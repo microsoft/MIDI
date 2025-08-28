@@ -63,25 +63,25 @@ namespace Microsoft.Midi.ConsoleApp
 
                     if (transportInfo.ManufacturerName != "Microsoft" && transportInfo.ManufacturerName != string.Empty)
                     {
-                        fullName = transportInfo.ManufacturerName + " " + endpoint.Name;
+                        fullName = AnsiMarkupFormatter.FormatManufacturerName(transportInfo.ManufacturerName) + " " + AnsiMarkupFormatter.FormatEndpointName(endpoint.Name);
                     }
                     else
                     {
-                        fullName = endpoint.Name;
+                        fullName = AnsiMarkupFormatter.FormatEndpointName(endpoint.Name);
                     }
 
                     if (parent != null)
                     {
                         choices.Add(new UmpEndpointPickerEntry(
                             AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " +
-                            (fullName + " [grey35](" + endpoint.GetParentDeviceInformation().Name + ")[/]").PadRight(80),
+                            (fullName + " [grey35](" + AnsiMarkupFormatter.EscapeString(endpoint.GetParentDeviceInformation().Name) + ")[/]").PadRight(80),
                             endpoint.EndpointDeviceId));
                     }
                     else
                     {
                         choices.Add(new UmpEndpointPickerEntry(
                             AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " +
-                            (fullName).PadRight(80),
+                            fullName.PadRight(80),
                             endpoint.EndpointDeviceId));
                     }
                 }

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-      <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+      <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <StartupObject></StartupObject>
@@ -30,7 +30,7 @@
 
       <RollForward>LatestMinor</RollForward>
 
-      <WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion>
+      <WindowsSDKPackageVersion>10.0.22621.38</WindowsSDKPackageVersion>
 
       <NoWin32Manifest>true</NoWin32Manifest>
 

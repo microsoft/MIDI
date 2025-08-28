@@ -90,7 +90,13 @@
 
 // Service config
 
-#define UUID_IMidiServiceConfigStatics						8087b303-0519-31d1-c0de-ee0010000000
+#define UUID_IMidiServiceConfigStatics						    8087b303-0519-31d1-c0de-ee0010000000
+#define UUID_IMidiServiceMidiServiceEndpointCustomizationConfig 8087b303-0519-31d1-c0de-dd0011000000
+#define UUID_IMidiServiceTransportCommand                       8087b303-0519-31d1-c0de-dd0012000000
+#define UUID_IMidiServiceTransportCommonCommandsStatics         8087b303-0519-31d1-c0de-ee0013000000
+
+#define UUID_IMidiServiceConfigEndpointMatchCriteria            8087b303-0519-31d1-c0de-dd0014000000
+#define UUID_IMidiServiceConfigEndpointMatchCriteriaStatics     8087b303-0519-31d1-c0de-ee0014000000
 
 // Utilities
 

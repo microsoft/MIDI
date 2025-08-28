@@ -165,8 +165,7 @@ int main()
         std::cout << std::endl << "User-supplied Metadata" << std::endl;
         std::cout << "- User-supplied Name: " << winrt::to_string(userInfo.Name) << std::endl;
         std::cout << "- User Description:   " << winrt::to_string(userInfo.Description) << std::endl;
-        std::cout << "- Small Image Path:   " << winrt::to_string(userInfo.SmallImagePath) << std::endl;
-        std::cout << "- Large Image Path:   " << winrt::to_string(userInfo.LargeImagePath) << std::endl;
+        std::cout << "- Image Path:   " << winrt::to_string(userInfo.ImageFileName) << std::endl;
 
         std::cout << std::endl << "Endpoint Supported Capabilities" << std::endl;
         std::cout << "- UMP Major.Minor:   " << declaredEndpointInfo.SpecificationVersionMajor << "." << declaredEndpointInfo.SpecificationVersionMinor << std::endl;

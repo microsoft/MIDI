@@ -1,21 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Xml.Linq;
-using Microsoft.UI.Xaml.Documents;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -69,19 +70,19 @@ namespace Microsoft.Midi.Settings.Controls
     public sealed partial class MidiEndpointAndGroupPickerControl : UserControl
     {
         [ObservableProperty]
-        public ObservableCollection<MidiEndpointDeviceInformation>? endpoints;
+        public ObservableCollection<MidiEndpointWrapper>? endpoints;
 
 
         public static readonly DependencyProperty SelectedEndpointProperty = DependencyProperty.Register(
             "SelectedEndpoint",
-            typeof(MidiEndpointDeviceInformation),
+            typeof(MidiEndpointWrapper),
             typeof(MidiEndpointAndGroupPickerControl),
             new PropertyMetadata(null, new PropertyChangedCallback(OnSelectedEndpointChanged))
             );
 
-        public MidiEndpointDeviceInformation? SelectedEndpoint
+        public MidiEndpointWrapper? SelectedEndpoint
         {
-            get { return (MidiEndpointDeviceInformation)GetValue(SelectedEndpointProperty); }
+            get { return (MidiEndpointWrapper)GetValue(SelectedEndpointProperty); }
             set { SetValue(SelectedEndpointProperty, value); }
         }
         private static void OnSelectedEndpointChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -136,7 +137,7 @@ namespace Microsoft.Midi.Settings.Controls
 
             Dictionary<uint, MidiGroupForDisplay> groupsForDisplay = [];
 
-            var functionBlocks = SelectedEndpoint.GetDeclaredFunctionBlocks();
+            var functionBlocks = SelectedEndpoint.DeviceInformation.GetDeclaredFunctionBlocks();
 
             // do we have function blocks? If so, use them
             if (functionBlocks != null && functionBlocks.Count > 0)
@@ -145,7 +146,7 @@ namespace Microsoft.Midi.Settings.Controls
             }
             else
             {
-                var groupBlocks = SelectedEndpoint.GetGroupTerminalBlocks();
+                var groupBlocks = SelectedEndpoint.DeviceInformation.GetGroupTerminalBlocks();
 
                 // no function blocks. Do we have group terminal blocks?
                 if (groupBlocks != null && groupBlocks.Count > 0)

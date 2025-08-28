@@ -121,7 +121,12 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
                 //);
 
                 // For transforms, by convention the context contains the group index.
-                auto hr = m_Callback->Callback(optionFlags, &(byteStream[0]), messageByteCount, position, m_UMP2BS.group);
+                auto hr = m_Callback->Callback(
+                    (MessageOptionFlags) (optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
+                    &(byteStream[0]),
+                    messageByteCount,
+                    position,
+                    m_UMP2BS.group);
 
                 if (FAILED(hr))
                 {

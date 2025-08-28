@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "MidiEndpointCustomProperties.h"
+#include "MidiEndpointMatchCriteria.h"
+
 using namespace winrt::Windows::Devices::Enumeration;
 
 
@@ -30,13 +33,19 @@ struct KsAggregateEndpointMidiPinDefinition
 
 struct KsAggregateEndpointDefinition
 {
-    std::wstring ManufacturerName; 
+    std::wstring EndpointDeviceId{};
+    
+    uint16_t VID{0};
+    uint16_t PID{0};
+    std::wstring SerialNumber{};
 
-    std::wstring EndpointName;
-    std::wstring EndpointDeviceInstanceId;
+    std::wstring ManufacturerName{}; 
 
-    std::wstring ParentDeviceName;
-    std::wstring ParentDeviceInstanceId;
+    std::wstring EndpointName{};
+    std::wstring EndpointDeviceInstanceId{};
+
+    std::wstring ParentDeviceName{};
+    std::wstring ParentDeviceInstanceId{};
 
     std::vector<KsAggregateEndpointMidiPinDefinition> MidiPins{ };
 };
@@ -51,6 +60,9 @@ public:
 
     STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
     STDMETHOD(Shutdown)();
+
+    // returns the endpointDeviceInterfaceId for a matching endpoint found in m_availableEndpointDefinitions
+    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ MidiEndpointMatchCriteria& criteria);
 
 private:
     STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& masterEndpointDefinition);

@@ -12,9 +12,9 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<tags>midi midi2 windows music audio native</tags>
 		<dependencies>
-            <group targetFramework="net8.0-windows10.0.20348.0" />
-            <group targetFramework="net9.0-windows10.0.20348.0" />
-            <group targetFramework="net10.0-windows10.0.20348.0" />
+            <group targetFramework="net8.0-windows10.0.22621.0" />
+            <group targetFramework="net9.0-windows10.0.22621.0" />
+            <group targetFramework="net10.0-windows10.0.22621.0" />
             <group targetFramework="uap10.0" />
             <group targetFramework="native" />
         </dependencies>
@@ -26,9 +26,9 @@
         <!-- Compile-time References  ================================================ -->
 
         <!-- TODO: These should be architecture-specific or an any-cpu version -->
-        <file target="ref\uap10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\ref\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
-        <file target="ref\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\ref\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
-        <file target="ref\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\ref\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
+        <file target="ref\uap10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\ref\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
+        <file target="ref\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\ref\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
+        <file target="ref\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\ref\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
 
         <!-- Reference winmds -->
         
@@ -40,19 +40,19 @@
 
 
       <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->
-        <file target="runtimes\win-x64\lib\net8.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-x64\lib\net9.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-x64\lib\net10.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-x64\lib\net8.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-x64\lib\net9.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-x64\lib\net10.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
 
-        <file target="runtimes\win-arm64\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\arm64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-arm64\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\arm64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-arm64\lib\net10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\arm64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\arm64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\arm64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64\lib\net10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\arm64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
       <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->
-        <file target="runtimes\win-arm64ec\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-arm64ec\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-arm64ec\lib\net10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64ec\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64ec\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64ec\lib\net10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.22621.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
       <!-- Build-time files ================================================ -->
 

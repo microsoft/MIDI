@@ -58,7 +58,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
                                     info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
                                     info.TransportCode = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L"");
                                     info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
-                                    info.SmallImagePath = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, L"");
+                                    info.ImageFileName = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IMAGE_FILENAME_PROPERTY_KEY, L"");
                                     info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
                                     info.Version = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY, L"");
                                     info.IsSystemManaged = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false);

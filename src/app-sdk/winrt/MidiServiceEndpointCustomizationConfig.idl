@@ -1,0 +1,48 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiServiceConfigEndpointMatchCriteria.idl";
+import "Midi1PortNamingApproachEnum.idl";
+
+import "MidiGroup.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
+{
+    [contract(MidiServiceConfigApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceEndpointCustomizationConfig", UUID_IMidiServiceMidiServiceEndpointCustomizationConfig)]
+    runtimeclass MidiServiceEndpointCustomizationConfig : IMidiServiceTransportPluginConfig
+    {
+        MidiServiceEndpointCustomizationConfig();
+
+        MidiServiceEndpointCustomizationConfig(Guid transportId);
+        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description);
+        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description, String imageFileName);
+        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description, String imageFileName, Boolean requiresNoteOffTranslation, Boolean supportsMidiPolyphonicExpression, UInt16 recommendedControlChangeIntervalMilliseconds);
+
+        String Name;
+        String Description;
+        String ImageFileName;
+
+        MidiServiceConfigEndpointMatchCriteria MatchCriteria;
+
+        Boolean RequiresNoteOffTranslation;
+        Boolean SupportsMidiPolyphonicExpression;
+        UInt16 RecommendedControlChangeIntervalMilliseconds;
+
+        Microsoft.Windows.Devices.Midi2.Midi1PortNamingApproach Midi1PortNamingApproach;
+
+        void AddMidi1SourcePortCustomName(Microsoft.Windows.Devices.Midi2.MidiGroup group, String name);
+        void AddMidi1DestinationPortCustomName(Microsoft.Windows.Devices.Midi2.MidiGroup group, String name);
+
+    };
+}

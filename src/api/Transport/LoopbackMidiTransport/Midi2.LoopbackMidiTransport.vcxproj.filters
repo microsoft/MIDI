@@ -64,7 +64,7 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="transport_defs.h">
+    <ClInclude Include="loopback_transport_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TransportState.h">
@@ -105,5 +105,6 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

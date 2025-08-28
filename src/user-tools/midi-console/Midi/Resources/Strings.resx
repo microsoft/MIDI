@@ -527,9 +527,6 @@ Timestamp</value>
   <data name="PropertiesTablePropertyLabelId" xml:space="preserve">
     <value>Id</value>
   </data>
-  <data name="PropertiesTablePropertyLabelLargeImagePath" xml:space="preserve">
-    <value>Large Image Path</value>
-  </data>
   <data name="PropertiesTablePropertyLabelManufacturer" xml:space="preserve">
     <value>Manufacturer</value>
   </data>
@@ -551,8 +548,8 @@ Timestamp</value>
   <data name="PropertiesTablePropertyLabelSerialNumber" xml:space="preserve">
     <value>Serial Number</value>
   </data>
-  <data name="PropertiesTablePropertyLabelSmallImagePath" xml:space="preserve">
-    <value>Small Image Path</value>
+  <data name="PropertiesTablePropertyLabelImageFileName" xml:space="preserve">
+    <value>Image File Name</value>
   </data>
   <data name="PropertiesTablePropertyLabelSoftwareRevisionLevel" xml:space="preserve">
     <value>Software RevisionLevel</value>

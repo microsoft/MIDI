@@ -51,6 +51,9 @@
     <ClCompile Include="Midi2.Ble1MidiPluginMetadataProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBleAdvertiser.cpp">
+      <Filter>Source Files\Infrastructure</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -94,6 +97,12 @@
     </ClInclude>
     <ClInclude Include="Midi2.Ble1MidiPluginMetadataProvider.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBleAdvertiser.h">
+      <Filter>Header Files\Infrastructure</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_ble_utilities.h">
+      <Filter>Header Files\Infrastructure</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

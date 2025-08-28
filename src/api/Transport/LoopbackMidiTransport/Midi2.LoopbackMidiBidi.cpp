@@ -39,8 +39,7 @@ CMidi2LoopbackMidiBidi::Initialize(
 
     // TODO: This should use SWD properties and not a string search
 
-    if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_PERM_LOOP_INSTANCE_ID_A_PREFIX) ||
-        internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_TEMP_LOOP_INSTANCE_ID_A_PREFIX))
+    if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_LOOP_INSTANCE_ID_A_PREFIX))
     {
         TraceLoggingWrite(
             MidiLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -58,8 +57,7 @@ CMidi2LoopbackMidiBidi::Initialize(
         m_isEndpointA = true;
 
     }
-    else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX) ||
-             internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_TEMP_LOOP_INSTANCE_ID_B_PREFIX))
+    else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_LOOP_INSTANCE_ID_B_PREFIX))
     {
         TraceLoggingWrite(
             MidiLoopbackMidiTransportTelemetryProvider::Provider(),

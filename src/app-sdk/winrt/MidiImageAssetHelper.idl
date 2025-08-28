@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+
+import "MidiEndpointDeviceInformation.idl";
+import "MidiServiceTransportPluginInfo.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Utilities.Metadata
+{
+    [experimental]
+    static runtimeclass MidiImageAssetHelper
+    {
+        static String GetImageFullPathForTransport(Microsoft.Windows.Devices.Midi2.Reporting.MidiServiceTransportPluginInfo transportPluginInfo);
+        static String GetDefaultImageFullPathForTransport(Microsoft.Windows.Devices.Midi2.Reporting.MidiServiceTransportPluginInfo transportPluginInfo);
+
+        static String GetImageFullPathForEndpoint(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
+        static String GetDefaultImageFullPathForEndpoint(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
+
+    }
+}

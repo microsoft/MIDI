@@ -12,7 +12,7 @@
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
     <CppWinRTLibs>true</CppWinRTLibs>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
+    <WindowsTargetPlatformMinVersion>10.0.22621.0</WindowsTargetPlatformMinVersion>
     <MinimalCoreWin>true</MinimalCoreWin>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -181,19 +181,19 @@
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib;$(SolutionDir)..\api\vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">MachineARM64</TargetMachine>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib;Detours.lib;$(SolutionDir)..\api\vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">MachineARM64X</TargetMachine>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib;Detours.lib;$(SolutionDir)..\api\vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -239,9 +239,9 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib;$(SolutionDir)..\api\vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib;Detours.lib;$(SolutionDir)..\api\vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib;Detours.lib;$(SolutionDir)..\api\vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MachineARM64</TargetMachine>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">MachineARM64X</TargetMachine>
     </Link>
@@ -264,7 +264,9 @@
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
     <ClInclude Include="date_util.h" />
-    <ClInclude Include="MidiEndpointConnectionBasicSettings.h" />
+    <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
+      <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_sdk_idl_defs.h" />
     <ClInclude Include="MidiNetworkAdvertisedHost.h">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
@@ -468,12 +470,33 @@
     <ClInclude Include="MidiRuntimeUpdateUtility.h">
       <DependentUpon>MidiRuntimeUpdateUtility.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiClockGenerator.h" />
-    <ClInclude Include="MidiClockDestination.h" />
+    <ClInclude Include="MidiClockGenerator.h">
+      <DependentUpon>MidiClockGenerator.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiClockDestination.h">
+      <DependentUpon>MidiClockDestination.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiImageAssetHelper.h">
+      <DependentUpon>MidiImageAssetHelper.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceEndpointCustomizationConfig.h">
+      <DependentUpon>MidiServiceEndpointCustomizationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportCommand.h">
+      <DependentUpon>MidiServiceTransportCommand.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportCommonCommands.h">
+      <DependentUpon>MidiServiceTransportCommonCommands.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
+      <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp" />
+    <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
+      <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
     </ClCompile>
@@ -758,10 +781,31 @@
     <ClCompile Include="MidiRuntimeUpdateUtility.cpp">
       <DependentUpon>MidiRuntimeUpdateUtility.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiClockGenerator.cpp" />
-    <ClCompile Include="MidiClockDestination.cpp" />
+    <ClCompile Include="MidiClockGenerator.cpp">
+      <DependentUpon>MidiClockGenerator.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiClockDestination.cpp">
+      <DependentUpon>MidiClockDestination.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiImageAssetHelper.cpp">
+      <DependentUpon>MidiImageAssetHelper.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceEndpointCustomizationConfig.cpp">
+      <DependentUpon>MidiServiceEndpointCustomizationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportCommand.cpp">
+      <DependentUpon>MidiServiceTransportCommand.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportCommonCommands.cpp">
+      <DependentUpon>MidiServiceTransportCommonCommands.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
+      <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="Midi1PortNamingApproachEnum.idl" />
+    <Midl Include="MidiImageAssetHelper.idl" />
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
@@ -830,6 +874,10 @@
     <Midl Include="MidiRuntimeUpdateUtility.idl" />
     <Midl Include="MidiRuntimeVersion.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
+    <Midl Include="MidiServiceConfigEndpointMatchCriteria.idl" />
+    <Midl Include="MidiServiceTransportCommonCommands.idl" />
+    <Midl Include="MidiServiceEndpointCustomizationConfig.idl" />
+    <Midl Include="MidiServiceTransportCommand.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiMessage128.idl" />

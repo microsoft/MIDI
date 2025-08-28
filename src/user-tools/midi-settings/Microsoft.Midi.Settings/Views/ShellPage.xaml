@@ -9,6 +9,7 @@
     xmlns:i="using:Microsoft.Xaml.Interactivity"
     xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:serviceContracts="using:Microsoft.Midi.Settings.Contracts.Services"
     Typography.Kerning="True"
     Typography.StylisticSet20="True"
     Typography.DiscretionaryLigatures="True"
@@ -16,78 +17,208 @@
 
     <Page.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+        <x:Double x:Key="NavigationViewItemOnLeftIconBoxHeight">26</x:Double>
+        <Thickness x:Key="NavigationViewItemOnLeftIconBoxMargin">8,0,0,0</Thickness>
+        <Thickness x:Key="NavigationViewItemContentPresenterMargin">8,0,0,0</Thickness>
+        <Thickness x:Key="NavigationViewItemButtonMargin">12,2,4,2</Thickness>
+        <x:Double x:Key="NavigationViewCompactPaneLength">60</x:Double>
+
+        <Thickness x:Key="NavigationFrameContentMargin">40,0,40,0</Thickness>
+        <Thickness x:Key="NavigationViewHeaderMargin">40,0,40,20</Thickness>
+
+        <Style x:Key="NavigationViewItemPreviewTagContainer"  TargetType="Grid">
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}"/>
+            <Setter Property="Background" Value="{StaticResource SystemFillColorCautionBackground}" />
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="NavigationViewItemPreviewText"  TargetType="TextBlock">
+            <Setter Property="Text" Value="Preview"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="Margin" Value="4,2,4,2"/>
+            <Setter Property="Foreground" Value="{StaticResource SystemFillColorCaution}" />
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+
+        <Style x:Key="NavigationViewItemComingSoonTagContainer"  TargetType="Grid">
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}"/>
+            <Setter Property="Background" Value="{StaticResource SystemFillColorCriticalBackground}" />
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="NavigationViewItemComingSoonText"  TargetType="TextBlock">
+            <Setter Property="Text" Value="Coming Soon"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="Margin" Value="4,2,4,2"/>
+            <Setter Property="Foreground" Value="{StaticResource SystemFillColorCritical}" />
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
     </Page.Resources>
 
+
+
     <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
+       
         <Grid x:Name="AppTitleBar"
-              Canvas.ZIndex="1"
-              Height="{Binding ElementName=NavigationViewControl, Path=CompactPaneLength}"
-              IsHitTestVisible="True"
-              VerticalAlignment="Top">
-            <Image Source="/Assets/DIN.png"
-                   HorizontalAlignment="Left"
-                   Width="16"
-                   Height="16" />
-
-            <TextBlock x:Name="AppTitleBarText"
-                       VerticalAlignment="Center"
-                       TextWrapping="NoWrap"
-                       Style="{StaticResource CaptionTextBlockStyle}"
-                       Margin="28,0,28,0"/>
+              Grid.Row="0"
+              VerticalAlignment="Top"
+              >
 
 
-            <StackPanel Orientation="Horizontal"
-                        VerticalAlignment="Top"
-                        HorizontalAlignment="Right"
-                        Margin="0,5,175,0">
-
-                <Grid Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
-                      Padding="10,3,10,3"
-                      Margin="5,0,5,0"
-                      CornerRadius="4"
-                      Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
-
-                    <TextBlock x:Name="ServiceUnavailableIndicator"
-                               x:Uid="ShellPage_ServiceUnavailableIndicator"
-                               VerticalAlignment="Center"
-                               TextWrapping="NoWrap"
-                               Style="{StaticResource CaptionTextBlockStyle}"
-                               Foreground="{StaticResource TextFillColorPrimary}"
-                       />
-                </Grid>
+            <controls:TitleBar x:Name="AppTitleBarControl" 
+                               Title="MIDI Settings"
+                               AutoConfigureCustomTitleBar="False"
+                               DisplayMode="Tall"
+                               IsPaneButtonVisible="False"
+                               BackButtonClick="TitleBar_BackButtonClick"
+                               IsBackButtonVisible="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
+                               >
+                <controls:TitleBar.Icon>
+                    <ImageIcon Source="/Assets/AppIcon.ico" />
+                </controls:TitleBar.Icon>
 
                 
-                <Grid Background="{StaticResource SystemFillColorCautionBackgroundBrush}"
-                      Padding="10,3,10,3"
-                      Margin="5,0,5,0"
-                      CornerRadius="4"
-                      Visibility="{x:Bind ViewModel.IsRunningAsAdministrator, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    
-                    <TextBlock x:Name="AdminModeIndicator"
-                               x:Uid="ShellPage_AdministratorIndicator"
-                               VerticalAlignment="Center"
-                               TextWrapping="NoWrap"
-                               Style="{StaticResource CaptionTextBlockStyle}"
-                               Foreground="{StaticResource TextFillColorPrimary}"
-                       />
-                </Grid>
+                <controls:TitleBar.Content>
+                    <AutoSuggestBox x:Name="SearchBox" 
+                                    PlaceholderText=" Find a setting, endpoint, or port" 
+                                    Canvas.ZIndex="100"
+                                    QueryIcon="Find"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Width="300"
+                                    MinWidth="300"
+                                    MaxWidth="700"
+                                    AutoMaximizeSuggestionArea="True"
+                                    Margin="4"
+                                    GotFocus="AutoSuggestBox_GotFocus"
+                                    LostFocus="AutoSuggestBox_LostFocus"
+                                    TextChanged="SettingsSearchBox_TextChanged"
+                                    SuggestionChosen="AutoSuggestBox_SuggestionChosen"
+                                    QuerySubmitted="SettingsSearchBox_QuerySubmitted">
+                        <AutoSuggestBox.ItemTemplate>
+                            <DataTemplate x:DataType="serviceContracts:MidiSettingsSearchResult">
+                                <Grid Margin="4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
 
-                <Grid Background="{StaticResource SmokeFillColorDefaultBrush}"
-                      Padding="10,3,10,3"
-                      Margin="5,0,5,0"
-                      CornerRadius="4"
-                      Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock x:Name="DeveloperModeIndicator"
-                               x:Uid="ShellPage_DeveloperModeIndicator"
-                               VerticalAlignment="Center"
-                               TextWrapping="NoWrap"
-                               Style="{StaticResource CaptionTextBlockStyle}"
-                               Foreground="{StaticResource TextFillColorPrimary}"
-                       />
-                </Grid>
+                                    <FontIcon Grid.Column="0" 
+                                              VerticalAlignment="Center"
+                                              Glyph="{x:Bind Glyph}"
+                                              Style="{StaticResource NavigationMenuIconStyles}"
+                                              Margin="4,0,8,0"/>
 
-            </StackPanel>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Vertical">
 
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="8,4,4,0">
+                                            <TextBlock Margin="0,0,4,0"
+                                                       Text="{x:Bind DisplayText}"/>
+
+                                            <TextBlock Margin="4,0,0,0"
+                                                       Text="("/>
+
+                                            <TextBlock Margin="0,0,0,0"
+                                                       Text="{x:Bind ResultType}"
+                                                       Foreground="{StaticResource TextFillColorTertiary}"/>
+
+                                            <TextBlock Margin="0,0,8,0"
+                                                       Text=")"/>
+
+                                        </StackPanel>
+
+                                        <TextBlock Margin="8,4,0,8" 
+                                                   Text="{x:Bind DisplayDescription}"
+                                                   TextWrapping="WrapWholeWords"
+                                                   FontSize="{StaticResource SmallFontSize}"
+                                                   Foreground="{StaticResource TextFillColorTertiary}" />
+
+                                    </StackPanel>
+                                    
+
+                                </Grid>
+                            </DataTemplate>
+                        </AutoSuggestBox.ItemTemplate>
+                    </AutoSuggestBox>
+                                    
+                </controls:TitleBar.Content>
+
+
+                <controls:TitleBar.Footer>
+                    <StackPanel Orientation="Horizontal"
+                                IsHitTestVisible="False"
+                                VerticalAlignment="Top"
+                                Margin="0,0,150,0"
+                                    >
+
+                        <Grid Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
+                              IsHitTestVisible="False"
+                              Padding="10,3,10,3"
+                              Margin="5,0,5,0"
+                              CornerRadius="4"
+                              Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
+
+                            <TextBlock x:Name="ServiceUnavailableIndicator"
+                                       x:Uid="ShellPage_ServiceUnavailableIndicator"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{StaticResource TextFillColorPrimary}"
+                                   />
+                        </Grid>
+
+
+                        <Grid Background="{StaticResource SystemFillColorCautionBackgroundBrush}"
+                              IsHitTestVisible="False"
+                              Padding="10,3,10,3"
+                              Margin="5,0,5,0"
+                              CornerRadius="4"
+                              Visibility="{x:Bind ViewModel.IsRunningAsAdministrator, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                            <TextBlock x:Name="AdminModeIndicator"
+                                       x:Uid="ShellPage_AdministratorIndicator"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{StaticResource TextFillColorPrimary}"
+                                   />
+                        </Grid>
+
+                        <Grid Background="{StaticResource SmokeFillColorDefaultBrush}"
+                              IsHitTestVisible="False"
+                              Padding="10,3,10,3"
+                              Margin="5,0,5,0"
+                              CornerRadius="4"
+                              Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock x:Name="DeveloperModeIndicator"
+                                       x:Uid="ShellPage_DeveloperModeIndicator"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{StaticResource TextFillColorPrimary}"
+                                   />
+                        </Grid>
+
+                    </StackPanel>
+                </controls:TitleBar.Footer>
+
+            </controls:TitleBar>
+            
         </Grid>
 
 
@@ -101,18 +232,20 @@
             </TextBlock.RenderTransform>
         </TextBlock>-->
 
-        <NavigationView
-            x:Name="NavigationViewControl"
-            Background="Transparent"
-            BorderThickness="0"
-            Canvas.ZIndex="0"
-            IsBackButtonVisible="Visible"
-            IsBackEnabled="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
-            SelectedItem="{x:Bind ViewModel.Selected, Mode=OneWay}"
-            IsSettingsVisible="True"
-            ExpandedModeThresholdWidth="1280"
-            DisplayModeChanged="NavigationViewControl_DisplayModeChanged"
-            Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
+        <NavigationView Grid.Row="1"
+                        x:Name="NavigationViewControl"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Canvas.ZIndex="0"
+                        IsPaneToggleButtonVisible="False"
+                        IsBackButtonVisible="Collapsed"
+                        SelectedItem="{x:Bind ViewModel.Selected, Mode=OneWay}"
+                        IsSettingsVisible="True"
+                        ExpandedModeThresholdWidth="1280"
+                        IsTitleBarAutoPaddingEnabled="False"
+                        DisplayModeChanged="NavigationViewControl_DisplayModeChanged"
+                        >
+            <!-- <Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}"> -->
 
 
             <!-- Remove page background and border -->
@@ -121,37 +254,185 @@
                 <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
             </NavigationView.Resources>
 
+            <NavigationView.PaneHeader>
+                <Grid Margin="16,12,4,30"
+                      Padding="24,12,12,12"
+                      HorizontalAlignment="Stretch"
+                      Background="{StaticResource CardBackgroundFillColorDefault}"
+                      CornerRadius="{StaticResource ControlCornerRadius}"
+                      BorderBrush="{StaticResource AccentControlElevationBorderBrush}"
+                      BorderThickness="0">
 
-            <!--<NavigationView.AutoSuggestBox>
-                <AutoSuggestBox
-                    x:Name="SettingsSearchBox"
-                    x:Uid="ShellPage_SettingsSearchBox"
-                    VerticalAlignment="Center"
-                    x:FieldModifier="public"
-                    QueryIcon="Find"
-                    MinWidth="200"
-                    KeyboardAcceleratorPlacementMode="Hidden"
-                    QuerySubmitted="SettingsSearchBox_QuerySubmitted"
-                    TextChanged="SettingsSearchBox_TextChanged">
-                    <AutoSuggestBox.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control" Key="F" Invoked="KeyboardAccelerator_Invoked" />
-                    </AutoSuggestBox.KeyboardAccelerators>
-                </AutoSuggestBox>
-            </NavigationView.AutoSuggestBox>-->
+                    <Rectangle Height="35" 
+                               Width="3"
+                               Margin="-24,0,0,0"
+                               Stroke="{StaticResource MidiIconBaseColorBlueBrush}"
+                               StrokeThickness="3"
+                               RadiusX="3"
+                               RadiusY="3"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center" />
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Installed MIDI Runtime" 
+                                   FontSize="{StaticResource SmallFontSize}"
+                                   Opacity="0.75"/>
+                        <TextBlock Text="{x:Bind ViewModel.SdkVersionString}"
+                                   FontSize="{StaticResource SmallFontSize}"
+                                   Foreground="{StaticResource MidiIconBaseColorBlueBrush}"
+                                   Margin="0,4,0,0"/>
 
 
+                        <!--<TextBlock Text="Current Configuration File"
+                                   FontSize="{StaticResource SmallFontSize}"
+                                   Opacity="0.75"/>
+
+                        <TextBlock Text="{x:Bind ViewModel.CurrentConfigName}" 
+                                   FontSize="{StaticResource SmallFontSize}"
+                                   Foreground="{StaticResource MidiIconBaseColorBlueBrush}"
+                                   Margin="0,4,0,4"/>-->
+                    </StackPanel>
+                </Grid>
+            </NavigationView.PaneHeader>
+            
             <NavigationView.MenuItems>
 
-                <NavigationViewItem x:Uid="Shell_Home" 
+                <NavigationViewItem x:Uid="Shell_Home"
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.HomeViewModel"
                                     >
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe80f;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-Home.svg" />
+                    </NavigationViewItem.Icon>
+                    
+                </NavigationViewItem>
+
+
+                <NavigationViewItemHeader x:Uid="Shell_MidiNavHeader"
+                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+
+                <NavigationViewItem x:Uid="Shell_AllMidiDevices" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-Endpoints.svg"  />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.GlobalMidiSettingsViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-GlobalSettings.svg"  />
+                    </NavigationViewItem.Icon>
+
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_GlobalMidiSettings" />
+
+                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+
+
+                <!--<NavigationViewItemHeader x:Uid="Shell_ConfigureTransportsNavHeader" 
+                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>-->
+
+
+                
+                <NavigationViewItem x:Name="SectionLOOP" 
+                                    Visibility="{x:Bind ViewModel.ShowLoopbackMidiInLeftNav, Mode=OneWay}" 
+                                    x:Uid="Shell_EndpointsLoop" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsLoopViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-CreateLoopbackEndpoints.svg" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                
+                <NavigationViewItem x:Name="SectionNET2UDP" 
+                                    Visibility="{x:Bind ViewModel.ShowNetworkMidi2InLeftNav, Mode=OneWay}"  
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-NetworkMidi.svg" />
+                    </NavigationViewItem.Icon>
+                    
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_EndpointsNet2Udp" />
+
+                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+                
+
+                <NavigationViewItem x:Name="SectionBLE10" Visibility="Collapsed" x:Uid="Shell_EndpointsBle10" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsBle10ViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe702;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
 
-                
+
+
+                <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
+
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-SysEx.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_ToolsSysEx" />
+
+                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+
+                <!--<NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WindowsSettingsViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-WindowsSettings.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_WindowsSettings" />
+
+                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>-->
+
+
+                <!--
+                <NavigationViewItem 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.LivePerformanceSettingsViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-LivePerformanceMode.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_LivePerformanceMode" />
+
+                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+                -->
+
+
                 <NavigationViewItem x:Uid="Shell_Configurations" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ConfigurationsViewModel"
                                     Visibility="Collapsed">
@@ -160,71 +441,7 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader" 
-                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                <!--
-                <NavigationViewItem x:Uid="Shell_EndpointsAll" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe772;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                -->
                 
-                <NavigationViewItem x:Name="SectionKS" Visibility="Collapsed" x:Uid="Shell_EndpointsKS" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsKSViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xecf3;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionKSA" Visibility="Collapsed" x:Uid="Shell_EndpointsKsa" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsKsaViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xecf0;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionLOOP" Visibility="Collapsed" x:Uid="Shell_EndpointsLoop" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsLoopViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8ee;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionAPP" Visibility="Collapsed" x:Uid="Shell_EndpointsApp" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAppViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8a1;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionBLE10" Visibility="Collapsed" x:Uid="Shell_EndpointsBle10" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsBle10ViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe702;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionNET2UDP" Visibility="Collapsed" x:Uid="Shell_EndpointsNet2Udp" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xee77;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-
-                <!--
-                <NavigationViewItem x:Uid="Shell_Routes" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.RoutesViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef90;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                -->
-
-                <NavigationViewItem x:Name="SectionDIAG" Visibility="Collapsed" x:Uid="Shell_EndpointsDiagnostic" 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsDiagViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-
-
 
                 <NavigationViewItemHeader x:Uid="Shell_ManagementNavHeader"
                                           Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
@@ -234,20 +451,15 @@
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ManagementSessionsViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeda3;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-Sessions.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <!--<NavigationViewItem x:Uid="Shell_ToolsMonitor" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsMonitorViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7b3;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>-->
                 
                 <NavigationViewItem x:Uid="Shell_PluginsTransport" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsTransportViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb4d;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-Transports.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <!--
@@ -258,103 +470,53 @@
                 </NavigationViewItem>
                 -->
 
-                <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
 
-                <NavigationViewItem x:Uid="Shell_ToolsSysEx" 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
-                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9f5;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
 
-                <!--
-                <NavigationViewItem x:Uid="Shell_ToolsTest" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsTestViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                -->
-                
-                <!--<NavigationViewItem x:Uid="Shell_ToolsConsole" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsConsoleViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>-->
-
-<!--
-                <NavigationViewItemHeader x:Uid="Shell_Midi1ApiNavHeader"/>
-
-                <NavigationViewItem x:Uid="Shell_WinRTMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinRTMidi1DevicesViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Uid="Shell_WinMMMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinMMMidi1DevicesViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
--->
-
-                <!--
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>
 
-                <NavigationViewItem x:Uid="Shell_Troubleshooting" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.TroubleshootingViewModel">
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.AdvancedUsbSettingsViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7ba;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-AdvancedUsbSettings.svg" />
+                    </NavigationViewItem.Icon>                    
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_AdvancedUsbSettings" />
+
+                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
                 </NavigationViewItem>
-                -->
+
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.TroubleshootingViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-Troubleshooting.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_Troubleshooting" />
+
+                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>                   
+                </NavigationViewItem>
                 
                 <NavigationViewItem x:Uid="Shell_ForDevelopers" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ForDevelopersViewModel"
                                     Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xec7a;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-Developers.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                
+                
             </NavigationView.MenuItems>
             
-            
-            <NavigationView.HeaderTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <TextBlock
-                            Text="{Binding}"
-                            Style="{ThemeResource TitleTextBlockStyle}" />
-                    </Grid>
-                </DataTemplate>
-            </NavigationView.HeaderTemplate>
-            
-           
-            <i:Interaction.Behaviors>
-                <behaviors:NavigationViewHeaderBehavior
-                    DefaultHeader="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
-                    <behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <TextBlock
-                                    Text="{Binding}"
-                                    Style="{ThemeResource TitleTextBlockStyle}" />
-                            </Grid>
-                        </DataTemplate>
-                    </behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
-                </behaviors:NavigationViewHeaderBehavior>
-            </i:Interaction.Behaviors>
 
-            <!--<NavigationView.ContentTemplate>
-                <DataTemplate>
-                    <Grid  Background="Transparent"
-                            BorderThickness="0"
-                            CornerRadius="0">
-                        <ContentPresenter/>
-                    </Grid>
-                </DataTemplate>
-            </NavigationView.ContentTemplate>-->
-            
-            <Grid Margin="{StaticResource NavigationViewPageContentMargin}">
+            <Grid Margin="{StaticResource NavigationFrameContentMargin}">
                 <Frame x:Name="NavigationFrame" />
             </Grid>
             

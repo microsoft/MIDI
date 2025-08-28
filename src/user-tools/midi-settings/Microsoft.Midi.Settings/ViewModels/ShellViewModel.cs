@@ -6,27 +6,32 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.Views;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
+using System.ComponentModel;
 
 namespace Microsoft.Midi.Settings.ViewModels;
 
-public class ShellViewModel : ObservableRecipient
+public partial class ShellViewModel : ObservableRecipient
 {
     private bool _isBackEnabled;
     private object? _selected;
 
     private readonly IGeneralSettingsService _generalSettingsService;
-
-    private readonly IMidiConfigFileService m_configFileService;
+    private readonly IMidiSettingsSearchService _settingsSearchService;
+    private readonly IMidiConfigFileService _configFileService;
     private readonly IMidiSdkService _sdkService;
+
+    public string SdkVersionString => MidiRuntimeInformation.GetInstalledVersion().ToString();
+
+    public string? CurrentConfigName => _configFileService?.CurrentConfig?.FileName;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
@@ -69,33 +74,78 @@ public class ShellViewModel : ObservableRecipient
 
     public bool IsValidConfigLoaded
     {
-        get => m_configFileService.IsConfigFileActive;
+        get => _configFileService.IsConfigFileActive;
     }
 
-    
+    public IList<MidiSettingsSearchResult> GetSearchResults(string query)
+    {
+        return _settingsSearchService.GetFilteredResults(query);
+    }
 
 
+    [ObservableProperty]
+    private bool showNetworkMidi2InLeftNav = false;
 
-    public ShellViewModel(INavigationService navigationService, 
-        INavigationViewService navigationViewService, 
+    [ObservableProperty]
+    private bool showLoopbackMidiInLeftNav = false;
+
+    [ObservableProperty]
+    private bool showBle10MidiInLeftNav = false;
+
+
+    private void UpdateVisibilityOfLeftNavSections()
+    {
+        var transports = App.GetService<IMidiTransportInfoService>().GetAllTransports();
+
+        foreach (var transport in transports)
+        {
+            switch (transport.TransportCode)
+            {
+                case "LOOP":
+                    ShowLoopbackMidiInLeftNav = _configFileService.IsConfigFileActive;
+                    break;
+                case "BLE10":
+                    ShowBle10MidiInLeftNav = _configFileService.IsConfigFileActive;
+                    break;
+                case "NET2UDP":
+                    ShowNetworkMidi2InLeftNav = _configFileService.IsConfigFileActive;
+                    break;
+
+            }
+        }
+    }
+
+
+    public ShellViewModel(
+        INavigationService navigationService, 
+        INavigationViewService navigationViewService,
         IGeneralSettingsService generalSettingsService,
         IMidiConfigFileService midiConfigFileService,
-        IMidiSdkService sdkService
+        IMidiSdkService sdkService,
+        IMidiSettingsSearchService settingsSearchService
         )
     {
+        _settingsSearchService = settingsSearchService;
         _sdkService = sdkService;
+        _configFileService = midiConfigFileService;
+        _generalSettingsService = generalSettingsService;
+
         NavigationService = navigationService;
         NavigationService.Navigated += OnNavigated;
         NavigationViewService = navigationViewService;
 
-        m_configFileService = midiConfigFileService;
-        _generalSettingsService = generalSettingsService;
-        _generalSettingsService.SettingsChanged += _generalSettingsService_SettingsChanged;
+
+        UpdateVisibilityOfLeftNavSections();
+
+        _configFileService.ActiveConfigFileChanged += (s, e) =>
+        {
+            UpdateVisibilityOfLeftNavSections();
+        };
     }
 
-    private void _generalSettingsService_SettingsChanged(object? sender, EventArgs e)
+    public void RefreshSearchData()
     {
-        OnPropertyChanged("AreDeveloperOptionsEnabled");
+        _settingsSearchService.Refresh();
     }
 
     private void OnNavigated(object sender, NavigationEventArgs e)

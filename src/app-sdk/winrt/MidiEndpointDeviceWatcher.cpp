@@ -221,8 +221,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     }
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_CustomEndpointName) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomLargeImagePath) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomSmallImagePath) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomImagePath) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_CustomDescription)
                         )
                     {

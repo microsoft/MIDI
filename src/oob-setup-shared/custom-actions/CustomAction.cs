@@ -105,7 +105,7 @@ namespace custom_actions
 
         private static bool GrantAdministratorFullFilePermissions(Session session, string fullFilePath)
         {
-            var command = "icacls " + fullFilePath + " /grant Administrators:F";
+            var command = "icacls " + fullFilePath + " /grant:r *S-1-5-32-544:F";
 
             return RunCommand(session, command);
 

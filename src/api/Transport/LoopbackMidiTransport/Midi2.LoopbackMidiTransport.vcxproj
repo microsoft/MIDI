@@ -388,7 +388,7 @@
   <ItemGroup>
     <ClInclude Include="TransportState.h" />
     <ClInclude Include="TransportWorkQueue.h" />
-    <ClInclude Include="transport_defs.h" />
+    <ClInclude Include="loopback_transport_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.LoopbackMidiTransport.h" />
     <ClInclude Include="Midi2.LoopbackMidiBidi.h" />

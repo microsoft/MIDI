@@ -18,7 +18,6 @@ namespace Microsoft.Midi.Settings.Services;
 public class NavigationViewService : INavigationViewService
 {
     private readonly INavigationService _navigationService;
-
     private readonly IPageService _pageService;
 
     private NavigationView? _navigationView;

@@ -182,7 +182,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
             );
 
             response.Status = svc::MidiServiceConfigResponseStatus::ErrorConfigJsonNullOrEmpty;
-
             return response;
         }
 
@@ -224,16 +223,18 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
         auto success = responseJsonObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
+        response.ServiceMessage = responseJsonObject.GetNamedString(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, L"");
+        response.ResponseJson = responseJsonObject.Stringify();
+
         if (success)
         {
             response.Status = svc::MidiServiceConfigResponseStatus::Success;
-            response.ResponseJson = responseJsonObject.Stringify();
 
             return response;
         }
         else
         {
-            response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingResponseJson;
+            response.Status = svc::MidiServiceConfigResponseStatus::ErrorFromService;
 
             return response;
         }

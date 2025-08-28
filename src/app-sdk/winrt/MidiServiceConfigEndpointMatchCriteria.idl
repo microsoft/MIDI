@@ -1,0 +1,54 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+
+namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
+{ 
+    [contract(MidiServiceConfigApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigEndpointMatchCriteria", UUID_IMidiServiceConfigEndpointMatchCriteria)]
+    [static_name("Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigEndpointMatchCriteriaStatics", UUID_IMidiServiceConfigEndpointMatchCriteriaStatics)]
+    runtimeclass MidiServiceConfigEndpointMatchCriteria
+    {
+        MidiServiceConfigEndpointMatchCriteria();
+
+        static String MatchObjectKey { get; };
+
+        static MidiServiceConfigEndpointMatchCriteria FromJson(String matchObjectJson);
+
+        // the primary way to identify an endpoint. But this can change if USB and no serial number
+        String EndpointDeviceId;
+
+        // useful when the endpoint has not yet been created. Does limit to one UMP endpoint to device, though
+        String DeviceInstanceId;
+
+        // USB-specific
+        UInt16 UsbVendorId;
+        UInt16 UsbProductId;
+        String UsbSerialNumber;
+
+        // comes after initial discovery
+        String Midi2ProductInstanceId;
+
+        // for network MIDI
+        String StaticIPAddress;
+        UInt16 Port;
+
+        // worst cases. This is the name supplied by the transport
+        String TransportSuppliedEndpointName;
+        String ParentDeviceName;
+
+        // compare two match objects
+        Boolean Matches(MidiServiceConfigEndpointMatchCriteria other);
+
+        String GetConfigJson();
+    };
+}

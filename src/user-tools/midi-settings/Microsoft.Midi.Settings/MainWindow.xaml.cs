@@ -14,19 +14,23 @@ using WinUIEx;
 
 namespace Microsoft.Midi.Settings;
 
-public sealed partial class MainWindow : WinUIEx.WindowEx
+public sealed partial class MainWindow// : WinUIEx.WindowEx
 {
     public MainWindow()
     {
         InitializeComponent();
 
+        AppWindow.SetIcon(@"\Assets\AppIcon.ico");
+        AppWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+        AppWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+
         //AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets/DIN_Settings.png"));
         Content = null;
         Title = "AppDisplayName".GetLocalized();
 
-        PersistenceId = "MidiSettings_MainWindow";
-        MinWidth = 640;
-        MinHeight = 480;
+
+        //MinWidth = 640;
+        //MinHeight = 480;
 
         //Content = new Microsoft.UI.Xaml.Controls.Grid(); // workaround for WinAppSDK bug http://task.ms/43347736
         //this.SystemBackdrop = new MicaBackdrop();
@@ -57,15 +61,7 @@ public sealed partial class MainWindow : WinUIEx.WindowEx
 
             settingsService.SetMainWindowPositionAndSize(r);
         }
+
     }
 
-    //private void MainWindow_SizeChanged(object sender, UI.Xaml.WindowSizeChangedEventArgs args)
-    //{
-    //    // todo: keep the value in app settings and save when app is closed
-    //}
-
-    //private void MainWindow_PositionChanged(object? sender, global::Windows.Graphics.PointInt32 e)
-    //{
-    //    // todo: keep the value in app settings and save when app is closed
-    //}
 }

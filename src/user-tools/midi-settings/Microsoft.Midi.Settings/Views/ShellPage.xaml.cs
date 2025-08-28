@@ -8,6 +8,7 @@
 
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
+using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -32,57 +33,27 @@ public sealed partial class ShellPage : Page
         ViewModel = viewModel;
         InitializeComponent();
 
+        AppTitleBarControl.Title = App.MainWindow.Title;
+
         ViewModel.NavigationService.Frame = NavigationFrame;
         ViewModel.NavigationViewService.Initialize(NavigationViewControl);
 
-        // TODO: Set the title bar icon by updating /Assets/WindowIcon.ico.
-        // A custom title bar is required for full window theme and Mica support.
-        // https://docs.microsoft.com/windows/apps/develop/title-bar?tabs=winui3#full-customization
-        App.MainWindow.ExtendsContentIntoTitleBar = true;
-        App.MainWindow.SetTitleBar(AppTitleBar);
+        // App.MainWindow.ExtendsContentIntoTitleBar = true;
+        // App.MainWindow.SetTitleBar(AppTitleBar);
         App.MainWindow.Activated += MainWindow_Activated;
-        AppTitleBarText.Text = "AppDisplayName".GetLocalized();
+        //        AppTitleBarText.Text = "AppDisplayName".GetLocalized();
     }
 
     private void OnLoaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        TitleBarHelper.UpdateTitleBar(RequestedTheme);
+        //    TitleBarHelper.UpdateTitleBar(RequestedTheme);
 
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.Left, VirtualKeyModifiers.Menu));
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.GoBack));
 
-        var transports = MidiReporting.GetInstalledTransportPlugins();
+        // prime the endpoint data
+        App.GetService<IMidiEndpointEnumerationService>().GetEndpoints();
 
-        foreach (var transport in transports)
-        {
-            // there are better ways to do this. In a time crunch atm.
-
-            switch (transport.TransportCode)
-            {
-                case "KS":
-                    SectionKS.Visibility = Visibility.Visible;
-                    break;
-                case "KSA":
-                    SectionKSA.Visibility = Visibility.Visible;
-                    break;
-                case "LOOP":
-                    SectionLOOP.Visibility = Visibility.Visible;
-                    break;
-                case "APP":
-                    SectionAPP.Visibility = Visibility.Visible;
-                    break;
-                case "BLE10":
-                    SectionBLE10.Visibility = Visibility.Visible;
-                    break;
-                case "NET2UDP":
-                    SectionNET2UDP.Visibility = Visibility.Visible;
-                    break;
-                case "DIAG":
-                    SectionDIAG.Visibility = Visibility.Visible;
-                    break;
-
-            }
-        }
     }
 
 
@@ -90,18 +61,18 @@ public sealed partial class ShellPage : Page
     {
         var resource = args.WindowActivationState == WindowActivationState.Deactivated ? "WindowCaptionForegroundDisabled" : "WindowCaptionForeground";
 
-        AppTitleBarText.Foreground = (SolidColorBrush)App.Current.Resources[resource];
+        //        AppTitleBarText.Foreground = (SolidColorBrush)App.Current.Resources[resource];
     }
 
     private void NavigationViewControl_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
     {
-        AppTitleBar.Margin = new Thickness()
-        {
-            Left = sender.CompactPaneLength * (sender.DisplayMode == NavigationViewDisplayMode.Minimal ? 2 : 1),
-            Top = AppTitleBar.Margin.Top,
-            Right = AppTitleBar.Margin.Right,
-            Bottom = AppTitleBar.Margin.Bottom
-        };
+        //AppTitleBar.Margin = new Thickness()
+        //{
+        //    Left = sender.CompactPaneLength * (sender.DisplayMode == NavigationViewDisplayMode.Minimal ? 2 : 1),
+        //    Top = AppTitleBar.Margin.Top,
+        //    Right = AppTitleBar.Margin.Right,
+        //    Bottom = AppTitleBar.Margin.Bottom
+        //};
     }
 
     private static KeyboardAccelerator BuildKeyboardAccelerator(VirtualKey key, VirtualKeyModifiers? modifiers = null)
@@ -127,20 +98,69 @@ public sealed partial class ShellPage : Page
         args.Handled = result;
     }
 
+
+
+
     private void SettingsSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        var dialog = new MessageDialog("Settings search is not yet implemented.");
 
-        dialog.ShowAsync().Wait();
     }
+
 
     private void SettingsSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
+        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            var results = ViewModel.GetSearchResults(sender.Text.ToLower().Trim());
 
+            sender.ItemsSource = results;
+        }
     }
+
+    private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+        var item = args.SelectedItem as MidiSettingsSearchResult;
+
+        if (item != null)
+        {
+            sender.Text = item.DisplayText;
+
+            App.GetService<INavigationService>().NavigateTo(item.DestinationKey, item.Parameter);
+        }
+    }
+
+    private void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine("AutoSuggestBox_GotFocus: Enter");
+        // very hacky. Should make this more deterministic and move outside of this event
+        ViewModel.RefreshSearchData();
+
+        SearchBox.Width = SearchBox.MaxWidth;
+
+        System.Diagnostics.Debug.WriteLine("AutoSuggestBox_GotFocus: Exit");
+    }
+
+    private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine("AutoSuggestBox_LostFocus: Enter");
+
+        SearchBox.Width = SearchBox.MinWidth;
+
+        System.Diagnostics.Debug.WriteLine("AutoSuggestBox_LostFocus: Exit");
+    }
+
+
+
 
     private void KeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
 
+    }
+
+    private void TitleBar_BackButtonClick(object sender, RoutedEventArgs e)
+    {
+        var navigationService = App.GetService<INavigationService>();
+
+        navigationService.GoBack();
     }
 }

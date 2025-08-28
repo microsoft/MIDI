@@ -143,6 +143,13 @@ public:
         _Out_ LPWSTR*
         );
 
+    // called by a transport when the MIDI 1 port names have changed
+    // to change the friendlyname of the ports, they have to be removed
+    // and re-added, which is best done here.
+    STDMETHOD(RebuildMidi1PortsForEndpoint)(
+        _In_ LPCWSTR endpointDeviceInterfaceId
+        );
+
     STDMETHOD(Shutdown)();
 
 private:
@@ -223,8 +230,11 @@ private:
 
     std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_midiParents;
 
-    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForByteDriverSelection{ MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_VALUE };   // KSA with MIDI 1 device
-    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForUmpDriverUmpNativeSelection{ MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_VALUE };  // KS or others with MIDI 2 device
+
+    // TODO: These need to be simplified along with the overall name table simplification. Move the defaults
+    // into the new nametable class to keep from cluttering the device manager
+    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForByteDriverSelection{ MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_VALUE };                   // KSA with MIDI 1 device
+    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForUmpDriverUmpNativeSelection{ MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_VALUE };            // KS or others with MIDI 2 device
     Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForUmpDriverByteNativeSelection{ MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE };    // KS with MIDI 1 device
 
 };

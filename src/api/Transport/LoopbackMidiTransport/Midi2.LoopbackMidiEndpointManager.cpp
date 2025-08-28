@@ -301,9 +301,9 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
     commonProperties.EndpointName = endpointName.c_str();
-    commonProperties.EndpointDescription = endpointDescription.size() > 0 ? endpointDescription.c_str() : nullptr;
-    commonProperties.CustomEndpointName = nullptr;
-    commonProperties.CustomEndpointDescription = nullptr;
+    commonProperties.EndpointDescription = nullptr; // TODO: Should generate a default description here
+    commonProperties.CustomEndpointName = friendlyName.c_str(); // technically, the user supplied this so we put it in both spots
+    commonProperties.CustomEndpointDescription = endpointDescription.size() > 0 ? endpointDescription.c_str() : nullptr;
     commonProperties.UniqueIdentifier = definition->EndpointUniqueIdentifier.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
     commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
@@ -328,7 +328,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     gtb1.FirstGroupIndex = 0;    // group indexes start at 0
     gtb1.Protocol = 0x11;        // 0x11 = MIDI 2.0
     gtb1.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // MIDI Out from user's perspective
-    gtb1.Name = friendlyName + L" Out";           // todo: get this from properties so folks can control the port name
+    gtb1.Name = friendlyName; //+ L" Out";           // todo: get this from properties so folks can control the port name
     blocks.push_back(gtb1);
 
     internal::GroupTerminalBlockInternal gtb2;
@@ -337,7 +337,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     gtb2.FirstGroupIndex = 0;    // group indexes start at 0
     gtb2.Protocol = 0x11;        // 0x11 = MIDI 2.0
     gtb2.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;  // MIDI In from user's perspective
-    gtb2.Name = friendlyName + L" In";           // todo: get this from properties so folks can control the port name
+    gtb2.Name = friendlyName; // + L" In";           // todo: get this from properties so folks can control the port name
     blocks.push_back(gtb2);
 
 

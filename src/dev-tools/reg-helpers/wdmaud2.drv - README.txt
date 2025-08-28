@@ -1,3 +1,7 @@
+If you don't have PowerShell 7+ (in most cases, this will manifest as "pwsh" not being recognized), install it using this command at an admin command prompt:
+
+    winget install --id Microsoft.Powershell --source winget
+
 wdmaud2.drv is the driver which connects the WinMM API to the new Windows MIDI Service. This is required on systems with Windows MIDI Services installed, if you want to use existing MIDI 1.0 apps.
 
 Replacing wdmaud2.drv requires bypassing Windows File Protection. The midi-replace-wdmaud2-drv.ps1 script (launched from the cmd file of the same name) performs this work. 

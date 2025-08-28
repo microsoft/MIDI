@@ -18,6 +18,15 @@
 
 namespace WindowsMidiServicesInternal
 {
+    inline void SafeCopyWStringToFixedArray(wchar_t* destArray, size_t destArrayCountIncludingTerminator, std::wstring source)
+    {
+        size_t length = min(source.size(), destArrayCountIncludingTerminator - 1);
+
+        memset((void*)destArray, 0, destArrayCountIncludingTerminator * sizeof(wchar_t));
+
+        memcpy(destArray, source.c_str(), length * sizeof(wchar_t));
+    }
+
     inline void InPlaceToUpper(_Inout_ std::wstring &s)
     {
         std::transform(s.begin(), s.end(), s.begin(), towupper);

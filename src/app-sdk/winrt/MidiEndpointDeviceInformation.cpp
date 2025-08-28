@@ -11,6 +11,7 @@
 #include "MidiEndpointDeviceInformation.h"
 #include "MidiEndpointDeviceInformation.g.cpp"
 
+#include "MidiEndpointCustomProperties.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
@@ -219,8 +220,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // User-supplied metadata ============================================================
         additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
-        additionalProperties.Append(STRING_PKEY_MIDI_CustomLargeImagePath);
-        additionalProperties.Append(STRING_PKEY_MIDI_CustomSmallImagePath);
+        additionalProperties.Append(STRING_PKEY_MIDI_CustomImagePath);
         additionalProperties.Append(STRING_PKEY_MIDI_CustomDescription);
        
         // Additional Capabilities ============================================================
@@ -721,8 +721,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         info.Name = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomEndpointName, L"");
         info.Description = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomDescription, L"");
         
-        info.LargeImagePath = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomLargeImagePath, L"");
-        info.SmallImagePath = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomSmallImagePath, L"");
+        info.ImageFileName = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomImagePath, L"");
 
         info.RequiresNoteOffTranslation = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_RequiresNoteOffTranslation, false);
         info.SupportsMidiPolyphonicExpression = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false);
@@ -1016,6 +1015,32 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             );
         }
     }
+
+
+    midi2::Midi1PortNamingApproach MidiEndpointDeviceInformation::Midi1PortNamingApproach() const noexcept
+    {
+        auto namingPropVal = internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_Midi1PortNamingSelection, (uint32_t)MidiEndpointCustomMidi1NamingApproach::Default);
+
+        // these types are value-compatible. However, we don't simply cast because
+        // sometimes these properties have garbage in them before they are set for
+        // the first time
+
+        switch (namingPropVal)
+        {
+        case MidiEndpointCustomMidi1NamingApproach::Default:
+            return midi2::Midi1PortNamingApproach::Default;
+
+        case MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible:
+            return midi2::Midi1PortNamingApproach::UseClassicCompatible;
+
+        case MidiEndpointCustomMidi1NamingApproach::UseNewStyle:
+            return midi2::Midi1PortNamingApproach::UseNewStyle;
+
+        default:
+            return midi2::Midi1PortNamingApproach::Default;
+        }
+    }
+
 
     // instance method
     collections::IVectorView<midi2::Midi1PortNameTableEntry> MidiEndpointDeviceInformation::GetNameTable() const noexcept

@@ -21,6 +21,10 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
+    HRESULT ProcessCommand(
+        _In_ json::JsonObject const& transportObject,
+        _In_ json::JsonObject& responseObject);
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
 
     GUID m_TransportId;   // kept for convenience

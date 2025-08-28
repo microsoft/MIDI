@@ -3090,6 +3090,29 @@ CMidiDeviceManager::GetMidi1PortNames(
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::RebuildMidi1PortsForEndpoint(
+    LPCWSTR endpointDeviceInterfaceId
+)
+{
+    std::wstring cleanEndpointId { internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId) };
+
+    for (auto& port : m_midiPorts)
+    {
+        std::wstring cleanPortId { port->DeviceInterfaceId.get() };
+
+        if (cleanPortId == cleanEndpointId)
+        {
+            return SyncMidi1Ports(port.get());
+        }
+    }
+
+    return E_NOTFOUND;
+}
+
+
 // TODO: If any of the ports in play here are actually in-use by WinMM or WinRT MIDI 1.0
 // we need to leave them alone for now. Otherwise, tearing down and rebuilding a port
 // like that just because a function block came through will end up being a problem.

@@ -2295,7 +2295,13 @@ MidiTransportTests::MultiThreadedMidiSendTest()
     MIDI_MESSAGE midiTestMessage_0 = { 0xAA, 0x12, 0x34 };
     UMP32 midiTestData_32_1 = {0x20AB2234 };
     MIDI_MESSAGE midiTestMessage_1 = { 0xAB, 0x22, 0x34 };
+    std::wstring midiBidirectionalInstanceId;
 
+    // Confirm the required bidi endpoint is available for testing, otherwise skip
+    if (!GetBidiEndpoint(MidiDataFormats_UMP, TRUE, midiBidirectionalInstanceId))
+    {
+        return;
+    }
 
     MultiThreadedMidiTest test[NUM_TEST_THREADS];
     MultiThreadedMidiTestConfig testConfig[NUM_TEST_THREADS] = {

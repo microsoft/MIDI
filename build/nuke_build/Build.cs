@@ -51,9 +51,9 @@ class Build : NukeBuild
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 12;
+    const UInt16 BuildVersionPatch = 13;
 
-    const UInt16 BuildVersionPreviewNumber = 12;
+    const UInt16 BuildVersionPreviewNumber = 13;
     string VersionName => "Preview " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
@@ -70,6 +70,9 @@ class Build : NukeBuild
     string NugetPackageId => "Microsoft.Windows.Devices.Midi2";
     string NugetPackageVersion;
     string NugetFullPackageIdWithVersion = "";
+
+
+    const string TargetWindowsSdkVersion = "10.0.22621.0";
 
     DateTime BuildDate;
 
@@ -603,7 +606,7 @@ class Build : NukeBuild
 
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
 
-//        string rid = "net8.0-windows10.0.20348.0";
+            //        string rid = $"net8.0-windows{TargetWindowsSdkVersion}";
 
             foreach (var sourcePlatform in SdkPlatforms)
             {
@@ -787,6 +790,7 @@ class Build : NukeBuild
         .DependsOn(BuildPowerShellProjection)
         .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildAppSDKToolsAndTests)
+        .DependsOn(CopySharedDesignAssets)
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
@@ -1152,19 +1156,22 @@ class Build : NukeBuild
                 paths.Add(settingsOutputFolder / "Microsoft.Windows.Widgets.Projection.dll");
 
 
-                // Add Assets folder with app icon. This ends up special-cased
-
-                paths.Add(settingsOutputFolder / "Assets" / "AppIcon.ico");
-                paths.Add(settingsOutputFolder / "Assets" / "AppIcon.png");
-                paths.Add(settingsOutputFolder / "Assets" / "LoopbackDiagram.svg");
-
-
                 // TODO: This doesn't deal with any localization content
-
 
                 // copy all the globbed files
 
                 foreach (var f in paths)
+                {
+                    FileSystemTasks.CopyFileToDirectory(f, stagingFolder, FileExistsPolicy.Overwrite);
+                }
+
+                // Add Assets folder with app icon. This ends up special-cased
+                List<AbsolutePath> assets = [];
+                assets.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Assets", "*.svg"));
+                assets.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Assets", "*.ico"));
+                assets.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Assets", "*.png"));
+
+                foreach (var f in assets)
                 {
                     FileSystemTasks.CopyFileToDirectory(f, stagingFolder, FileExistsPolicy.Overwrite);
                 }
@@ -1214,6 +1221,43 @@ class Build : NukeBuild
             }
 
         });
+
+
+
+    Target CopySharedDesignAssets => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildAndPackAllAppSDKs)
+        .DependsOn(BuildUserToolsSharedComponents)
+        .Executes(() =>
+        {
+            var designSourceFolder = RootDirectory / "design";
+
+            var assetsStagingRoot = StagingRootFolder / "Assets";
+            var transportAssetsStagingRoot = assetsStagingRoot / "Transports";
+            var endpointAssetsStagingRoot = assetsStagingRoot / "Endpoints";
+
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "APPPUB-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "BLE10-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "DIAG-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "KSA-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "KS-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "LOOP-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "NET2UDP-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+
+
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-apppub-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ble10-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-diag-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ksa-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ks-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-loop-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-net2udp-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+
+        });
+
+
+
 
     Target BuildConsoleApp => _ => _
         .DependsOn(Prerequisites)
@@ -1276,7 +1320,7 @@ class Build : NukeBuild
 
                 // TODO: This doesn't deal with any localization content
 
-                var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / "net8.0-windows10.0.20348.0" / rid ;
+                var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / $"net8.0-windows{TargetWindowsSdkVersion}" / rid ;
                 //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
                 var runtimesFolder = consoleOutputFolder;
 
@@ -1372,7 +1416,7 @@ class Build : NukeBuild
 
             // TODO: This doesn't deal with any localization content
 
-            var psOutputFolder = MidiPowerShellSolutionFolder / "bin" / Configuration.Release / "net8.0-windows10.0.20348.0" / rid;
+            var psOutputFolder = MidiPowerShellSolutionFolder / "bin" / Configuration.Release / $"net8.0-windows{TargetWindowsSdkVersion}" / rid;
             //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
             var runtimesFolder = psOutputFolder;
 
@@ -1938,6 +1982,26 @@ class Build : NukeBuild
                 );
         });
 
+
+    Target ZipServicePdbs => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildServiceAndPlugins)
+        .Executes(() =>
+    {
+        foreach (var platform in new string[]{ "arm64", "x64"})
+        {
+            var folder = ApiStagingFolder / platform;
+
+            folder.ZipTo(
+                ThisReleaseFolder / $"service-pdbs-{platform}.zip",
+                filter: x =>
+                    x.HasExtension("pdb")
+                );
+            
+        }
+
+    });
+
     Target ZipPowershellDevUtilities => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
@@ -2024,6 +2088,7 @@ class Build : NukeBuild
         .DependsOn(BuildCSharpSamples)
         .DependsOn(ZipPowershellDevUtilities)
         .DependsOn(ZipSamples)
+        .DependsOn(ZipServicePdbs)
         .Executes(() =>
         {
             if (BuiltInBoxInstallers.Count > 0)

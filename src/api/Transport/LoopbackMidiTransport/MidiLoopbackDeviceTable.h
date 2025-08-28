@@ -12,6 +12,10 @@
 
 class MidiLoopbackDeviceTable
 {
+private:
+    std::map<std::wstring, MidiLoopbackDevice> m_devices{};
+
+
 public:
 
     MidiLoopbackDevice* GetDevice(std::wstring associationId)
@@ -48,7 +52,33 @@ public:
     }
 
 
-private:
-    std::map<std::wstring, MidiLoopbackDevice> m_devices{};
+    bool IsUniqueIdentifierInUseForLoopbackA(std::wstring uniqueIdentifier)
+    {
+        auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
 
+        for (auto const& [key, device] : m_devices)
+        {
+            if (cleanId == internal::ToLowerTrimmedWStringCopy(device.DefinitionA.EndpointUniqueIdentifier))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool IsUniqueIdentifierInUseForLoopbackB(std::wstring uniqueIdentifier)
+    {
+        auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
+
+        for (auto const& [key, device] : m_devices)
+        {
+            if (cleanId == internal::ToLowerTrimmedWStringCopy(device.DefinitionB.EndpointUniqueIdentifier))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 };

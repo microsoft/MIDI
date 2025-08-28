@@ -6,15 +6,10 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Extensions.Options;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Core.Contracts.Services;
 using Microsoft.Midi.Settings.Core.Helpers;
-using Microsoft.Midi.Settings.Helpers;
-using Microsoft.Midi.Settings.Models;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using Windows.ApplicationModel;
+
 using Windows.Storage;
 
 namespace Microsoft.Midi.Settings.Services;

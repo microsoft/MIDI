@@ -21,6 +21,7 @@ import "MidiDeclaredEndpointInfo.idl";
 import "MidiDeclaredStreamConfiguration.idl";
 import "MidiEndpointTransportSuppliedInfo.idl";
 import "MidiEndpointUserSuppliedInfo.idl";
+import "Midi1PortNamingApproachEnum.idl";
 
 import "MidiEndpointDeviceInformationSortOrderEnum.idl";
 import "MidiEndpointDeviceInformationFiltersEnum.idl";
@@ -103,5 +104,7 @@ namespace Microsoft.Windows.Devices.Midi2
 
         MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(MidiGroup group, Midi1PortFlow portFlow);
         MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(MidiGroup group, Midi1PortFlow portFlow, Boolean useCachedPortInformationIfAvailable);
+
+        Midi1PortNamingApproach Midi1PortNamingApproach{ get; };
     }
 }

@@ -561,7 +561,7 @@ MidiSrvGetTransportList(
         if (metadata.TransportCode != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.TransportCode));
         if (metadata.Description != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Description));
         if (metadata.Author != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Author));
-        if (metadata.SmallImagePath != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.SmallImagePath));
+        if (metadata.SmallImagePath != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IMAGE_FILENAME_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.SmallImagePath));
         if (metadata.Version != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Version));
         transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsRuntimeCreatableByApps));
         transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsRuntimeCreatableBySettings));

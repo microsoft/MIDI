@@ -93,6 +93,12 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceTransportPluginConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceEndpointCustomizationConfig", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfigEndpointMatchCriteria", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.IMidiServiceConfigEndpointMatchCriteriaStatics", defaultThreading });
+
 
     // Loopback MIDI
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointCreationConfig", defaultThreading });
@@ -127,6 +133,12 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockGenerator", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockDestination", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Metadata.MidiImageAssetHelper", defaultThreading });
+
+
+    
+
 
     return types;
 }
@@ -280,7 +292,7 @@ MidiAppSdkRuntimeComponentCatalog::GetThreadingModel(
         return S_OK;
     }
 
-    auto errorMessage = std::wstring{ L"MIDI Component Catalog REGDB_E_CLASSNOTREG: " } + std::wstring{ raw_class_name } + L"\n\r";
+    auto errorMessage = std::wstring{ L"MIDI App SDK: MIDI Component Catalog REGDB_E_CLASSNOTREG: " } + std::wstring{ raw_class_name } + L"\n";
     OutputDebugString(errorMessage.c_str());
     return REGDB_E_CLASSNOTREG;
 }

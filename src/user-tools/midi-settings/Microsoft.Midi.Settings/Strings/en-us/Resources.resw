@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppDisplayName" xml:space="preserve">
-    <value>MIDI Settings PREVIEW</value>
+    <value>Windows Musician Settings PREVIEW</value>
   </data>
   <data name="AppDescription" xml:space="preserve">
     <value>Management, settings, and utility app for Windows MIDI Services. Features in the prototype do not necessarily represent committed features.</value>
@@ -153,7 +153,7 @@
   <data name="Shell_ToolsNavHeader.Content" xml:space="preserve">
     <value>Tools</value>
   </data>
-  <data name="Shell_ToolsSysEx.Content" xml:space="preserve">
+  <data name="Shell_ToolsSysEx.Text" xml:space="preserve">
     <value>SysEx Transfer</value>
   </data>
   <data name="Shell_ToolsConsole.Content" xml:space="preserve">
@@ -163,7 +163,7 @@
     <value>Device Test</value>
   </data>
   <data name="Shell_ForDevelopers.Content" xml:space="preserve">
-    <value>Developers / Advanced Users</value>
+    <value>Developers</value>
   </data>
   <data name="Settings_Personalization.Text" xml:space="preserve">
     <value>Personalization</value>
@@ -198,7 +198,7 @@
   <data name="Shell_MoreNavHeader.Content" xml:space="preserve">
     <value>More</value>
   </data>
-  <data name="Shell_Troubleshooting.Content" xml:space="preserve">
+  <data name="Shell_Troubleshooting.Text" xml:space="preserve">
     <value>Troubleshooting</value>
   </data>
   <data name="SettingsPage_DeveloperModeExpander.Description" xml:space="preserve">
@@ -283,7 +283,7 @@
     <value>Below is a list of all MIDI devices as seen by the legacy MIDI 1.0 APIs, and the apps which use them.</value>
   </data>
   <data name="AppSessionName" xml:space="preserve">
-    <value>Settings</value>
+    <value>Windows Musician Settings</value>
   </data>
   <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
     <value>This page lists the full set of transport plugins installed and recognized by Windows MIDI Services on this PC. For information on the endpoint devices enumerated by these transport plugins, see the Devices page.</value>
@@ -313,7 +313,7 @@
     <value>MIDI 1.0 Drivers (USB, etc.)</value>
   </data>
   <data name="Shell_EndpointsLoop.Content" xml:space="preserve">
-    <value>Loopback</value>
+    <value>Loopback Endpoints</value>
   </data>
   <data name="Shell_EndpointsApp.Content" xml:space="preserve">
     <value>Virtual Device Apps</value>
@@ -321,8 +321,8 @@
   <data name="Shell_EndpointsBle10.Content" xml:space="preserve">
     <value>Bluetooth MIDI 1.0 (Preview)</value>
   </data>
-  <data name="Shell_EndpointsNet2Udp.Content" xml:space="preserve">
-    <value>Network MIDI 2.0 (Preview)</value>
+  <data name="Shell_EndpointsNet2Udp.Text" xml:space="preserve">
+    <value>Network MIDI 2.0</value>
   </data>
   <data name="CreateLoopbackEndpointsWindowTitle" xml:space="preserve">
     <value>Create Loopback Endpoints</value>
@@ -568,5 +568,132 @@ This step requires Administrator rights, and must be repeated after any new Wind
   </data>
   <data name="Error_UnableToStartMidiService" xml:space="preserve">
     <value>Unable to start the MIDI Service. If this persists, please terminate the midisrv.exe process or reboot your PC.</value>
+  </data>
+  <data name="Shell_AllMidiDevices.Content" xml:space="preserve">
+    <value>MIDI Devices and Endpoints</value>
+  </data>
+  <data name="Shell_GlobalMidiSettings.Text" xml:space="preserve">
+    <value>Global MIDI Settings</value>
+  </data>
+  <data name="Shell_ConfigureTransportsNavHeader.Content" xml:space="preserve">
+    <value>Transport Configuration</value>
+  </data>
+  <data name="GlobalSettings_DefaultUseClassicMidi1PortNames.Content" xml:space="preserve">
+    <value>Use names compatible with previous versions of Windows MIDI APIs, and preserve compatibility with saved MIDI projects in applications.</value>
+  </data>
+  <data name="GlobalSettings_DefaultUseNewStyleMidi1PortNames.Content" xml:space="preserve">
+    <value>Use newer-style port names preferred by MIDI device manufacturers. (For USB devices, these names use the iJack name when available).</value>
+  </data>
+  <data name="GlobalSettings_DefaultNamingExpander.Header" xml:space="preserve">
+    <value>Default MIDI 1.0 Port Naming</value>
+  </data>
+  <data name="GlobalSettings_DefaultNamingExpander.Description" xml:space="preserve">
+    <value>The option chosen here will be the default approach for naming MIDI 1.0 API ports using classic MIDI 1.0 in-box or vendor drivers. The default naming approach can be overridden on a per-device basis if desired.
+
+If you have many existing projects using your MIDI 1.0 devices and need to keep naming compatibility so the devices are automatically discovered by your DAW or other app, we recommend using the classic port names. Otherwise, the new style names are usually more informative.
+
+This change will require a MIDI Service restart before it will take effect.</value>
+  </data>
+  <data name="GlobalSettings_SetMidiServiceToAutoStartCard.Header" xml:space="preserve">
+    <value>Set the Windows MIDI Service (midisrv.exe) to auto-start with Windows, to reduce delays when apps call MIDI APIs for the first time after a reboot.</value>
+  </data>
+  <data name="GlobalSettings_SetMidiServiceToAutoStartButton.Content" xml:space="preserve">
+    <value>Set MIDI Service to Auto-Start</value>
+  </data>
+  <data name="Shell_WindowsSettings.Text" xml:space="preserve">
+    <value>Optimizations for Musicians</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard.Header" xml:space="preserve">
+    <value>Power Mode</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard.Description" xml:space="preserve">
+    <value>When working with low-latency audio, setting the Windows power mode to Best Performance can help increase processor speed and reduce glitching.</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard_LaunchButton.Content" xml:space="preserve">
+    <value>Open Windows Settings</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludeDawProcessButton.Content" xml:space="preserve">
+    <value>Exclude DAW Process from Defender Scanning</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludeDawProjectsFolderButton.Content" xml:space="preserve">
+    <value>Exclude DAW Projects Folder</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludePluginDataFoldersButton.Content" xml:space="preserve">
+    <value>Exclude Plugin Data Folders</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard.Header" xml:space="preserve">
+    <value>Defender Settings</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard.Description" xml:space="preserve">
+    <value>You can exclude specific trusted processes and file locations from Windows Defender scanning. This will significantly speed up reading/writing in those locations, but you must be careful to only put trusted content and plugins there.</value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard.Header" xml:space="preserve">
+    <value>Windows Updates</value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard.Description" xml:space="preserve">
+    <value>Although staying up to date is important for security, features, and bug fixes, you may pause Windows updates for a duration of time while working on a project. </value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard_PauseUpdatesButton.Content" xml:space="preserve">
+    <value>Pause Updates for X Days</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeaturesCard.Header" xml:space="preserve">
+    <value>Pre-Installed Windows Features</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeaturesCard.Description" xml:space="preserve">
+    <value>Pre-installed Windows features are great for many users, but may sometimes interfere with the creative process. You may easily remove or disable them here. Once uninstalled, they cannot be reinstalled.</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WidgetsCard.Header" xml:space="preserve">
+    <value>Widgets</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WeatherCard.Header" xml:space="preserve">
+    <value>Weather</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_NewsCard.Header" xml:space="preserve">
+    <value>News</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_XboxCard.Header" xml:space="preserve">
+    <value>Xbox App</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_GameDvrCard.Header" xml:space="preserve">
+    <value>Game DVR</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_DesktopSpotlightCard.Header" xml:space="preserve">
+    <value>Desktop Spotlight</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_LockscreenTipsCard.Header" xml:space="preserve">
+    <value>Lock Screen Tips</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WindowsSuggestionsCard.Header" xml:space="preserve">
+    <value>Windows Suggestions</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StartMenuWebSearchCard.Header" xml:space="preserve">
+    <value>Web Search in Start</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_GeoLocationCard.Header" xml:space="preserve">
+    <value>GeoLocation</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_SolitaireAndGamesCard.Header" xml:space="preserve">
+    <value>Solitaire and Casual Games</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StartMenuRecommendedAppsCard.Header" xml:space="preserve">
+    <value>Recommended Apps in Start</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StickyKeysCard.Header" xml:space="preserve">
+    <value>Sticky Keys</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableRecoverableFeaturesCard.Header" xml:space="preserve">
+    <value>Configurable Windows Features</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableRecoverableFeaturesCard.Description" xml:space="preserve">
+    <value>These features can be easily turned on or off, but are located here for convenience.</value>
+  </data>
+  <data name="Shell_MidiNavHeader.Content" xml:space="preserve">
+    <value>MIDI Setup</value>
+  </data>
+  <data name="Shell_LivePerformanceMode.Text" xml:space="preserve">
+    <value>Live Performance Mode</value>
+  </data>
+  <data name="Shell_AdvancedUsbSettings.Text" xml:space="preserve">
+    <value>Advanced USB Settings</value>
   </data>
 </root>

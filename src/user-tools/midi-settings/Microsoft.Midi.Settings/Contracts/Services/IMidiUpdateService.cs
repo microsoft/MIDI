@@ -14,28 +14,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Midi.Settings.Contracts.Services
+namespace Microsoft.Midi.Settings.Contracts.Services;
+
+public interface IMidiUpdateService
 {
-    public interface IMidiUpdateService
-    {
-        MidiRuntimeReleaseTypes GetCurrentInstalledChannel();
+    MidiRuntimeReleaseTypes GetCurrentInstalledChannel();
 
-        MidiRuntimeReleaseTypes GetCurrentPreferredChannel();
-        void SetCurrentPreferredChannel(MidiRuntimeReleaseTypes preferredChannel);
+    MidiRuntimeReleaseTypes GetCurrentPreferredChannel();
+    void SetCurrentPreferredChannel(MidiRuntimeReleaseTypes preferredChannel);
 
 
-        void SetAutoCheckForUpdatesEnabled(bool newValue);
-        bool GetAutoCheckForUpdatesEnabled();
+    void SetAutoCheckForUpdatesEnabled(bool newValue);
+    bool GetAutoCheckForUpdatesEnabled();
 
-        IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads();
+    IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads();
 
-        MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeReleaseTypes releaseChannelType);
+    MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeReleaseTypes releaseChannelType);
 
-        MidiRuntimeRelease? CheckForUpdates();
+    MidiRuntimeRelease? CheckForUpdates();
 
-        Uri GetMidiSdkInstallerPageUri();
+    Uri GetMidiSdkInstallerPageUri();
 
-        Task<bool> DownloadAndInstallUpdate(Uri uri);
-    }
-
+    Task<bool> DownloadAndInstallUpdate(Uri uri);
 }

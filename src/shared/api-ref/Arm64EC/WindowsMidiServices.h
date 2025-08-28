@@ -1036,6 +1036,10 @@ EXTERN_C const IID IID_IMidiDeviceManager;
             /* [annotation][string][in] */ 
             _In_  LPCWSTR instanceId) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE RebuildMidi1PortsForEndpoint( 
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId) = 0;
+        
         virtual HRESULT STDMETHODCALLTYPE UpdateTransportConfiguration( 
             /* [annotation][in] */ 
             _In_  GUID transportId,
@@ -1135,6 +1139,12 @@ EXTERN_C const IID IID_IMidiDeviceManager;
             /* [annotation][string][in] */ 
             _In_  LPCWSTR instanceId);
         
+        DECLSPEC_XFGVIRT(IMidiDeviceManager, RebuildMidi1PortsForEndpoint)
+        HRESULT ( STDMETHODCALLTYPE *RebuildMidi1PortsForEndpoint )( 
+            IMidiDeviceManager * This,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId);
+        
         DECLSPEC_XFGVIRT(IMidiDeviceManager, UpdateTransportConfiguration)
         HRESULT ( STDMETHODCALLTYPE *UpdateTransportConfiguration )( 
             IMidiDeviceManager * This,
@@ -1186,6 +1196,9 @@ EXTERN_C const IID IID_IMidiDeviceManager;
 #define IMidiDeviceManager_RemoveEndpoint(This,instanceId)	\
     ( (This)->lpVtbl -> RemoveEndpoint(This,instanceId) ) 
 
+#define IMidiDeviceManager_RebuildMidi1PortsForEndpoint(This,endpointDeviceInterfaceId)	\
+    ( (This)->lpVtbl -> RebuildMidi1PortsForEndpoint(This,endpointDeviceInterfaceId) ) 
+
 #define IMidiDeviceManager_UpdateTransportConfiguration(This,transportId,configurationJson,responseJson)	\
     ( (This)->lpVtbl -> UpdateTransportConfiguration(This,transportId,configurationJson,responseJson) ) 
 
@@ -1230,22 +1243,6 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManager;
         virtual HRESULT STDMETHODCALLTYPE GetTransportRemoveActionEntry( 
             /* [annotation][string][in] */ 
             _In_  LPCWSTR sourceTransportJson,
-            /* [annotation][string][out] */ 
-            _Out_  LPWSTR *responseJson) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE GetMatchingEndpointEntry( 
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR sourceActionObjectJson,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR searchKeyValuePairsJson,
-            /* [annotation][string][out] */ 
-            _Out_  LPWSTR *responseJson) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE GetCachedEndpointUpdateEntry( 
-            /* [annotation][in] */ 
-            _In_  GUID transportId,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR searchKeyValuePairsJson,
             /* [annotation][string][out] */ 
             _Out_  LPWSTR *responseJson) = 0;
         
@@ -1297,26 +1294,6 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManager;
             /* [annotation][string][out] */ 
             _Out_  LPWSTR *responseJson);
         
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManager, GetMatchingEndpointEntry)
-        HRESULT ( STDMETHODCALLTYPE *GetMatchingEndpointEntry )( 
-            IMidiServiceConfigurationManager * This,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR sourceActionObjectJson,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR searchKeyValuePairsJson,
-            /* [annotation][string][out] */ 
-            _Out_  LPWSTR *responseJson);
-        
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManager, GetCachedEndpointUpdateEntry)
-        HRESULT ( STDMETHODCALLTYPE *GetCachedEndpointUpdateEntry )( 
-            IMidiServiceConfigurationManager * This,
-            /* [annotation][in] */ 
-            _In_  GUID transportId,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR searchKeyValuePairsJson,
-            /* [annotation][string][out] */ 
-            _Out_  LPWSTR *responseJson);
-        
         END_INTERFACE
     } IMidiServiceConfigurationManagerVtbl;
 
@@ -1348,12 +1325,6 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManager;
 
 #define IMidiServiceConfigurationManager_GetTransportRemoveActionEntry(This,sourceTransportJson,responseJson)	\
     ( (This)->lpVtbl -> GetTransportRemoveActionEntry(This,sourceTransportJson,responseJson) ) 
-
-#define IMidiServiceConfigurationManager_GetMatchingEndpointEntry(This,sourceActionObjectJson,searchKeyValuePairsJson,responseJson)	\
-    ( (This)->lpVtbl -> GetMatchingEndpointEntry(This,sourceActionObjectJson,searchKeyValuePairsJson,responseJson) ) 
-
-#define IMidiServiceConfigurationManager_GetCachedEndpointUpdateEntry(This,transportId,searchKeyValuePairsJson,responseJson)	\
-    ( (This)->lpVtbl -> GetCachedEndpointUpdateEntry(This,transportId,searchKeyValuePairsJson,responseJson) ) 
 
 #endif /* COBJMACROS */
 

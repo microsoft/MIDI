@@ -6,15 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.UI.Xaml;
-using Windows.Foundation;
-
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
 public class WindowRect
@@ -68,6 +59,12 @@ public class WindowRect
     }
 }
 
+public enum EndpointListView
+{
+    Default = 0,
+    CardView,
+    ListView
+}
 
 public interface IGeneralSettingsService
 {
@@ -79,7 +76,12 @@ public interface IGeneralSettingsService
     public WindowRect? GetMainWindowPositionAndSize();
     public void SetMainWindowPositionAndSize(WindowRect value);
 
+
+    public EndpointListView GetEndpointListLastUsedView();
+    public void SetEndpointListLastUsedView(EndpointListView view);
+
+
     Task InitializeAsync();
 
-    event EventHandler SettingsChanged;
+//    event EventHandler SettingsChanged;
 }

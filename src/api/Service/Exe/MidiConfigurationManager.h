@@ -46,20 +46,20 @@ public:
 
     // given the contents of a create/update/remove object, will return the object which matches the criteria
     // provided in the searchKeyValuePairsJson json object
-    STDMETHOD(GetMatchingEndpointEntry)(
-        _In_ LPCWSTR sourceActionObjectJson,
-        _In_ LPCWSTR searchKeyValuePairsJson,
-        _Out_ LPWSTR* responseJson
-        );
+    //STDMETHOD(GetMatchingEndpointEntry)(
+    //    _In_ LPCWSTR sourceActionObjectJson,
+    //    _In_ LPCWSTR searchKeyValuePairsJson,
+    //    _Out_ LPWSTR* responseJson
+    //    );
 
     // Uses the internal cache of config file entries and returns any matching update json for the 
     // specified transport. This is needed for transports that create devices after the initial
     // configuration has been read.
-    STDMETHOD(GetCachedEndpointUpdateEntry)(
-        _In_ GUID transportId,
-        _In_ LPCWSTR searchKeyValuePairsJson,
-        _Out_ LPWSTR* responseJson
-    );
+    //STDMETHOD(GetCachedEndpointUpdateEntry)(
+    //    _In_ GUID transportId,
+    //    _In_ LPCWSTR searchKeyValuePairsJson,
+    //    _Out_ LPWSTR* responseJson
+    //);
 
 
     // TODO: the endpoint lookup table should be maintained in memory here, and can be updated/reloaded

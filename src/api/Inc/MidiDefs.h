@@ -609,12 +609,12 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfigurationLastUpdateTime, 407);     /
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomEndpointName, 500);     // DEVPROP_TYPE_STRING
 
 // large image of most any size. Mostly used just by the settings app
-#define STRING_PKEY_MIDI_CustomLargeImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"501"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomLargeImagePath, 501);     // DEVPROP_TYPE_STRING
+//#define STRING_PKEY_MIDI_CustomLargeImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"501"
+//DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomLargeImagePath, 501);     // DEVPROP_TYPE_STRING
 
-// 32x32 image
-#define STRING_PKEY_MIDI_CustomSmallImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"502"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomSmallImagePath, 502);     // DEVPROP_TYPE_STRING
+// Image. Recommend SVG or PNG
+#define STRING_PKEY_MIDI_CustomImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"502"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomImagePath, 502);     // DEVPROP_TYPE_STRING
 
 #define STRING_PKEY_MIDI_CustomDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"503"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomDescription, 503);     // DEVPROP_TYPE_STRING
@@ -687,7 +687,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 950);     // DEVPRO
 
 // this is set at the parent endpoint level, and applies to all WinMM and WinRT MIDI 1.0 ports created from this endpoint
 #define STRING_PKEY_MIDI_Midi1PortNamingSelection MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"955"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 : MidiPortNameSelectionProperty enum
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 : MidiEndpointCustomMidi1NamingApproach enum
 
 // this is the name table. We can have up to 32 created ports from a single endpoint
 #define STRING_PKEY_MIDI_Midi1PortNameTable MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"960"

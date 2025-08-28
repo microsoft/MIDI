@@ -55,9 +55,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Buffer smaller than provided offset + byteLength (first check)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed. Buffer smaller than provided offset + byteLength (first check)", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Buffer smaller than provided offset + byteLength (first check)\n");
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
@@ -74,9 +76,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Buffer smaller than provided offset + byteLength (second check)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed. Buffer smaller than provided offset + byteLength (second check)", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Buffer smaller than provided offset + byteLength (second check)\n");
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
@@ -104,9 +108,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                             TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                            TraceLoggingWideString(L"SendMessageRaw failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingWideString(L"Send failed. SendMessageRaw failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
                             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                         );
+
+                        OutputDebugString(L"MIDI App SDK: Send failed. SendMessageRaw failed\n");
 
                         return result;
                     }
@@ -121,9 +127,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Ran out of data when sending multiple messages", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send partially failed. Ran out of data when sending multiple messages", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                     );
+
+                    OutputDebugString(L"MIDI App SDK: Send partially failed. Ran out of data when sending multiple messages\n");
 
 
                     auto returnValue = midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange ;
@@ -155,9 +163,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Finished, but bytes processed != supplied count", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed. Finished, but bytes processed != supplied count", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Finished, but bytes processed != supplied count\n");
+
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
             }
@@ -172,9 +183,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Unable to get buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. Unable to get buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Unable to get buffer\n");
 
             return midi2::MidiSendMessageResults::Failed;
         }
@@ -234,9 +247,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to send message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed.\n");
+
 
                 if (i > 0)
                 {
@@ -299,9 +315,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Failed to send message.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send failed.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                     );
+
+                    OutputDebugString(L"MIDI App SDK: Send failed.\n");
+
 
                     if (i > 0)
                     {
@@ -325,9 +344,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to send message. Index out of bounds", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed. Index out of bounds", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Index out of bounds\n");
+
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
 
@@ -374,9 +396,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to send message.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed.\n");
+
 
                 return sendMessageResult;
             }
@@ -430,9 +455,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to send message.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed.\n");
 
 
                 return sendMessageResult;
@@ -477,9 +504,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to send message.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Index out of bounds\n");
 
                 // if any fail, we return immediately.
 
