@@ -36,7 +36,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
 
         clientObject.SetNamedValue(
-            MidiEndpointMatchCriteria::PropertyKey,
+            WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey,
             matchObject);
 
         json::JsonObject clientsContainer{};

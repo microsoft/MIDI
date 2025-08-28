@@ -39,12 +39,14 @@
                         <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical">
                             <StackPanel Margin="0,0,0,0">
                                 <RadioButton x:Uid="GlobalSettings_DefaultUseClassicMidi1PortNames"
+                                             IsChecked="{x:Bind ViewModel.UseClassicCompatibleWinMMPortNames, Mode=TwoWay}"
                                              GroupName="PortNaming"
                                              Command="{x:Bind ViewModel.SetDefaultNamingApproachCommand }"
                                              
                                              >
                                 </RadioButton>
                                 <RadioButton x:Uid="GlobalSettings_DefaultUseNewStyleMidi1PortNames"
+                                             IsChecked="{x:Bind ViewModel.UseNewStyleWinMMPortNames, Mode=TwoWay}"
                                              GroupName="PortNaming"
                                              Command="{x:Bind ViewModel.SetDefaultNamingApproachCommand }">
                                 </RadioButton>
@@ -52,6 +54,11 @@
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
+
+                <Button Content="Restart MIDI Service"
+                        Margin="0,16,0,0"
+                        Command="{x:Bind ViewModel.RestartMidiServiceCommand}" />
+                
             </StackPanel>
 
 

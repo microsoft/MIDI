@@ -31,21 +31,15 @@
     <ClInclude Include="..\..\Inc\MidiEndpointCustomPropertiesCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Inc\MidiEndpointNameTable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiEndpointCustomProperties.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Inc\MidiEndpointCustomPropertiesCache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiEndpointMatchCriteria.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointNameTable.cpp">
+    <ClCompile Include="MidiEndpointCustomPropertiesCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -17,7 +17,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
     {
         MidiServiceConfigEndpointMatchCriteria() = default;
 
-        static winrt::hstring MatchObjectKey() { return MidiEndpointMatchCriteria::PropertyKey; }
+        static winrt::hstring MatchObjectKey() { return WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey; }
 
         static midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria FromJson(_In_ winrt::hstring const& matchObjectJson) noexcept;
 
@@ -57,11 +57,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
         winrt::hstring GetConfigJson() const noexcept;
 
-        std::shared_ptr<MidiEndpointMatchCriteria> InternalGetMatchObject() noexcept { return m_match; }
-        void InternalSetMatchObject(_In_ std::shared_ptr<MidiEndpointMatchCriteria> value) noexcept { m_match = value; }
+        std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> InternalGetMatchObject() noexcept { return m_match; }
+        void InternalSetMatchObject(_In_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> value) noexcept { m_match = value; }
 
     private:
-        std::shared_ptr<MidiEndpointMatchCriteria> m_match{ std::make_shared<MidiEndpointMatchCriteria>() };
+        std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> m_match{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria>() };
 
 
     };

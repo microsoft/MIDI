@@ -87,7 +87,6 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "swd_helpers.h"
 #include "resource_util.h"
 #include "midi_group_terminal_blocks.h"
-#include "midi_naming.h"
 
 #include "MidiXProc.h"
 

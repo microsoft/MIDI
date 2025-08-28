@@ -64,10 +64,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public MidiEndpointCustomizationViewModel(MidiEndpointWrapper endpointWrapper)
         {
-            midi1PortNamingOptions.Add(Midi1PortNamingApproach.Default);
-            midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseClassicCompatible);
-            midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseNewStyle);
-
+            Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
             EndpointWrapper = endpointWrapper;
 
             CustomName = endpointWrapper.DeviceInformation.GetUserSuppliedInfo().Name;
@@ -77,7 +74,10 @@ namespace Microsoft.Midi.Settings.ViewModels
             RequiresNoteOffTranslation = endpointWrapper.DeviceInformation.GetUserSuppliedInfo().RequiresNoteOffTranslation;
             RecommendedControlChangeAutomationIntervalMilliseconds = endpointWrapper.DeviceInformation.GetUserSuppliedInfo().RecommendedControlChangeAutomationIntervalMilliseconds;
 
-            Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
+            midi1PortNamingOptions.Add(Midi1PortNamingApproach.Default);
+            midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseClassicCompatible);
+            midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseNewStyle);
+
 
             // name table entries
 
@@ -90,11 +90,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 vm.Group = new MidiGroup(nameTableEntry.GroupIndex);
 
+                vm.CurrentDisplayName = EndpointWrapper.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(vm.Group, nameTableEntry.Flow).PortName;
+
                 if (nameTableEntry.Flow == Midi1PortFlow.MidiMessageSource)
                 {
-                    // TODO: find current display name
-
-
                     Midi1SourcePorts.Add(vm);
                 }
                 else
@@ -130,20 +129,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             foreach (var port in Midi1SourcePorts)
             {
-                // write it only if it has changed
-                if (port.OriginalCustomName != port.NewCustomName.Trim())
-                {
-                    configUpdate.AddMidi1SourcePortCustomName(port.Group, port.NewCustomName.Trim());
-                }
+                configUpdate.AddMidi1SourcePortCustomName(port.Group, port.NewCustomName.Trim());
             }
 
             foreach (var port in Midi1DestinationPorts)
             {
-                // write it only if it has changed
-                if (port.OriginalCustomName != port.NewCustomName.Trim())
-                {
-                    configUpdate.AddMidi1DestinationPortCustomName(port.Group, port.NewCustomName.Trim());
-                }
+                configUpdate.AddMidi1DestinationPortCustomName(port.Group, port.NewCustomName.Trim());
             }
 
             return configUpdate;

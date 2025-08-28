@@ -86,21 +86,21 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiConfigurationManager::ProcessCustomProperties(
     winrt::hstring resolvedEndpointDeviceId,
-    std::shared_ptr<MidiEndpointMatchCriteria> matchCriteria,
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> matchCriteria,
     json::JsonObject updateObject,
-    std::shared_ptr<MidiEndpointCustomProperties>& customProperties,
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>& customProperties,
     std::vector<DEVPROPERTY>& endpointDevProperties,
-    std::shared_ptr<MidiEndpointNameTable>& nameTable,
+    std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable>& nameTable,
     json::JsonObject& responseObject)
 {
     UNREFERENCED_PARAMETER(responseObject);
 
     // Check for common custom properties (Name, Description, Image, etc.)
-    if (updateObject.HasKey(MidiEndpointCustomProperties::PropertyKey))
+    if (updateObject.HasKey(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey))
     {
-        auto customPropsJson = updateObject.GetNamedObject(MidiEndpointCustomProperties::PropertyKey);
+        auto customPropsJson = updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey);
 
-        customProperties = MidiEndpointCustomProperties::FromJson(customPropsJson);
+        customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(customPropsJson);
 
         if (customProperties != nullptr)
         {
@@ -117,17 +117,17 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCustomProperties(
                         customProperties->Midi1Sources.size() > 0)
                     {
                         // get the current name table
-                        nameTable = MidiEndpointNameTable::FromEndpointDeviceId(resolvedEndpointDeviceId);
+                        nameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromEndpointDeviceId(resolvedEndpointDeviceId);
 
                         // apply name updates
                         for (auto const& source : customProperties->Midi1Sources)
                         {
-                            nameTable->UpdateCustomName(source.second.GroupIndex, MidiFlow::MidiFlowIn, source.second.Name);
+                            nameTable->UpdateSourceEntryCustomName(source.second.GroupIndex, source.second.Name);
                         }
 
                         for (auto const& dest : customProperties->Midi1Destinations)
                         {
-                            nameTable->UpdateCustomName(dest.second.GroupIndex, MidiFlow::MidiFlowOut, dest.second.Name);
+                            nameTable->UpdateDestinationEntryCustomName(dest.second.GroupIndex, dest.second.Name);
                         }
 
                         // write out the dev props. This does require that the name table is kept around
@@ -243,16 +243,16 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                     continue;
                 }
 
-                auto matchObject = updateObject.GetNamedObject(MidiEndpointMatchCriteria::PropertyKey, nullptr);
+                auto matchObject = updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey, nullptr);
                 if (matchObject == nullptr)
                 {
                     // no match object found, so no away to associate this update to an endpoint. Move on.
                     continue;
                 }
 
-                std::shared_ptr<MidiEndpointCustomProperties> customProperties{ nullptr };
-                std::shared_ptr<MidiEndpointNameTable> nameTable{ nullptr };
-                std::shared_ptr<MidiEndpointMatchCriteria> matchCriteria = MidiEndpointMatchCriteria::FromJson(matchObject);
+                std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
+                std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable> nameTable{ nullptr };
+                std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
                 std::vector<DEVPROPERTY> endpointDevProperties{};
 
                 // Resolve the EndpointDeviceId in case we matched on something else

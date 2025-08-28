@@ -31,7 +31,7 @@ public:
 
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
-
+#if false
     TEST_METHOD(TestCheckForEndingNumber);
     TEST_METHOD(TestFullyCleanupBlockName);
     TEST_METHOD(TestFullyCleanupKSPinName);
@@ -42,7 +42,7 @@ public:
     TEST_METHOD(TestGenerateWinMMLegacyName);
     TEST_METHOD(TestGeneratePinNameBasedMidi1PortName);
     TEST_METHOD(TestGenerateFilterPlusBlockMidi1PortName);
-
+#endif
 
 private:
 

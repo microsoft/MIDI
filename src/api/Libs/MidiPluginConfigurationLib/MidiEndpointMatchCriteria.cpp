@@ -32,21 +32,19 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY L"match"
+
+namespace json = ::winrt::Windows::Data::Json;
+namespace internal = ::WindowsMidiServicesInternal;
+
+
+namespace WindowsMidiServicesPluginConfigurationLib
+{
 
 #ifdef max
 #pragma push_macro("max")
 #undef max
 
-
-
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY L"match"
-
-
-
-
-namespace json = ::winrt::Windows::Data::Json;
-
-namespace internal = ::WindowsMidiServicesInternal;
 
 winrt::hstring MidiEndpointMatchCriteria::PropertyKey{ MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY };
 
@@ -263,7 +261,9 @@ bool MidiEndpointMatchCriteria::Matches(MidiEndpointMatchCriteria& matchValues)
 {
     Normalize();
 
-    // in priority order so we confirm on the most important ones first.
+    // in priority order so we confirm on the most important ones first. These
+    // first two can be changed by plugging into a different port, so we do not
+    // bail immediately if they do not match.
 
     // Endpoint device id
     if (!matchValues.EndpointDeviceId.empty() && 
@@ -279,56 +279,62 @@ bool MidiEndpointMatchCriteria::Matches(MidiEndpointMatchCriteria& matchValues)
         return true;
     }
 
+    // Most of the rest of these are absolute. If specified and they do not match, then it's not a match
+    // because they are properties of the actual device, not something assigned by Windows
+
     // VID/PID/Serial
     if (matchValues.UsbVendorId > 0 &&
         matchValues.UsbProductId > 0 && 
         matchValues.UsbVendorId == UsbVendorId &&
         matchValues.UsbProductId == UsbProductId)
     {
-        if (matchValues.UsbSerialNumber.empty())
+        if (matchValues.UsbSerialNumber.empty() && UsbSerialNumber.empty())
         {
             // we're not matching on serial, and VID/PID match, so we're good
             return true;
         }
-        else if (matchValues.UsbSerialNumber == UsbSerialNumber)
+        else
         {
-            // serial isn't empty, and it matches
-            return true;
+            // we return either way here, because if the info doesn't match, we shouldn't continue
+            return matchValues.UsbSerialNumber == UsbSerialNumber;
         }
     }
 
     // Manufacturer and product instance id
     if (!matchValues.DeviceManufacturerName.empty() && 
         !matchValues.DeviceProductInstanceId.empty() &&
-        matchValues.DeviceManufacturerName == DeviceManufacturerName &&
-        matchValues.DeviceProductInstanceId == DeviceProductInstanceId)
+        !DeviceManufacturerName.empty() &&
+        !DeviceProductInstanceId.empty())
     {
-        return true;
+        return (
+            matchValues.DeviceManufacturerName == DeviceManufacturerName &&
+            matchValues.DeviceProductInstanceId == DeviceProductInstanceId);
     }
 
-
     // Static IP address and port
-    if (!matchValues.NetworkStaticIPAddress.empty() &&
-        matchValues.NetworkPort > 0 &&
-        matchValues.NetworkStaticIPAddress == NetworkStaticIPAddress &&
-        matchValues.NetworkPort == NetworkPort)
+    if (!matchValues.NetworkStaticIPAddress.empty() && 
+        !NetworkStaticIPAddress.empty() &&
+        matchValues.NetworkPort > 0 && 
+        NetworkPort > 0)
     {
-        return true;
+        return 
+            matchValues.NetworkStaticIPAddress == NetworkStaticIPAddress &&
+            matchValues.NetworkPort == NetworkPort;
     }
 
     // Transport-supplied name
-    if (!matchValues.TransportSuppliedEndpointName.empty() &&
-        matchValues.TransportSuppliedEndpointName == TransportSuppliedEndpointName)
+    if (!matchValues.TransportSuppliedEndpointName.empty() && 
+        !TransportSuppliedEndpointName.empty())
     {
-        return true;
+        return matchValues.TransportSuppliedEndpointName == TransportSuppliedEndpointName;
     }
 
     // Parent device name. This is going to restrict us to a single UMP endpoint per device
     // so it may need to be removed, or combined with other criteria in the future
     if (!matchValues.ParentDeviceName.empty() &&
-        matchValues.ParentDeviceName == ParentDeviceName)
+        !ParentDeviceName.empty())
     {
-        return true;
+        return matchValues.ParentDeviceName == ParentDeviceName;
     }
 
 
@@ -339,3 +345,6 @@ bool MidiEndpointMatchCriteria::Matches(MidiEndpointMatchCriteria& matchValues)
 
 #pragma pop_macro("max")
 #endif  // ifdef max
+
+
+}

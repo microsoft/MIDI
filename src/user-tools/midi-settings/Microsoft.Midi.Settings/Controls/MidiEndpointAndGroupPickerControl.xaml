@@ -33,11 +33,11 @@
                   Margin="0,0,13,0"
                   HorizontalAlignment="Stretch"
                   Header="Endpoint"
-                  ItemsSource="{x:Bind Endpoints}"
+                  ItemsSource="{x:Bind Endpoints, Mode=OneWay}"
                   SelectedItem="{x:Bind SelectedEndpoint, Mode=TwoWay}"
                   >
             <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="midi2:MidiEndpointDeviceInformation">
+                <DataTemplate x:DataType="local:MidiEndpointWrapper">
                     <TextBlock Text="{x:Bind Name}" />
                 </DataTemplate>
             </ComboBox.ItemTemplate>
@@ -49,7 +49,7 @@
                   HorizontalAlignment="Stretch"
                   Header="Group"
                   IsEnabled="True"
-                  ItemsSource="{x:Bind Groups}"
+                  ItemsSource="{x:Bind Groups, Mode=OneWay}"
                   SelectedItem="{x:Bind SelectedGroup, Mode=TwoWay}"
                   />
 

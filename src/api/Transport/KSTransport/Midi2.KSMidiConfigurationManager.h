@@ -25,10 +25,7 @@ public:
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Out_ LPWSTR* responseJson));
     STDMETHOD(Shutdown)();
 
-    // internal method called after endpoint creation
- //   HRESULT ApplyConfigFileUpdatesForEndpoint(_In_ std::wstring endpointSearchKeysJson);
-
-    std::shared_ptr<MidiEndpointCustomPropertiesCache> CustomPropertiesCache() { return m_customPropertiesCache; }
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> CustomPropertiesCache() { return m_customPropertiesCache; }
 
 private:
 
@@ -38,17 +35,16 @@ private:
 
     HRESULT ProcessCustomProperties(
         _In_ winrt::hstring resolvedEndpointDeviceId,
+        _In_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> matchCriteria,
         _In_ json::JsonObject updateObject,
-        _In_ std::shared_ptr<MidiEndpointCustomProperties>& customProperties,
+        _In_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>& customProperties,
         _In_ std::vector<DEVPROPERTY>& endpointDevProperties,
-        _In_ std::shared_ptr<MidiEndpointNameTable>& nameTable,
+        _In_ std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable>& nameTable,
         _In_ json::JsonObject& responseObject);
 
-    std::shared_ptr<MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<MidiEndpointCustomPropertiesCache>() };
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache>() };
 
     wil::com_ptr_nothrow<IMidiServiceConfigurationManager> m_midiServiceConfigurationManagerInterface;
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
-
-    //HRESULT ApplyUserConfiguration(_In_ std::wstring deviceInterfaceId);
 
 };

@@ -24,11 +24,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class MidiEndpointWrapper : ObservableRecipient
     {
-        private readonly INavigationService _navigationService;
-        private readonly ISynchronizationContextService _synchronizationContextService;
-        private readonly IMidiPanicService _panicService;
-        private readonly IMidiTransportInfoService _transportInfoService;
-
         public ICommand ViewDeviceDetailsCommand
         {
             get; private set;
@@ -39,6 +34,10 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public ICommand MonitorEndpointCommand
+        {
+            get; private set;
+        }
 
         public string ManufacturerName { get; private set; }
         public bool HasManufacturerName { get; private set; }
@@ -59,6 +58,16 @@ namespace Microsoft.Midi.Settings.ViewModels
         public bool SupportsMidi2 { get; private set; }
 
         public ImageSource Image { get; private set; }
+
+        [ObservableProperty]
+        private bool hasUsbVidPid;
+
+        [ObservableProperty]
+        private string usbVendorIdFormatted;
+
+        [ObservableProperty]
+        private string usbProductIdFormatted;
+
 
         [ObservableProperty]
         private bool hasSingleInputPort;
@@ -112,6 +121,28 @@ namespace Microsoft.Midi.Settings.ViewModels
                 ManufacturerName = DeviceInformation.GetTransportSuppliedInfo().ManufacturerName.Trim();
 
                 HasManufacturerName = ManufacturerName != string.Empty;
+
+                if (DeviceInformation.GetTransportSuppliedInfo().VendorId > 0)
+                {
+                    UsbVendorIdFormatted = DeviceInformation.GetTransportSuppliedInfo().VendorId.ToString("X4");
+                }
+                else
+                {
+                    UsbVendorIdFormatted = string.Empty;
+                }
+
+                if (DeviceInformation.GetTransportSuppliedInfo().ProductId > 0)
+                {
+                    UsbProductIdFormatted = DeviceInformation.GetTransportSuppliedInfo().ProductId.ToString("X4");
+                }
+                else
+                {
+                    UsbProductIdFormatted = string.Empty;
+                }
+
+
+                HasUsbVidPid = DeviceInformation.GetTransportSuppliedInfo().VendorId > 0 &&
+                               DeviceInformation.GetTransportSuppliedInfo().ProductId > 0;
 
                 // native UMP
 
@@ -201,8 +232,8 @@ namespace Microsoft.Midi.Settings.ViewModels
                     var source = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
                     Image = source;
                 }
-
             }, null);
+
 
             Task.Run(() =>
             {
@@ -248,15 +279,23 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Completed posting to UI Thread");
 
-                }, null);
+                 }, null);
 
             });
+
         }
+
+        private readonly INavigationService _navigationService;
+        private readonly ISynchronizationContextService _synchronizationContextService;
+        private readonly IMidiPanicService _panicService;
+        private readonly IMidiTransportInfoService _transportInfoService;
+        private readonly IMidiConsoleToolsService _consoleToolsService;
 
         public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,
             IMidiTransportInfoService transportInfoService,
             INavigationService navigationService,
             ISynchronizationContextService synchronizationContextService,
+            IMidiConsoleToolsService consoleToolsService,
             IMidiPanicService panicService)
         {
             System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Constructing");
@@ -265,6 +304,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             _synchronizationContextService = synchronizationContextService;
             _panicService = panicService;
             _transportInfoService = transportInfoService;
+            _consoleToolsService = consoleToolsService;
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointWrapper>(
                 (param) =>
@@ -289,6 +329,16 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     // TODO: Could make this a bit faster by sending only for valid groups
                     _panicService.SendMidiPanic(DeviceInformation.EndpointDeviceId);
+
+                });
+
+
+            MonitorEndpointCommand = new RelayCommand(
+                () =>
+                {
+                    System.Diagnostics.Debug.WriteLine("Monitor");
+
+                    _consoleToolsService.MonitorEndpoint(DeviceInformation.EndpointDeviceId);                   
 
                 });
 

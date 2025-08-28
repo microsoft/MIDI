@@ -14,29 +14,32 @@
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointMatchCriteria.h"
 
-struct MidiEndpointCustomPropertiesCacheEntry
+namespace WindowsMidiServicesPluginConfigurationLib
 {
-    std::shared_ptr<MidiEndpointMatchCriteria> Match{ nullptr };
-    std::shared_ptr<MidiEndpointCustomProperties> Properties{ nullptr };
-};
 
-class MidiEndpointCustomPropertiesCache
-{
-public:
-    MidiEndpointCustomPropertiesCache() = default;
+    struct MidiEndpointCustomPropertiesCacheEntry
+    {
+        std::shared_ptr<MidiEndpointMatchCriteria> Match{ nullptr };
+        std::shared_ptr<MidiEndpointCustomProperties> Properties{ nullptr };
+    };
 
-    //std::shared_ptr<MidiEndpointCustomProperties> GetProperties(_In_ std::map<winrt::hstring, winrt::hstring> knownEndpointProperties);
-    std::shared_ptr<MidiEndpointCustomProperties> GetProperties(_In_ MidiEndpointMatchCriteria& knownEndpointProperties);
+    class MidiEndpointCustomPropertiesCache
+    {
+    public:
+        MidiEndpointCustomPropertiesCache() = default;
 
-    void Add(_In_ std::shared_ptr<MidiEndpointMatchCriteria> match, _In_ std::shared_ptr<MidiEndpointCustomProperties> properties);
+        //std::shared_ptr<MidiEndpointCustomProperties> GetProperties(_In_ std::map<winrt::hstring, winrt::hstring> knownEndpointProperties);
+        std::shared_ptr<MidiEndpointCustomProperties> GetProperties(_In_ MidiEndpointMatchCriteria& knownEndpointProperties);
 
-    // TODO: Do we need a "remove" in here?
+        void Add(_In_ std::shared_ptr<MidiEndpointMatchCriteria> match, _In_ std::shared_ptr<MidiEndpointCustomProperties> properties);
 
-private:
-    std::vector<MidiEndpointCustomPropertiesCacheEntry> m_entries;
+        // TODO: Do we need a "remove" in here?
 
-};
+    private:
+        std::vector<MidiEndpointCustomPropertiesCacheEntry> m_entries;
 
+    };
 
+}
 
 #endif

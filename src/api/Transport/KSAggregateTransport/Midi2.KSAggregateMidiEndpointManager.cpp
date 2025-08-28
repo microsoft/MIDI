@@ -135,9 +135,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     std::vector<internal::GroupTerminalBlockInternal> blocks{ };
     std::vector<PinMapEntryStagingEntry> pinMapEntries{ };
 
-    std::vector<std::wstring> portNamesUserFlowOut{ };
-    std::vector<std::wstring> portNamesUserFlowIn{ };
-
     for (auto const& pin : masterEndpointDefinition.MidiPins)
     {
         RETURN_HR_IF(E_INVALIDARG, pin.FilterDeviceId.empty());
@@ -158,27 +155,33 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         pinMapEntry.GroupIndex = pin.GroupIndex;
         gtb.FirstGroupIndex = pin.GroupIndex;
 
-        if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
+        if (pin.PinDataFlow == MidiFlow::MidiFlowIn)  // pin in, so user out : A MIDI Destination
         {
-            //flowFromUserPerspective = MidiFlow::MidiFlowOut;
-
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
-            //gtb.Name = pin.PortNames.BlockName;
-            gtb.Name = pin.PortNames.FilterPlusBlockName;
 
-            // this is kept just so we can add ordinal differentiators if we need to
-            portNamesUserFlowOut.push_back(gtb.Name);
+            auto nameTableEntry = masterEndpointDefinition.EndpointNameTable.GetDestinationEntry(gtb.FirstGroupIndex);
+            if (nameTableEntry != nullptr)
+            {
+                gtb.Name = nameTableEntry->NewStyleName;
+            }
+            else
+            {
+                gtb.Name = L"Block " + std::to_wstring(gtb.FirstGroupIndex + 1);
+            }
+
         }
-        else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)
+        else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)  // pin out, so user in : A MIDI Source
         {
-            //flowFromUserPerspective = MidiFlow::MidiFlowIn;
-
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
-            //gtb.Name = pin.PortNames.BlockName;
-            gtb.Name = pin.PortNames.FilterPlusBlockName;
-
-            // this is kept just so we can add ordinal differentiators if we need to
-            portNamesUserFlowIn.push_back(gtb.Name);
+            auto nameTableEntry = masterEndpointDefinition.EndpointNameTable.GetSourceEntry(gtb.FirstGroupIndex);
+            if (nameTableEntry != nullptr)
+            {
+                gtb.Name = nameTableEntry->NewStyleName;
+            }
+            else
+            {
+                gtb.Name = L"Block " + std::to_wstring(gtb.FirstGroupIndex + 1);
+            }
         }
         else
         {
@@ -324,10 +327,11 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     // Fold in custom properties, including MIDI 1 port names and naming approach
     // ===============================================================================
 
-    MidiEndpointMatchCriteria matchCriteria{};
+    WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
     matchCriteria.DeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(masterEndpointDefinition.EndpointDeviceInstanceId);
-    //matchCriteria.UsbVendorId = MidiPin->VID;
-    //matchCriteria.UsbProductId = MidiPin->PID;
+    matchCriteria.UsbVendorId = masterEndpointDefinition.VID;
+    matchCriteria.UsbProductId = masterEndpointDefinition.PID;
+    matchCriteria.UsbSerialNumber = masterEndpointDefinition.SerialNumber;
     matchCriteria.TransportSuppliedEndpointName = masterEndpointDefinition.EndpointName;
 
     auto customProperties = TransportState::Current().GetConfigurationManager()->CustomPropertiesCache()->GetProperties(matchCriteria);
@@ -349,7 +353,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         if (!customProperties->Name.empty())
         {
             commonProperties.CustomEndpointName = customProperties->Name.c_str();
-            commonProperties.FriendlyName = customProperties->Name.c_str();         // this introduces a difference between config at runtime vs read from config file
         }
 
         if (!customProperties->Description.empty())
@@ -377,8 +380,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     // Write Name table property, folding in the custom names we discovered earlier
     // ===============================================================================================
 
-    std::vector<internal::Midi1PortNaming::Midi1PortNameEntry> portNameEntries{};
-
     for (auto const& pinEntry : masterEndpointDefinition.MidiPins)
     {
         if (customProperties != nullptr && 
@@ -402,22 +403,8 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
                         TraceLoggingUInt8(pinEntry.GroupIndex, "group index")
                     );
 
-                    internal::SafeCopyHStringToFixedArray((wchar_t*)pinEntry.PortNames.CustomName, MAXPNAMELEN, customConfiguredName->second.Name);
+                    masterEndpointDefinition.EndpointNameTable.UpdateDestinationEntryCustomName(pinEntry.GroupIndex, customConfiguredName->second.Name);
                 }
-                else
-                {
-                    TraceLoggingWrite(
-                        MidiKSAggregateTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"No custom name found for group", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(masterEndpointDefinition.EndpointDeviceInstanceId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD),
-                        TraceLoggingUInt8(pinEntry.GroupIndex, "group index")
-                        );
-                }
-
             }
             else if (pinEntry.PinDataFlow == MidiFlow::MidiFlowOut)
             {
@@ -437,62 +424,15 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
                         TraceLoggingUInt8(pinEntry.GroupIndex, "group index")
                     );
 
-                    internal::SafeCopyHStringToFixedArray((wchar_t*)pinEntry.PortNames.CustomName, MAXPNAMELEN, customConfiguredName->second.Name);
+                    masterEndpointDefinition.EndpointNameTable.UpdateSourceEntryCustomName(pinEntry.GroupIndex, customConfiguredName->second.Name);
                 }
-                else
-                {
-                    TraceLoggingWrite(
-                        MidiKSAggregateTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"No custom name found for group", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(masterEndpointDefinition.EndpointDeviceInstanceId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD),
-                        TraceLoggingUInt8(pinEntry.GroupIndex, "group index")
-                    );
-                }
-
             }
         }
 
-        portNameEntries.push_back(pinEntry.PortNames);
     }
 
-    TraceLoggingWrite(
-        MidiKSAggregateTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Completed creating port name entries.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name"),
-        TraceLoggingUInt32(static_cast<uint32_t>(portNameEntries.size()), "port name entries count")
-        );
+    masterEndpointDefinition.EndpointNameTable.WriteProperties(interfaceDevProperties);
 
-    std::vector<std::byte> nameTablePropertyData{ };
-
-    if (internal::Midi1PortNaming::WriteMidi1PortNameTableToPropertyDataPointer(portNameEntries, nameTablePropertyData))
-    {
-        interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BINARY, (ULONG)nameTablePropertyData.size(), (PVOID)nameTablePropertyData.data() });
-    }
-    else
-    {
-        // write empty data
-        interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_EMPTY, 0, nullptr });
-
-        TraceLoggingWrite(
-            MidiKSAggregateTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to write MIDI 1 port name table to property data", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
-        );
-    }
 
     // Despite being a MIDI 1 device, we present as a UMP endpoint, so we need to set 
     // this property so the service can create the MIDI 1 ports without waiting for 
@@ -500,9 +440,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     interfaceDevProperties.push_back({ { PKEY_MIDI_EndpointDiscoveryProcessComplete, DEVPROP_STORE_SYSTEM, nullptr },
         DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(devPropTrue), (PVOID)&devPropTrue });
 
-
-
-    SW_DEVICE_CREATE_INFO createInfo{ };
+        SW_DEVICE_CREATE_INFO createInfo{ };
 
     createInfo.cbSize = sizeof(createInfo);
     createInfo.pszInstanceId = masterEndpointDefinition.EndpointDeviceInstanceId.c_str();
@@ -984,6 +922,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                     }
 
 
+
                     // get the data flow so we know if this is a MIDI Input or a MIDI Output
                     KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
 
@@ -997,12 +936,13 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                         {
                             // MIDI Out (input to device)
                             pinDefinition.PinDataFlow = MidiFlow::MidiFlowIn;
-                            pinDefinition.PortNames.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;    // opposite
+                            pinDefinition.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;    // opposite
 
                             pinDefinition.GroupIndex = static_cast<uint8_t>(midiOutputGroupIndexForDevice);
-                            pinDefinition.PortNames.GroupIndex = pinDefinition.GroupIndex;
 
                             pinDefinition.PortIndexWithinThisFilterAndDirection = static_cast<uint8_t>(midiOutputPinIndexForThisFilter);
+
+
 
                             midiOutputPinIndexForThisFilter++;
                             midiOutputGroupIndexForDevice++;
@@ -1011,10 +951,9 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                         {
                             // MIDI In (output from device)
                             pinDefinition.PinDataFlow = MidiFlow::MidiFlowOut;
-                            pinDefinition.PortNames.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;     // opposite
+                            pinDefinition.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;     // opposite
 
                             pinDefinition.GroupIndex = static_cast<uint8_t>(midiInputGroupIndexForDevice);
-                            pinDefinition.PortNames.GroupIndex = pinDefinition.GroupIndex;
 
                             pinDefinition.PortIndexWithinThisFilterAndDirection = static_cast<uint8_t>(midiInputPinIndexForThisFilter);
 
@@ -1025,17 +964,30 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                         // This is where we build the proposed names
                         // =================================================
 
-                        internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
-                            pinDefinition.PortNames,
+                        std::wstring customName = L"";
+
+                        endpointDefinition.EndpointNameTable.PopulateEntryForMidi1DeviceUsingMidi1Driver(
+                            pinDefinition.GroupIndex,
+                            pinDefinition.DataFlowFromUserPerspective,
+                            customName,
                             driverSuppliedName,
-                            endpointDefinition.ParentDeviceName,
                             pinDefinition.FilterName,
                             pinDefinition.PinName,
-                            customPortName,
-                            pinDefinition.PortNames.DataFlowFromUserPerspective,
-                            pinDefinition.PortIndexWithinThisFilterAndDirection,
-                            pinDefinition.GroupIndex
+                            pinDefinition.PortIndexWithinThisFilterAndDirection
                         );
+
+
+                        //internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
+                        //    pinDefinition.PortNames,
+                        //    driverSuppliedName,
+                        //    endpointDefinition.ParentDeviceName,
+                        //    pinDefinition.FilterName,
+                        //    pinDefinition.PinName,
+                        //    customPortName,
+                        //    pinDefinition.PortNames.DataFlowFromUserPerspective,
+                        //    pinDefinition.PortIndexWithinThisFilterAndDirection,
+                        //    pinDefinition.GroupIndex
+                        //);
 
                         endpointDefinition.MidiPins.push_back(pinDefinition);
                     }
@@ -1233,13 +1185,13 @@ CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher watch
 
 
 _Use_decl_annotations_
-winrt::hstring CMidi2KSAggregateMidiEndpointManager::FindMatchingInstantiatedEndpoint(MidiEndpointMatchCriteria& criteria)
+winrt::hstring CMidi2KSAggregateMidiEndpointManager::FindMatchingInstantiatedEndpoint(WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
 {
     criteria.Normalize();
 
     for (auto const& def : m_availableEndpointDefinitions)
     {
-        MidiEndpointMatchCriteria available{};
+        WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria available{};
 
         available.DeviceInstanceId = def.second.EndpointDeviceInstanceId;
         available.EndpointDeviceId = def.second.EndpointDeviceId;

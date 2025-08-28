@@ -160,6 +160,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
     //}
 
     const string ValueName_DefaultMidi1PortNaming = "DefaultMidi1PortNaming";
+
     const string ValueName_Midi2DiscoveryEnabled = "Midi2DiscoveryEnabled";
     const string ValueName_Midi2DiscoveryTimeoutMS = "Midi2DiscoveryTimeoutMS";
     const string ValueName_UseMMCSS = "UseMMCSS";
@@ -245,19 +246,19 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
     {
         //return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_DefaultToOldMidi1PortNaming, SettingsDefaultMidi1PortNaming);
 
-        var val = GetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_DefaultMidi1PortNaming, (uint)(Midi1PortNameSelectionProperty.PortName_UseLegacyWinMM));
+        var val = GetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_DefaultMidi1PortNaming, (uint)(Midi1PortNamingApproach.UseClassicCompatible));
 
-        if ((Midi1PortNameSelectionProperty)val == Midi1PortNameSelectionProperty.PortName_UseLegacyWinMM)
-        {
-            return false;
-        }
-        else
+        if ((Midi1PortNamingApproach)val == Midi1PortNamingApproach.UseNewStyle)
         {
             return true;
         }
+        else
+        {
+            return false;
+        }
 
     }
-    public bool SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNameSelectionProperty newValue)
+    public bool SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach newValue)
     {
         return SetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_DefaultMidi1PortNaming, (uint)newValue);
     }

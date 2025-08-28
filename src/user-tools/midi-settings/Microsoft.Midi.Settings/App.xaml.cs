@@ -130,6 +130,9 @@ public partial class App : Application
 
                     services.AddSingleton<IWindowsSettingsService, WindowsSettingsService>();
 
+                    services.AddSingleton<IMidiDiagnosticsService, MidiDiagnosticsService>();
+                    services.AddSingleton<IMidiConsoleToolsService, MidiConsoleToolsService>();
+
 
 
                     // Views and ViewModels

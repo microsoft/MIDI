@@ -997,6 +997,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include the list of possible MIDI 1.0 port names generated on endpoint creation or customization..
+        /// </summary>
+        internal static string ParameterEndpointPropertiesIncludeNameTable {
+            get {
+                return ResourceManager.GetString("ParameterEndpointPropertiesIncludeNameTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Include the full list of raw property keys and values for the endpoint. Typically useful only for debugging purposes..
         /// </summary>
         internal static string ParameterEndpointPropertiesIncludeRaw {
@@ -1884,6 +1893,42 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MIDI1.0 Port Name Selection.
+        /// </summary>
+        internal static string PropertyTableLabelNameSelection {
+            get {
+                return ResourceManager.GetString("PropertyTableLabelNameSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom Name.
+        /// </summary>
+        internal static string PropertyTableLabelNameTableCustomName {
+            get {
+                return ResourceManager.GetString("PropertyTableLabelNameTableCustomName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WinMM Legacy Name.
+        /// </summary>
+        internal static string PropertyTableLabelNameTableLegacyName {
+            get {
+                return ResourceManager.GetString("PropertyTableLabelNameTableLegacyName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New-Style Name.
+        /// </summary>
+        internal static string PropertyTableLabelNameTableNewStyleName {
+            get {
+                return ResourceManager.GetString("PropertyTableLabelNameTableNewStyleName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No associated MIDI 1 destinations (MIDI out ports).
         /// </summary>
         internal static string PropertyTableNoAssociatedMidi1DestinationPorts {
@@ -2442,6 +2487,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MIDI 1 Destinations Name table.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderNameTableDestinationNames {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderNameTableDestinationNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 1 Sources Name Table.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderNameTableSourceNames {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderNameTableSourceNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Parent Device.
         /// </summary>
         internal static string PropertyTableSectionHeaderParentDevice {
@@ -2465,6 +2528,33 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent {
             get {
                 return ResourceManager.GetString("PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use OS Default.
+        /// </summary>
+        internal static string PropertyTableValueNamingApproachDefault {
+            get {
+                return ResourceManager.GetString("PropertyTableValueNamingApproachDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use Legacy WinMM Compatible Names.
+        /// </summary>
+        internal static string PropertyTableValueNamingApproachUseClassicCompatible {
+            get {
+                return ResourceManager.GetString("PropertyTableValueNamingApproachUseClassicCompatible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use New-Style Names.
+        /// </summary>
+        internal static string PropertyTableValueNamingApproachUseNewStyle {
+            get {
+                return ResourceManager.GetString("PropertyTableValueNamingApproachUseNewStyle", resourceCulture);
             }
         }
         

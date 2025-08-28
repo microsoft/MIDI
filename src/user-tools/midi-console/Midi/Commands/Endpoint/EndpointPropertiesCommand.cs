@@ -10,6 +10,8 @@
 
 //using Microsoft.Windows.Devices.Midi2.Initialization;
 
+using Spectre.Console.Rendering;
+
 namespace Microsoft.Midi.ConsoleApp
 {
 
@@ -26,6 +28,12 @@ namespace Microsoft.Midi.ConsoleApp
             [CommandOption("-r|--include-raw-properties|--include-raw")]
             [DefaultValue(false)]
             public bool IncludeRaw { get; set; }
+
+            [LocalizedDescription("ParameterEndpointPropertiesIncludeNameTable")]
+            [CommandOption("-n|--include-name-table|--include-names")]
+            [DefaultValue(false)]
+            public bool IncludeNameTable { get; set; }
+
         }
 
 
@@ -139,7 +147,7 @@ namespace Microsoft.Midi.ConsoleApp
 
 
 
-
+                // container and device instance id
 
                 if (settings.Verbose)
                 {
@@ -190,6 +198,8 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                 }
 
+
+                // user-supplied info
                 var userInfo = di.GetUserSuppliedInfo();
 
                 table.AddEmptyRow();
@@ -201,6 +211,7 @@ namespace Microsoft.Midi.ConsoleApp
                 table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelImageFileName), AnsiMarkupFormatter.EscapeString(userInfo.ImageFileName));
 
 
+                // protocol information for UMP
 
                 if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
@@ -227,6 +238,7 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                 }
 
+                // transport supplied info 
                 if (settings.Verbose)
                 {
                     table.AddEmptyRow();
@@ -478,6 +490,58 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableNoAssociatedMidi1SourcePorts), "");
                 }
 
+                // Name table -----------------------------------------------------------------------------------------------
+
+                if (settings.IncludeNameTable)
+                {
+                    table.AddEmptyRow();
+
+                    string nameSelectionString = string.Empty;
+                    switch (di.Midi1PortNamingApproach)
+                    {
+                        case Midi1PortNamingApproach.Default:
+                            nameSelectionString = Strings.PropertyTableValueNamingApproachDefault;
+                            break;
+
+                        case Midi1PortNamingApproach.UseClassicCompatible:
+                            nameSelectionString = Strings.PropertyTableValueNamingApproachUseClassicCompatible;
+                            break;
+
+                        case Midi1PortNamingApproach.UseNewStyle:
+                            nameSelectionString = Strings.PropertyTableValueNamingApproachUseNewStyle;
+                            break;
+                    }
+
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTableLabelNameSelection), nameSelectionString);
+
+                    table.AddEmptyRow();
+
+                    var destinationNames = di.GetNameTable().Where(e => e.Flow == Midi1PortFlow.MidiMessageDestination);
+                    if (destinationNames.Any())
+                    {
+                        table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderNameTableDestinationNames), "");
+
+                        foreach (var entry in destinationNames.OrderBy(e => e.GroupIndex))
+                        {
+                            DisplayMidi1NameTableEntry(table, entry);
+                        }
+                    }
+
+                    var sourceNames = di.GetNameTable().Where(e => e.Flow == Midi1PortFlow.MidiMessageSource);
+                    if (sourceNames.Any())
+                    {
+                        table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderNameTableSourceNames), "");
+
+                        foreach (var entry in sourceNames.OrderBy(e => e.GroupIndex))
+                        {
+                            DisplayMidi1NameTableEntry(table, entry);
+                        }
+                    }
+
+                }
+
+
+
 
                 // Additional Properties -----------------------------------
 
@@ -589,6 +653,37 @@ namespace Microsoft.Midi.ConsoleApp
             return (int)(MidiConsoleReturnCode.Success);
         }
 
+        private void DisplayMidi1NameTableEntry(Table table, Midi1PortNameTableEntry entry)
+        {
+            MidiGroup group = new MidiGroup(entry.GroupIndex);
+
+            string rowCaption = string.Empty;
+
+            rowCaption = FormatFieldLabel(MidiGroup.LongLabel) + " " + AnsiMarkupFormatter.FormatBlockNumberLabel(group.DisplayValue);
+
+            var subTable = new Table();
+            subTable.AddColumns("", "");
+            subTable.Border(TableBorder.None);
+            subTable.HideHeaders();
+
+            string customName = entry.CustomName;
+
+            if (string.IsNullOrEmpty(customName))
+            {
+                customName = AnsiMarkupFormatter.FormatMissingOptionalValue("(not specified)");
+            }
+            else
+            {
+                customName = AnsiMarkupFormatter.FormatPortName(entry.CustomName);
+            }
+
+                subTable.AddRow(Strings.PropertyTableLabelNameTableCustomName, customName);
+            subTable.AddRow(Strings.PropertyTableLabelNameTableLegacyName, AnsiMarkupFormatter.FormatPortName(entry.LegacyCompatibleName));
+            subTable.AddRow(Strings.PropertyTableLabelNameTableNewStyleName, AnsiMarkupFormatter.FormatPortName(entry.NewStyleName));
+
+            table.AddRow(new Markup(rowCaption), subTable);
+            table.AddEmptyRow();
+        }
 
         private void DisplayMidi1PortInformation(Table table, MidiEndpointAssociatedPortDeviceInformation port, bool verbose)
         {
@@ -608,6 +703,8 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiMarkupFormatter.FormatPortIndex(port.PortNumber) + " " +
                 AnsiMarkupFormatter.FormatPortName(port.PortName)),
                 portInformation);
+
+
         }
 
         private void DisplayProperties(Table table, IReadOnlyDictionary<string, object> properties)

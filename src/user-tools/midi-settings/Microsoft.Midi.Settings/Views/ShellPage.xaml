@@ -327,9 +327,9 @@
                         <Grid>
                             <TextBlock x:Uid="Shell_GlobalMidiSettings" />
 
-                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                            <!--<Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
                                 <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
-                            </Grid>
+                            </Grid>-->
                         </Grid>
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
@@ -497,8 +497,8 @@
                         <Grid>
                             <TextBlock x:Uid="Shell_Troubleshooting" />
 
-                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
-                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
                             </Grid>
                         </Grid>
                     </NavigationViewItem.Content>                   

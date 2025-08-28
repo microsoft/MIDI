@@ -94,9 +94,9 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
             foreach (var name in endpoint.DeviceInformation.GetNameTable())
             {
-                result.AddKeyword(name.PinName);
+                result.AddKeyword(name.LegacyCompatibleName);
+                result.AddKeyword(name.NewStyleName);
                 result.AddKeyword(name.CustomName);
-                result.AddKeyword(name.BlockName);
             }
 
             foreach (var fb in endpoint.DeviceInformation.GetDeclaredFunctionBlocks())
@@ -108,7 +108,6 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
             {
                 result.AddKeyword(gtb.Name);
             }
-
 
 
             // MIDI 1 ports have their own entries

@@ -696,4 +696,16 @@ This change will require a MIDI Service restart before it will take effect.</val
   <data name="Shell_AdvancedUsbSettings.Text" xml:space="preserve">
     <value>Advanced USB Settings</value>
   </data>
+  <data name="DeviceDetailPage_UsbVidPid.Text" xml:space="preserve">
+    <value>USB VID/PID</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseGlobalDefault" xml:space="preserve">
+    <value>Use Global Default</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseClassicAPICompatible" xml:space="preserve">
+    <value>Use Classic API Compatible</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseNewStyle" xml:space="preserve">
+    <value>Use New-Style</value>
+  </data>
 </root>

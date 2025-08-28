@@ -22,10 +22,7 @@ namespace Microsoft.Windows.Devices.Midi2
         Midi1PortFlow Flow;
 
         String CustomName;
-        String LegacyWinMMName;
-        String PinName;
-        String FilterPlusPinName;
-        String BlockName;
-        String FilterPlusBlockName;
+        String LegacyCompatibleName;
+        String NewStyleName;
     };
 }

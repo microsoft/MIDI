@@ -52,7 +52,7 @@ public:
     STDMETHOD(Shutdown)();
 
     // returns the endpointDeviceInterfaceId for a matching endpoint found in m_AvailableMidiPins
-    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ MidiEndpointMatchCriteria& criteria);
+    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
 
 private:
 

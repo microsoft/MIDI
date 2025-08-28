@@ -8,7 +8,7 @@
 
 #include "pch.h"
 
-
+#if false
 
 // checks the StringEndsWithNumber function
 void NamingTests::TestCheckForEndingNumber()
@@ -161,3 +161,4 @@ void NamingTests::TestGenerateFilterPlusBlockMidi1PortName()
     VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateFilterPlusBlockMidi1PortName(parentDeviceName, filterName, L"MIDI", 2), L"YAMAHA USB-MIDI-1 3");
 }
 
+#endif

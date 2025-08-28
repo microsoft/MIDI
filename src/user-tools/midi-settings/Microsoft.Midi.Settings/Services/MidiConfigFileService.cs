@@ -354,6 +354,16 @@ public class MidiConfigFile : IMidiConfigFile
         return null;
     }
 
+    private JsonArray? FindExistingTransportUpdateArray(JsonObject parentTransportObject)
+    {
+        if (parentTransportObject.Keys.Contains(MidiConfigConstants.JsonKeys.CommonUpdate))
+        {
+            return parentTransportObject.GetNamedArray(MidiConfigConstants.JsonKeys.CommonUpdate);
+        }
+
+        return null;
+    }
+
 
     private JsonArray FindOrCreateTransportCreateArray(JsonObject parentTransportObject)
     {
@@ -583,18 +593,11 @@ public class MidiConfigFile : IMidiConfigFile
             return false;
         }
 
-        System.Diagnostics.Debug.WriteLine("Update Config:");
-        System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
-
         var existingTransportSettings = FindOrCreateTransportSection(m_config, updateConfig.TransportId);
         if (existingTransportSettings == null) return false;
-        System.Diagnostics.Debug.WriteLine("Existing Transport Settings:");
-        System.Diagnostics.Debug.WriteLine(existingTransportSettings.Stringify());
 
         var existingUpdateArray = FindOrCreateTransportUpdateArray(existingTransportSettings);
         if (existingUpdateArray == null) return false;
-        System.Diagnostics.Debug.WriteLine("Existing Update Array:");
-        System.Diagnostics.Debug.WriteLine(existingUpdateArray.Stringify());
 
         // now, look to see if there are any matching objects in here already
 
@@ -602,14 +605,10 @@ public class MidiConfigFile : IMidiConfigFile
         {
             var existingUpdateObject = existingUpdate.GetObject();
             if (existingUpdateObject == null) continue;
-            System.Diagnostics.Debug.WriteLine("Existing Update Object:");
-            System.Diagnostics.Debug.WriteLine(existingUpdateObject.Stringify());
 
             if (existingUpdateObject.ContainsKey(MidiConfigConstants.JsonKeys.Match))
             {
                 var existingMatchJson = existingUpdateObject.GetNamedObject(MidiConfigConstants.JsonKeys.Match);
-                System.Diagnostics.Debug.WriteLine("Existing Match Json:");
-                System.Diagnostics.Debug.WriteLine(existingMatchJson.Stringify());
 
                 var existingMatchObject = Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria.FromJson(existingMatchJson.Stringify());
 
@@ -654,12 +653,18 @@ public class MidiConfigFile : IMidiConfigFile
 
         var mergeObject = JsonObject.Parse(updateConfig.GetConfigJson());
 
-        if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
-        {
-            return Save();
-        }
+        var newTransportObject = FindExistingTransportSection(mergeObject, updateConfig.TransportId);
+        if (newTransportObject == null) return false;
 
-        return false;
+        var newUpdateArray = FindExistingTransportUpdateArray(newTransportObject);
+        if (newUpdateArray == null) return false;
+
+        var obj = newUpdateArray.First();
+        if (obj == null) return false;
+
+        existingUpdateArray.Add(obj);
+
+        return Save();
     }
 
 

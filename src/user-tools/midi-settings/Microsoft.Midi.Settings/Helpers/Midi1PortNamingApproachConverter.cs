@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Helpers
 {
+
     public partial class Midi1PortNamingApproachConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -24,37 +25,63 @@ namespace Microsoft.Midi.Settings.Helpers
                 return string.Empty;
             }
 
-            if (value is Midi1PortNamingApproach)
+            if (value is Midi1PortNamingApproach && targetType == typeof(string))
             {
                 var val = (Midi1PortNamingApproach)value;
-
-                // TODO: Localize
 
                 switch (val)
                 {
                     case Midi1PortNamingApproach.Default:
-                        return "Use Global Default";
+                        return "Midi1PortNamingValue_UseGlobalDefault".GetLocalized();
 
                     case Midi1PortNamingApproach.UseClassicCompatible:
-                        return "Use Classic API Compatible";
+                        return "Midi1PortNamingValue_UseClassicAPICompatible".GetLocalized();
 
                     case Midi1PortNamingApproach.UseNewStyle:
-                        return "Use New-Style";
+                        return "Midi1PortNamingValue_UseNewStyle".GetLocalized();
 
                     default:
-                        return "Unknown";
+                        return "Midi1PortNamingValue_UseGlobalDefault".GetLocalized();
                 }
             }
             else
             {
-                return string.Empty;
+                return "Midi1PortNamingValue_UseGlobalDefault".GetLocalized();
             }
 
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
-            throw new NotImplementedException();
+            if (value is null || value is string && string.IsNullOrEmpty((string)value))
+            {
+                return Midi1PortNamingApproach.Default;
+            }
+
+            if (!(value is string))
+            {
+                return Midi1PortNamingApproach.Default;
+            }
+
+            var valueString = (string)value;
+
+            if (valueString == "Midi1PortNamingValue_UseGlobalDefault".GetLocalized())
+            {
+                return Midi1PortNamingApproach.Default;
+            }
+
+            if (valueString == "Midi1PortNamingValue_UseClassicAPICompatible".GetLocalized())
+            {
+                return Midi1PortNamingApproach.UseClassicCompatible;
+            }
+
+            if (valueString == "Midi1PortNamingValue_UseNewStyle".GetLocalized())
+            {
+                return Midi1PortNamingApproach.UseNewStyle;
+            }
+
+            return Midi1PortNamingApproach.Default;
+
         }
     }
 

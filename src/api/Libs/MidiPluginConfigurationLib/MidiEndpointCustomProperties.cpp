@@ -32,6 +32,9 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 
+namespace WindowsMidiServicesPluginConfigurationLib
+{
+
 
 #undef max
 #undef GetObject
@@ -132,26 +135,26 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
         {
             auto midi1Ports = customPropertiesObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_PORTS_PROPERTY_KEY);
 
+            // naming approach
             // get the naming approach to use for MIDI 1 ports. Custom names will always override. 
             // "default" means to use the default for Windows all-up.
-
             auto naming = midi1Ports.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_PROPERTY_KEY, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_DEFAULT);
 
             if (naming == MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_DEFAULT)
             {
-                props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::Default;
+                props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault;
             }
             else if (naming == MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_COMPATIBLE)
             {
-                props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible;
+                props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM;
             }
             else if (naming == MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_NEW_STYLE)
             {
-                props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::UseNewStyle;
+                props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName;
             }
             else
             {
-                props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::Default;
+                props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault;
             }
 
             // read MIDI 1 source ports info
@@ -271,13 +274,13 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
 
         switch (Midi1NamingApproach)
         {
-        case MidiEndpointCustomMidi1NamingApproach::Default:
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault:
             namingApproach = MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_DEFAULT;
             break;
-        case MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible:
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM:
             namingApproach = MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_COMPATIBLE;
             break;
-        case MidiEndpointCustomMidi1NamingApproach::UseNewStyle:
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName:
             namingApproach = MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_NEW_STYLE;
             break;
         }
@@ -410,8 +413,9 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
                 DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
     }
 
+    // naming approach
     destination.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-        DEVPROP_TYPE_UINT32, (ULONG)sizeof(MidiEndpointCustomMidi1NamingApproach), (PVOID)&Midi1NamingApproach });
+        DEVPROP_TYPE_UINT32, (ULONG)sizeof(WindowsMidiServicesNamingLib::Midi1PortNameSelection), (PVOID)&Midi1NamingApproach });
 
 
     return true;
@@ -468,3 +472,6 @@ bool MidiEndpointCustomProperties::WriteAllProperties(std::vector<DEVPROPERTY>& 
     return false;
 }
 
+
+
+}

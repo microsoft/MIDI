@@ -108,6 +108,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             App.GetService<IMidiTransportInfoService>(),
             App.GetService<INavigationService>(),
             _synchronizationContextService,
+            App.GetService<IMidiConsoleToolsService>(),
             App.GetService<IMidiPanicService>());
     }
 

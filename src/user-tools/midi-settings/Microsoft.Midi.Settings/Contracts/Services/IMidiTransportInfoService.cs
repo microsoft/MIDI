@@ -16,5 +16,7 @@ public interface IMidiTransportInfoService
 
     IList<MidiServiceTransportPluginInfo> GetAllTransports();
 
+    bool IsTransportAvailable(string transportCode);
+
 
 }

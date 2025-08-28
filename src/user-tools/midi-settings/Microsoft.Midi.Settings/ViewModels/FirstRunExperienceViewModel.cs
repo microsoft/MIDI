@@ -176,12 +176,12 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     if (UseNewStyleWinMMPortNames)
                     {
-                        m_registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNameSelectionProperty.PortName_UseInterfacePlusPinName);
+                        m_registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle);
                         needServiceRestart = true;
                     }
                     else
                     {
-                        m_registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNameSelectionProperty.PortName_UseLegacyWinMM);
+                        m_registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible);
                         needServiceRestart = true;
                     }
                 }

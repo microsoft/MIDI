@@ -28,6 +28,8 @@
 #include "wstring_util.h"
 #include "json_defs.h"
 
+#include "MidiEndpointNameTable.h"
+
 // The "customProperties" section is shared with all endpoints
 //
 // "endpointTransportPluginSettings":
@@ -79,61 +81,65 @@
 // }
 //
 
-struct MidiEndpointCustomMidi1PortProperties
+
+namespace WindowsMidiServicesPluginConfigurationLib
 {
-    uint8_t GroupIndex;
-    winrt::hstring Name;
-};
 
-enum MidiEndpointCustomMidi1NamingApproach
-{
-    Default = 0,
-    UseClassicCompatible = 1,
-    UseNewStyle = 2
-};
+    struct MidiEndpointCustomMidi1PortProperties
+    {
+        uint8_t GroupIndex;
+        winrt::hstring Name;
+    };
 
-class MidiEndpointCustomProperties
-{
-public:
-    static winrt::hstring PropertyKey;  // main property key for this type. defined in impl file
+    //enum MidiEndpointCustomMidi1NamingApproach
+    //{
+    //    Default = 0,
+    //    UseClassicCompatible = 1,
+    //    UseNewStyle = 2
+    //};
 
-    MidiEndpointCustomProperties() = default;
+    class MidiEndpointCustomProperties
+    {
+    public:
+        static winrt::hstring PropertyKey;  // main property key for this type. defined in impl file
 
-    static std::shared_ptr<MidiEndpointCustomProperties> FromJson(_In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
+        MidiEndpointCustomProperties() = default;
 
-    _Success_(return == true)
-    bool WriteAllProperties(_In_ std::vector<DEVPROPERTY>& destination);
+        static std::shared_ptr<MidiEndpointCustomProperties> FromJson(_In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
 
-    _Success_(return == true)
-    bool WriteNonCommonProperties(_In_ std::vector<DEVPROPERTY>&destination);
+        _Success_(return == true)
+        bool WriteAllProperties(_In_ std::vector<DEVPROPERTY>& destination);
 
-
-    _Success_(return == true)
-    bool WriteJson(_In_::winrt::Windows::Data::Json::JsonObject& customPropertiesObject);
-
-    winrt::hstring Name{};
-    winrt::hstring Description{};
-    winrt::hstring Image{};
-    bool RequiresNoteOffTranslation{};
-    bool SupportsMidiPolyphonicExpression{};
-    uint16_t RecommendedControlChangeIntervalMilliseconds{};
-
- //   bool UmpOnly{ false };
-    MidiEndpointCustomMidi1NamingApproach Midi1NamingApproach{ MidiEndpointCustomMidi1NamingApproach::Default };
-
-    std::map<uint8_t, MidiEndpointCustomMidi1PortProperties> Midi1Sources{};
-    std::map<uint8_t, MidiEndpointCustomMidi1PortProperties> Midi1Destinations{};
-
-private:
-
-    void Normalize();
-
-    DEVPROP_BOOLEAN m_devPropTrue{ DEVPROP_TRUE };
-    DEVPROP_BOOLEAN m_devPropFalse{ DEVPROP_FALSE };
-
-    //MidiEndpointCustomMidi1NamingApproach m_selectedPortNamingDevProperty{ MidiEndpointCustomMidi1NamingApproach::Default };
-};
+        _Success_(return == true)
+        bool WriteNonCommonProperties(_In_ std::vector<DEVPROPERTY>&destination);
 
 
+        _Success_(return == true)
+        bool WriteJson(_In_::winrt::Windows::Data::Json::JsonObject& customPropertiesObject);
+
+        winrt::hstring Name{};
+        winrt::hstring Description{};
+        winrt::hstring Image{};
+        bool RequiresNoteOffTranslation{};
+        bool SupportsMidiPolyphonicExpression{};
+        uint16_t RecommendedControlChangeIntervalMilliseconds{};
+
+     //   bool UmpOnly{ false };
+        WindowsMidiServicesNamingLib::Midi1PortNameSelection Midi1NamingApproach{ WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault };
+
+        std::map<uint8_t, MidiEndpointCustomMidi1PortProperties> Midi1Sources{};
+        std::map<uint8_t, MidiEndpointCustomMidi1PortProperties> Midi1Destinations{};
+
+    private:
+
+        void Normalize();
+
+        DEVPROP_BOOLEAN m_devPropTrue{ DEVPROP_TRUE };
+        DEVPROP_BOOLEAN m_devPropFalse{ DEVPROP_FALSE };
+
+        //MidiEndpointCustomMidi1NamingApproach m_selectedPortNamingDevProperty{ MidiEndpointCustomMidi1NamingApproach::Default };
+    };
+
+}
 
 #endif  // ifdef JSON_CUSTOM_PROPERTY_HELPER_H

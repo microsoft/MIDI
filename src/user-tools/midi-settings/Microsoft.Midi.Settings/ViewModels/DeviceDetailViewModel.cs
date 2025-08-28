@@ -109,20 +109,20 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             System.Diagnostics.Debug.WriteLine("Start clearing properties");
 
-            _endpointEnumerationService.EndpointUpdated += (s, e) =>
-            {
-                if (EndpointWrapper != null && e.EndpointDeviceId == EndpointWrapper.Id)
-                {
-                    _synchronizationContextService?.GetUIContext().Post(_ =>
-                    {
-                        System.Diagnostics.Debug.WriteLine("Refreshing VM properties due to Endpoint Update event.");
+            //_endpointEnumerationService.EndpointUpdated += (s, e) =>
+            //{
+            //    if (EndpointWrapper != null && e.EndpointDeviceId == EndpointWrapper.Id)
+            //    {
+            //        _synchronizationContextService?.GetUIContext().Post(_ =>
+            //        {
+            //            System.Diagnostics.Debug.WriteLine("Refreshing VM properties due to Endpoint Update event.");
 
-                        EndpointWrapper = _endpointEnumerationService.GetEndpointById(e.EndpointDeviceId);
+            //            EndpointWrapper = _endpointEnumerationService.GetEndpointById(e.EndpointDeviceId);
 
-                        RefreshVM();
-                    }, null);
-                }
-            };
+            //            RefreshVM();
+            //        }, null);
+            //    }
+            //};
 
             // ugly, but there to prevent binding errors. Making everything nullable
             // bleeds over into the xaml, requires converters, etc. messy AF.
@@ -160,14 +160,14 @@ namespace Microsoft.Midi.Settings.ViewModels
                 // cache this here because the update event may trigger before we save to the config file
                 var updateConfig = CustomizationViewModel.GetUpdateConfig();
 
-                System.Diagnostics.Debug.WriteLine("Config json before updating endpoint.");
-                System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+               // System.Diagnostics.Debug.WriteLine("Config json before updating endpoint.");
+               // System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
                 var success = _endpointCustomizationService.UpdateEndpoint(
                     updateConfig);
 
-                System.Diagnostics.Debug.WriteLine("Config json after updating endpoint.");
-                System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+             //   System.Diagnostics.Debug.WriteLine("Config json after updating endpoint.");
+             //   System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
                 if (success)
                 {
@@ -175,8 +175,8 @@ namespace Microsoft.Midi.Settings.ViewModels
                     {
                         if (_configFileService.CurrentConfig.StoreEndpointCustomization(updateConfig))
                         {
-                            System.Diagnostics.Debug.WriteLine("Config json after successfully saving to config.");
-                            System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+                            //System.Diagnostics.Debug.WriteLine("Config json after successfully saving to config.");
+                            //System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
 
                             // success
@@ -184,10 +184,11 @@ namespace Microsoft.Midi.Settings.ViewModels
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine("Config json after FAILING to save to config.");
-                            System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+                            //System.Diagnostics.Debug.WriteLine("Config json after FAILING to save to config.");
+                            //System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
                             // todo: show error
+                            System.Diagnostics.Debug.WriteLine("Could not save to config file.");
                         }
                     }
                     else
@@ -249,13 +250,13 @@ namespace Microsoft.Midi.Settings.ViewModels
             this.HasFunctionBlocks = FunctionBlocks.Count > 0;
             this.HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
 
+
             ShowMidi2Properties = (this.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
 
             // TODO: This should pull from a property of the transport
-            ShowCustomizeButton = 
-                TransportSuppliedInfo.TransportCode.ToUpper() == "KS" || 
+            ShowCustomizeButton =
+                TransportSuppliedInfo.TransportCode.ToUpper() == "KS" ||
                 TransportSuppliedInfo.TransportCode.ToUpper() == "KSA";
-
         }
 
         public void OnNavigatedFrom()

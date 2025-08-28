@@ -60,8 +60,6 @@ namespace Microsoft.Midi.Settings.Views
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             ViewModel.DispatcherQueue = this.DispatcherQueue;
-
-            ViewModel.RefreshDeviceCollection();
         }
 
         private async void OnPickSysExFile(object sender, RoutedEventArgs e)

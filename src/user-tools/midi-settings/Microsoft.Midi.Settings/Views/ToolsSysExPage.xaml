@@ -38,7 +38,7 @@
                                                         ShowMessageSourceGroups="False"
                                                         SelectedEndpoint="{x:Bind ViewModel.SelectedEndpoint, Mode=TwoWay}"
                                                         SelectedGroup="{x:Bind ViewModel.SelectedGroup, Mode=TwoWay}"
-                                                        Endpoints="{x:Bind ViewModel.MidiEndpoints}"
+                                                        Endpoints="{x:Bind ViewModel.MidiEndpoints, Mode=OneWay}"
                                                         />
 
         <TextBox x:Name="TransferDelayTextBox"

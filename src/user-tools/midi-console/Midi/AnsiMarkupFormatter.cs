@@ -276,7 +276,10 @@ namespace Microsoft.Midi.ConsoleApp
             return "[grey]" + key + "[/]";
         }
 
-
+        public static string FormatMissingOptionalValue(string replacement)
+        {
+            return "[grey35]" + replacement + "[/]";
+        }
 
         public static string FormatTransportName(string name)
         {

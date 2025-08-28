@@ -222,7 +222,6 @@
                                     <StackPanel>
                                         <TextBlock Text="Common MIDI tasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
                                         <TextBlock Text="Common tasks and settings for Windows MIDI Services." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
-                                        <TextBlock Text="PREVIEW NOTE: Some of these are not yet enabled." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
                                     </StackPanel>
                                 </controls:SettingsExpander.Header>
                                 <controls:SettingsExpander.Items>
@@ -242,8 +241,9 @@
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="False"
-                                                       Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <controls:SettingsCard IsClickEnabled="True" 
+                                                           Command="{x:Bind ViewModel.CommonTaskSetUpNetworkMidi2Command}"
+                                                           Visibility="{x:Bind ViewModel.IsNetworkMidi2Available, Mode=OneWay,Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <controls:SettingsCard.Header>
                                             <TextBlock x:Uid="CommonTasks_SetUpNetworkMidi2" TextWrapping="WrapWholeWords" />
                                         </controls:SettingsCard.Header>
@@ -254,7 +254,7 @@
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
                                                        Command="{x:Bind ViewModel.CommonTaskSendSysExCommand}"
-                                                       Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                       Visibility="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay,Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <controls:SettingsCard.Header>
                                             <TextBlock x:Uid="CommonTasks_SendSysExFile" TextWrapping="WrapWholeWords" />
                                         </controls:SettingsCard.Header>
@@ -267,7 +267,8 @@
                                 <TextBlock x:Uid="CommonTasksGroup_ServiceAndDrivers" Style="{StaticResource HomeCardItemSeparatorStyle}"/>
                             </Border>-->
 
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
+                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                           Command="{x:Bind ViewModel.CommonTaskSetServiceAutoStartCommand}">
                                         <controls:SettingsCard.Header>
                                             <TextBlock x:Uid="CommonTasks_SetServiceAutoStart" TextWrapping="WrapWholeWords" />
                                         </controls:SettingsCard.Header>
@@ -277,7 +278,8 @@
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
+                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                           Command="{x:Bind ViewModel.CommonTaskAssignMidi1DeviceToNewDriverCommand}">
                                         <controls:SettingsCard.Header>
                                             <TextBlock x:Uid="CommonTasks_AssignMidi1DeviceToNewDriver" TextWrapping="WrapWholeWords" />
                                         </controls:SettingsCard.Header>

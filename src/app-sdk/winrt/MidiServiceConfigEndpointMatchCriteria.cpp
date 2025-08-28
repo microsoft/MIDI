@@ -46,7 +46,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
         if (json::JsonObject::TryParse(matchObjectJson, jsonObject))
         {
-            auto match = MidiEndpointMatchCriteria::FromJson(jsonObject);
+            auto match = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(jsonObject);
 
             winrtMatch->InternalSetMatchObject(match);
 
