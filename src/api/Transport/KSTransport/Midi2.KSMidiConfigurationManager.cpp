@@ -83,6 +83,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiConfigurationManager::ProcessCustomProperties(
     winrt::hstring resolvedEndpointDeviceId,
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> matchCriteria,
     json::JsonObject updateObject,
     std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>& customProperties,
     std::vector<DEVPROPERTY>& endpointDevProperties,
@@ -100,6 +101,9 @@ CMidi2KSMidiConfigurationManager::ProcessCustomProperties(
 
         if (customProperties != nullptr)
         {
+            // cache this set of properties in case of surprise removal or the device is added later
+            m_customPropertiesCache->Add(matchCriteria, customProperties);
+
             if (customProperties->WriteAllProperties(endpointDevProperties))
             {
                 if (customProperties->Midi1Destinations.size() > 0 ||
@@ -266,16 +270,12 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                 // process all the custom props like Name, Description, Image, etc.
                 LOG_IF_FAILED(ProcessCustomProperties(
                     matchingEndpointDeviceId,
+                    matchCriteria,
                     updateObject,
                     customProperties,
                     endpointDevProperties,
                     nameTable,
                     responseObject));
-
-                if (customProperties != nullptr)
-                {
-                    m_customPropertiesCache->Add(matchCriteria, customProperties);
-                }
 
                 if (endpointDevProperties.size() == 0)
                 {
@@ -310,12 +310,7 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                     {
                         // TODO: We need to update the MIDI 1 endpoint naming table as well, and then recreate the MIDI 1 ports
 
-                        if (updatePropsHR == E_NOTFOUND)
-                        {
-
-                            // TODO: We need to keep the props around for when the device appears
-                        }
-                        else
+                        if (updatePropsHR != E_NOTFOUND)
                         {
                             TraceLoggingWrite(
                                 MidiKSTransportTelemetryProvider::Provider(),
@@ -332,55 +327,6 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                         }
                     }
                 }
-
-
-                // The device manager checks to see if the endpoint exists
-                // and will return a E_NOTFOUND if it doesn't.
-
-                auto updatePropsHR = m_midiDeviceManager->UpdateEndpointProperties(
-                    matchCriteria->EndpointDeviceId.c_str(),
-                    (ULONG)endpointDevProperties.size(),
-                    endpointDevProperties.data()
-                );
-
-                if (SUCCEEDED(updatePropsHR))
-                {
-                    TraceLoggingWrite(
-                        MidiKSTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Properties updated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(matchCriteria->EndpointDeviceId.c_str(), "swd")
-                    );
-                }
-                else
-                {
-                    // TODO: We need to update the MIDI 1 endpoint naming table as well, and then recreate the MIDI 1 ports
-
-                    if (updatePropsHR == E_NOTFOUND)
-                    {
-
-                        // TODO: We need to keep the props around for when the device appears
-                    }
-                    else
-                    {
-                        TraceLoggingWrite(
-                            MidiKSTransportTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_ERROR,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Error updating device properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingHResult(updatePropsHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                            TraceLoggingWideString(matchCriteria->EndpointDeviceId.c_str(), "swd")
-                        );
-
-                        RETURN_IF_FAILED(E_FAIL);
-                    }
-                }
-
             }
 
             internal::SetConfigurationResponseObjectSuccess(responseObject);

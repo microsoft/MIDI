@@ -51,20 +51,32 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         [ObservableProperty]
-        public bool useNewStyleWinMMPortNames;
+        private bool useNewStyleWinMMPortNames;
+
+        [ObservableProperty]
+        private bool useClassicCompatibleWinMMPortNames;
 
 
         public ICommand SetServiceToAutoStartCommand { get; private set; }
 
         public ICommand SetDefaultNamingApproachCommand { get; private set; }
 
+        public ICommand RestartMidiServiceCommand { get; private set; }
+
+        
 
         private readonly IMidiServiceRegistrySettingsService _registrySettingsService;
+        private readonly IMidiConsoleToolsService _consoleToolsService;
 
         public GlobalMidiSettingsViewModel(
-            IMidiServiceRegistrySettingsService registrySettingsService)
+            IMidiServiceRegistrySettingsService registrySettingsService,
+            IMidiConsoleToolsService consoleToolsService)
         {
             _registrySettingsService = registrySettingsService;
+            _consoleToolsService = consoleToolsService;
+
+            UseNewStyleWinMMPortNames = _registrySettingsService.GetDefaultUseNewStyleMidi1PortNaming();
+            UseClassicCompatibleWinMMPortNames = !UseNewStyleWinMMPortNames;
 
             SetServiceToAutoStartCommand = new RelayCommand(() =>
             {
@@ -84,24 +96,24 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             });
 
+            RestartMidiServiceCommand = new RelayCommand(() =>
+            {
+                _consoleToolsService.RestartMidiService();
+            });
 
             SetDefaultNamingApproachCommand = new RelayCommand(() =>
             {
-                if (UseNewStyleWinMMPortNames)
-                {
-                    bool storedUseNewStyleWinMMPortNames = _registrySettingsService.GetDefaultUseNewStyleMidi1PortNaming();
+                bool storedUseNewStyleWinMMPortNames = _registrySettingsService.GetDefaultUseNewStyleMidi1PortNaming();
 
-                    if (storedUseNewStyleWinMMPortNames != UseNewStyleWinMMPortNames)
+                if (storedUseNewStyleWinMMPortNames != UseNewStyleWinMMPortNames)
+                {
+                    if (UseNewStyleWinMMPortNames)
                     {
-                        if (UseNewStyleWinMMPortNames)
-                        {
-                            // TODO: This needs to change to the simplified naming form
-                            _registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNameSelectionProperty.PortName_UseInterfacePlusPinName);
-                        }
-                        else
-                        {
-                            _registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNameSelectionProperty.PortName_UseLegacyWinMM);
-                        }
+                        _registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle);
+                    }
+                    else
+                    {
+                        _registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible);
                     }
                 }
             });

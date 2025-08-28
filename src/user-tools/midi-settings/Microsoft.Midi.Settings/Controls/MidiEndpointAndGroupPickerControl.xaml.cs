@@ -70,7 +70,7 @@ namespace Microsoft.Midi.Settings.Controls
     public sealed partial class MidiEndpointAndGroupPickerControl : UserControl
     {
         [ObservableProperty]
-        public ObservableCollection<MidiEndpointWrapper>? endpoints;
+        private ObservableCollection<MidiEndpointWrapper> endpoints = [];
 
 
         public static readonly DependencyProperty SelectedEndpointProperty = DependencyProperty.Register(
@@ -112,10 +112,10 @@ namespace Microsoft.Midi.Settings.Controls
         }
 
         [ObservableProperty]
-        public bool showMessageDestinationGroups;
+        private bool showMessageDestinationGroups;
 
         [ObservableProperty]
-        public bool showMessageSourceGroups;
+        private bool showMessageSourceGroups;
 
         public ObservableCollection<MidiGroupForDisplay> Groups { get; } = [];
 

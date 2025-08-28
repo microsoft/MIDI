@@ -92,6 +92,7 @@
 
             </Grid>
             
+            <!-- Properties at top right -->
             <Grid Grid.Column="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -161,8 +162,7 @@
             
         </Grid>
 
-        <!-- TODO: Show active groups summary at top -->
-        
+       
         <ScrollViewer Grid.Row="1" x:Name="ContentControl" Margin="0,13,0,0">
             <StackPanel Orientation="Vertical" Spacing="4">
 
@@ -172,11 +172,13 @@
                             IsDynamicOverflowEnabled="False"
                             >
                     <CommandBar.PrimaryCommands>
-                        <AppBarButton Content="Monitor" />
+                        <AppBarButton Content="Monitor" Command="{x:Bind ViewModel.EndpointWrapper.MonitorEndpointCommand }" />
+<!--                        
                         <AppBarButton Content="Send SysEx" />
                         <AppBarSeparator />
                         <AppBarButton Content="Troubleshoot" />
-                        <AppBarButton Content="Panic" />
+-->                        
+                        <AppBarButton Content="Panic" Command="{x:Bind ViewModel.EndpointWrapper.SendPanicCommand }" />
                     </CommandBar.PrimaryCommands>
                 </CommandBar>
 
@@ -934,7 +936,8 @@
                                    Text="MIDI 1.0 Ports"/>
 
                         <!-- Bind this to viewmodel values -->
-                        <ComboBox Grid.Row="1" 
+                        <ComboBox Grid.Row="1"
+                                  IsEditable="False"
                                   HorizontalAlignment="Left"
                                   Header="Default MIDI 1 Port Naming"
                                   ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNamingOptions, Mode=OneWay}"
@@ -949,7 +952,10 @@
 
 
                         <ScrollViewer Grid.Row="2" 
-                                      VerticalScrollMode="Auto">
+                                      VerticalScrollMode="Auto"
+                                      VerticalScrollBarVisibility="Auto"
+                                      VerticalAlignment="Stretch"
+                                      MaxHeight="450">
 
                             <ScrollViewer.Resources>
                                 <DataTemplate x:Key="Midi1PortCustomizationTemplate" 
@@ -962,11 +968,12 @@
                                         </Grid.ColumnDefinitions>
                                         
                                         <TextBlock Grid.Column="0" 
-                                                   Text="{x:Bind Group, Mode=OneWay}" 
+                                                   Text="{x:Bind Group, Mode=OneWay}"
                                                    VerticalAlignment="Center"/>
                                         
-                                        <TextBlock Grid.Column="0" 
+                                        <TextBlock Grid.Column="1" 
                                                    Text="{x:Bind CurrentDisplayName, Mode=OneWay}" 
+                                                   Opacity="0.55"
                                                    VerticalAlignment="Center"/>
                                         
                                         <TextBox Grid.Column="2"

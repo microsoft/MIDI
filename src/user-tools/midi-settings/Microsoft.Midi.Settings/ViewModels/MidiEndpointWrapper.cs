@@ -24,11 +24,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class MidiEndpointWrapper : ObservableRecipient
     {
-        private readonly INavigationService _navigationService;
-        private readonly ISynchronizationContextService _synchronizationContextService;
-        private readonly IMidiPanicService _panicService;
-        private readonly IMidiTransportInfoService _transportInfoService;
-
         public ICommand ViewDeviceDetailsCommand
         {
             get; private set;
@@ -39,6 +34,10 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public ICommand MonitorEndpointCommand
+        {
+            get; private set;
+        }
 
         public string ManufacturerName { get; private set; }
         public bool HasManufacturerName { get; private set; }
@@ -286,10 +285,17 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         }
 
+        private readonly INavigationService _navigationService;
+        private readonly ISynchronizationContextService _synchronizationContextService;
+        private readonly IMidiPanicService _panicService;
+        private readonly IMidiTransportInfoService _transportInfoService;
+        private readonly IMidiConsoleToolsService _consoleToolsService;
+
         public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,
             IMidiTransportInfoService transportInfoService,
             INavigationService navigationService,
             ISynchronizationContextService synchronizationContextService,
+            IMidiConsoleToolsService consoleToolsService,
             IMidiPanicService panicService)
         {
             System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Constructing");
@@ -298,6 +304,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             _synchronizationContextService = synchronizationContextService;
             _panicService = panicService;
             _transportInfoService = transportInfoService;
+            _consoleToolsService = consoleToolsService;
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointWrapper>(
                 (param) =>
@@ -322,6 +329,16 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     // TODO: Could make this a bit faster by sending only for valid groups
                     _panicService.SendMidiPanic(DeviceInformation.EndpointDeviceId);
+
+                });
+
+
+            MonitorEndpointCommand = new RelayCommand(
+                () =>
+                {
+                    System.Diagnostics.Debug.WriteLine("Monitor");
+
+                    _consoleToolsService.MonitorEndpoint(DeviceInformation.EndpointDeviceId);                   
 
                 });
 

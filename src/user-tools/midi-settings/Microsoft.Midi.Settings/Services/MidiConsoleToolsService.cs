@@ -63,4 +63,27 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
         }
     }
 
+
+
+    public bool RestartMidiService()
+    {
+        try
+        {
+            string arguments = "service restart";
+
+            var consoleProcess = new System.Diagnostics.Process();
+
+            consoleProcess.StartInfo.Verb = "runas";
+            consoleProcess.StartInfo.FileName = "midi";
+            consoleProcess.StartInfo.Arguments = arguments;
+            consoleProcess.StartInfo.UseShellExecute = true;
+
+            return consoleProcess.Start();
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
 }

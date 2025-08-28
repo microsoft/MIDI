@@ -30,7 +30,7 @@ using Microsoft.Midi.Settings.Contracts.ViewModels;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class ToolsSysExViewModel : ObservableRecipient, ISettingsSearchTarget
+    public partial class ToolsSysExViewModel : ObservableRecipient, ISettingsSearchTarget, INavigationAware
     {
         public static IList<string> GetSearchKeywords()
         {
@@ -49,44 +49,11 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
-        private readonly IMidiSdkService _sdkService;
-        private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
-        private readonly IMidiSessionService _sessionService;
-
         public DispatcherQueue? DispatcherQueue { get; set; }
 
         public ICommand SendSysExCommand
         {
             get; private set;
-        }
-
-
-        public ToolsSysExViewModel(
-            IMidiSdkService sdkService,
-            IMidiSessionService sessionService,
-            IMidiEndpointEnumerationService endpointEnumerationService
-            )
-        {
-            _sessionService = sessionService;
-            _sdkService = sdkService;
-            _endpointEnumerationService = endpointEnumerationService;
-
-            DelayBetweenMessagesText = DefaultDelayBetweenMessagesMilliseconds.ToString();
-
-            SendSysExCommand = new RelayCommand(
-                () =>
-                {
-                    SendSysEx();
-                });
-
-            TransferInProgress = false;
-            TransferCompleteSuccess = false;
-            transferCompleteFailed = false;
-
-            TransferBytesRead = 0;
-            TransferTotalBytesInFile = 0;
-
-            SelectedFileName = null;
         }
 
 
@@ -201,6 +168,50 @@ namespace Microsoft.Midi.Settings.ViewModels
         private const UInt16 MaxDelayBetweenMessagesMilliseconds = 2000;
         private UInt16 _delayBetweenMessagesMilliseconds = DefaultDelayBetweenMessagesMilliseconds;
 
+
+        private readonly IMidiSdkService _sdkService;
+        private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
+        private readonly IMidiSessionService _sessionService;
+        private readonly ISynchronizationContextService _synchronizationContextService;
+
+
+        public ToolsSysExViewModel(
+            IMidiSdkService sdkService,
+            IMidiSessionService sessionService,
+            IMidiEndpointEnumerationService endpointEnumerationService,
+            ISynchronizationContextService synchronizationContextService
+            )
+        {
+            _sessionService = sessionService;
+            _sdkService = sdkService;
+            _endpointEnumerationService = endpointEnumerationService;
+            _synchronizationContextService = synchronizationContextService;
+
+            DelayBetweenMessagesText = DefaultDelayBetweenMessagesMilliseconds.ToString();
+
+            SendSysExCommand = new RelayCommand(
+                () =>
+                {
+                    SendSysEx();
+                });
+
+            TransferInProgress = false;
+            TransferCompleteSuccess = false;
+            transferCompleteFailed = false;
+
+            TransferBytesRead = 0;
+            TransferTotalBytesInFile = 0;
+
+            SelectedFileName = null;
+
+        }
+
+
+
+
+
+
+
         public string DelayBetweenMessagesText
         {
             get { return _delayBetweenMessagesMilliseconds.ToString(); }
@@ -226,9 +237,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshDeviceCollection()
         {
-            if (DispatcherQueue == null) return;
-
-            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            _synchronizationContextService.GetUIContext().Post( _ =>
             {
                 MidiEndpoints.Clear();
 
@@ -240,10 +249,19 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     MidiEndpoints.Add(endpoint);
                 }
-            });
+
+            }, null);
+
         }
 
+        public void OnNavigatedTo(object parameter)
+        {
+            RefreshDeviceCollection();
+        }
 
-
+        public void OnNavigatedFrom()
+        {
+            
+        }
     }
 }

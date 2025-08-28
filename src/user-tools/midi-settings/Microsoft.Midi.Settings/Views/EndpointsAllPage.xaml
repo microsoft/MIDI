@@ -402,7 +402,8 @@
                                             </ToolTipService.ToolTip>
                                         </Button>
 
-                                        <Button Content="Monitor"/>
+                                        <Button Content="Monitor"
+                                                Command="{x:Bind MonitorEndpointCommand}"/>
                                     </StackPanel>
 
 

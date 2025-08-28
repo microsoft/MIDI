@@ -199,16 +199,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         // have a valid communication. Skip connector pins.
         if (KSPIN_COMMUNICATION_NONE == communication)
         {
-            //TraceLoggingWrite(
-            //    MidiKSTransportTelemetryProvider::Provider(),
-            //    MIDI_TRACE_EVENT_INFO,
-            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Pin is not for communication. Moving on", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingWideString(device.Id().c_str(), "device id"),
-            //    TraceLoggingUInt32(i, "pin id")
-            //);
 
             continue;
         }
@@ -297,17 +287,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         // continue on
         if (0 == transportCapability)
         {
-            //TraceLoggingWrite(
-            //    MidiKSTransportTelemetryProvider::Provider(),
-            //    MIDI_TRACE_EVENT_INFO,
-            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Pin has no transport capability", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingWideString(device.Id().c_str(), "device id"),
-            //    TraceLoggingUInt32(i, "pin id")
-            //);
-
             continue;
         }
 
@@ -404,27 +383,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         midiPin->InstanceId = MIDI_KS_INSTANCE_ID_PREFIX;
         midiPin->InstanceId += (midiPin->Flow == MidiFlowOut) ? L"OUT_" : L"IN_";
 
-        // serial# alone is not enough because it isn't unique. Need to also have VID and PID
-        // but this is a problem when a serial number is reused by the manufacturer, which
-        // happens all too often. So we'll just use the hash of the parent device instance id
-        // and let Windows create the unique id. Need to test to see if iSerialNumber really
-        // is working in this case.
-        // 
-        // TODO: We may want to actually check and see if there are others already with 
-        // this id, and simply add an index to the generated instance id. We need to 
-        // optimize for well-behaved devices and just not break for others.
-
-        //if (midiPin->VID > 0 && midiPin->PID > 0 && !midiPin->SerialNumber.empty())
-        //{
-        //    midiPin->InstanceId +=
-        //        L"V_" + std::to_wstring(midiPin->VID) +
-        //        L"P_" + std::to_wstring(midiPin->PID) +
-        //        L"S_" + midiPin->SerialNumber;
-        //}
-        //else
-        //{
-            midiPin->InstanceId += hash;
-        // }
+        midiPin->InstanceId += hash;
 
         midiPin->InstanceId += L"_PIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);
@@ -440,16 +399,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         (newMidiPins[0]->TransportCapability == newMidiPins[1]->TransportCapability) &&
         (newMidiPins[0]->DataFormatCapability & MidiDataFormats::MidiDataFormats_UMP) == MidiDataFormats::MidiDataFormats_UMP )
     {
-        //TraceLoggingWrite(
-        //    MidiKSTransportTelemetryProvider::Provider(),
-        //    MIDI_TRACE_EVENT_INFO,
-        //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        //    TraceLoggingPointer(this, "this"),
-        //    TraceLoggingWideString(L"Setting up to create UMP bidirectional endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        //    TraceLoggingWideString(device.Id().c_str(), "device id")
-        //);
-
         auto midiInPinIndex = newMidiPins[0]->Flow == MidiFlowIn?0:1;
         auto midiOutPinIndex = newMidiPins[0]->Flow == MidiFlowOut?0:1;
 
@@ -596,12 +545,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 commonProperties.NativeDataFormat = MidiDataFormats_UMP;
                 capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
                 capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
-
-                // for native MIDI 2 devices, we use filter name + pin (gtb) name
-                // TODO: This needs to be re-done to use user-specified properties from config file
-                //auto naming = Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName;
-                //interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-                //    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
             }
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
@@ -620,13 +563,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
                 commonProperties.NativeDataFormat = MidiDataFormats_ByteStream;
                 capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
-
-                //
-                // TODO: This needs to be updated to use user-specified properties from config file
-                //
-                //auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
-                //interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-                //    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
             }
             else
             {
@@ -684,9 +620,10 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         // ===============================================================================
 
         WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
-        matchCriteria.DeviceInstanceId = deviceInstanceId;
+        matchCriteria.DeviceInstanceId = MidiPin->InstanceId;
         matchCriteria.UsbVendorId = MidiPin->VID;
         matchCriteria.UsbProductId = MidiPin->PID;
+        matchCriteria.UsbSerialNumber = MidiPin->SerialNumber;
         matchCriteria.TransportSuppliedEndpointName = MidiPin->Name;
 
         auto customProperties = TransportState::Current().GetConfigurationManager()->CustomPropertiesCache()->GetProperties(matchCriteria);
@@ -702,10 +639,16 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             {
                 commonProperties.CustomEndpointDescription = customProperties->Description.c_str();
             }
-
-            // this includes image, the Midi 1 naming approach, etc.
-            customProperties->WriteNonCommonProperties(interfaceDevProperties);
         }
+        else
+        {
+            // we do this so defaults get created and added to the interfaceDevProperties vector
+            customProperties = std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>();
+        }
+
+        // this includes image, the Midi 1 naming approach, etc.
+        customProperties->WriteNonCommonProperties(interfaceDevProperties);
+
 
         // Write Name table property
         // ===============================================================================
@@ -815,39 +758,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 TraceLoggingWideString(MidiPin->Name.c_str(), "name")
             );
 
-
-            // Here we're only building search keys for the SWD id, but we need to broaden this to
-            // other relevant search criteria like serial number or the original name, etc.
-
-            //auto jsonSearchKeys = TransportState::Current().GetConfigurationManager()->BuildEndpointJsonSearchKeysForSWD(newDeviceInterfaceId.get());
-
-            //TraceLoggingWrite(
-            //    MidiKSTransportTelemetryProvider::Provider(),
-            //    MIDI_TRACE_EVENT_INFO,
-            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Retrieved json search keys", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys")
-            //);
-
-            //auto applyConfigHR = TransportState::Current().GetConfigurationManager()->ApplyConfigFileUpdatesForEndpoint(jsonSearchKeys);
-
-            //if (FAILED(applyConfigHR))
-            //{
-            //    TraceLoggingWrite(
-            //        MidiKSTransportTelemetryProvider::Provider(),
-            //        MIDI_TRACE_EVENT_ERROR,
-            //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            //        TraceLoggingPointer(this, "this"),
-            //        TraceLoggingWideString(L"Unable to apply config file update for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //        TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys"),
-            //        TraceLoggingHResult(applyConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD)
-            //    );
-
-            //    LOG_IF_FAILED(applyConfigHR);
-            //}
 
             // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
             // don't want to perform this on translated byte stream endpoints

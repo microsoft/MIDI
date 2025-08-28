@@ -60,7 +60,7 @@
 
                 -->
 
-                <TextBlock Text="If you are not sure that a device is working" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+                <!--<TextBlock Text="If you are not sure that a device is working" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
 
                 <controls:SettingsExpander x:Name="SendTestNotesSettingsExpander"
@@ -82,7 +82,7 @@
                             </StackPanel>
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
-                </controls:SettingsExpander>
+                </controls:SettingsExpander>-->
 
 
 
@@ -93,27 +93,26 @@
                            Description="Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.">
                     <StackPanel>
                         <Button Content="Restart MIDI Service"
-                                Command="{x:Bind ViewModel.RestartServiceCommand}"
-                                Visibility="{x:Bind ViewModel.IsUserRunningAsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                        <TextBlock Text="You must run this application as Administrator to manage the Windows service." 
-                                   Visibility="{x:Bind ViewModel.IsUserRunningAsAdmin, Converter={StaticResource BooleanToInverseVisibilityConverter}}" />
+                                Command="{x:Bind ViewModel.RestartServiceCommand}"/>
                     </StackPanel>
                 </controls:SettingsCard>
 
                 <TextBlock Text="If you're working with support" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <controls:SettingsCard Header="Report MIDI System Information"
-                                   Description="If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact.">
-                    <Button Content="Save MIDI System Information"/>
+                                   Description="If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact."
+                                       >
+                    <Button Content="Capture MIDI System Information"
+                            Command="{x:Bind ViewModel.MidiDiagCommand}"/>
                 </controls:SettingsCard>
 
 
-                <TextBlock Text="If you've found a bug" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+                <!--<TextBlock Text="If you've found a bug" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <controls:SettingsCard Header="Report a Bug to Microsoft"
                                    Description="If you've run across something which may be a bug in Windows MIDI Services, you can report it here.">
                     <Button Content="Open Feedback Hub"/>
-                </controls:SettingsCard>
+                </controls:SettingsCard>-->
             </StackPanel>
         </ScrollViewer>
     </Grid>

@@ -26,49 +26,49 @@ namespace Microsoft.Midi.Settings.ViewModels;
 public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 {
     private DispatcherQueue _dispatcherQueue;
-    private INavigationService _navigationService;
 
     public ICommand RestartServiceCommand
     {
         get; private set;
     }
 
+    public ICommand MidiDiagCommand
+    {
+        get; private set;
+    }
+
+
     public bool IsUserRunningAsAdmin
     {
         get { return UserHelper.CurrentUserHasAdminRights(); }
     }
 
-    public TroubleshootingViewModel(INavigationService navigationService)
+    private readonly INavigationService _navigationService;
+    private readonly IMidiConsoleToolsService _consoleToolsService;
+    private readonly IMidiDiagnosticsService _diagnosticsService;
+
+    public TroubleshootingViewModel(
+        INavigationService navigationService,
+        IMidiConsoleToolsService consoleToolsService,
+        IMidiDiagnosticsService diagnosticsService)
     {
+        _consoleToolsService = consoleToolsService;
         _navigationService = navigationService;
+        _diagnosticsService = diagnosticsService;
 
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
-
-        RestartServiceCommand = new RelayCommand<MidiEndpointDeviceInformation>(
-            (param) =>
+        RestartServiceCommand = new RelayCommand(
+            () =>
             {
-                System.Diagnostics.Debug.WriteLine("RestartServiceCommand exec");
-
-                //_navigationService.NavigateTo(typeof(DeviceDetailViewModel).FullName!, param);
-
+                _consoleToolsService.RestartMidiService();
             });
-    }
 
-
-    public void RestartService()
-    {
-        var controller = MidiServiceHelper.GetServiceController();
-
-        if (controller != null)
-        {
-            MidiServiceHelper.StopService(controller);
-            MidiServiceHelper.StartService(controller);
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine("Unable to get service controller");
-        }
+        MidiDiagCommand = new RelayCommand(
+            () =>
+            {
+                _diagnosticsService.CaptureMidiDiagOutputToNotepad();
+            });
     }
 
 

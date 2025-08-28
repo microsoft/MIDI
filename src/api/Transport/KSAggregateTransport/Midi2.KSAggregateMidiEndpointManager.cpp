@@ -135,9 +135,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     std::vector<internal::GroupTerminalBlockInternal> blocks{ };
     std::vector<PinMapEntryStagingEntry> pinMapEntries{ };
 
-//    std::vector<std::wstring> portNamesUserFlowOut{ };
-//    std::vector<std::wstring> portNamesUserFlowIn{ };
-
     for (auto const& pin : masterEndpointDefinition.MidiPins)
     {
         RETURN_HR_IF(E_INVALIDARG, pin.FilterDeviceId.empty());
@@ -332,8 +329,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
     WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
     matchCriteria.DeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(masterEndpointDefinition.EndpointDeviceInstanceId);
-    //matchCriteria.UsbVendorId = MidiPin->VID;
-    //matchCriteria.UsbProductId = MidiPin->PID;
+    matchCriteria.UsbVendorId = masterEndpointDefinition.VID;
+    matchCriteria.UsbProductId = masterEndpointDefinition.PID;
+    matchCriteria.UsbSerialNumber = masterEndpointDefinition.SerialNumber;
     matchCriteria.TransportSuppliedEndpointName = masterEndpointDefinition.EndpointName;
 
     auto customProperties = TransportState::Current().GetConfigurationManager()->CustomPropertiesCache()->GetProperties(matchCriteria);
@@ -355,7 +353,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         if (!customProperties->Name.empty())
         {
             commonProperties.CustomEndpointName = customProperties->Name.c_str();
-            commonProperties.FriendlyName = customProperties->Name.c_str();         // this introduces a difference between config at runtime vs read from config file
         }
 
         if (!customProperties->Description.empty())

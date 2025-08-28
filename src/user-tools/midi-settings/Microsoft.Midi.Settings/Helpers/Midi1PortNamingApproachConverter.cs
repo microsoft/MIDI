@@ -25,11 +25,9 @@ namespace Microsoft.Midi.Settings.Helpers
                 return string.Empty;
             }
 
-            if (value is Midi1PortNamingApproach)
+            if (value is Midi1PortNamingApproach && targetType == typeof(string))
             {
                 var val = (Midi1PortNamingApproach)value;
-
-                // TODO: Localize
 
                 switch (val)
                 {
@@ -43,12 +41,12 @@ namespace Microsoft.Midi.Settings.Helpers
                         return "Midi1PortNamingValue_UseNewStyle".GetLocalized();
 
                     default:
-                        return "Unknown";
+                        return "Midi1PortNamingValue_UseGlobalDefault".GetLocalized();
                 }
             }
             else
             {
-                return string.Empty;
+                return "Midi1PortNamingValue_UseGlobalDefault".GetLocalized();
             }
 
         }

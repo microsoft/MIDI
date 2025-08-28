@@ -42,7 +42,7 @@ namespace WindowsMidiServicesNamingLib
 #define MIN_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
 
 // Default WinMM naming for MIDI 1 device using a MIDI 1 driver
-#define MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE_NAME    L"DefaultMidi1PortNamingSelection"
+#define MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE_NAME    L"DefaultMidi1PortNaming"
 #define MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE             ((uint32_t)(Midi1PortNameSelection::UseLegacyWinMM))
 
 
