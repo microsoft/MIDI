@@ -31,18 +31,29 @@ public:
 
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
-#if false
-    TEST_METHOD(TestCheckForEndingNumber);
-    TEST_METHOD(TestFullyCleanupBlockName);
-    TEST_METHOD(TestFullyCleanupKSPinName);
-    TEST_METHOD(TestRemoveJustKSPinGeneratedSuffix);
-    TEST_METHOD(TestAddGroupNumberToNameIfNeeded);
+
+        //TEST_METHOD(TestGetPreferredName);
+
+        //TEST_METHOD(TestGetSourceEntry);
+        //TEST_METHOD(TestGetDestinationEntry);
+
+        //TEST_METHOD(TestUpdateSourceEntryCustomName);
+        //TEST_METHOD(TestUpdateDestinationEntryCustomName);
 
 
-    TEST_METHOD(TestGenerateWinMMLegacyName);
-    TEST_METHOD(TestGeneratePinNameBasedMidi1PortName);
-    TEST_METHOD(TestGenerateFilterPlusBlockMidi1PortName);
-#endif
+        //TEST_METHOD(TestGetSourceEntryCustomName);
+        //TEST_METHOD(TestGetDestinationEntryCustomName);
+
+
+        //TEST_METHOD(TestPopulateAllEntriesForNativeUmpDevice);
+        //TEST_METHOD(TestPopulateAllEntriesForMidi1DeviceUsingUmpDriver);
+
+        TEST_METHOD(TestPopulateEntryForNativeUmpDevice);
+        TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingUmpDriver);
+        TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingMidi1Driver);
+
+        // TODO: Need to test reading/writing from property vectors
+
 
 private:
 
