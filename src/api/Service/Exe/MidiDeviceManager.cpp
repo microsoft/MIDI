@@ -12,6 +12,7 @@
 #include "Midi2KSTransport.h"
 #include "Midi2LoopbackMidiTransport.h"
 #include "MidiEndpointNameTable.h"
+#include "MidiClientManager.h"
 
 
 using namespace winrt::Windows::Devices::Enumeration;
@@ -59,7 +60,8 @@ HRESULT
 CMidiDeviceManager::Initialize(
     std::shared_ptr<CMidiPerformanceManager>& performanceManager, 
     std::shared_ptr<CMidiEndpointProtocolManager>& endpointProtocolManager,
-    std::shared_ptr<CMidiConfigurationManager>& configurationManager)
+    std::shared_ptr<CMidiConfigurationManager>& configurationManager,
+    std::shared_ptr<CMidiClientManager>& clientManager)
 {
     DWORD transferState = 0;
     DWORD dataSize = sizeof(DWORD);
@@ -424,6 +426,7 @@ CMidiDeviceManager::Initialize(
     }
 
     m_performanceManager = performanceManager;
+    m_clientManager = clientManager;
 
     return S_OK;
 }
@@ -1665,6 +1668,8 @@ CMidiDeviceManager::DeactivateEndpoint
     auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
     RETURN_HR_IF(E_INVALIDARG, cleanId == L"");
 
+    std::vector<std::wstring> interfaceIds;
+
     // there may be more than one SWD associated with this instance id, as we reuse
     // the instance id for the legacy SWD, it just has a different activator and InterfaceClass.
     do
@@ -1722,6 +1727,9 @@ CMidiDeviceManager::DeactivateEndpoint
             //OutputDebugString(item->get()->InstanceId.c_str());
             //OutputDebugString(L"\n");
 
+            // Add the interface ID of this port to a list
+            interfaceIds.push_back(internal::NormalizeEndpointInterfaceIdWStringCopy(item->get()->DeviceInterfaceId.get()));
+
             // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
             // which will deactivate the device, done.
             m_midiPorts.erase(item);
@@ -1734,6 +1742,34 @@ CMidiDeviceManager::DeactivateEndpoint
     {
         // now that we've removed UMP and WinMM ports, we need to compact the port numbers to keep them contiguous
         RETURN_IF_FAILED(CompactPortNumbers());
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingValue(interfaceIds.size(), "InterfaceIdCount"),
+            TraceLoggingWideString(interfaceIds.empty() ? L"<none>" : interfaceIds.front().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingWideString(L"Notifying client manager of device removal", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+         );
+        
+        // Notify client manager that device was removed
+        if (m_clientManager)
+        {
+            m_clientManager->OnDeviceRemoved(interfaceIds);
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"No client manager set for device removal", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        }
     }
 
 

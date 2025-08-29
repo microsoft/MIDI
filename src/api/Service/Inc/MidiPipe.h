@@ -271,6 +271,53 @@ public:
     virtual BOOL IsGroupFiltered() { return FALSE; }
     virtual BYTE GroupIndex() { return INVALID_GROUP_INDEX; }
 
+    void Invalidate()
+    {
+        auto lock = m_Lock.lock_exclusive();
+
+        if (!m_Invalidated)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingWideString(L"Marking pipe invalid", MIDI_TRACE_EVENT_MESSAGE_FIELD));
+
+            m_Invalidated = true;
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingWideString(L"Invalidate() called but pipe already invalid", MIDI_TRACE_EVENT_MESSAGE_FIELD));
+        }
+    }
+
+    bool IsInvalidated()
+    {
+        auto lock = m_Lock.lock_shared();
+        bool result = m_Invalidated;
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingBool(result, "IsInvalidatedResult"));
+
+        return result;
+    }
+
 private:
     std::wstring m_Device;
     MidiDataFormats m_DataFormatIn{ MidiDataFormats_Invalid };
@@ -280,5 +327,8 @@ private:
     wil::srwlock m_Lock;
     std::map<MidiPipeHandle, wil::com_ptr_nothrow<CMidiPipe>> m_ConnectedPipes;
     std::vector<MidiClientHandle> m_Clients;
+
+    // Keeps track of if this devicePipe has been invalidated already.
+    bool m_Invalidated = false;
 };
 
