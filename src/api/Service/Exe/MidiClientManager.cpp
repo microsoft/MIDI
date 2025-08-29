@@ -454,18 +454,32 @@ CMidiClientManager::GetMidiDevice(
     auto cleanMidiDevice = internal::NormalizeEndpointInterfaceIdWStringCopy(midiDevice);
 
     // Get an existing device pipe if one exists, otherwise create a new pipe
-    auto device = m_DevicePipes.find(cleanMidiDevice);
-    if (device != m_DevicePipes.end())
+    auto devicePipes = m_DevicePipes.equal_range(cleanMidiDevice);
+    for (auto pipe = devicePipes.first; pipe != devicePipes.second; ++pipe)
     {
-        RETURN_HR_IF(E_UNEXPECTED, device->second->Flow() != creationParams->Flow);
-        midiDevicePipe = device->second;
+        if (creationParams->Flow == pipe->second->Flow() && !pipe->second->IsInvalidated())
+        {
+            RETURN_HR_IF(E_UNEXPECTED, midiDevicePipe);
+            midiDevicePipe = pipe->second;
+        }
     }
-    else
+
+    if (!midiDevicePipe)
     {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingWideString(L"No valid pipe found, creating new one", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanMidiDevice.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingUInt32((UINT32)creationParams->Flow, "requestedFlow")
+        );
+
+        // No valid pipe found so need to create a new one.
         wil::com_ptr_nothrow<CMidiDevicePipe> devicePipe;
 
         // The devicePipe must be initialized with the flow of the aliased device
-        MIDISRV_DEVICECREATION_PARAMS deviceCreationParams{ };
+        MIDISRV_DEVICECREATION_PARAMS deviceCreationParams{};
 
         deviceCreationParams.BufferSize = creationParams->BufferSize;
 
@@ -482,6 +496,14 @@ CMidiClientManager::GetMidiDevice(
 
         midiDevicePipe = devicePipe.get();
         m_DevicePipes.emplace(cleanMidiDevice.c_str(), std::move(devicePipe));
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingWideString(L"Inserted new device pipe into m_DevicePipes", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingPointer(midiDevicePipe.get(), "newPipe")
+        );
     }
 
     TraceLoggingWrite(
@@ -1315,4 +1337,53 @@ CMidiClientManager::DestroyMidiClient(
 
 
     return S_OK;
+}
+
+void CMidiClientManager::OnDeviceRemoved(
+    const std::vector<std::wstring>& interfaceIds
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingValue((UINT32)interfaceIds.size(), "RemovedInterfaceCount")
+    );
+
+    auto lock = m_ClientManagerLock.lock_exclusive();
+
+    // When a device is removed, mark its device pipe as invalid
+    for (auto& [key, pipe] : m_DevicePipes)
+    {
+
+        for (const auto& id : interfaceIds)
+        {
+            if (pipe->MidiDevice().starts_with(id))
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingWideString(pipe->MidiDevice().c_str(), "PipeDeviceId"),
+                    TraceLoggingWideString(id.c_str(), "RemovedId"),
+                    TraceLoggingWideString(L"Marking pipe invalid and erasing pipe", MIDI_TRACE_EVENT_MESSAGE_FIELD));
+
+
+                pipe->Invalidate();
+                break;
+            }
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD));
 }

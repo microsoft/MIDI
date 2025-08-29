@@ -33,7 +33,7 @@ public:
     HRESULT DestroyMidiClient(
         _In_ MidiClientHandle);
 
-
+    void OnDeviceRemoved(const std::vector<std::wstring>& interfaceIds);
 
     HRESULT Shutdown();
 
@@ -96,7 +96,7 @@ private:
     std::shared_ptr<CMidiSessionTracker> m_SessionTracker;
 
     std::map<MidiClientHandle, wil::com_ptr_nothrow<CMidiPipe>> m_ClientPipes;
-    std::map<std::wstring, wil::com_ptr_nothrow<CMidiPipe>> m_DevicePipes;
+    std::multimap<std::wstring, wil::com_ptr_nothrow<CMidiPipe>> m_DevicePipes;
     std::multimap<std::wstring, wil::com_ptr_nothrow<CMidiTransformPipe>> m_TransformPipes; // need this to be CMidiTransformPipe to make it reasonable to get properties
 
     // mmcss task id that is shared among all midi clients
