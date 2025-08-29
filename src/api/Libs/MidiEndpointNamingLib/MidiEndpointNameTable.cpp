@@ -953,7 +953,7 @@ std::wstring MidiEndpointNameTable::GetPreferredName(
             selection = MidiEndpointNameTable::GetSystemDefaultPortNameSelection();
         }
 
-        switch (endpointLocalPortNameSelection)
+        switch (selection)
         {
         case Midi1PortNameSelection::UseLegacyWinMM:
             return std::wstring{ entry->LegacyWinMMName };
