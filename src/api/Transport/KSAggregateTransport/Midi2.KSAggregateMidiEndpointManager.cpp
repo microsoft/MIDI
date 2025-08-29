@@ -493,7 +493,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         );
 
         // return new device interface id
-        masterEndpointDefinition.EndpointDeviceId = std::wstring{ newDeviceInterfaceId.get() };
+        masterEndpointDefinition.EndpointDeviceId = internal::NormalizeEndpointInterfaceIdWStringCopy(std::wstring{ newDeviceInterfaceId.get() });
 
         auto lock = m_availableEndpointDefinitionsLock.lock();
 

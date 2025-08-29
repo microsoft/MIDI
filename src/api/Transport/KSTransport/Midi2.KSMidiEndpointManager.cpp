@@ -492,8 +492,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         std::vector<DEVPROPERTY> interfaceDevProperties;
 
 
-        // TODO: Need to fold in cached custom properties ---------------------------------------------------------------------------
-
         MIDIENDPOINTCOMMONPROPERTIES commonProperties {};
         commonProperties.TransportId = KsTransportLayerGUID;
         commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;

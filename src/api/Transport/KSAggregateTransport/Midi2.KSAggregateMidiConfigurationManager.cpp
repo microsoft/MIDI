@@ -105,7 +105,8 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCustomProperties(
         if (customProperties != nullptr)
         {
             // cache this set of properties in case of surprise removal or the device is added later
-            m_customPropertiesCache->Add(matchCriteria, customProperties);
+            auto cached = m_customPropertiesCache->Add(matchCriteria, customProperties);
+            LOG_HR_IF(E_FAIL, !cached);
 
             // we only write dev properties if we have a resolved endpoint device id
             // otherwise, caching is the best we can do

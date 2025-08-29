@@ -415,7 +415,7 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
 
     // naming approach
     destination.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-        DEVPROP_TYPE_UINT32, (ULONG)sizeof(WindowsMidiServicesNamingLib::Midi1PortNameSelection), (PVOID)&Midi1NamingApproach });
+        DEVPROP_TYPE_UINT32, (ULONG)sizeof(uint32_t), (PVOID)&Midi1NamingApproach });
 
 
     return true;
