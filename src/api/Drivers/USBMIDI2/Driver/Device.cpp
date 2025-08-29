@@ -1827,6 +1827,7 @@ Return Value:
                 // Make sure we do not try to capture this string in future processing
                 grpTermBlockStringIndexes[numGrpTermBlocks] = 0;
                 grpTermBlockStringSizes[numGrpTermBlocks] = sizeof(WCHAR);
+                grpTermBlockStructureSize+=sizeof(WCHAR);
                 numGrpTermBlocks++;
                 continue;
             }
@@ -1862,6 +1863,9 @@ Return Value:
         return(status);
     }
 
+    // Clear the created memory
+    RtlZeroMemory(pGTBPropertyBuffer, grpTermBlockStructureSize);
+
     // Place KSMULTIPLE_ITEM Strucutre
     PKSMULTIPLE_ITEM pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
     pMultiHeader->Size = grpTermBlockStructureSize;
@@ -1884,8 +1888,6 @@ Return Value:
         pThisGrpTrmBlk->GrpTrmBlock.Protocol = 0x01 /*MIDI_1_0_UP_TO_64_BITS*/;
         pThisGrpTrmBlk->GrpTrmBlock.MaxInputBandwidth = 0x0000; // Unknown or not fixed
         pThisGrpTrmBlk->GrpTrmBlock.MaxOutputBandwidth = 0x0000; // Unknown or not fixed
-
-        RtlZeroMemory(&pThisGrpTrmBlk->Name, grpTermBlockStringSizes[termBlockCount]);
 
         if (grpTermBlockStringIndexes[termBlockCount])
         {
