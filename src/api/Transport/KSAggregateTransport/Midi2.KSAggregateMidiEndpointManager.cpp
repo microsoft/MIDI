@@ -336,6 +336,8 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
     auto customProperties = TransportState::Current().GetConfigurationManager()->CustomPropertiesCache()->GetProperties(matchCriteria);
 
+    std::wstring customName{ };
+    std::wstring customDescription{ };
     if (customProperties != nullptr)
     {
         TraceLoggingWrite(
@@ -352,12 +354,14 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
         if (!customProperties->Name.empty())
         {
-            commonProperties.CustomEndpointName = customProperties->Name.c_str();
+            customName = customProperties->Name;
+            commonProperties.CustomEndpointName = customName.c_str();
         }
 
         if (!customProperties->Description.empty())
         {
-            commonProperties.CustomEndpointDescription = customProperties->Description.c_str();
+            customDescription = customProperties->Description;
+            commonProperties.CustomEndpointDescription = customDescription.c_str();
         }
 
         // this includes image, the Midi 1 naming approach, etc.
