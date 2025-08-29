@@ -28,7 +28,6 @@ CMidiDevicePipe::Initialize(
         TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-
     auto deviceLock = m_DevicePipeLock.lock_exclusive();
 
     TRANSPORTCREATIONPARAMS transportCreationParams;
@@ -259,4 +258,3 @@ CMidiDevicePipe::SendMidiMessage(
 
     return E_ABORT;
 }
-

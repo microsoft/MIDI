@@ -630,10 +630,10 @@ VOID WINAPI SvcMain(_In_ DWORD , _In_ LPTSTR *)
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
 
-    PROCESS_MITIGATION_REDIRECTION_TRUST_POLICY ReparsePointPolicy {};
-    ReparsePointPolicy.EnforceRedirectionTrust = 1;
+    PROCESS_MITIGATION_REDIRECTION_TRUST_POLICY RedirectionTrustPolicy {};
+    RedirectionTrustPolicy.EnforceRedirectionTrust = 1;
     LOG_IF_WIN32_BOOL_FALSE(SetProcessMitigationPolicy(ProcessRedirectionTrustPolicy,
-                                    &ReparsePointPolicy,
+                                    &RedirectionTrustPolicy,
                                     sizeof(PROCESS_MITIGATION_REDIRECTION_TRUST_POLICY)));
 
     // Register the handler function for the service

@@ -84,6 +84,9 @@ typedef struct _PORT_INFO
     std::wstring Name;
 } PORT_INFO;
 
+// Forward declarations
+class CMidiClientManager;
+
 class CMidiDeviceManager  : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
@@ -97,7 +100,8 @@ public:
     STDMETHOD(Initialize)(
         _In_ std::shared_ptr<CMidiPerformanceManager>&,
         _In_ std::shared_ptr<CMidiEndpointProtocolManager>&,
-        _In_ std::shared_ptr<CMidiConfigurationManager>&);
+        _In_ std::shared_ptr<CMidiConfigurationManager>&,
+        _In_ std::shared_ptr<CMidiClientManager>&);
 
     STDMETHOD(ActivateVirtualParentDevice)(
         _In_ ULONG,
@@ -218,6 +222,8 @@ private:
     HRESULT SyncMidi1Ports(
         _In_ PMIDIPORT umpMidiPort
     );
+
+    std::shared_ptr<CMidiClientManager> m_clientManager;
 
     std::shared_ptr<CMidiPerformanceManager> m_performanceManager;
     std::shared_ptr<CMidiConfigurationManager> m_configurationManager;

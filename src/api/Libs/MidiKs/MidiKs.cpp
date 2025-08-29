@@ -495,8 +495,17 @@ KSMidiInDevice::SendRequestToDriver()
         }
         else
         {
-            //return hr;
-            LOG_IF_FAILED(hr);
+            // if our operation was cancelled, then the pin handle is being closed,
+            // exit the worker (even if we are still in a running state)
+            if (hr == HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED))
+            {
+                return HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED);
+            }
+            else
+            {
+                // return hr;
+                LOG_IF_FAILED(hr);
+            }
         }
     }
     return S_OK;

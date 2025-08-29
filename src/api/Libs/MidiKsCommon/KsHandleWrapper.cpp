@@ -54,7 +54,9 @@ KsHandleWrapper::KsHandleWrapper(std::wstring pwszFilterName, UINT pinId, MidiTr
 
 KsHandleWrapper::~KsHandleWrapper()
 {
-    Close();
+    auto lock = m_lock.lock_exclusive();
+    UnregisterForNotifications();
+    m_handle.reset();
 }
 
 HRESULT KsHandleWrapper::Open()
@@ -92,10 +94,20 @@ HRESULT KsHandleWrapper::Open()
 
 void KsHandleWrapper::Close()
 {
-    auto lock = m_lock.lock_exclusive();
+    // cancel pending ioctls for midi pin
+    {
+        auto sharedLock = m_lock.lock_shared();
+        if (m_handleType == HandleType::Pin && m_handle)
+        {
+            CancelIoEx(m_handle.get(), nullptr);
+        }
+    }
 
-    UnregisterForNotifications();
-    m_handle.reset();
+    // acquire exclusive lock to reset handle
+    {
+        auto lock = m_lock.lock_exclusive();
+        m_handle.reset();
+    }
 }
 
 HANDLE KsHandleWrapper::GetHandle()
@@ -159,6 +171,13 @@ HRESULT KsHandleWrapper::RegisterForNotifications()
         return E_HANDLE;
     }
 
+    if (m_notifyContext)
+    {
+        // TODO: spin off a worker to unregister the old context.
+        // CM_Unregister_Notification(m_notifyContext);
+        m_notifyContext = nullptr;
+    }
+
     // Define the notification filter
     CM_NOTIFY_FILTER cmFilter;
     ZeroMemory(&cmFilter, sizeof(cmFilter));
@@ -208,12 +227,8 @@ DWORD CALLBACK KsHandleWrapper::PnPCallback(
         wrapper->OnDeviceQueryRemoveCancel();
         break;
     case CM_NOTIFY_ACTION_DEVICEINTERFACEREMOVAL:
-        wrapper->OnDeviceRemove();
-        break;
-    case CM_NOTIFY_ACTION_DEVICEREMOVECOMPLETE:
-        wrapper->OnDeviceRemove();
-        break;
     case CM_NOTIFY_ACTION_DEVICEREMOVEPENDING:
+    case CM_NOTIFY_ACTION_DEVICEREMOVECOMPLETE:
         wrapper->OnDeviceRemove();
         break;
     default:
