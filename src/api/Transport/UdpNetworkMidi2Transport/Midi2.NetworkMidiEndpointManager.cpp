@@ -724,7 +724,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
 //    std::wstring endpointDescription = definition->EndpointDescription;
 
     // no user or in-protocol data in this case
-    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
+    std::wstring friendlyName = endpointName;
 
 
     TraceLoggingWrite(
