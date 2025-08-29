@@ -557,12 +557,20 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     // "update" entries
     if (updateSection != nullptr && updateSection.Size() > 0)
     {
+        // this needs to allow for activating and deactivating existing entries, as well as setting the endpoint names and
 
     }
 
     // "remove" entries
     if (removeSection != nullptr && removeSection.Size() > 0)
     {
+        // remove a host 
+
+
+
+
+
+        // remove a connection to a remote host
 
     }
 
