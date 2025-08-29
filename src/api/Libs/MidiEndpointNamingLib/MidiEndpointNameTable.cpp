@@ -435,7 +435,7 @@ std::vector<Midi1PortNameEntry> ReadMidi1PortNameTableFromPropertyData(
 }
 
 
-inline bool WriteMidi1PortNameTableToPropertyDataPointer(
+bool WriteMidi1PortNameTableToPropertyDataPointer(
     _In_ std::vector<Midi1PortNameEntry> const& entries,
     _Inout_ std::vector<std::byte>& propertyData
 )
@@ -555,8 +555,10 @@ bool MidiEndpointNameTable::UpdateSourceEntryCustomName(
 
     if (entry != nullptr)
     {
+        auto charCount = min(MAXPNAMELEN-1, name.size());
+
         memset(entry->CustomName, 0, MAXPNAMELEN);
-        wcsncpy_s(entry->CustomName, MAXPNAMELEN, name.c_str(), name.size());
+        wcsncpy_s(entry->CustomName, MAXPNAMELEN, name.c_str(), charCount);
 
 
         return true;
@@ -574,8 +576,10 @@ bool MidiEndpointNameTable::UpdateDestinationEntryCustomName(
 
     if (entry != nullptr)
     {
+        auto charCount = min(MAXPNAMELEN - 1, name.size());
+
         memset(entry->CustomName, 0, MAXPNAMELEN);
-        wcsncpy_s(entry->CustomName, MAXPNAMELEN, name.c_str(), name.size());
+        wcsncpy_s(entry->CustomName, MAXPNAMELEN, name.c_str(), charCount);
 
         return true;
     }
@@ -603,9 +607,6 @@ MidiEndpointNameTable::WriteProperties(
     {
         destination.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, (ULONG)m_nameTablePropertyData.size(), (PVOID)m_nameTablePropertyData.data() });
-
-        //destination.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-        //    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelection), (PVOID)&EndpointLocalPortNameSelectionOverride });
 
         return S_OK;
     }
