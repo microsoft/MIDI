@@ -1005,7 +1005,7 @@ bool MidiEndpointNameTable::IsEqualTo(MidiEndpointNameTable* nameTable)
     if (SourceEntryCount() != nameTable->SourceEntryCount() ||
         DestinationEntryCount() != nameTable->DestinationEntryCount())
     {
-        return true;
+        return false;
     }
 
     for (auto const& it : m_sourceEntries)
