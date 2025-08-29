@@ -47,9 +47,9 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomPropertiesCache:
 {
     for (auto const& entry : m_entries)
     {
-        if (entry.Match->Matches(knownEndpointProperties))
+        if (entry->Match->Matches(knownEndpointProperties))
         {
-            return entry.Properties;
+            return entry->Properties;
         }
     }
 
@@ -60,14 +60,38 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomPropertiesCache:
 
 
 _Use_decl_annotations_
-void MidiEndpointCustomPropertiesCache::Add(
+bool MidiEndpointCustomPropertiesCache::Add(
     std::shared_ptr<MidiEndpointMatchCriteria> match, std::shared_ptr<MidiEndpointCustomProperties> properties)
 {
-    MidiEndpointCustomPropertiesCacheEntry entry{};
-    entry.Match = match;
-    entry.Properties = properties;
+
+    // Need to make sure we don't already have custom properties for this endpoint. If so, remove them.
+    // we only remove one, because if we do this correctly each time, there will never be more than one
+    // other match in here.
+
+    std::vector<std::shared_ptr<MidiEndpointCustomPropertiesCacheEntry>>::iterator it;
+
+    for (it = m_entries.begin(); it != m_entries.end(); it++)
+    {
+        if ((*it)->Match->Matches(*match))
+        {
+            m_entries.erase(it);
+            break;
+        }
+    }
+
+    auto entry = std::make_shared<MidiEndpointCustomPropertiesCacheEntry>();
+
+    if (entry == nullptr)
+    {
+        return false;
+    }
+
+    entry->Match = match;
+    entry->Properties = properties;
 
     m_entries.push_back(entry);
+
+    return true;
 }
 
 

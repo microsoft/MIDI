@@ -31,12 +31,12 @@ namespace WindowsMidiServicesPluginConfigurationLib
         //std::shared_ptr<MidiEndpointCustomProperties> GetProperties(_In_ std::map<winrt::hstring, winrt::hstring> knownEndpointProperties);
         std::shared_ptr<MidiEndpointCustomProperties> GetProperties(_In_ MidiEndpointMatchCriteria& knownEndpointProperties);
 
-        void Add(_In_ std::shared_ptr<MidiEndpointMatchCriteria> match, _In_ std::shared_ptr<MidiEndpointCustomProperties> properties);
+        bool Add(_In_ std::shared_ptr<MidiEndpointMatchCriteria> match, _In_ std::shared_ptr<MidiEndpointCustomProperties> properties);
 
         // TODO: Do we need a "remove" in here?
 
     private:
-        std::vector<MidiEndpointCustomPropertiesCacheEntry> m_entries;
+        std::vector<std::shared_ptr<MidiEndpointCustomPropertiesCacheEntry>> m_entries;
 
     };
 

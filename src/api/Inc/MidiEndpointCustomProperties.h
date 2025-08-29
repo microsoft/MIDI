@@ -105,7 +105,8 @@ namespace WindowsMidiServicesPluginConfigurationLib
 
         MidiEndpointCustomProperties() = default;
 
-        static std::shared_ptr<MidiEndpointCustomProperties> FromJson(_In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
+        static std::shared_ptr<MidiEndpointCustomProperties> FromJson(
+            _In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
 
         _Success_(return == true)
         bool WriteAllProperties(_In_ std::vector<DEVPROPERTY>& destination);

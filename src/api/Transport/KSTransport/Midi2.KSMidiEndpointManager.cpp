@@ -492,8 +492,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         std::vector<DEVPROPERTY> interfaceDevProperties;
 
 
-        // TODO: Need to fold in cached custom properties ---------------------------------------------------------------------------
-
         MIDIENDPOINTCOMMONPROPERTIES commonProperties {};
         commonProperties.TransportId = KsTransportLayerGUID;
         commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
@@ -627,17 +625,21 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         matchCriteria.TransportSuppliedEndpointName = MidiPin->Name;
 
         auto customProperties = TransportState::Current().GetConfigurationManager()->CustomPropertiesCache()->GetProperties(matchCriteria);
+        std::wstring customName{ };
+        std::wstring customDescription{ };
 
         if (customProperties != nullptr)
         {
             if (!customProperties->Name.empty())
             {
-                commonProperties.CustomEndpointName = customProperties->Name.c_str();
+                customName = customProperties->Name;
+                commonProperties.CustomEndpointName = customName.c_str();
             }
 
             if (!customProperties->Description.empty())
             {
-                commonProperties.CustomEndpointDescription = customProperties->Description.c_str();
+                customDescription = customProperties->Description;
+                commonProperties.CustomEndpointDescription = customDescription.c_str();
             }
         }
         else
