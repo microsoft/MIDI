@@ -720,7 +720,8 @@
                                                 Orientation="Horizontal"
                                                 HorizontalAlignment="Right">
 
-                                            <Button Content="Monitor" Margin="4,8,4,8" />
+                                            <Button Content="Monitor" Margin="4,8,4,8"
+                                                    Command="{x:Bind MonitorEndpointCommand}"/>
 
                                             <!--<Button Content="Details >" Margin="4,8,4,8"
                                                 Command="{x:Bind ViewDeviceDetailsCommand }"
