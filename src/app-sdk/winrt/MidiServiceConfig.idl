@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 import "IMidiServiceTransportPluginConfig.idl";
 import "IMidiServiceMessageProcessingPluginConfig.idl";
 import "MidiServiceConfigResponse.idl";
+import "MidiServiceTransportCommand.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
@@ -22,6 +23,13 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
     {
         static MidiServiceConfigResponse UpdateTransportPluginConfig(
             IMidiServiceTransportPluginConfig configUpdate);
+
+        static MidiServiceConfigResponse UpdateTransportPluginConfig(
+            Guid transportId,
+            Windows.Data.Json.JsonObject fullConfigObject);
+
+        static MidiServiceConfigResponse SendTransportCommand(
+            MidiServiceTransportCommand command);
 
         //static MidiServiceConfigResponse UpdateProcessingPluginConfig(
         //    IMidiServiceMessageProcessingPluginConfig configUpdate);

@@ -67,7 +67,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         midi2::Midi1PortNamingApproach Midi1PortNamingApproach() const noexcept;
         void Midi1PortNamingApproach(_In_ midi2::Midi1PortNamingApproach const value) noexcept;
 
-        hstring GetConfigJson() const noexcept;
+        json::JsonObject GetConfigJson() const noexcept;
 
     private:
         std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> m_props{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>() };

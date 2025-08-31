@@ -10,14 +10,18 @@
 
 import "MidiApiContracts.idl";
 
+import "IMidiServiceTransportPluginConfig.idl";
+
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiNetworkClientEndpointRemovalResult
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientDisconnectConfig")]
+    runtimeclass MidiNetworkClientDisconnectConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
-        Boolean Success;
-        String ErrorInformation;
+        MidiNetworkClientDisconnectConfig();
 
-    };
+
+    }
 }
 

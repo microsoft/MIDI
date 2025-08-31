@@ -154,6 +154,240 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandStopHost(
+    winrt::hstring const& hostEntryId,
+    json::JsonObject& responseObject) noexcept
+{
+    auto host = TransportState::Current().GetHost(hostEntryId);
+
+    if (host == nullptr)
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Host not found.");
+        return S_OK;
+    }
+
+    if (SUCCEEDED(host->Stop()))
+    {
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+        return S_OK;
+    }
+    else
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Unable to stop host.");
+        return S_OK;
+    }
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandStartHost(
+    winrt::hstring const& hostEntryId,
+    json::JsonObject& responseObject) noexcept
+{
+    auto host = TransportState::Current().GetHost(hostEntryId);
+
+    if (host == nullptr)
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Host not found.");
+        return S_OK;
+    }
+
+    auto startHr = host->Start();
+
+    if (SUCCEEDED(startHr))
+    {
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+        return S_OK;
+    }
+    else
+    {
+        auto error = L"Unable to start host. HRESULT: " + std::to_wstring(startHr);
+
+        internal::SetConfigurationResponseObjectFail(responseObject, error);
+        return S_OK;
+    }
+}
+
+
+
+
+
+
+
+
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
+    json::JsonObject& responseObject) noexcept
+{
+
+    internal::SetConfigurationResponseObjectFail(responseObject, L"Not implemented.");
+
+
+
+    return S_OK;
+}
+
+
+
+//
+// Response Object Payload
+// {
+//   "hosts" :
+//   [
+//     {
+//       "id" : "some guid",
+//       "enabled" : true,
+//       "hasStarted" : true,
+//       "actualPort" : 12345,
+//       "name" : "Advertised Endpoint Name",
+//       "productInstanceId" : "instance id",
+//       "createMidi1Ports" : true,
+//       "serviceInstanceName" : "foobarbaz"
+//      },
+//     ...
+//   ]
+// }
+// 
+//
+
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
+    json::JsonObject& responseObject) noexcept
+{
+    json::JsonArray hostsArray;
+
+    for (auto const host : TransportState::Current().GetHosts())
+    {
+        json::JsonObject hostObject;
+
+        auto def = host->GetDefinition();
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY,
+            json::JsonValue::CreateStringValue(def.EntryIdentifier));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_IS_ENABLED_KEY,
+            json::JsonValue::CreateBooleanValue(host->IsEnabled()));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY,
+            json::JsonValue::CreateBooleanValue(host->HasStarted()));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY,
+            json::JsonValue::CreateStringValue(host->ActualPort()));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(host->ActualAddress()));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY,
+            json::JsonValue::CreateStringValue(def.UmpEndpointName));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY,
+            json::JsonValue::CreateStringValue(def.ProductInstanceId));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
+            json::JsonValue::CreateBooleanValue(def.CreateMidi1Ports));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY,
+            json::JsonValue::CreateStringValue(def.ServiceInstanceName));
+
+        hostsArray.Append(hostObject);
+    }
+
+
+    responseObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HOSTS_ARRAY_KEY, hostsArray);
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::ProcessCommand(
+    json::JsonObject const& transportObject,
+    json::JsonObject& responseObject) noexcept
+{
+    auto commandHelper = internal::MidiTransportCommandHelper::ParseCommand(transportObject);
+
+    if (commandHelper.Command().empty())
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing command.");
+
+        // we S_OK this because the response object is valid and should be read
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES)
+    {
+        std::map<std::wstring, bool> capabilities{};
+
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS, false);
+
+        // revisit these once the functions are added in
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
+
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+        internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS)
+    {
+        RETURN_IF_FAILED(RunCommandEnumerateClients(responseObject));
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS)
+    {
+        RETURN_IF_FAILED(RunCommandEnumerateHosts(responseObject));
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST)
+    {
+        winrt::hstring hostEntryIdentifier{};
+
+        auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
+
+        if (arg != commandHelper.Arguments()->end())
+        {
+            RETURN_IF_FAILED(RunCommandStartHost(arg->second.c_str(), responseObject));
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST)
+    {
+        auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
+
+        if (arg != commandHelper.Arguments()->end())
+        {
+            RETURN_IF_FAILED(RunCommandStopHost(arg->second.c_str(), responseObject));
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+    else
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+    }
+
+    // we return S_OK no matter what, so the response object will be parsed
+    return S_OK;
+}
 
 
 //"{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}":
@@ -240,6 +474,10 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     if (configurationJsonSection == nullptr) return S_OK;
 
 
+    //OutputDebugString(L"JSON Received by CMidi2NetworkMidiConfigurationManager");
+    //OutputDebugString(configurationJsonSection);
+    //OutputDebugString(L"\n");
+
 
     json::JsonObject jsonObject;
     auto responseObject = internal::BuildConfigurationResponseObject(false);
@@ -271,6 +509,18 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
         RETURN_IF_FAILED(E_INVALIDARG);
     }
+
+    // command. If there's a command in the payload, we ignore anything else
+    if (internal::MidiTransportCommandHelper::TransportObjectContainsCommand(jsonObject))
+    {
+        auto hr = ProcessCommand(jsonObject, responseObject);
+
+        internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+        return hr;
+    }
+
+
 
     auto transportSettingsSection = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_KEY, nullptr);
 
@@ -337,7 +587,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 definition->EntryIdentifier = internal::TrimmedHStringCopy(it.Current().Key());
 
-                definition->Enabled = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
+                definition->IsEnabled = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
                 definition->Advertise = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
 
                 definition->CreateMidi1Ports = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);

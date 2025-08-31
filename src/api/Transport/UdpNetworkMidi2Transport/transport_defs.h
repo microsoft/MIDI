@@ -20,10 +20,13 @@
 
 // TODO: Names should be moved to .rc for localization
 
-#define TRANSPORT_PARENT_ID                                             L"MIDIU_NET2UDP_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME                                    L"MIDI 2.0 Network (UDP) Endpoints"
+#define TRANSPORT_HOST_PARENT_NAME_PREFIX                               L"MIDI 2.0 Network Local Host: "
+#define TRANSPORT_HOST_PARENT_ID_PREFIX                                 L"MIDIU_NET2UDP_HOST_"
 
-#define LOOPBACK_PARENT_ROOT                                            L"HTREE\\ROOT\\0"
+#define TRANSPORT_CLIENT_PARENT_ID                                      L"MIDIU_NET2UDP_TRANSPORT"
+#define TRANSPORT_CLIENT_PARENT_DEVICE_NAME                             L"MIDI 2.0 Network Remote Hosts"
+
+#define ULTIMATE_PARENT_ROOT                                            L"HTREE\\ROOT\\0"
 #define TRANSPORT_ENUMERATOR                                            L"MIDISRV"
 
 

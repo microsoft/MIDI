@@ -7,8 +7,8 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiNetworkClientEndpointCreationConfig.h"
-#include "Endpoints.Network.MidiNetworkClientEndpointCreationConfig.g.cpp"
+#include "MidiNetworkClientConnectConfig.h"
+#include "Endpoints.Network.MidiNetworkClientConnectConfig.g.cpp"
 
 #include "..\..\..\api\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
@@ -17,7 +17,7 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
 
-    winrt::hstring MidiNetworkClientEndpointCreationConfig::GetConfigJson() const noexcept
+    json::JsonObject MidiNetworkClientConnectConfig::GetConfigJson() const noexcept
     {
         json::JsonObject clientObject{};
 
@@ -72,6 +72,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
             transportSettingsObject);
 
 
-        return wrapperObject.Stringify();
+        return wrapperObject;
     }
 }

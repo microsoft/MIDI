@@ -24,6 +24,21 @@ public:
 //    STDMETHOD(ValidateClientDefinition(_In_ MidiNetworkUdpClientDefinition& definition));
 
 private:
+    HRESULT ProcessCommand(
+        _In_ json::JsonObject const& transportObject,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
+    HRESULT RunCommandEnumerateClients(_Inout_ json::JsonObject& responseObject) noexcept;
+    HRESULT RunCommandEnumerateHosts(_Inout_ json::JsonObject& responseObject) noexcept;
+    HRESULT RunCommandStopHost(
+        _In_ winrt::hstring const& hostConfigEntryId,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
+    HRESULT RunCommandStartHost(
+        _In_ winrt::hstring const& hostConfigEntryId,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
 };

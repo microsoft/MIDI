@@ -49,7 +49,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
     //   }
     // }
 
-    winrt::hstring MidiLoopbackEndpointCreationConfig::GetConfigJson()
+    json::JsonObject MidiLoopbackEndpointCreationConfig::GetConfigJson()
     {
         json::JsonObject endpointAssociationObject;
         json::JsonObject endpointDeviceAObject;
@@ -123,7 +123,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             topLevelTransportPluginSettingsObject);
 
 
-        return outerWrapperObject.Stringify();
+        return outerWrapperObject;
     }
 
 }

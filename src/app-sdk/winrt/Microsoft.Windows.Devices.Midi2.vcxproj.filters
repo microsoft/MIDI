@@ -43,12 +43,6 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <Filter>SDK\CapabilityInquiry</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkClientEndpointCreationConfig.cpp">
-      <Filter>SDK\Endpoints\Network\Client</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkClientEndpointRemovalConfig.cpp">
-      <Filter>SDK\Endpoints\Network\Client</Filter>
-    </ClCompile>
     <ClCompile Include="Initialization\MidiAppSdkRuntimeComponent.cpp">
       <Filter>Initializer\WinRT Detour</Filter>
     </ClCompile>
@@ -184,12 +178,6 @@
     </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
       <Filter>SDK\CapabilityInquiry</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkClientEndpointCreationConfig.h">
-      <Filter>SDK\Endpoints\Network\Client</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkClientEndpointRemovalConfig.h">
-      <Filter>SDK\Endpoints\Network\Client</Filter>
     </ClInclude>
     <ClInclude Include="Initialization\MidiAppSdkRuntimeComponent.h">
       <Filter>Initializer\WinRT Detour</Filter>
@@ -544,16 +532,16 @@
     <Midl Include="MidiNetworkTransportManager.idl">
       <Filter>SDK\Endpoints\Network</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientEndpointCreationConfig.idl">
+    <Midl Include="MidiNetworkClientConnectConfig.idl">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientEndpointCreationResult.idl">
+    <Midl Include="MidiNetworkClientConnectResult.idl">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientEndpointRemovalConfig.idl">
+    <Midl Include="MidiNetworkClientDisconnectConfig.idl">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientEndpointRemovalResult.idl">
+    <Midl Include="MidiNetworkClientDisconnectResult.idl">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostCreationConfig.idl">
@@ -660,6 +648,18 @@
     </Midl>
     <Midl Include="Midi1PortNamingApproachEnum.idl">
       <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostUpdateResult.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkConfiguredClient.idl">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkConfiguredHost.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientConnectionResult.idl">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

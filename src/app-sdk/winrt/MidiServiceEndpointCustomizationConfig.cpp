@@ -70,7 +70,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
     }
 
 
-    winrt::hstring MidiServiceEndpointCustomizationConfig::GetConfigJson() const noexcept
+    json::JsonObject MidiServiceEndpointCustomizationConfig::GetConfigJson() const noexcept
     {
         json::JsonObject matchObject;
         json::JsonObject customPropertiesObject;
@@ -114,7 +114,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
             topLevelTransportPluginSettingsObject);
 
 
-        return outerWrapperObject.Stringify();
+        return outerWrapperObject;
     }
 
 

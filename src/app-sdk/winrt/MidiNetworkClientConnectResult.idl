@@ -10,18 +10,19 @@
 
 import "MidiApiContracts.idl";
 
-import "IMidiServiceTransportPluginConfig.idl";
-
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    [contract(MidiEndpointsNetworkApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientEndpointRemovalConfig")]
-    runtimeclass MidiNetworkClientEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    struct MidiNetworkClientConnectResult
     {
-        MidiNetworkClientEndpointRemovalConfig();
+        Guid ClientId;
+
+		Boolean Success;
+        String ErrorInformation;
+
+		// we won't have the endpoint device id yet, so cannot return it here
 
 
-    }
+    };
 }
 

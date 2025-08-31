@@ -11,20 +11,25 @@
 import "MidiApiContracts.idl";
 import "MidiNetworkClientMatchCriteria.idl";
 import "IMidiServiceTransportPluginConfig.idl";
+import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
     [contract(MidiEndpointsNetworkApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientEndpointCreationConfig")]
-    runtimeclass MidiNetworkClientEndpointCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientConnectConfig")]
+    runtimeclass MidiNetworkClientConnectConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
-        MidiNetworkClientEndpointCreationConfig();
+		MidiNetworkClientConnectConfig();
 
 		String Id;							// GUID or other string we use in the config file and for subsequent edits/deletes
 		String Comment;						// optional comment that is put into the config file
 		Boolean CreateOnlyUmpEndpoints;	    // todo: this will also need a table of port names
-		Boolean AutoReconnect;				// true if we reconnect after any disconnects. Otherwise, we connect only once.
+		//Boolean AutoReconnect;				// true if we reconnect after any disconnects. Otherwise, we connect only once.
+
+
+
+
 
 		// sets the criteria we look for when creating the endpoint. mDNS is generally preferred.
 		MidiNetworkClientMatchCriteria MatchCriteria;

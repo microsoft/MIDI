@@ -18,8 +18,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         //Guid HostId;
 
 		Boolean Success;
-
-		// we won't have any endpoint device ids yet, so cannot return them here
+        String ErrorInformation;
 
 
     };

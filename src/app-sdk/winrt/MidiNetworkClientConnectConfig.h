@@ -7,16 +7,16 @@
 // ============================================================================
 
 #pragma once
-#include "Endpoints.Network.MidiNetworkClientEndpointCreationConfig.g.h"
+#include "Endpoints.Network.MidiNetworkClientConnectConfig.g.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    struct MidiNetworkClientEndpointCreationConfig : MidiNetworkClientEndpointCreationConfigT<MidiNetworkClientEndpointCreationConfig>
+    struct MidiNetworkClientConnectConfig : MidiNetworkClientConnectConfigT<MidiNetworkClientConnectConfig>
     {
-        MidiNetworkClientEndpointCreationConfig() = default;
+        MidiNetworkClientConnectConfig() = default;
 
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
-        winrt::hstring GetConfigJson() const noexcept;
+        json::JsonObject GetConfigJson() const noexcept;
 
         winrt::hstring Comment() const noexcept { return m_comment; }
         void Comment(_In_ winrt::hstring const& value) { m_comment = value; }
@@ -45,7 +45,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation
 {
-    struct MidiNetworkClientEndpointCreationConfig : MidiNetworkClientEndpointCreationConfigT<MidiNetworkClientEndpointCreationConfig, implementation::MidiNetworkClientEndpointCreationConfig>
+    struct MidiNetworkClientConnectConfig : MidiNetworkClientConnectConfigT<MidiNetworkClientConnectConfig, implementation::MidiNetworkClientConnectConfig>
     {
     };
 }

@@ -46,8 +46,8 @@ struct MidiNetworkHostDefinition
     winrt::hstring UmpEndpointName;
     winrt::hstring ProductInstanceId;
 
-    bool UmpOnly{ true };
-    bool Enabled{ true };
+    //bool UmpOnly{ true };
+    bool IsEnabled{ true };
     bool Advertise{ true };
 
     bool CreateMidi1Ports{ MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT };
@@ -79,19 +79,32 @@ class MidiNetworkHost
 {
 public:
     HRESULT Initialize(_In_ MidiNetworkHostDefinition& hostDefinition);
+    
     HRESULT Start();
+    HRESULT Stop();
+
     HRESULT Shutdown();
 
     bool HasStarted() { return m_started; }
 
-private:
-    winrt::hstring m_configIdentifier{};
+    bool IsEnabled() { return m_enabled; }
 
+    MidiNetworkHostDefinition GetDefinition() { return m_hostDefinition; }
+
+    winrt::hstring ActualPort() { return m_socket != nullptr ? m_socket.Information().LocalPort() : L""; }
+    winrt::hstring ActualAddress() { return m_socket != nullptr ? m_socket.Information().LocalAddress().DisplayName() : L""; }
+
+private:
+//    winrt::hstring m_configIdentifier{};
+
+    bool m_enabled{ true };
     bool m_started{ false };
     bool m_createUmpEndpointsOnly{ true };
 
     std::wstring m_hostEndpointName{ };
     std::wstring m_hostProductInstanceId{ };
+
+    std::wstring m_parentDeviceInstanceId{ };
 
     std::atomic<bool> m_keepProcessing{ true };
 
@@ -108,6 +121,8 @@ private:
 
     DatagramSocket m_socket{ nullptr };
 
-    HRESULT CreateNetworkConnection(_In_ winrt::Windows::Networking::HostName const& remoteHostName, _In_ winrt::hstring const& remotePort);
+    HRESULT CreateNetworkConnection(
+        _In_ winrt::Windows::Networking::HostName const& remoteHostName, 
+        _In_ winrt::hstring const& remotePort);
 
 };

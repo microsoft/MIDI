@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
+{
+    [experimental]
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    struct MidiNetworkConfiguredClient
+    {
+        String Id;  // internal id we use to match up in config file
+
+        Boolean IsEnabled;                  // true if this is allows to connect. Mostly for pre-configured connections
+        Boolean IsSessionActive;            // true if a session is active
+
+        String ConnectedRemoteIPOrName;     
+        UInt16 ConnectedRemotePort;
+        UInt16 ConnectedLocalPort;          // need to see if I can get this in the service
+
+        String EndpointDeviceId;            // the created MIDI endpoint's id
+    };
+}
+

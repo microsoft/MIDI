@@ -53,6 +53,25 @@ TransportState::AddHost(
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+std::shared_ptr<MidiNetworkHost>
+TransportState::GetHost(winrt::hstring hostEntryIdentifier)
+{
+    for (auto& host : m_hosts)
+    {
+        if (host->GetDefinition().EntryIdentifier == hostEntryIdentifier)
+        {
+            return host;
+        }
+    }
+
+    return nullptr;
+}
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 TransportState::AddPendingHostDefinition(
@@ -203,6 +222,57 @@ TransportState::GetNetworkConnection(
 
     return nullptr;
 }
+
+_Use_decl_annotations_
+std::vector<std::shared_ptr<MidiNetworkConnection>> 
+TransportState::GetAllNetworkConnectionsForHost(winrt::hstring const& hostEntryConfigIdentifier)
+{
+    std::vector<std::shared_ptr<MidiNetworkConnection>> results;
+
+    for (auto& conn : m_networkConnections)
+    {
+        if (conn.second->ConfigIdentifier() == hostEntryConfigIdentifier)
+        {
+            results.push_back(conn.second);
+        }
+    }
+
+    return results;
+}
+
+_Use_decl_annotations_
+HRESULT 
+TransportState::RemoveAllNetworkConnectionsForHost(winrt::hstring const& hostEntryConfigIdentifier)
+{
+    do
+    {
+        auto item = std::find_if(m_networkConnections.begin(), m_networkConnections.end(), [&](const std::pair<std::string, std::shared_ptr<MidiNetworkConnection>>& connection)
+        {
+            if (connection.second->ConfigIdentifier() == hostEntryConfigIdentifier)
+            {
+                return true;
+            }
+
+            return false;
+        });
+
+        // exit if the no matches were found. We're done in that case.
+        if (item == m_networkConnections.end())
+        {
+            break;
+        }
+        else
+        {
+            // this is assuming that shutdown has already been peformed on these connections. 
+            // we're just doing housekeeping here
+
+            m_networkConnections.erase(item);
+        }
+    } while (TRUE);
+
+    return S_OK;
+}
+
 
 
 _Use_decl_annotations_

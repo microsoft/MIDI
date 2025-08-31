@@ -13,8 +13,8 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
     
-    winrt::hstring MidiNetworkHostRemovalConfig::GetConfigJson() const noexcept
+    json::JsonObject MidiNetworkHostRemovalConfig::GetConfigJson() const noexcept
     {
-        return L"";
+        return nullptr;
     }
 }

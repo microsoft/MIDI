@@ -22,8 +22,21 @@ public:
 
     STDMETHOD(InitiateDiscoveryAndNegotiation(_In_ std::wstring const& endpointDeviceInterfaceId));
 
-    STDMETHOD(CreateNewEndpoint(
-        _In_ MidiNetworkConnectionRole thisServiceRole,
+    // endpoint for a remote client connected to this host
+    STDMETHOD(CreateNewHostEndpointToRemoteClient(
+        _In_ std::wstring const& configIdentifier,
+        _In_ std::wstring const& parentHostDeviceInstanceId,
+        _In_ std::wstring const& endpointName,
+        _In_ std::wstring const& remoteEndpointProductInstanceId,
+        _In_ winrt::Windows::Networking::HostName const& hostName,
+        _In_ std::wstring const& networkPort,
+        _In_ bool umpOnly,
+        _Out_ std::wstring& createdNewDeviceInstanceId,
+        _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
+    ));
+
+    // endpoint for this client connected to a remote host
+    STDMETHOD(CreateNewClientEndpointToRemoteHost(
         _In_ std::wstring const& configIdentifier,
         _In_ std::wstring const& endpointName,
         _In_ std::wstring const& remoteEndpointProductInstanceId,
@@ -43,7 +56,28 @@ public:
 
     STDMETHOD(WakeupBackgroundEndpointCreatorThread)();
 
+    HRESULT CreateParentDeviceForHost(
+        _In_ winrt::hstring const& name,
+        _In_ winrt::hstring const& id,
+        _Inout_ std::wstring& createdNewDeviceInstanceId);
+
+    HRESULT DeleteParentHostDevice(
+        _In_ std::wstring const& deviceInstanceId);
+
 private:
+    STDMETHOD(CreateNewEndpoint(
+        _In_ MidiNetworkConnectionRole thisServiceRole,
+        _In_ std::wstring const& configIdentifier,
+        _In_ std::wstring const& parentId,
+        _In_ std::wstring const& endpointName,
+        _In_ std::wstring const& remoteEndpointProductInstanceId,
+        _In_ winrt::Windows::Networking::HostName const& hostName,
+        _In_ std::wstring const& networkPort,
+        _In_ bool umpOnly,
+        _Out_ std::wstring& createdNewDeviceInstanceId,
+        _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
+    ));
+
     enumeration::DeviceWatcher m_deviceWatcher{ nullptr };
     winrt::event_token m_deviceWatcherAddedToken;
     winrt::event_token m_deviceWatcherUpdatedToken;
@@ -61,9 +95,9 @@ private:
 
     GUID m_containerId{};
     GUID m_transportId{ };
-    std::wstring m_parentDeviceId{};
+    std::wstring m_clientParentDeviceInstanceId{};
 
-    HRESULT CreateParentDevice();
+    HRESULT CreateParentDeviceForClients();
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;

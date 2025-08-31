@@ -28,11 +28,12 @@ struct MidiOutgoingPingTrackingEntry
 class MidiNetworkConnection
 {
 public:
-    HRESULT Initialize(
-        _In_ MidiNetworkConnectionRole const role,
-        _In_ winrt::hstring configIdentifier,
+
+    HRESULT InitializeForHost(
+        _In_ winrt::hstring const& configIdentifier,
+        _In_ std::wstring const& hostParentInstanceId,
         _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
-        _In_ winrt::Windows::Networking::HostName const& remoteHostName,
+        _In_ winrt::Windows::Networking::HostName const& remoteClientHostName,
         _In_ winrt::hstring const& remotePort,
         _In_ std::wstring const& thisEndpointName,
         _In_ std::wstring const& thisProductInstanceId,
@@ -40,6 +41,19 @@ public:
         _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
         _In_ bool createUmpEndpointsOnly
     );
+
+    HRESULT InitializeForClient(
+        _In_ winrt::hstring const& configIdentifier,
+        _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+        _In_ winrt::Windows::Networking::HostName const& remoteHostHostName,
+        _In_ winrt::hstring const& remotePort,
+        _In_ std::wstring const& thisEndpointName,
+        _In_ std::wstring const& thisProductInstanceId,
+        _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
+        _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
+        _In_ bool createUmpEndpointsOnly
+    );
+
 
     HRESULT Shutdown();
 
@@ -59,19 +73,42 @@ public:
         _In_ PVOID const bytes,
         _In_ UINT const byteCount);
 
-
-
     HRESULT DisconnectMidiCallback();
+
+    // if this was created from a host here
+    winrt::hstring ConfigIdentifier() { return m_configIdentifier; }
+
 
     // todo: session info, connection to bidi streams, etc.
 
 private:
+    HRESULT Initialize(
+        _In_ MidiNetworkConnectionRole const role,
+        _In_ winrt::hstring const& configIdentifier,
+        _In_ std::wstring const& hostParentInstanceId,  // host only
+        _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+        _In_ winrt::Windows::Networking::HostName const& remoteHostName,
+        _In_ winrt::hstring const& remotePort,
+        _In_ std::wstring const& thisEndpointName,
+        _In_ std::wstring const& thisProductInstanceId,
+        _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
+        _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
+        _In_ bool createUmpEndpointsOnly
+    );
+
     HRESULT SendQueuedMidiMessagesToNetwork();
 
     HRESULT StartOutboundMidiMessageProcessingThread();
     HRESULT StartConnectionWatchdogThread();
 
     HRESULT ResetSequenceNumbers();
+
+    bool m_shuttingDown { false };
+
+
+    bool m_byeReplyReceived{ false };
+    bool m_inSelfInitiatedByeSequence { false };    // true if we're trying to close the session by sending Bye, and waiting for bye reply
+    HRESULT AttemptPoliteByeSequence();
     HRESULT EndActiveSession(_In_ bool respondWithByeReply);
 
     HRESULT RequestMissingPackets();
@@ -82,7 +119,7 @@ private:
     wil::critical_section m_outgoingUmpMessageQueueLock;
     std::vector<uint32_t> m_outgoingUmpMessages{};
     std::jthread m_outboundProcessingThread;
-    HRESULT OutboundProcessingThreadWorker(_In_ std::stop_token stopToken);
+    HRESULT OutboundProcessingThreadWorker();
 
     bool m_createUmpEndpointsOnly{ true };
 
@@ -94,6 +131,7 @@ private:
 
     wil::critical_section m_socketWriterLock;
 
+    std::wstring m_parentDeviceInstanceId;              // the parent under which new endpoints are created.
 
     std::wstring m_sessionEndpointDeviceInterfaceId{};  // swd
     std::wstring m_sessionDeviceInstanceId{};           // what we used to create/delete the device
@@ -125,6 +163,7 @@ private:
         _In_ std::wstring const& remoteHostProductInstanceId);
 
     HRESULT HandleIncomingBye();
+    HRESULT HandleIncomingByeReply();
 
     HRESULT HandleIncomingPing(_In_ uint32_t const pingId);
     HRESULT HandleIncomingPingReply(_In_ uint32_t const pingId);
@@ -166,12 +205,9 @@ private:
 
     std::jthread m_connectionWatcherThread;
     HRESULT SignalHealthyConnectionAndUpdateArrivalTimestamp();
-    HRESULT ConnectionWatcherThreadWorker(_In_ std::stop_token stopToken);
+    HRESULT ConnectionWatcherThreadWorker();
     HRESULT EndActiveSessionDueToTimeout();
 
     HRESULT AddUmpPacketToRetransmitBuffer(_In_ MidiSequenceNumber const sequenceNumber, _In_ std::vector<uint32_t> const& words);
-
-
-
 
 };

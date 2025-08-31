@@ -88,6 +88,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "json_helpers.h"
 #include "swd_helpers.h"
 #include "resource_util.h"
+#include "json_transport_command_helper.h"
 
 #include "MidiXProc.h"
 

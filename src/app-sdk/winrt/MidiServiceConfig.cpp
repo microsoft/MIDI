@@ -185,15 +185,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
             return response;
         }
 
-        json::JsonObject jsonUpdate{ nullptr }; 
-            
-        if (!json::JsonObject::TryParse(configUpdate.GetConfigJson(), jsonUpdate))
-        {
-            response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson;
-            return response;
-        }
+        return UpdateTransportPluginConfig(configUpdate.TransportId(), configUpdate.GetConfigJson());
 
-        if (jsonUpdate == nullptr)
+    }
+
+    _Use_decl_annotations_
+    svc::MidiServiceConfigResponse MidiServiceConfig::UpdateTransportPluginConfig(
+        winrt::guid const& transportId,
+        json::JsonObject const& fullConfigObject) noexcept
+    {
+        // this initializes to a failure state, so we can just return it when we have a fail
+        svc::MidiServiceConfigResponse response;
+
+        if (fullConfigObject == nullptr)
         {
             LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
 
@@ -211,8 +215,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         }
 
         auto responseJsonObject = InternalSendConfigJsonAndGetResponse(
-            configUpdate.TransportId(),
-            jsonUpdate
+            transportId,
+            fullConfigObject
         );
 
         if (responseJsonObject == nullptr)
@@ -239,6 +243,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
             return response;
         }
     }
+
+    _Use_decl_annotations_
+    svc::MidiServiceConfigResponse MidiServiceConfig::SendTransportCommand(
+        svc::MidiServiceTransportCommand const& command) noexcept
+    {
+        return UpdateTransportPluginConfig(command.TransportId(), command.GetConfigJson());
+    }
+
 
     //_Use_decl_annotations_
     //svc::MidiServiceConfigResponse MidiServiceConfig::UpdateProcessingPluginConfig(

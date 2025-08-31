@@ -41,7 +41,7 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
     m_containerId = m_transportId;                           // we use the transport ID as the container ID for convenience
 
-    RETURN_IF_FAILED(CreateParentDevice());
+    RETURN_IF_FAILED(CreateParentDeviceForClients());
 
     m_initialized = true;
 
@@ -378,7 +378,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                 continue;
             }
 
-            if (!definition->Enabled)
+            if (!definition->IsEnabled)
             {
                 continue;
             }
@@ -394,8 +394,6 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                 {
                     LOG_IF_FAILED(host->Start());
                 }
-
-                // Remove pending entry
 
                 definition->Created = true;
 
@@ -566,7 +564,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
 
 HRESULT
-CMidi2NetworkMidiEndpointManager::CreateParentDevice()
+CMidi2NetworkMidiEndpointManager::CreateParentDeviceForClients()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -581,26 +579,28 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 
 
     // the parent device parameters are set by the transport (this)
-    std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
-    std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_PARENT_ID) };
+    std::wstring parentDeviceName{ TRANSPORT_CLIENT_PARENT_DEVICE_NAME };
+    std::wstring parentDeviceInstanceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_CLIENT_PARENT_ID) };
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
-    createInfo.pszInstanceId = parentDeviceId.c_str();
+    createInfo.pszInstanceId = parentDeviceInstanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
     createInfo.pContainerId = &m_containerId;
 
-    LPWSTR newDeviceId;
+    wil::unique_cotaskmem_string newParentDeviceId;
 
     RETURN_IF_FAILED(m_midiDeviceManager->ActivateVirtualParentDevice(
         0,
         nullptr,
         &createInfo,
-        (LPWSTR*)&newDeviceId
+        &newParentDeviceId
     ));
 
-    m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
+    m_clientParentDeviceInstanceId = newParentDeviceId.get();
+    //m_clientParentDeviceInstanceId = parentDeviceInstanceId;
+
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -608,8 +608,108 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(newDeviceId, "New parent device instance id")
+        TraceLoggingWideString(m_clientParentDeviceInstanceId.c_str(), "New parent device instance id")
     );
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
+    winrt::hstring const& name,
+    winrt::hstring const& serviceInstanceId,
+    std::wstring& createdNewDeviceInstanceId
+)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
+
+    // the parent device parameters are set by the transport (this)
+    std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_HOST_PARENT_ID_PREFIX + std::wstring{ serviceInstanceId.c_str() }) };
+    std::wstring parentName{ TRANSPORT_HOST_PARENT_NAME_PREFIX + name };
+
+    wil::unique_cotaskmem_string newParentDeviceId;
+
+    SW_DEVICE_CREATE_INFO createInfo = {};
+    createInfo.cbSize = sizeof(createInfo);
+    createInfo.pszInstanceId = parentDeviceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = parentName.c_str();
+    createInfo.pContainerId = &m_containerId;
+
+    // NOTE: This will fail if the parent device already exists. Since there's no function to
+    // remove the virtual parent currently in the MIDI Device Manager, this will fail the second
+    // time it is called (so after a Stop and then start)
+    auto activateHr = m_midiDeviceManager->ActivateVirtualParentDevice(
+        0,
+        nullptr,
+        &createInfo,
+        &newParentDeviceId
+    );
+    RETURN_IF_FAILED(activateHr);
+
+
+    createdNewDeviceInstanceId = newParentDeviceId.get();
+    //createdNewDeviceInstanceId = parentDeviceId;
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(parentDeviceId.c_str(), "New parent device instance id")
+    );
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::DeleteParentHostDevice(
+    std::wstring const& deviceInstanceId)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(deviceInstanceId.c_str(), "deviceShortInstanceId")
+    );
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
+
+    auto instanceId = deviceInstanceId;
+
+    if (!instanceId.empty())
+    {
+        // this will remove all child endpoints
+        // NOTE: There's no device manager function to remove the parent, yet.
+        RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(instanceId.c_str()));
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Empty instanceId property for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        RETURN_IF_FAILED(E_INVALIDARG);
+    }
 
     return S_OK;
 }
@@ -686,12 +786,75 @@ CMidi2NetworkMidiEndpointManager::InitiateDiscoveryAndNegotiation(
     return S_OK;
 }
 
+// endpoint for a remote client connected to this host
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::CreateNewHostEndpointToRemoteClient(
+    _In_ std::wstring const& configIdentifier,
+    _In_ std::wstring const& parentHostDeviceInstanceId,
+    _In_ std::wstring const& endpointName,
+    _In_ std::wstring const& remoteEndpointProductInstanceId,
+    _In_ winrt::Windows::Networking::HostName const& hostName,
+    _In_ std::wstring const& networkPort,
+    _In_ bool umpOnly,
+    _Out_ std::wstring& createdNewDeviceInstanceId,
+    _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
+)
+{
+    RETURN_HR_IF(E_INVALIDARG, parentHostDeviceInstanceId.empty());
+
+    return CreateNewEndpoint(
+        MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+        configIdentifier,
+        parentHostDeviceInstanceId,
+        endpointName,
+        remoteEndpointProductInstanceId,
+        hostName,
+        networkPort,
+        umpOnly,
+        createdNewDeviceInstanceId,
+        createdNewEndpointDeviceInterfaceId
+    );
+
+}
+
+// endpoint for this client connected to a remote host
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::CreateNewClientEndpointToRemoteHost(
+    _In_ std::wstring const& configIdentifier,
+    _In_ std::wstring const& endpointName,
+    _In_ std::wstring const& remoteEndpointProductInstanceId,
+    _In_ winrt::Windows::Networking::HostName const& hostName,
+    _In_ std::wstring const& networkPort,
+    _In_ bool umpOnly,
+    _Out_ std::wstring& createdNewDeviceInstanceId,
+    _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
+)
+{
+    RETURN_HR_IF(E_INVALIDARG, m_clientParentDeviceInstanceId.empty());
+
+    return CreateNewEndpoint(
+        MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+        configIdentifier,
+        m_clientParentDeviceInstanceId,
+        endpointName,
+        remoteEndpointProductInstanceId,
+        hostName,
+        networkPort,
+        umpOnly,
+        createdNewDeviceInstanceId,
+        createdNewEndpointDeviceInterfaceId
+    );
+
+}
 
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     MidiNetworkConnectionRole thisServiceRole,
     std::wstring const& configIdentifier,
+    std::wstring const& parentInstanceId,
     std::wstring const& endpointName,
     std::wstring const& remoteEndpointProductInstanceId,
     winrt::Windows::Networking::HostName const& hostName,
@@ -836,8 +999,11 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
     commonProperties.Capabilities = (MidiEndpointCapabilities)capabilities;
 
+    // this is here only because it kept getting optimized away during debugging
+    std::wstring parent = parentInstanceId;
+
     RETURN_IF_FAILED(m_midiDeviceManager->ActivateEndpoint(
-        (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
+        (PCWSTR)parent.c_str(),                                 // parent instance Id
         umpOnly,                                                // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
@@ -862,7 +1028,8 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
 
 
     // we need this for removal later
-    createdNewDeviceInstanceId = instanceId;
+    //createdNewDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(L"SWD\\MIDISRV\\" + instanceId);
+    createdNewDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
     createdNewEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
 
 

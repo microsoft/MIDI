@@ -200,8 +200,7 @@ MidiNetworkClient::Start(
         TraceLoggingWideString(remoteHostName.ToString().c_str(), "remote hostname"),
         TraceLoggingWideString(remotePort.c_str(), "remote port"));
 
-    RETURN_IF_FAILED(conn->Initialize(
-        MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+    RETURN_IF_FAILED(conn->InitializeForClient(
         m_configIdentifier,
         m_socket,
         remoteHostName,

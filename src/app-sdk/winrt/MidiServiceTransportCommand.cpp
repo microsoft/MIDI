@@ -41,10 +41,53 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
 
 
-    winrt::hstring MidiServiceTransportCommand::GetConfigJson() const noexcept
+    json::JsonObject MidiServiceTransportCommand::GetConfigJson() const noexcept
     {
-        // temp
+        json::JsonObject outerWrapper;
+        json::JsonObject transportObject;
+        json::JsonObject topLevelTransportPluginSettingsObject;
 
-        return L"";
+        json::JsonObject commandObject;
+        json::JsonObject argumentsObject;
+
+
+        commandObject.SetNamedValue(
+            MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY,
+            json::JsonValue::CreateStringValue(m_verb));
+
+        if (m_arguments.Size() > 0)
+        {
+            for (auto const& arg : m_arguments)
+            {
+                argumentsObject.SetNamedValue(
+                    arg.Key(),
+                    json::JsonValue::CreateStringValue(arg.Value()));
+            }
+
+            commandObject.SetNamedValue(
+                MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY,
+                argumentsObject
+            );
+        }
+
+        // create the transport object with the child commandObject
+
+        transportObject.SetNamedValue(
+            MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY,
+            commandObject);
+
+        // create the main node with the transport id property as key to the array
+
+        topLevelTransportPluginSettingsObject.SetNamedValue(
+            internal::GuidToString(m_transportId),
+            transportObject);
+
+        // wrap it all up so the json is valid
+
+        outerWrapper.SetNamedValue(
+            MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
+            topLevelTransportPluginSettingsObject);
+
+        return outerWrapper;
     }
 }

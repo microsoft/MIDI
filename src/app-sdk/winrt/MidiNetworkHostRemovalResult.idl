@@ -16,6 +16,8 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     struct MidiNetworkHostRemovalResult
     {
         Boolean Success;
+        String ErrorInformation;
+
 
     };
 }
