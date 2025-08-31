@@ -64,10 +64,10 @@ namespace WindowsMidiServicesInternal
             }
             else
             {
-                auto commandName = transportObject.GetNamedString(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY, L"");
+                auto commandName = commandObject.GetNamedString(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY, L"");
                 result.m_command = commandName.c_str();
 
-                auto arguments = transportObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY, nullptr);
+                auto arguments = commandObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY, nullptr);
                 if (arguments != nullptr)
                 {
                     for (auto const& argument : arguments)
