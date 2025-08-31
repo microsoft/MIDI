@@ -38,7 +38,7 @@ namespace Microsoft.Midi.Settings.ViewModels
     }
 
 
-    public partial class NetworkMidi2SetupViewModel : ObservableRecipient, ISettingsSearchTarget
+    public partial class NetworkMidi2SetupViewModel : ObservableRecipient, ISettingsSearchTarget, INavigationAware
     {
         public static IList<string> GetSearchKeywords()
         {
@@ -120,7 +120,12 @@ namespace Microsoft.Midi.Settings.ViewModels
         private string newClientComment;
 
 
-        public NetworkMidi2SetupViewModel(IMidiTransportInfoService transportInfoService, IMidiConfigFileService configFileService)
+        public ObservableCollection<MidiNetworkConfiguredHostWrapper> ConfiguredHosts { get; } = [];
+
+
+        public NetworkMidi2SetupViewModel(
+            IMidiTransportInfoService transportInfoService, 
+            IMidiConfigFileService configFileService)
         {
             _configFileService = configFileService;
 
@@ -182,6 +187,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 // todo: remove host from collection
             };
+
         }
 
         public void RefreshHostsCollection()
@@ -211,37 +217,39 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public bool CreateHost()
         {
-            var config = new MidiNetworkHostCreationConfig();
+            //var config = new MidiNetworkHostCreationConfig();
 
-            config.Id = NewHostEndpointName + "_" + NewHostProductInstanceId;
-            config.Name = NewHostEndpointName;
-            config.ServiceInstanceName = NewHostServiceInstanceName.ToLower();
-            config.ProductInstanceId = NewHostProductInstanceId;
+            //config.Id = NewHostEndpointName + "_" + NewHostProductInstanceId;
+            //config.Name = NewHostEndpointName;
+            //config.ServiceInstanceName = NewHostServiceInstanceName.ToLower();
+            //config.ProductInstanceId = NewHostProductInstanceId;
 
-            config.Advertise = NewHostEnableAdvertising;
-            config.CreateOnlyUmpEndpoints = !NewHostEnableMidi1Ports;
+            //config.Advertise = NewHostEnableAdvertising;
+            //config.CreateOnlyUmpEndpoints = !NewHostEnableMidi1Ports;
 
-            //System.Diagnostics.Debug.WriteLine("");
-            //System.Diagnostics.Debug.WriteLine(config.GetConfigJson());
-            //System.Diagnostics.Debug.WriteLine("");
+            ////System.Diagnostics.Debug.WriteLine("");
+            ////System.Diagnostics.Debug.WriteLine(config.GetConfigJson());
+            ////System.Diagnostics.Debug.WriteLine("");
 
-            var result = MidiNetworkTransportManager.CreateNetworkHost(config);
+            //var result = MidiNetworkTransportManager.CreateNetworkHost(config);
 
-            if (result.Success)
-            {
-                if (_configFileService.CurrentConfig != null)
-                {
-                    _configFileService.CurrentConfig.StoreNetworkHost(config);
-                }
-                else
-                {
-                    // unable to save. Config is null.
-                }
+            //if (result.Success)
+            //{
+            //    if (_configFileService.CurrentConfig != null)
+            //    {
+            //        _configFileService.CurrentConfig.StoreNetworkHost(config);
+            //    }
+            //    else
+            //    {
+            //        // unable to save. Config is null.
+            //    }
 
-                InitializeNewHostSettings();
-            }
+            //    InitializeNewHostSettings();
+            //}
 
-            return result.Success;
+            //return result.Success;
+
+            return false;
         }
 
 
@@ -257,78 +265,105 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public bool CreateClientDirect()
         {
-            var config = new MidiNetworkClientEndpointCreationConfig();
+            //var config = new MidiNetworkClientEndpointCreationConfig();
 
-            config.Id = NewClientIdentifier;
-            config.MatchCriteria.DeviceId = NewClientDeviceId;
-            config.MatchCriteria.DirectHostNameOrIPAddress = NewClientHostNameOrIP;
-            config.Comment = NewClientComment;
+            //config.Id = NewClientIdentifier;
+            //config.MatchCriteria.DeviceId = NewClientDeviceId;
+            //config.MatchCriteria.DirectHostNameOrIPAddress = NewClientHostNameOrIP;
+            //config.Comment = NewClientComment;
 
-            ushort port;
-            if (!string.IsNullOrEmpty(NewClientPortNumber) && ushort.TryParse(NewClientPortNumber, out port))
-            {
-                config.MatchCriteria.DirectPort = port;
-            }
+            //ushort port;
+            //if (!string.IsNullOrEmpty(NewClientPortNumber) && ushort.TryParse(NewClientPortNumber, out port))
+            //{
+            //    config.MatchCriteria.DirectPort = port;
+            //}
 
-            //config.NetworkProtocol = udp;
-            config.CreateOnlyUmpEndpoints = !NewClientEnableMidi1Ports;
+            ////config.NetworkProtocol = udp;
+            //config.CreateOnlyUmpEndpoints = !NewClientEnableMidi1Ports;
 
-            System.Diagnostics.Debug.WriteLine("");
-            System.Diagnostics.Debug.WriteLine(config.GetConfigJson());
-            System.Diagnostics.Debug.WriteLine("");
+            //System.Diagnostics.Debug.WriteLine("");
+            //System.Diagnostics.Debug.WriteLine(config.GetConfigJson());
+            //System.Diagnostics.Debug.WriteLine("");
 
-            var result = MidiNetworkTransportManager.CreateNetworkClient(config);
+            //var result = MidiNetworkTransportManager.CreateNetworkClient(config);
 
-            if (result.Success)
-            {
-                if (_configFileService.CurrentConfig != null)
-                {
-                    _configFileService.CurrentConfig.StoreNetworkClient(config);
-                }
-                else 
-                { 
-                    // couldn't store the client. CurrentConfig is null
-                }
+            //if (result.Success)
+            //{
+            //    if (_configFileService.CurrentConfig != null)
+            //    {
+            //        _configFileService.CurrentConfig.StoreNetworkClient(config);
+            //    }
+            //    else 
+            //    { 
+            //        // couldn't store the client. CurrentConfig is null
+            //    }
 
-                InitializeNewClientSettings();
-            }
+            //    InitializeNewClientSettings();
+            //}
 
-            return result.Success;
+            //return result.Success;
+
+            return false;
         }
 
         public bool CreateClientFromMdns(string deviceId)
         {
-            var config = new MidiNetworkClientEndpointCreationConfig();
+            //var config = new MidiNetworkClientEndpointCreationConfig();
 
-            config.Id = Guid.NewGuid().ToString();
-            config.MatchCriteria.DeviceId = deviceId;
-            config.Comment = "From MDNS";   // TODO
+            //config.Id = Guid.NewGuid().ToString();
+            //config.MatchCriteria.DeviceId = deviceId;
+            //config.Comment = "From MDNS";   // TODO
 
-            //config.NetworkProtocol = udp;
-            config.CreateOnlyUmpEndpoints = false;  // todo
+            ////config.NetworkProtocol = udp;
+            //config.CreateOnlyUmpEndpoints = false;  // todo
 
-            System.Diagnostics.Debug.WriteLine("");
-            System.Diagnostics.Debug.WriteLine(config.GetConfigJson());
-            System.Diagnostics.Debug.WriteLine("");
+            //System.Diagnostics.Debug.WriteLine("");
+            //System.Diagnostics.Debug.WriteLine(config.GetConfigJson());
+            //System.Diagnostics.Debug.WriteLine("");
 
-            var result = MidiNetworkTransportManager.CreateNetworkClient(config);
+            //var result = MidiNetworkTransportManager.CreateNetworkClient(config);
 
-            if (result.Success)
-            {
-                if (_configFileService.CurrentConfig != null)
-                {
-                    _configFileService.CurrentConfig.StoreNetworkClient(config);
-                }
-                else
-                {
-                    // couldn't save. Current config is null
-                }
+            //if (result.Success)
+            //{
+            //    if (_configFileService.CurrentConfig != null)
+            //    {
+            //        _configFileService.CurrentConfig.StoreNetworkClient(config);
+            //    }
+            //    else
+            //    {
+            //        // couldn't save. Current config is null
+            //    }
 
-                InitializeNewClientSettings();
-            }
+            //    InitializeNewClientSettings();
+            //}
 
-            return result.Success;
+            //return result.Success;
+
+            return false;
         }
 
+
+        private void LoadConfiguredHosts()
+        {
+            var hosts = MidiNetworkTransportManager.GetConfiguredHosts();
+
+            ConfiguredHosts.Clear();
+
+            foreach (var host in hosts)
+            {
+                ConfiguredHosts.Add(new MidiNetworkConfiguredHostWrapper(host));
+            }
+
+        }
+
+        public void OnNavigatedTo(object parameter)
+        {
+            LoadConfiguredHosts();
+        }
+
+        public void OnNavigatedFrom()
+        {
+            
+        }
     }
 }

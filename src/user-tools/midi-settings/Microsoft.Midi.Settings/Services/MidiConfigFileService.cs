@@ -516,15 +516,11 @@ public class MidiConfigFile : IMidiConfigFile
             return false;
         }
 
-        JsonObject mergeObject;
-        if (JsonObject.TryParse(creationConfig.GetConfigJson(), out mergeObject))
+        if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
         {
-            if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
-            {
-                // write the property
+            // write the property
 
-                return Save();
-            }
+            return Save();
         }
 
         return false;
@@ -542,44 +538,40 @@ public class MidiConfigFile : IMidiConfigFile
             return false;
         }
 
-        JsonObject mergeObject;
-        if (JsonObject.TryParse(creationConfig.GetConfigJson(), out mergeObject))
+        if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
         {
-            if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
-            {
-                // write the property
+            // write the property
 
-                return Save();
-            }
+            return Save();
         }
 
         return false;
     }
 
-    public bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientEndpointCreationConfig creationConfig)
-    {
-        if (m_config == null) return false;
-        if (creationConfig == null) return false;
+    //public bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientEndpointCreationConfig creationConfig)
+    //{
+    //    if (m_config == null) return false;
+    //    if (creationConfig == null) return false;
 
-        // get the latest from disk
-        if (!Load())
-        {
-            return false;
-        }
+    //    // get the latest from disk
+    //    if (!Load())
+    //    {
+    //        return false;
+    //    }
 
-        JsonObject mergeObject;
-        if (JsonObject.TryParse(creationConfig.GetConfigJson(), out mergeObject))
-        {
-            if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
-            {
-                // write the property
+    //    JsonObject mergeObject;
+    //    if (JsonObject.TryParse(creationConfig.GetConfigJson(), out mergeObject))
+    //    {
+    //        if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
+    //        {
+    //            // write the property
 
-                return Save();
-            }
-        }
+    //            return Save();
+    //        }
+    //    }
 
-        return false;
-    }
+    //    return false;
+    //}
 
 
     public bool StoreEndpointCustomization(Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig updateConfig)
@@ -617,9 +609,7 @@ public class MidiConfigFile : IMidiConfigFile
                     System.Diagnostics.Debug.WriteLine("We match");
 
                     // this object has the full structure including endpointTransportPluginSettings and the transportId
-                    var newFullUpdateObject = JsonObject.Parse(updateConfig.GetConfigJson());
-
-                    var newTransportSection = FindExistingTransportSection(newFullUpdateObject, updateConfig.TransportId);
+                    var newTransportSection = FindExistingTransportSection(updateConfig.GetConfigJson(), updateConfig.TransportId);
 
                     if (newTransportSection != null)
                     {
@@ -651,9 +641,7 @@ public class MidiConfigFile : IMidiConfigFile
 
         // no matches found, so add as new
 
-        var mergeObject = JsonObject.Parse(updateConfig.GetConfigJson());
-
-        var newTransportObject = FindExistingTransportSection(mergeObject, updateConfig.TransportId);
+        var newTransportObject = FindExistingTransportSection(updateConfig.GetConfigJson(), updateConfig.TransportId);
         if (newTransportObject == null) return false;
 
         var newUpdateArray = FindExistingTransportUpdateArray(newTransportObject);
