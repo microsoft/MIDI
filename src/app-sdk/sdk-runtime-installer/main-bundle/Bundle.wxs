@@ -88,13 +88,12 @@
           <!-- Windows App Runtime Install -->
 
           <ExePackage
-              Vital="true"
+              Vital="false"
               Permanent="true"
               DisplayName="Microsoft Windows App Runtime"
               SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\WindowsAppRuntimeInstall-$(var.Platform).exe"
               Compressed="yes"
              />
-
 
           <!-- arm64 install requires both the .NET 8 Arm64 and x64 versions -->
             
