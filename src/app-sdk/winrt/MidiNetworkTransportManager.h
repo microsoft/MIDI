@@ -28,14 +28,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
 
+        static foundation::IAsyncOperation<MidiNetworkHostUpdateResult> StartNetworkHostAsync(_In_ winrt::hstring const& hostId);
+        static foundation::IAsyncOperation<MidiNetworkHostUpdateResult> StopNetworkHostAsync(_In_ winrt::hstring const& hostId);
 
-        static network::MidiNetworkHostCreationResult CreateNetworkHost(_In_ network::MidiNetworkHostCreationConfig const& creationConfig);
-        static network::MidiNetworkHostRemovalResult RemoveNetworkHost(_In_ network::MidiNetworkHostRemovalConfig const& removalConfig);
+        static foundation::IAsyncOperation<network::MidiNetworkHostCreationResult> CreateNetworkHostAsync(_In_ network::MidiNetworkHostCreationConfig const& creationConfig) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkHostRemovalResult> RemoveNetworkHostAsync(_In_ network::MidiNetworkHostRemovalConfig const& removalConfig) noexcept;
 
-        static network::MidiNetworkClientEndpointCreationResult CreateNetworkClient(_In_ network::MidiNetworkClientEndpointCreationConfig const& creationConfig);
-        static network::MidiNetworkClientEndpointRemovalResult RemoveNetworkClient(_In_ network::MidiNetworkClientEndpointRemovalConfig const& removalConfig);
+        static foundation::IAsyncOperation<network::MidiNetworkClientConnectionResult> ConnectNetworkClientAsync(_In_ network::MidiNetworkClientConnectConfig const& creationConfig) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkClientConnectionResult> DisconnectNetworkClientAsync(_In_ network::MidiNetworkClientDisconnectConfig const& removalConfig) noexcept;
 
         static collections::IVectorView<network::MidiNetworkAdvertisedHost> GetAdvertisedHosts() noexcept;
+
+
+        static collections::IVectorView<network::MidiNetworkConfiguredHost> GetConfiguredHosts() noexcept;
+        static collections::IVectorView<network::MidiNetworkConfiguredClient> GetConfiguredClients() noexcept;
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation

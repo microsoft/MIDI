@@ -11,19 +11,72 @@
 #include "pch.h"
 
 
-// TODO: Change to a loop
-// - Incoming messages should go into a list
-// - Loop will check the list and send out whatever is in there (requires that the list has locks to prevent reading partial UMPs)
-// - Loop should also handle a regular outgoing ping and then update the SWD's calculated latency when it changes beyond some delta
-// - Loop should also handle sending keep-alive empty UDP packets
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::InitializeForHost(
+    winrt::hstring const& configIdentifier,
+    std::wstring const& hostParentInstanceId,
+    winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+    winrt::Windows::Networking::HostName const& remoteClientHostName,
+    winrt::hstring const& remotePort,
+    std::wstring const& thisEndpointName,
+    std::wstring const& thisProductInstanceId,
+    uint16_t const retransmitBufferMaxCommandPacketCount,
+    uint8_t const maxForwardErrorCorrectionCommandPacketCount,
+    bool createUmpEndpointsOnly
+)
+{
+    return Initialize(
+        MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+        configIdentifier,
+        hostParentInstanceId,
+        socket,
+        remoteClientHostName,
+        remotePort,
+        thisEndpointName,
+        thisProductInstanceId,
+        retransmitBufferMaxCommandPacketCount,
+        maxForwardErrorCorrectionCommandPacketCount,
+        createUmpEndpointsOnly
+    );
+}
 
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::InitializeForClient(
+    winrt::hstring const& configIdentifier,
+    winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+    winrt::Windows::Networking::HostName const& remoteHostHostName,
+    winrt::hstring const& remotePort,
+    std::wstring const& thisEndpointName,
+    std::wstring const& thisProductInstanceId,
+    uint16_t const retransmitBufferMaxCommandPacketCount,
+    uint8_t const maxForwardErrorCorrectionCommandPacketCount,
+    bool createUmpEndpointsOnly
+)
+{
+    return Initialize(
+        MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+        configIdentifier,
+        TRANSPORT_CLIENT_PARENT_ID,
+        socket,
+        remoteHostHostName,
+        remotePort,
+        thisEndpointName,
+        thisProductInstanceId,
+        retransmitBufferMaxCommandPacketCount,
+        maxForwardErrorCorrectionCommandPacketCount,
+        createUmpEndpointsOnly
+    );
 
+}
 
 _Use_decl_annotations_
 HRESULT 
 MidiNetworkConnection::Initialize(
     MidiNetworkConnectionRole const role,
-    winrt::hstring configIdentifier,
+    winrt::hstring const& configIdentifier,
+    std::wstring const& parentDeviceInstanceId,
     winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
     winrt::Windows::Networking::HostName const& hostName,
     winrt::hstring const& port,
@@ -44,6 +97,7 @@ MidiNetworkConnection::Initialize(
     );
 
     m_configIdentifier = configIdentifier;
+    m_parentDeviceInstanceId = parentDeviceInstanceId;
 
     m_sessionActive = false;
 
@@ -104,17 +158,19 @@ MidiNetworkConnection::Initialize(
 }
 
 
-_Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::ConnectionWatcherThreadWorker(std::stop_token stopToken)
+MidiNetworkConnection::ConnectionWatcherThreadWorker()
 {
+    auto stopToken = m_connectionWatcherThread.get_stop_token();
+
+
     bool continueWatching = true;
 
     // if we haven't received any UDP messages in a certain amount of time,
     // send a ping to the remote
 
 
-    while (continueWatching && !stopToken.stop_requested())
+    while (!m_shuttingDown && continueWatching && !stopToken.stop_requested())
     {
         auto threadWaitStartTimestamp = internal::GetCurrentMidiTimestamp();
         m_connectionTimeoutEvent.wait(m_outgoingPingIntervalMilliseconds);
@@ -131,7 +187,8 @@ MidiNetworkConnection::ConnectionWatcherThreadWorker(std::stop_token stopToken)
 
             // check our ping entries. We want to check the last N entries and if all of them
             // have been ignored, we will take action.
-            for (auto pingEntry = m_outgoingPingTracking.rbegin(); pingEntry != m_outgoingPingTracking.rend() && consecutiveFailures <= m_outgoingPingMaxIgnoredBeforeDisconnect; pingEntry++)
+            for (auto pingEntry = m_outgoingPingTracking.rbegin(); 
+                !stopToken.stop_requested() && !m_shuttingDown && pingEntry != m_outgoingPingTracking.rend() && consecutiveFailures <= m_outgoingPingMaxIgnoredBeforeDisconnect; pingEntry++)
             {
                 if (!pingEntry->Received)
                 {
@@ -144,26 +201,31 @@ MidiNetworkConnection::ConnectionWatcherThreadWorker(std::stop_token stopToken)
                 }
             }
 
-            if (consecutiveFailures >= m_outgoingPingMaxIgnoredBeforeDisconnect)
+            if (!m_shuttingDown && !stopToken.stop_requested())
             {
-                // disconnect
-                continueWatching = false;
-
-                if (m_sessionActive)
+                if (consecutiveFailures >= m_outgoingPingMaxIgnoredBeforeDisconnect)
                 {
-                    RETURN_IF_FAILED(EndActiveSessionDueToTimeout());
+                    // disconnect
+                    continueWatching = false;
+
+                    if (m_sessionActive)
+                    {
+                        RETURN_IF_FAILED(EndActiveSessionDueToTimeout());
+                    }
+                    else
+                    {
+                        // TODO: Check spec. Do we send a bye?
+
+                    }
                 }
                 else
                 {
-                    // TODO: Check spec. Do we send a bye?
-
+                    if (!stopToken.stop_requested())
+                    {
+                        LOG_IF_FAILED(SendPing());
+                    }
                 }
             }
-            else
-            {
-                LOG_IF_FAILED(SendPing());
-            }
-            
         }
     }
 
@@ -196,7 +258,7 @@ MidiNetworkConnection::StartOutboundMidiMessageProcessingThread()
     m_newMessagesInQueueEvent.ResetEvent();
 
     m_outboundProcessingThread = std::jthread (std::bind_front(&MidiNetworkConnection::OutboundProcessingThreadWorker, this));
-    m_outboundProcessingThread.detach();
+ //   m_outboundProcessingThread.detach();
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -371,7 +433,7 @@ MidiNetworkConnection::ResetSequenceNumbers()
 }
 
 
-_Use_decl_annotations_
+
 HRESULT
 MidiNetworkConnection::EndActiveSessionDueToTimeout()
 {
@@ -407,7 +469,8 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
 
     // clear the outbound queue
     m_outgoingUmpMessages.clear();
-    ResetSequenceNumbers();
+    
+    LOG_IF_FAILED(ResetSequenceNumbers());
 
     // TODO: Reset connection watchdog timers, pings, etc.
 
@@ -425,16 +488,14 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
         RETURN_IF_FAILED(m_writer->Send());
     }
 
-
     // clear the association with the SWD
     RETURN_IF_FAILED(TransportState::Current().DisassociateMidiEndpointFromConnection(m_sessionEndpointDeviceInterfaceId));
     m_sessionEndpointDeviceInterfaceId.clear();
 
     // TODO: if the endpoint is in our discovery list, mark it as not created
 
-
-
-
+    LOG_IF_FAILED(m_writer->Shutdown());
+    m_writer.reset();
 
 
     TraceLoggingWrite(
@@ -449,6 +510,54 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
     return S_OK;
 }
 
+
+HRESULT
+MidiNetworkConnection::AttemptPoliteByeSequence()
+{
+    // TODO: This likely needs to be a new thread
+
+    if (m_writer != nullptr)
+    {
+        m_inSelfInitiatedByeSequence = true;
+
+        bool continueTrying { true };
+        uint16_t attempts = 5;
+        DWORD attemptDelayMS = 200;
+
+        while (continueTrying)
+        {
+            auto lock = m_socketWriterLock.lock();
+            RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+
+            // we use "Power Down" here because things like "User terminated" tend to clear information on the other side,
+            RETURN_IF_FAILED(m_writer->WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_PowerDown, L"Connection closing."));
+            RETURN_IF_FAILED(m_writer->Send());
+
+            Sleep(attemptDelayMS);
+
+            continueTrying = ((--attempts > 0) && !m_byeReplyReceived);
+        }
+
+        m_inSelfInitiatedByeSequence = false;
+    }
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkConnection::HandleIncomingByeReply()
+{
+    if (m_inSelfInitiatedByeSequence)
+    {
+        m_byeReplyReceived = true;
+    }
+    else
+    {
+        // TODO: NAK this?
+    }
+
+    return S_OK;
+}
 
 HRESULT
 MidiNetworkConnection::HandleIncomingBye()
@@ -527,8 +636,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
             // Create the endpoint for Windows MIDI Services clients
             HRESULT hr = S_OK;
 
-            hr = TransportState::Current().GetEndpointManager()->CreateNewEndpoint(
-                MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+            hr = TransportState::Current().GetEndpointManager()->CreateNewClientEndpointToRemoteHost(
                 m_configIdentifier.c_str(),
                 remoteHostUmpEndpointName,
                 remoteHostProductInstanceId,
@@ -678,9 +786,9 @@ MidiNetworkConnection::HandleIncomingInvitation(
 
             //UNREFERENCED_PARAMETER(clientProductInstanceId);
             //UNREFERENCED_PARAMETER(clientUmpEndpointName);
-            hr = TransportState::Current().GetEndpointManager()->CreateNewEndpoint(
-                MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+            hr = TransportState::Current().GetEndpointManager()->CreateNewHostEndpointToRemoteClient(
                 m_configIdentifier.c_str(),
+                m_parentDeviceInstanceId,
                 clientUmpEndpointName,
                 clientProductInstanceId,
                 m_remoteHostName,
@@ -945,7 +1053,7 @@ MidiNetworkConnection::ProcessIncomingMessage(
             break;
 
         case CommandCommon_ByeReply:
-            // don't need to do anything with this
+            LOG_IF_FAILED(HandleIncomingByeReply());
             break;
 
         case CommandClientToHost_Invitation:
@@ -1291,10 +1399,11 @@ MidiNetworkConnection::SendInvitation()
 
 
 
-_Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
+MidiNetworkConnection::OutboundProcessingThreadWorker()
 {
+    auto stopToken = m_outboundProcessingThread.get_stop_token();
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -1306,7 +1415,7 @@ MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
     );
 
     // loop until we're told not to
-    while (!stopToken.stop_requested()/* && m_sessionActive */)
+    while (!m_shuttingDown && !stopToken.stop_requested()/* && m_sessionActive */)
     {
         // if no new outbound MIDI messages, and it has been longer than the
         // amount of time we currently have set for min midi message interval,
@@ -1319,7 +1428,7 @@ MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
         // https://en.cppreference.com/w/cpp/thread/condition_variable_any
 
         // wait for the minimum transmit interval, or a signal that we have new outbound UMPs
-        if (!m_newMessagesInQueueEvent.is_signaled())
+        if (!stopToken.stop_requested() && !m_newMessagesInQueueEvent.is_signaled())
         {
             m_newMessagesInQueueEvent.wait(m_outgoingUmpEmptyPacketIntervalMilliseconds);
         }
@@ -1368,7 +1477,10 @@ MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
         }
 
         // we're done processing, so reset the event for the next round
-        m_newMessagesInQueueEvent.ResetEvent();
+        if (!stopToken.stop_requested())
+        {
+            m_newMessagesInQueueEvent.ResetEvent();
+        }
     }
 
     TraceLoggingWrite(
@@ -1398,6 +1510,12 @@ MidiNetworkConnection::SendQueuedMidiMessagesToNetwork()
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+    if (m_shuttingDown)
+    {
+        return S_OK;
+    }
+
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
 
@@ -1539,30 +1657,38 @@ MidiNetworkConnection::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_connectionWatcherThread.request_stop();
-    m_outboundProcessingThread.request_stop();
 
+    // don't process any more MIDI UMP messages
     if (m_callback)
     {
         m_callback = nullptr;
     }
 
-    if (m_sessionActive)
-    {
-        RETURN_IF_FAILED(TransportState::Current().DisassociateMidiEndpointFromConnection(m_sessionEndpointDeviceInterfaceId));
-        m_sessionActive = false;
-    }
+    // stop pings
+    m_connectionWatcherThread.request_stop();
+    m_connectionTimeoutEvent.SetEvent();
 
-    if (m_writer != nullptr)
-    {
-        auto lock = m_socketWriterLock.lock();
-        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-        RETURN_IF_FAILED(m_writer->WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_PowerDown, L"Connection closing."));
-        RETURN_IF_FAILED(m_writer->Send());
+    // say bye
+    LOG_IF_FAILED(AttemptPoliteByeSequence());
 
-        LOG_IF_FAILED(m_writer->Shutdown());
-        m_writer = nullptr;
-    }
+    m_shuttingDown = true;
+
+    // cleanup
+    LOG_IF_FAILED(EndActiveSession(false));
+
+    m_outboundProcessingThread.request_stop();
+
+    // in case the threads were sleeping
+    m_retransmitBuffer.clear();
+    m_outgoingUmpMessages.clear();
+    m_newMessagesInQueueEvent.SetEvent();
+
+
+
+    // TODO: Need to remove this from the list in TransportState.Current()
+
+
+
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

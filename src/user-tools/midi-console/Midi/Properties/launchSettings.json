@@ -62,6 +62,10 @@
     "Endpoint Properties Include name table": {
       "commandName": "Project",
       "commandLineArgs": "endpoint properties --include-name-table"
+    },
+    "Play Notes": {
+      "commandName": "Project",
+      "commandLineArgs": "endpoint play-notes 70 71 72 73 74 75 76 77 78 79 --forever"
     }
   }
 }

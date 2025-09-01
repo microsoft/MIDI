@@ -45,6 +45,8 @@
 #include <winrt/Windows.Web.Http.h>
 
 
+#undef GetObject
+
 #include <winrt/Windows.Data.Json.h>
 namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
@@ -205,8 +207,8 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiNetworkClientMatchCriteria.h"
 #include "MidiNetworkHostCreationConfig.h"
 #include "MidiNetworkHostRemovalConfig.h"
-#include "MidiNetworkClientEndpointCreationConfig.h"
-#include "MidiNetworkClientEndpointRemovalConfig.h"
+//#include "MidiNetworkClientEndpointCreationConfig.h"
+//#include "MidiNetworkClientEndpointRemovalConfig.h"
 #include "MidiNetworkTransportManager.h"
 
 #include "MidiNetworkAdvertisedHost.h"

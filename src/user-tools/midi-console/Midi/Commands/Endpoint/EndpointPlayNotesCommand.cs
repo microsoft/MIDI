@@ -52,6 +52,12 @@ namespace Microsoft.Midi.ConsoleApp
             [CommandOption("-m|--midi2")]
             [DefaultValue(false)]
             public bool Midi2 { get; set; }
+
+            [LocalizedDescription("ParameterMonitorEndpointAutoReconnect")]
+            [CommandOption("-a|--auto-reconnect")]
+            [DefaultValue(true)]
+            public bool AutoReconnect { get; set; }
+
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
@@ -101,6 +107,44 @@ namespace Microsoft.Midi.ConsoleApp
         }
 
 
+        bool _hasEndpointDisconnected = false;
+        bool _continueWatchingDevice = true;
+
+        private void MonitorEndpointConnectionStatusInTheBackground(string endpointId)
+        {
+            var deviceWatcherThread = new Thread(() =>
+            {
+                var watcher = MidiEndpointDeviceWatcher.Create(
+                    MidiEndpointDeviceInformationFilters.DiagnosticLoopback |
+                    MidiEndpointDeviceInformationFilters.StandardNativeUniversalMidiPacketFormat |
+                    MidiEndpointDeviceInformationFilters.VirtualDeviceResponder |
+                    MidiEndpointDeviceInformationFilters.StandardNativeMidi1ByteFormat
+                    );
+
+
+                watcher.Removed += (s, e) =>
+                {
+                    if (e.EndpointDeviceId.ToLower() == endpointId.ToLower())
+                    {
+                        _hasEndpointDisconnected = true;
+                        _continueWatchingDevice = false;
+
+                        watcher.Stop();
+                    }
+                };
+
+                watcher.Start();
+
+                while (_continueWatchingDevice)
+                {
+                    Thread.Sleep(100);
+                }
+
+            });
+
+            deviceWatcherThread.Start();
+        }
+
 
         public override int Execute(CommandContext context, Settings settings)
         {
@@ -140,7 +184,15 @@ namespace Microsoft.Midi.ConsoleApp
                 }
 
                 IMidiEndpointConnectionSettings connectionSettings;
-                connectionSettings = new MidiEndpointConnectionBasicSettings(false, false);
+                if (settings.AutoReconnect)
+                {
+                    connectionSettings = new MidiEndpointConnectionBasicSettings(false, true);
+                }
+                else
+                {
+                    connectionSettings = new MidiEndpointConnectionBasicSettings(false, false);
+                }
+
 
                 var connection = session.CreateEndpointConnection(endpointId, connectionSettings); 
                 if (connection != null)
@@ -159,9 +211,15 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
                 }
 
-
-                connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
-                connection.EndpointDeviceReconnected += Connection_EndpointDeviceReconnected;
+                if (settings.AutoReconnect)
+                {
+                    connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
+                    connection.EndpointDeviceReconnected += Connection_EndpointDeviceReconnected;
+                }
+                else
+                {
+                    MonitorEndpointConnectionStatusInTheBackground(endpointId);
+                }
 
 
                 using AutoResetEvent m_messageDispatcherThreadWakeup = new AutoResetEvent(false);
@@ -177,135 +235,168 @@ namespace Microsoft.Midi.ConsoleApp
 
                     while (stillSending)
                     {
-                        if (_disconnected)
+                        if (!connection.IsOpen)
                         {
+                            // if we're looking to auto-reconnect, we don't bail
+                            if (settings.AutoReconnect)
+                            {
+                                Thread.Sleep(100);
+                                continue;
+                            }
+
                             stillSending = false;
 
                             // if we disconnect, we just have a short delay and then skip the rest of the loop
                             //Thread.Sleep(200);
                             break;
                         }
-
-                        MidiSendMessageResults noteOnSendResult;
-
-                        if (settings.Midi2)
-                        {
-                            UInt32 velocity = (UInt32)(((float)settings.Velocity / 100.0) * UInt16.MaxValue) << 16;
-                            UInt16 note = (UInt16)((UInt16)settings.NoteIndexes![noteArrayIndex] << 8);
-
-                            var noteOnMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
-                                                                MidiClock.TimestampConstantSendImmediately,
-                                                                group,
-                                                                Midi2ChannelVoiceMessageStatus.NoteOn,
-                                                                channel,
-                                                                note,
-                                                                velocity);
-
-                            noteOnSendResult = connection.SendSingleMessagePacket(noteOnMessage);
-                        }
                         else
                         {
-                            byte velocity = (byte)((float)(settings.Velocity / 100.0) * 127);
-
-                            var noteOnMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
-                                                                MidiClock.TimestampConstantSendImmediately,
-                                                                group,
-                                                                Midi1ChannelVoiceMessageStatus.NoteOn,
-                                                                channel,
-                                                                (byte)settings.NoteIndexes![noteArrayIndex],
-                                                                velocity);
-
-                            noteOnSendResult = connection.SendSingleMessagePacket(noteOnMessage);
-                        }
-
-                        // don't check still-sending here, or we can end up with a stuck note.
-                        if (MidiEndpointConnection.SendMessageSucceeded(noteOnSendResult))
-                        {
-                            Console.Write("[");
-                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatMidi1Note((byte)settings.NoteIndexes![noteArrayIndex]));
-
-                            // a note length of 0 is not allowed, so we go right to waiting
-
-                            if (stillSending)
-                            {
-                                m_messageDispatcherThreadWakeup.WaitOne(settings.Length);
-                            }
-
-                            MidiSendMessageResults noteOffSendResult;
+                            MidiSendMessageResults noteOnSendResult;
 
                             if (settings.Midi2)
                             {
-                                UInt32 velocity = (UInt32)((float)(settings.Velocity / 100.0) * UInt16.MaxValue) << 16;
+                                UInt32 velocity = (UInt32)(((float)settings.Velocity / 100.0) * UInt16.MaxValue) << 16;
                                 UInt16 note = (UInt16)((UInt16)settings.NoteIndexes![noteArrayIndex] << 8);
 
-                                var noteOffMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
-                                                                MidiClock.TimestampConstantSendImmediately,
-                                                                group,
-                                                                Midi2ChannelVoiceMessageStatus.NoteOff,
-                                                                channel,
-                                                                note,
-                                                                velocity);
+                                var noteOnMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
+                                                                    MidiClock.TimestampConstantSendImmediately,
+                                                                    group,
+                                                                    Midi2ChannelVoiceMessageStatus.NoteOn,
+                                                                    channel,
+                                                                    note,
+                                                                    velocity);
 
-                                noteOffSendResult = connection.SendSingleMessagePacket(noteOffMessage);
+                                noteOnSendResult = connection.SendSingleMessagePacket(noteOnMessage);
                             }
                             else
                             {
                                 byte velocity = (byte)((float)(settings.Velocity / 100.0) * 127);
 
-                                var noteOffMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
-                                                                MidiClock.TimestampConstantSendImmediately,
-                                                                group,
-                                                                Midi1ChannelVoiceMessageStatus.NoteOff,
-                                                                channel,
-                                                                (byte)settings.NoteIndexes![noteArrayIndex],
-                                                                velocity);
+                                var noteOnMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
+                                                                    MidiClock.TimestampConstantSendImmediately,
+                                                                    group,
+                                                                    Midi1ChannelVoiceMessageStatus.NoteOn,
+                                                                    channel,
+                                                                    (byte)settings.NoteIndexes![noteArrayIndex],
+                                                                    velocity);
 
-                                noteOffSendResult = connection.SendSingleMessagePacket(noteOffMessage);
+                                noteOnSendResult = connection.SendSingleMessagePacket(noteOnMessage);
                             }
 
-                            if (MidiEndpointConnection.SendMessageSucceeded(noteOffSendResult))
+                            // don't check still-sending here, or we can end up with a stuck note.
+                            if (MidiEndpointConnection.SendMessageSucceeded(noteOnSendResult))
                             {
-                                Console.Write("]");
+                                Console.Write("[");
+                                AnsiConsole.Markup(AnsiMarkupFormatter.FormatMidi1Note((byte)settings.NoteIndexes![noteArrayIndex]));
 
-                                if (settings.Rest > 0 && stillSending)
+                                // a note length of 0 is not allowed, so we go right to waiting
+
+                                if (stillSending)
                                 {
-                                    m_messageDispatcherThreadWakeup.WaitOne(settings.Rest);
+                                    m_messageDispatcherThreadWakeup.WaitOne(settings.Length);
+                                }
+
+                                MidiSendMessageResults noteOffSendResult;
+
+                                if (settings.Midi2)
+                                {
+                                    UInt32 velocity = (UInt32)((float)(settings.Velocity / 100.0) * UInt16.MaxValue) << 16;
+                                    UInt16 note = (UInt16)((UInt16)settings.NoteIndexes![noteArrayIndex] << 8);
+
+                                    var noteOffMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
+                                                                    MidiClock.TimestampConstantSendImmediately,
+                                                                    group,
+                                                                    Midi2ChannelVoiceMessageStatus.NoteOff,
+                                                                    channel,
+                                                                    note,
+                                                                    velocity);
+
+                                    noteOffSendResult = connection.SendSingleMessagePacket(noteOffMessage);
                                 }
                                 else
                                 {
-                                    // we just tight loop
+                                    byte velocity = (byte)((float)(settings.Velocity / 100.0) * 127);
+
+                                    var noteOffMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
+                                                                    MidiClock.TimestampConstantSendImmediately,
+                                                                    group,
+                                                                    Midi1ChannelVoiceMessageStatus.NoteOff,
+                                                                    channel,
+                                                                    (byte)settings.NoteIndexes![noteArrayIndex],
+                                                                    velocity);
+
+                                    noteOffSendResult = connection.SendSingleMessagePacket(noteOffMessage);
+                                }
+
+                                if (MidiEndpointConnection.SendMessageSucceeded(noteOffSendResult))
+                                {
+                                    Console.Write("]");
+
+                                    if (settings.Rest > 0 && stillSending)
+                                    {
+                                        m_messageDispatcherThreadWakeup.WaitOne(settings.Rest);
+                                    }
+                                    else
+                                    {
+                                        // we just tight loop
+                                    }
+                                }
+                                else
+                                {
+                                    // display failure message
+                                    AnsiConsole.WriteLine();
+                                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Failed to send note-off message."));
+                                    AnsiConsole.WriteLine();
+
+                                    if (((noteOffSendResult & MidiSendMessageResults.EndpointConnectionClosedOrInvalid) == MidiSendMessageResults.EndpointConnectionClosedOrInvalid) &&
+                                        settings.AutoReconnect)
+                                    {
+                                        // connection was closed, but we are waiting for a reconnect
+                                    }
+                                    else
+                                    {
+                                        stillSending = false;
+                                    }
                                 }
                             }
                             else
                             {
                                 // display failure message
                                 AnsiConsole.WriteLine();
-                                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Failed to send note-off message."));
+                                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Failed to send note-on message."));
                                 AnsiConsole.WriteLine();
-                                stillSending = false;
-                            }
-                        }
-                        else
-                        {
-                            // display failure message
-                            AnsiConsole.WriteLine();
-                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Failed to send note-on message."));
-                            AnsiConsole.WriteLine();
-                            stillSending = false;
-                        }
 
-                        if (stillSending)
-                        {
-                            noteArrayIndex++;
-                            if (noteArrayIndex >= settings.NoteIndexes.Length)
-                            {
-                                if (settings.Forever)
+                                if (connection.IsOpen || !settings.AutoReconnect)
                                 {
-                                    noteArrayIndex = 0;
+                                    stillSending = false;
+                                }
+
+                                if (((noteOnSendResult & MidiSendMessageResults.EndpointConnectionClosedOrInvalid) == MidiSendMessageResults.EndpointConnectionClosedOrInvalid) &&
+                                    settings.AutoReconnect)
+                                {
+                                    // connection was closed, but we are waiting for a reconnect
                                 }
                                 else
                                 {
                                     stillSending = false;
+                                }
+
+                            }
+
+                            if (stillSending)
+                            {
+                                noteArrayIndex++;
+                                if (noteArrayIndex >= settings.NoteIndexes.Length)
+                                {
+                                    if (settings.Forever)
+                                    {
+                                        noteArrayIndex = 0;
+                                    }
+                                    else
+                                    {
+                                        stillSending = false;
+                                    }
                                 }
                             }
                         }
@@ -360,22 +451,17 @@ namespace Microsoft.Midi.ConsoleApp
             }
         }
 
-        bool _disconnected = false;
-
         // Auto-reconnect takes care of the internals. We're just reporting here
         private void Connection_EndpointDeviceReconnected(IMidiEndpointConnectionSource sender, object args)
         {
             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.EndpointReconnected));
-
-            _disconnected = false;
         }
 
         // Auto-reconnect takes care of the internals. We're just reporting here
         private void Connection_EndpointDeviceDisconnected(IMidiEndpointConnectionSource sender, object args)
         {
+            AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
-
-            _disconnected = true;
         }
 
     }

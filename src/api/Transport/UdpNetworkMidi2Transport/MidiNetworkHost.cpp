@@ -34,7 +34,7 @@ MidiNetworkHost::Initialize(
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.empty());
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.size() > MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
 
-    m_configIdentifier = hostDefinition.EntryIdentifier;
+    //m_configIdentifier = hostDefinition.EntryIdentifier;
 
     m_started = false;
 
@@ -49,21 +49,6 @@ MidiNetworkHost::Initialize(
     }
 
     m_hostDefinition = hostDefinition;
-
-    {
-        DatagramSocket socket;
-        m_socket = socket;
-        m_socket.Control().DontFragment(true);
-        //m_socket.Control().InboundBufferSizeInBytes(10000);
-        m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
-    }
-
-    if (m_hostDefinition.Advertise)
-    {
-        m_advertiser = std::make_shared<MidiNetworkAdvertiser>();
-        RETURN_IF_NULL_ALLOC(m_advertiser);
-        RETURN_IF_FAILED(m_advertiser->Initialize());
-    }
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -94,9 +79,9 @@ MidiNetworkHost::CreateNetworkConnection(HostName const& remoteHostName, winrt::
 
     if (conn)
     {
-        RETURN_IF_FAILED(conn->Initialize(
-            MidiNetworkConnectionRole::ConnectionWindowsIsHost,
-            m_configIdentifier,
+        RETURN_IF_FAILED(conn->InitializeForHost(
+            m_hostDefinition.EntryIdentifier,
+            m_parentDeviceInstanceId,
             m_socket,
             remoteHostName,
             remotePort,
@@ -128,6 +113,61 @@ MidiNetworkHost::CreateNetworkConnection(HostName const& remoteHostName, winrt::
 }
 
 HRESULT
+MidiNetworkHost::Stop()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    // First step: stop advertising so no one is encouraged to bug us
+    if (m_advertiser)
+    {
+        RETURN_IF_FAILED(m_advertiser->Shutdown());
+        m_advertiser.reset();
+    }
+
+    // disconnect clients and send goodbye messages
+    // TODO: send "bye" to all sessions, and then unbind the socket
+    // but we need to restrict to this host, not every host/client
+    // so we need to keep a reference / id for this host in with each
+    // connection
+    for (auto& connection: TransportState::Current().GetAllNetworkConnectionsForHost(m_hostDefinition.EntryIdentifier))
+    {
+        LOG_IF_FAILED(connection->Shutdown());
+    }
+
+    // now remove all those connections
+    RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForHost(m_hostDefinition.EntryIdentifier));
+
+
+    // TODO: Stop packet processing thread using the jthread stop token
+    m_keepProcessing = false;
+
+
+    // unbind the port
+    if (m_socket)
+    {
+        m_socket.MessageReceived(m_messageReceivedEventToken);
+        m_socket.Close();
+        m_socket = nullptr;
+    }
+
+    // NOTE: This doesn't currently work properly because no function in device manager for this.
+    // It doesn't remove the parent device, just the children / UMP endpoints. 
+    RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteParentHostDevice(m_parentDeviceInstanceId));
+
+    m_started = false;
+
+    return S_OK;
+}
+
+
+HRESULT
 MidiNetworkHost::Start()
 {
     TraceLoggingWrite(
@@ -139,10 +179,40 @@ MidiNetworkHost::Start()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+
+    {
+        DatagramSocket socket;
+        m_socket = socket;
+        m_socket.Control().DontFragment(true);
+        //m_socket.Control().InboundBufferSizeInBytes(10000);
+        m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
+    }
+
+
+    std::wstring parentDeviceInstanceId{};
+    auto createParentHR = TransportState::Current().GetEndpointManager()->CreateParentDeviceForHost(
+        m_hostDefinition.UmpEndpointName,
+        m_hostDefinition.ServiceInstanceName,
+        parentDeviceInstanceId
+    );
+
+    if (SUCCEEDED(createParentHR))
+    {
+        m_parentDeviceInstanceId = parentDeviceInstanceId;
+    }
+    else
+    {
+        // working around the fact that virtual parent removal isn't yet implemented in the MIDI Device Manager
+        // in most cases, the failure will be because the parent already exists.
+        LOG_IF_FAILED(createParentHR);
+    }
+   
     HostName hostName(m_hostDefinition.HostName);
 
     // wire up to handle incoming events
-    auto messageReceivedHandler = winrt::Windows::Foundation::TypedEventHandler<DatagramSocket, DatagramSocketMessageReceivedEventArgs>(this, &MidiNetworkHost::OnMessageReceived);
+    auto messageReceivedHandler = winrt::Windows::Foundation::TypedEventHandler<DatagramSocket, DatagramSocketMessageReceivedEventArgs>(
+        this, &MidiNetworkHost::OnMessageReceived);
+
     m_messageReceivedEventToken = m_socket.MessageReceived(messageReceivedHandler);
 
     // TODO: this should have error checking
@@ -151,8 +221,12 @@ MidiNetworkHost::Start()
     auto boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(m_socket.Information().LocalPort())));
 
     // advertise
-    if (m_hostDefinition.Advertise && m_advertiser != nullptr)
+    if (m_hostDefinition.Advertise)
     {
+        m_advertiser = std::make_shared<MidiNetworkAdvertiser>();
+        RETURN_IF_NULL_ALLOC(m_advertiser);
+        RETURN_IF_FAILED(m_advertiser->Initialize());
+
         RETURN_IF_FAILED(m_advertiser->Advertise(
             m_hostDefinition.ServiceInstanceName,
             hostName,
@@ -276,24 +350,7 @@ MidiNetworkHost::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    if (m_advertiser)
-    {
-        m_advertiser->Shutdown();
-    }
-
-    // TODO: send "bye" to all sessions, and then unbind the socket
-    // but we need to restrict to this host, not every host/client
-
-
-    // TODO: Stop packet processing thread using the jthread stop token
-    m_keepProcessing = false;
-
-    if (m_socket)
-    {
-        m_socket.MessageReceived(m_messageReceivedEventToken);
-        m_socket.Close();
-        m_socket = nullptr;
-    }
+    LOG_IF_FAILED(Stop());
 
     //while (m_connections.size() > 0)
     //{

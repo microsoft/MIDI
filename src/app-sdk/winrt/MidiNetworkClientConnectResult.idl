@@ -13,7 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiNetworkClientEndpointCreationResult
+    struct MidiNetworkClientConnectResult
     {
         Guid ClientId;
 

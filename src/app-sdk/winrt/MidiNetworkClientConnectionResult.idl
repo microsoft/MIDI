@@ -10,16 +10,15 @@
 
 import "MidiApiContracts.idl";
 
-
-namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
-    [contract(MidiServiceConfigApiContract, 1)]
-    [uuid(UUID_IMidiServiceTransportPluginConfig), version(1.0)]
-    interface IMidiServiceTransportPluginConfig
+    [experimental]
+    struct MidiNetworkClientConnectionResult
     {
-        Guid TransportId { get; };
-        //Boolean IsFromCurrentConfigFile{ get; };
+        Boolean Success;
+        String ErrorInformation;
 
-        Windows.Data.Json.JsonObject GetConfigJson();
-    }
+        String EndpointDeviceId;
+    };
 }
+

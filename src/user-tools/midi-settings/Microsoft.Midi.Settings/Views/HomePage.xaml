@@ -278,7 +278,7 @@
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="False"
                                                            Command="{x:Bind ViewModel.CommonTaskAssignMidi1DeviceToNewDriverCommand}">
                                         <controls:SettingsCard.Header>
                                             <TextBlock x:Uid="CommonTasks_AssignMidi1DeviceToNewDriver" TextWrapping="WrapWholeWords" />

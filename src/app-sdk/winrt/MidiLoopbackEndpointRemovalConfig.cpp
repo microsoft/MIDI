@@ -29,7 +29,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
     //     }
     //   }
     // }
-    winrt::hstring MidiLoopbackEndpointRemovalConfig::GetConfigJson()
+    json::JsonObject MidiLoopbackEndpointRemovalConfig::GetConfigJson()
     {
         json::JsonArray endpointDeletionArray;
         json::JsonObject transportObject;
@@ -57,6 +57,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
             topLevelTransportPluginSettingsObject);
 
-        return outerWrapperObject.Stringify();
+        return outerWrapperObject;
     }
 }

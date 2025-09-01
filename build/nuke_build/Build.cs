@@ -481,6 +481,9 @@ class Build : NukeBuild
         // service and plugins to be Arm64EC just to provide a few headers
 
         var intermediateFolder = ApiSolutionFolder / "vsfiles" / "intermediate";
+        var apiReleaseFolder = ApiSolutionFolder / "vsfiles";
+        var apiIncludeFolder = ApiSolutionFolder / "inc";
+        var networkTransportFolder = ApiSolutionFolder / "Transport" / "UdpNetworkMidi2Transport";
 
         foreach (var platform in ServiceAndApiPlatformsAll)
         {
@@ -496,6 +499,25 @@ class Build : NukeBuild
             referenceFiles.Add(intermediateFolder / "idl" / sourcePlatform / Configuration.Release / "WindowsMidiServices_i.c");
 
             referenceFiles.Add(intermediateFolder / "MidiKS" / sourcePlatform / Configuration.Release / "MidiKS.lib");
+            referenceFiles.Add(apiReleaseFolder / sourcePlatform / Configuration.Release / "MidiPluginConfigurationLib.lib");
+            referenceFiles.Add(apiReleaseFolder / sourcePlatform / Configuration.Release / "MidiEndpointNamingLib.lib");
+
+            referenceFiles.Add(apiIncludeFolder / "MidiEndpointCustomProperties.h");
+            referenceFiles.Add(apiIncludeFolder / "MidiEndpointMatchCriteria.h");
+            referenceFiles.Add(apiIncludeFolder / "MidiEndpointNameTable.h");
+            referenceFiles.Add(apiIncludeFolder / "MidiDefs.h");
+            referenceFiles.Add(apiIncludeFolder / "hstring_util.h");
+            referenceFiles.Add(apiIncludeFolder / "wstring_util.h");
+            referenceFiles.Add(apiIncludeFolder / "json_defs.h");
+            referenceFiles.Add(apiIncludeFolder / "json_helpers.h");
+            referenceFiles.Add(apiIncludeFolder / "loopback_ids.h");
+            referenceFiles.Add(apiIncludeFolder / "midi_group_terminal_blocks.h");
+
+            // transport-specific include file
+            referenceFiles.Add(networkTransportFolder / "network_json_defs.h");
+            //referenceFiles.Add(ble1TransportFolder / "ble1_json_defs.h");
+
+
 
             // this is the only one that needs Arm64X
             referenceFiles.Add(intermediateFolder / "Midi2.MidiSrvTransport" / sourcePlatform / Configuration.Release / "Midi2MidiSrvTransport.h");

@@ -188,7 +188,7 @@ app.Configure(config =>
 
     }).WithAlias("ep");
      
-
+    // if any alias for "service" is added, it must be included in the startup code below
     config.AddBranch("service", service =>
     {
         service.SetDescription(Strings.CommandServiceDescription);
@@ -222,8 +222,6 @@ app.Configure(config =>
             .WithDescription(Strings.ServiceSetAutoDelayedStartDescription)
             .WithExample("service", "set-auto-start", "--restart")
             ;
-
-        
 
 
     }).WithAlias("svc");
@@ -305,23 +303,30 @@ using (initializer)
         return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
     }
 
-    // is the service running? If not, show a message so the user knows what is happening
 
-    using (var controller = MidiServiceHelper.GetServiceController())
+    // this is super brittle
+    if (args.Length > 1 && (args[0].ToLower() == "service" || args[0].ToLower() == "svc"))
     {
-        if (!MidiServiceHelper.ServiceIsReallyRunning(controller))
-        {
-            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.StartingMidiService));
-        }
+        // skip service initialization because user is perfoming a service command
     }
-
-
-    // start the service
-    if (!initializer.EnsureServiceAvailable())
+    else
     {
-        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
+        // is the service running? If not, show a message so the user knows what is happening
+        using (var controller = MidiServiceHelper.GetServiceController())
+        {
+            if (!MidiServiceHelper.ServiceIsReallyRunning(controller))
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.StartingMidiService));
+            }
+        }
 
-        return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+        // start the service
+        if (!initializer.EnsureServiceAvailable())
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
+
+            return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+        }
     }
 
     if (args.Length == 0)

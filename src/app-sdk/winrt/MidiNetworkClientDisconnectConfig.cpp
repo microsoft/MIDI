@@ -7,14 +7,14 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiNetworkClientEndpointRemovalConfig.h"
-#include "Endpoints.Network.MidiNetworkClientEndpointRemovalConfig.g.cpp"
+#include "MidiNetworkClientDisconnectConfig.h"
+#include "Endpoints.Network.MidiNetworkClientDisconnectConfig.g.cpp"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
 
-    winrt::hstring MidiNetworkClientEndpointRemovalConfig::GetConfigJson() const noexcept
+    json::JsonObject  MidiNetworkClientDisconnectConfig::GetConfigJson() const noexcept
     {
-        return L"";
+        return nullptr;
     }
 }

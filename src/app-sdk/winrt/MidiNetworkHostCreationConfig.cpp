@@ -17,7 +17,7 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
 
-    winrt::hstring MidiNetworkHostCreationConfig::GetConfigJson() const noexcept
+    json::JsonObject MidiNetworkHostCreationConfig::GetConfigJson() const noexcept
     {
         json::JsonObject hostObject{};
 
@@ -104,7 +104,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
             transportSettingsObject);
 
 
-
-		return wrapperObject.Stringify();
+		return wrapperObject;
     }
 }

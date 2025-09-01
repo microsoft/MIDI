@@ -78,7 +78,7 @@
                         HorizontalAlignment="Left"
                         BorderThickness="0"
                         Padding="0"
-                        Foreground="{StaticResource AccentTextFillColorPrimaryBrush}"
+                        Foreground="{StaticResource AccentTextFillColorTertiaryBrush}"
                         Background="Transparent"
                         Click="Button_Click"
                         Visibility="{x:Bind ViewModel.ShowCustomizeButton, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
@@ -185,27 +185,36 @@
                 <controls:SettingsCard Margin="0,16,0,0"
                                        CornerRadius="8">
                     <controls:SettingsCard.Header>
-                        <StackPanel Orientation="Horizontal" 
-                                    HorizontalAlignment="Left"
-                                    Margin="0,0,0,0">
-                            <TextBlock Text="Endpoint Device Id: "
+                        <TextBlock Text="Endpoint Device Id: "
                                        Margin="4"
                                        Style="{StaticResource SmallPropertyLabel}"/>
-                            <TextBlock Text="{x:Bind ViewModel.EndpointWrapper.Id}" 
+                    </controls:SettingsCard.Header>
+
+                    <Grid HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+
+                        <TextBlock Text="{x:Bind ViewModel.EndpointWrapper.Id}" 
+                                       Grid.Column="0"
+                                       HorizontalAlignment="Right"
                                        TextWrapping="NoWrap" 
                                        Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"
                                        Margin="4"
                                        IsTextSelectionEnabled="True" />
-                            <Button Margin="4,0,4,0"
+
+                        <Button Margin="4,0,4,0"
+                                    Grid.Column="1"
                                     Padding="4"
                                     Background="Transparent"
                                     Command="{x:Bind ViewModel.CopyEndpointDeviceIdCommand}">
-                                <FontIcon Glyph="&#xE8C8;" FontSize="10"/>
-                                <!-- Copy -->
-                            </Button>
+                            <FontIcon Glyph="&#xE8C8;" FontSize="10"/>
+                            <!-- Copy -->
+                        </Button>
+                    </Grid>
 
-                        </StackPanel>
-                    </controls:SettingsCard.Header>
                 </controls:SettingsCard>
 
 
@@ -234,7 +243,7 @@
 
                             <TextBlock HorizontalAlignment="Right">
                                 <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts, Mode=OneWay}" 
-                                     Foreground="{StaticResource AccentTextFillColorPrimaryBrush}"/>
+                                     Foreground="{StaticResource AppHighlightedText}"/>
                                 <Run Text="Port(s)" />
                             </TextBlock>
                         </Grid>
@@ -311,7 +320,7 @@
                             
                             <TextBlock HorizontalAlignment="Right">
                                 <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts, Mode=OneWay}" 
-                                     Foreground="{StaticResource AccentTextFillColorPrimaryBrush}"/>
+                                     Foreground="{StaticResource AppHighlightedText}"/>
                                 <Run Text="Port(s)" />
                             </TextBlock>
                         </Grid>

@@ -16,7 +16,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         MidiNetworkHostCreationConfig() = default;
 
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
-        winrt::hstring GetConfigJson() const noexcept;
+        json::JsonObject  GetConfigJson() const noexcept;
 
         winrt::hstring Id() const noexcept { return m_id; }
         void Id(_In_ winrt::hstring const& value) { m_id = value; }

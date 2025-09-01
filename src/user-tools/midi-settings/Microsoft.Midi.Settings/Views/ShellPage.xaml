@@ -473,7 +473,8 @@
 
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>
 
-                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.AdvancedUsbSettingsViewModel">
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.AdvancedUsbSettingsViewModel"
+                                    Visibility="Collapsed">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-AdvancedUsbSettings.svg" />
                     </NavigationViewItem.Icon>                    
@@ -488,6 +489,7 @@
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
 
+                
                 <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.TroubleshootingViewModel">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-Troubleshooting.svg" />
@@ -496,9 +498,9 @@
                         <Grid>
                             <TextBlock x:Uid="Shell_Troubleshooting" />
 
-                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                            <!--<Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
                                 <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
-                            </Grid>
+                            </Grid>-->
                         </Grid>
                     </NavigationViewItem.Content>                   
                 </NavigationViewItem>

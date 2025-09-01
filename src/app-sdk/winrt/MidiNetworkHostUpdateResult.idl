@@ -13,11 +13,11 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiNetworkClientEndpointRemovalResult
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    struct MidiNetworkHostUpdateResult
     {
         Boolean Success;
         String ErrorInformation;
-
     };
 }
 

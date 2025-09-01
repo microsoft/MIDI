@@ -7,22 +7,25 @@
 // ============================================================================
 
 #pragma once
-#include "Endpoints.Network.MidiNetworkClientEndpointCreationConfig.g.h"
+#include "Endpoints.Network.MidiNetworkClientConnectConfig.g.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    struct MidiNetworkClientEndpointCreationConfig : MidiNetworkClientEndpointCreationConfigT<MidiNetworkClientEndpointCreationConfig>
+    struct MidiNetworkClientConnectConfig : MidiNetworkClientConnectConfigT<MidiNetworkClientConnectConfig>
     {
-        MidiNetworkClientEndpointCreationConfig() = default;
+        MidiNetworkClientConnectConfig() = default;
 
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
-        winrt::hstring GetConfigJson() const noexcept;
+        json::JsonObject GetConfigJson() const noexcept;
 
         winrt::hstring Comment() const noexcept { return m_comment; }
         void Comment(_In_ winrt::hstring const& value) { m_comment = value; }
 
         winrt::hstring Id() const noexcept { return m_id; }
         void Id(_In_ winrt::hstring const& value) { m_id = value; }
+
+        winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
+        void UmpEndpointName(_In_ winrt::hstring const& value) { m_umpEndpointName = value; }
 
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
         void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }
@@ -34,6 +37,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         void MatchCriteria(_In_ network::MidiNetworkClientMatchCriteria const& value) noexcept { m_matchCriteria = value; }
 
     private:
+        winrt::hstring m_umpEndpointName{};
         winrt::hstring m_id{};
         bool m_umpOnly{ false };
         bool m_autoReconnect{ true };
@@ -45,7 +49,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation
 {
-    struct MidiNetworkClientEndpointCreationConfig : MidiNetworkClientEndpointCreationConfigT<MidiNetworkClientEndpointCreationConfig, implementation::MidiNetworkClientEndpointCreationConfig>
+    struct MidiNetworkClientConnectConfig : MidiNetworkClientConnectConfigT<MidiNetworkClientConnectConfig, implementation::MidiNetworkClientConnectConfig>
     {
     };
 }

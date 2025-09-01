@@ -105,12 +105,14 @@ CMidi2KSMidiConfigurationManager::ProcessCustomProperties(
             auto cached = m_customPropertiesCache->Add(matchCriteria, customProperties);
             LOG_HR_IF(E_FAIL,!cached);
 
-            if (customProperties->WriteAllProperties(endpointDevProperties))
+            // we only write dev properties if we have a resolved endpoint device id
+            // otherwise, caching is the best we can do
+            if (!resolvedEndpointDeviceId.empty())
             {
-                if (customProperties->Midi1Destinations.size() > 0 ||
-                    customProperties->Midi1Sources.size() > 0)
+                if (customProperties->WriteAllProperties(endpointDevProperties))
                 {
-                    if (!resolvedEndpointDeviceId.empty())
+                    if (customProperties->Midi1Destinations.size() > 0 ||
+                        customProperties->Midi1Sources.size() > 0)
                     {
                         // get the current name table
                         nameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromEndpointDeviceId(resolvedEndpointDeviceId);
@@ -131,18 +133,18 @@ CMidi2KSMidiConfigurationManager::ProcessCustomProperties(
                         nameTable->WriteProperties(endpointDevProperties);
                     }
                 }
-            }
-            else
-            {
-                // failed to write custom properties
-                TraceLoggingWrite(
-                    MidiKSTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Failed writing custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
+                else
+                {
+                    // failed to write custom properties
+                    TraceLoggingWrite(
+                        MidiKSTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Failed writing custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+                }
             }
         }
         else

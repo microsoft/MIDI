@@ -24,7 +24,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
         winrt::guid TransportId() { return loop::MidiLoopbackEndpointManager::TransportId(); }
         bool IsFromCurrentConfigFile() { return false; }
-        winrt::hstring GetConfigJson();
+        json::JsonObject GetConfigJson();
 
 
         winrt::guid AssociationId() { return m_associationId; }

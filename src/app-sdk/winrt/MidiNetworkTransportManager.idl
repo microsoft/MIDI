@@ -14,11 +14,17 @@ import "MidiNetworkHostCreationResult.idl";
 import "MidiNetworkHostCreationConfig.idl";
 import "MidiNetworkHostRemovalResult.idl";
 import "MidiNetworkHostRemovalConfig.idl";
-import "MidiNetworkClientEndpointCreationResult.idl";
-import "MidiNetworkClientEndpointCreationConfig.idl";
-import "MidiNetworkClientEndpointRemovalResult.idl";
-import "MidiNetworkClientEndpointRemovalConfig.idl";
+import "MidiNetworkHostUpdateResult.idl";
+
+
+import "MidiNetworkClientConnectionResult.idl";
+import "MidiNetworkClientConnectConfig.idl";
+import "MidiNetworkClientDisconnectConfig.idl";
+
 import "MidiNetworkAdvertisedHost.idl";
+
+import "MidiNetworkConfiguredHost.idl";
+import "MidiNetworkConfiguredClient.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
@@ -30,22 +36,37 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         static Boolean IsTransportAvailable{ get; };
         static Guid TransportId{ get; };
 
-        static MidiNetworkHostCreationResult CreateNetworkHost(
+
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostCreationResult> CreateNetworkHostAsync(
             MidiNetworkHostCreationConfig creationConfig);
 
-        static MidiNetworkHostRemovalResult RemoveNetworkHost(
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostRemovalResult> RemoveNetworkHostAsync(
             MidiNetworkHostRemovalConfig removalConfig);
 
+        // keeps the host entry in memory, but closes all connections
+        // stops advertising, and refuses any new connections
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResult> StopNetworkHostAsync(String hostId);
 
-        static MidiNetworkClientEndpointCreationResult CreateNetworkClient(
-            MidiNetworkClientEndpointCreationConfig creationConfig);
-
-        static MidiNetworkClientEndpointRemovalResult RemoveNetworkClient(
-            MidiNetworkClientEndpointRemovalConfig removalConfig);
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResult> StartNetworkHostAsync(String hostId);
 
 
-        // list the hosts currently visible to this PC
+        // Sends new client info to the service
+        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectionResult> ConnectNetworkClientAsync(
+            MidiNetworkClientConnectConfig connectConfig);
+
+        //// Closes the connection and removes the entry in the service
+        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectionResult> DisconnectNetworkClientAsync(
+            MidiNetworkClientDisconnectConfig disconnectConfig);
+
+
+        // returns info about what is configured inside the service
+        static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredHost> GetConfiguredHosts();
+        static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredClient> GetConfiguredClients();
+
+
+        // list the external hosts currently visible to this PC
         static Windows.Foundation.Collections.IVectorView<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
+
 
         static String MidiNetworkUdpDnsServiceType{ get; };
         static String MidiNetworkUdpDnsSdQueryString{ get; };
@@ -53,5 +74,6 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         static Windows.Devices.Enumeration.DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind{ get; };
 
         static IVector<String> MidiNetworkUdpDnsSdQueryAdditionalProperties { get; };
+
     }
 }

@@ -14,6 +14,6 @@ net stop midisrv
 echo Copying Network MIDI Transport
 copy /Y %buildoutput%\Midi2.NetworkMidiTransport.dll %servicepath%
 
-net start midisrv
+midi service start
 
 pause

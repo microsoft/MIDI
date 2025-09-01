@@ -21,7 +21,7 @@ using Windows.Storage;
 
 namespace Microsoft.Midi.Settings.ViewModels;
 
-public partial class ForDevelopersViewModel : ObservableRecipient, ISettingsSearchTarget
+public partial class ForDevelopersViewModel : ObservableRecipient //, ISettingsSearchTarget
 {
     public static IList<string> GetSearchKeywords()
     {

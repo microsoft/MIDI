@@ -71,7 +71,7 @@ namespace Microsoft.Midi.ConsoleApp
             public string? OutputFile { get; set; }
 
             [LocalizedDescription("ParameterCaptureMessagesAnnotate")]
-            [CommandOption("-a|--annotate-capture")]
+            [CommandOption("-n|--annotate-capture")]
             [DefaultValue(false)]
             public bool AnnotateCaptureFile { get; set; }
 
@@ -86,7 +86,7 @@ namespace Microsoft.Midi.ConsoleApp
             public bool WarnIfSkippedIncrementMessage { get; set; }
 
             [LocalizedDescription("ParameterMonitorEndpointAutoReconnect")]
-            [CommandOption("-r|--auto-reconnect")]
+            [CommandOption("-a|--auto-reconnect")]
             [DefaultValue(true)]
             public bool AutoReconnect { get; set; }
 

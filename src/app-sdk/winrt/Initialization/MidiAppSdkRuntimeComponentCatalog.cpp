@@ -118,6 +118,10 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkHostCreationConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkHostRemovalConfig", defaultThreading });
 
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientConnectConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientDisconnectConfig", defaultThreading });
+
+
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientEndpointCreationConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientEndpointRemovalConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientMatchCriteria", defaultThreading });

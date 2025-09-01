@@ -70,13 +70,25 @@ public:
         _In_ std::shared_ptr<MidiNetworkHostDefinition>);
     std::vector<std::shared_ptr<MidiNetworkHostDefinition>> GetPendingHostDefinitions() { return m_pendingHostDefinitions; }
 
-    HRESULT AddClient(
-        _In_ std::shared_ptr<MidiNetworkClient>);
+    std::shared_ptr<MidiNetworkHost> GetHost(_In_ winrt::hstring hostEntryIdentifier);
+
+
+
+
+
+
+    HRESULT AddClient(_In_ std::shared_ptr<MidiNetworkClient>);
+    HRESULT RemoveClient(_In_ winrt::hstring clientConfigEntryIdentifier);
+
     std::vector<std::shared_ptr<MidiNetworkClient>> GetClients() { return m_clients; }
+
+    std::shared_ptr<MidiNetworkClient> GetClient(_In_ winrt::hstring clientEntryIdentifier);
+
 
     HRESULT AddPendingClientDefinition(
         _In_ std::shared_ptr<MidiNetworkClientDefinition>);
     std::vector<std::shared_ptr<MidiNetworkClientDefinition>> GetPendingClientDefinitions() { return m_pendingClientDefinitions; }
+
 
 
     // these two sets of functions, and their related maps, work with the same
@@ -103,6 +115,14 @@ public:
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort);
 
+    std::vector<std::shared_ptr<MidiNetworkConnection>> GetAllNetworkConnectionsForHost(_In_ winrt::hstring const& hostEntryIdentifier);
+
+    std::vector<std::shared_ptr<MidiNetworkConnection>> GetAllNetworkConnectionsForClient(_In_ winrt::hstring const& clientEntryIdentifier);
+
+    HRESULT RemoveAllNetworkConnectionsForHost(_In_ winrt::hstring const& hostEntryIdentifier);
+
+    HRESULT RemoveAllNetworkConnectionsForClient(_In_ winrt::hstring const& clientEntryIdentifier);
+
     HRESULT AddNetworkConnection(
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort, 
@@ -111,6 +131,7 @@ public:
     HRESULT RemoveNetworkConnection(
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort);
+
 
 private:
     TransportState();

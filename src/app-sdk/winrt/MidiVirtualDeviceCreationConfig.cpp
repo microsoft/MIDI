@@ -67,7 +67,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     //    }
     //}
     //
-    winrt::hstring MidiVirtualDeviceCreationConfig::GetConfigJson() const noexcept
+    json::JsonObject MidiVirtualDeviceCreationConfig::GetConfigJson() const noexcept
     {
         // create the json for creating the endpoint
 
@@ -129,7 +129,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
             topLevelTransportPluginSettingsObject);
 
 
-        return outerWrapperObject.Stringify();
+        return outerWrapperObject;
     }
 
 
