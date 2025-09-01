@@ -69,6 +69,20 @@ TransportState::GetHost(winrt::hstring hostEntryIdentifier)
     return nullptr;
 }
 
+_Use_decl_annotations_
+std::shared_ptr<MidiNetworkClient>
+TransportState::GetClient(winrt::hstring clientEntryIdentifier)
+{
+    for (auto& client : m_clients)
+    {
+        if (client->GetDefinition().EntryIdentifier == clientEntryIdentifier)
+        {
+            return client;
+        }
+    }
+
+    return nullptr;
+}
 
 
 
@@ -94,6 +108,24 @@ TransportState::AddClient(
     m_clients.push_back(client);
 
     return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+TransportState::RemoveClient(winrt::hstring clientConfigEntryIdentifier)
+{
+    for (int i = 0; i < m_clients.size(); i++)
+    {
+        auto client = m_clients[i];
+
+        if (client->GetDefinition().EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            m_clients.erase(m_clients.begin() + i);
+            return S_OK;
+        }
+    }
+
+    return E_NOTFOUND;
 }
 
 
@@ -224,6 +256,23 @@ TransportState::GetNetworkConnection(
 }
 
 _Use_decl_annotations_
+std::vector<std::shared_ptr<MidiNetworkConnection>>
+TransportState::GetAllNetworkConnectionsForClient(winrt::hstring const& clientEntryConfigIdentifier)
+{
+    std::vector<std::shared_ptr<MidiNetworkConnection>> results;
+
+    for (auto& conn : m_networkConnections)
+    {
+        if (conn.second->ConfigIdentifier() == clientEntryConfigIdentifier)
+        {
+            results.push_back(conn.second);
+        }
+    }
+
+    return results;
+}
+
+_Use_decl_annotations_
 std::vector<std::shared_ptr<MidiNetworkConnection>> 
 TransportState::GetAllNetworkConnectionsForHost(winrt::hstring const& hostEntryConfigIdentifier)
 {
@@ -273,6 +322,38 @@ TransportState::RemoveAllNetworkConnectionsForHost(winrt::hstring const& hostEnt
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+TransportState::RemoveAllNetworkConnectionsForClient(winrt::hstring const& clientEntryConfigIdentifier)
+{
+    do
+    {
+        auto item = std::find_if(m_networkConnections.begin(), m_networkConnections.end(), [&](const std::pair<std::string, std::shared_ptr<MidiNetworkConnection>>& connection)
+            {
+                if (connection.second->ConfigIdentifier() == clientEntryConfigIdentifier)
+                {
+                    return true;
+                }
+
+                return false;
+            });
+
+        // exit if the no matches were found. We're done in that case.
+        if (item == m_networkConnections.end())
+        {
+            break;
+        }
+        else
+        {
+            // this is assuming that shutdown has already been peformed on these connections. 
+            // we're just doing housekeeping here
+
+            m_networkConnections.erase(item);
+        }
+    } while (TRUE);
+
+    return S_OK;
+}
 
 
 _Use_decl_annotations_

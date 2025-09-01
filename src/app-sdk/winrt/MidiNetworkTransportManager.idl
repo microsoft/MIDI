@@ -24,6 +24,7 @@ import "MidiNetworkClientDisconnectConfig.idl";
 import "MidiNetworkAdvertisedHost.idl";
 
 import "MidiNetworkConfiguredHost.idl";
+import "MidiNetworkConfiguredClient.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
@@ -36,11 +37,11 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         static Guid TransportId{ get; };
 
 
-   //     static Windows.Foundation.IAsyncOperation<MidiNetworkHostCreationResult> CreateNetworkHostAsync(
-   //         MidiNetworkHostCreationConfig creationConfig);
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostCreationResult> CreateNetworkHostAsync(
+            MidiNetworkHostCreationConfig creationConfig);
 
-   //     static Windows.Foundation.IAsyncOperation<MidiNetworkHostRemovalResult> RemoveNetworkHostAsync(
-   //         MidiNetworkHostRemovalConfig removalConfig);
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostRemovalResult> RemoveNetworkHostAsync(
+            MidiNetworkHostRemovalConfig removalConfig);
 
         // keeps the host entry in memory, but closes all connections
         // stops advertising, and refuses any new connections
@@ -50,17 +51,17 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 
 
         // Sends new client info to the service
-        //static IAsyncOperation<MidiNetworkClientConnectionResult> ConnectNetworkClientAsync(
-        //    MidiNetworkClientConnectConfig connectConfig);
+        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectionResult> ConnectNetworkClientAsync(
+            MidiNetworkClientConnectConfig connectConfig);
 
         //// Closes the connection and removes the entry in the service
-        //static IAsyncOperation<MidiNetworkClientConnectionResult> DisconnectNetworkClientAsync(
-        //    MidiNetworkClientDisconnectConfig disconnectConfig);
+        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectionResult> DisconnectNetworkClientAsync(
+            MidiNetworkClientDisconnectConfig disconnectConfig);
 
 
         // returns info about what is configured inside the service
         static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredHost> GetConfiguredHosts();
-        //static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredClient> GetConfiguredClients();
+        static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredClient> GetConfiguredClients();
 
 
         // list the external hosts currently visible to this PC

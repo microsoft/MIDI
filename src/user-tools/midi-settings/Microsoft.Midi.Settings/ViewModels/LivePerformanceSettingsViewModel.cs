@@ -28,7 +28,7 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class LivePerformanceSettingsViewModel : ObservableRecipient, INavigationAware, ISettingsSearchTarget
+    public partial class LivePerformanceSettingsViewModel : ObservableRecipient, INavigationAware //, ISettingsSearchTarget
     {
         public static IList<string> GetSearchKeywords()
         {

@@ -34,6 +34,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
         json::JsonObject matchObject = json::JsonObject::Parse(MatchCriteria().GetConfigJson());
 
+        if (!UmpEndpointName().empty())
+        {
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME,
+                json::JsonValue::CreateStringValue(UmpEndpointName())
+            );
+        }
 
         clientObject.SetNamedValue(
             WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey,

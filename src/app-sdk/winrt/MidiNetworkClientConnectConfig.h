@@ -24,6 +24,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         winrt::hstring Id() const noexcept { return m_id; }
         void Id(_In_ winrt::hstring const& value) { m_id = value; }
 
+        winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
+        void UmpEndpointName(_In_ winrt::hstring const& value) { m_umpEndpointName = value; }
+
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
         void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }
 
@@ -34,6 +37,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         void MatchCriteria(_In_ network::MidiNetworkClientMatchCriteria const& value) noexcept { m_matchCriteria = value; }
 
     private:
+        winrt::hstring m_umpEndpointName{};
         winrt::hstring m_id{};
         bool m_umpOnly{ false };
         bool m_autoReconnect{ true };

@@ -300,6 +300,32 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
     // TODO: Need a lock in here to make sure two passes of the creation
     // loop aren't both trying to create the same client
 
+    DWORD nameLen = MAX_COMPUTERNAME_LENGTH + 1;
+    std::wstring machineName;
+    machineName.reserve(nameLen + 1);
+    memset(machineName.data(), 0, MAX_COMPUTERNAME_LENGTH + 1);
+
+    std::wstring root;
+
+    if (GetComputerName(machineName.data(), &nameLen))
+    {
+        root = internal::ToLowerTrimmedWStringCopy(machineName) + L"-midisrv";
+    }
+    else
+    {
+        root = L"windows-midisrv";
+    }
+
+    if (clientDefinition->LocalProductInstanceId.empty())
+    {
+        clientDefinition->LocalProductInstanceId = L"unspecified-" + root;
+    }
+
+    if (clientDefinition->LocalEndpointName.empty())
+    {
+        clientDefinition->LocalEndpointName = root;
+    }
+
 
     auto client = std::make_shared<MidiNetworkClient>();
     RETURN_IF_NULL_ALLOC(client);

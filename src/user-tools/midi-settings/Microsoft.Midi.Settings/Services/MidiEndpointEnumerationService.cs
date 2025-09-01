@@ -91,7 +91,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     public void Start()
     {
-        StartDeviceWatcher(true);
+        StartDeviceWatcher(false);
     }
 
     private readonly ISynchronizationContextService _synchronizationContextService;

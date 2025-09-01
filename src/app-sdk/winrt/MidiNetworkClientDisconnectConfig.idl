@@ -21,7 +21,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     {
         MidiNetworkClientDisconnectConfig();
 
-
+        String Id;							// GUID or other string we use in the config file and for subsequent edits/deletes
     }
 }
 

@@ -9,7 +9,9 @@
 using Microsoft.Midi.Settings.Contracts.Services;
 
 using Windows.Data.Json;
-using Microsoft.Midi.Settings.Config;    // we use the WinRT JSON libraries to be consistent with the service code
+using Microsoft.Midi.Settings.Config;
+using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
+using Windows.ApplicationModel.Contacts;    // we use the WinRT JSON libraries to be consistent with the service code
 
 namespace Microsoft.Midi.Settings.Services;
 
@@ -39,6 +41,8 @@ internal class MidiConfigConstants
 
         public const string TransportPluginSettings = "endpointTransportPluginSettings";
 
+        public const string NetworkClients = "clients";
+        public const string NetworkHosts = "hosts";
     }
 
     //internal class Reg
@@ -548,30 +552,61 @@ public class MidiConfigFile : IMidiConfigFile
         return false;
     }
 
-    //public bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientEndpointCreationConfig creationConfig)
-    //{
-    //    if (m_config == null) return false;
-    //    if (creationConfig == null) return false;
+    public bool RemoveNetworkHost(string hostEntryId)
+    {
+        if (m_config == null) return false;
+        if (string.IsNullOrEmpty(hostEntryId)) return false;
 
-    //    // get the latest from disk
-    //    if (!Load())
-    //    {
-    //        return false;
-    //    }
+        // get the latest from disk
+        if (!Load())
+        {
+            return false;
+        }
 
-    //    JsonObject mergeObject;
-    //    if (JsonObject.TryParse(creationConfig.GetConfigJson(), out mergeObject))
-    //    {
-    //        if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
-    //        {
-    //            // write the property
+        var transportObject = FindExistingTransportSection(m_config, MidiNetworkTransportManager.TransportId);
+        if (transportObject == null) return false;
 
-    //            return Save();
-    //        }
-    //    }
+        var createObject = FindExistingTransportCreateObject(transportObject);
+        if (createObject == null) return false;
 
-    //    return false;
-    //}
+        var hostsObject = createObject.GetNamedObject(MidiConfigConstants.JsonKeys.NetworkHosts);
+        if (hostsObject == null) return false;
+
+        if (hostsObject.ContainsKey(hostEntryId))
+        {
+            hostsObject.Remove(hostEntryId);
+            
+            return Save();
+        }
+        else
+        {
+            return false;
+        }
+
+    }
+
+
+
+    public bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientConnectConfig creationConfig)
+    {
+        if (m_config == null) return false;
+        if (creationConfig == null) return false;
+
+        // get the latest from disk
+        if (!Load())
+        {
+            return false;
+        }
+
+        if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+        {
+            // write the property
+
+            return Save();
+        }
+
+        return false;
+    }
 
 
     public bool StoreEndpointCustomization(Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig updateConfig)

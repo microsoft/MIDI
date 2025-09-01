@@ -148,27 +148,112 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     }
 
 
+    collections::IVectorView<network::MidiNetworkConfiguredClient> MidiNetworkTransportManager::GetConfiguredClients() noexcept
+    {
+        midi2::ServiceConfig::MidiServiceTransportCommand command(network::MidiNetworkTransportManager::TransportId());
+        command.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS);
 
+        OutputDebugString(L"\n");
+        OutputDebugString(command.GetConfigJson().Stringify().c_str());
+        OutputDebugString(L"\n");
 
-    //_Use_decl_annotations_
-    //network::MidiNetworkHostCreationResult MidiNetworkTransportManager::CreateNetworkHost(
-    //    network::MidiNetworkHostCreationConfig const& creationConfig)
-    //{
-    //    auto createResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
+        auto response = midi2::ServiceConfig::MidiServiceConfig::SendTransportCommand(command);
 
-    //    network::MidiNetworkHostCreationResult result{ };
+        auto results = winrt::single_threaded_vector<network::MidiNetworkConfiguredClient>();
 
-    //    if (createResponse.Status == svc::MidiServiceConfigResponseStatus::Success)
-    //    {
-    //        result.Success = true;
-    //    }
-    //    else
-    //    {
-    //        result.Success = false;
-    //    }
+        if (response.Status == midi2::ServiceConfig::MidiServiceConfigResponseStatus::Success)
+        {
+            auto responseJson = response.ResponseJson;
 
-    //    return result;
-    //}
+            json::JsonObject responseObject;
+            if (json::JsonObject::TryParse(responseJson, responseObject))
+            {
+                if (responseObject.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CLIENTS_ARRAY_KEY))
+                {
+                    auto hostsArray = responseObject.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CLIENTS_ARRAY_KEY);
+
+                    for (auto const& entry : hostsArray)
+                    {
+                        auto entryObject = entry.GetObject();
+
+                        if (entryObject != nullptr)
+                        {
+                            network::MidiNetworkConfiguredClient client;
+
+                            client.Id = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY, L"");
+                            client.IsSessionActive = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY, false);
+
+                            client.ConnectedRemoteAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY, L"");
+                            client.ConnectedRemotePort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY, L"");
+                            client.ConnectedLocalAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_ADDRESS_KEY, L"");
+                            client.ConnectedLocalPort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_PORT_KEY, L"");
+                            client.EndpointDeviceId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_UMP_ENDPOINT_ID_KEY, L"");
+
+                            //client.HasStarted = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY, false);
+                            //client.ActualAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY, L"");
+                            //client.ActualPort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY, L"");
+                            //client.UmpEndpointName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY, L"");
+                            //client.ProductInstanceId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY, L"");
+                            //client.CreateMidi1Ports = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY, false);
+                            //client.ServiceInstanceName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY, L"");
+
+                            results.Append(client);
+                        }
+                    }
+                }
+                else
+                {
+                    // no response array
+                }
+            }
+        }
+        else
+        {
+            // failed
+        }
+
+        return results.GetView();
+    }
+
+    // TODO: Not yet really async
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<network::MidiNetworkHostCreationResult> 
+    MidiNetworkTransportManager::CreateNetworkHostAsync(
+        network::MidiNetworkHostCreationConfig const& creationConfig) noexcept
+    {
+        network::MidiNetworkHostCreationResult result{ };
+
+    //    co_await winrt::resume_background();
+
+        // TODO. This doesn't do everything sync in the service so needs to change
+        auto createResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
+
+        if (createResponse.Status == svc::MidiServiceConfigResponseStatus::Success)
+        {
+            result.Success = true;
+        }
+        else
+        {
+            result.Success = false;
+        }
+
+        co_return result;
+    }
+
+    // TODO: Not yet really async
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<network::MidiNetworkHostRemovalResult> 
+    MidiNetworkTransportManager::RemoveNetworkHostAsync(
+        network::MidiNetworkHostRemovalConfig const& removalConfig) noexcept
+    {
+        network::MidiNetworkHostRemovalResult result{ };
+
+        result.Success = false;
+        result.ErrorInformation = L"Not yet implemented";
+
+        co_return result;
+    }
+
 
     //_Use_decl_annotations_
     //network::MidiNetworkHostRemovalResult MidiNetworkTransportManager::RemoveNetworkHost(
@@ -180,6 +265,74 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     //    network::MidiNetworkHostRemovalResult result{ };
     //    return result;
     //}
+
+
+    // TODO: not yet really async
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<network::MidiNetworkClientConnectionResult>
+    MidiNetworkTransportManager::ConnectNetworkClientAsync(
+        network::MidiNetworkClientConnectConfig const& creationConfig) noexcept
+    {
+        // TODO: Right now this is only doing direct connects, not MDNS connects
+        // TODO: There's no endpoint name in the config
+
+        svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
+        cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT);
+        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, creationConfig.Id());
+        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS, creationConfig.MatchCriteria().DirectHostNameOrIPAddress());
+        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT, winrt::to_hstring(creationConfig.MatchCriteria().DirectPort()));
+        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME, creationConfig.UmpEndpointName());
+
+        auto createResponse = svc::MidiServiceConfig::SendTransportCommand(cmd);
+
+        network::MidiNetworkClientConnectionResult result{ };
+
+        if (createResponse.Status == svc::MidiServiceConfigResponseStatus::Success)
+        {
+            result.Success = true;
+        }
+        else
+        {
+            result.Success = false;
+            result.ErrorInformation = createResponse.ServiceMessage;
+        }
+
+        co_return result;
+    }
+    
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<network::MidiNetworkClientConnectionResult>
+    MidiNetworkTransportManager::DisconnectNetworkClientAsync(
+        network::MidiNetworkClientDisconnectConfig const& removalConfig) noexcept
+    {
+
+        svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
+        cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT);
+        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, removalConfig.Id());
+
+        auto response = svc::MidiServiceConfig::SendTransportCommand(cmd);
+
+        network::MidiNetworkClientConnectionResult result{ };
+
+        if (response.Status == svc::MidiServiceConfigResponseStatus::Success)
+        {
+            result.Success = true;
+        }
+        else
+        {
+            result.Success = false;
+            result.ErrorInformation = response.ServiceMessage;
+        }
+
+        co_return result;
+    }
+
+
+
+
+
+
 
     //_Use_decl_annotations_
     //network::MidiNetworkClientEndpointCreationResult MidiNetworkTransportManager::CreateNetworkClient(

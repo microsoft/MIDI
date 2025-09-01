@@ -28,7 +28,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 		//Boolean AutoReconnect;				// true if we reconnect after any disconnects. Otherwise, we connect only once.
 
 
-
+		String UmpEndpointName;				// the ump endpoint name to create
 
 
 		// sets the criteria we look for when creating the endpoint. mDNS is generally preferred.

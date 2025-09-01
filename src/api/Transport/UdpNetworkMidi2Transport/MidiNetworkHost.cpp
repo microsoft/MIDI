@@ -138,7 +138,7 @@ MidiNetworkHost::Stop()
     // connection
     for (auto& connection: TransportState::Current().GetAllNetworkConnectionsForHost(m_hostDefinition.EntryIdentifier))
     {
-        RETURN_IF_FAILED(connection->Shutdown());
+        LOG_IF_FAILED(connection->Shutdown());
     }
 
     // now remove all those connections
@@ -350,7 +350,7 @@ MidiNetworkHost::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    Stop();
+    LOG_IF_FAILED(Stop());
 
     //while (m_connections.size() > 0)
     //{

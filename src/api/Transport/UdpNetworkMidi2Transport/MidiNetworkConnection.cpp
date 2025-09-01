@@ -1684,6 +1684,12 @@ MidiNetworkConnection::Shutdown()
     m_newMessagesInQueueEvent.SetEvent();
 
 
+
+    // TODO: Need to remove this from the list in TransportState.Current()
+
+
+
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,

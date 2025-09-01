@@ -18,12 +18,13 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     {
         String Id;  // internal id we use to match up in config file
 
-        Boolean IsEnabled;                  // true if this is allows to connect. Mostly for pre-configured connections
+        //Boolean IsEnabled;                  // true if this is allows to connect. Mostly for pre-configured connections
         Boolean IsSessionActive;            // true if a session is active
 
-        String ConnectedRemoteIPOrName;     
-        UInt16 ConnectedRemotePort;
-        UInt16 ConnectedLocalPort;          // need to see if I can get this in the service
+        String ConnectedRemoteAddress;     
+        String ConnectedRemotePort;
+        String ConnectedLocalAddress;
+        String ConnectedLocalPort;          // need to see if I can get this in the service
 
         String EndpointDeviceId;            // the created MIDI endpoint's id
     };

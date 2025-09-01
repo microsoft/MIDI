@@ -24,6 +24,8 @@ MidiNetworkClient::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    m_clientDefinition = clientDefinition;
+
     m_configIdentifier = clientDefinition.EntryIdentifier;
 
 
@@ -259,6 +261,21 @@ MidiNetworkClient::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+
+
+
+
+    for (auto& connection : TransportState::Current().GetAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier))
+    {
+        LOG_IF_FAILED(connection->Shutdown());
+    }
+
+    // now remove all those connections
+    RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier));
+
+
+    LOG_IF_FAILED(m_networkConnection->Shutdown());
+    m_networkConnection.reset();
 
     if (m_socket)
     {

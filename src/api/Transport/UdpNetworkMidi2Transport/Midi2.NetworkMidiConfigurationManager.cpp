@@ -212,23 +212,179 @@ CMidi2NetworkMidiConfigurationManager::RunCommandStartHost(
 
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
+    winrt::hstring const& configEntryId,
+    winrt::hstring const& remoteAddress,
+    winrt::hstring const& remotePort,
+    winrt::hstring const& umpEndpointName,
+    json::JsonObject& responseObject) noexcept
+{
+
+    if (remoteAddress.empty())
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing remote address.");
+        return S_OK;
+    }
+
+    if (remotePort.empty())
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing remote port.");
+        return S_OK;
+    }
+
+    // do some validation of the remote port
+    uint16_t remotePortNumeric{0};
+    auto num = wcstol(remotePort.c_str(), NULL, 10);
+    if (num > WORD_MAX || num < 1)
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Invalid remote port.");
+        return S_OK;
+    }
+    else
+    {
+        remotePortNumeric = static_cast<uint16_t>(num);
+    }
+
+    // this happens all in real-time, unlike the stuff that is done via the config file
+
+    auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
+
+    // TODO: These should be parameters
+    clientDefinition->CreateMidi1Ports = true;
+    clientDefinition->EntryIdentifier = configEntryId;
+    clientDefinition->MatchDirectHostNameOrIPAddress = remoteAddress;
+    clientDefinition->MatchDirectPort = remotePort;
+    clientDefinition->LocalEndpointName = umpEndpointName;
+
+    TransportState::Current().GetEndpointManager()->StartNewClient(
+        clientDefinition, 
+        remoteAddress,
+        remotePortNumeric);
+
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandDisconnectClient(
+    winrt::hstring const& configEntryId,
+    json::JsonObject& responseObject) noexcept
+{
+
+    if (configEntryId.empty())
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing entry id.");
+        return S_OK;
+    }
+
+
+    auto client = TransportState::Current().GetClient(configEntryId);
+
+    if (client != nullptr)
+    {
+        LOG_IF_FAILED(client->Shutdown());
+    }
+
+    TransportState::Current().RemoveClient(configEntryId);
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
 
 
 
 
-
-
+//
+// Response Object Payload
+// {
+//   "clients" :
+//   [
+//     {
+//       "entryIdentifier" : "some guid",
+//       "enabled" : true,
+//       "sessionActive" : true,
+//       "remoteAddress" : "ip or host",
+//       "remotePort" : "port number",
+//       "localPort" : "port number",
+//       "endpointDeviceId" : "id of associated ump endpoint",
+//       "createMidi1Ports" : true
+//      },
+//     ...
+//   ]
+// }
+// 
+//
 _Use_decl_annotations_
 HRESULT 
 CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
     json::JsonObject& responseObject) noexcept
 {
+    json::JsonArray clientsArray;
 
-    internal::SetConfigurationResponseObjectFail(responseObject, L"Not implemented.");
+    for (auto const client : TransportState::Current().GetClients())
+    {
+        json::JsonObject clientObject;
+
+        auto def = client->GetDefinition();
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY,
+            json::JsonValue::CreateStringValue(def.EntryIdentifier));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_MDNS_MATCH_ID_KEY,
+            json::JsonValue::CreateStringValue(def.MatchId));
+
+        //clientObject.SetNamedValue(
+        //    MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_ENABLED_KEY,
+        //    json::JsonValue::CreateBooleanValue(client->IsEnabled()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY,
+            json::JsonValue::CreateBooleanValue(client->IsSessionActive()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(client->RemoteAddress()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY,
+            json::JsonValue::CreateStringValue(client->RemotePort()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(client->LocalAddress()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_PORT_KEY,
+            json::JsonValue::CreateStringValue(client->LocalPort()));
+
+        //clientObject.SetNamedValue(
+        //    MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_UMP_ENDPOINT_ID_KEY,
+        //    json::JsonValue::CreateStringValue(client->UmpEndpointId));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
+            json::JsonValue::CreateBooleanValue(def.CreateMidi1Ports));
 
 
+        clientsArray.Append(clientObject);
+    }
+
+
+    responseObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CLIENTS_ARRAY_KEY, clientsArray);
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
 
     return S_OK;
+
 }
 
 
@@ -239,10 +395,10 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
 //   "hosts" :
 //   [
 //     {
-//       "id" : "some guid",
+//       "entryIdentifier" : "some guid",
 //       "enabled" : true,
 //       "hasStarted" : true,
-//       "actualPort" : 12345,
+//       "actualPort" : "12345",
 //       "name" : "Advertised Endpoint Name",
 //       "productInstanceId" : "instance id",
 //       "createMidi1Ports" : true,
@@ -253,7 +409,6 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
 // }
 // 
 //
-
 
 _Use_decl_annotations_
 HRESULT 
@@ -374,6 +529,45 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
         if (arg != commandHelper.Arguments()->end())
         {
             RETURN_IF_FAILED(RunCommandStopHost(arg->second.c_str(), responseObject));
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT)
+    {
+        auto entryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER);
+        auto addr = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS);
+        auto port = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT);
+        auto name = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME);
+
+        if (entryId != commandHelper.Arguments()->end() &&
+            addr != commandHelper.Arguments()->end() &&
+            port != commandHelper.Arguments()->end() &&
+            name != commandHelper.Arguments()->end())
+        {
+            RETURN_IF_FAILED(RunCommandConnectDirect(
+                entryId->second.c_str(), 
+                addr->second.c_str(), 
+                port->second.c_str(), 
+                name->second.c_str(),
+                responseObject));
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT)
+    {
+        auto entryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER);
+
+        if (entryId != commandHelper.Arguments()->end())
+        {
+            RETURN_IF_FAILED(RunCommandDisconnectClient(
+                entryId->second.c_str(),
+                responseObject));
         }
         else
         {

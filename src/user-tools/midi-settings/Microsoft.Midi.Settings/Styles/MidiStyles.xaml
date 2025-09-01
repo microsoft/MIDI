@@ -2,9 +2,13 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <SolidColorBrush x:Key="MidiIconBaseColorBlueBrush" Color="#FF15B1F9" />
+    <Color x:Key="AppBlueColor">#FF15B1F9</Color>
+
+    <SolidColorBrush x:Key="MidiIconBaseColorBlueBrush" Color="{StaticResource AppBlueColor}" />
     <SolidColorBrush x:Key="MidiIconBaseColorGreenBrush" Color="#FF00B698" />
 
+    <SolidColorBrush x:Key="AppHighlightedText" Color="{StaticResource AppBlueColor}" />
+    
     <Style x:Key="NavigationMenuIconStyles" TargetType="FontIcon">
         <Setter Property="Foreground" Value="{StaticResource MidiIconBaseColorBlueBrush}" />
     </Style>

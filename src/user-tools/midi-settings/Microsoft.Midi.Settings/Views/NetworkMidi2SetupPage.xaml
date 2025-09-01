@@ -78,15 +78,21 @@
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="IP Addresses" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind StringifiedIpAddresses}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind StringifiedIpAddresses}" Style="{StaticResource SmallEmphasizedPropertyValue}"  IsTextSelectionEnabled="True"/>
 
                                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind AdvertisedHost.ProductInstanceId}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind AdvertisedHost.ProductInstanceId}" Style="{StaticResource SmallEmphasizedPropertyValue}" IsTextSelectionEnabled="True" />
                                         </Grid>
 
-                                        <StackPanel Orientation="Horizontal" Grid.Column="1">
+                                        <StackPanel Orientation="Horizontal" Grid.Column="1" Width="150">
                                             <Button Content="Connect" Tag="{x:Bind AdvertisedHost.DeviceId, Mode=OneTime}"
-                                                    Click="CreateClientFromHostList_Click"/>
+                                                    HorizontalAlignment="Right"
+                                                    Visibility="{x:Bind IsConnected, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
+                                                    Command="{x:Bind ConnectCommand}"/>
+                                            <Button Content="Disconnect" Tag="{x:Bind AdvertisedHost.DeviceId, Mode=OneTime}"
+                                                    HorizontalAlignment="Right"
+                                                    Visibility="{x:Bind IsConnected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Command="{x:Bind DisconnectCommand}"/>
                                         </StackPanel>
                                     </Grid>
 
@@ -188,7 +194,9 @@
                                         <Button Content="Stop Host" Visibility="{x:Bind HasStarted, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" 
                                                 Command="{x:Bind StopCommand}"
                                                 />
-                                        <Button Content="Delete Host" />
+                                        <Button Content="Delete Host" 
+                                                Command="{x:Bind DeleteCommand}"
+                                                />
 
                                     </StackPanel>
 
@@ -275,7 +283,10 @@
                     
                     <TextBox Margin="3" Header="Port Number" 
                              Text="{x:Bind ViewModel.NewClientPortNumber, Mode=TwoWay}"/>
-                    
+
+                    <TextBox Margin="3" Header="Local Endpoint Name" 
+                             Text="{x:Bind ViewModel.NewClientEndpointName, Mode=TwoWay}"/>
+
                     <ToggleSwitch Margin="3" Header="Create MIDI 1.0 Proxy Ports" 
                                   IsOn="{x:Bind ViewModel.NewClientEnableMidi1Ports, Mode=TwoWay}"/>
                     

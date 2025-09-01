@@ -29,7 +29,7 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
             consoleProcess.StartInfo.FileName = "wt";
             consoleProcess.StartInfo.Arguments = arguments;
-            consoleProcess.StartInfo.UseShellExecute = true;
+            consoleProcess.StartInfo.UseShellExecute = false;
             
             return consoleProcess.Start();
         }
@@ -53,7 +53,7 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
             consoleProcess.StartInfo.FileName = "wt";
             consoleProcess.StartInfo.Arguments = arguments;
-            consoleProcess.StartInfo.UseShellExecute = true;
+            consoleProcess.StartInfo.UseShellExecute = false;
 
             return consoleProcess.Start();
         }

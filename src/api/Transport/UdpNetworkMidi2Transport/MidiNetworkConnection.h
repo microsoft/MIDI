@@ -79,6 +79,8 @@ public:
     winrt::hstring ConfigIdentifier() { return m_configIdentifier; }
 
 
+    bool IsSessionActive() { return m_sessionActive; }
+
     // todo: session info, connection to bidi streams, etc.
 
 private:

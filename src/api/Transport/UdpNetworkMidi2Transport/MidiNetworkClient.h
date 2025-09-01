@@ -54,7 +54,19 @@ public:
 
     HRESULT Shutdown();
 
+    MidiNetworkClientDefinition GetDefinition() { return m_clientDefinition; }
+
+    winrt::hstring RemoteAddress() { return m_socket != nullptr ? m_socket.Information().RemoteAddress().DisplayName() : L""; }
+    winrt::hstring RemotePort() { return m_socket != nullptr ? m_socket.Information().RemotePort() : L""; }
+
+    winrt::hstring LocalAddress() { return m_socket != nullptr ? m_socket.Information().LocalAddress().DisplayName() : L""; }
+    winrt::hstring LocalPort() { return m_socket != nullptr ? m_socket.Information().LocalPort() : L""; }
+
+    bool IsSessionActive() { return m_networkConnection != nullptr ? m_networkConnection->IsSessionActive() : false; }
+
 private:
+    MidiNetworkClientDefinition m_clientDefinition;
+
     winrt::hstring m_configIdentifier{};
 
     bool m_createUmpEndpointsOnly{ true };
