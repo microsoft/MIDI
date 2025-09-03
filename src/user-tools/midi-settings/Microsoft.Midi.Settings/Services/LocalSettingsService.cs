@@ -52,6 +52,8 @@ public class LocalSettingsService : ILocalSettingsService
 
     public async Task<T?> ReadSettingAsync<T>(string key)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (RuntimeHelper.IsMSIX)
         {
             if (ApplicationData.Current.LocalSettings.Values.TryGetValue(key, out var obj))
@@ -75,6 +77,8 @@ public class LocalSettingsService : ILocalSettingsService
 
     public async Task<T?> ReadSettingAsync<T>(string key, T defaultIfNotSet)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (RuntimeHelper.IsMSIX)
         {
             if (ApplicationData.Current.LocalSettings.Values.TryGetValue(key, out var obj))
@@ -98,6 +102,8 @@ public class LocalSettingsService : ILocalSettingsService
 
     public async Task SaveSettingAsync<T>(string key, T value)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (RuntimeHelper.IsMSIX)
         {
             ApplicationData.Current.LocalSettings.Values[key] = await Json.StringifyAsync(value);

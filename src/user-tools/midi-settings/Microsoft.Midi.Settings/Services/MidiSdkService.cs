@@ -121,8 +121,10 @@ public class MidiSdkService : IMidiSdkService
             _runtimeInitialized = true;
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error initializing MIDI SDK", ex);
+
             return false;
         }
     }
@@ -149,8 +151,10 @@ public class MidiSdkService : IMidiSdkService
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error initializing MIDI Service", ex);
+
             return false;
         }
     }

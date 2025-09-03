@@ -39,8 +39,10 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
             return (UInt32)valueDWORD;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError($"Error getting registry DWORD value for {keyName} : {valueName}", ex);
+
             return defaultValue;
         }
     }
@@ -75,8 +77,10 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
                 return false;
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError($"Error getting registry Boolean DWORD value for {keyName} : {valueName}", ex);
+
             return defaultValue;
         }
 
@@ -102,8 +106,10 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
                 return defaultValue;
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError($"Error getting registry string value for {keyName} : {valueName}", ex);
+
             return defaultValue;
         }
     }
@@ -116,8 +122,10 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError($"Error setting registry DWORD value for {keyName} : {valueName}", ex);
+
             return false;
         }
     }
@@ -132,8 +140,10 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError($"Error setting registry Boolean DWORD value for {keyName} : {valueName}", ex);
+
             return false;
         }
     }
@@ -146,8 +156,10 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError($"Error setting registry String value for {keyName} : {valueName}", ex);
+
             return false;
         }
     }

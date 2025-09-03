@@ -46,6 +46,8 @@ public class ActivationService : IActivationService
 
     private void PositionMainWindow()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         bool provided = false;
 
         var extents = _generalSettingsService.GetMainWindowPositionAndSize();
@@ -88,6 +90,7 @@ public class ActivationService : IActivationService
             App.MainWindow.AppWindow.Move(new global::Windows.Graphics.PointInt32(extents.Left, extents.Top));
         }
 
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -100,6 +103,8 @@ public class ActivationService : IActivationService
 
     public async Task ActivateAsync(object activationArgs)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         App.MainWindow.Hide();
 
         // Execute tasks before activation.
@@ -189,10 +194,14 @@ public class ActivationService : IActivationService
 
         // Execute tasks after activation.
         await StartupAsync();
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     private async Task HandleActivationAsync(object activationArgs)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         var activationHandler = _activationHandlers.FirstOrDefault(h => h.CanHandle(activationArgs));
 
         if (activationHandler != null)
@@ -204,18 +213,28 @@ public class ActivationService : IActivationService
         {
             await _defaultHandler.HandleAsync(activationArgs);
         }
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     private async Task InitializeAsync()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         await _themeSelectorService.InitializeAsync().ConfigureAwait(false);
         await _generalSettingsService.InitializeAsync().ConfigureAwait(false);
         await Task.CompletedTask;
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     private async Task StartupAsync()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         await _themeSelectorService.SetRequestedThemeAsync();
         await Task.CompletedTask;
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 }

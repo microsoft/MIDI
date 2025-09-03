@@ -170,10 +170,7 @@ namespace Microsoft.Midi.Settings.Views
             }
             catch (Exception ex)
             {
-                var dialog = new MessageDialog("Error opening console");
-                dialog.Content = ex.ToString();
-
-                dialog.ShowAsync().Wait();
+                App.GetService<ILoggingService>().LogError("Error opening console monitor", ex);
             }
         }
     }
