@@ -1,0 +1,21 @@
+﻿{
+    "releases":
+    [
+        {
+            "type": "preview",
+            "source": "GitHub Preview",
+            "name": "Preview 14",
+            "description": "Replace this text with a summary of this SDK update",
+            "buildDate": "2025-09-03",
+            "versionFull": "1.0.14-preview.14.87",
+            "versionMajor": 1,
+            "versionMinor": 0,
+            "versionPatch": 14,
+            "versionBuildNumber": 87,
+            "preview": "preview.14.87",
+            "releaseNotesUri": "https://github.com/microsoft/MIDI/releases/tag/ (TODO)",
+            "directDownloadUriX64": "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64",
+            "directDownloadUriArm64": "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64""
+        }
+    ]
+}
