@@ -49,6 +49,7 @@
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.LoopbackMidiTransport" Name="23324529-7840-5bb4-9d74-c61e306f00d0" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiTransport" Name="64ed8ddd-0036-5739-8591-ffc4c2eaa975" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.NetworkMidiTransport" Name="69964598-a2da-5f65-9288-a394b9633704" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Ble1MidiTransport" Name="7c2237b1-fa15-530f-3b15-3cf59ef6542d" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.BS2UMPTransform" Name="b4d50468-e9d8-5080-5b75-e49eb39fee9c" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.SchedulerTransform" Name="8e536c97-6c77-5695-9dbe-ff05129b564e" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform" Name="98249e74-b9b4-5c91-d52e-e44464686064" Level="5" NonPagedMemory="false" />
@@ -76,6 +77,7 @@
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.LoopbackMidiTransport" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiTransport" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.NetworkMidiTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Ble1MidiTransport" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.BS2UMPTransform" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.SchedulerTransform" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform" />
