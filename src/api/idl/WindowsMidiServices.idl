@@ -54,8 +54,11 @@ typedef enum
 {
     MessageOptionFlags_None = 0,
     MessageOptionFlags_WaitForSendComplete = 1,
-    MessageOptionFlags_ContextContainsGroupIndex = 2
+    MessageOptionFlags_ContextContainsGroupIndex = 2,
+    MessageOptionFlags_CallbackRetry = 4
 } MessageOptionFlags;
+
+cpp_quote("#define MessageOptionFlags_Valid 0x00000007")
 
 // Structure used during transport initialization to communicate format information and other configuration
 typedef struct

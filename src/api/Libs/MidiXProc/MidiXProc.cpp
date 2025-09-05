@@ -17,19 +17,33 @@
 #include <wil\registry.h>
 #include <wil\result.h>
 #include <wil\wistd_memory.h>
+#include <wil\tracelogging.h>
 
 #include "WindowsMidiServices.h"
 
 #include <Devpkey.h>
 #include "MidiKsDef.h"
 #include "MidiDefs.h"
+#include <TraceLoggingProvider.h>
 #include "MidiXProc.h"
+
+class MidiXProcTelemetryProvider : public wil::TraceLoggingProvider
+{
+    IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
+        MidiXProcTelemetryProvider,
+        "Microsoft.Windows.Midi2.MidiXproc",
+        // {159b4b38-c2b9-58bc-f3cc-dcd31ca44d21}
+        (0x159b4b38,0xc2b9,0x58bc,0xf3,0xcc,0xdc,0xd3,0x1c,0xa4,0x4d,0x21))
+};
 
 // infinite timeouts when waiting for read events cause the server to just hang
 #define MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT 5000
 
 // timeout waiting for the messages to be recieved
 #define MIDI_XPROC_BUFFER_EMPTY_WAIT_TIMEOUT 5000
+
+// timeout waiting for the messages to be recieved
+#define MIDI_XPROC_CALLBACK_RETRY_TIMEOUT 1000
 
 _Use_decl_annotations_
 HRESULT
@@ -429,6 +443,9 @@ CMidiXProc::SendMidiMessage(
     ULONG bufferWrittenPosition {0};
     ULONG startingReadPosition {0};
 
+    // include the option flags provided at initialization
+    optionFlags = (MessageOptionFlags) (optionFlags | m_MidiOut->MessageOptions);
+
     {
         // only 1 caller may add a message to the xproc queue at a time
         auto lock = m_MessageSendLock.lock();
@@ -501,13 +518,36 @@ CMidiXProc::SendMidiMessage(
                 // us to wait for it to complete.
                 bufferWrittenPosition = writePosition;
                 startingReadPosition = readPosition;
+
+                if (m_PipeStalled)
+                {
+                    m_PipeStalled = false;
+                    m_SequentialDroppedBuffers = 0;
+
+                    // Pipe was previously stalled, however space is available now
+                    // pipe has recovered and is no longer stalled.
+                    TraceLoggingWrite(
+                        MidiXProcTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"MidiXProc recovered from stall.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingPointer(midiData, "midiData"),
+                        TraceLoggingValue(readPosition, "readPosition"),
+                        TraceLoggingValue(writePosition, "writePosition"),
+                        TraceLoggingValue(m_PipeStalled, "PipeStalled"),
+                        TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
+                        TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
+                    );
+                }
             }
-            else
+            else if (!m_PipeStalled)
             {
-                // Buffer is full, wait for the client to read some data out of the buffer to
+                // Buffer is full, and either the pipe has not been detected as being stalled, or the client requested 
+                // to always wait for a retry. Wait for the client to read some data out of the buffer to
                 // make space
                 HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
-                //DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
                 DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT);
                 if (ret == (WAIT_OBJECT_0 + 1))
                 {
@@ -516,8 +556,71 @@ CMidiXProc::SendMidiMessage(
                     continue;
                 }
 
-                // couldn't find room. 
+                // We're either terminating, or space did not come available, so this buffer is going to be dropped
+                m_TotalDroppedBuffers++;
 
+                if (ret == WAIT_OBJECT_0)
+                {
+                    // We're terminating
+                    TraceLoggingWrite(
+                        MidiXProcTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"MidiXProc terminated, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingPointer(midiData, "midiData"),
+                        TraceLoggingValue(readPosition, "readPosition"),
+                        TraceLoggingValue(writePosition, "writePosition"),
+                        TraceLoggingValue(m_PipeStalled, "PipeStalled"),
+                        TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
+                        TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
+                    );
+                }
+                else if (ret == WAIT_TIMEOUT)
+                {
+                    m_PipeStalled = true;                    
+
+                    // Pipe is running and we timed out waiting for space.
+                    // The pipe is stalled, set a flag so we skip waiting the full timeout for additional messages
+                    // that come in while the pipe is stalled, however we will still check to see if the pipe has
+                    // recovered when new messages arrive.
+                    TraceLoggingWrite(
+                        MidiXProcTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"MidiXProc stall detected, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingPointer(midiData, "midiData"),
+                        TraceLoggingValue(readPosition, "readPosition"),
+                        TraceLoggingValue(writePosition, "writePosition"),
+                        TraceLoggingValue(m_PipeStalled, "PipeStalled"),
+                        TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
+                        TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
+                    );
+                }
+            }
+            else
+            {
+                // The pipe is stalled and continues to be stalled, and the client did not request retry, 
+                // log that the message has been lost, don't wait for space, and report the failure
+                m_TotalDroppedBuffers++;
+                m_SequentialDroppedBuffers++;
+                TraceLoggingWrite(
+                    MidiXProcTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"MidiXProc stalled, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingPointer(midiData, "midiData"),
+                    TraceLoggingValue(readPosition, "readPosition"),
+                    TraceLoggingValue(writePosition, "writePosition"),
+                    TraceLoggingValue(m_PipeStalled, "PipeStalled"),
+                    TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
+                    TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
+                );
             }
         }while (retry);
     }
@@ -607,6 +710,7 @@ CMidiXProc::ProcessMidiIn()
                     }
 
                     PVOID data = (PVOID)(((BYTE*)header) + sizeof(LOOPEDDATAFORMAT));
+                    HRESULT hr = S_OK;
 
                     if (m_MidiInCallback)
                     {
@@ -618,13 +722,52 @@ CMidiXProc::ProcessMidiIn()
                             header->Position = qpc.QuadPart;
                         }
 
-                        m_MidiInCallback->Callback(MessageOptionFlags_None, data, dataSize, header->Position, m_MidiInCallbackContext);
+                        hr = m_MidiInCallback->Callback(m_MidiIn->MessageOptions, data, dataSize, header->Position, m_MidiInCallbackContext);
                     }
 
-                    // advance to the next midi packet, we loop processing them one at a time
-                    // until we have processed all that is available for this pass.
-                    InterlockedExchange((LONG*)registers->ReadPosition, newReadPosition);
-                    RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiIn->ReadEvent.get()));
+                    if (FAILED(hr) && (MessageOptionFlags_CallbackRetry == (m_MidiIn->MessageOptions & MessageOptionFlags_CallbackRetry)))
+                    {
+                        // Sending the message failed and there was a request to retry, 
+                        // Wait and retry sending the failed message.
+                        ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_CALLBACK_RETRY_TIMEOUT);
+                        if (ret == WAIT_OBJECT_0)
+                        {
+                            // thread terminated, exit.
+                            break;
+                        }
+
+                        TraceLoggingWrite(
+                            MidiXProcTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"MidiXProc callback failed, buffer retrying.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingHResult(hr, "hr")
+                        );
+                    }
+                    else
+                    {
+                        if (FAILED(hr))
+                        {
+                            m_TotalDroppedBuffers++;
+                            TraceLoggingWrite(
+                                MidiXProcTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"MidiXProc callback failed, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingHResult(hr, "hr"),
+                                TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
+                            );
+                        }
+
+                        // advance to the next midi packet, we loop processing them one at a time
+                        // until we have processed all that is available for this pass.
+                        InterlockedExchange((LONG*)registers->ReadPosition, newReadPosition);
+                        RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiIn->ReadEvent.get()));
+                    }
                 }
             } while (TRUE);
         }

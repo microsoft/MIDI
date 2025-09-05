@@ -14,6 +14,9 @@
 #include "MidiSwEnum.h"
 
 #include "Midi2MidiSrvTransport.h"
+#include "Midi2KSTransport.h"
+
+#define TEST_APPID {0xc24cc593, 0xbc6b, 0x4726,{ 0xb5, 0x52, 0xbe, 0xc8, 0x2d, 0xed, 0xb6, 0x8c}}
 
 _Use_decl_annotations_
 void __RPC_FAR* __RPC_API midl_user_allocate(size_t size)
@@ -55,6 +58,24 @@ HRESULT GetMidiSrvBindingHandle(handle_t* bindingHandle)
         bindingHandle));
 
     return S_OK;
+}
+
+void CleanupClient(_In_ PMIDISRV_CLIENT *client)
+{
+    if (*client)
+    {
+        SAFE_CLOSEHANDLE((*client)->MidiInDataFileMapping);
+        SAFE_CLOSEHANDLE((*client)->MidiInRegisterFileMapping);
+        SAFE_CLOSEHANDLE((*client)->MidiInWriteEvent);
+        SAFE_CLOSEHANDLE((*client)->MidiInReadEvent);
+        SAFE_CLOSEHANDLE((*client)->MidiOutDataFileMapping);
+        SAFE_CLOSEHANDLE((*client)->MidiOutRegisterFileMapping);
+        SAFE_CLOSEHANDLE((*client)->MidiOutWriteEvent);
+        SAFE_CLOSEHANDLE((*client)->MidiOutReadEvent);
+    
+        MIDL_user_free(*client);
+        *client = nullptr;
+    }
 }
 
 void Midi2ServiceTests::TestMidiServiceClientRPC()
@@ -120,20 +141,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
             midiPump->Shutdown();
         }
 
-        if (client)
-        {
-            SAFE_CLOSEHANDLE(client->MidiInDataFileMapping);
-            SAFE_CLOSEHANDLE(client->MidiInRegisterFileMapping);
-            SAFE_CLOSEHANDLE(client->MidiInWriteEvent);
-            SAFE_CLOSEHANDLE(client->MidiInReadEvent);
-            SAFE_CLOSEHANDLE(client->MidiOutDataFileMapping);
-            SAFE_CLOSEHANDLE(client->MidiOutRegisterFileMapping);
-            SAFE_CLOSEHANDLE(client->MidiOutWriteEvent);
-            SAFE_CLOSEHANDLE(client->MidiOutReadEvent);
-
-            MIDL_user_free(client);
-            client = nullptr;
-        }
+        CleanupClient(&client);
 
         if (0 != clientHandle)
         {
@@ -330,38 +338,7 @@ void Midi2ServiceTests::TestMidiServiceInvalidCreationParams()
 
     // In the event that a creation does succeed, clean it up on our way out.
     auto cleanupOnExit = wil::scope_exit([&]() {
-        if (client)
-        {
-            SAFE_CLOSEHANDLE(client->MidiInDataFileMapping);
-            SAFE_CLOSEHANDLE(client->MidiInRegisterFileMapping);
-            SAFE_CLOSEHANDLE(client->MidiInWriteEvent);
-            SAFE_CLOSEHANDLE(client->MidiInReadEvent);
-            SAFE_CLOSEHANDLE(client->MidiOutDataFileMapping);
-            SAFE_CLOSEHANDLE(client->MidiOutRegisterFileMapping);
-            SAFE_CLOSEHANDLE(client->MidiOutWriteEvent);
-            SAFE_CLOSEHANDLE(client->MidiOutReadEvent);
-
-            if (0 != client->ClientHandle)
-            {
-                HRESULT hr = ([&]()
-                {
-                    // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
-                    // with structured exception handling.
-                    RpcTryExcept RETURN_IF_FAILED(MidiSrvDestroyClient(bindingHandle.get(), client->ClientHandle));
-                    RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
-                    RpcEndExcept
-                        return S_OK;
-                }());
-        
-                if (FAILED(hr))
-                {
-                    LOG_OUTPUT(L"MidiSrvDestroyClient failed 0x%08x", hr);
-                }
-            }
-
-            MIDL_user_free(client);
-            client = nullptr;
-        }
+        CleanupClient(&client);
     });
 
     for (UINT i = 0; i < _countof(creationParams); i++)
@@ -422,6 +399,89 @@ void Midi2ServiceTests::TestMidiServiceInvalidCreationParams()
 
 }
 
+void Midi2ServiceTests::TestMidiServiceFailedCreation()
+{
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    wil::unique_rpc_binding bindingHandle;
+
+    // create the client session on the service before calling EnumerateDevices, which will kickstart
+    // the service if it's not already running.
+    LOG_OUTPUT(L"Retrieving binding handle");
+    VERIFY_SUCCEEDED(GetMidiSrvBindingHandle(&bindingHandle));
+
+    GUID dummySessionId{};
+    PVOID contextHandle{ nullptr };
+    DWORD MmCssTaskId{ 0 };
+    TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_None, MidiDataFormats_UMP, TEST_APPID };
+    wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+    wil::com_ptr_nothrow<IMidiBidirectional> midiKSDevice;
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> testDevices;
+
+    VERIFY_SUCCEEDED(CoCreateGuid(&dummySessionId));
+    VERIFY_SUCCEEDED([&](){
+        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+        // with structured exception handling.
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), dummySessionId, L"TestMidiServiceFailedCreation", &contextHandle));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+    // This test has two parts, part 1 is locating a KS device that isn't currently in use and opening the KS pin on it.
+    // Part 2 is attempting to use that same device from within the service, which will result in a late-failure during
+    // initialization, triggering additional cleanup codepaths.
+    LOG_OUTPUT(L"Enumerating devices, locating a KS device that is not currently in use.");
+
+    VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2KSTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(testDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (!midiKSDevice &&
+            device->Flow == MidiFlowBidirectional &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MINMIDI") &&
+            !device->MidiOne)
+        {
+            wil::com_ptr_nothrow<IMidiBidirectional> testDevice;
+            VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBidirectional), (void **) &testDevice));
+            if (SUCCEEDED(testDevice->Initialize(device->DeviceId.c_str(), &transportCreationParams, &MmCssTaskId, this, 0, dummySessionId)))
+            {
+                midiKSDevice = testDevice;
+                return true;
+            }
+        }
+
+        return false;
+    }));
+
+    if (testDevices.size() == 0 || !midiKSDevice)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 MinMidi bidi endpoint.");
+        return;
+    }
+
+    VERIFY_IS_TRUE(testDevices.size() > 0);
+
+    std::wstring midiDevice = testDevices[0]->DeviceId;
+    PMIDISRV_CLIENT client {nullptr};
+
+    // In the event that a creation does succeed, clean it up on our way out.
+    auto cleanupOnExit = wil::scope_exit([&]() {
+        CleanupClient(&client);
+    });
+
+    MIDISRV_CLIENTCREATION_PARAMS creationParam = { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, PAGE_SIZE };
+
+    LOG_OUTPUT(L"Testing creation with driver in use");
+    VERIFY_FAILED([&]() {
+        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+        // with structured exception handling.
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParam, dummySessionId, &client));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+}
 
 bool Midi2ServiceTests::TestSetup()
 {

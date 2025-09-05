@@ -118,9 +118,11 @@ public:
         // no clients are added or removed while performing the callback
         // to the client.
         auto lock = m_Lock.lock_shared();
+        HRESULT hr = S_OK;
 
         for (auto const& Client : m_ConnectedPipes)
         {
+            HRESULT hrTemp = S_OK;
             // By convention, context will contain the group index this message is targeting.
             // If this client is group filtered, and the context is a valid group index, then
             // filter the messages being sent to this client by the group index.
@@ -129,16 +131,21 @@ public:
             {
                 if (Client.second->GroupIndex() == (UINT32) context)
                 {
-                    LOG_IF_FAILED(Client.second->SendMidiMessage((MessageOptionFlags)(optionFlags & ~MessageOptionFlags_ContextContainsGroupIndex), Data, length, position));
+                    LOG_IF_FAILED(hrTemp = Client.second->SendMidiMessage((MessageOptionFlags)(optionFlags & ~MessageOptionFlags_ContextContainsGroupIndex), Data, length, position));
                 }
             }
             else
             {
-                LOG_IF_FAILED(Client.second->SendMidiMessage((MessageOptionFlags)(optionFlags & ~MessageOptionFlags_ContextContainsGroupIndex), Data, length, position));
+                LOG_IF_FAILED(hrTemp = Client.second->SendMidiMessage((MessageOptionFlags)(optionFlags & ~MessageOptionFlags_ContextContainsGroupIndex), Data, length, position));
+            }
+
+            if (SUCCEEDED(hr) && FAILED(hrTemp))
+            {
+                hr = hrTemp;
             }
         }
 
-        return S_OK;
+        return hr;
     }
 
     std::wstring MidiDevice() { return m_Device; }

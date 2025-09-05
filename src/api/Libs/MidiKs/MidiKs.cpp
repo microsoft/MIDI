@@ -221,7 +221,7 @@ KSMidiDevice::ConfigureLoopedBuffer(ULONG& bufferSize
             &buffer,
             sizeof(buffer),
             nullptr);
-}));
+    }));
 
     m_MidiPipe->Data.BufferAddress = (PBYTE) buffer.BufferAddress;
     bufferSize = m_MidiPipe->Data.BufferSize = buffer.ActualBufferSize;
@@ -254,7 +254,7 @@ KSMidiDevice::ConfigureLoopedRegisters()
             &registers,
             sizeof(registers),
             nullptr);
-}));
+    }));
 
     m_MidiPipe->Registers.ReadPosition = (PULONG) registers.ReadPosition;
     m_MidiPipe->Registers.WritePosition = (PULONG) registers.WritePosition;
@@ -290,7 +290,7 @@ KSMidiDevice::ConfigureLoopedEvent()
             &LoopedEvent,
             sizeof(LoopedEvent),
             nullptr);
-}));
+    }));
 
     return S_OK;
 }

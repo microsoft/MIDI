@@ -89,6 +89,12 @@ CMidiClientPipe::Initialize(
         SAFE_CLOSEHANDLE(client->MidiOutReadEvent);
     });
 
+    // Additional message options requested by the client process
+    // For MidiIn, we do not want to wait for the client process to consume the messages, that option only applies to
+    // midi out messages.
+    m_MidiInMessageOptions = (MessageOptionFlags) (creationParams->MessageOptions & ~MessageOptionFlags_WaitForSendComplete);
+    m_MidiOutMessageOptions = creationParams->MessageOptions;
+
     if (IsFlowSupported(MidiFlowIn))
     {
         GUID generatedName;
@@ -98,6 +104,7 @@ CMidiClientPipe::Initialize(
         RETURN_IF_NULL_ALLOC(midiInPipe);
 
         midiInPipe->DataFormat = creationParams->DataFormat;
+        midiInPipe->MessageOptions = m_MidiInMessageOptions;
 
         midiInPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
         RETURN_IF_NULL_ALLOC(midiInPipe->DataBuffer);
@@ -134,6 +141,7 @@ CMidiClientPipe::Initialize(
         RETURN_IF_NULL_ALLOC(midiOutPipe);
 
         midiOutPipe->DataFormat = creationParams->DataFormat;
+        midiOutPipe->MessageOptions = m_MidiOutMessageOptions;
 
         midiOutPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
         RETURN_IF_NULL_ALLOC(midiOutPipe->DataBuffer);
@@ -173,9 +181,6 @@ CMidiClientPipe::Initialize(
     // from the client to the server.
     // Set our callback context to our group index (if supplied), so proper filtering is applied.
     RETURN_IF_FAILED(m_MidiPump->Initialize(mmcssTaskId, midiOutPipe, midiInPipe, thisCallback.get(), groupIndex, overwriteZeroTimestamps));
-
-    // Additional message options requested by the client process
-    m_MessageOptions = creationParams->MessageOptions;
 
     cleanupOnFailure.release();
 
@@ -245,8 +250,9 @@ CMidiClientPipe::SendMidiMessage(
 
     auto lock = m_ClientPipeLock.lock_shared();
 
-    RETURN_HR_IF_NULL(E_ABORT, m_MidiPump);   
-    RETURN_IF_FAILED(m_MidiPump->SendMidiMessage((MessageOptionFlags) (m_MessageOptions | optionFlags), data, length, position));
+    RETURN_HR_IF_NULL(E_ABORT, m_MidiPump);
+    // This method is called for MidiIn messages going out to the client, so the midi in message options apply here.
+    RETURN_IF_FAILED(m_MidiPump->SendMidiMessage((MessageOptionFlags) (m_MidiInMessageOptions | optionFlags), data, length, position));
 
     return S_OK;
 }
