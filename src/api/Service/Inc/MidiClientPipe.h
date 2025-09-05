@@ -82,6 +82,7 @@ private:
     BOOL m_GroupFiltered{FALSE};
     BYTE m_GroupIndex{0};
 
-    MessageOptionFlags m_MessageOptions { MessageOptionFlags_None };
+    MessageOptionFlags m_MidiInMessageOptions { MessageOptionFlags_None };
+    MessageOptionFlags m_MidiOutMessageOptions { MessageOptionFlags_None };
 };
 
