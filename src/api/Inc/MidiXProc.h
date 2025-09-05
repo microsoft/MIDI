@@ -33,6 +33,7 @@ typedef struct MEMORY_MAPPED_REGISTERS
 typedef struct MEMORY_MAPPED_PIPE
 {
     MidiDataFormats DataFormat {MidiDataFormats_Invalid};
+    MessageOptionFlags MessageOptions {MessageOptionFlags_None};
 
     std::unique_ptr<MEMORY_MAPPED_BUFFER> DataBuffer;
     std::unique_ptr<MEMORY_MAPPED_BUFFER> RegistersBuffer;
@@ -112,6 +113,9 @@ private:
     // only 1 client may send a message at a time on the cross process
     // queue
     wil::critical_section m_MessageSendLock;
+    bool m_PipeStalled {false};
+    ULONGLONG m_SequentialDroppedBuffers {0};
+    ULONGLONG m_TotalDroppedBuffers {0};
 
     static BOOL m_useMMCSS;             // true if we are configured to use MMCSS
     static BOOL m_mmcssSettingRead;     // true if the MMCSS use value has been read from the registry

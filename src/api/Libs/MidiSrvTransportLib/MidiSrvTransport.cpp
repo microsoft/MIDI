@@ -133,7 +133,10 @@ CMidi2MidiSrv::Initialize(
     clientCreationParams.BufferSize = PAGE_SIZE;  // original
     //clientCreationParams.BufferSize = 256;    // Set this for debugging see https://github.com/microsoft/MIDI/issues/182 for all the drama :)
     //clientCreationParams.BufferSize = PAGE_SIZE * 8;
-    clientCreationParams.MessageOptions = creationParams->MessageOptions;
+
+    // We request CallbackRetry on the service to client pipe to request that our messages are not dropped in the event that the device
+    // pipe becomes full.
+    clientCreationParams.MessageOptions = (MessageOptionFlags) (creationParams->MessageOptions | MessageOptionFlags_CallbackRetry);
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
@@ -158,6 +161,7 @@ CMidi2MidiSrv::Initialize(
         midiInPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(midiInPipe);
         midiInPipe->DataFormat = client->DataFormat;
+        midiInPipe->MessageOptions = clientCreationParams.MessageOptions;
         midiInPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
         RETURN_IF_NULL_ALLOC(midiInPipe->DataBuffer);
         midiInPipe->RegistersBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
@@ -180,6 +184,7 @@ CMidi2MidiSrv::Initialize(
         midiOutPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(midiOutPipe);
         midiOutPipe->DataFormat = client->DataFormat;
+        midiOutPipe->MessageOptions = clientCreationParams.MessageOptions;
         midiOutPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
         RETURN_IF_NULL_ALLOC(midiOutPipe->DataBuffer);
         midiOutPipe->RegistersBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);

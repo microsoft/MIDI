@@ -15,6 +15,8 @@
 // doing loopback.
 wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
 MidiPin* g_MidiInPin {nullptr};
+UINT g_MidiInPinCount {0};
+UINT g_MidiOutPinCount {0};
 
 // smallest UMP is 4 bytes, smallest bytestream is 1 byte (clock, etc.)
 #define MINIMUM_LOOPED_DATASIZE 1
@@ -349,11 +351,29 @@ MidiPin::Create(
                         IsEqualGUID(format->Specifier, KSDATAFORMAT_SPECIFIER_NONE));
     NT_RETURN_NTSTATUS_IF(STATUS_NO_MATCH, !formatMatch);
 
+    if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
+    {
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, g_MidiInPinCount != 0);
+    }
+    else
+    {
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, g_MidiOutPinCount != 0);
+    }
+
     // Create the pin
     MidiPin* midiPin = new (POOL_FLAG_NON_PAGED) MidiPin(Pin);
     NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, !midiPin);
 
     Pin->Context = (PVOID)midiPin;
+
+    if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
+    {
+        g_MidiInPinCount=1;
+    }
+    else
+    {
+        g_MidiOutPinCount=1;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -434,6 +454,15 @@ MidiPin::Close(
 
         delete This;
         Pin->Context = nullptr;
+
+        if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
+        {
+            g_MidiInPinCount=0;
+        }
+        else
+        {
+            g_MidiOutPinCount=0;
+        }
     }
 
     return STATUS_SUCCESS;
