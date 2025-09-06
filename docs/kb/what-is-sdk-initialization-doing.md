@@ -124,7 +124,7 @@ This is not related to the SDK itself, but to the in-box Windows service.
 
 To ship the service and its transport/transform plugins in Windows, we had to set it to demand-start. That is, it only starts when applications need to use its features. This helps Windows start up quickly -- something particularly important given that the set of users who use MIDI is relatively small compared to the audience as a whole.
 
-When the first call is made into the service, the service is started up. During startup, we enumerate devices, initialize the transports, create the Windows MIDI Services endpoints, peform discovery and protocol negotiation with MIDI 2 devices, and create compatible WinMM ports. If you have many MIDI devices attached, this can take a noticeable number of seconds to complete.
+When the first call is made into the service, the service is started up. During startup, we enumerate devices, initialize the transports, create the Windows MIDI Services endpoints, perform discovery and protocol negotiation with MIDI 2 devices, and create compatible WinMM ports. If you have many MIDI devices attached, this can take a noticeable number of seconds to complete.
 
 > Customers are free to change the service to automatic start. In fact, we recommend that for anyone who uses MIDI regularly -- especially musicians. That will avoid the delay when making that first call into the service.
 
