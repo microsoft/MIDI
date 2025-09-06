@@ -12,7 +12,7 @@
 
 #pragma once
 
-#define ABSTRACTION_LAYER_GUID __uuidof(Midi2VirtualPatchBayAbstraction);
+#define TRANSPORT_LAYER_GUID __uuidof(Midi2VirtualPatchBayTransport);
 
 #define TRANSPORT_MANUFACTURER L"Microsoft"
 #define TRANSPORT_CODE L"VPB"

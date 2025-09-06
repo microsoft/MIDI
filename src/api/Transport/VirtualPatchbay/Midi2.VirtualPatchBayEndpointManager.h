@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -17,13 +17,13 @@ class CMidi2VirtualPatchBayEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
+    STDMETHOD(Shutdown)();
 
 
 private:
     GUID m_ContainerId{};
-    GUID m_TransportAbstractionId{};
+    GUID m_transportId;   // kept for convenience
 
     HRESULT CreateEndpoint(
     );
@@ -37,8 +37,8 @@ private:
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
-    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_MidiProtocolManager;
 
     DeviceWatcher m_Watcher{ 0 };
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_DeviceAdded;

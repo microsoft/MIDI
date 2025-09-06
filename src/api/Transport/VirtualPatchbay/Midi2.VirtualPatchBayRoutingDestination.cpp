@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "pch.h"
@@ -34,6 +34,9 @@ CMidi2VirtualPatchBayRoutingDestination::Callback(
     LONGLONG position, 
     LONGLONG context)
 {
+    UNREFERENCED_PARAMETER(data);
+    UNREFERENCED_PARAMETER(length);
+    UNREFERENCED_PARAMETER(position);
     UNREFERENCED_PARAMETER(context);
 
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
@@ -62,7 +65,7 @@ CMidi2VirtualPatchBayRoutingDestination::Callback(
         newData = (byte*)data;
     }
 
-    RETURN_IF_FAILED(m_endpointBidi->SendMidiMessage(newData, length, position));
+//    RETURN_IF_FAILED(m_endpointBidi->SendMidiMessage(newData, length, position));
 
     return S_OK;
 }
@@ -105,7 +108,7 @@ CMidi2VirtualPatchBayRoutingDestination::SetEndpointBidi(
 }
 
 HRESULT
-CMidi2VirtualPatchBayRoutingDestination::Cleanup()
+CMidi2VirtualPatchBayRoutingDestination::Shutdown()
 {
     m_router = nullptr;
 

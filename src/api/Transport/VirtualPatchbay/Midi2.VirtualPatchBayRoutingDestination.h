@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -26,14 +26,15 @@ public:
     STDMETHOD(SetGroupTransforms)(_In_ std::map<uint8_t, uint8_t> groupTransformMap);
     STDMETHOD(SetEndpointBidi)(_In_ LPCWSTR resolvedEndpointDeviceInterfaceId, _In_ IMidiBidirectional* destinationEndpointBidi);
 
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
+
     CMidi2VirtualPatchBayRoutingEntry* m_router;
 
     std::wstring m_matchJson{ };
-    GUID m_endpointAbstractionId{ };
     std::wstring m_resolvedEndpointDeviceInterfaceId{ };
+    GUID m_destinationTransportId;
 
     wil::com_ptr_nothrow<IMidiBidirectional> m_endpointBidi{ nullptr };
 

@@ -2,7 +2,7 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D} = s 'Midi2VirtualPatchBayAbstraction Class'
+		ForceRemove {B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D} = s 'Midi2VirtualPatchBayTransport Class'
 		{
 			InprocServer32 = s '%MODULE%'
 			{
