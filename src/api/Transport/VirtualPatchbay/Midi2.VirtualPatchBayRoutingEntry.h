@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -26,7 +26,7 @@ public:
     // destinations are responsible for any group mapping etc.
     STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT length, _In_ LONGLONG position, _In_ LONGLONG context);
 
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
     std::wstring m_associationId;

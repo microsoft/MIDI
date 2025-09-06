@@ -9,11 +9,11 @@
 
 #pragma once
 
-class CMidi2VirtualPatchBayAbstractionModule : public ATL::CAtlDllModuleT< CMidi2VirtualPatchBayAbstractionModule >
+class CMidi2VirtualPatchBayTransportModule : public ATL::CAtlDllModuleT<CMidi2VirtualPatchBayTransportModule>
 {
 public :
-    DECLARE_LIBID(LIBID_Midi2VirtualPatchBayAbstractionLib)
-    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2VIRTUALPATCHBAYABSTRACTION, "{51F2C928-D846-45E9-BFA8-058BC804FF3E}")
+    DECLARE_LIBID(LIBID_Midi2VirtualPatchBayTransportLib)
+    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2VIRTUALPATCHBAYTRANSPORT, "{51F2C928-D846-45E9-BFA8-058BC804FF3E}")
 };
 
-extern class CMidi2VirtualPatchBayAbstractionModule _AtlModule;
+extern class CMidi2VirtualPatchBayTransportModule _AtlModule;

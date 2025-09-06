@@ -37,25 +37,24 @@ class Build : NukeBuild
     enum MidiBuildType
     {
         Preview,
-        RC,
         Stable
     }
 
     MSBuildVerbosity BuildVerbosity => MSBuildVerbosity.Quiet;
-    LogLevel LoggingLevel => LogLevel.Normal;
+    LogLevel LoggingLevel => LogLevel.Error;
 
     // --------------------------------------------------------------------------------------
     // Version information to change 
     // --------------------------------------------------------------------------------------
 
-    MidiBuildType BuildType => MidiBuildType.RC;
+    MidiBuildType BuildType => MidiBuildType.Preview;        // Stable or Preview
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 14;
+    const UInt16 BuildVersionPatch = 13;
 
-    const UInt16 BuildVersionPreviewNumber = 1;
-    string VersionName => "Release Candidate " + BuildVersionPreviewNumber;
+    const UInt16 BuildVersionPreviewNumber = 13;
+    string VersionName => "Preview " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
 
@@ -133,10 +132,9 @@ class Build : NukeBuild
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
 
     AbsolutePath InDevelopmentServiceComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup-in-dev";
+    AbsolutePath VirtualPatchBaySetupSolutionFolder => SourceRootFolder / "oob-setup-virtual-patch-bay";
 
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
-
-
 
     AbsolutePath UserToolsRootFolder => SourceRootFolder / "user-tools";
 
@@ -184,6 +182,7 @@ class Build : NukeBuild
     Dictionary<string, string> BuiltSdkRuntimeInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltInBoxInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltPreviewInBoxInstallers = new Dictionary<string, string>();
+    Dictionary<string, string> BuiltVirtualPatchBayInstallers = new Dictionary<string, string>();
 
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
@@ -212,11 +211,6 @@ class Build : NukeBuild
             {
                 BuildVersionPreviewString = "";
                 NugetPackageVersion = BuildMajorMinorPatch;
-            }
-            else if (BuildType == MidiBuildType.RC)
-            {
-                BuildVersionPreviewString = "rc." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
-                NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
             }
             else if (BuildType == MidiBuildType.Preview)
             {
@@ -249,44 +243,18 @@ class Build : NukeBuild
         {
             string buildSource = "GitHub Preview";
             string versionName = VersionName;
-            //string versionString = BuildVersionFullString;
+            string versionString = BuildVersionFullString;
 
-            //string buildDate = BuildDate.ToString("yyyy-MM-dd");
+            string buildVersionMajor = BuildVersionMajor.ToString();
+            string buildVersionMinor = BuildVersionMinor.ToString();
+            string buildVersionPatch = BuildVersionPatch.ToString();
+
+            string buildDate = BuildDate.ToString("yyyy-MM-dd");
 
             // create directories if they do not exist
 
             ThisReleaseFolder.CreateDirectory();
-            //SdkVersionFilesFolder.CreateDirectory();
-
-
-            var msbuildProperties = new Dictionary<string, object>();
-            msbuildProperties.Add("MidiBuildType", $"{BuildType.ToString().ToLower()}");
-            msbuildProperties.Add("MidiBuildSource", $"{buildSource}");
-            msbuildProperties.Add("MidiVersionName", $"{versionName}");
-            msbuildProperties.Add("MidiBuildVersionMajor", BuildVersionMajor);
-            msbuildProperties.Add("MidiBuildVersionMinor", BuildVersionMinor);
-            msbuildProperties.Add("MidiBuildVersionPatch", BuildVersionPatch);
-            msbuildProperties.Add("MidiBuildVersionBuildNumber", BuildVersionBuildNumber);
-            msbuildProperties.Add("MidiBuildVersionPreviewString", $"{BuildVersionPreviewString}");
-
-            msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version" ).ToString());
-
-
-            
-
-            MSBuildTasks.MSBuild(_ => _
-                .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
-                .SetMaxCpuCount(null)
-                .SetProcessArgumentConfigurator(_ => _ .Add("/t:TransformAll"))
-                .SetProperties(msbuildProperties)
-                .SetVerbosity(MSBuildVerbosity.Normal)
-                .EnableNodeReuse()
-            );
-
-
-
-
-#if false
+            SdkVersionFilesFolder.CreateDirectory();
 
             // json version for published SDK releases. This needs to be manually copied to /docs/version/sdk_version.json
             // if this ends up being a published release
@@ -402,7 +370,7 @@ class Build : NukeBuild
                 writer.WriteLine();
             }
 
-#endif            
+            
         });
 
     Target BuildServiceAndPlugins => _ => _
@@ -569,7 +537,7 @@ class Build : NukeBuild
     Target BuildInDevelopmentServicePlugins => _ => _
         .DependsOn(CreateVersionIncludes)
         .DependsOn(Prerequisites)
-        //.DependsOn(BuildServiceAndPlugins)
+        .DependsOn(BuildServiceAndPlugins)
         .Executes(() =>
         {
             foreach (var platform in ServiceAndApiPlatforms)
@@ -621,8 +589,8 @@ class Build : NukeBuild
     Target BuildAndPackAllAppSDKs => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
-        //.DependsOn(BuildServiceAndPlugins)
-        //.DependsOn(BuildInDevelopmentServicePlugins)
+        .DependsOn(BuildServiceAndPlugins)
+        .DependsOn(BuildInDevelopmentServicePlugins)
         .Executes(() =>
         {
         //    bool wxsWritten = false;
@@ -1065,6 +1033,58 @@ class Build : NukeBuild
         }
     });
 
+    Target BuildVirtualPatchBayPluginInstaller => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildInDevelopmentServicePlugins)
+        .Executes(() =>
+        {
+            // we build for Arm64 and x64. No EC required here
+            foreach (var platform in InstallerPlatforms)
+            {
+                UpdateSetupBundleInfoIncludeFile(platform);
+
+                //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+
+                string solutionDir = VirtualPatchBaySetupSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                Console.Out.WriteLine($"Platform:    {platform}");
+
+                NuGetTasks.NuGetRestore(_ => _
+                    .SetProcessWorkingDirectory(solutionDir)
+                    .SetSource(@"https://api.nuget.org/v3/index.json")
+                    .SetSolutionDirectory(solutionDir)
+                //.SetConfigFile(packagesConfigFullPath)
+                );
+
+                var output = MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(VirtualPatchBaySetupSolutionFolder / "midi-services-virtual-patch-bay-setup.sln")
+                    .SetMaxCpuCount(null)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    .SetTargets("Clean", "Rebuild")
+                    .SetVerbosity(BuildVerbosity)
+                    .EnableNodeReuse()
+                );
+
+                string newInstallerName = $"Windows MIDI Services (Virtual Patch Bay) {BuildVersionFullString}-{platform.ToLower()}.exe";
+
+                FileSystemTasks.CopyFile(
+                    VirtualPatchBaySetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesVirtualPatchBaySetup.exe",
+                    ThisReleaseFolder / newInstallerName);
+
+                BuiltVirtualPatchBayInstallers[platform.ToLower()] = newInstallerName;
+
+            }
+        });
 
 
     Target BuildUserToolsSharedComponents => _ => _
@@ -2128,15 +2148,19 @@ class Build : NukeBuild
     Target BuildAndPublishAll => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
+        .DependsOn(BuildServiceAndPlugins)
+        .DependsOn(ZipWdmaud2)
         .DependsOn(BuildServiceAndPluginsInstaller)
+        .DependsOn(BuildInDevelopmentServicePlugins)
         .DependsOn(BuildInDevelopmentServicePluginsInstaller)
+        .DependsOn(BuildVirtualPatchBayPluginInstaller)
+        .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
       //  .DependsOn(BuildAndPackageElectronProjection)
         .DependsOn(BuildCppSamples)
         .DependsOn(BuildCSharpSamples)
-        .DependsOn(ZipWdmaud2)
         .DependsOn(ZipPowershellDevUtilities)
         .DependsOn(ZipSamples)
         .DependsOn(ZipServicePdbs)
@@ -2169,6 +2193,23 @@ class Build : NukeBuild
             {
                 Console.WriteLine("No in-box preview installers built.");
             }
+
+
+            if (BuiltVirtualPatchBayInstallers.Count > 0)
+            {
+                Console.WriteLine("\nBuilt Virtual Patch Bay installers:");
+
+                foreach (var item in BuiltVirtualPatchBayInstallers)
+                {
+                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No Virtual Patch Bay installers built.");
+            }
+            
+
 
             if (BuiltSdkRuntimeInstallers.Count > 0)
             {

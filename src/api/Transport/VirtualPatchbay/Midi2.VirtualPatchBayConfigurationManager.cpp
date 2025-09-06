@@ -12,26 +12,26 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayConfigurationManager::Initialize(
-    GUID AbstractionId,
-    IUnknown* MidiDeviceManager,
-    IUnknown* MidiServiceConfigurationManagerInterface
+    GUID transportId,
+    IMidiDeviceManager* midiDeviceManager,
+    IMidiServiceConfigurationManager* midiServiceConfigurationManager
 )
 {
     TraceLoggingWrite(
-        MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+        MidiVirtualPatchBayTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, MidiDeviceManager);
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, MidiServiceConfigurationManagerInterface);
-    RETURN_IF_FAILED(MidiServiceConfigurationManagerInterface->QueryInterface(__uuidof(IMidiServiceConfigurationManagerInterface), (void**)&m_MidiServiceConfigurationManagerInterface));
+    RETURN_HR_IF_NULL(E_INVALIDARG, midiServiceConfigurationManager);
+    RETURN_IF_FAILED(midiServiceConfigurationManager->QueryInterface(__uuidof(IMidiServiceConfigurationManager), (void**)&m_midiServiceConfigurationManager));
 
-    m_abstractionId = AbstractionId;
+    m_transportId = transportId;
 
     return S_OK;
 }
@@ -101,21 +101,20 @@ CMidi2VirtualPatchBayConfigurationManager::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayConfigurationManager::UpdateConfiguration(
-    LPCWSTR ConfigurationJsonSection,
-    BOOL /*IsFromConfigurationFile*/,
-    BSTR* /*Response*/
+    LPCWSTR configurationJsonSection,
+    LPWSTR* /*responseJson*/
 )
 {
     TraceLoggingWrite(
-        MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+        MidiVirtualPatchBayTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(ConfigurationJsonSection, "json")
+        TraceLoggingWideString(configurationJsonSection, "json")
     );
 
-    if (ConfigurationJsonSection == nullptr) return S_OK;
+    if (configurationJsonSection == nullptr) return S_OK;
 
     json::JsonObject jsonObject;
     json::JsonObject responseObject;
@@ -126,18 +125,18 @@ CMidi2VirtualPatchBayConfigurationManager::UpdateConfiguration(
     // Once complete, signal that we're ready for devices to be resolved
 
 
-    if (!json::JsonObject::TryParse(winrt::to_hstring(ConfigurationJsonSection), jsonObject))
+    if (!json::JsonObject::TryParse(winrt::to_hstring(configurationJsonSection), jsonObject))
     {
         LOG_IF_FAILED(E_FAIL);  // cause fallbackerror to be logged
 
         TraceLoggingWrite(
-            MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+            MidiVirtualPatchBayTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(ConfigurationJsonSection, "json")
+            TraceLoggingWideString(configurationJsonSection, "json")
         );
 
         return E_FAIL;
@@ -279,20 +278,20 @@ CMidi2VirtualPatchBayConfigurationManager::UpdateConfiguration(
 
 
 HRESULT
-CMidi2VirtualPatchBayConfigurationManager::Cleanup()
+CMidi2VirtualPatchBayConfigurationManager::Shutdown()
 {
     TraceLoggingWrite(
-        MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+        MidiVirtualPatchBayTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
 
-    AbstractionState::Current().Cleanup();
+    TransportState::Current().Shutdown();
 
-    m_MidiDeviceManager.reset();
-    m_MidiServiceConfigurationManagerInterface.reset();
+    m_midiDeviceManager.reset();
+    m_midiServiceConfigurationManager.reset();
 
     return S_OK;
 }

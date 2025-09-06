@@ -9,14 +9,14 @@
 #include "pch.h"
 
 
-AbstractionState::AbstractionState() = default;
-AbstractionState::~AbstractionState() = default;
+TransportState::TransportState() = default;
+TransportState::~TransportState() = default;
 
-AbstractionState& AbstractionState::Current()
+TransportState& TransportState::Current()
 {
     // explanation: http://www.modernescpp.com/index.php/thread-safe-initialization-of-data/
 
-    static AbstractionState current;
+    static TransportState current;
 
     return current;
 }
@@ -24,7 +24,7 @@ AbstractionState& AbstractionState::Current()
 
 
 HRESULT
-AbstractionState::ConstructEndpointManager()
+TransportState::ConstructEndpointManager()
 {
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualPatchBayEndpointManager>(&m_endpointManager));
 
@@ -33,7 +33,7 @@ AbstractionState::ConstructEndpointManager()
 
 
 HRESULT
-AbstractionState::ConstructConfigurationManager()
+TransportState::ConstructConfigurationManager()
 {
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualPatchBayConfigurationManager>(&m_configurationManager));
 

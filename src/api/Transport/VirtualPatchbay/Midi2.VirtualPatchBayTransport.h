@@ -3,37 +3,37 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
 
-class MidiVirtualPatchBayAbstractionTelemetryProvider : public wil::TraceLoggingProvider
+class MidiVirtualPatchBayTransportTelemetryProvider : public wil::TraceLoggingProvider
 {
     IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
-        MidiVirtualPatchBayAbstractionTelemetryProvider,
-        "Microsoft.Windows.Midi2.VirtualPatchBayAbstraction",
-        //  53e8558d-340c-5a2f-37e9-8e5d56758792 from hash of name using:
-        // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.VirtualPatchBayAbstraction").Guid
-        (0x53e8558d,0x340c,0x5a2f,0x37,0xe9,0x8e,0x5d,0x56,0x75,0x87,0x92))
+        MidiVirtualPatchBayTransportTelemetryProvider,
+        "Microsoft.Windows.Midi2.VirtualPatchBayTransport",
+        //  74d7e33b-2093-5dd1-64d7-541b04070d00 from hash of name using:
+        // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.VirtualPatchBayTransport").Guid
+        (0x74d7e33b,0x2093,0x5dd1,0x64,0xd7,0x54,0x1b,0x04,0x07,0x0d,0x00))
 };
 
 using namespace ATL;
 
-class ATL_NO_VTABLE CMidi2VirtualPatchBayAbstraction : 
+class ATL_NO_VTABLE CMidi2VirtualPatchBayTransport : 
     public CComObjectRootEx<CComMultiThreadModel>,
-    public CComCoClass<CMidi2VirtualPatchBayAbstraction, &CLSID_Midi2VirtualPatchBayAbstraction>,
-    public IMidiAbstraction
+    public CComCoClass<CMidi2VirtualPatchBayTransport, &CLSID_Midi2VirtualPatchBayTransport>,
+    public IMidiTransport
 {
 public:
-    CMidi2VirtualPatchBayAbstraction()
+    CMidi2VirtualPatchBayTransport()
     {
     }
 
-    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2VIRTUALPATCHBAYABSTRACTION)
+    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2VIRTUALPATCHBAYTRANSPORT)
 
-    BEGIN_COM_MAP(CMidi2VirtualPatchBayAbstraction)
-        COM_INTERFACE_ENTRY(IMidiAbstraction)
+    BEGIN_COM_MAP(CMidi2VirtualPatchBayTransport)
+        COM_INTERFACE_ENTRY(IMidiTransport)
     END_COM_MAP()
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -44,4 +44,4 @@ private:
 
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(Midi2VirtualPatchBayAbstraction), CMidi2VirtualPatchBayAbstraction)
+OBJECT_ENTRY_AUTO(__uuidof(Midi2VirtualPatchBayTransport), CMidi2VirtualPatchBayTransport)

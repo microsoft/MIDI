@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -13,17 +13,15 @@ using namespace wil;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-GUID AbstractionLayerGUID = ABSTRACTION_LAYER_GUID;
-
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayEndpointManager::Initialize(
-    IUnknown* MidiDeviceManager, 
-    IUnknown* /*midiEndpointProtocolManager*/
+    IMidiDeviceManager* MidiDeviceManager, 
+    IMidiEndpointProtocolManager* /*midiEndpointProtocolManager*/
 )
 {
     TraceLoggingWrite(
-        MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+        MidiVirtualPatchBayTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingPointer(this, "this"),
@@ -32,10 +30,10 @@ CMidi2VirtualPatchBayEndpointManager::Initialize(
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
 
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
 
-    m_TransportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
-    m_ContainerId = m_TransportAbstractionId;          // we use the transport ID as the container ID for convenience
+    m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
+    m_ContainerId = m_ContainerId;          // we use the transport ID as the container ID for convenience
 
 
     return S_OK;
@@ -46,7 +44,7 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
     )
 {
     TraceLoggingWrite(
-        MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+        MidiVirtualPatchBayTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingPointer(this, "this"),
@@ -58,17 +56,17 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
 
 
 HRESULT
-CMidi2VirtualPatchBayEndpointManager::Cleanup()
+CMidi2VirtualPatchBayEndpointManager::Shutdown()
 {
     TraceLoggingWrite(
-        MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+        MidiVirtualPatchBayTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
 
-    AbstractionState::Current().Cleanup();
+    TransportState::Current().Shutdown();
 
     m_MidiDeviceManager.reset();
     m_MidiProtocolManager.reset();

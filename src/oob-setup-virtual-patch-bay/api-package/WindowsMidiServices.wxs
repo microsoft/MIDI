@@ -1,0 +1,91 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+
+    <Package  
+          Name="Microsoft Windows MIDI Services Virtual Patch Bay $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="1.0.0.0"
+          UpgradeCode="f547d564-7d64-4ba3-aaa7-7b80a99649d0"
+          Scope="perMachine"
+          Compressed="true"
+          
+          >
+       
+        <MediaTemplate EmbedCab="yes" />
+
+        
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+            </Directory>
+        </StandardDirectory>
+        
+        <!-- Transport and other Service Plugins -->
+        <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
+    
+        <Component Id="WindowsServicePlugins"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="8f275db0-747b-4506-99b7-cc8cb05e14ab"  >
+
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayTransport.dll" SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayTransport.pdb" />
+        </Component>
+        
+
+        <Component Id="ConfigurationRegistryEntries"
+                Bitness="always64"
+                Directory="SERVICE_INSTALLFOLDER"
+                Guid="b3358c4f-b05a-4586-900f-d9b104918d5e"
+                NeverOverwrite="false">
+                   
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services">
+
+                <RegistryKey Key="Endpoint Processing Plugins">
+                    <!-- TODO: Any processing plugins -->
+                </RegistryKey>
+
+                <RegistryKey Key="Transport Plugins">
+                  
+                    <RegistryKey Key="Midi2VirtualPatchBayTransport">
+                        <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}">
+                          <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
+                        <RegistryValue Type="integer" Name="Enabled" Value="1">
+                          <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
+                    </RegistryKey>
+                    
+
+                </RegistryKey>
+            </RegistryKey>
+        </Component>
+
+
+      <Feature Id="WindowsMIDIServices">
+        <ComponentRef Id="WindowsServicePlugins"/>
+        <ComponentRef Id="ConfigurationRegistryEntries"/>
+      </Feature>
+
+      
+      <Binary Id="CustomActionBinary"
+              SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+      <CustomAction Id="Action_TakeRegistryOwnership"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="TakeRegistryOwnership"
+                    Return="check"/>
+
+      <InstallExecuteSequence>
+        <Custom Action="Action_TakeRegistryOwnership"
+                Before="CreateFolders"
+                Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+      </InstallExecuteSequence>      
+      
+    </Package>
+</Wix>

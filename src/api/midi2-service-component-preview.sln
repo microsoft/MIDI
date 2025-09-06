@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transport.NetworkMidi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Ble1MidiTransport", "Transport\BleMidi1Transport\Midi2.Ble1MidiTransport.vcxproj", "{AD934155-A549-499E-9647-966139C36402}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.VirtualPatchBayTransport", "Transport\VirtualPatchbay\Midi2.VirtualPatchBayTransport.vcxproj", "{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -58,6 +60,18 @@ Global
 		{AD934155-A549-499E-9647-966139C36402}.Release|ARM64EC.Build.0 = Release|ARM64EC
 		{AD934155-A549-499E-9647-966139C36402}.Release|x64.ActiveCfg = Release|x64
 		{AD934155-A549-499E-9647-966139C36402}.Release|x64.Build.0 = Release|x64
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Debug|ARM64.Build.0 = Debug|ARM64
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Debug|x64.ActiveCfg = Debug|x64
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Debug|x64.Build.0 = Debug|x64
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|ARM64.ActiveCfg = Release|ARM64
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|ARM64.Build.0 = Release|ARM64
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|x64.ActiveCfg = Release|x64
+		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
