@@ -50,7 +50,7 @@ For code, one place to start is by looking at the open issues here in Github, or
 
 > All contributions must be compatible with the MIT license we use. 
 
-## Specific Consideratiopns
+## Specific Considerations
 
 ### External OSS Library Dependencies
 
