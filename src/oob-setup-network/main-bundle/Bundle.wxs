@@ -13,7 +13,6 @@
     
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
     <Bundle Name="Windows MIDI Services Network MIDI 2.0 Preview" 
             Manufacturer="Microsoft Corporation" 
             Version="$(SetupVersionNumber)" 
@@ -70,11 +69,11 @@
 
       <PackageGroup Id="MidiServicesPackages">
             <MsiPackage
-                Id="WindowsMIDIServicesInDevelopmentSetup"
+                Id="WindowsMIDIServicesNetworkMidi2PluginSetup"
                 Vital="true"
                 Permanent="no"
                 Compressed="yes"
-                SourceFile="WindowsMIDIServicesInDevelopmentSetup.msi">
+                SourceFile="WindowsMIDIServicesNetworkMidi2PluginSetup.msi">
             </MsiPackage>
 
         </PackageGroup>

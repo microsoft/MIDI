@@ -132,7 +132,7 @@ class Build : NukeBuild
 
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
 
-    AbsolutePath InDevelopmentServiceComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup-in-dev";
+    AbsolutePath NetworkMidiSetupSolutionFolder => SourceRootFolder / "oob-setup-network";
     AbsolutePath VirtualPatchBaySetupSolutionFolder => SourceRootFolder / "oob-setup-virtual-patch-bay";
 
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
@@ -182,7 +182,7 @@ class Build : NukeBuild
 
     Dictionary<string, string> BuiltSdkRuntimeInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltInBoxInstallers = new Dictionary<string, string>();
-    Dictionary<string, string> BuiltPreviewInBoxInstallers = new Dictionary<string, string>();
+    Dictionary<string, string> BuiltNetworkMidiInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltVirtualPatchBayInstallers = new Dictionary<string, string>();
 
 
@@ -893,7 +893,7 @@ class Build : NukeBuild
             }
         });
 
-    Target BuildInDevelopmentServicePluginsInstaller => _ => _
+    Target BuildNetworkMidiInstaller => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(BuildInDevelopmentServicePlugins)
         .Executes(() =>
@@ -905,7 +905,7 @@ class Build : NukeBuild
 
             //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
 
-            string solutionDir = InDevelopmentServiceComponentsSetupSolutionFolder.ToString() + @"\";
+            string solutionDir = NetworkMidiSetupSolutionFolder.ToString() + @"\";
 
             var msbuildProperties = new Dictionary<string, object>();
             msbuildProperties.Add("Platform", platform);
@@ -923,7 +923,7 @@ class Build : NukeBuild
             );
 
             var output = MSBuildTasks.MSBuild(_ => _
-                .SetTargetPath(InDevelopmentServiceComponentsSetupSolutionFolder / "midi-services-in-box-preview-setup.sln")
+                .SetTargetPath(NetworkMidiSetupSolutionFolder / "midi-services-in-box-preview-setup.sln")
                 .SetMaxCpuCount(null)
                 /*.SetOutDir(outputFolder) */
                 /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
@@ -938,10 +938,10 @@ class Build : NukeBuild
             string newInstallerName = $"Windows MIDI Services (Preview Service Plugins) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
             FileSystemTasks.CopyFile(
-                InDevelopmentServiceComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInDevelopmentServiceComponentsSetup.exe",
+                NetworkMidiSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesNetworkMidiSetup.exe",
                 ThisReleaseFolder / newInstallerName);
 
-            BuiltPreviewInBoxInstallers[platform.ToLower()] = newInstallerName;
+            BuiltNetworkMidiInstallers[platform.ToLower()] = newInstallerName;
 
         }
     });
@@ -2064,7 +2064,7 @@ class Build : NukeBuild
         .DependsOn(BuildServiceAndPlugins)
         .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildInDevelopmentServicePlugins)
-        .DependsOn(BuildInDevelopmentServicePluginsInstaller)
+        .DependsOn(BuildNetworkMidiInstaller)
         .DependsOn(BuildVirtualPatchBayPluginInstaller)
         .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildConsoleApp)
@@ -2093,18 +2093,18 @@ class Build : NukeBuild
                 Console.WriteLine("No in-box installers built.");
             }
 
-            if (BuiltPreviewInBoxInstallers.Count > 0)
+            if (BuiltNetworkMidiInstallers.Count > 0)
             {
-                Console.WriteLine("\nBuilt in-box preview installers:");
+                Console.WriteLine("\nBuilt Network Midi installers:");
 
-                foreach (var item in BuiltPreviewInBoxInstallers)
+                foreach (var item in BuiltNetworkMidiInstallers)
                 {
                     Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
                 }
             }
             else
             {
-                Console.WriteLine("No in-box preview installers built.");
+                Console.WriteLine("No network MIDI installers built.");
             }
 
 

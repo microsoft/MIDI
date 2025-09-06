@@ -1,6 +1,6 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
-    <OutputName>WindowsMIDIServicesInDevelopmentSetup</OutputName>
+    <OutputName>WindowsMIDIServicesNetworkMidi2PluginSetup</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
