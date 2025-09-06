@@ -37,6 +37,7 @@ class Build : NukeBuild
     enum MidiBuildType
     {
         Preview,
+        RC,
         Stable
     }
 
@@ -47,14 +48,14 @@ class Build : NukeBuild
     // Version information to change 
     // --------------------------------------------------------------------------------------
 
-    MidiBuildType BuildType => MidiBuildType.Preview;        // Stable or Preview
+    MidiBuildType BuildType => MidiBuildType.RC;
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
     const UInt16 BuildVersionPatch = 14;
 
-    const UInt16 BuildVersionPreviewNumber = 14;
-    string VersionName => "Preview " + BuildVersionPreviewNumber;
+    const UInt16 BuildVersionPreviewNumber = 1;
+    string VersionName => "Release Candidate " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
 
@@ -211,6 +212,11 @@ class Build : NukeBuild
             {
                 BuildVersionPreviewString = "";
                 NugetPackageVersion = BuildMajorMinorPatch;
+            }
+            else if (BuildType == MidiBuildType.RC)
+            {
+                BuildVersionPreviewString = "rc." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
+                NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
             }
             else if (BuildType == MidiBuildType.Preview)
             {
@@ -2122,21 +2128,18 @@ class Build : NukeBuild
     Target BuildAndPublishAll => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
-        //.DependsOn(BuildServiceAndPlugins)
-        //.DependsOn(ZipWdmaud2)
-        //.DependsOn(BuildServiceAndPluginsInstaller)
-        .DependsOn(BuildInDevelopmentServicePlugins)
+        .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildInDevelopmentServicePluginsInstaller)
-        .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
       //  .DependsOn(BuildAndPackageElectronProjection)
         .DependsOn(BuildCppSamples)
         .DependsOn(BuildCSharpSamples)
+        .DependsOn(ZipWdmaud2)
         .DependsOn(ZipPowershellDevUtilities)
         .DependsOn(ZipSamples)
-        //.DependsOn(ZipServicePdbs)
+        .DependsOn(ZipServicePdbs)
         .Executes(() =>
         {
             if (BuiltInBoxInstallers.Count > 0)
