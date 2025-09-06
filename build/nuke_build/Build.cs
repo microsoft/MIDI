@@ -132,10 +132,9 @@ class Build : NukeBuild
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
 
     AbsolutePath InDevelopmentServiceComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup-in-dev";
+    AbsolutePath VirtualPatchBaySetupSolutionFolder => SourceRootFolder / "oob-setup-virtual-patch-bay";
 
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
-
-
 
     AbsolutePath UserToolsRootFolder => SourceRootFolder / "user-tools";
 
@@ -183,6 +182,7 @@ class Build : NukeBuild
     Dictionary<string, string> BuiltSdkRuntimeInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltInBoxInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltPreviewInBoxInstallers = new Dictionary<string, string>();
+    Dictionary<string, string> BuiltVirtualPatchBayInstallers = new Dictionary<string, string>();
 
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
@@ -1033,6 +1033,58 @@ class Build : NukeBuild
         }
     });
 
+    Target BuildVirtualPatchBayPluginInstaller => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildInDevelopmentServicePlugins)
+        .Executes(() =>
+        {
+            // we build for Arm64 and x64. No EC required here
+            foreach (var platform in InstallerPlatforms)
+            {
+                UpdateSetupBundleInfoIncludeFile(platform);
+
+                //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+
+                string solutionDir = VirtualPatchBaySetupSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                Console.Out.WriteLine($"Platform:    {platform}");
+
+                NuGetTasks.NuGetRestore(_ => _
+                    .SetProcessWorkingDirectory(solutionDir)
+                    .SetSource(@"https://api.nuget.org/v3/index.json")
+                    .SetSolutionDirectory(solutionDir)
+                //.SetConfigFile(packagesConfigFullPath)
+                );
+
+                var output = MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(VirtualPatchBaySetupSolutionFolder / "midi-services-virtual-patch-bay-setup.sln")
+                    .SetMaxCpuCount(null)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    .SetTargets("Clean", "Rebuild")
+                    .SetVerbosity(BuildVerbosity)
+                    .EnableNodeReuse()
+                );
+
+                string newInstallerName = $"Windows MIDI Services (Virtual Patch Bay) {BuildVersionFullString}-{platform.ToLower()}.exe";
+
+                FileSystemTasks.CopyFile(
+                    VirtualPatchBaySetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesVirtualPatchBaySetup.exe",
+                    ThisReleaseFolder / newInstallerName);
+
+                BuiltVirtualPatchBayInstallers[platform.ToLower()] = newInstallerName;
+
+            }
+        });
 
 
     Target BuildUserToolsSharedComponents => _ => _
@@ -2101,6 +2153,7 @@ class Build : NukeBuild
         .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildInDevelopmentServicePlugins)
         .DependsOn(BuildInDevelopmentServicePluginsInstaller)
+        .DependsOn(BuildVirtualPatchBayPluginInstaller)
         .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
@@ -2140,6 +2193,23 @@ class Build : NukeBuild
             {
                 Console.WriteLine("No in-box preview installers built.");
             }
+
+
+            if (BuiltVirtualPatchBayInstallers.Count > 0)
+            {
+                Console.WriteLine("\nBuilt Virtual Patch Bay installers:");
+
+                foreach (var item in BuiltVirtualPatchBayInstallers)
+                {
+                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No Virtual Patch Bay installers built.");
+            }
+            
+
 
             if (BuiltSdkRuntimeInstallers.Count > 0)
             {
