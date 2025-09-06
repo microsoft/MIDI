@@ -37,6 +37,7 @@ class Build : NukeBuild
     enum MidiBuildType
     {
         Preview,
+        RC,
         Stable
     }
 
@@ -47,14 +48,14 @@ class Build : NukeBuild
     // Version information to change 
     // --------------------------------------------------------------------------------------
 
-    MidiBuildType BuildType => MidiBuildType.Preview;        // Stable or Preview
+    MidiBuildType BuildType => MidiBuildType.RC; 
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 13;
+    const UInt16 BuildVersionPatch = 14;
 
-    const UInt16 BuildVersionPreviewNumber = 13;
-    string VersionName => "Preview " + BuildVersionPreviewNumber;
+    const UInt16 BuildVersionPreviewNumber = 1;
+    string VersionName => "Release Candidate " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
 
@@ -212,6 +213,11 @@ class Build : NukeBuild
                 BuildVersionPreviewString = "";
                 NugetPackageVersion = BuildMajorMinorPatch;
             }
+            else if (BuildType == MidiBuildType.RC)
+            {
+                BuildVersionPreviewString = "rc." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
+                NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
+            }
             else if (BuildType == MidiBuildType.Preview)
             {
                 BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
@@ -243,7 +249,7 @@ class Build : NukeBuild
         {
             string buildSource = "GitHub Preview";
             string versionName = VersionName;
-            string versionString = BuildVersionFullString;
+            //string versionString = BuildVersionFullString;
 
             string buildVersionMajor = BuildVersionMajor.ToString();
             string buildVersionMinor = BuildVersionMinor.ToString();
@@ -256,121 +262,27 @@ class Build : NukeBuild
             ThisReleaseFolder.CreateDirectory();
             SdkVersionFilesFolder.CreateDirectory();
 
-            // json version for published SDK releases. This needs to be manually copied to /docs/version/sdk_version.json
-            // if this ends up being a published release
+            var msbuildProperties = new Dictionary<string, object>();
+            msbuildProperties.Add("MidiBuildType", $"{BuildType.ToString().ToLower()}");
+            msbuildProperties.Add("MidiBuildSource", $"{buildSource}");
+            msbuildProperties.Add("MidiVersionName", $"{versionName}");
+            msbuildProperties.Add("MidiBuildVersionMajor", BuildVersionMajor);
+            msbuildProperties.Add("MidiBuildVersionMinor", BuildVersionMinor);
+            msbuildProperties.Add("MidiBuildVersionPatch", BuildVersionPatch);
+            msbuildProperties.Add("MidiBuildVersionBuildNumber", BuildVersionBuildNumber);
+            msbuildProperties.Add("MidiBuildVersionPreviewString", $"{BuildVersionPreviewString}");
 
-            var SdkVersionJsonFile = ThisReleaseFolder / "sdk_version.json";
+            msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version").ToString());
 
-            using (StreamWriter writer = System.IO.File.CreateText(SdkVersionJsonFile))
-            {
-                writer.WriteLine("{");
-                writer.WriteLine("    \"releases\":");
-                writer.WriteLine("    [");
-                writer.WriteLine("        {");
-                writer.WriteLine($"            \"type\": \"{BuildType.ToString().ToLower()}\",");
-                writer.WriteLine($"            \"source\": \"{buildSource}\",");
-                writer.WriteLine($"            \"name\": \"{versionName}\",");
-                writer.WriteLine($"            \"description\": \"Replace this text with a summary of this SDK update\",");
-                writer.WriteLine($"            \"buildDate\": \"{buildDate}\",");
-                writer.WriteLine($"            \"versionFull\": \"{versionString}\",");
-                writer.WriteLine($"            \"versionMajor\": {buildVersionMajor},");
-                writer.WriteLine($"            \"versionMinor\": {buildVersionMinor},");
-                writer.WriteLine($"            \"versionPatch\": {buildVersionPatch},");
-                writer.WriteLine($"            \"versionBuildNumber\": {BuildVersionBuildNumber},");
-                writer.WriteLine($"            \"preview\": \"{BuildVersionPreviewString}\",");
-                writer.WriteLine($"            \"releaseNotesUri\": \"https://github.com/microsoft/MIDI/releases/tag/ (TODO)\",");
-                writer.WriteLine($"            \"directDownloadUriX64\": \"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64\",");
-                writer.WriteLine($"            \"directDownloadUriArm64\": \"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64\"");
-                writer.WriteLine("        }");
-                writer.WriteLine("    ]");
-                writer.WriteLine("}");
-            }
+            MSBuildTasks.MSBuild(_ => _
+                .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
+                .SetMaxCpuCount(null)
+                .SetProcessArgumentConfigurator(_ => _.Add("/t:TransformAll"))
+                .SetProperties(msbuildProperties)
+                .SetVerbosity(MSBuildVerbosity.Normal)
+                .EnableNodeReuse()
+            );
 
-            bool isPreview = BuildType == MidiBuildType.Preview;
-
-            // create .h file for SDK and related tools
-
-            using (StreamWriter writer = System.IO.File.CreateText(NuGetVersionHeaderFile))
-            {
-                writer.WriteLine("// this file has been auto-generated by the Windows MIDI Services build process");
-                writer.WriteLine("// the version information here represents the NuGet package version your app was");
-                writer.WriteLine("// built against");
-                writer.WriteLine();
-                writer.WriteLine("#ifndef WINDOWS_MIDI_SERVICES_NUGET_VERSION_INCLUDE");
-                writer.WriteLine("#define WINDOWS_MIDI_SERVICES_NUGET_VERSION_INCLUDE");
-                writer.WriteLine();
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_IS_PREVIEW                         {isPreview.ToString().ToLower()}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L\"{buildSource}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L\"{buildDate}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L\"{versionName}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L\"{versionString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      {buildVersionMajor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      {buildVersionMinor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      {buildVersionPatch}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               {BuildVersionBuildNumber}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L\"{BuildVersionPreviewString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L\"{BuildVersionFileFullString}\"");
-                writer.WriteLine();
-                writer.WriteLine("#endif");
-                writer.WriteLine();
-            }
-
-            using (StreamWriter writer = System.IO.File.CreateText(SdkVersionHeaderFile))
-            {
-                writer.WriteLine("// this file has been auto-generated by the Windows MIDI Services build process");
-                writer.WriteLine("// SDK runtime version file");
-                writer.WriteLine();
-                writer.WriteLine("#ifndef WINDOWS_MIDI_SERVICES_SDK_RUNTIME_VERSION_INCLUDE");
-                writer.WriteLine("#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_VERSION_INCLUDE");
-                writer.WriteLine();
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_IS_PREVIEW                       {isPreview.ToString().ToLower()}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_SOURCE                           L\"{buildSource}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_DATE                             L\"{buildDate}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_NAME                     L\"{versionName}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FULL                     L\"{versionString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR                    {buildVersionMajor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR                    {buildVersionMinor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_PATCH                    {buildVersionPatch}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER             {BuildVersionBuildNumber}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_PREVIEW                          L\"{BuildVersionPreviewString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FILE                     L\"{BuildVersionFileFullString}\"");
-                writer.WriteLine();
-                writer.WriteLine("#endif");
-                writer.WriteLine();
-            }
-
-            // create .cs file for console and settings app
-
-            using (StreamWriter writer = System.IO.File.CreateText(CommonVersionCSharpFile))
-            {
-                writer.WriteLine("// this file has been auto-generated by the Windows MIDI Services build process");
-                writer.WriteLine("// this information is the version from the SDK projection, not the SDK runtime");
-                writer.WriteLine("// the version information here represents the NuGet package version your app was");
-                writer.WriteLine("// built against");
-                writer.WriteLine();
-
-                writer.WriteLine("namespace Microsoft.Windows.Devices.Midi2.Common");
-                writer.WriteLine("{");
-                writer.WriteLine("\tpublic static class MidiNuGetBuildInformation");
-                writer.WriteLine("\t{");
-                writer.WriteLine($"\t\tpublic const bool IsPreview = {isPreview.ToString().ToLower()};");
-                writer.WriteLine($"\t\tpublic const string Source = \"{buildSource}\";");
-                writer.WriteLine($"\t\tpublic const string BuildDate = \"{buildDate}\";");
-                writer.WriteLine($"\t\tpublic const string Name = \"{versionName}\";");
-                writer.WriteLine($"\t\tpublic const string BuildFullVersion = \"{versionString}\";");
-                writer.WriteLine($"\t\tpublic const ushort VersionMajor = {buildVersionMajor};");
-                writer.WriteLine($"\t\tpublic const ushort VersionMinor = {buildVersionMinor};");
-                writer.WriteLine($"\t\tpublic const ushort VersionPatch = {buildVersionPatch};");
-                writer.WriteLine($"\t\tpublic const ushort VersionBuildNumber = {BuildVersionBuildNumber};");
-                writer.WriteLine($"\t\tpublic const string Preview = \"{BuildVersionPreviewString}\";");
-                writer.WriteLine($"\t\tpublic const string AssemblyFullVersion = \"{BuildVersionAssemblyFullString}\";");
-                writer.WriteLine($"\t\tpublic const string FileFullVersion = \"{BuildVersionFileFullString}\";");
-                writer.WriteLine("\t}");
-                writer.WriteLine("}");
-                writer.WriteLine();
-            }
-
-            
         });
 
     Target BuildServiceAndPlugins => _ => _
@@ -537,7 +449,6 @@ class Build : NukeBuild
     Target BuildInDevelopmentServicePlugins => _ => _
         .DependsOn(CreateVersionIncludes)
         .DependsOn(Prerequisites)
-        .DependsOn(BuildServiceAndPlugins)
         .Executes(() =>
         {
             foreach (var platform in ServiceAndApiPlatforms)
@@ -575,7 +486,9 @@ class Build : NukeBuild
 
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.NetworkMidiTransport.dll");
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.NetworkMidiTransport.pdb");
-                // stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualPatchBay.dll");
+
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualPatchBayTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualPatchBayTransport.pdb");
 
                 foreach (var file in stagingFiles)
                 {
@@ -2149,7 +2062,6 @@ class Build : NukeBuild
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
         .DependsOn(BuildServiceAndPlugins)
-        .DependsOn(ZipWdmaud2)
         .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildInDevelopmentServicePlugins)
         .DependsOn(BuildInDevelopmentServicePluginsInstaller)
@@ -2161,6 +2073,7 @@ class Build : NukeBuild
       //  .DependsOn(BuildAndPackageElectronProjection)
         .DependsOn(BuildCppSamples)
         .DependsOn(BuildCSharpSamples)
+        .DependsOn(ZipWdmaud2)
         .DependsOn(ZipPowershellDevUtilities)
         .DependsOn(ZipSamples)
         .DependsOn(ZipServicePdbs)
