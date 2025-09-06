@@ -58,7 +58,7 @@
         <StandardDirectory Id="ProgramMenuFolder">
             <Component Id="SettingsAppShortcut" Guid="c71be7ba-f0b6-483e-a409-e40985e90117">
                 <Shortcut Id="ApplicationStartMenuShortcut"
-                          Name="Windows Musician and MIDI Settings"
+                          Name="MIDI Settings"
                           Description="Windows Musician and MIDI Services Settings and Configuration"
                           Target="[!ShortcutTargetExe]"
                           WorkingDirectory="SETTINGSAPP_INSTALLFOLDER" />

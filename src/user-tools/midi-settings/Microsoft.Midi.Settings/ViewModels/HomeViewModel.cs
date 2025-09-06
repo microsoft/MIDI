@@ -225,7 +225,9 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
             }
             catch (Exception ex)
-            { 
+            {
+                App.GetService<ILoggingService>().LogError("Error checking for SDK updates", ex);
+
                 // error trying to check for a new release. Firewall? No network?
 
                 System.Diagnostics.Debug.WriteLine(ex);

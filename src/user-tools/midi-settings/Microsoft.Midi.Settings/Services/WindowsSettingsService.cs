@@ -33,10 +33,7 @@ internal class WindowsSettingsService : IWindowsSettingsService
         }
         catch (Exception ex)
         {
-            var dialog = new MessageDialog("Error opening console");
-            dialog.Content = ex.ToString();
-
-            dialog.ShowAsync().Wait();
+            App.GetService<ILoggingService>().LogError("Error navigating to app URI", ex);
         }
     }
 

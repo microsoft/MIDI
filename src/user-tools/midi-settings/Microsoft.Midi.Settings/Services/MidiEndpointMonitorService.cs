@@ -35,10 +35,7 @@ public class MidiEndpointMonitorService : IMidiEndpointMonitorService
         }
         catch (Exception ex)
         {
-            var dialog = new MessageDialog("Error opening console");
-            dialog.Content = ex.ToString();
-
-            dialog.ShowAsync().Wait();
+            App.GetService<ILoggingService>().LogError($"Error launching console monitor for endpoint '{midiEndpointDeviceId}'", ex);
         }
     }
 }

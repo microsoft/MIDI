@@ -31,7 +31,11 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public async void SetMainWindowPositionAndSize(WindowRect value)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         await _localSettingsService.SaveSettingAsync<WindowRect>(MainWindowPositionAndSize_SettingsKey, value);
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     public WindowRect? GetMainWindowPositionAndSize()
@@ -41,8 +45,10 @@ class GeneralSettingsService : IGeneralSettingsService
             return _localSettingsService.ReadSettingAsync<WindowRect>(MainWindowPositionAndSize_SettingsKey).GetAwaiter().GetResult();
 
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error getting main window position and size", ex);
+
         }
 
         // default
@@ -56,8 +62,10 @@ class GeneralSettingsService : IGeneralSettingsService
             return _localSettingsService.ReadSettingAsync<EndpointListView>(EndpointListLastUsedView_SettingsKey).GetAwaiter().GetResult();
 
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error getting Endpoint List last used view", ex);
+
             return EndpointListView.Default;
         }
     }

@@ -39,8 +39,10 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
             return notepadProcess.Start();
 
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error capturing mididiag.exe output and opening in notepad.", ex);
+
             return false;
         }
     }

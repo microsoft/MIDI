@@ -8,7 +8,7 @@ Write-Host "Available MIDI Endpoints" -ForegroundColor Cyan
 (Get-MidiEndpointDeviceInfoList) | Sort-Object -Property Name | Format-Table -AutoSize
 
 # I'm using the default loopback that is created when you set up MIDI through the MIDI Settings app
-$endpointDeviceId = "\\?\swd#midisrv#midiu_loop_a_default_loopback_a#{e7cce071-3c03-423f-88d3-f1045d02552b}"
+$endpointDeviceId = "\\?\swd#midisrv#midiu_loop_a_default#{e7cce071-3c03-423f-88d3-f1045d02552b}"
 
 # show some info about the device we're interested in
 Write-Host "Endpoint we intend to connect to" -ForegroundColor Cyan

@@ -115,6 +115,8 @@ public class MidiConfigFile : IMidiConfigFile
 
     internal bool LoadHeaderOnly()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (m_fullFileName == string.Empty) return false;
 
         try
@@ -157,14 +159,18 @@ public class MidiConfigFile : IMidiConfigFile
             }
 
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error loading config file header", ex);
+
             return false;
         }
     }
 
     public bool Load()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (m_fullFileName == string.Empty) return false;
 
         try
@@ -216,14 +222,18 @@ public class MidiConfigFile : IMidiConfigFile
             }
 
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error loading config file", ex);
+
             return false;
         }
     }
 
     private bool Save()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (m_config == null) return false;
         if (m_fullFileName == string.Empty) return false;
 
@@ -240,8 +250,10 @@ public class MidiConfigFile : IMidiConfigFile
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error saving config file", ex);
+
         }
 
         return false;
@@ -771,6 +783,8 @@ class MidiConfigFileService : IMidiConfigFileService
 
     private MidiConfigFile? LoadConfigFile(string localFileName)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         // early Canary builds went out with a file of this name, and
         // it's protected in a way that we can't write to it without
         // some futzing around, so we just pretend it doesn't exist.
@@ -871,6 +885,8 @@ class MidiConfigFileService : IMidiConfigFileService
 
     public bool CreateNewConfigFile(string configName, string configLocalFileName)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         try
         {
             // cleanup the name
@@ -922,8 +938,10 @@ class MidiConfigFileService : IMidiConfigFileService
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error creating new config file", ex);
+
             return false;
         }
     }

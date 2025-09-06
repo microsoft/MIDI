@@ -37,24 +37,25 @@ class Build : NukeBuild
     enum MidiBuildType
     {
         Preview,
+        RC,
         Stable
     }
 
     MSBuildVerbosity BuildVerbosity => MSBuildVerbosity.Quiet;
-    LogLevel LoggingLevel => LogLevel.Error;
+    LogLevel LoggingLevel => LogLevel.Normal;
 
     // --------------------------------------------------------------------------------------
     // Version information to change 
     // --------------------------------------------------------------------------------------
 
-    MidiBuildType BuildType => MidiBuildType.Preview;        // Stable or Preview
+    MidiBuildType BuildType => MidiBuildType.RC;
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 13;
+    const UInt16 BuildVersionPatch = 14;
 
-    const UInt16 BuildVersionPreviewNumber = 13;
-    string VersionName => "Preview " + BuildVersionPreviewNumber;
+    const UInt16 BuildVersionPreviewNumber = 1;
+    string VersionName => "Release Candidate " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
 
@@ -212,6 +213,11 @@ class Build : NukeBuild
                 BuildVersionPreviewString = "";
                 NugetPackageVersion = BuildMajorMinorPatch;
             }
+            else if (BuildType == MidiBuildType.RC)
+            {
+                BuildVersionPreviewString = "rc." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
+                NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
+            }
             else if (BuildType == MidiBuildType.Preview)
             {
                 BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
@@ -243,18 +249,44 @@ class Build : NukeBuild
         {
             string buildSource = "GitHub Preview";
             string versionName = VersionName;
-            string versionString = BuildVersionFullString;
+            //string versionString = BuildVersionFullString;
 
-            string buildVersionMajor = BuildVersionMajor.ToString();
-            string buildVersionMinor = BuildVersionMinor.ToString();
-            string buildVersionPatch = BuildVersionPatch.ToString();
-
-            string buildDate = BuildDate.ToString("yyyy-MM-dd");
+            //string buildDate = BuildDate.ToString("yyyy-MM-dd");
 
             // create directories if they do not exist
 
             ThisReleaseFolder.CreateDirectory();
-            SdkVersionFilesFolder.CreateDirectory();
+            //SdkVersionFilesFolder.CreateDirectory();
+
+
+            var msbuildProperties = new Dictionary<string, object>();
+            msbuildProperties.Add("MidiBuildType", $"{BuildType.ToString().ToLower()}");
+            msbuildProperties.Add("MidiBuildSource", $"{buildSource}");
+            msbuildProperties.Add("MidiVersionName", $"{versionName}");
+            msbuildProperties.Add("MidiBuildVersionMajor", BuildVersionMajor);
+            msbuildProperties.Add("MidiBuildVersionMinor", BuildVersionMinor);
+            msbuildProperties.Add("MidiBuildVersionPatch", BuildVersionPatch);
+            msbuildProperties.Add("MidiBuildVersionBuildNumber", BuildVersionBuildNumber);
+            msbuildProperties.Add("MidiBuildVersionPreviewString", $"{BuildVersionPreviewString}");
+
+            msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version" ).ToString());
+
+
+            
+
+            MSBuildTasks.MSBuild(_ => _
+                .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
+                .SetMaxCpuCount(null)
+                .SetProcessArgumentConfigurator(_ => _ .Add("/t:TransformAll"))
+                .SetProperties(msbuildProperties)
+                .SetVerbosity(MSBuildVerbosity.Normal)
+                .EnableNodeReuse()
+            );
+
+
+
+
+#if false
 
             // json version for published SDK releases. This needs to be manually copied to /docs/version/sdk_version.json
             // if this ends up being a published release
@@ -370,7 +402,7 @@ class Build : NukeBuild
                 writer.WriteLine();
             }
 
-            
+#endif            
         });
 
     Target BuildServiceAndPlugins => _ => _
@@ -537,7 +569,7 @@ class Build : NukeBuild
     Target BuildInDevelopmentServicePlugins => _ => _
         .DependsOn(CreateVersionIncludes)
         .DependsOn(Prerequisites)
-        .DependsOn(BuildServiceAndPlugins)
+        //.DependsOn(BuildServiceAndPlugins)
         .Executes(() =>
         {
             foreach (var platform in ServiceAndApiPlatforms)
@@ -589,8 +621,8 @@ class Build : NukeBuild
     Target BuildAndPackAllAppSDKs => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
-        .DependsOn(BuildServiceAndPlugins)
-        .DependsOn(BuildInDevelopmentServicePlugins)
+        //.DependsOn(BuildServiceAndPlugins)
+        //.DependsOn(BuildInDevelopmentServicePlugins)
         .Executes(() =>
         {
         //    bool wxsWritten = false;
@@ -2096,18 +2128,15 @@ class Build : NukeBuild
     Target BuildAndPublishAll => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
-        .DependsOn(BuildServiceAndPlugins)
-        .DependsOn(ZipWdmaud2)
         .DependsOn(BuildServiceAndPluginsInstaller)
-        .DependsOn(BuildInDevelopmentServicePlugins)
         .DependsOn(BuildInDevelopmentServicePluginsInstaller)
-        .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
       //  .DependsOn(BuildAndPackageElectronProjection)
         .DependsOn(BuildCppSamples)
         .DependsOn(BuildCSharpSamples)
+        .DependsOn(ZipWdmaud2)
         .DependsOn(ZipPowershellDevUtilities)
         .DependsOn(ZipSamples)
         .DependsOn(ZipServicePdbs)

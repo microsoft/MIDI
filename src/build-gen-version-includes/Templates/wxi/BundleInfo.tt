@@ -1,0 +1,32 @@
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ output extension=".wxi" #>
+<#
+
+string buildType = this.Host.ResolveParameterValue("-", "-", "buildType") ?? "unspecified";
+string buildSource = this.Host.ResolveParameterValue("-", "-", "buildSource") ?? "unspecified";
+string versionName = this.Host.ResolveParameterValue("-", "-", "versionName") ?? "unspecified";
+UInt16 buildVersionMajor = UInt16.Parse(this.Host.ResolveParameterValue("-", "-", "buildVersionMajor") ?? "0");
+UInt16 buildVersionMinor = UInt16.Parse(this.Host.ResolveParameterValue("-", "-", "buildVersionMinor") ?? "0");
+UInt16 buildVersionPatch = UInt16.Parse(this.Host.ResolveParameterValue("-", "-", "buildVersionPatch") ?? "0");
+UInt16 buildVersionBuildNumber = UInt16.Parse(this.Host.ResolveParameterValue("-", "-", "buildVersionBuildNumber") ?? "0");
+string buildVersionPreviewString = this.Host.ResolveParameterValue("-", "-", "buildVersionPreviewString") ?? "unspecified";
+
+string buildDateString = DateTime.Today.ToString("yyyy-MM-dd");
+string versionStringFull = $"{buildVersionMajor}.{buildVersionMinor}.{buildVersionPatch}";
+
+if (!string.IsNullOrEmpty(buildVersionPreviewString))
+{
+    versionStringFull = $"{versionStringFull}-{buildVersionPreviewString}";
+}
+else
+{
+    versionStringFull =  $"{versionStringFull}.{buildVersionBuildNumber}";
+}
+
+#>
+
+<Include>
+  <?define SetupVersionName="<#= versionName #>" ?>
+  <?define SetupVersionNumber="<#= versionStringFull #>" ?>
+  <?define MidiSdkAndToolsVersion="<#= versionStringFull #>" ?>
+</Include>

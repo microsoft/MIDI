@@ -180,6 +180,8 @@ public class MidiUpdateService : IMidiUpdateService
         }
         catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error downloading and installing update.", ex);
+
             System.Diagnostics.Debug.WriteLine("Exception downloading file: " + ex.ToString());
 
             return false;

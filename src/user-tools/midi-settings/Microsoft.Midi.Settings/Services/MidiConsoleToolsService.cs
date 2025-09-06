@@ -33,8 +33,10 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
             
             return consoleProcess.Start();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error opening MIDI console", ex);
+
             return false;
         }
     }
@@ -57,8 +59,10 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
             return consoleProcess.Start();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error monitoring endpoint", ex);
+
             return false;
         }
     }
@@ -80,8 +84,10 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
             return consoleProcess.Start();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error restarting MIDI service", ex);
+
             return false;
         }
     }
