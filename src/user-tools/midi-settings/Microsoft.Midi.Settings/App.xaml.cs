@@ -95,8 +95,11 @@ public partial class App : Application
 
                     // Services
 
-                    services.AddSingleton<ISynchronizationContextService>(synchronizationContextService); 
+                    // spin up the logging service first
                     services.AddSingleton<ILoggingService, LoggingService>();
+
+
+                    services.AddSingleton<ISynchronizationContextService>(synchronizationContextService);
 
                     services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
                     services.AddSingleton<IGeneralSettingsService, GeneralSettingsService>();
@@ -197,6 +200,10 @@ public partial class App : Application
                 }).
                 Build();
 
+
+            App.GetService<ILoggingService>().LogInfo("Starting up: Services registered.");
+
+
             //}
             //else
             //{
@@ -217,10 +224,10 @@ public partial class App : Application
                 "Error_StartupMessageBoxTitle".GetLocalized(),
                 0);
 
+            App.GetService<ILoggingService>().LogError("Error registering services, pages, and viewmodels", ex);
+
             Exit();
         }
-
-        //App.GetService<ILoggingService>().LogError("This is a test message");
     }
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
@@ -237,6 +244,7 @@ public partial class App : Application
         catch (Exception)
         {
             // just eat it. we're clearly in a messed-up state
+            Exit();
         }
 
     }
@@ -251,8 +259,9 @@ public partial class App : Application
     {
         try
         {
+            App.GetService<ILoggingService>().LogInfo("Starting up: OnLaunched");
 
-           // InitializationProgressWindow.Completed += (s,e) => 
+            // InitializationProgressWindow.Completed += (s,e) => 
 
 
             base.OnLaunched(args);
@@ -264,10 +273,12 @@ public partial class App : Application
 
             await App.GetService<IActivationService>().ActivateAsync(args);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // an exception here usually results from a race condition during initialization when initialization failed.
             // so just eat it here.
+
+            App.GetService<ILoggingService>().LogError("Error launching app", ex);
         }
     }
 

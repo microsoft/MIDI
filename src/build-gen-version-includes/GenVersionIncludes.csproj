@@ -1,0 +1,136 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+
+  <PropertyGroup>
+    <BeforeTransform>Midi_Setup</BeforeTransform>
+    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
+    <TransformOnBuild>true</TransformOnBuild>
+    <TransformOutOfDateOnly>false</TransformOutOfDateOnly>
+  </PropertyGroup>
+
+  <Target Name="Midi_Setup" BeforeTargets="PrepareForBuild">
+    <Message Text="In Midi_Setup..." Importance="High" />
+
+    <Message Text="MSBuild Extensions Path : $(MSBuildExtensionsPath)" Importance="High" />
+   
+    <Message Text="Version include folder :  $(MidiVersionOutputFolder)" Importance="High" />
+    <MakeDir Directories="$(MidiVersionOutputFolder)" Condition="!Exists('$(MidiVersionOutputFolder)')" />
+
+
+    <Message Text="Setting transform variables..." Importance="High" />
+
+    <Message Text="buildType :                 $(MidiBuildType)" Importance="High" />
+    <Message Text="buildSource :               $(MidiBuildSource)" Importance="High" />
+    <Message Text="versionName :               $(MidiVersionName)" Importance="High" />
+    <Message Text="buildVersionMajor :         $(MidiBuildVersionMajor)" Importance="High" />
+    <Message Text="buildVersionMinor :         $(MidiBuildVersionMinor)" Importance="High" />
+    <Message Text="buildVersionPatch :         $(MidiBuildVersionPatch)" Importance="High" />
+    <Message Text="buildVersionBuildNumber :   $(MidiBuildVersionBuildNumber)" Importance="High" />
+    <Message Text="buildVersionPreviewString : $(MidiBuildVersionPreviewString)" Importance="High" />
+  </Target>
+
+
+  <ItemGroup>
+    <T4ParameterValues Include="buildType">
+      <Value>$(MidiBuildType)</Value>
+      <Visible>False</Visible>
+    </T4ParameterValues>
+
+    <T4ParameterValues Include="buildSource">
+      <Value>$(MidiBuildSource)</Value>
+      <Visible>False</Visible>
+    </T4ParameterValues>
+
+    <T4ParameterValues Include="versionName">
+      <Value>$(MidiVersionName)</Value>
+      <Visible>False</Visible>
+    </T4ParameterValues>
+
+    <T4ParameterValues Include="buildVersionMajor">
+      <Value>$(MidiBuildVersionMajor)</Value>
+      <Visible>False</Visible>
+    </T4ParameterValues>
+
+    <T4ParameterValues Include="buildVersionMinor">
+      <Value>$(MidiBuildVersionMinor)</Value>
+      <Visible>False</Visible>
+    </T4ParameterValues>
+
+    <T4ParameterValues Include="buildVersionPatch">
+      <Value>$(MidiBuildVersionPatch)</Value>
+      <Visible>False</Visible>
+    </T4ParameterValues>
+
+    <T4ParameterValues Include="buildVersionBuildNumber">
+      <Value>$(MidiBuildVersionBuildNumber)</Value>
+      <Visible>False</Visible>
+    </T4ParameterValues>
+
+    <T4ParameterValues Include="buildVersionPreviewString">
+      <Value>$(MidiBuildVersionPreviewString)</Value>
+      <Visible>False</Visible>
+    </T4ParameterValues>
+
+  </ItemGroup>
+
+
+ 
+  <ItemGroup Label="MidiVersionFilesToTransform">
+
+    <None Include="Templates\wxi\BundleInfo.tt">
+      <DesignTime>False</DesignTime>
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <OutputFilePath>$(MidiVersionOutputFolder)</OutputFilePath>
+      <OutputFileName>BundleInfo.wxi</OutputFileName>
+      <Visible>True</Visible>
+    </None>
+    
+    <None Include="Templates\json\sdk_version.tt">
+      <DesignTime>False</DesignTime>
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <OutputFilePath>$(MidiVersionOutputFolder)</OutputFilePath>
+      <Visible>True</Visible>
+    </None>
+
+    <None Include="Templates\h\WindowsMidiServicesSdkRuntimeVersion.tt">
+      <DesignTime>False</DesignTime>
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <OutputFilePath>$(MidiVersionOutputFolder)</OutputFilePath>
+      <Visible>True</Visible>
+      <LastGenOutput>WindowsMidiServicesSdkRuntimeVersion.h</LastGenOutput>
+    </None>
+
+    <None Include="Templates\cs\WindowsMidiServicesVersion.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <OutputFilePath>$(MidiVersionOutputFolder)</OutputFilePath>
+      <Visible>True</Visible>
+      <LastGenOutput>WindowsMidiServicesVersion.cs</LastGenOutput>
+    </None>
+
+    <None Include="Templates\h\WindowsMidiServicesVersion.tt">
+      <DesignTime>False</DesignTime>
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <OutputFilePath>$(MidiVersionOutputFolder)</OutputFilePath>
+      <Visible>True</Visible>
+      <LastGenOutput>WindowsMidiServicesVersion.h</LastGenOutput>
+    </None>
+
+  
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\TextTemplating\Microsoft.TextTemplating.targets" />
+
+
+
+</Project>

@@ -63,6 +63,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private void StartDeviceWatcher(bool includeAll)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (_watcher != null)
         {
             ShutDownDeviceWatcher();
@@ -91,6 +93,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     public void Start()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         StartDeviceWatcher(false);
     }
 
@@ -103,6 +107,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private MidiEndpointWrapper BuildWrapper(MidiEndpointDeviceInformation deviceInformation)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         return new MidiEndpointWrapper(
             deviceInformation,
             App.GetService<IMidiTransportInfoService>(),
@@ -120,6 +126,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private void OnDeviceWatcherEndpointAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationAddedEventArgs args)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         System.Diagnostics.Debug.WriteLine("MidiEndpointEnumerationService: EndpointAdded");
 
         _synchronizationContextService?.GetUIContext().Post(_ =>
@@ -137,6 +145,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private void OnDeviceWatcherEndpointRemoved(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationRemovedEventArgs args)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         foreach (MidiEndpointWrapper info in _endpoints)
         {
             if (info.Id == args.EndpointDeviceId)
@@ -154,6 +164,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private void OnDeviceWatcherEndpointUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         foreach (MidiEndpointWrapper info in _endpoints)
         {
             if (info.Id == args.EndpointDeviceId)

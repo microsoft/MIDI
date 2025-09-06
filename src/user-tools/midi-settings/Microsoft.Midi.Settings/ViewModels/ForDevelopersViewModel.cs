@@ -340,8 +340,10 @@ public partial class ForDevelopersViewModel : ObservableRecipient //, ISettingsS
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            App.GetService<ILoggingService>().LogError("Error replacing wdmaud2.drv", ex);
+
             // todo: set an error the UI can show
             return false;
         }

@@ -1,0 +1,47 @@
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ output extension=".json" #>
+<#
+
+string buildType = this.Host.ResolveParameterValue("-", "-", "buildType") ?? "unspecified";
+string buildSource = this.Host.ResolveParameterValue("-", "-", "buildSource") ?? "unspecified";
+string versionName = this.Host.ResolveParameterValue("-", "-", "versionName") ?? "unspecified";
+UInt16 buildVersionMajor = UInt16.Parse(this.Host.ResolveParameterValue("-", "-", "buildVersionMajor") ?? "0");
+UInt16 buildVersionMinor = UInt16.Parse(this.Host.ResolveParameterValue("-", "-", "buildVersionMinor") ?? "0");
+UInt16 buildVersionPatch = UInt16.Parse(this.Host.ResolveParameterValue("-", "-", "buildVersionPatch") ?? "0");
+UInt16 buildVersionBuildNumber = UInt16.Parse(this.Host.ResolveParameterValue("-", "-", "buildVersionBuildNumber") ?? "0");
+string buildVersionPreviewString = this.Host.ResolveParameterValue("-", "-", "buildVersionPreviewString") ?? "unspecified";
+
+string buildDateString = DateTime.Today.ToString("yyyy-MM-dd");
+string versionStringFull = $"{buildVersionMajor}.{buildVersionMinor}.{buildVersionPatch}";
+
+if (!string.IsNullOrEmpty(buildVersionPreviewString))
+{
+    versionStringFull = $"{versionStringFull}-{buildVersionPreviewString}";
+}
+else
+{
+    versionStringFull =  $"{versionStringFull}.{buildVersionBuildNumber}";
+}
+
+#>
+{
+    "releases":
+    [
+        {
+            "type": "<#= buildType.ToLower() #>",
+            "source": "<#= buildSource #>",
+            "name": "<#= versionName #>",
+            "description": "Replace this text with a summary of this SDK update",
+            "buildDate": "<#= buildDateString #>",
+            "versionFull": "<#= versionStringFull #>",
+            "versionMajor": <#= buildVersionMajor #>,
+            "versionMinor": <#= buildVersionMinor #>,
+            "versionPatch": <#= buildVersionPatch #>,
+            "versionBuildNumber": <#= buildVersionBuildNumber #>,
+            "preview": "<#= buildVersionPreviewString #>",
+            "releaseNotesUri": "https://github.com/microsoft/MIDI/releases/tag/ (TODO)",
+            "directDownloadUriX64": "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64",
+            "directDownloadUriArm64": "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64""
+        }
+    ]
+}

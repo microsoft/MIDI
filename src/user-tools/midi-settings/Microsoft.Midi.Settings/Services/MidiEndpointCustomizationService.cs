@@ -24,6 +24,8 @@ public class MidiEndpointCustomizationService : IMidiEndpointCustomizationServic
 
     public bool UpdateEndpoint(MidiServiceEndpointCustomizationConfig configUpdate)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         // build the json and send up through the transport
 
         System.Diagnostics.Debug.WriteLine(configUpdate.GetConfigJson());
