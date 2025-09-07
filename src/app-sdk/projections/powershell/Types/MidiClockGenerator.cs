@@ -12,6 +12,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#pragma warning disable CS8305
+
 namespace WindowsMidiServices
 {
     public class MidiClockGenerator

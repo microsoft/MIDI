@@ -22,13 +22,13 @@ namespace WindowsMidiServices
     public class CommandOpenMidiEndpointConnection : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public MidiSession Session
+        public MidiSession? Session
         {
             get;set;
         }
 
         [Parameter(Mandatory = true, Position = 1)]
-        public string EndpointDeviceId
+        public string? EndpointDeviceId
         {
             get; set;
         }
@@ -38,22 +38,19 @@ namespace WindowsMidiServices
         {
             if (Session == null || !Session.IsValid)
             {
-                // invalid
-                return;
+                throw new ArgumentNullException("Invalid session.");
             }
 
             if (string.IsNullOrWhiteSpace(EndpointDeviceId))
             {
-                // need an endpoint id
-                return;
+                throw new ArgumentNullException("Endpoint device id is null or empty.");
             }
 
             var backingConnection = Session.BackingSession!.CreateEndpointConnection(EndpointDeviceId);
 
             if (backingConnection == null)
             {
-                // failed to create connection
-                return;
+                throw new Exception("Unable to create connection.");
             }
 
             // do this here to make sure the event handler is wired up before we open
@@ -65,7 +62,7 @@ namespace WindowsMidiServices
             }
             else
             {
-                // unable to open session
+                throw new Exception("Unable to open connection.");
             }
 
 

@@ -107,7 +107,7 @@ namespace Microsoft.Midi.ConsoleApp
         }
 
 
-        bool _hasEndpointDisconnected = false;
+//        bool _hasEndpointDisconnected = false;
         bool _continueWatchingDevice = true;
 
         private void MonitorEndpointConnectionStatusInTheBackground(string endpointId)
@@ -126,7 +126,7 @@ namespace Microsoft.Midi.ConsoleApp
                 {
                     if (e.EndpointDeviceId.ToLower() == endpointId.ToLower())
                     {
-                        _hasEndpointDisconnected = true;
+                    //    _hasEndpointDisconnected = true;
                         _continueWatchingDevice = false;
 
                         watcher.Stop();

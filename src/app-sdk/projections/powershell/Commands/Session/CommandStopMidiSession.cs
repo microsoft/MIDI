@@ -21,10 +21,15 @@ namespace WindowsMidiServices
     public class CommandStopMidiSession : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public MidiSession Session { get; set; }
+        public MidiSession? Session { get; set; }
 
         protected override void ProcessRecord()
         {
+            if (Session == null)
+            {
+                throw new ArgumentNullException("Session is null.");
+            }
+
             if (Session.BackingSession != null)
             {
                 WriteVerbose("MIDI Session stopped.");

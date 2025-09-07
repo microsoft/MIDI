@@ -16,17 +16,19 @@ using System.Management.Automation;
 using System.Text;
 using System.Threading.Tasks;
 
+#pragma warning disable CS8305
+
 namespace WindowsMidiServices
 {
     [Cmdlet(VerbsLifecycle.Start, "MidiBeatClock")]
     public class CommandStartMidiBeatClock : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public MidiEndpointConnection Connection { get; set; }
+        public MidiEndpointConnection? Connection { get; set; }
 
 
         [Parameter(Mandatory = true, Position = 1)]
-        public byte[] GroupNumbers { get; set; }
+        public byte[] GroupNumbers { get; set; } = [];
 
 
         [Parameter(Mandatory = false, Position = 2)]
@@ -72,7 +74,11 @@ namespace WindowsMidiServices
             }
 
             var destinations = new List<MidiClockDestination>();
-            destinations.Add(new MidiClockDestination(Connection.BackingConnection, groups));
+
+            if (Connection != null)
+            {
+                destinations.Add(new MidiClockDestination(Connection.BackingConnection, groups));
+            }
 
             var backingClock = new Microsoft.Windows.Devices.Midi2.Utilities.Sequencing.MidiClockGenerator(destinations, Tempo, PulsesPerQuarterNote);
             var result = new MidiClockGenerator(backingClock, SendStopMessage);

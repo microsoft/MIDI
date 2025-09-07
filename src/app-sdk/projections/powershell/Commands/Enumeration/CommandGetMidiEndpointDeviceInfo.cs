@@ -16,13 +16,18 @@ namespace WindowsMidiServices
     public class CommandGetMidiEndpointDeviceInfo : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public string EndpointDeviceId
+        public string? EndpointDeviceId
         {
             get; set;
         }
 
         protected override void ProcessRecord()
         {
+            if (string.IsNullOrEmpty(EndpointDeviceId))
+            {
+                throw new ArgumentNullException("Endpoint Device Id is null or empty.");
+            }
+
             var sdkDevice = Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(EndpointDeviceId);
 
             var device = new MidiEndpointDeviceInfo(sdkDevice);

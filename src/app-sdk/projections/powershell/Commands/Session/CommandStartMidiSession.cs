@@ -22,10 +22,15 @@ namespace WindowsMidiServices
     public class CommandStartMidiSession : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         protected override void ProcessRecord()
         {
+            if (string.IsNullOrEmpty(Name))
+            {
+                throw new ArgumentNullException("Name is null or empty.");
+            }
+
             // todo: check to see if initialized. If not, throw
 
             var backingSession = Microsoft.Windows.Devices.Midi2.MidiSession.Create(Name);

@@ -187,14 +187,14 @@ namespace Microsoft.Midi.ConsoleApp
             }
         }
 
-        bool _disconnected = false;
+    //    bool _disconnected = false;
 
         // Auto-reconnect takes care of the internals. We're just reporting here
         private void Connection_EndpointDeviceReconnected(IMidiEndpointConnectionSource sender, object args)
         {
             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.EndpointReconnected));
 
-            _disconnected = false;
+     //       _disconnected = false;
         }
 
         // Auto-reconnect takes care of the internals. We're just reporting here
@@ -202,7 +202,7 @@ namespace Microsoft.Midi.ConsoleApp
         {
             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
 
-            _disconnected = true;
+     //       _disconnected = true;
         }
 
     }

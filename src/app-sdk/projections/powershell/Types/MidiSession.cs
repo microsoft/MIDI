@@ -16,8 +16,8 @@ namespace WindowsMidiServices
 {
     public class MidiSession
     {
-        public Guid SessionId => BackingSession.SessionId;
-        public string Name => BackingSession.Name;
+        public Guid SessionId => BackingSession!.SessionId;
+        public string Name => BackingSession!.Name;
 
         public bool IsValid => (bool)(BackingSession != null && BackingSession.IsOpen == true);
 

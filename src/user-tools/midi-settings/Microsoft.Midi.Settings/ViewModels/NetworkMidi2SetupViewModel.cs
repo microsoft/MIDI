@@ -61,6 +61,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 // TEMP!
 
+                if (AdvertisedHost == null)
+                {
+                    return;
+                }
+
                 var config = new MidiNetworkClientConnectConfig();
                 config.Comment = AdvertisedHost.FullName;
                 config.Id = ConfigEntryId;

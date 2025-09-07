@@ -16,13 +16,15 @@ using System.Management.Automation;
 using System.Text;
 using System.Threading.Tasks;
 
+#pragma warning disable CS8305
+
 namespace WindowsMidiServices
 {
     [Cmdlet(VerbsLifecycle.Stop, "MidiBeatClock")]
     public class CommandStopMidiBeatClock : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public WindowsMidiServices.MidiClockGenerator ClockGenerator { get; set; }
+        public WindowsMidiServices.MidiClockGenerator? ClockGenerator { get; set; }
 
 
         protected override void ProcessRecord()
