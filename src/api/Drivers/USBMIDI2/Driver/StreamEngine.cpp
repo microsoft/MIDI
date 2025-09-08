@@ -70,6 +70,7 @@ StreamEngine::~StreamEngine()
     Cleanup();
 }
 
+_Use_decl_annotations_
 NTSTATUS
 StreamEngine::Cleanup()
 {
@@ -261,6 +262,49 @@ StreamEngine::HandleIo()
                 "%!FUNC! thread event end with status: %!STATUS!", status);
         }while(true);
     }
+    else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
+    {
+        // application is reading a midi message in, this is traditionally called
+        // midi in.            
+        PVOID waitObjects[] = { m_ThreadExitEvent.get(), m_ReadEvent };
+
+        do
+        {
+            // run until we get a thread exit event.
+            // wait for either a read event indicating data has been read, or thread exit.
+            status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! thread event with status: %!STATUS!", status);
+
+            if (STATUS_WAIT_1 == status)
+            {
+                // process data in the cyclic buffer until either the read buffer is empty
+                // or the write buffer is full.
+
+                // we have a read event, therefore we need to check thresholds
+                ULONG bufferInUse = BufferInUse();
+
+                if (bufferInUse >= READ_BUFFER_MAX_THRESHOLD)
+                {
+                    USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false);
+                }
+                else if (bufferInUse < READ_BUFFER_MIN_THRESHOLD)
+                {
+                    USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), true);
+                }
+                KeResetEvent(m_ReadEvent);
+            }
+            else
+            {
+                // exit event or failure, exit the loop to terminate the thread.
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! thread terminated with status: %!STATUS!", status);
+                break;
+            }
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! thread event end with status: %!STATUS!", status);
+        } while (true);
+    }
 
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
@@ -390,6 +434,39 @@ Return Value:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return true;
+}
+
+_Use_decl_annotations_
+NONPAGED_CODE_SEG
+ULONG
+StreamEngine::BufferInUse()
+{
+    ULONG bufferInUse = 0;
+
+    // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
+    // and read position is empty. (read position is their last read position, write position is our last written).
+    // retrieve our write position first since we know it won't be changing, and their read position second,
+    // so we can have as much free space as possible.
+    ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
+    ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
+
+    // Now we need to calculate the available space, taking into account the looping
+    // buffer.
+    if (midiInReadPosition <= midiInWritePosition)
+    {
+        // if the read position is less than the write position, then the difference between
+        // the read and write position is the buffer in use, same as above.
+        bufferInUse = (midiInWritePosition - midiInReadPosition);
+    }
+    else
+    {
+        // we looped around, the write position is behind the read position.
+        // The difference between the read position and the write position
+        // is the available space
+        bufferInUse = m_BufferSize - (midiInReadPosition - midiInWritePosition);
+    }
+
+    return bufferInUse;
 }
 
 _Use_decl_annotations_
