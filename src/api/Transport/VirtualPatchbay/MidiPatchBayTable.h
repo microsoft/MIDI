@@ -9,8 +9,9 @@
 #pragma once
 
 
-// thread-safe meyers singleton for storing the devices we'll use
 
+
+// thread-safe meyers singleton for storing the devices we'll use
 
 class MidiPatchBayTable
 {

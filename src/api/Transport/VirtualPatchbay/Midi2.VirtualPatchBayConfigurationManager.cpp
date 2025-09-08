@@ -37,15 +37,49 @@ CMidi2VirtualPatchBayConfigurationManager::Initialize(
 }
 
 
+//              "someguid":
+//              {
+//                  "name" : "foobarbaz",
+//                  "uniqueId" : "somethingunique",
+//                  "description" : "this is a virtual port which can be used in routes where we need to intercept midi out and send elsewhere"
+//                  "image" : "path\to\image"
+//              }
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualPatchBayConfigurationManager::ProcessConfigEntryCreateVirtualEndpoint(
+    json::JsonObject const& entry, 
+    json::JsonObject& responseObject) noexcept
+{
+
+
+
+    return S_OK;
+}
+
+
+
+
+
 //"endpointTransportPluginSettings":
 //{
 //    "{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}":
 //    {
 //        "_comment": "Virtual Patch Bay",
-//            "create" :
+//        "create" :
 //        {
-//            "{272357f5-6ab2-4737-b920-466eb94505bb}":
+//            "virtualEndpoints":
 //            {
+//              "someguid":
+//              {
+//                  "name" : "foobarbaz",
+//                  "uniqueId" : "somethingunique",
+//                  "description" : "this is a virtual port which can be used in routes where we need to intercept midi out and send elsewhere"
+//              }
+//            },
+//            "routes":
+//            {
+//              "{272357f5-6ab2-4737-b920-466eb94505bb}":
+//              {
 //                 "name": "Test Fan Out",
 //                 "description" : "A virtual patch bay entry to test fan out",
 //                 "enabled" : true,
@@ -54,7 +88,7 @@ CMidi2VirtualPatchBayConfigurationManager::Initialize(
 //                    {
 //                       "match":
 //                       {
-//                           "SWD" : "somenendpointdeviceidfoobarbazbal0"
+//                           "endpointDeviceId" : "somenendpointdeviceidfoobarbazbal0"
 //                       },
 //                       "groupIndexes" : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 //                    }
@@ -64,7 +98,7 @@ CMidi2VirtualPatchBayConfigurationManager::Initialize(
 //                    {
 //                      "match":
 //                      {
-//                        "SWD" : "foobarbazbal1"
+//                        "endpointDeviceId" : "foobarbazbal1"
 //                      },
 //                      "groupMap" :
 //                      [
@@ -76,7 +110,7 @@ CMidi2VirtualPatchBayConfigurationManager::Initialize(
 //                    {
 //                      "match":
 //                      {
-//                        "SWD" : "foobarbazbal2"
+//                        "endpointDeviceId" : "foobarbazbal2"
 //                      },
 //                      "groupMap" :
 //                      [
@@ -85,13 +119,14 @@ CMidi2VirtualPatchBayConfigurationManager::Initialize(
 //                    {
 //                      "match":
 //                      {
-//                        "SWD" : "foobarbazbal3"
+//                        "endpointDeviceId" : "foobarbazbal3"
 //                      },
 //                      "groupMap" :
 //                      [
 //                      ]
 //                    }
 //                 ]
+//              }
 //            }
 //        }
 //    },
@@ -288,7 +323,7 @@ CMidi2VirtualPatchBayConfigurationManager::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
-    TransportState::Current().Shutdown();
+    LOG_IF_FAILED(TransportState::Current().Shutdown());
 
     m_midiDeviceManager.reset();
     m_midiServiceConfigurationManager.reset();

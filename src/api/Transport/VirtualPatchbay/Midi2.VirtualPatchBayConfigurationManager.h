@@ -28,6 +28,14 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
+    HRESULT ProcessConfigEntryCreateVirtualEndpoint(
+        _In_ json::JsonObject const& entry,
+        _In_ json::JsonObject& responseObject) noexcept;
+
+
+
+
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiServiceConfigurationManager> m_midiServiceConfigurationManager;
 

@@ -98,6 +98,9 @@
     <ClInclude Include="Midi2.VirtualPatchBayTransport.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="virtual_patch_bay_shared_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.VirtualPatchBayTransport.rc">
@@ -108,5 +111,8 @@
     <Midl Include="Midi2VirtualPatchBayTransport.idl">
       <Filter>Source Files</Filter>
     </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
 </Project>

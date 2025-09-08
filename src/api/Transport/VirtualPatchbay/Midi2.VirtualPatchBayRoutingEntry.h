@@ -29,7 +29,7 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    std::wstring m_associationId;
+    std::wstring m_configIdentifier;
 
     std::wstring m_name;
     std::wstring m_description;

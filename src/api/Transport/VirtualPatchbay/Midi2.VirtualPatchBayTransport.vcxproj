@@ -147,7 +147,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -165,7 +165,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -183,7 +183,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -220,7 +220,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -237,7 +237,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -264,7 +264,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -308,6 +308,7 @@
     <ClInclude Include="MidiPatchBayTable.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="virtual_patch_bay_shared_types.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.VirtualPatchBayTransport.rc" />
