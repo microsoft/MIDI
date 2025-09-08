@@ -41,21 +41,21 @@ class Build : NukeBuild
         Stable
     }
 
-    MSBuildVerbosity BuildVerbosity => MSBuildVerbosity.Quiet;
+    MSBuildVerbosity BuildVerbosity => MSBuildVerbosity.Minimal;
     LogLevel LoggingLevel => LogLevel.Normal;
 
     // --------------------------------------------------------------------------------------
     // Version information to change 
     // --------------------------------------------------------------------------------------
 
-    MidiBuildType BuildType => MidiBuildType.RC;
+    MidiBuildType BuildType => MidiBuildType.RC; 
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
     const UInt16 BuildVersionPatch = 14;
 
     const UInt16 BuildVersionPreviewNumber = 1;
-    string VersionName => "Release Candidate " + BuildVersionPreviewNumber;
+    string VersionName => "SDK Release Candidate " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
 
@@ -132,11 +132,7 @@ class Build : NukeBuild
 
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
 
-    AbsolutePath InDevelopmentServiceComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup-in-dev";
-
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
-
-
 
     AbsolutePath UserToolsRootFolder => SourceRootFolder / "user-tools";
 
@@ -158,7 +154,7 @@ class Build : NukeBuild
     //    AbsolutePath ElectronJSSamplesRootFolder => SamplesRootFolder / "electron-js";
 
     AbsolutePath SetupBundleInfoIncludeFile => StagingRootFolder / "version" / "BundleInfo.wxi";
-    AbsolutePath BuildVersionFile => StagingRootFolder / "version" / "BuildNumber.txt";
+    AbsolutePath BuildVersionFile => StagingRootFolder / "version" / "SDK_BuildNumber.txt";
 
     AbsolutePath SdkVersionFilesFolder => StagingRootFolder / "version";
     AbsolutePath SdkVersionHeaderFile => SdkVersionFilesFolder / "WindowsMidiServicesSdkRuntimeVersion.h";
@@ -170,8 +166,9 @@ class Build : NukeBuild
 
     AbsolutePath SamplesCSWinRTSolutionFolder => SamplesRootFolder / "csharp-net";
 
-
-    string[] SdkPlatforms => new string[] { "x64", "Arm64EC"  };
+    
+    string[] SdkPlatformsIncludingAnyCpu => new string[] { "x64", "Arm64EC", "AnyCPU" };
+    string[] SdkPlatforms => new string[] { "x64", "Arm64EC" };
     string[] ServiceAndApiPlatforms => new string[] { "x64", "Arm64" };
     string[] ServiceAndApiPlatformsAll => new string[] { "x64", "Arm64", "Arm64EC" };   // the order here matters because the dependencies in the solution aren't perfect
     string[] ToolsPlatforms => new string[] { "x64", "Arm64" };
@@ -183,13 +180,11 @@ class Build : NukeBuild
 
     Dictionary<string, string> BuiltSdkRuntimeInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltInBoxInstallers = new Dictionary<string, string>();
-    Dictionary<string, string> BuiltPreviewInBoxInstallers = new Dictionary<string, string>();
-
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
 
-    Target Prerequisites => _ => _
+    Target T_Prerequisites => _ => _
         .Executes(() =>
         {
             Logging.Level = LoggingLevel;
@@ -243,21 +238,24 @@ class Build : NukeBuild
         });
 
 
-    Target CreateVersionIncludes => _ => _
-        .DependsOn(Prerequisites)
+    Target T_CreateVersionIncludes => _ => _
+        .DependsOn(T_Prerequisites)
         .Executes(() =>
         {
             string buildSource = "GitHub Preview";
             string versionName = VersionName;
             //string versionString = BuildVersionFullString;
 
-            //string buildDate = BuildDate.ToString("yyyy-MM-dd");
+            string buildVersionMajor = BuildVersionMajor.ToString();
+            string buildVersionMinor = BuildVersionMinor.ToString();
+            string buildVersionPatch = BuildVersionPatch.ToString();
+
+            string buildDate = BuildDate.ToString("yyyy-MM-dd");
 
             // create directories if they do not exist
 
             ThisReleaseFolder.CreateDirectory();
-            //SdkVersionFilesFolder.CreateDirectory();
-
+            SdkVersionFilesFolder.CreateDirectory();
 
             var msbuildProperties = new Dictionary<string, object>();
             msbuildProperties.Add("MidiBuildType", $"{BuildType.ToString().ToLower()}");
@@ -269,145 +267,22 @@ class Build : NukeBuild
             msbuildProperties.Add("MidiBuildVersionBuildNumber", BuildVersionBuildNumber);
             msbuildProperties.Add("MidiBuildVersionPreviewString", $"{BuildVersionPreviewString}");
 
-            msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version" ).ToString());
-
-
-            
+            msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version").ToString());
 
             MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
                 .SetMaxCpuCount(null)
-                .SetProcessArgumentConfigurator(_ => _ .Add("/t:TransformAll"))
+                .SetProcessArgumentConfigurator(_ => _.Add("/t:TransformAll"))
                 .SetProperties(msbuildProperties)
                 .SetVerbosity(MSBuildVerbosity.Normal)
                 .EnableNodeReuse()
             );
 
-
-
-
-#if false
-
-            // json version for published SDK releases. This needs to be manually copied to /docs/version/sdk_version.json
-            // if this ends up being a published release
-
-            var SdkVersionJsonFile = ThisReleaseFolder / "sdk_version.json";
-
-            using (StreamWriter writer = System.IO.File.CreateText(SdkVersionJsonFile))
-            {
-                writer.WriteLine("{");
-                writer.WriteLine("    \"releases\":");
-                writer.WriteLine("    [");
-                writer.WriteLine("        {");
-                writer.WriteLine($"            \"type\": \"{BuildType.ToString().ToLower()}\",");
-                writer.WriteLine($"            \"source\": \"{buildSource}\",");
-                writer.WriteLine($"            \"name\": \"{versionName}\",");
-                writer.WriteLine($"            \"description\": \"Replace this text with a summary of this SDK update\",");
-                writer.WriteLine($"            \"buildDate\": \"{buildDate}\",");
-                writer.WriteLine($"            \"versionFull\": \"{versionString}\",");
-                writer.WriteLine($"            \"versionMajor\": {buildVersionMajor},");
-                writer.WriteLine($"            \"versionMinor\": {buildVersionMinor},");
-                writer.WriteLine($"            \"versionPatch\": {buildVersionPatch},");
-                writer.WriteLine($"            \"versionBuildNumber\": {BuildVersionBuildNumber},");
-                writer.WriteLine($"            \"preview\": \"{BuildVersionPreviewString}\",");
-                writer.WriteLine($"            \"releaseNotesUri\": \"https://github.com/microsoft/MIDI/releases/tag/ (TODO)\",");
-                writer.WriteLine($"            \"directDownloadUriX64\": \"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64\",");
-                writer.WriteLine($"            \"directDownloadUriArm64\": \"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64\"");
-                writer.WriteLine("        }");
-                writer.WriteLine("    ]");
-                writer.WriteLine("}");
-            }
-
-            bool isPreview = BuildType == MidiBuildType.Preview;
-
-            // create .h file for SDK and related tools
-
-            using (StreamWriter writer = System.IO.File.CreateText(NuGetVersionHeaderFile))
-            {
-                writer.WriteLine("// this file has been auto-generated by the Windows MIDI Services build process");
-                writer.WriteLine("// the version information here represents the NuGet package version your app was");
-                writer.WriteLine("// built against");
-                writer.WriteLine();
-                writer.WriteLine("#ifndef WINDOWS_MIDI_SERVICES_NUGET_VERSION_INCLUDE");
-                writer.WriteLine("#define WINDOWS_MIDI_SERVICES_NUGET_VERSION_INCLUDE");
-                writer.WriteLine();
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_IS_PREVIEW                         {isPreview.ToString().ToLower()}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L\"{buildSource}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L\"{buildDate}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L\"{versionName}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L\"{versionString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      {buildVersionMajor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      {buildVersionMinor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      {buildVersionPatch}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               {BuildVersionBuildNumber}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L\"{BuildVersionPreviewString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L\"{BuildVersionFileFullString}\"");
-                writer.WriteLine();
-                writer.WriteLine("#endif");
-                writer.WriteLine();
-            }
-
-            using (StreamWriter writer = System.IO.File.CreateText(SdkVersionHeaderFile))
-            {
-                writer.WriteLine("// this file has been auto-generated by the Windows MIDI Services build process");
-                writer.WriteLine("// SDK runtime version file");
-                writer.WriteLine();
-                writer.WriteLine("#ifndef WINDOWS_MIDI_SERVICES_SDK_RUNTIME_VERSION_INCLUDE");
-                writer.WriteLine("#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_VERSION_INCLUDE");
-                writer.WriteLine();
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_IS_PREVIEW                       {isPreview.ToString().ToLower()}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_SOURCE                           L\"{buildSource}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_DATE                             L\"{buildDate}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_NAME                     L\"{versionName}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FULL                     L\"{versionString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR                    {buildVersionMajor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR                    {buildVersionMinor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_PATCH                    {buildVersionPatch}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER             {BuildVersionBuildNumber}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_PREVIEW                          L\"{BuildVersionPreviewString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FILE                     L\"{BuildVersionFileFullString}\"");
-                writer.WriteLine();
-                writer.WriteLine("#endif");
-                writer.WriteLine();
-            }
-
-            // create .cs file for console and settings app
-
-            using (StreamWriter writer = System.IO.File.CreateText(CommonVersionCSharpFile))
-            {
-                writer.WriteLine("// this file has been auto-generated by the Windows MIDI Services build process");
-                writer.WriteLine("// this information is the version from the SDK projection, not the SDK runtime");
-                writer.WriteLine("// the version information here represents the NuGet package version your app was");
-                writer.WriteLine("// built against");
-                writer.WriteLine();
-
-                writer.WriteLine("namespace Microsoft.Windows.Devices.Midi2.Common");
-                writer.WriteLine("{");
-                writer.WriteLine("\tpublic static class MidiNuGetBuildInformation");
-                writer.WriteLine("\t{");
-                writer.WriteLine($"\t\tpublic const bool IsPreview = {isPreview.ToString().ToLower()};");
-                writer.WriteLine($"\t\tpublic const string Source = \"{buildSource}\";");
-                writer.WriteLine($"\t\tpublic const string BuildDate = \"{buildDate}\";");
-                writer.WriteLine($"\t\tpublic const string Name = \"{versionName}\";");
-                writer.WriteLine($"\t\tpublic const string BuildFullVersion = \"{versionString}\";");
-                writer.WriteLine($"\t\tpublic const ushort VersionMajor = {buildVersionMajor};");
-                writer.WriteLine($"\t\tpublic const ushort VersionMinor = {buildVersionMinor};");
-                writer.WriteLine($"\t\tpublic const ushort VersionPatch = {buildVersionPatch};");
-                writer.WriteLine($"\t\tpublic const ushort VersionBuildNumber = {BuildVersionBuildNumber};");
-                writer.WriteLine($"\t\tpublic const string Preview = \"{BuildVersionPreviewString}\";");
-                writer.WriteLine($"\t\tpublic const string AssemblyFullVersion = \"{BuildVersionAssemblyFullString}\";");
-                writer.WriteLine($"\t\tpublic const string FileFullVersion = \"{BuildVersionFileFullString}\";");
-                writer.WriteLine("\t}");
-                writer.WriteLine("}");
-                writer.WriteLine();
-            }
-
-#endif            
         });
 
-    Target BuildServiceAndPlugins => _ => _
-        .DependsOn(CreateVersionIncludes)
-        .DependsOn(Prerequisites)
+    Target T_BuildServiceAndPlugins => _ => _
+        .DependsOn(T_CreateVersionIncludes)
+        .DependsOn(T_Prerequisites)
         .Executes(() =>
     {
         // this needs to build for Release before building for debug. 
@@ -566,63 +441,11 @@ class Build : NukeBuild
     });
 
 
-    Target BuildInDevelopmentServicePlugins => _ => _
-        .DependsOn(CreateVersionIncludes)
-        .DependsOn(Prerequisites)
-        //.DependsOn(BuildServiceAndPlugins)
-        .Executes(() =>
-        {
-            foreach (var platform in ServiceAndApiPlatforms)
-            {
-                string solutionDir = ApiSolutionFolder.ToString() + @"\";
 
-                var msbuildProperties = new Dictionary<string, object>();
-                msbuildProperties.Add("Platform", platform);
-                msbuildProperties.Add("SolutionDir", solutionDir);  // to include trailing slash
-                msbuildProperties.Add("NoWarn", "MIDL2111");        // IDL identifier length warning
-
-                Console.Out.WriteLine($"----------------------------------------------------------------------");
-                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-                Console.Out.WriteLine($"Platform:    {platform}");
-
-
-                MSBuildTasks.MSBuild(_ => _
-                    .SetTargetPath(ApiSolutionFolder / "midi2-service-component-preview.sln")
-                    .SetMaxCpuCount(null)
-                    /*.SetOutDir(outputFolder) */
-                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
-                    /*.SetTargets("Build") */
-                    .SetProperties(msbuildProperties)
-                    .SetConfiguration(ServiceBuildConfiguration)
-                    .SetVerbosity(BuildVerbosity)
-                    .EnableNodeReuse()
-                );
-
-                // copy binaries to staging folder
-                var stagingFiles = new List<AbsolutePath>();
-
-                // only in-proc files, like the MidiSrvTransport, are Arm64EC
-                //var servicePlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64" : "x64";
-                var servicePlatform = platform;
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.NetworkMidiTransport.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.NetworkMidiTransport.pdb");
-                // stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualPatchBay.dll");
-
-                foreach (var file in stagingFiles)
-                {
-                    FileSystemTasks.CopyFileToDirectory(file, ApiStagingFolder / servicePlatform, FileExistsPolicy.Overwrite, true);
-                }
-            }
-        });
-
-
-
-    Target BuildAndPackAllAppSDKs => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(CreateVersionIncludes)
-        //.DependsOn(BuildServiceAndPlugins)
-        //.DependsOn(BuildInDevelopmentServicePlugins)
+    Target T_BuildAndPackAllAppSDKs => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_CreateVersionIncludes)
+        .DependsOn(T_BuildServiceAndPlugins)
         .Executes(() =>
         {
         //    bool wxsWritten = false;
@@ -662,8 +485,10 @@ class Build : NukeBuild
 
             //        string rid = $"net8.0-windows{TargetWindowsSdkVersion}";
 
-            foreach (var sourcePlatform in SdkPlatforms)
+            foreach (var sourcePlatform in SdkPlatformsIncludingAnyCpu)
             {
+                if (sourcePlatform == "AnyCPU") continue;
+
                 var sdkBinaries = new List<AbsolutePath>();
 
                 sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.winmd");
@@ -731,8 +556,8 @@ class Build : NukeBuild
         });
 
 
-    Target BuildAppSDKToolsAndTests => _ => _
-        .DependsOn(BuildAndPackAllAppSDKs)
+    Target T_BuildAppSDKToolsAndTests => _ => _
+        .DependsOn(T_BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
 
@@ -836,15 +661,15 @@ class Build : NukeBuild
         });
 
 
-    Target BuildAppSdkRuntimeAndToolsInstaller => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(CreateVersionIncludes)
-        .DependsOn(BuildConsoleApp)
-        .DependsOn(BuildSettingsApp)
-        .DependsOn(BuildPowerShellProjection)
-        .DependsOn(BuildAndPackAllAppSDKs)
-        .DependsOn(BuildAppSDKToolsAndTests)
-        .DependsOn(CopySharedDesignAssets)
+    Target T_BuildAppSdkRuntimeAndToolsInstaller => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_CreateVersionIncludes)
+        .DependsOn(T_BuildConsoleApp)
+        .DependsOn(T_BuildSettingsApp)
+        .DependsOn(T_BuildPowerShellProjection)
+        .DependsOn(T_BuildAndPackAllAppSDKs)
+        .DependsOn(T_BuildAppSDKToolsAndTests)
+        .DependsOn(T_CopySharedDesignAssets)
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
@@ -953,9 +778,9 @@ class Build : NukeBuild
         }
     }
 
-    Target BuildServiceAndPluginsInstaller => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildServiceAndPlugins)
+    Target T_BuildServiceAndPluginsInstaller => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildServiceAndPlugins)
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
@@ -1012,73 +837,18 @@ class Build : NukeBuild
             }
         });
 
-    Target BuildInDevelopmentServicePluginsInstaller => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildInDevelopmentServicePlugins)
-        .Executes(() =>
-    {
-        // we build for Arm64 and x64. No EC required here
-        foreach (var platform in InstallerPlatforms)
-        {
-            UpdateSetupBundleInfoIncludeFile(platform);
-
-            //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
-
-            string solutionDir = InDevelopmentServiceComponentsSetupSolutionFolder.ToString() + @"\";
-
-            var msbuildProperties = new Dictionary<string, object>();
-            msbuildProperties.Add("Platform", platform);
-            msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
-
-            Console.Out.WriteLine($"----------------------------------------------------------------------");
-            Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-            Console.Out.WriteLine($"Platform:    {platform}");
-
-            NuGetTasks.NuGetRestore(_ => _
-                .SetProcessWorkingDirectory(solutionDir)
-                .SetSource(@"https://api.nuget.org/v3/index.json")
-                .SetSolutionDirectory(solutionDir)
-            //.SetConfigFile(packagesConfigFullPath)
-            );
-
-            var output = MSBuildTasks.MSBuild(_ => _
-                .SetTargetPath(InDevelopmentServiceComponentsSetupSolutionFolder / "midi-services-in-box-preview-setup.sln")
-                .SetMaxCpuCount(null)
-                /*.SetOutDir(outputFolder) */
-                /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
-                /*.SetTargets("Build") */
-                .SetProperties(msbuildProperties)
-                .SetConfiguration(Configuration.Release)
-                .SetTargets("Clean", "Rebuild")
-                .SetVerbosity(BuildVerbosity)
-                .EnableNodeReuse()
-            );
-
-            string newInstallerName = $"Windows MIDI Services (Preview Service Plugins) {BuildVersionFullString}-{platform.ToLower()}.exe";
-
-            FileSystemTasks.CopyFile(
-                InDevelopmentServiceComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInDevelopmentServiceComponentsSetup.exe",
-                ThisReleaseFolder / newInstallerName);
-
-            BuiltPreviewInBoxInstallers[platform.ToLower()] = newInstallerName;
-
-        }
-    });
-
-
-
-    Target BuildUserToolsSharedComponents => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildAndPackAllAppSDKs)
+    Target T_BuildUserToolsSharedComponents => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
             // build x64 and Arm64
         });
 
-    Target BuildSettingsApp => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildAndPackAllAppSDKs)
-        .DependsOn(BuildUserToolsSharedComponents)
+    Target T_BuildSettingsApp => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildAndPackAllAppSDKs)
+        .DependsOn(T_BuildUserToolsSharedComponents)
         .Executes(() =>
         {
             var solution = MidiSettingsSolutionFolder / "midi-settings.sln";
@@ -1278,10 +1048,10 @@ class Build : NukeBuild
 
 
 
-    Target CopySharedDesignAssets => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildAndPackAllAppSDKs)
-        .DependsOn(BuildUserToolsSharedComponents)
+    Target T_CopySharedDesignAssets => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildAndPackAllAppSDKs)
+        .DependsOn(T_BuildUserToolsSharedComponents)
         .Executes(() =>
         {
             var designSourceFolder = RootDirectory / "design";
@@ -1313,10 +1083,10 @@ class Build : NukeBuild
 
 
 
-    Target BuildConsoleApp => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildAndPackAllAppSDKs)
-        .DependsOn(BuildUserToolsSharedComponents)
+    Target T_BuildConsoleApp => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildAndPackAllAppSDKs)
+        .DependsOn(T_BuildUserToolsSharedComponents)
         .Executes(() =>
         {
             var solution = MidiConsoleSolutionFolder / "midi-console.sln";
@@ -1410,9 +1180,9 @@ class Build : NukeBuild
         });
 
 
-    Target BuildPowerShellProjection => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildAndPackAllAppSDKs)
+    Target T_BuildPowerShellProjection => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildAndPackAllAppSDKs)
         .Executes(() =>
     {
         var solution = MidiPowerShellSolutionFolder / "midi-powershell.sln";
@@ -1602,8 +1372,8 @@ class Build : NukeBuild
     }
 
 
-    Target BuildCppSamples => _ => _
-        .DependsOn(BuildAndPackAllAppSDKs)
+    Target T_BuildCppSamples => _ => _
+        .DependsOn(T_BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
             var solution = SamplesCppWinRTSolutionFolder / "cpp-winrt-samples.sln";
@@ -1711,8 +1481,8 @@ class Build : NukeBuild
         });
 
 
-    Target BuildCSharpSamples => _ => _
-        .DependsOn(BuildAndPackAllAppSDKs)
+    Target T_BuildCSharpSamples => _ => _
+        .DependsOn(T_BuildAndPackAllAppSDKs)
         .Executes(() =>
     {
         var solution = SamplesCSWinRTSolutionFolder / "csharp-net-samples.sln";
@@ -1797,8 +1567,8 @@ class Build : NukeBuild
     readonly Tool NodeGyp;
 
 
-    Target BuildAndPackageElectronProjection => _ => _
-        .DependsOn(BuildAndPackAllAppSDKs)
+    Target T_BuildAndPackageElectronProjection => _ => _
+        .DependsOn(T_BuildAndPackAllAppSDKs)
         //.DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
         .Executes(() =>
     {
@@ -1984,12 +1754,12 @@ class Build : NukeBuild
     });
 
 
-    Target ZipSamples => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(CreateVersionIncludes)
-        .DependsOn(BuildAndPackAllAppSDKs)
-        .DependsOn(BuildCSharpSamples)
-        .DependsOn(BuildCppSamples)
+    Target T_ZipSamples => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_CreateVersionIncludes)
+        .DependsOn(T_BuildAndPackAllAppSDKs)
+        .DependsOn(T_BuildCSharpSamples)
+        .DependsOn(T_BuildCppSamples)
         .Executes(() =>
         {
             var samplesFolder = RootDirectory / "samples" ;
@@ -2037,9 +1807,9 @@ class Build : NukeBuild
         });
 
 
-    Target ZipServicePdbs => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildServiceAndPlugins)
+    Target T_ZipServicePdbs => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildServiceAndPlugins)
         .Executes(() =>
     {
         foreach (var platform in new string[]{ "arm64", "x64"})
@@ -2056,9 +1826,9 @@ class Build : NukeBuild
 
     });
 
-    Target ZipPowershellDevUtilities => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(CreateVersionIncludes)
+    Target T_ZipPowershellDevUtilities => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_CreateVersionIncludes)
         .Executes(() =>
         {
             var regHelpersFolder = RootDirectory / "src" / "dev-tools" / "reg-helpers";
@@ -2066,9 +1836,9 @@ class Build : NukeBuild
             regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
         });
 
-    Target ZipWdmaud2 => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(BuildServiceAndPlugins)
+    Target T_ZipWdmaud2 => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildServiceAndPlugins)
         .Executes(() =>
         {
             var zipRoot = (StagingRootFolder / "wdmaud2").CreateOrCleanDirectory();
@@ -2126,20 +1896,21 @@ class Build : NukeBuild
 
 
     Target BuildAndPublishAll => _ => _
-        .DependsOn(Prerequisites)
-        .DependsOn(CreateVersionIncludes)
-        .DependsOn(BuildServiceAndPluginsInstaller)
-        .DependsOn(BuildInDevelopmentServicePluginsInstaller)
-        .DependsOn(BuildConsoleApp)
-        .DependsOn(BuildSettingsApp)
-        .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_CreateVersionIncludes)
+        .DependsOn(T_BuildServiceAndPlugins)
+        .DependsOn(T_BuildServiceAndPluginsInstaller)
+        .DependsOn(T_BuildAndPackAllAppSDKs)
+        .DependsOn(T_BuildConsoleApp)
+        .DependsOn(T_BuildSettingsApp)
+        .DependsOn(T_BuildAppSdkRuntimeAndToolsInstaller)
       //  .DependsOn(BuildAndPackageElectronProjection)
-        .DependsOn(BuildCppSamples)
-        .DependsOn(BuildCSharpSamples)
-        .DependsOn(ZipWdmaud2)
-        .DependsOn(ZipPowershellDevUtilities)
-        .DependsOn(ZipSamples)
-        .DependsOn(ZipServicePdbs)
+        .DependsOn(T_BuildCppSamples)
+        .DependsOn(T_BuildCSharpSamples)
+        .DependsOn(T_ZipWdmaud2)
+        .DependsOn(T_ZipPowershellDevUtilities)
+        .DependsOn(T_ZipSamples)
+        .DependsOn(T_ZipServicePdbs)
         .Executes(() =>
         {
             if (BuiltInBoxInstallers.Count > 0)
@@ -2156,19 +1927,8 @@ class Build : NukeBuild
                 Console.WriteLine("No in-box installers built.");
             }
 
-            if (BuiltPreviewInBoxInstallers.Count > 0)
-            {
-                Console.WriteLine("\nBuilt in-box preview installers:");
+         
 
-                foreach (var item in BuiltPreviewInBoxInstallers)
-                {
-                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("No in-box preview installers built.");
-            }
 
             if (BuiltSdkRuntimeInstallers.Count > 0)
             {

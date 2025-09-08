@@ -16,7 +16,7 @@ namespace WindowsMidiServices
 {
     public class MidiMessageInfo
     {
-        public string MessageName { get; internal set; }
+        public string? MessageName { get; internal set; }
 
         public Microsoft.Windows.Devices.Midi2.MidiMessageType MessageType { get; internal set; }
 
@@ -25,9 +25,9 @@ namespace WindowsMidiServices
 
         public UInt16 ExpectedWordCount { get; internal set; }
 
-        public UInt32[] Words { get; internal set; }
+        public UInt32[] Words { get; internal set; } = [];
 
-        public string WordsHex { get; internal set; }
+        public string? WordsHex { get; internal set; }
 
         public bool MessageTypeHasGroupField { get; internal set; }
         public bool MessageTypeHasChannelField { get; internal set; }

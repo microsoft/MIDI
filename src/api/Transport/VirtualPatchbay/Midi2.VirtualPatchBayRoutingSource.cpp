@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "pch.h"
@@ -129,7 +129,7 @@ CMidi2VirtualPatchBayRoutingSource::SetEndpointCallback(
 }
 
 HRESULT
-CMidi2VirtualPatchBayRoutingSource::Cleanup()
+CMidi2VirtualPatchBayRoutingSource::Shutdown()
 {
     m_router = nullptr;
 

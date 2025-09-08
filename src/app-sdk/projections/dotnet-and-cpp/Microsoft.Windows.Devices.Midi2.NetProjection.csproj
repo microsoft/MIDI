@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<Platform>x64</Platform>
-	<Platforms>x64;ARM64</Platforms>
+	<Platforms>x64;ARM64;AnyCPU</Platforms>
   </PropertyGroup>
 
 	<PropertyGroup>
@@ -61,9 +61,18 @@
       <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_x64</DefineConstants>
         <PlatformTarget>x64</PlatformTarget>
     </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_x64</DefineConstants>
+      <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
         <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_x64</DefineConstants>
         <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+      <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_x64</DefineConstants>
+      <PlatformTarget>x64</PlatformTarget>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">

@@ -17,14 +17,6 @@
 
 #include <hstring.h>
 
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.Foundation.Collections.h>
-#include <winrt/Windows.Devices.Enumeration.h>
-#include <winrt/Windows.Data.Json.h>
-
-namespace json = ::winrt::Windows::Data::Json;
-
-
 #include <assert.h>
 #include <devioctl.h>
 #include <wrl\implements.h>
@@ -64,8 +56,20 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "setupapi.h"
 //#include "Devpkey.h"
 
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
+
+#undef GetObject
+#include <winrt/Windows.Data.Json.h>
+namespace json = ::winrt::Windows::Data::Json;
+namespace enumeration = ::winrt::Windows::Devices::Enumeration;
+
+
+
 // AbstractionUtilities
 #include "wstring_util.h"
+#include "hstring_util.h"
 namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
@@ -76,32 +80,32 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "json_helpers.h"
 #include "swd_helpers.h"
 #include "resource_util.h"
+#include "json_transport_command_helper.h"
+
 #include "ump_helpers.h"
-#include "midi_ump.h"
+//#include "midi_ump.h"
 
-#include "MidiXProc.h"
+//#include "MidiXProc.h"
 
+#include "Midi2VirtualPatchBayTransport_i.c"
+#include "Midi2VirtualPatchBayTransport.h"
 
 #include "strsafe.h"
 
-#include "abstraction_defs.h"
-
-#include "Midi2VirtualPatchBayAbstraction_i.c"
-#include "Midi2VirtualPatchBayAbstraction.h"
-
+#include "transport_defs.h"
 #include "dllmain.h"
 
-
-
 class CMidi2VirtualPatchBayEndpointManager;
-class AbstractionState;
+class CMidi2VirtualPatchBayConfigurationManager;
 class CMidi2VirtualPatchBayRoutingSource;
 class CMidi2VirtualPatchBayRoutingDestination;
 class CMidi2VirtualPatchBayRoutingEntry;
 
+#include "TransportState.h"
+
 #include "MidiPatchBayTable.h"
 
-#include "Midi2.VirtualPatchBayAbstraction.h"
+#include "Midi2.VirtualPatchBayTransport.h"
 #include "Midi2.VirtualPatchBayEndpointManager.h"
 #include "Midi2.VirtualPatchBayConfigurationManager.h"
 #include "Midi2.VirtualPatchBayPluginMetadataProvider.h"
@@ -109,7 +113,3 @@ class CMidi2VirtualPatchBayRoutingEntry;
 #include "Midi2.VirtualPatchBayRoutingEntry.h"
 #include "Midi2.VirtualPatchBayRoutingSource.h"
 #include "Midi2.VirtualPatchBayRoutingDestination.h"
-
-
-#include "AbstractionState.h"
-

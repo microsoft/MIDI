@@ -20,10 +20,10 @@ namespace WindowsMidiServices
     public class CommandSendMidiMessage : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public MidiEndpointConnection Connection { get; set; }
+        public MidiEndpointConnection? Connection { get; set; }
 
         [Parameter(Mandatory = true, Position = 1)]
-        public UInt32[] Words { get; set; }
+        public UInt32[] Words { get; set; } = [];
 
         [Parameter()]
         public UInt64 Timestamp { get; set; } = 0;
@@ -33,6 +33,16 @@ namespace WindowsMidiServices
             if (Words.Length > 4 || Words.Length < 1)
             {
                 throw new ArgumentException("MIDI Words must comprise one and only one valid MIDI UMP message (1-4 32-bit words)");
+            }
+
+            if (Connection == null)
+            {
+                throw new ArgumentNullException("Connection is null.");
+            }
+
+            if (Connection.BackingConnection == null)
+            {
+                throw new ArgumentNullException("Underlying connection is null.");
             }
 
             // todo: some data validation to ensure the words are a single message only

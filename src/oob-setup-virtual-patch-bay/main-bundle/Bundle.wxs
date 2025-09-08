@@ -14,10 +14,10 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
     <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
-    <Bundle Name="Windows MIDI Services Network MIDI 2.0 Preview" 
+    <Bundle Name="Windows MIDI Services Virtual Patch Bay Preview" 
             Manufacturer="Microsoft Corporation" 
             Version="$(SetupVersionNumber)" 
-            UpgradeCode="92fb6982-e97d-476f-8d27-44500086a690">
+            UpgradeCode="328f0322-0178-4f10-8a14-d499c6229ba3">
 
         <!-- Require Dev Mode to be turned on to run this installer -->
         <WixVariable Id="DevModeEnabled" Value="0" />
@@ -70,11 +70,11 @@
 
       <PackageGroup Id="MidiServicesPackages">
             <MsiPackage
-                Id="WindowsMIDIServicesInDevelopmentSetup"
+                Id="WindowsMIDIServicesVirtualPatchBaySetup"
                 Vital="true"
                 Permanent="no"
                 Compressed="yes"
-                SourceFile="WindowsMIDIServicesInDevelopmentSetup.msi">
+                SourceFile="WindowsMIDIServicesVirtualPatchBaySetup.msi">
             </MsiPackage>
 
         </PackageGroup>

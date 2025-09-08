@@ -16,8 +16,8 @@ namespace WindowsMidiServices
 {
     public class MidiEndpointConnection
     {
-        public Guid ConnectionId => BackingConnection.ConnectionId;
-        public string EndpointDeviceId => BackingConnection.ConnectedEndpointDeviceId;
+        public Guid ConnectionId => BackingConnection!.ConnectionId;
+        public string EndpointDeviceId => BackingConnection!.ConnectedEndpointDeviceId;
 
         internal Microsoft.Windows.Devices.Midi2.MidiEndpointConnection? BackingConnection { get; set; }
 

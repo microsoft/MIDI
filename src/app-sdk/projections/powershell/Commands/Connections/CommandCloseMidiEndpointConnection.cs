@@ -21,23 +21,32 @@ namespace WindowsMidiServices
     public class CommandCloseMidiEndpointConnection : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public MidiSession Session
+        public MidiSession? Session
         {
             get; set;
         }
 
         [Parameter(Mandatory = true, Position = 1)]
-        public MidiEndpointConnection Connection
+        public MidiEndpointConnection? Connection
         {
             get; set;
         }
 
         protected override void ProcessRecord()
         {
+            if (Session == null)
+            {
+                throw new ArgumentNullException("Session is null.");
+            }
+
             if (Session.BackingSession == null)
             {
-                // todo: throw
-                return;
+                throw new ArgumentNullException("Underlying session is null.");
+            }
+
+            if (Connection == null)
+            {
+                throw new ArgumentNullException("Endpoint connection is null.");
             }
 
             Guid id = Connection.ConnectionId;

@@ -6,6 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
 #pragma once
 
 #include "pch.h"

@@ -3,14 +3,15 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
 
 
-// thread-safe meyers singleton for storing the devices we'll use
 
+
+// thread-safe meyers singleton for storing the devices we'll use
 
 class MidiPatchBayTable
 {

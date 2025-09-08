@@ -12,17 +12,32 @@
 class CMidi2VirtualPatchBayConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiAbstractionConfigurationManager>
+    IMidiTransportConfigurationManager>
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IUnknown* MidiDeviceManager, _In_ IUnknown* MidiServiceConfigurationManagerInterface));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* Response));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Initialize(
+        _In_ GUID transportId, 
+        _In_ IMidiDeviceManager* midiDeviceManager, 
+        _In_ IMidiServiceConfigurationManager* midiServiceConfigurationManager));
+
+    STDMETHOD(UpdateConfiguration(
+        _In_ LPCWSTR configurationJsonSection, 
+        _Out_ LPWSTR* responseJson));
+
+    STDMETHOD(Shutdown)();
 
 private:
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
-    wil::com_ptr_nothrow<IMidiServiceConfigurationManagerInterface> m_MidiServiceConfigurationManagerInterface;
+    HRESULT ProcessConfigEntryCreateVirtualEndpoint(
+        _In_ json::JsonObject const& entry,
+        _In_ json::JsonObject& responseObject) noexcept;
 
-    GUID m_abstractionId;   // kept for convenience
+
+
+
+
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiServiceConfigurationManager> m_midiServiceConfigurationManager;
+
+    GUID m_transportId;   // kept for convenience
 };

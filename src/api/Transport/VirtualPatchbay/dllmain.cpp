@@ -1,8 +1,14 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
 #include "pch.h"
 
-CMidi2VirtualPatchBayAbstractionModule _AtlModule;
+CMidi2VirtualPatchBayTransportModule _AtlModule;
 
 extern "C" BOOL WINAPI
 DllMain(
@@ -13,7 +19,7 @@ DllMain(
 {
     if (Reason == DLL_PROCESS_ATTACH)
     {
-        wil::SetResultTelemetryFallback(MidiVirtualPatchBayAbstractionTelemetryProvider::FallbackTelemetryCallback);
+        wil::SetResultTelemetryFallback(MidiVirtualPatchBayTransportTelemetryProvider::FallbackTelemetryCallback);
     }
 
     return _AtlModule.DllMain(Reason, Reserved);
@@ -23,8 +29,7 @@ _Use_decl_annotations_
 STDAPI
 DllCanUnloadNow(void)
 {
-    auto &module = Microsoft::WRL::Module<Microsoft::WRL::InProc>::GetModule();
-    return module.Terminate() ? _AtlModule.DllCanUnloadNow() : S_FALSE;
+    return _AtlModule.DllCanUnloadNow();
 }
 
 _Use_decl_annotations_

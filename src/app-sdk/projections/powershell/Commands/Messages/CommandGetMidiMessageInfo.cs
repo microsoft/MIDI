@@ -19,7 +19,7 @@ namespace WindowsMidiServices
     public class CommandGetMidiMessageInfo : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public UInt32[] Words { get; set; }
+        public UInt32[] Words { get; set; } = [];
         protected override void ProcessRecord()
         {
             if (Words.Length > 4 || Words.Length < 1)

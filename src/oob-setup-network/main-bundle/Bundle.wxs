@@ -1,0 +1,82 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
+     >
+
+    <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+
+    <?include $(StagingVersionIncludeFile) ?>
+
+    
+    <!-- TODO: Gate on Windows 10 22H2 or later -->
+
+    <Bundle Name="Windows MIDI Services Network MIDI 2.0 Preview" 
+            Manufacturer="Microsoft Corporation" 
+            Version="$(SetupVersionNumber)" 
+            UpgradeCode="92fb6982-e97d-476f-8d27-44500086a690">
+
+        <!-- Require Dev Mode to be turned on to run this installer -->
+        <WixVariable Id="DevModeEnabled" Value="0" />
+        <util:RegistrySearch
+            Id="DevMode"
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+            Value="AllowDevelopmentWithoutDevLicense"
+            Variable="DevModeEnabled"
+            Result="value"/>
+
+        <bal:Condition Message="Developer mode in Windows Settings must be enabled to install this Windows MIDI Services preview package."
+                 Condition="DevModeEnabled=1" />
+      
+        <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
+
+        <BootstrapperApplication>
+            <bal:WixStandardBootstrapperApplication LicenseUrl="" 
+                                                    Theme="hyperlinkLicense" 
+                                                    SuppressOptionsUI="true"
+                                                    SuppressRepair="true"
+                                                    ShowVersion="true"
+                                                    LogoFile="midi_installer_logo_square.png"/>
+
+        
+        </BootstrapperApplication>
+
+        <Chain>
+          <PackageGroupRef Id="Prerequisites" />
+          <PackageGroupRef Id="MidiServicesPackages" />
+        </Chain>
+    </Bundle>
+
+    
+    <Fragment>
+      <PackageGroup Id="Prerequisites">
+
+        <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
+        <ExePackage
+            Vital="false"
+            DisplayName="Microsoft Visual C++ Runtime"
+            SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
+            Compressed="yes"
+            InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt"
+            Permanent="true"
+                >
+        </ExePackage>
+
+      </PackageGroup>
+
+      <PackageGroup Id="MidiServicesPackages">
+            <MsiPackage
+                Id="WindowsMIDIServicesNetworkMidi2PluginSetup"
+                Vital="true"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMIDIServicesNetworkMidi2PluginSetup.msi">
+            </MsiPackage>
+
+        </PackageGroup>
+        
+    </Fragment>
+</Wix>
