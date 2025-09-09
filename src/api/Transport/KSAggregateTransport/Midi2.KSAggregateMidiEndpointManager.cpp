@@ -160,13 +160,13 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
 
             auto nameTableEntry = masterEndpointDefinition.EndpointNameTable.GetDestinationEntry(gtb.FirstGroupIndex);
-            if (nameTableEntry != nullptr)
+            if (nameTableEntry != nullptr && nameTableEntry->NewStyleName[0] != static_cast<wchar_t>(0))
             {
                 gtb.Name = nameTableEntry->NewStyleName;
             }
             else
             {
-                gtb.Name = L"Block " + std::to_wstring(gtb.FirstGroupIndex + 1);
+                gtb.Name = L"Block " + std::to_wstring(gtb.Number);
             }
 
         }
@@ -174,13 +174,13 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         {
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
             auto nameTableEntry = masterEndpointDefinition.EndpointNameTable.GetSourceEntry(gtb.FirstGroupIndex);
-            if (nameTableEntry != nullptr)
+            if (nameTableEntry != nullptr && nameTableEntry->NewStyleName[0] != static_cast<wchar_t>(0))
             {
                 gtb.Name = nameTableEntry->NewStyleName;
             }
             else
             {
-                gtb.Name = L"Block " + std::to_wstring(gtb.FirstGroupIndex + 1);
+                gtb.Name = L"Block " + std::to_wstring(gtb.Number);
             }
         }
         else

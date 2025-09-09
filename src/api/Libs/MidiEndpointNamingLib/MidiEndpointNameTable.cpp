@@ -76,6 +76,8 @@ std::wstring RemoveJustKSPinGeneratedSuffix(
     return WindowsMidiServicesInternal::TrimmedWStringCopy(cleanedPinName);
 }
 
+
+// Adds the group number differentiator only if the name is the same as the parent device or filter name
 std::wstring AddGroupNumberToNameIfNeeded(
     _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
     _In_ std::wstring const& filterName,
@@ -470,7 +472,7 @@ std::shared_ptr<MidiEndpointNameTable> MidiEndpointNameTable::FromEndpointDevice
     winrt::hstring const& endpointDeviceId)
 {
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
+    additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);               // this gets used by FromDeviceInfo
 
     winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo { nullptr };
 
@@ -507,6 +509,7 @@ std::shared_ptr<MidiEndpointNameTable> MidiEndpointNameTable::FromDeviceInfo(
 
     }
 
+    // if the property isn't present, we return an empty name table which can be used to create the entries
     return std::make_shared<MidiEndpointNameTable>();
 
 }
@@ -518,6 +521,12 @@ std::shared_ptr<MidiEndpointNameTable> MidiEndpointNameTable::FromPropertyData(
     winrt::com_array<uint8_t> const& propertyData)
 {
     std::shared_ptr<MidiEndpointNameTable> results = std::make_shared<MidiEndpointNameTable>();
+
+    if (propertyData.data() == nullptr || propertyData.size() == 0)
+    {
+        // return an empty name table
+        return results;
+    }
 
     // ideally, this should get folded into this code and then the header removed. Need to refactor.
     auto nameEntries = ReadMidi1PortNameTableFromPropertyData(propertyData.data(), propertyData.size());
@@ -559,7 +568,6 @@ bool MidiEndpointNameTable::UpdateSourceEntryCustomName(
 
         memset(entry->CustomName, 0, MAXPNAMELEN);
         wcsncpy_s(entry->CustomName, MAXPNAMELEN, name.c_str(), charCount);
-
 
         return true;
     }
@@ -618,7 +626,6 @@ MidiEndpointNameTable::WriteProperties(
         return S_OK;
     }
 
-
     return E_FAIL;
 }
 
@@ -646,18 +653,12 @@ MidiEndpointNameTable::PopulateEntryForNativeUmpDevice(
         groupIndex
     );
 
-
-
-    //std::wstring legacyWinMMName = GenerateLegacyMidi1PortName(
-    //    parentDeviceName,
-    //    filterName,
-    //    flowFromUserPerspective,
-    //    portIndexWithinThisFilterAndDirection
-    //);
-
-    // when generating names for native UMP devices, we don't have old rules to adhere to
-    // so we can use new-style names all the time.
-    std::wstring legacyWinMMName = newStyleName;
+    std::wstring legacyWinMMName = GenerateLegacyMidi1PortName(
+        parentDeviceName,
+        filterName,
+        flowFromUserPerspective,
+        portIndexWithinThisFilterAndDirection
+    );
 
     internal::SafeCopyWStringToFixedArray(entry->CustomName, MAXPNAMELEN, customName);
     internal::SafeCopyWStringToFixedArray(entry->LegacyWinMMName, MAXPNAMELEN, legacyWinMMName);
@@ -686,7 +687,8 @@ MidiEndpointNameTable::PopulateAllEntriesForMidi1DeviceUsingUmpDriver(
     std::vector<WindowsMidiServicesInternal::GroupTerminalBlockInternal>& blocks
 ) noexcept
 {
-    UNREFERENCED_PARAMETER(parentDeviceName);
+    uint8_t outIndex{ 0 };
+    uint8_t inIndex{ 0 };
 
     for (auto const& gtb : blocks)
     {
@@ -702,7 +704,11 @@ MidiEndpointNameTable::PopulateAllEntriesForMidi1DeviceUsingUmpDriver(
                     groupIndex,
                     MidiFlow::MidiFlowIn,
                     customName,
-                    gtb.Name));
+                    parentDeviceName,
+                    gtb.Name,
+                    outIndex));
+
+                outIndex++;
             }
 
             if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
@@ -712,7 +718,11 @@ MidiEndpointNameTable::PopulateAllEntriesForMidi1DeviceUsingUmpDriver(
                     groupIndex,
                     MidiFlow::MidiFlowOut,
                     customName,
-                    gtb.Name));
+                    parentDeviceName,
+                    gtb.Name,
+                    inIndex));
+
+                inIndex++;
             }
         }
     }
@@ -781,14 +791,28 @@ MidiEndpointNameTable::PopulateEntryForMidi1DeviceUsingUmpDriver(
     uint8_t const groupIndex,
     MidiFlow const flowFromUserPerspective,
     std::wstring const& customName,
-    std::wstring const& blockName
+    std::wstring const& parentDeviceName,
+    std::wstring const& blockName,
+    uint8_t const portIndexWithinThisFilterAndDirection
+
 ) noexcept
 {
     auto entry = std::make_shared<Midi1PortNameEntry>();
 
-    // use teh block name directly
-    std::wstring newStyleName = blockName;
-    std::wstring legacyWinMMName = blockName;
+    // uses the block name directly, but only if not empty
+    std::wstring newStyleName = GenerateFilterPlusBlockMidi1PortName(
+        parentDeviceName,
+        parentDeviceName,
+        blockName,
+        groupIndex
+    );
+
+    std::wstring legacyWinMMName = GenerateLegacyMidi1PortName(
+        parentDeviceName,
+        parentDeviceName,           // no filter here, so use the parent name again
+        flowFromUserPerspective,
+        portIndexWithinThisFilterAndDirection
+    );
 
     internal::SafeCopyWStringToFixedArray(entry->CustomName, MAXPNAMELEN, customName);
     internal::SafeCopyWStringToFixedArray(entry->LegacyWinMMName, MAXPNAMELEN, legacyWinMMName);

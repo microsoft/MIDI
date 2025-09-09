@@ -48,9 +48,16 @@ public:
         //TEST_METHOD(TestPopulateAllEntriesForNativeUmpDevice);
         //TEST_METHOD(TestPopulateAllEntriesForMidi1DeviceUsingUmpDriver);
 
+        TEST_METHOD(TestStringEndsWithSpecifiedNumber);
+
         TEST_METHOD(TestPopulateEntryForNativeUmpDevice);
         TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingUmpDriver);
         TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingMidi1Driver);
+
+        TEST_METHOD(TestValidateMidi1DriverAndMidi2DriverCreateCompatibleLegacyNames);
+
+        TEST_METHOD(TestGitHubIssue652);
+        TEST_METHOD(TestGitHubIssue616);
 
         // TODO: Need to test reading/writing from property vectors
 
