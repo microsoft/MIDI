@@ -2684,10 +2684,6 @@ CMidiDeviceManager::SyncMidi1Ports(
     // byte format device on a byte format transport. We should probably get this from other properties rather than
     // having a dependency in here on the GUID for the KSA transport
 
-    // NOTE: These two boolean values are no longer used
-   // bool isUsingUmpTransport = (bool)(transportId != winrt::guid(__uuidof(Midi2KSAggregateTransport)));   // KSA is the only one mapping byte format to UMP right now. BLE will in the future, as will RTP
-   // bool isNativeUmpEndpoint = (bool)(nativeDataFormat == MidiDataFormats::MidiDataFormats_UMP);
-
     // we know which groups are active, so now we get the names for these groups
     LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, portInfo));
 
@@ -2768,6 +2764,7 @@ CMidiDeviceManager::SyncMidi1Ports(
                     }
                 }
 
+
                 // name we created earlier in the GetMidi1PortNames function
                 std::wstring friendlyName = portInfo[flow][groupIndex].Name;
 
@@ -2785,8 +2782,12 @@ CMidiDeviceManager::SyncMidi1Ports(
                         TraceLoggingUInt32(groupIndex, "group index")
                         );
 
+                    // -----------------------------------------------------------------------------------------------------------------------------
                     // this is just a last-chance fallback. If we ever see this in production, that's a problem.
+
                     friendlyName =  std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN-7) + L" Gr " + std::to_wstring(groupIndex+1);
+
+                    // -----------------------------------------------------------------------------------------------------------------------------
                 }
 
                 interfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
