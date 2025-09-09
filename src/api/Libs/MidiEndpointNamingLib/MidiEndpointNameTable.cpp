@@ -239,7 +239,7 @@ std::wstring GenerateLegacyMidi1PortName(
         // NOTE: There's an existing issue in WinMM that causes two of the same make/model of
         // device to have the same name, even if they report different names, because they 
         // share the same registry entry. To maintain compatibility, we cannot fix that here
-        // Instead, the custom will need to use one of the other provided naming options.
+        // Instead, the customer will need to use one of the other provided naming options.
 
         generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(nameFromRegistry).substr(0, MAXPNAMELEN - 1);
     }
@@ -278,25 +278,6 @@ std::wstring GenerateLegacyMidi1PortName(
     {
         return generatedName;
     }
-}
-
-std::wstring GeneratePinNameBasedMidi1PortName(
-    _In_ std::wstring const& filterName,
-    _In_ std::wstring const& pinName,
-    _In_ MidiFlow const flowFromUserPerspective,
-    _In_ uint8_t const portIndexWithinThisFilterAndDirection
-) noexcept
-{
-    UNREFERENCED_PARAMETER(filterName);
-    UNREFERENCED_PARAMETER(flowFromUserPerspective);
-    UNREFERENCED_PARAMETER(portIndexWithinThisFilterAndDirection);
-
-    std::wstring generatedName{ RemoveJustKSPinGeneratedSuffix(pinName) };
-
-    // we use the pin name exactly as it is in the device
-    generatedName = generatedName.substr(0, MAXPNAMELEN - 1);
-
-    return WindowsMidiServicesInternal::TrimmedWStringCopy(generatedName);
 }
 
 
