@@ -63,11 +63,13 @@
 
       <!-- These are of questionable use due to cppwinrt version mismatch possibilities ================================================ -->
 
+      <!--
       <file target="build\native\include\winmidi\winrt"       src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\Microsoft.Windows.Devices.Midi2*.h" />
       <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.0.h" />
       <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.1.h" />
       <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.2.h" />
-
+      -->
+      
       <!-- Standard Windows SDK headers should come from the Windows SDK. But we may want to include them for other compilers? -->
         
       <file src="README.md" target="\" />
