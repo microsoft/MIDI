@@ -1,5 +1,6 @@
 @echo off
 
+echo | set /p="Remove directory: "
 rmdir /S build
 
 cmake -S src -B build
