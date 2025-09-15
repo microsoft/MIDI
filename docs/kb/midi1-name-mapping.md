@@ -39,11 +39,21 @@ namespace Microsoft.Windows.Devices.Midi2
 
 If you are not mapping to old names, there's nothing you need to do here. Windows MIDI Services will choose the user-preferred names when creating the MIDI 1.0 ports, and will also use the user-preferred name for the UMP Endpoint.
 
-> Note: You may wonder about the Group Terminal Blocks and how they play into this. For an application which has adopted the new SDK, we prefer you show the endpoint's name (which takes into account user preferences) and then the Function Block names and Group Numbers if function blocks are available. Function Block Names come from the device, which can sometimes provide ways to change the name on-device. If no function blocks are available (for example, with a MIDI 1.0 device), the group terminal block names and group numbers. The Group Terminal Block names use new-style naming. If you need to map to old-style naming, use the group information and look up the value in the name table.
-> For MIDI 1.0 devices, the Group Terminal Block is 1:1 with a MIDI 1.0 port.
-> For MIDI 2.0 devices, per-spec, a Function Block can span multiple groups and directions, and a group can appear in multiple function blocks. The ultimate address is always the group. So you can end up with names like `Some Endpoint Group 5 (Synth, Sequencer)` if you follow recommended naming conventions for MIDI 2.0.
-> USB MIDI 2.0 devices will have static Group Terminal Blocks and *may* also have static or dynamic function blocks, discovered in-protocol after the device has been plugged in, and updated at any point in time afterwards. Function blocks, when available, take precedence
-> We may offer a way for users to rename Group Terminal Blocks and Function Blocks in the future. Do not store these names in your own files.
+## Group Terminal Blocks vs Function Blocks vs Ports
+
+You may wonder about the Group Terminal Blocks and how they play into this. For an application which has adopted the new SDK, we prefer you show the endpoint's name (which takes into account user preferences) and then the Function Block names and Group Numbers, if function blocks are available.
+
+Group Terminal Blocks, in their original spec, are static USB-only entities, received through a call to the driver at device enumeration time. For convenience, we've adopted them in Windows MIDI Services as a way to create UMP Endpoints out of MIDI 1.0 devices, to present a unified API.
+
+Function Blocks were added in an update to the UMP MIDI 2.0 specification. Function Block Names come from the endpoint, in the MIDI protocol, which can sometimes provide ways to change the name on-device. Unlike Group Terminal Blocks, Function Blocks work across all MIDI 2.0 transports, not just USB. If no function blocks are available (for example, with a MIDI 1.0 device), the group terminal block names and group numbers. The Group Terminal Block names use new-style naming. If you need to map to old-style naming, use the group information and look up the value in the name table.
+
+For MIDI 1.0 devices (KSA and KS transports), the Group Terminal Block is 1:1 with a MIDI 1.0 port.
+
+For MIDI 2.0 devices, per-spec, a Function Block can span multiple groups and directions, and a group can appear in multiple function blocks. The ultimate address is always the group. So you can end up with names like `Some Endpoint Group 5 (Synth, Sequencer)` if you follow recommended naming conventions for MIDI 2.0.
+
+USB MIDI 2.0 devices will have static Group Terminal Blocks and *may* also have static or dynamic function blocks, discovered in-protocol after the device has been plugged in, and updated at any point in time afterwards. Function blocks, when available, take precedence
+
+We may offer a way for users to rename Group Terminal Blocks and Function Blocks in the future. Do not store these names in your own files.
 
 ## Find original names
 
@@ -72,7 +82,9 @@ The table is re-generated whenever the device is discovered by the service. (So 
 
 If you have a WinMM MIDI Output port name, and you want to look it up in the table, you can look for `Flow == Midi1PortFlow::MidiMessageDestination` and `LegacyCompatibleName == <your stored WinMM name>`. Of course, you would need to do this for each of the enumerated MIDI Endpoints. But this is a very fast call, using only stored property information that is already available in memory.
 
-Note: the fact that a name table entry exists does not necessarily equate to the MIDI 1.0 port being active or available. You will need to handle cases where no port with that specific name exists. In addition, due to the nature of MIDI 1.0 port names, you have to be able to handle instances where more than one match exists, especially in cases where more than one of the same make/model of device is connected.
+The fact that a name table entry exists does not necessarily equate to the MIDI 1.0 port being active or available. You will need to handle cases where no port with that specific name exists. In addition, due to the nature of MIDI 1.0 port names, you have to be able to handle instances where more than one match exists, especially in cases where more than one of the same make/model of device is connected.
+
+> **Group Index vs Group Number:** The MIDI Group is an essential part of the addressing of a message and so is usually displayed to the user as part of the Endpoint/Group/Channel assignment for a track. The Group Index (0-15) shall not be displayed to users. Instead, the Group Number (1-16) is what is displayed. The built-in `MidiGroup` type includes code to do this, but it's also as simple as adding 1 to the index.
 
 ## Ways to find the associated ports
 
