@@ -42,6 +42,9 @@ Environment:
 
 class StreamEngine;
 
+#define READ_BUFFER_MAX_THRESHOLD   384 * sizeof(UMPDATAFORMAT)
+#define READ_BUFFER_MIN_THRESHOLD   256 * sizeof(UMPDATAFORMAT)
+
 typedef struct _SINGLE_BUFFER_MAPPING
 {
     // address of the memory alloation
@@ -137,6 +140,12 @@ public:
         _In_reads_(bufferSize)      PUINT8              pBuffer,
         _In_                        size_t              bufferSize
     );
+
+    _Must_inspect_result_
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    NONPAGED_CODE_SEG
+    ULONG
+    BufferInUse();
 
 private:
 
