@@ -279,8 +279,8 @@ StreamEngine::HandleIo()
 
             if (STATUS_WAIT_1 == status)
             {
-                // process data in the cyclic buffer until either the read buffer is empty
-                // or the write buffer is full.
+                // We have a read evnet
+                KeResetEvent(m_ReadEvent);
 
                 // we have a read event, therefore we need to check thresholds
                 ULONG bufferInUse = BufferInUse();
@@ -293,7 +293,6 @@ StreamEngine::HandleIo()
                 {
                     USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), true);
                 }
-                KeResetEvent(m_ReadEvent);
             }
             else
             {
@@ -347,8 +346,6 @@ Return Value:
     //auto lock = m_MidiInLock.acquire();
     if (m_IsRunning)
     {
-        KeResetEvent(m_ReadEvent);
-
         // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
         // and read position is empty. (read position is their last read position, write position is our last written).
         // retrieve our write position first since we know it won't be changing, and their read position second,
@@ -585,8 +582,6 @@ StreamEngine::Pause()
         // Make sure we are not trying to change state while processing
         auto lock = m_MidiInLock.acquire();
 
-        // If m_IsRunning true, the midi out worker thread will send data.
-        // If it is false, the midi out worker will throw the data away.
         m_IsRunning = false;
         m_ThreadExitEvent.set();
         m_TotalDroppedBuffers = 0;
@@ -597,13 +592,20 @@ StreamEngine::Pause()
         {
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! STOPPING Continuous Reader.");
-            WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe), WdfIoTargetCancelSentIo);
+            USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false);
         }
         else
         {
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
         }
+
+        // shut down and clean up the worker thread.
+        m_ThreadExitEvent.set();
+        m_ThreadExitedEvent.wait();
+        KeWaitForSingleObject(m_WorkerThread, Executive, KernelMode, FALSE, nullptr);
+        ObDereferenceObject(m_WorkerThread);
+        m_WorkerThread = nullptr;
     }
     else
     {
@@ -672,9 +674,25 @@ StreamEngine::Run()
     }
     else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
-        // m_IsRunning is used to indicate running state. If m_IsRunning true, the out worker
-        // thread will output data to the connected device, otherwise data will be thrown away.
-        //auto lock = m_MidiInLock.acquire();
+        m_ThreadExitEvent.clear();
+
+        // Create and start the midi in worker thread for the management of continuous reader.
+        HANDLE handle = nullptr;
+        NT_RETURN_IF_NTSTATUS_FAILED(PsCreateSystemThread(&handle, THREAD_ALL_ACCESS, 0, 0, 0, StreamEngine::WorkerThread, this));
+
+        // we use the handle from ObReferenceObjectByHandleWithTag, so we can close this handle
+        // when this goes out of scope.
+        auto closeHandle = wil::scope_exit([&handle]() {
+            ZwClose(handle);
+            });
+
+        // reference the thread using our pooltag, for easier diagnostics later on in the event of
+        // a leak.
+        NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandleWithTag(handle, THREAD_ALL_ACCESS, nullptr, KernelMode, USBMIDI_POOLTAG, (PVOID*)&m_WorkerThread, nullptr));
+
+        // boost the worker thread priority, to ensure that the write events are handled as
+        // timely as possible.
+        KeSetPriorityThread(m_WorkerThread, HIGH_PRIORITY);
 
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
         PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
@@ -692,12 +710,7 @@ StreamEngine::Run()
 
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! STARTING Continuous Reader.");
-            status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe));
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "%!FUNC! Could not start interrupt pipe failed %!STATUS!", status);
-            }
+            USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), true);
         }
         else
         {

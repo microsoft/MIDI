@@ -213,6 +213,11 @@ Return Value:
     KeInitializeSpinLock(&devCtx->UsbWriteIOUrbsLock);
     devCtx->UsbWriteIOUrbs = 0;
 
+    //
+    // Create governor information for Continuous Reader
+    KeInitializeSpinLock(&devCtx->ContRdrLock);
+    devCtx->ContRdrState = USBMIDI2_CONT_RDR_IDLE;
+
     // 
     // Allow ACX to add any post-requirement it needs on this device.
     //
@@ -471,25 +476,9 @@ EvtDeviceD0Entry(
     UNREFERENCED_PARAMETER(Device);
     UNREFERENCED_PARAMETER(PreviousState);
 
-    NTSTATUS        status;
-    KIRQL           oldLevel;
-    PDEVICE_CONTEXT pDeviceContext;
-
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     PAGED_CODE();
-
-    pDeviceContext = GetDeviceContext(Device);
-    ASSERT(pDeviceContext != nullptr);
-
-    KeAcquireSpinLock(&pDeviceContext->ContRdrLock, &oldLevel);
-    if (pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_ACTIVE
-        || pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_STOP)
-    {
-        status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDeviceContext->MidiInPipe));
-        pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_RUNNING;
-    }
-    KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -506,7 +495,6 @@ EvtDeviceD0Exit(
 {
     NTSTATUS        status = STATUS_SUCCESS;
     POWER_ACTION    powerAction;
-    KIRQL           oldLevel;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
@@ -549,15 +537,6 @@ EvtDeviceD0Exit(
                 status = STATUS_SUCCESS;
             }
         }
-
-        KeAcquireSpinLock(&devCtx->ContRdrLock, &oldLevel);
-        if (devCtx->ContRdrState == USBMIDI2_CONT_RDR_RUNNING)
-        {
-            WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
-                        WdfIoTargetCancelSentIo);
-            devCtx->ContRdrState = USBMIDI2_CONT_RDR_STOP;
-        }
-        KeReleaseSpinLock(&devCtx->ContRdrLock, oldLevel);
     }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
@@ -1171,8 +1150,6 @@ Return Value:
     WDFUSBPIPE                              pipe;
     WDF_USB_PIPE_INFORMATION                pipeInfo;
     WDF_USB_CONTINUOUS_READER_CONFIG        readerConfig;
-    KIRQL                                   oldLevel;
-
 
     PAGED_CODE();
 
@@ -1256,10 +1233,8 @@ Return Value:
         }
 
         // Set Continuous reader active and state
-        KeAcquireSpinLock(&pDeviceContext->ContRdrLock, &oldLevel);
         status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDeviceContext->MidiInPipe));
         pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_RUNNING;
-        KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
     }
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
