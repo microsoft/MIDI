@@ -1,0 +1,6 @@
+{
+  "dependencies": [
+    "cppwinrt",
+    "microsoft-windows-devices-midi2"
+  ]
+}
