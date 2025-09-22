@@ -21,8 +21,8 @@ namespace Microsoft.Windows.Devices.Midi2
         UInt8 GroupIndex;               // can't use MidiGroup here unless we're going to make a runtimeclass of this
         Midi1PortFlow Flow;
 
-        String CustomName;
-        String LegacyCompatibleName;
-        String NewStyleName;
+        String CustomName;              // user-supplied name. Blank if not provided.
+        String LegacyCompatibleName;    // WinMM MIDI 1.0 compatible port name
+        String NewStyleName;            // New-style port name
     };
 }
