@@ -52,8 +52,6 @@ Environment:
 
 // Used to regulate the IO buffering of driver through to service
 #define USB_WRITE_MAX_URBS      5
-//#define USB_READ_MAX_BUFFERS    128 * 4 * 8 // 128 32bit UMP / USB MIDI 1
-                                            // messages * 4 sets * 8 standard double buffer size
 
 // Used for handling exchange of SYSEX between USB MIDI 1.0 and UMP
 #define UMPTOBS_BUFFER 12
@@ -93,6 +91,17 @@ typedef struct
 } UMP_PACKET, *PUMP_PACKET;
 
 //
+// States for Continuous Reader
+// 
+typedef enum
+{
+    USBMIDI2_CONT_RDR_IDLE = 0,
+    USBMIDI2_CONT_RDR_ACTIVE,
+    USBMIDI2_CONT_RDR_RUNNING,
+    USBMIDI2_CONT_RDR_STOP
+} USBMIDI2_CONT_RDR_STATE;
+
+//
 // Define device context.
 //
 typedef struct _DEVICE_CONTEXT {
@@ -128,6 +137,11 @@ typedef struct _DEVICE_CONTEXT {
     WDFUSBPIPE                  MidiOutPipe;        // out to device
     WDF_USB_PIPE_TYPE           MidiOutPipeType;    // Bulk or Interrupt
     ULONG                       MidiOutMaxSize;     // maximum transfer size
+
+    // Continuous Reader
+    // Continous Reader state and management
+    USBMIDI2_CONT_RDR_STATE     ContRdrState = USBMIDI2_CONT_RDR_IDLE;
+    KSPIN_LOCK                  ContRdrLock;
 
     //
     // The folloiwng fileds are used to store device configuration information
@@ -254,6 +268,17 @@ PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverEnumeratePipes(
     _In_ WDFDEVICE    Device
+);
+
+//
+// Function to handle continuous reader setting
+// 
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+VOID
+USBMIDI2DriverIoContinuousReader(
+    _In_ WDFDEVICE  Device,
+    _In_ BOOLEAN    runContinuousReader
 );
 
 //
