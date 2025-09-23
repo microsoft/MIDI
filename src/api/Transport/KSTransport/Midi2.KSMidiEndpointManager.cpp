@@ -745,7 +745,10 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                                                             &createInfo,
                                                             &newDeviceInterfaceId));
 
-        
+        // keep the created endpoint device interface id because this is used in some lookups later
+        // specifically around matching for customization
+        MidiPin->EndpointDeviceId = static_cast<LPWSTR>(newDeviceInterfaceId.get());
+
         // Now we deal with metadata provided in-protocol and also by the user
 
         if (SUCCEEDED(MidiPin->SwdCreation))
@@ -926,7 +929,7 @@ winrt::hstring CMidi2KSMidiEndpointManager::FindMatchingInstantiatedEndpoint(Win
         WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria available{};
 
         available.DeviceInstanceId = pin->InstanceId;
-        available.EndpointDeviceId = pin->Id;
+        available.EndpointDeviceId = pin->EndpointDeviceId;
         available.UsbVendorId = pin->VID;
         available.UsbProductId = pin->PID;
         available.UsbSerialNumber = pin->SerialNumber;

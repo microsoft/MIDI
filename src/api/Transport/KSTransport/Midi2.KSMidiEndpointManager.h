@@ -34,10 +34,13 @@ public:
 
     GUID NativeDataFormat{0};
 
-    std::wstring SerialNumber;
-    std::wstring ManufacturerName;
-    UINT16 VID{ 0 };
-    UINT16 PID{ 0 };
+
+    // the following fields are used for matching when customizing
+    std::wstring SerialNumber;          // USB serial number, if provided       
+    std::wstring ManufacturerName;      
+    UINT16 VID{ 0 };                    // Vendor ID
+    UINT16 PID{ 0 };                    // Product Id
+    std::wstring EndpointDeviceId{};    // the swd id that is created when the endpoint is activated
 
 } MIDI_PIN_INFO, *PMIDI_PIN_INFO;
 
