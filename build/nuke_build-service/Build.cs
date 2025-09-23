@@ -52,9 +52,9 @@ class Build : NukeBuild
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 14;
+    const UInt16 BuildVersionPatch = 15;
 
-    const UInt16 BuildVersionPreviewNumber = 1;
+    const UInt16 BuildVersionPreviewNumber = 14;
     string VersionName => "Service Preview " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
@@ -70,10 +70,7 @@ class Build : NukeBuild
 
     string NugetPackageId => "Microsoft.Windows.Devices.Midi2";
     string NugetPackageVersion;
-    string NugetFullPackageIdWithVersion = "";
 
-
-    const string TargetWindowsSdkVersion = "10.0.22621.0";
 
     DateTime BuildDate;
 
@@ -189,8 +186,6 @@ class Build : NukeBuild
 
             BuildVersionAssemblyFullString = BuildMajorMinorPatch + "." + BuildVersionBuildNumber;
             BuildVersionFileFullString = BuildMajorMinorPatch + "." + BuildVersionBuildNumber;
-
-            NugetFullPackageIdWithVersion = NugetPackageId + "." + NugetPackageVersion;
 
             _thisReleaseFolder = $"{ReleaseRootFolder / VersionName} ({DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")})";
 
@@ -521,64 +516,6 @@ class Build : NukeBuild
                 BuiltInBoxInstallers[platform.ToLower()] = newInstallerName;
             }
         });
-
-
-    void RestoreNuGetPackagesForCPPProject(string vcxprojFilePath, string solutionDir, string packagesConfigFullPath)
-    {
-        var projectDir = Path.GetDirectoryName(vcxprojFilePath);
-
-        NuGetTasks.NuGetInstall(_ => _
-            .SetProcessWorkingDirectory(projectDir)
-            .SetPreRelease(true)
-            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
-            .SetPackageID(NugetPackageId)
-            .SetDependencyVersion(DependencyVersion.Highest)
-        );
-
-        NuGetTasks.NuGetRestore(_ => _
-            .SetProcessWorkingDirectory(projectDir)
-            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
-            .SetSolutionDirectory(solutionDir)
-            //.SetConfigFile(packagesConfigFullPath)
-        );
-    }
-
-    void UpdatePackagesConfigForCPPProject(string configFilePath)
-    {
-        if (File.Exists(configFilePath))
-        {
-            // this is ugly and annoying to have to do.
-            //   XmlTasks.XmlPoke(configFilePath, @"/packages/package/id", NugetFullPackageId)
-
-            var doc = new XmlDocument();
-            doc.Load(configFilePath);
-
-            XmlElement element = doc.SelectSingleNode($"/packages/package[@id = \"{NugetPackageId}\"]") as XmlElement;
-
-            // change the version attribute
-            if (element != null)
-            {
-                Console.WriteLine($"Updating {element}");
-
-                element.SetAttribute("version", NugetPackageVersion);
-
-                doc.Save(configFilePath);
-
-                Console.WriteLine($"Updated {configFilePath}");
-            }
-            else
-            {
-                throw new ArgumentException($"Failed to update NuGet Package Value for '{configFilePath}'.");
-            }
-
-        }
-        else
-        {
-            throw new ArgumentException($"Packages.config file does not exist '{configFilePath}'.");
-        }
-    }
-
-
 
     Target T_ZipServicePdbs => _ => _
         .DependsOn(T_Prerequisites)
