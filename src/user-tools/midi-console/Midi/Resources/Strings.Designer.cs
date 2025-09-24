@@ -2199,7 +2199,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Naming Preference.
+        ///   Looks up a localized string similar to Naming Approach/Preference.
         /// </summary>
         internal static string PropertyTablePropertyLabelPortNamingApproach {
             get {
