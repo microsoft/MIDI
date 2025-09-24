@@ -27,10 +27,13 @@ public:
     MidiFlow Flow{ MidiFlowOut };
     BOOL CreateUMPOnly{ FALSE };
     HRESULT SwdCreation{ S_OK };
-    std::unique_ptr<BYTE> GroupTerminalBlockData;
-    ULONG GroupTerminalBlockDataSize {0};
 
-    std::vector<internal::GroupTerminalBlockInternal> blocks{ }; // we need this for naming
+    // kept for the property
+    std::vector<std::byte> GroupTerminalBlockPropertyData{ };
+
+    //ULONG GroupTerminalBlockPropertyDataSize {0};
+
+    std::vector<internal::GroupTerminalBlockInternal> Blocks{ }; // we need this for naming
 
     GUID NativeDataFormat{0};
 

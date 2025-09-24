@@ -17,12 +17,6 @@ using namespace winrt::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-// if this is defined, then KSMidiEndpointManager will publish a Bidi endpoint
-// for pairs of midi in & out endpoints on the same filter.
-
-#define CREATE_KS_BIDI_SWDS
-#define BIDI_REPLACES_INOUT_SWDS
-
 #define INITIAL_ENUMERATION_TIMEOUT_MS 10000
 
 _Use_decl_annotations_
@@ -199,7 +193,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         // have a valid communication. Skip connector pins.
         if (KSPIN_COMMUNICATION_NONE == communication)
         {
-
             continue;
         }
 
@@ -211,13 +204,13 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         wil::unique_handle handleDupe(deviceHandleWrapper.GetHandle());
         RETURN_IF_NULL_ALLOC(handleDupe);
 
-        KsHandleWrapper m_PinHandleWrapper(deviceId.c_str(), i, MidiTransport_CyclicUMP, handleDupe.get());
+        KsHandleWrapper pinHandleWrapper(deviceId.c_str(), i, MidiTransport_CyclicUMP, handleDupe.get());
 
-        RETURN_IF_FAILED(m_PinHandleWrapper.Open());
+        RETURN_IF_FAILED(pinHandleWrapper.Open());
 
         // Using lamba function to prevent handle from dissapearing when being used.
-        RETURN_IF_FAILED(m_PinHandleWrapper.Execute([&](HANDLE handle) {
-
+        RETURN_IF_FAILED(pinHandleWrapper.Execute([&](HANDLE handle)
+        {
             TraceLoggingWrite(
                 MidiKSTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_INFO,
@@ -309,75 +302,27 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         midiPin->VID = deviceVID;
         midiPin->PID = devicePID;
 
-        // Group Terminal Blocks from the MIDI 2 driver
-        midiPin->GroupTerminalBlockData = std::move(groupTerminalBlockData);
-        midiPin->GroupTerminalBlockDataSize = groupTerminalBlockDataSize;
+        // Group Terminal Blocks from the MIDI 2 driver. For MIDI 1 devices on the UMP driver, these are created to represent the ports
+        // we need them up-front because we base names on them later
+        midiPin->Blocks = internal::ReadGroupTerminalBlocksFromPropertyData(
+            groupTerminalBlockData.get(),
+            groupTerminalBlockDataSize);
+
 
         // Native Data format (UMP or bytestream) from the driver
-
         midiPin->NativeDataFormat = nativeDataFormat;
 
 
         // Serial number from the driver. Empty serials are a 1 character nul, so check for size > sizeof(WCHAR)
-
         if (serialNumberDataSize > sizeof(WCHAR))
         {
             midiPin->SerialNumber = std::wstring(serialNumberData.get(), (size_t)(serialNumberDataSize / sizeof(WCHAR)));
-
-            TraceLoggingWrite(
-                MidiKSTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Retrieved serial number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(device.Id().c_str(), "device id"),
-                TraceLoggingWideString(midiPin->SerialNumber.c_str(), "serial number"),
-                TraceLoggingULong(serialNumberDataSize, "data size")
-            );
-        }
-        else
-        {
-            TraceLoggingWrite(
-                MidiKSTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"No USB device serial number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(device.Id().c_str(), "device id")
-            );
         }
 
         // Manufacturer from the driver. Empty manufacturer is a 1 character nul, so check for size > sizeof(WCHAR)
-
         if (manufacturerNameDataSize > sizeof(WCHAR))
         {
             midiPin->ManufacturerName = std::wstring(manufacturerNameData.get(), (size_t)(manufacturerNameDataSize / sizeof(WCHAR)));
-
-            TraceLoggingWrite(
-                MidiKSTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Retrieved manufacturer name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(device.Id().c_str(), "device id"),
-                TraceLoggingWideString(midiPin->ManufacturerName.c_str(), "manufacturer"),
-                TraceLoggingULong(manufacturerNameDataSize, "data size")
-            );
-        }
-        else
-        {
-            TraceLoggingWrite(
-                MidiKSTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"No USB device manufacturer name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(device.Id().c_str(), "device id")
-            );
         }
 
         midiPin->InstanceId = MIDI_KS_INSTANCE_ID_PREFIX;
@@ -390,8 +335,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         newMidiPins.push_back(std::move(midiPin));
     }
-
-#ifdef CREATE_KS_BIDI_SWDS
 
     // UMP devices only. Some redundant checking here, but just in case
     if (newMidiPins.size() == 2 && 
@@ -420,44 +363,24 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         midiPin->SerialNumber = newMidiPins[midiInPinIndex]->SerialNumber;
         midiPin->ManufacturerName = newMidiPins[midiInPinIndex]->ManufacturerName;
 
-        // in and out pins should have the same GTB's, pick one.
-        if (newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSize > 0)
-        {
-            std::unique_ptr<BYTE> groupTerminalBlockData(new (std::nothrow) BYTE[newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSize]);
-            RETURN_IF_NULL_ALLOC(groupTerminalBlockData);
-            memcpy(groupTerminalBlockData.get(), newMidiPins[midiOutPinIndex]->GroupTerminalBlockData.get(), newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSize);
-            midiPin->GroupTerminalBlockData = std::move(groupTerminalBlockData);
-            midiPin->GroupTerminalBlockDataSize = newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSize;
-        }
+        // in and out pins should have the same GTB's, we just pick one for this bidirectional midiPin.
+        midiPin->Blocks = newMidiPins[midiInPinIndex]->Blocks;
 
-        midiPin->NativeDataFormat = newMidiPins[midiOutPinIndex]->NativeDataFormat;
+        midiPin->NativeDataFormat = newMidiPins[midiInPinIndex]->NativeDataFormat;
         midiPin->Flow = MidiFlowBidirectional;
 
         midiPin->InstanceId = MIDI_KS_INSTANCE_ID_PREFIX;
-
-        //if (midiPin->SerialNumber.empty())
-        //{
-            midiPin->InstanceId += hash;
-        //}
-        //else
-        //{
-        //    midiPin->InstanceId += midiPin->SerialNumber;
-        //}
+        midiPin->InstanceId += hash;
 
         midiPin->InstanceId += L"_OUTPIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);
         midiPin->InstanceId += L"_INPIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinIdIn);
 
-#ifdef BIDI_REPLACES_INOUT_SWDS
         // replace the existing entries with this one bidi entry
         newMidiPins.clear();
-#else
-        // don't want to double the legacy SWD's, so if we are
-        // creating both in and out swd's, no need to duplicate
-        // bidirectional as well.
-        midiPin->CreateUMPOnly = TRUE;
-#endif
+
+        // add our new bidirectional MIDI pin
         newMidiPins.push_back(std::move(midiPin));
 
         TraceLoggingWrite(
@@ -470,10 +393,15 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             TraceLoggingWideString(device.Id().c_str(), "device id")
         );
     }
-    
-#endif
-
-    //in the added callback we're going to go ahead and create the SWD's:
+    else
+    {
+        // this should only be hit if there are 0 new MIDI Pins
+        // if there's only one pin at the point of this check, something is wrong.
+        return S_OK;
+    }
+        
+    // in the added callback we're going to go ahead and create the SWD's:
+    // at this point, assuming BIDI_REPLACES_INOUT_SWDS, we should have only 1 bidirectional MIDI pin
     for (auto const& MidiPin : newMidiPins)
     {
         TraceLoggingWrite(
@@ -570,13 +498,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
-        if (MidiPin->GroupTerminalBlockDataSize > 0)
-        {
-            interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSize, (PVOID)MidiPin->GroupTerminalBlockData.get() });
-        }
-
-
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.
         if (MidiPin->Flow == MidiFlowBidirectional)
         {
@@ -656,31 +577,61 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         // ===============================================================================
 
         // we have group terminal blocks data, so we need to create names starting from that
+        
+
 
         // these variables need to be out here, to make sure the data is still available when the properties are created
         WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{};
 
         if (!MidiPin->CreateUMPOnly)
         {
-            // get the group terminal blocks and their names, because that's how the MIDI 2 driver reports the info about attached MIDI 1 devices
-            // for MIDI 2.0 USB devices, we start with the GTBs, but after discovery and protocol negotiation, will update them from function blocks
-            auto gtbs = internal::ReadGroupTerminalBlocksFromPropertyData(
-                MidiPin->GroupTerminalBlockData.get(), 
-                MidiPin->GroupTerminalBlockDataSize);
-
             if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
             {
                 // MIDI 2 device using the UMP driver
-                LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(parentDeviceInfo.Name().c_str(), gtbs));
+                LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(parentDeviceInfo.Name().c_str(), MidiPin->Blocks));
             }
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
                 // MIDI 1 device using the UMP driver
-                LOG_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(parentDeviceInfo.Name().c_str(), gtbs));
+                LOG_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(parentDeviceInfo.Name().c_str(), MidiPin->Blocks));
+
+                // first, update the names as needed. We do this only for MIDI 1.0 devices attached to the new driver
+                for (auto& gtb : MidiPin->Blocks)
+                {
+                    if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT)               // gtb input is a midi output (destination)
+                    {
+                        auto nameTableEntry = nameTable.GetDestinationEntry(gtb.FirstGroupIndex);
+                        if (nameTableEntry != nullptr && nameTableEntry->NewStyleName[0] != static_cast<wchar_t>(0))
+                        {
+                            gtb.Name = internal::TrimmedWStringCopy(nameTableEntry->NewStyleName);
+                        }
+                    }
+                    else if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_OUTPUT)              // gtb output is a midi input (source)
+                    {
+                        auto nameTableEntry = nameTable.GetSourceEntry(gtb.FirstGroupIndex);
+                        if (nameTableEntry != nullptr && nameTableEntry->NewStyleName[0] != static_cast<wchar_t>(0))
+                        {
+                            gtb.Name = internal::TrimmedWStringCopy(nameTableEntry->NewStyleName);
+                        }
+                    }
+
+                    // name fallback
+                    if (gtb.Name.empty())
+                    {
+                        gtb.Name = MidiPin->Name;
+
+                        if (gtb.FirstGroupIndex > 0)
+                        {
+                            gtb.Name += L" " + std::wstring{ gtb.FirstGroupIndex };
+                        }
+                    }
+                }
+
+
             }
 
-
-            for (auto const& gtb : gtbs)
+            // this update is done for all names, not just for MIDI 1.0 devices
+            for (auto const& gtb : MidiPin->Blocks)
             {
                 // process each group. For MIDI 1 devices, count will always be 1. For MIDI 2, it could be anything from 1-16
                 for (uint8_t groupIndex = gtb.FirstGroupIndex; groupIndex < gtb.FirstGroupIndex + gtb.GroupCount; groupIndex++)
@@ -716,6 +667,25 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             }
 
             LOG_IF_FAILED(nameTable.WriteProperties(interfaceDevProperties));
+        }
+
+
+        // ==============================================
+        // Write Group Terminal Block Data, which may have been updated during name selection and property customizing
+
+        if (MidiPin->Blocks.size() > 0)
+        {
+            internal::WriteGroupTerminalBlocksToPropertyDataPointer(MidiPin->Blocks, MidiPin->GroupTerminalBlockPropertyData);
+
+            interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BINARY, static_cast<ULONG>(MidiPin->GroupTerminalBlockPropertyData.size()), (PVOID)MidiPin->GroupTerminalBlockPropertyData.data() });
+        }
+        else
+        {
+            // no gtbs, so null out the property
+
+            interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_EMPTY, 0, nullptr });
         }
 
 

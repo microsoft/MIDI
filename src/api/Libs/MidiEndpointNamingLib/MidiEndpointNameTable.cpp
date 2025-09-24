@@ -676,10 +676,8 @@ MidiEndpointNameTable::PopulateAllEntriesForMidi1DeviceUsingUmpDriver(
         for (uint8_t groupIndex = gtb.FirstGroupIndex; groupIndex < gtb.FirstGroupIndex + gtb.GroupCount; groupIndex++)
         {
             std::wstring customName = L"";
-            std::wstring pinName = gtb.Name;
 
-            if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
-                gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_OUTPUT)              // gtb output is a midi input (Source)
+            if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_OUTPUT)              // gtb output is a midi input (Source)
             {
                 LOG_IF_FAILED(PopulateEntryForMidi1DeviceUsingUmpDriver(
                     groupIndex,
@@ -691,9 +689,7 @@ MidiEndpointNameTable::PopulateAllEntriesForMidi1DeviceUsingUmpDriver(
 
                 outIndex++;
             }
-
-            if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
-                gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT)           // block input is a MIDI output (Destination)
+            else if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT)           // block input is a MIDI output (Destination)
             {
                 LOG_IF_FAILED(PopulateEntryForMidi1DeviceUsingUmpDriver(
                     groupIndex,
@@ -704,6 +700,10 @@ MidiEndpointNameTable::PopulateAllEntriesForMidi1DeviceUsingUmpDriver(
                     inIndex));
 
                 inIndex++;
+            }
+            else
+            {
+                // should be no bidirectional GTBs for a MIDI 1.0 device
             }
         }
     }

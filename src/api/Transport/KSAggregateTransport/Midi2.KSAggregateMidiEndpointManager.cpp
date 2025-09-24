@@ -162,13 +162,8 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             auto nameTableEntry = masterEndpointDefinition.EndpointNameTable.GetDestinationEntry(gtb.FirstGroupIndex);
             if (nameTableEntry != nullptr && nameTableEntry->NewStyleName[0] != static_cast<wchar_t>(0))
             {
-                gtb.Name = nameTableEntry->NewStyleName;
+                gtb.Name = internal::TrimmedWStringCopy(nameTableEntry->NewStyleName);
             }
-            else
-            {
-                gtb.Name = L"Block " + std::to_wstring(gtb.Number);
-            }
-
         }
         else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)  // pin out, so user in : A MIDI Source
         {
@@ -176,16 +171,23 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             auto nameTableEntry = masterEndpointDefinition.EndpointNameTable.GetSourceEntry(gtb.FirstGroupIndex);
             if (nameTableEntry != nullptr && nameTableEntry->NewStyleName[0] != static_cast<wchar_t>(0))
             {
-                gtb.Name = nameTableEntry->NewStyleName;
-            }
-            else
-            {
-                gtb.Name = L"Block " + std::to_wstring(gtb.Number);
+                gtb.Name = internal::TrimmedWStringCopy(nameTableEntry->NewStyleName);
             }
         }
         else
         {
             RETURN_IF_FAILED(E_INVALIDARG);
+        }
+
+        // name fallback
+        if (gtb.Name.empty())
+        {
+            gtb.Name = masterEndpointDefinition.EndpointName;
+
+            if (gtb.FirstGroupIndex > 0)
+            {
+                gtb.Name += L" " + std::wstring{ gtb.FirstGroupIndex };
+            }
         }
 
         // default values as defined in the MIDI 2.0 USB spec
