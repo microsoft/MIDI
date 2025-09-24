@@ -1037,4 +1037,22 @@ Timestamp</value>
   <data name="PropertyTableValueNamingApproachUseNewStyle" xml:space="preserve">
     <value>Use New-Style Names</value>
   </data>
+  <data name="PropertyTableSectionHeaderPortNaming" xml:space="preserve">
+    <value>Port Naming</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionPortNaming" xml:space="preserve">
+    <value>Windows MIDI Services supplies two options for naming MIDI 1 ports: The older compatible way, and a newer approach which results in better names.</value>
+  </data>
+  <data name="PropertyTablePropertyLabelPortNamingApproach" xml:space="preserve">
+    <value>Naming Preference</value>
+  </data>
+  <data name="PropertyTablePropertyValuePortNamingApproachClassicCompatible" xml:space="preserve">
+    <value>WinMM Classic Compatible (Legacy Names)</value>
+  </data>
+  <data name="PropertyTablePropertyValuePortNamingApproachNewStyle" xml:space="preserve">
+    <value>New Style (Use Pin/Jack Names)</value>
+  </data>
+  <data name="PropertyTablePropertyValuePortNamingApproachDefault" xml:space="preserve">
+    <value>Use system-wide default setting</value>
+  </data>
 </root>

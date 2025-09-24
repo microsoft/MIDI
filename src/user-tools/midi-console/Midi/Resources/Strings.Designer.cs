@@ -2199,6 +2199,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Naming Preference.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelPortNamingApproach {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelPortNamingApproach", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product Instance Id Last Updated.
         /// </summary>
         internal static string PropertyTablePropertyLabelProductInstanceIdLastUpdated {
@@ -2298,6 +2307,33 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to WinMM Classic Compatible (Legacy Names).
+        /// </summary>
+        internal static string PropertyTablePropertyValuePortNamingApproachClassicCompatible {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyValuePortNamingApproachClassicCompatible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use system-wide default setting.
+        /// </summary>
+        internal static string PropertyTablePropertyValuePortNamingApproachDefault {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyValuePortNamingApproachDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Style (Use Pin/Jack Names).
+        /// </summary>
+        internal static string PropertyTablePropertyValuePortNamingApproachNewStyle {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyValuePortNamingApproachNewStyle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SysEx Streams.
         /// </summary>
         internal static string PropertyTablePropertyValueSuffixFunctionBlockMultipleSysexStreams {
@@ -2393,6 +2429,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertyTableSectionDescriptionParentDevice {
             get {
                 return ResourceManager.GetString("PropertyTableSectionDescriptionParentDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Windows MIDI Services supplies two options for naming MIDI 1 ports: The older compatible way, and a newer approach which results in better names..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionPortNaming {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionPortNaming", resourceCulture);
             }
         }
         
@@ -2510,6 +2555,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertyTableSectionHeaderParentDevice {
             get {
                 return ResourceManager.GetString("PropertyTableSectionHeaderParentDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Port Naming.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderPortNaming {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderPortNaming", resourceCulture);
             }
         }
         
