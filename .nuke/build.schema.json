@@ -73,17 +73,13 @@
               "T_BuildCppSamples",
               "T_BuildCSharpSamples",
               "T_BuildPowerShellProjection",
-              "T_BuildServiceAndPlugins",
-              "T_BuildServiceAndPluginsInstaller",
               "T_BuildSettingsApp",
               "T_BuildUserToolsSharedComponents",
               "T_CopySharedDesignAssets",
               "T_CreateVersionIncludes",
               "T_Prerequisites",
               "T_ZipPowershellDevUtilities",
-              "T_ZipSamples",
-              "T_ZipServicePdbs",
-              "T_ZipWdmaud2"
+              "T_ZipSamples"
             ]
           }
         },
@@ -102,17 +98,13 @@
               "T_BuildCppSamples",
               "T_BuildCSharpSamples",
               "T_BuildPowerShellProjection",
-              "T_BuildServiceAndPlugins",
-              "T_BuildServiceAndPluginsInstaller",
               "T_BuildSettingsApp",
               "T_BuildUserToolsSharedComponents",
               "T_CopySharedDesignAssets",
               "T_CreateVersionIncludes",
               "T_Prerequisites",
               "T_ZipPowershellDevUtilities",
-              "T_ZipSamples",
-              "T_ZipServicePdbs",
-              "T_ZipWdmaud2"
+              "T_ZipSamples"
             ]
           }
         },

@@ -107,7 +107,6 @@ class Build : NukeBuild
 
     AbsolutePath StagingRootFolder => BuildRootFolder / "staging";
     AbsolutePath AppSdkStagingFolder => StagingRootFolder / "app-sdk";
-    AbsolutePath ApiStagingFolder => StagingRootFolder / "api";
 
 
     AbsolutePath ReleaseRootFolder => BuildRootFolder / "release";
@@ -129,10 +128,6 @@ class Build : NukeBuild
     //AbsolutePath AppSdkSetupConsoleFolder => AppSdkSetupSolutionFolder / "console-package";
     //AbsolutePath AppSdkSetupPowerShellFolder => AppSdkSetupSolutionFolder / "powershell-package";
 
-
-    AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
-
-    AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
 
     AbsolutePath UserToolsRootFolder => SourceRootFolder / "user-tools";
 
@@ -179,7 +174,6 @@ class Build : NukeBuild
 
 
     Dictionary<string, string> BuiltSdkRuntimeInstallers = new Dictionary<string, string>();
-    Dictionary<string, string> BuiltInBoxInstallers = new Dictionary<string, string>();
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
@@ -280,172 +274,10 @@ class Build : NukeBuild
 
         });
 
-    Target T_BuildServiceAndPlugins => _ => _
-        .DependsOn(T_CreateVersionIncludes)
-        .DependsOn(T_Prerequisites)
-        .Executes(() =>
-    {
-        // this needs to build for Release before building for debug. 
-        // Some of the IDL and other references point to Release only, and
-        // the reference files come from Release
-
-        var platforms = new List<string>();
-        platforms.AddRange(ServiceAndApiPlatformsAll);
-        platforms.Add("Win32");
-
-        foreach (var platform in platforms)
-        {
-            string solutionDir = ApiSolutionFolder.ToString() + @"\";
-
-            Console.Out.WriteLine($"----------------------------------------------------------------------");
-            Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-            Console.Out.WriteLine($"Platform:    {platform}");
-
-            var configs = new[] { Configuration.Debug, Configuration.Release };
-            foreach (var buildConfiguration in configs)
-            {
-                Console.WriteLine($"Building Service and Plugins {platform} {buildConfiguration}");
-
-                var msbuildProperties = new Dictionary<string, object>();
-                msbuildProperties.Add("Platform", platform);
-                msbuildProperties.Add("SolutionDir", solutionDir);  // to include trailing slash
-                msbuildProperties.Add("NoWarn", "MIDL2111");        // IDL identifier length warning
-                msbuildProperties.Add("Configuration", buildConfiguration.ToString());
-
-                MSBuildTasks.MSBuild(_ => _
-                    .SetTargetPath(ApiSolutionFolder / "midi2.sln")
-                    .SetMaxCpuCount(null)
-                    //.SetConfiguration(buildConfiguration)
-                    /*.SetOutDir(outputFolder) */
-                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
-                    //.SetTargets("Rebuild") 
-                    .SetProperties(msbuildProperties)
-                    .SetVerbosity(BuildVerbosity)
-                    .EnableNodeReuse()
-                );
-            }
-
-            // copy binaries to staging folder
-            var stagingFiles = new List<AbsolutePath>();
-
-
-            // This transport gets compiled to Arm64X and x64. The Arm64X output is in the Arm64EC folder
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / ServiceBuildConfiguration / $"Midi2.MidiSrvTransport.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / ServiceBuildConfiguration / $"Midi2.MidiSrvTransport.pdb");
-
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / ServiceBuildConfiguration / $"wdmaud2.drv");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / ServiceBuildConfiguration / $"wdmaud2.pdb");
-
-            var servicePlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64" : platform;
-
-            if (platform != "Win32")
-            {
-                // only in-proc files, like the MidiSrvTransport, are Arm64EC. For all the others
-                // any reference to Arm64EC is just Arm64. We don't use any of the Arm64X output
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midisrv.exe");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midisrv.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.DiagnosticsTransport.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.DiagnosticsTransport.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSTransport.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSTransport.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSAggregateTransport.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSAggregateTransport.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualMidiTransport.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualMidiTransport.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.LoopbackMidiTransport.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.LoopbackMidiTransport.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BS2UMPTransform.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BS2UMPTransform.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UMP2BSTransform.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UMP2BSTransform.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UmpProtocolDownscalerTransform.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UmpProtocolDownscalerTransform.pdb");
-
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SchedulerTransform.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SchedulerTransform.pdb");
-            }
-
-            foreach (var file in stagingFiles)
-            {
-                FileSystemTasks.CopyFileToDirectory(file, ApiStagingFolder / servicePlatform, FileExistsPolicy.Overwrite, true);
-            }
-        }
-
-        // Copy reference files to reference folder. This requires
-        // the SDK projects reference those instead of the current version
-        // which references deep into the API project
-
-        // copy x64 files to Arm64EC folder as well. No reason for the full
-        // service and plugins to be Arm64EC just to provide a few headers
-
-        var intermediateFolder = ApiSolutionFolder / "vsfiles" / "intermediate";
-        var apiReleaseFolder = ApiSolutionFolder / "vsfiles";
-        var apiIncludeFolder = ApiSolutionFolder / "inc";
-        var networkTransportFolder = ApiSolutionFolder / "Transport" / "UdpNetworkMidi2Transport";
-
-        foreach (var platform in ServiceAndApiPlatformsAll)
-        {
-            var referenceFiles = new List<AbsolutePath>();
-
-            // for the destination platform, we use x64 files here since they're not
-            // binaries anyway
-            //string sourcePlatform = (platform == "Arm64EC" ? "x64" : platform);
-            string sourcePlatform = platform;
-
-            referenceFiles.Add(intermediateFolder / "idl" / sourcePlatform / Configuration.Release / "WindowsMidiServices.h");
-            referenceFiles.Add(intermediateFolder / "idl" / sourcePlatform / Configuration.Release / "WindowsMidiServices_i.c");
-            referenceFiles.Add(intermediateFolder / "idl" / sourcePlatform / Configuration.Release / "WindowsMidiServices_i.c");
-
-            referenceFiles.Add(intermediateFolder / "MidiKS" / sourcePlatform / Configuration.Release / "MidiKS.lib");
-            referenceFiles.Add(apiReleaseFolder / sourcePlatform / Configuration.Release / "MidiPluginConfigurationLib.lib");
-            referenceFiles.Add(apiReleaseFolder / sourcePlatform / Configuration.Release / "MidiEndpointNamingLib.lib");
-
-            referenceFiles.Add(apiIncludeFolder / "MidiEndpointCustomProperties.h");
-            referenceFiles.Add(apiIncludeFolder / "MidiEndpointMatchCriteria.h");
-            referenceFiles.Add(apiIncludeFolder / "MidiEndpointNameTable.h");
-            referenceFiles.Add(apiIncludeFolder / "MidiDefs.h");
-            referenceFiles.Add(apiIncludeFolder / "hstring_util.h");
-            referenceFiles.Add(apiIncludeFolder / "wstring_util.h");
-            referenceFiles.Add(apiIncludeFolder / "json_defs.h");
-            referenceFiles.Add(apiIncludeFolder / "json_helpers.h");
-            referenceFiles.Add(apiIncludeFolder / "loopback_ids.h");
-            referenceFiles.Add(apiIncludeFolder / "midi_group_terminal_blocks.h");
-
-            // transport-specific include file
-            referenceFiles.Add(networkTransportFolder / "network_json_defs.h");
-            //referenceFiles.Add(ble1TransportFolder / "ble1_json_defs.h");
-
-
-
-            // this is the only one that needs Arm64X
-            referenceFiles.Add(intermediateFolder / "Midi2.MidiSrvTransport" / sourcePlatform / Configuration.Release / "Midi2MidiSrvTransport.h");
-
-            // copy the files over to the reference location
-            foreach (var file in referenceFiles)
-            {
-                FileSystemTasks.CopyFileToDirectory(file, ApiReferenceFolder / platform, FileExistsPolicy.Overwrite, true);
-            }
-
-
-        }
-
-    });
-
-
 
     Target T_BuildAndPackAllAppSDKs => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_CreateVersionIncludes)
-        .DependsOn(T_BuildServiceAndPlugins)
         .Executes(() =>
         {
         //    bool wxsWritten = false;
@@ -777,65 +609,6 @@ class Build : NukeBuild
             writer.WriteLine("</Include>");
         }
     }
-
-    Target T_BuildServiceAndPluginsInstaller => _ => _
-        .DependsOn(T_Prerequisites)
-        .DependsOn(T_BuildServiceAndPlugins)
-        .Executes(() =>
-        {
-            // we build for Arm64 and x64. No EC required here
-            foreach (var platform in InstallerPlatforms)
-            {
-                UpdateSetupBundleInfoIncludeFile(platform);
-
-                //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
-
-                string solutionDir = InBoxComponentsSetupSolutionFolder.ToString() + @"\";
-
-                var msbuildProperties = new Dictionary<string, object>();
-                msbuildProperties.Add("Platform", platform);
-                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
-
-                Console.Out.WriteLine($"----------------------------------------------------------------------");
-                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-                Console.Out.WriteLine($"Platform:    {platform}");
-
-                NuGetTasks.NuGetRestore(_ => _
-                    .SetProcessWorkingDirectory(solutionDir)
-                    .SetSource(@"https://api.nuget.org/v3/index.json")
-                    .SetSolutionDirectory(solutionDir)
-                //.SetConfigFile(packagesConfigFullPath)
-                );
-
-                var output = MSBuildTasks.MSBuild(_ => _
-                    .SetTargetPath(InBoxComponentsSetupSolutionFolder / "midi-services-in-box-setup.sln")
-                    .SetMaxCpuCount(null)
-                    /*.SetOutDir(outputFolder) */
-                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
-                    /*.SetTargets("Build") */
-                    .SetProperties(msbuildProperties)
-                    .SetConfiguration(Configuration.Release)
-                    .SetVerbosity(BuildVerbosity)
-                    .SetTargets("Clean", "Rebuild")
-                    .EnableNodeReuse()
-                );
-
-
-                // todo: it would be better to see if any of the sdk files have changed and only
-                // do this copy if a new setup file was created. Maybe do a before/after date/time check?
-
-                string installerType = ServiceBuildConfiguration == Configuration.Debug ? "DEBUG" : "";
-
-
-                string newInstallerName = $"Windows MIDI Services ({installerType}In-Box Service) {BuildVersionFullString}-{platform.ToLower()}.exe";
-
-                FileSystemTasks.CopyFile(
-                    InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
-                    ThisReleaseFolder / newInstallerName);
-
-                BuiltInBoxInstallers[platform.ToLower()] = newInstallerName;
-            }
-        });
 
     Target T_BuildUserToolsSharedComponents => _ => _
         .DependsOn(T_Prerequisites)
@@ -1807,25 +1580,6 @@ class Build : NukeBuild
         });
 
 
-    Target T_ZipServicePdbs => _ => _
-        .DependsOn(T_Prerequisites)
-        .DependsOn(T_BuildServiceAndPlugins)
-        .Executes(() =>
-    {
-        foreach (var platform in new string[]{ "arm64", "x64"})
-        {
-            var folder = ApiStagingFolder / platform;
-
-            folder.ZipTo(
-                ThisReleaseFolder / $"service-pdbs-{platform}.zip",
-                filter: x =>
-                    x.HasExtension("pdb")
-                );
-            
-        }
-
-    });
-
     Target T_ZipPowershellDevUtilities => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_CreateVersionIncludes)
@@ -1836,70 +1590,10 @@ class Build : NukeBuild
             regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
         });
 
-    Target T_ZipWdmaud2 => _ => _
-        .DependsOn(T_Prerequisites)
-        .DependsOn(T_BuildServiceAndPlugins)
-        .Executes(() =>
-        {
-            var zipRoot = (StagingRootFolder / "wdmaud2").CreateOrCleanDirectory();
-
-            var arm64 = (zipRoot / "arm64").CreateOrCleanDirectory();
-            var x64 = (zipRoot / "x64").CreateOrCleanDirectory();
-            var x86 = (zipRoot / "Win32").CreateOrCleanDirectory();
-
-            var regHelpersLocation = RootDirectory / "src" / "dev-tools" / "reg-helpers";
-
-            var regHelperCmdFileName = "dev-replace-wdmaud2.cmd";
-            var regHelperPs1FileName = "midi-replace-wdmaud2-drv.ps1";
-            var readmeFileName = "wdmaud2.drv - README.txt";
-
-            var regHelperx86CmdFileName = "dev-replace-wdmaud2-x86.cmd";
-            var regHelperx86Ps1FileName = "midi-replace-wdmaud2-drv-x86.ps1";
-
-
-            var regHelperCmdFileFullPath = regHelpersLocation / regHelperCmdFileName;
-            var regHelperPs1FileFullPath = regHelpersLocation / regHelperPs1FileName;
-            var readmeFileFullPath = regHelpersLocation / readmeFileName;
-
-            var regHelperx86CmdFileFullPath = regHelpersLocation / regHelperx86CmdFileName;
-            var regHelperx86Ps1FileFullPath = regHelpersLocation / regHelperx86Ps1FileName;
-
-            string driverFile = "wdmaud2.drv";
-            string pdbFile = "wdmaud2.pdb";
-
-            CopyFile(ApiStagingFolder / "arm64" / driverFile, arm64 / driverFile, FileExistsPolicy.Fail, false);
-            CopyFile(ApiStagingFolder / "arm64" / pdbFile, arm64 / pdbFile, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperCmdFileFullPath, arm64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperPs1FileFullPath, arm64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
-            CopyFile(readmeFileFullPath, arm64 / readmeFileName, FileExistsPolicy.Fail, false);
-
-
-            CopyFile(ApiStagingFolder / "x64" / driverFile, x64 / driverFile, FileExistsPolicy.Fail, false);
-            CopyFile(ApiStagingFolder / "x64" / pdbFile, x64 / pdbFile, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperCmdFileFullPath, x64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperPs1FileFullPath, x64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
-            CopyFile(readmeFileFullPath, x64 / readmeFileName, FileExistsPolicy.Fail, false);
-
-
-            CopyFile(ApiStagingFolder / "Win32" / driverFile, x86 / driverFile, FileExistsPolicy.Fail, false);
-            CopyFile(ApiStagingFolder / "Win32" / pdbFile, x86 / pdbFile, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperx86CmdFileFullPath, x86 / regHelperx86CmdFileName, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperx86Ps1FileFullPath, x86 / regHelperx86Ps1FileName, FileExistsPolicy.Fail, false);
-            CopyFile(readmeFileFullPath, x86 / readmeFileName, FileExistsPolicy.Fail, false);
-
-
-            x64.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-x64.zip");
-            arm64.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-arm64.zip");
-            x86.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-x86-win32.zip");
-
-        });
-
 
     Target BuildAndPublishAll => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_CreateVersionIncludes)
-        .DependsOn(T_BuildServiceAndPlugins)
-        .DependsOn(T_BuildServiceAndPluginsInstaller)
         .DependsOn(T_BuildAndPackAllAppSDKs)
         .DependsOn(T_BuildConsoleApp)
         .DependsOn(T_BuildSettingsApp)
@@ -1907,29 +1601,10 @@ class Build : NukeBuild
       //  .DependsOn(BuildAndPackageElectronProjection)
         .DependsOn(T_BuildCppSamples)
         .DependsOn(T_BuildCSharpSamples)
-        .DependsOn(T_ZipWdmaud2)
         .DependsOn(T_ZipPowershellDevUtilities)
         .DependsOn(T_ZipSamples)
-        .DependsOn(T_ZipServicePdbs)
         .Executes(() =>
         {
-            if (BuiltInBoxInstallers.Count > 0)
-            {
-                Console.WriteLine("\nBuilt in-box installers:");
-
-                foreach (var item in BuiltInBoxInstallers)
-                {
-                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("No in-box installers built.");
-            }
-
-         
-
-
             if (BuiltSdkRuntimeInstallers.Count > 0)
             {
                 Console.WriteLine("\nBuilt SDK runtime installers:");

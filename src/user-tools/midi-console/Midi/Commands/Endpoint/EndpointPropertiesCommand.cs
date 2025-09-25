@@ -457,10 +457,39 @@ namespace Microsoft.Midi.ConsoleApp
 
 
 
+                // MIDI 1.0 Port Naming -------------------------------------------------------
+
+                table.AddEmptyRow();
+                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderPortNaming), "");
+                if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionPortNaming), "");
+                table.AddEmptyRow();
+
+                string namingApproach = string.Empty;
+
+                switch (di.Midi1PortNamingApproach)
+                {
+                    case Midi1PortNamingApproach.Default:
+                        namingApproach = Strings.PropertyTablePropertyValuePortNamingApproachDefault;
+                        break;
+
+                    case Midi1PortNamingApproach.UseNewStyle:
+                        namingApproach = Strings.PropertyTablePropertyValuePortNamingApproachNewStyle;
+                        break;
+
+                    case Midi1PortNamingApproach.UseClassicCompatible:
+                        namingApproach = Strings.PropertyTablePropertyValuePortNamingApproachClassicCompatible;
+                        break;
+
+                }
+
+                table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelPortNamingApproach), namingApproach);
+
+
                 // Related MIDI 1.0 ports (WinMM and WinRT MIDI 1.0) -------------------------------------------------------
 
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidi1Ports), "");
+
                 if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionMidi1Ports), "");
                 table.AddEmptyRow();
 

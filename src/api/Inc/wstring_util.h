@@ -18,9 +18,10 @@
 
 namespace WindowsMidiServicesInternal
 {
+    // assumes the string passed in has already been trimmed of leading/trailing whitespace
     inline bool StringEndsWithSpecifiedNumber(
-        _In_ std::wstring s,
-        _In_ uint16_t numberToFind)
+        _In_ std::wstring const& s,
+        _In_ uint16_t const numberToFind)
     {
         // TODO: Check to see if there's a number at the end of the string (take the last numeric values) and compare *whole* value
 
