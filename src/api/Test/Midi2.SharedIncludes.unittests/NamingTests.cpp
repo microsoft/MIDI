@@ -54,6 +54,25 @@ using namespace WindowsMidiServicesNamingLib;
 //{
 //}
 
+void NamingTests::TestStringEndsWithSpecifiedNumber()
+{
+    // we don't test for numeric-only strings because that is not an expected scenario
+    // and the function under test doesn't handle that.
+
+    VERIFY_IS_TRUE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"FOO 01", 1));
+    VERIFY_IS_TRUE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"FOO 25 01", 1));
+    VERIFY_IS_TRUE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"G 0005", 5));
+    VERIFY_IS_TRUE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"A 6", 6));
+
+    VERIFY_IS_FALSE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"A [6]", 6));
+
+    VERIFY_IS_TRUE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"YAMAHA DTX-MULTI 12", 12));
+    VERIFY_IS_FALSE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"YAMAHA DTX-MULTI 12", 2));
+    VERIFY_IS_FALSE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"YAMAHA DTX-MULTI 12", 1));
+    VERIFY_IS_FALSE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"YAMAHA DTX-MULTI 120", 12));
+    VERIFY_IS_TRUE(WindowsMidiServicesInternal::StringEndsWithSpecifiedNumber(L"YAMAHA DTX-MULTI 120", 120));
+}
+
 void NamingTests::TestPopulateEntryForNativeUmpDevice()
 {
     MidiEndpointNameTable table;
@@ -81,9 +100,13 @@ void NamingTests::TestPopulateEntryForNativeUmpDevice()
     expectedSourceNewStyleNames.push_back(filterName + L" Ext In");
     expectedSourceNewStyleNames.push_back(filterName + L" Ext In");
 
-    // for MIDI 2 devices, the classic names are also new-style names
     std::vector<std::wstring> expectedSourceClassicNames{};
-    std::copy(expectedSourceNewStyleNames.begin(), expectedSourceNewStyleNames.end(), std::back_inserter(expectedSourceClassicNames));
+    expectedSourceClassicNames.push_back(parentDeviceName);
+    expectedSourceClassicNames.push_back(L"MIDIIN2 (" + parentDeviceName + L")");
+    expectedSourceClassicNames.push_back(L"MIDIIN3 (" + parentDeviceName + L")");
+    expectedSourceClassicNames.push_back(L"MIDIIN4 (" + parentDeviceName + L")");
+    expectedSourceClassicNames.push_back(L"MIDIIN5 (" + parentDeviceName + L")");
+    expectedSourceClassicNames.push_back(L"MIDIIN6 (" + parentDeviceName + L")");
 
 
     std::vector<std::wstring> destinationBlockNames{};
@@ -98,9 +121,12 @@ void NamingTests::TestPopulateEntryForNativeUmpDevice()
     expectedDestinationNewStyleNames.push_back(filterName + L" Ext Out");
     expectedDestinationNewStyleNames.push_back(filterName + L" Ext Out");
 
-    // for MIDI 2 devices, the classic names are also new-style names
+    // for UMP devices, there's no filter name that's separate from the parent device name. They are the same.
     std::vector<std::wstring> expectedDestinationClassicNames{};
-    std::copy(expectedDestinationNewStyleNames.begin(), expectedDestinationNewStyleNames.end(), std::back_inserter(expectedDestinationClassicNames));
+    expectedDestinationClassicNames.push_back(parentDeviceName);
+    expectedDestinationClassicNames.push_back(L"MIDIOUT2 (" + parentDeviceName + L")");
+    expectedDestinationClassicNames.push_back(L"MIDIOUT3 (" + parentDeviceName + L")");
+    expectedDestinationClassicNames.push_back(L"MIDIOUT4 (" + parentDeviceName + L")");
 
 
     VERIFY_ARE_EQUAL(sourceBlockNames.size(), expectedSourceClassicNames.size());
@@ -166,6 +192,8 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
     uint8_t portIndexSource{ 0 };
     uint8_t portIndexDestination{ 0 };
 
+    std::wstring parentDeviceName { L"SomeSynth"};
+
     std::vector<std::wstring> sourceBlockNames{};
     sourceBlockNames.push_back(L"SomeSynth MIDI");
     sourceBlockNames.push_back(L"SomeSynth Synth");
@@ -185,7 +213,12 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
 
     // classic names are same as new-style for a MIDI 1 device using the UMP driver
     std::vector<std::wstring> expectedSourceClassicNames{};
-    std::copy(expectedSourceNewStyleNames.begin(), expectedSourceNewStyleNames.end(), std::back_inserter(expectedSourceClassicNames));
+    expectedSourceClassicNames.push_back(L"SomeSynth");
+    expectedSourceClassicNames.push_back(L"MIDIIN2 (SomeSynth)");
+    expectedSourceClassicNames.push_back(L"MIDIIN3 (SomeSynth)");
+    expectedSourceClassicNames.push_back(L"MIDIIN4 (SomeSynth)");
+    expectedSourceClassicNames.push_back(L"MIDIIN5 (SomeSynth)");
+    expectedSourceClassicNames.push_back(L"MIDIIN6 (SomeSynth)");
 
 
     std::vector<std::wstring> destinationBlockNames{};
@@ -201,7 +234,11 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
     expectedDestinationNewStyleNames.push_back(L"SomeSynth Ext Out");
 
     std::vector<std::wstring> expectedDestinationClassicNames{};
-    std::copy(expectedDestinationNewStyleNames.begin(), expectedDestinationNewStyleNames.end(), std::back_inserter(expectedDestinationClassicNames));
+    expectedDestinationClassicNames.push_back(L"SomeSynth");
+    expectedDestinationClassicNames.push_back(L"MIDIOUT2 (SomeSynth)");
+    expectedDestinationClassicNames.push_back(L"MIDIOUT3 (SomeSynth)");
+    expectedDestinationClassicNames.push_back(L"MIDIOUT4 (SomeSynth)");
+
 
     VERIFY_ARE_EQUAL(sourceBlockNames.size(), expectedSourceClassicNames.size());
     VERIFY_ARE_EQUAL(sourceBlockNames.size(), expectedSourceNewStyleNames.size());
@@ -216,7 +253,9 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
             groupIndex,
             MidiFlow::MidiFlowIn,
             L"",                   // custom name
-            sourceBlockNames[groupIndex]
+            parentDeviceName,
+            sourceBlockNames[groupIndex],
+            groupIndex
         ));
 
         portIndexSource++;
@@ -228,7 +267,9 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
             groupIndex,
             MidiFlow::MidiFlowOut,
             L"",                   // custom name
-            destinationBlockNames[groupIndex]
+            parentDeviceName,
+            destinationBlockNames[groupIndex],
+            groupIndex
         ));
 
         portIndexDestination++;
@@ -369,162 +410,336 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingMidi1Driver()
 }
 
 
-
-
-
-
-
-#if false
-
-// checks the StringEndsWithNumber function
-void NamingTests::TestCheckForEndingNumber()
+void NamingTests::TestValidateMidi1DriverAndMidi2DriverCreateCompatibleLegacyNames()
 {
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 2", 2));
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 12", 12));
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 123", 123));
+    MidiEndpointNameTable tableUmpDriver;
+    MidiEndpointNameTable tableMidi1Driver;
 
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test2", 2));
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test12", 12));
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test123", 123));
+    uint8_t portIndexSource{ 0 };
+    uint8_t portIndexDestination{ 0 };
 
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test-2", 2));
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test-12", 12));
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test-123", 123));
+    // this is using real-world device data
+    std::wstring nameFromRegistry{ L"nanoKEY Fold" };
+    std::wstring filterName{ L"nanoKEY Fold" };
 
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"867-123", 123));
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"867 123", 123));
+    std::vector<std::wstring> sourceBlockNames{};
+    sourceBlockNames.push_back(L"nanoKEY Fold _ KEYBOARD/CTRL");
 
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 1-23", 23));
-    VERIFY_IS_TRUE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 1 23", 23));
+    std::vector<std::wstring> expectedSourceClassicNames{};
+    expectedSourceClassicNames.push_back(nameFromRegistry);
 
-
-    VERIFY_IS_FALSE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 2", 20));
-    VERIFY_IS_FALSE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 12", 2));
-    VERIFY_IS_FALSE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test-12", 2));
-    VERIFY_IS_FALSE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 123", 3));
-    VERIFY_IS_FALSE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 123", 23));
-
-    VERIFY_IS_FALSE(internal::Midi1PortNaming::StringEndsWithNumber(L"Test 1-23", 123));
-}
-
-void NamingTests::TestFullyCleanupBlockName()
-{
-    std::wstring parentDeviceName{ L"MOTU USB MIDI Device" };
-    std::wstring filterName{ L"MOTU USB MIDI" };
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupBlockName(parentDeviceName, parentDeviceName, filterName), L"");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupBlockName(filterName, parentDeviceName, filterName), L"");
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupBlockName(L"MIDI", parentDeviceName, filterName), L"");
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupBlockName(filterName + L"Input 1", parentDeviceName, filterName), L"Input 1");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupBlockName(parentDeviceName + L"Input 1", parentDeviceName, filterName), L"Input 1");
-
-}
-
-void NamingTests::TestFullyCleanupKSPinName()
-{
-    std::wstring parentDeviceName{ L"MOTU USB MIDI Device" };
-    std::wstring filterName{ L"Midi Port 1" };
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(L"Port [0]", parentDeviceName, filterName), L"Port");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(L"MIDI", parentDeviceName, filterName), L"");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(L"IN", parentDeviceName, filterName), L"");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(L"OUT", parentDeviceName, filterName), L"");
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(L"MIDIIN ", parentDeviceName, filterName), L"MIDIIN");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(L" MIDIOUT", parentDeviceName, filterName), L"MIDIOUT");
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(L" MIDI IN", parentDeviceName, filterName), L"MIDI IN");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(L"MIDI OUT ", parentDeviceName, filterName), L"MIDI OUT");
-
-    // pin name is same as parent device name
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(parentDeviceName, parentDeviceName, filterName), L"");
-
-    // pin name is same as filter name
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::FullyCleanupKSPinName(filterName, parentDeviceName, filterName), L"");
-}
-
-void NamingTests::TestRemoveJustKSPinGeneratedSuffix()
-{
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::RemoveJustKSPinGeneratedSuffix(L"Port [0]"), L"Port");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::RemoveJustKSPinGeneratedSuffix(L"Port [10]"), L"Port");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::RemoveJustKSPinGeneratedSuffix(L"Port [20] "), L"Port");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::RemoveJustKSPinGeneratedSuffix(L"Port  [20] "), L"Port");
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::RemoveJustKSPinGeneratedSuffix(L"Port [16] Input"), L"Port [16] Input");
-}
-
-void NamingTests::TestAddGroupNumberToNameIfNeeded()
-{
-    std::wstring parentDeviceName{ L"MOTU USB MIDI Device 5" };
-    std::wstring filterName{ L"MIDI Port 2" };
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, L"MIDI Port 2", 0), L"MIDI Port 2");   // we don't add for group index 0
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, L"MIDI Port 2", 3), L"MIDI Port 2 4");
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, L"MOTU USB MIDI Device 5", 3), L"MOTU USB MIDI Device 5 4");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, L"MOTU USB MIDI Device 5", 4), L"MOTU USB MIDI Device 5");
-}
+    std::vector<std::wstring> expectedSourceNewStyleNames{};
+    expectedSourceNewStyleNames.push_back(L"nanoKEY Fold _ KEYBOARD/CTRL");
 
 
-// Scenario: We have a registry entry for the device name
-// and we want to generate the port names based upon that
-// information.
-void NamingTests::TestGenerateWinMMLegacyName()
-{
-    std::wstring filterName{ L"YAMAHA DTX-MULTI 12" };
-    std::wstring registryName{ L"YAMAHA DTX-MULTI 12" };
+    std::vector<std::wstring> destinationBlockNames{};
+    destinationBlockNames.push_back(L"nanoKEY Fold _ CTRL");
+
+    std::vector<std::wstring> expectedDestinationClassicNames{};
+    expectedDestinationClassicNames.push_back(nameFromRegistry);
+
+    std::vector<std::wstring> expectedDestinationNewStyleNames{};
+    expectedDestinationNewStyleNames.push_back(L"nanoKEY Fold _ CTRL");
+
+    VERIFY_ARE_EQUAL(sourceBlockNames.size(), expectedSourceClassicNames.size());
+    VERIFY_ARE_EQUAL(sourceBlockNames.size(), expectedSourceNewStyleNames.size());
+
+    VERIFY_ARE_EQUAL(destinationBlockNames.size(), expectedDestinationClassicNames.size());
+    VERIFY_ARE_EQUAL(destinationBlockNames.size(), expectedDestinationNewStyleNames.size());
 
 
-    for (auto const flow : {MidiFlow::MidiFlowIn, MidiFlow::MidiFlowOut})
+    for (uint8_t groupIndex = 0; groupIndex < sourceBlockNames.size(); groupIndex++)
     {
-        std::wstring prefix{};
-        if (flow == MidiFlow::MidiFlowIn)
-        {
-            prefix = L"MIDIIN";
-        }
-        else
-        {
-            prefix = L"MIDIOUT";
-        }
+        VERIFY_SUCCEEDED(tableUmpDriver.PopulateEntryForMidi1DeviceUsingUmpDriver(
+            groupIndex,
+            MidiFlow::MidiFlowIn,
+            L"",                   // custom name
+            nameFromRegistry,
+            sourceBlockNames[groupIndex],
+            portIndexSource
+        ));
 
-        VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateLegacyMidi1PortName(registryName, filterName, flow, 0), registryName);
-        VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateLegacyMidi1PortName(registryName, filterName, flow, 1), prefix + L"2 (" + registryName + L")");
-        VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateLegacyMidi1PortName(registryName, filterName, flow, 2), prefix + L"3 (" + registryName + L")");
+        portIndexSource++;
+    }
 
-        VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateLegacyMidi1PortName(L"", filterName, flow, 0), filterName);
-        VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateLegacyMidi1PortName(L"", filterName, flow, 1), prefix + L"2 (" + filterName + L")");
-        VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateLegacyMidi1PortName(L"", filterName, flow, 2), prefix + L"3 (" + filterName + L")");
+    for (uint8_t groupIndex = 0; groupIndex < destinationBlockNames.size(); groupIndex++)
+    {
+        VERIFY_SUCCEEDED(tableUmpDriver.PopulateEntryForMidi1DeviceUsingUmpDriver(
+            groupIndex,
+            MidiFlow::MidiFlowOut,
+            L"",                   // custom name
+            nameFromRegistry,
+            destinationBlockNames[groupIndex],
+            portIndexDestination
+        ));
+
+        portIndexDestination++;
+    }
+
+    // to begin with, validate all the names are what are expected
+
+    for (uint8_t groupIndex = 0; groupIndex < sourceBlockNames.size(); groupIndex++)
+    {
+        auto entry = tableUmpDriver.GetSourceEntry(groupIndex);
+
+        VERIFY_ARE_EQUAL(entry->LegacyWinMMName, expectedSourceClassicNames[groupIndex]);
+        VERIFY_ARE_EQUAL(entry->NewStyleName, expectedSourceNewStyleNames[groupIndex]);
+    }
+
+    for (uint8_t groupIndex = 0; groupIndex < destinationBlockNames.size(); groupIndex++)
+    {
+        auto entry = tableUmpDriver.GetDestinationEntry(groupIndex);
+
+        VERIFY_ARE_EQUAL(entry->LegacyWinMMName, expectedDestinationClassicNames[groupIndex]);
+        VERIFY_ARE_EQUAL(entry->NewStyleName, expectedDestinationNewStyleNames[groupIndex]);
+    }
+
+
+    // Now populate using simulated Midi1 driver path and validate that it produces the same names
+
+    for (uint8_t groupIndex = 0; groupIndex < sourceBlockNames.size(); groupIndex++)
+    {
+        VERIFY_SUCCEEDED(tableMidi1Driver.PopulateEntryForMidi1DeviceUsingMidi1Driver(
+            groupIndex,
+            MidiFlow::MidiFlowIn,
+            L"",                   // custom name
+            nameFromRegistry,
+            filterName,
+            sourceBlockNames[groupIndex],
+            portIndexSource
+        ));
+
+        portIndexSource++;
+    }
+
+    for (uint8_t groupIndex = 0; groupIndex < destinationBlockNames.size(); groupIndex++)
+    {
+        VERIFY_SUCCEEDED(tableMidi1Driver.PopulateEntryForMidi1DeviceUsingMidi1Driver(
+            groupIndex,
+            MidiFlow::MidiFlowOut,
+            L"",                   // custom name
+            nameFromRegistry,
+            filterName,
+            destinationBlockNames[groupIndex],
+            portIndexDestination
+        ));
+
+        portIndexDestination++;
+    }
+
+    for (uint8_t groupIndex = 0; groupIndex < sourceBlockNames.size(); groupIndex++)
+    {
+        auto entry = tableUmpDriver.GetSourceEntry(groupIndex);
+
+        VERIFY_ARE_EQUAL(entry->LegacyWinMMName, expectedSourceClassicNames[groupIndex]);
+        VERIFY_ARE_EQUAL(entry->NewStyleName, expectedSourceNewStyleNames[groupIndex]);
+    }
+
+    for (uint8_t groupIndex = 0; groupIndex < destinationBlockNames.size(); groupIndex++)
+    {
+        auto entry = tableUmpDriver.GetDestinationEntry(groupIndex);
+
+        VERIFY_ARE_EQUAL(entry->LegacyWinMMName, expectedDestinationClassicNames[groupIndex]);
+        VERIFY_ARE_EQUAL(entry->NewStyleName, expectedDestinationNewStyleNames[groupIndex]);
+    }
+
+}
+
+
+// GTB name is generated using the New Style name from the name table.
+// So we do some testing for that here.
+void NamingTests::TestGitHubIssue652()
+{
+    MidiEndpointNameTable table;
+
+    uint8_t portIndexSource{ 0 };
+    uint8_t portIndexDestination{ 0 };
+
+    // name from the registry isn't always correct, so keeping it different from filterName is important for this thest
+    std::wstring nameFromRegistry{ L"MIDIMATE II" };
+    std::wstring filterName{ L"MIDIMATE II" };
+
+    std::vector<std::wstring> sourcePinNames{};
+    sourcePinNames.push_back(L"MIDIMATE II [1]");
+    sourcePinNames.push_back(L"MIDIMATE II [3]");
+
+    std::vector<std::wstring> expectedSourceClassicNames{};
+    expectedSourceClassicNames.push_back(nameFromRegistry);
+    expectedSourceClassicNames.push_back(L"MIDIIN2 (" + nameFromRegistry + L")");
+
+    std::vector<std::wstring> expectedSourceNewStyleNames{};
+    expectedSourceNewStyleNames.push_back(nameFromRegistry);
+    expectedSourceNewStyleNames.push_back(nameFromRegistry + L" 2");
+
+
+
+    std::vector<std::wstring> destinationPinNames{};
+    destinationPinNames.push_back(L"MIDIMATE II [0]");
+    destinationPinNames.push_back(L"MIDIMATE II [2]");
+
+    std::vector<std::wstring> expectedDestinationClassicNames{};
+    expectedDestinationClassicNames.push_back(nameFromRegistry);
+    expectedDestinationClassicNames.push_back(L"MIDIOUT2 (" + nameFromRegistry + L")");
+
+
+    std::vector<std::wstring> expectedDestinationNewStyleNames{};
+    expectedDestinationNewStyleNames.push_back(nameFromRegistry);
+    expectedDestinationNewStyleNames.push_back(nameFromRegistry + L" 2");
+
+
+    VERIFY_ARE_EQUAL(sourcePinNames.size(), expectedSourceClassicNames.size());
+    VERIFY_ARE_EQUAL(sourcePinNames.size(), expectedSourceNewStyleNames.size());
+
+    VERIFY_ARE_EQUAL(destinationPinNames.size(), expectedDestinationClassicNames.size());
+    VERIFY_ARE_EQUAL(destinationPinNames.size(), expectedDestinationNewStyleNames.size());
+
+
+    for (uint8_t groupIndex = 0; groupIndex < sourcePinNames.size(); groupIndex++)
+    {
+        VERIFY_SUCCEEDED(table.PopulateEntryForMidi1DeviceUsingMidi1Driver(
+            groupIndex,
+            MidiFlow::MidiFlowIn,
+            L"",                   // custom name
+            nameFromRegistry,
+            filterName,
+            sourcePinNames[groupIndex],
+            portIndexSource
+        ));
+
+        portIndexSource++;
+    }
+
+    for (uint8_t groupIndex = 0; groupIndex < destinationPinNames.size(); groupIndex++)
+    {
+        VERIFY_SUCCEEDED(table.PopulateEntryForMidi1DeviceUsingMidi1Driver(
+            groupIndex,
+            MidiFlow::MidiFlowOut,
+            L"",                   // custom name
+            nameFromRegistry,
+            filterName,
+            destinationPinNames[groupIndex],
+            portIndexDestination
+        ));
+
+        portIndexDestination++;
+    }
+
+    // validate all the names
+
+    for (uint8_t groupIndex = 0; groupIndex < sourcePinNames.size(); groupIndex++)
+    {
+        auto entry = table.GetSourceEntry(groupIndex);
+
+        VERIFY_ARE_EQUAL(entry->LegacyWinMMName, expectedSourceClassicNames[groupIndex]);
+        VERIFY_ARE_EQUAL(entry->NewStyleName, expectedSourceNewStyleNames[groupIndex]);
+    }
+
+    for (uint8_t groupIndex = 0; groupIndex < destinationPinNames.size(); groupIndex++)
+    {
+        auto entry = table.GetDestinationEntry(groupIndex);
+
+        VERIFY_ARE_EQUAL(entry->LegacyWinMMName, expectedDestinationClassicNames[groupIndex]);
+        VERIFY_ARE_EQUAL(entry->NewStyleName, expectedDestinationNewStyleNames[groupIndex]);
     }
 }
 
-// Scenario: We have a device using the MIDI 2 driver and it has no
-// iJack names, so each GTB is named after the device itself
-void NamingTests::TestGeneratePinNameBasedMidi1PortName()
+// GTB names come directly from the driver in the case of KS, so
+// we can only validate the port name approach here.
+// https://github.com/microsoft/MIDI/issues/616
+void NamingTests::TestGitHubIssue616()
 {
+    MidiEndpointNameTable table;
+
+    uint8_t portIndexSource{ 0 };
+    uint8_t portIndexDestination{ 0 };
+
+    // name from the registry isn't always correct, so keeping it different from filterName is important for this thest
     std::wstring filterName{ L"YAMAHA DTX-MULTI 12" };
 
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GeneratePinNameBasedMidi1PortName(filterName, L"MIDI Out [1]", MidiFlow::MidiFlowOut, 0), L"MIDI Out");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GeneratePinNameBasedMidi1PortName(filterName, L"[1]", MidiFlow::MidiFlowOut, 0), L"");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GeneratePinNameBasedMidi1PortName(filterName, L"MIDI Out", MidiFlow::MidiFlowOut, 0), L"MIDI Out");
+    std::vector<std::wstring> sourceBlockNames{};
+    sourceBlockNames.push_back(filterName);
+    sourceBlockNames.push_back(filterName);
+    sourceBlockNames.push_back(filterName);
 
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GeneratePinNameBasedMidi1PortName(filterName, L"YAMAHA DTX-MULTI 12 Out 1", MidiFlow::MidiFlowOut, 0), L"YAMAHA DTX-MULTI 12 Out 1");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GeneratePinNameBasedMidi1PortName(filterName, L"YAMAHA DTX-MULTI 12 Out [1]", MidiFlow::MidiFlowOut, 0), L"YAMAHA DTX-MULTI 12 Out");
+    std::vector<std::wstring> expectedSourceClassicNames{};
+    expectedSourceClassicNames.push_back(filterName);
+    expectedSourceClassicNames.push_back(L"MIDIIN2 (" + filterName + L")");
+    expectedSourceClassicNames.push_back(L"MIDIIN3 (" + filterName + L")");
 
+    std::vector<std::wstring> expectedSourceNewStyleNames{};
+    expectedSourceNewStyleNames.push_back(filterName);
+    expectedSourceNewStyleNames.push_back(filterName + L" 2");
+    expectedSourceNewStyleNames.push_back(filterName + L" 3");
+
+
+
+    std::vector<std::wstring> destinationBlockNames{};
+    destinationBlockNames.push_back(filterName);
+    destinationBlockNames.push_back(filterName);
+    destinationBlockNames.push_back(filterName);
+
+    std::vector<std::wstring> expectedDestinationClassicNames{};
+    expectedDestinationClassicNames.push_back(filterName);
+    expectedDestinationClassicNames.push_back(L"MIDIOUT2 (" + filterName + L")");
+    expectedDestinationClassicNames.push_back(L"MIDIOUT3 (" + filterName + L")");
+
+
+    std::vector<std::wstring> expectedDestinationNewStyleNames{};
+    expectedDestinationNewStyleNames.push_back(filterName);
+    expectedDestinationNewStyleNames.push_back(filterName + L" 2");
+    expectedDestinationNewStyleNames.push_back(filterName + L" 3");
+
+
+    VERIFY_ARE_EQUAL(sourceBlockNames.size(), expectedSourceClassicNames.size());
+    VERIFY_ARE_EQUAL(sourceBlockNames.size(), expectedSourceNewStyleNames.size());
+
+    VERIFY_ARE_EQUAL(destinationBlockNames.size(), expectedDestinationClassicNames.size());
+    VERIFY_ARE_EQUAL(destinationBlockNames.size(), expectedDestinationNewStyleNames.size());
+
+
+    for (uint8_t groupIndex = 0; groupIndex < sourceBlockNames.size(); groupIndex++)
+    {
+        VERIFY_SUCCEEDED(table.PopulateEntryForMidi1DeviceUsingUmpDriver(
+            groupIndex,
+            MidiFlow::MidiFlowIn,
+            L"",                   // custom name
+            filterName,
+            sourceBlockNames[groupIndex],
+            portIndexSource
+        ));
+
+        portIndexSource++;
+    }
+
+    for (uint8_t groupIndex = 0; groupIndex < destinationBlockNames.size(); groupIndex++)
+    {
+        VERIFY_SUCCEEDED(table.PopulateEntryForMidi1DeviceUsingUmpDriver(
+            groupIndex,
+            MidiFlow::MidiFlowOut,
+            L"",                   // custom name
+            filterName,
+            destinationBlockNames[groupIndex],
+            portIndexDestination
+        ));
+
+        portIndexDestination++;
+    }
+
+    // validate all the names
+
+    for (uint8_t groupIndex = 0; groupIndex < sourceBlockNames.size(); groupIndex++)
+    {
+        auto entry = table.GetSourceEntry(groupIndex);
+
+        VERIFY_ARE_EQUAL(entry->LegacyWinMMName, expectedSourceClassicNames[groupIndex]);
+        VERIFY_ARE_EQUAL(entry->NewStyleName, expectedSourceNewStyleNames[groupIndex]);
+    }
+
+    for (uint8_t groupIndex = 0; groupIndex < destinationBlockNames.size(); groupIndex++)
+    {
+        auto entry = table.GetDestinationEntry(groupIndex);
+
+        VERIFY_ARE_EQUAL(entry->LegacyWinMMName, expectedDestinationClassicNames[groupIndex]);
+        VERIFY_ARE_EQUAL(entry->NewStyleName, expectedDestinationNewStyleNames[groupIndex]);
+    }
 }
-
-
-// Scenario: 
-void NamingTests::TestGenerateFilterPlusBlockMidi1PortName()
-{
-    std::wstring parentDeviceName{ L"YAMAHA USB-MIDI Driver (WDM)" };
-    std::wstring filterName{ L"YAMAHA USB-MIDI-1" };
-
-
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateFilterPlusBlockMidi1PortName(parentDeviceName, filterName, L"MIDI Out [1]", 0), L"YAMAHA USB-MIDI-1 MIDI Out");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateFilterPlusBlockMidi1PortName(parentDeviceName, filterName, L"MIDI", 0), L"YAMAHA USB-MIDI-1");
-    VERIFY_ARE_EQUAL(internal::Midi1PortNaming::GenerateFilterPlusBlockMidi1PortName(parentDeviceName, filterName, L"MIDI", 2), L"YAMAHA USB-MIDI-1 3");
-}
-
-#endif

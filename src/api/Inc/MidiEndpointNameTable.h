@@ -113,8 +113,9 @@ namespace WindowsMidiServicesNamingLib
             _In_ uint8_t const groupIndex,
             _In_ MidiFlow const flowFromUserPerspective,
             _In_ std::wstring const& customName,
-            _In_ std::wstring const& blockName
-        ) noexcept;
+            _In_ std::wstring const& parentDeviceName,
+            _In_ std::wstring const& blockName,
+            _In_ uint8_t const portIndexWithinThisFilterAndDirection) noexcept;
 
         HRESULT PopulateEntryForMidi1DeviceUsingMidi1Driver(
             _In_ uint8_t const groupIndex,
