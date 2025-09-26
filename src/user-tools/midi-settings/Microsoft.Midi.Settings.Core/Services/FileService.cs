@@ -18,14 +18,19 @@ public class FileService : IFileService
 {
     public global::Windows.Data.Json.JsonObject Read(string folderPath, string fileName)
     {
-        var path = Path.Combine(folderPath, fileName);
-        if (File.Exists(path))
+        try
         {
-            var json = File.ReadAllText(path);
+            var path = Path.Combine(folderPath, fileName);
+            if (File.Exists(path))
+            {
+                var json = File.ReadAllText(path);
 
-            return global::Windows.Data.Json.JsonObject.Parse(json);
-
-            //return JsonConvert.DeserializeObject<T>(json);
+                return global::Windows.Data.Json.JsonObject.Parse(json);
+            }
+        }
+        catch (Exception ex)
+        {
+            // todo: log
         }
 
         return default;

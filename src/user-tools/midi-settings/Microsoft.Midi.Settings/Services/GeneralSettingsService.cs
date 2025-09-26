@@ -31,11 +31,7 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public async void SetMainWindowPositionAndSize(WindowRect value)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
-
         await _localSettingsService.SaveSettingAsync<WindowRect>(MainWindowPositionAndSize_SettingsKey, value);
-
-        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     public WindowRect? GetMainWindowPositionAndSize()

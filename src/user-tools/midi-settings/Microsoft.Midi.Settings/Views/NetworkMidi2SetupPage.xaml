@@ -320,7 +320,7 @@
 
                     <controls:SettingsCard Header="Endpoint Name Visible to Other Network Clients" Margin="3">
                         <TextBox Header="Name" Width="300" MaxLength="98"
-                                 Text="{x:Bind ViewModel.NewHostEndpointName, Mode=TwoWay}"/>
+                                 Text="{x:Bind ViewModel.NewHostEndpointName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </controls:SettingsCard>
 
                     <controls:SettingsCard Header="Create MIDI 1.0 Proxy Ports by Default" Margin="3">
@@ -380,7 +380,7 @@
 
                                     <TextBox Grid.Column="0" Margin="3" 
                                              Header="Product Instance Id"
-                                             Text="{x:Bind ViewModel.NewHostProductInstanceId, Mode=TwoWay}"
+                                             Text="{x:Bind ViewModel.NewHostProductInstanceId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              MaxLength="42"
                                              VerticalAlignment="Bottom"/>
                                 </Grid>

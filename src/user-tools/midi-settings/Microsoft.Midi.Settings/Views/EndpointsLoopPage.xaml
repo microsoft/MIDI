@@ -159,7 +159,7 @@
                                  VerticalAlignment="Top"
                                  Header="Loopback Base Name" 
                                  Width="250"
-                                 Text="{x:Bind ViewModel.NewLoopbackEndpointBaseName, Mode=TwoWay}"
+                                 Text="{x:Bind ViewModel.NewLoopbackEndpointBaseName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  MaxLength="27"
                                  Margin="13"/>
 
