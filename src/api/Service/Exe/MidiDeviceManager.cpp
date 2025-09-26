@@ -2108,250 +2108,6 @@ CMidiDeviceManager::AssignPortNumber(
     return S_OK;
 }
 
-#if false
-// replaced with version that keeps contiguous port numbers
-_Use_decl_annotations_
-HRESULT
-CMidiDeviceManager::AssignPortNumber(
-    HSWDEVICE SwDevice,
-    PWSTR deviceInterfaceId,
-    MidiFlow flow
-)
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-    );
-
-    auto interfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
-
-    std::map<UINT32, PORT_INFO> portInfo;
-
-    bool hasServiceAssignedPortNumber {false};
-    UINT32 serviceAssignedPortNumber {0};
-    bool hasCustomPortNumber {false};
-    UINT32 customPortNumber {0};
-    bool interfaceEnabled {false};
-
-    winrt::hstring deviceSelector(flow == MidiFlowOut?MIDI1_OUTPUT_DEVICES:MIDI1_INPUT_DEVICES);
-
-    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
-    additionalProperties.Append(STRING_PKEY_MIDI_CustomPortNumber);
-
-    auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
-
-    for (auto const& device : deviceList)
-    {
-        bool servicePortNumValid{ false };
-        UINT32 servicePortNum{ 0 };
-        bool userPortNumValid{ false };
-        UINT32 userPortNum{ 0 };
-
-        auto processingInterface = internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str());
-
-
-        // all others with a service assigned port number goes into the portInfo structure for processing.
-        auto prop = device.Properties().Lookup(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
-        if (prop)
-        {
-            servicePortNum = winrt::unbox_value<UINT32>(prop);
-            servicePortNumValid = servicePortNum <= MAX_WINMM_PORT_NUMBER;
-
-            if (!servicePortNumValid) servicePortNum = 0;
-        }
-
-
-        prop = device.Properties().Lookup(STRING_PKEY_MIDI_CustomPortNumber);
-        if (prop)
-        {
-            userPortNum = winrt::unbox_value<UINT32>(prop);
-            userPortNumValid = userPortNum <= MAX_WINMM_PORT_NUMBER;
-            if (!userPortNumValid) userPortNum = 0;
-        }
-
-        // if this is the interface we are processing, do not add it to the list, we want to determine if
-        // there are any others using the requested port(s).
-        if (processingInterface == interfaceId)
-        {
-            interfaceEnabled = device.IsEnabled();
-            hasCustomPortNumber = userPortNumValid;
-            customPortNumber = userPortNum;
-            hasServiceAssignedPortNumber = servicePortNumValid;
-            serviceAssignedPortNumber = servicePortNum;
-        }
-        else if (servicePortNumValid)
-        {
-            // we track for any port usage at all for assigning a new port number, avoiding 
-            // ports that are in use even if inactive to prevent future conflicts.
-            // There may be inactive users on the same port as an active user, so prefer to track
-            // the currently active user of a given port in case we need to move them.
-            if (!portInfo[servicePortNum].InUse || (!portInfo[servicePortNum].IsEnabled && device.IsEnabled()))
-            {
-                portInfo[servicePortNum].InUse = true;
-                portInfo[servicePortNum].IsEnabled = device.IsEnabled();
-                portInfo[servicePortNum].InterfaceId = processingInterface;
-                portInfo[servicePortNum].HasCustomPortNumber = userPortNumValid;
-                portInfo[servicePortNum].CustomPortNumber = userPortNum;
-                portInfo[servicePortNum].Flow = flow;
-            }
-        }
-    }
-
-    // if we have a service assigned port number, but that number is already in use
-    // by either an active port, or an inactive port and we're currently active (meaning this port
-    // was requested to relocate), move this port somewhere else.
-    bool serviceAssignedPortInUse = (hasServiceAssignedPortNumber &&
-                                        portInfo[serviceAssignedPortNumber].InUse && 
-                                        (interfaceEnabled || portInfo[serviceAssignedPortNumber].IsEnabled));
-
-    // if this port is already enabled, but not on it's ideal user assigned endpoint,
-    // then an update to our user assigned port is desired (but not guaranteed).
-    bool configUpdateDesired = (interfaceEnabled && 
-                                hasCustomPortNumber && 
-                                hasServiceAssignedPortNumber && 
-                                serviceAssignedPortNumber != customPortNumber);
-
-    // if no one is using the user assigned port number, or there is someone but they 
-    // can be moved to some other port, then our optimal port is available to us.
-    // This logic ensures that we do not take a user assigned port number from an enabled port
-    // that was also assigned this same port number, otherwise we would end up in a recursion
-    // loop with each port reassigning the other.
-    bool optimalPortAvailable = (hasCustomPortNumber &&
-                                    (!portInfo[customPortNumber].InUse || 
-                                    !portInfo[customPortNumber].IsEnabled ||
-                                    !portInfo[customPortNumber].HasCustomPortNumber ||
-                                    portInfo[customPortNumber].CustomPortNumber != customPortNumber));
-
-    bool interfaceDeactivated{false};
-    auto restoreInterfaceStateOnExit = wil::scope_exit([&]()
-    {
-        // if this interface was deactivated for a change, restore
-        // the state to active before returning.
-        if (interfaceDeactivated)
-        {
-            LOG_IF_FAILED(SwDeviceInterfaceSetState(SwDevice, deviceInterfaceId, TRUE));
-        }
-    });
-
-    // if either the assigned port is already in use, or we're trying to move
-    // this endpoint to its preferred user specified port number, move it.
-    if (serviceAssignedPortInUse || (configUpdateDesired && optimalPortAvailable))
-    {
-        if (interfaceEnabled)
-        {
-            // first, disable the interface if it's currently active, because
-            // we're going to be changing the port number for it and it can't be
-            // active when we do that.
-            LOG_IF_FAILED(SwDeviceInterfaceSetState(SwDevice, deviceInterfaceId, FALSE));
-            interfaceDeactivated = true;
-        }
-
-        // clear the existing service assigned port number for this endpoint so that a new port
-        // number will be assigned
-        std::vector<DEVPROPERTY> newProperties{};
-        newProperties.push_back({{ PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_EMPTY, 0, NULL });
-        RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
-            SwDevice,
-            deviceInterfaceId,
-            1,
-            (const DEVPROPERTY*)newProperties.data()));
-
-        hasServiceAssignedPortNumber = false;
-    }
-
-    // no service assigned port number on this endpoint, assign one, preferring the user
-    // assigned port number, if it's available.
-    if (!hasServiceAssignedPortNumber)
-    {
-        UINT32 firstAvailablePortNumber = 0;
-        UINT32 assignedPortNumber = 0;
-        std::vector<DEVPROPERTY> newProperties{};
-
-        // first we figure out what the default new port number will be, assuming the first available,
-        // this will be our fallback in the event of any errors or the user assigned port isn't available.
-        for(firstAvailablePortNumber = 1; portInfo[firstAvailablePortNumber].InUse;firstAvailablePortNumber++);
-        assignedPortNumber = firstAvailablePortNumber;
-
-        auto cleanupOnFailure = wil::scope_exit([&]()
-        {
-            // in the event that something fails with reassigning the old port, we want to fall back to a safe
-            // unused  port number.
-            newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(firstAvailablePortNumber)) });
-            LOG_IF_FAILED(SwDeviceInterfacePropertySet(
-                SwDevice,
-                deviceInterfaceId,
-                1,
-                (const DEVPROPERTY*)newProperties.data()));
-            newProperties.clear();
-        });
-
-        // if we previously determined that the optimal (user specified)
-        // port number is available for this endpoint, we want to use it.
-        if (optimalPortAvailable)
-        {
-            assignedPortNumber = customPortNumber;   
-        }
-
-        // we've decided what the new port will be for this endpoint, lock it in.
-        newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(assignedPortNumber)) });
-        RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
-            SwDevice,
-            deviceInterfaceId,
-            1,
-            (const DEVPROPERTY*)newProperties.data()));
-        newProperties.clear();
-
-        // Following from the logic above, we need to determine if the user assigned port number that was 
-        // assigned to this port was in use by an enabled port and needs to have a previous user reassigned.
-        if (hasCustomPortNumber && 
-            assignedPortNumber == customPortNumber &&
-            portInfo[customPortNumber].InUse &&
-            portInfo[customPortNumber].IsEnabled)
-        {
-            // First, we need to locate the MIDIPORT for the current user of this port, so we have the SW handle,
-            // the MIDIPORT should exist, since the port is active.
-            // If the MIDIPORT does not exist, then we can not move the conflicting port, exit with failure and fall back to the
-            // next available for the assigning port.
-            auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(portInfo[customPortNumber].InterfaceId);
-            auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
-            {
-                auto portInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Port->DeviceInterfaceId.get());
-                return (portInterfaceId == requestedInterfaceId);
-            });
-
-            RETURN_HR_IF(E_ABORT, item != m_midiPorts.end());
-            
-            // Recursive call, assign a new port number to this port.
-            RETURN_IF_FAILED(AssignPortNumber(item->get()->SwDevice.get(), item->get()->DeviceInterfaceId.get(), flow));
-        }
-
-        cleanupOnFailure.release();
-    }
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-    );
-
-
-    return S_OK;
-}
-#endif
-
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::GetFunctionBlockPortInfo(
@@ -2369,6 +2125,14 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
+
+    // We should skip this completely if it's not a UMP-native endpoint. Otherwise, we do all
+    // this work for MIDI 1.0 devices using the UMP driver
+    auto nativeDataFormat = internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(STRING_PKEY_MIDI_NativeDataFormat, deviceInfo, 1);
+    if (nativeDataFormat != MidiDataFormats::MidiDataFormats_UMP)
+    {
+        return E_NOTFOUND;
+    }
 
 
     // we don't process any function blocks until initial discovery has completed
@@ -2415,12 +2179,6 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
 
         auto data = refArray.Value();
         auto fb = (MidiFunctionBlockProperty*)(data.data());
-
-        //// only create ports for active function blocks
-        //if (!fb->IsActive)
-        //{
-        //    continue;
-        //}
 
         // TODO: this is going to result in slightly misleading names when a function blocks have overlapping groups. Ignoring for now.
 
@@ -2489,6 +2247,8 @@ CMidiDeviceManager::GetGroupTerminalBlockPortInfo(
         for (UINT i = gtb->GrpTrmBlock.FirstGroupIndex; i < (UINT)(gtb->GrpTrmBlock.FirstGroupIndex + gtb->GrpTrmBlock.GroupCount); i++)
         {
             auto gtbName = std::wstring(gtb->Name).substr(0, MAXPNAMELEN - 1);
+
+            // the names here will be used only if the name table comes up empty
 
             if (gtbName.empty())
             {
@@ -2737,9 +2497,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::GetMidi1PortNames(
     winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
-    std::map<UINT32, PORT_INFO> portInfo[2],
-    bool /* isNativeMidi2UmpEndpoint*/,
-    bool /* isUsingMidi2UmpDriver */
+    std::map<UINT32, PORT_INFO> portInfo[2]
 )
 {
     TraceLoggingWrite(
@@ -2781,6 +2539,8 @@ CMidiDeviceManager::GetMidi1PortNames(
         TraceLoggingUInt32(static_cast<uint32_t>(namingSelection), "name selection enum")
     );
 
+    // get the existing name table. If the endpoint has no name table, this can result
+    // in an empty name.
     auto nameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromDeviceInfo(deviceInfo);
 
     for (auto const& flow : { MidiFlow::MidiFlowIn, MidiFlow::MidiFlowOut })
@@ -2903,10 +2663,10 @@ CMidiDeviceManager::SyncMidi1Ports(
 
     std::wstring thisUmpMidiPortDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(umpMidiPort->DeviceInterfaceId.get());
 
-    // TODO: This should only check for function blocks if the device is a native UMP device
-     
     // get the current function block information from the UMP SWD, if present, else fall back to
     // GTB if that is present. If neither, then there's nothing more to do.
+
+    // GetFunctionBlockPortInfo will return E_NOTFOUND if it's a bytestream device, if discovery hasn't completed, or if no function blocks
     hrTemp = GetFunctionBlockPortInfo(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, portInfo);
     RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
     if (E_NOTFOUND == hrTemp)
@@ -2935,11 +2695,9 @@ CMidiDeviceManager::SyncMidi1Ports(
     // we need to know if this is a native UMP device on a UMP transport, a byte format device on a UMP transport, or a 
     // byte format device on a byte format transport. We should probably get this from other properties rather than
     // having a dependency in here on the GUID for the KSA transport
-    bool isUsingUmpTransport = (bool)(transportId != winrt::guid(__uuidof(Midi2KSAggregateTransport)));   // KSA is the only one mapping byte format to UMP right now. BLE will in the future, as will RTP
-    bool isNativeUmpEndpoint = (bool)(nativeDataFormat == MidiDataFormats::MidiDataFormats_UMP);
 
     // we know which groups are active, so now we get the names for these groups
-    LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, portInfo, isNativeUmpEndpoint, isUsingUmpTransport));
+    LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, portInfo));
 
     // First walk the midi ports list, identifying ports that have already been
     // created, updating the assigned custom number, deactivating any
@@ -3018,6 +2776,7 @@ CMidiDeviceManager::SyncMidi1Ports(
                     }
                 }
 
+
                 // name we created earlier in the GetMidi1PortNames function
                 std::wstring friendlyName = portInfo[flow][groupIndex].Name;
 
@@ -3035,8 +2794,19 @@ CMidiDeviceManager::SyncMidi1Ports(
                         TraceLoggingUInt32(groupIndex, "group index")
                         );
 
+                    // -----------------------------------------------------------------------------------------------------------------------------
                     // this is just a last-chance fallback. If we ever see this in production, that's a problem.
-                    friendlyName =  std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN-7) + L" Gr " + std::to_wstring(groupIndex+1);
+
+                    if (groupIndex == 0)
+                    {
+                        friendlyName = std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN - 1);
+                    }
+                    else
+                    {
+                        friendlyName = std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN - 7) + L" Gr " + std::to_wstring(groupIndex + 1);
+                    }
+
+                    // -----------------------------------------------------------------------------------------------------------------------------
                 }
 
                 interfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},

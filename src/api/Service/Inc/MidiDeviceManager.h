@@ -200,12 +200,6 @@ private:
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
-    //HRESULT GetCustomPortMapping(
-    //    _In_ LPCWSTR umpDeviceInterfaceId,
-    //    _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
-    //    _In_ std::map<UINT32, PORT_INFO> portInfo[2]
-    //);
-
     HRESULT RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
         _In_ LPCWSTR umpDeviceInterfaceId,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
@@ -214,9 +208,7 @@ private:
 
     HRESULT GetMidi1PortNames(
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
-        _Inout_ std::map<UINT32, PORT_INFO> portInfo[2],
-        _In_ bool isNativeMidi2UmpEndpoint,
-        _In_ bool isUsingMidi2UmpDriver
+        _Inout_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
     HRESULT SyncMidi1Ports(
