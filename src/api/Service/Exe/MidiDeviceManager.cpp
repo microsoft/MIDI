@@ -2785,7 +2785,14 @@ CMidiDeviceManager::SyncMidi1Ports(
                     // -----------------------------------------------------------------------------------------------------------------------------
                     // this is just a last-chance fallback. If we ever see this in production, that's a problem.
 
-                    friendlyName =  std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN-7) + L" Gr " + std::to_wstring(groupIndex+1);
+                    if (groupIndex > 0)
+                    {
+                        friendlyName = std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN - 1);
+                    }
+                    else
+                    {
+                        friendlyName = std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN - 7) + L" Gr " + std::to_wstring(groupIndex + 1);
+                    }
 
                     // -----------------------------------------------------------------------------------------------------------------------------
                 }
