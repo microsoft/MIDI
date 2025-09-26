@@ -9,15 +9,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-		<!--<Reference Include="$(SolutionDir)">
-			<IsWinMDFile>true</IsWinMDFile>
-		</Reference>
-			-->	   
 
+      <!-- In WinUI projects, WebView2 was clobbering $(NugetRoot) so had to change to use relative paths -->
+      <!--
 		<Reference Include="WindowsMidiServicesAppSDK">
 			<HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.winmd</HintPath>
 		</Reference>
-       
-        
+        -->
+      
+      <!-- moved to targets file -->
+      <!--     
+      <Reference Include="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\..\ref\native\Microsoft.Windows.Devices.Midi2.winmd'))" />
+      -->
+
     </ItemGroup>
 </Project>
