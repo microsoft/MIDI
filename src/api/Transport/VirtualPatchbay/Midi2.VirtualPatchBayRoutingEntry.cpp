@@ -16,7 +16,9 @@ CMidi2VirtualPatchBayRoutingEntry::Initialize(
     LPCWSTR description
 )
 {
-    m_associationId = associationId;
+    UNREFERENCED_PARAMETER(associationId);
+
+    //m_associationId = associationId;
     m_name = name;
     m_description = description;
 
