@@ -50,7 +50,8 @@ CMidi2VirtualPatchBayConfigurationManager::ProcessConfigEntryCreateVirtualEndpoi
     json::JsonObject const& entry, 
     json::JsonObject& responseObject) noexcept
 {
-
+    UNREFERENCED_PARAMETER(entry);
+    UNREFERENCED_PARAMETER(responseObject);
 
 
     return S_OK;
