@@ -2785,7 +2785,7 @@ CMidiDeviceManager::SyncMidi1Ports(
                     // -----------------------------------------------------------------------------------------------------------------------------
                     // this is just a last-chance fallback. If we ever see this in production, that's a problem.
 
-                    if (groupIndex > 0)
+                    if (groupIndex == 0)
                     {
                         friendlyName = std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN - 1);
                     }
