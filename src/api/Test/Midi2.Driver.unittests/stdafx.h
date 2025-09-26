@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
-// this is a hack, but because this is a test project, and we know we're not
+// this is a hack, but because this is a test project, and know we're not
 // using coroutines in our tests, we'll risk it. 
 #define _ALLOW_COROUTINE_ABI_MISMATCH
 

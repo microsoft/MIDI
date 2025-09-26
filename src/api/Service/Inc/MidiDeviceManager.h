@@ -233,6 +233,7 @@ private:
 
     wil::critical_section m_midiPortsLock;
     std::vector<std::unique_ptr<MIDIPORT>> m_midiPorts;
+    bool m_CreateMidi1Ports {true};
 
     std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_midiParents;
 
