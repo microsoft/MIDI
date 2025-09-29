@@ -4,9 +4,11 @@
 	<PropertyGroup Label="UserMacros" />
 
 
+  <!--     
     <PropertyGroup>
         <NugetRoot>$(MSBuildThisFileDirectory)..\..\</NugetRoot>
     </PropertyGroup>
+      -->
 
     <ItemGroup>
 
