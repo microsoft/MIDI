@@ -17,9 +17,16 @@
 			BeforeTargets="BeforeResolveReferences">
         <Message Text="-- Copying Windows MIDI Services references .winmd files" />
 
-        <ItemGroup>
+
+      <ItemGroup>
+        <Reference Include="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\..\ref\native\Microsoft.Windows.Devices.Midi2.winmd'))" />
+      </ItemGroup>
+
+      <!--
+      <ItemGroup>
             <Reference Include="$(NugetRoot)ref\native\Microsoft.Windows.Devices.Midi2*.winmd" />
         </ItemGroup>
+        -->
     </Target>
 
 </Project>
