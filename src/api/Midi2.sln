@@ -189,6 +189,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.LoopbackMidiTransport", "Transport\LoopbackMidiTransport\Midi2.LoopbackMidiTransport.vcxproj", "{0F94A751-9159-4A88-8A71-347151124548}"
 	ProjectSection(ProjectDependencies) = postProject
 		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E} = {FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.UmpProtocolDownscalerTransform", "Transform\UmpProtocolDownscaler\Midi2.UmpProtocolDownscalerTransform.vcxproj", "{C31CEE7B-8BEC-46A6-A8FD-74BABB01A4FB}"
@@ -229,8 +230,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.SharedIncludes.unitte
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiPluginConfigurationLib", "Libs\MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj", "{A631658B-3552-48E3-9DF1-EEA3E5016257}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiEndpointNamingLib", "Libs\MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj", "{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
