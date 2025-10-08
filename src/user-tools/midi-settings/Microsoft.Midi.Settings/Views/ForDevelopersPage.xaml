@@ -113,6 +113,7 @@
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
+                <!--
                 <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
                            x:Uid="ForDevelopers_SystemSettingsSectionHeader"
                            Text="System Settings" />
@@ -130,7 +131,7 @@
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
-
+                -->
 
                 <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
                            x:Uid="ForDevelopers_RelatedSupportSectionHeader"/>

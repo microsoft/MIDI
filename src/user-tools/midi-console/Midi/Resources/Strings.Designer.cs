@@ -196,6 +196,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Measure MIDI performance.
+        /// </summary>
+        internal static string CommandMeasureDescription {
+            get {
+                return ResourceManager.GetString("CommandMeasureDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measure MIDI latency and jitter using two endpoints that are connected together. For example, a MIDI 1.0 USB interface with out and in connected via  a DIN cable..
+        /// </summary>
+        internal static string CommandMeasureLoopbackPerformanceDescription {
+            get {
+                return ResourceManager.GetString("CommandMeasureLoopbackPerformanceDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Monitors a UMP endpoint for incoming messages and optionally displays them as they arrive..
         /// </summary>
         internal static string CommandMonitorEndpointDescription {
@@ -615,6 +633,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ErrorUnableToCreateSession {
             get {
                 return ResourceManager.GetString("ErrorUnableToCreateSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The supplied endpoint device id does not appear to match any device currently in the system..
+        /// </summary>
+        internal static string ErrorUnableToFindEndpointDevice {
+            get {
+                return ResourceManager.GetString("ErrorUnableToFindEndpointDevice", resourceCulture);
             }
         }
         
@@ -1101,6 +1128,60 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ParameterListenerMessagesFilter {
             get {
                 return ResourceManager.GetString("ParameterListenerMessagesFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The endpoint to send messages to.
+        /// </summary>
+        internal static string ParameterMeasureDestinationEndpointDeviceId {
+            get {
+                return ResourceManager.GetString("ParameterMeasureDestinationEndpointDeviceId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The group number (1-16) for the group you want to send the messages out on..
+        /// </summary>
+        internal static string ParameterMeasureDestinationGroupNumber {
+            get {
+                return ResourceManager.GetString("ParameterMeasureDestinationGroupNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The endpoint to listen to for incoming messages.
+        /// </summary>
+        internal static string ParameterMeasureSourceEndpointDeviceId {
+            get {
+                return ResourceManager.GetString("ParameterMeasureSourceEndpointDeviceId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The group number (1-16) for the group you want to listen to incoming messages on..
+        /// </summary>
+        internal static string ParameterMeasureSourceGroupNumber {
+            get {
+                return ResourceManager.GetString("ParameterMeasureSourceGroupNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set this flag to use MIDI 2.0 channel voice messages rather than MIDI 1.0 channel voice messages.
+        /// </summary>
+        internal static string ParameterMeasureUseMidi2 {
+            get {
+                return ResourceManager.GetString("ParameterMeasureUseMidi2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set this flag to use the outgoing message scheduler to send the messages.
+        /// </summary>
+        internal static string ParameterMeasureUseScheduler {
+            get {
+                return ResourceManager.GetString("ParameterMeasureUseScheduler", resourceCulture);
             }
         }
         
@@ -1637,6 +1718,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PingResultTableColumnHeaderServiceTimestamp {
             get {
                 return ResourceManager.GetString("PingResultTableColumnHeaderServiceTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please pick an endpoint to use to send the messages to.
+        /// </summary>
+        internal static string PleasePickDestinationEndpoint {
+            get {
+                return ResourceManager.GetString("PleasePickDestinationEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please pick an endpoint to use for listening to incoming messages.
+        /// </summary>
+        internal static string PleasePickSourceEndpoint {
+            get {
+                return ResourceManager.GetString("PleasePickSourceEndpoint", resourceCulture);
             }
         }
         

@@ -14,6 +14,8 @@ namespace Microsoft.Midi.ConsoleApp
     {
         Success = 0,
 
+        ErrorUserCanceled = 1,
+
         ErrorWinRTTypeActivationFailure = 10,
         ErrorMidiServicesSdkNotInstalled = 12,
 

@@ -238,6 +238,21 @@ app.Configure(config =>
         .WithExample("watch-endpoints")
         ;
 
+
+    config.AddBranch("measure", measure =>
+    {
+        measure.SetDescription(Strings.CommandMeasureDescription);
+
+
+        measure.AddCommand<MeasureLoopbackJitterCommand>("loopback-jitter")
+            .WithAlias("jitter")
+            .WithDescription(Strings.CommandMeasureLoopbackPerformanceDescription)
+            .WithExample("measure", "loopback-jitter")
+            ;
+
+    });
+
+
     /*
     config.AddBranch<SimulateCommandSettings>("simulate", cache =>
     {
