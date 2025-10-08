@@ -82,7 +82,7 @@ CMidiEndpointProtocolManager::Initialize(
 
         winrt::hstring deviceSelector(
             L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND " \
-            L"System.Devices.InterfaceEnabled:= System.StructuredQueryType.Boolean#True");
+            L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
 
         m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
 

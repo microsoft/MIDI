@@ -80,10 +80,11 @@ CMidiDeviceManager::Initialize(
     if (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, driver32Path, midisrvTransferComplete, RRF_RT_DWORD, NULL, &transferState, &dataSize) && 
         transferState != 1)
     {
-        // This assumes that AudioEndpointBuilder state is cycled after MidiSrv is installed, before MidiSrv starts.
-        // Should we instead coordinate endpoint builder and midisrv via named events or WNF, so endpoint builder is aware when
-        // midisrv starts for the first time, and midisrv is notified once endpoint builder completes the transition of control?
-
+        // transferState will be 1 if Midi2 is enabled on the system and endpoint control has been transfered from
+        // AudioEndpointBuilder to midisrv.
+        //
+        // If control has not been transferred, we do not want midisrv to create any midi 1 endpoints as they will
+        // not be usable by the legacy api's.
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
@@ -92,16 +93,11 @@ CMidiDeviceManager::Initialize(
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"AudioEndpointBuilder retains control of Midi port registration, unable to take exclusive control of midi ports.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
+
+        m_CreateMidi1Ports = false;
     }
 
-
-    // MIDI 1 device using MIDI 1 driver
-
-
-
-
     // Get the enabled transport layers from the registry
-
     for (auto const& TransportLayer : m_configurationManager->GetEnabledTransports())
     {
         wil::com_ptr_nothrow<IMidiTransport> midiTransport;
@@ -2604,6 +2600,22 @@ CMidiDeviceManager::SyncMidi1Ports(
         TraceLoggingWideString(umpMidiPort->AssociatedInterfaceId.c_str(), "associated interface id"),
         TraceLoggingWideString(umpMidiPort->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
+
+    if (!m_CreateMidi1Ports)
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit: Midi 1 ports owned by endpoint builder.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(umpMidiPort->AssociatedInterfaceId.c_str(), "associated interface id"),
+            TraceLoggingWideString(umpMidiPort->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+        return S_OK;
+    }
 
     HRESULT hrTemp;
 
