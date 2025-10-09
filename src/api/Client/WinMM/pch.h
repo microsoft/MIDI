@@ -29,6 +29,8 @@
 
 #include "resource.h"
 
+#include "wstring_util.h"
+
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 

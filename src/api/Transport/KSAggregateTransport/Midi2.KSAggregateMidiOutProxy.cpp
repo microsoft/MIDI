@@ -125,18 +125,18 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
         TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
 #else
-    TraceLoggingWrite(
-        MidiKSAggregateTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_VERBOSE,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Sending MIDI Message to UMP2BS translator", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
-        TraceLoggingPointer(data, "data pointer"),
-        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
-        TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-    );
+    //TraceLoggingWrite(
+    //    MidiKSAggregateTransportTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_VERBOSE,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Sending MIDI Message to UMP2BS translator", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
+    //    TraceLoggingPointer(data, "data pointer"),
+    //    TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+    //    TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    //);
 #endif
 
     // get the message translated. Comes back via the callback
@@ -172,18 +172,18 @@ CMidi2KSAggregateMidiOutProxy::Callback(
         TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
 #else
-    TraceLoggingWrite(
-        MidiKSAggregateTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_VERBOSE,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"MidiOut callback received from translation. Sending data to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
-        TraceLoggingPointer(data, "data pointer"),
-        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
-        TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-    );
+    //TraceLoggingWrite(
+    //    MidiKSAggregateTransportTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_VERBOSE,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"MidiOut callback received from translation. Sending data to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
+    //    TraceLoggingPointer(data, "data pointer"),
+    //    TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+    //    TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    //);
 #endif
 
     // Send transformed message to device
