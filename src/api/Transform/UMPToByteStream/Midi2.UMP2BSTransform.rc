@@ -69,14 +69,14 @@ BEGIN
     BEGIN
         BLOCK "040904B0"
         BEGIN
-            VALUE "CompanyName", "TODO: <Company name>"
-            VALUE "FileDescription", "TODO: <File description>"
-            VALUE "FileVersion", "1.0.0.1"
-            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
+            VALUE "CompanyName", "Microsoft Corporation"
+            VALUE "FileDescription", "MIDI 2.0 translation service plugin"
+            VALUE "FileVersion", "1.0.15.0"
+            VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation. All rights reserved."
             VALUE "InternalName", "Midi2.UMP2BSTransform.dll"
             VALUE "OriginalFilename", "Midi2.UMP2BSTransform.dll"
-            VALUE "ProductName", "TODO: <Product name>"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductName", "Microsoft Windows MIDI Services"
+            VALUE "ProductVersion", "1.0.15.0"
             VALUE "OLESelfRegister", ""
         END
     END

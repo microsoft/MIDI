@@ -76,14 +76,14 @@ BEGIN
     BEGIN
         BLOCK "040904B0"
         BEGIN
-            VALUE "CompanyName", "Microsoft"
-            VALUE "FileDescription", "Windows MIDI Services Message Scheduler"
-            VALUE "FileVersion", "1.0.0.1"
-            VALUE "LegalCopyright", "(c) Microsoft Corporation.  All rights reserved."
+            VALUE "CompanyName", "Microsoft Corporation"
+            VALUE "FileDescription", "Windows MIDI Services Message Scheduler Service Plugin"
+            VALUE "FileVersion", "1.0.15.0"
+            VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation. All rights reserved."
             VALUE "InternalName", "Midi2.SchedulerTransform.dll"
             VALUE "OriginalFilename", "Midi2.SchedulerTransform.dll"
-            VALUE "ProductName", "Windows MIDI Services"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductName", "Microsoft Windows MIDI Services"
+            VALUE "ProductVersion", "1.0.15.0"
             VALUE "OLESelfRegister", ""
         END
     END

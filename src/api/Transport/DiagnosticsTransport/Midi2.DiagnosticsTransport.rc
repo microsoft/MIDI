@@ -70,13 +70,13 @@ BEGIN
         BLOCK "040904B0"
         BEGIN
             VALUE "CompanyName", "Microsoft Corporation"
-            VALUE "FileDescription", "Windows MIDI Services Plugin"
-            VALUE "FileVersion", "1.0.0.1"
-            VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation.  All rights reserved."
+            VALUE "FileDescription", "Windows MIDI Services Service Test Transport Plugin"
+            VALUE "FileVersion", "1.0.15.0"
+            VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation. All rights reserved."
             VALUE "InternalName", "Midi2.DiagnosticsTransport.dll"
             VALUE "OriginalFilename", "Midi2.DiagnosticsTransport.dll"
             VALUE "ProductName", "Windows MIDI Services"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.0.15.0"
             VALUE "OLESelfRegister", ""
         END
     END
