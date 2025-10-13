@@ -22,7 +22,9 @@
 #include <format>
 #include <conio.h>
 #include <stdio.h>
-
+#include <vector>
+#include <queue>
+#include <thread>
 
 #include <wrl\module.h>
 #include <wrl\event.h>
@@ -58,6 +60,7 @@
 
 #include "wstring_util.h"
 #include "midi1_message_defs.h"
+#include "midi_timestamp.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
 
