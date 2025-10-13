@@ -133,6 +133,9 @@
     <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
       <Filter>SDK\ServiceConfig</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_ComExtensions.cpp">
+      <Filter>SDK\Core\Session</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />

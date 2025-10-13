@@ -97,6 +97,12 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
      
     auto data = static_cast<BYTE *>(inputData);
 
+
+    // we can keep this as a local because of how the callback works
+    std::vector<UINT32> translatedWords{};
+    translatedWords.reserve(length / 3 + 1);        // as an approximation of output data size, this is reasonable
+
+
     for (UINT i = 0; i < length; i++)
     {
         // Send the bytestream byte(s) to the parser. The way the parser works, we need
@@ -112,62 +118,29 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
             m_BS2UMP.dumpSysex7State(false);
         }
 
-        // retrieve the UMP(s) from the parser
-        // and send it on if we have a full message
+        // retrieve the UMP(s) from the parser and add to the outgoing message
         while (m_BS2UMP.availableUMP())
         {
-            m_umpMessageCurrentWordCount++;
-
-            // just to ensure we don't go past the end of the array
-            // TODO: we should clear the parser's byte buffer on error
-            if (m_umpMessageCurrentWordCount > _countof(m_umpMessage))
-            {
-                // Do this instead of RETURN_HR_IF to keep static analysis happy that
-                // we aren't exceeding m_umpMessage.
-                RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_INDEX_OUT_OF_BOUNDS));
-            }
-
-            // we need to send only a single message at a time. the library 
-            // converts to a stream of words which may be multiple UMPs. So we 
-            // need to walk the data
-
-            m_umpMessage[m_umpMessageCurrentWordCount-1] = m_BS2UMP.readUMP();
-
-            auto expectedWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(m_umpMessage[0]);
-
-            // if we have a complete UMP, we send it along
-            if (expectedWordCount == m_umpMessageCurrentWordCount)
-            {
-                //TraceLoggingWrite(
-                //    MidiBS2UMPTransformTelemetryProvider::Provider(),
-                //    MIDI_TRACE_EVENT_VERBOSE,
-                //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                //    TraceLoggingPointer(this, "this"),
-                //    TraceLoggingWideString(L"Translated to", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                //    TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
-                //    TraceLoggingHexUInt32Array(static_cast<uint32_t*>(m_umpMessage), static_cast<uint16_t>(m_umpMessageCurrentWordCount), "ump data"),
-                //    TraceLoggingUInt32(static_cast<uint32_t>(m_umpMessageCurrentWordCount * sizeof(uint32_t)), "length bytes"),
-                //    TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-                //);
-
-
-                // send the message
-                // By context, for the conversion transforms the context contains the group index
-                LOG_IF_FAILED(m_Callback->Callback(
-                    (MessageOptionFlags) (optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
-                    (PVOID)m_umpMessage, 
-                    (UINT)m_umpMessageCurrentWordCount * sizeof(uint32_t), 
-                    position, 
-                    m_BS2UMP.defaultGroup));
-
-                m_umpMessageCurrentWordCount = 0;
-                m_umpMessage[0] = m_umpMessage[1] = m_umpMessage[2] = m_umpMessage[3] = 0;
-            }
-
+            translatedWords.push_back(m_BS2UMP.readUMP());
         }
     }
 
+    if (translatedWords.size() > 0)
+    {
+        // send the message. The context contains the group index
+        auto hr = m_Callback->Callback(
+            (MessageOptionFlags)(optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
+            static_cast<PVOID>(translatedWords.data()),
+            static_cast<UINT>(translatedWords.size() * sizeof(UINT32)),
+            position,
+            m_BS2UMP.defaultGroup);
+
+        if (FAILED(hr))
+        {
+            m_BS2UMP.resetBuffer();
+            RETURN_IF_FAILED(hr);
+        }
+    }
 
     return S_OK;
 }

@@ -21,6 +21,9 @@
     <ClInclude Include="NamingTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UmpIteratorTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -30,6 +33,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NamingTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UmpIteratorTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 
+
 #define MIDIWORDNIBBLE1(x) ((uint8_t)((x & 0xF0000000) >> 28))
 #define MIDIWORDNIBBLE2(x) ((uint8_t)((x & 0x0F000000) >> 24))
 #define MIDIWORDNIBBLE3(x) ((uint8_t)((x & 0x00F00000) >> 20))
@@ -936,11 +937,5 @@ namespace WindowsMidiServicesInternal
 
         return false;
     }
-
-
-
-
-
-
 
 }

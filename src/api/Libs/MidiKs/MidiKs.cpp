@@ -439,7 +439,12 @@ KSMidiInDevice::Shutdown()
     return hr;
 }
 
-#define MIDI_DATA_BUFFER_LENGTH 256
+// PMB: Changed from 256 to 2048 to support larger incoming data chunks with fewer 
+//      calls, especially for SysEx. Will want to monitor over time to see if this 
+//      has any negative impact.
+//#define MIDI_DATA_BUFFER_LENGTH 256
+#define MIDI_DATA_BUFFER_LENGTH 2048
+
 
 typedef struct
 {

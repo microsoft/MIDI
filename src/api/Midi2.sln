@@ -52,6 +52,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{A4512D
 		Inc\resource_util.h = Inc\resource_util.h
 		Inc\swd_helpers.h = Inc\swd_helpers.h
 		Inc\ump_helpers.h = Inc\ump_helpers.h
+		Inc\ump_iterator.h = Inc\ump_iterator.h
 		Inc\wstring_util.h = Inc\wstring_util.h
 	EndProjectSection
 EndProject
@@ -225,8 +226,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiSrvTransportLib", "Libs
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.SharedIncludes.unittests", "Test\Midi2.SharedIncludes.unittests\Midi2.SharedIncludes.unittests.vcxproj", "{202E05F1-9BFB-4242-BFC6-A5AEE095A9AC}"
 	ProjectSection(ProjectDependencies) = postProject
-		{4F48735C-9364-462C-B207-2262D4E62589} = {4F48735C-9364-462C-B207-2262D4E62589}
-		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+		{A631658B-3552-48E3-9DF1-EEA3E5016257} = {A631658B-3552-48E3-9DF1-EEA3E5016257}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiPluginConfigurationLib", "Libs\MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj", "{A631658B-3552-48E3-9DF1-EEA3E5016257}"

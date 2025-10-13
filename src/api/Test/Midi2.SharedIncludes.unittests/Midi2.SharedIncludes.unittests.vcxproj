@@ -169,6 +169,7 @@
   <ItemGroup>
     <ClInclude Include="NamingTests.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="UmpIteratorTests.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -179,6 +180,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="UmpIteratorTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -1,0 +1,63 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Classic COM interfaces which allow access to pointer-based data
+// without additional allocations, validation, or intermediaries. 
+// These also allow for sending and receiving multiple messages
+// in bulk. In the case of sending, the sender must ensure that
+// the words sent represent full messages
+
+import "unknwn.idl";
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+#define UUID_IMidiEndpointConnectionMessagesReceivedCallback        8087b303-0519-31d1-31d1-000000000010
+#define UUID_IMidiEndpointConnectionRaw                             8087b303-0519-31d1-31d1-000000000020
+
+
+[
+	object,
+	local,
+	uuid(UUID_IMidiEndpointConnectionMessagesReceivedCallback)
+]
+interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
+{
+	HRESULT MessagesReceived(
+		[in, annotation("_In_")] UINT32* messages,
+		[in, annotation("_In_")] UINT wordCount,
+		[in, annotation("_In_")] ULONGLONG timestamp
+	);
+};
+
+
+
+[
+	object,
+	local,
+	uuid(UUID_IMidiEndpointConnectionRaw)
+]
+interface IMidiEndpointConnectionRaw : IUnknown
+{
+	//UINT GetSupportedMaxWordsPerTransmission();
+
+	HRESULT SendMidiMessagesRaw(
+		[in, annotation("_In_")] UINT32* completeMessages,
+		[in, annotation("_In_")] UINT32 wordCount,
+		[in, annotation("_In_")] UINT64 timestamp
+	);
+
+	HRESULT SetMessagesReceivedCallback(
+		[in, annotation("_In_")] IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
+	);
+
+	HRESULT RemoveMessagesReceivedCallback();
+
+};
+
+

@@ -17,9 +17,14 @@
 
 #define MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE 20
 
+
+#include "WindowsMidiServicesAppSdkComExtensions.h"
+#include "WindowsMidiServicesAppSdkComExtensions_i.c"
+
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
-    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, IMidiCallback> 
+    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, IMidiCallback, IMidiEndpointConnectionRaw>
     {
         MidiEndpointConnection() { m_maxAllowedTimestampOffset = internal::GetMidiTimestampFrequency() * MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE; }
         ~MidiEndpointConnection();
@@ -134,6 +139,26 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
 
         STDMETHOD(Callback)(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG timestamp, _In_ LONGLONG) override;
+
+
+        // Begin COM extensions -----------------------------------------
+
+       // STDMETHOD_(UINT, GetSupportedMaxWordsPerTransmission)();
+
+        STDMETHOD(SendMidiMessagesRaw)(
+            _In_ UINT32* completeMessages,
+            _In_ UINT wordCount,
+            _In_ UINT64 timestamp
+        );
+
+        STDMETHOD(SetMessagesReceivedCallback)(
+            _In_ IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
+        );
+
+        STDMETHOD(RemoveMessagesReceivedCallback)();
+
+        // End COM extensions --------------------------------------------
+
 
         winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs> const& handler)
         {
