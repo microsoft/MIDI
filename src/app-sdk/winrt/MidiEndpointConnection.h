@@ -244,6 +244,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::com_ptr<IMidiTransport> m_serviceTransport{ nullptr };
         winrt::com_ptr<IMidiBidirectional> m_endpointTransport{ nullptr };
 
+        winrt::com_ptr<IMidiEndpointConnectionMessagesReceivedCallback> m_comCallback{ nullptr };
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 

@@ -44,7 +44,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         RETURN_HR_IF_NULL(E_INVALIDARG, messagesReceivedCallback);
 
-        // TODO: set a callback variable internally and have the regular Callback shortcircuit check that first
+        // We now own a reference to this callback
+        m_comCallback.copy_from(messagesReceivedCallback);
 
         return S_OK;
     }
@@ -53,7 +54,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     HRESULT
     MidiEndpointConnection::RemoveMessagesReceivedCallback()
     {
-        // TODO: Clear out the callback
+        // Clear out the callback
+        m_comCallback = nullptr;
 
         return S_OK;
     }

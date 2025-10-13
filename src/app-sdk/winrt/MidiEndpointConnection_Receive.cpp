@@ -18,6 +18,28 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         UNREFERENCED_PARAMETER(context);
         UNREFERENCED_PARAMETER(optionFlags);
 
+
+        // this is for the COM extensions approach to receiving messages. It's a fast exit.
+        if (m_comCallback != nullptr)
+        {
+            if (size > 0)
+            {
+                // when you use the COM extensions, we bypass all other processing of incoming messages
+                return m_comCallback->MessagesReceived(
+                    static_cast<UINT32*>(data),
+                    size / sizeof(uint32_t),
+                    static_cast<ULONGLONG>(timestamp)
+                );
+            }
+            else
+            {
+                // should never have a size of 0, but guarding just in case.
+                return E_INVALIDARG;
+            }
+        }
+
+
+
         if ((!m_messageReceivedEvent) && (!m_messageProcessingPlugins || m_messageProcessingPlugins.Size() == 0))
         {
 #ifdef _DEBUG

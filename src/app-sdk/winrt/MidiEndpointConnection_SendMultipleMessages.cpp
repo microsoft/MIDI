@@ -473,6 +473,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     }
 
 
+    // packets include timestamps, so this function must send each message individually
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesPacketList(
         collections::IIterable<IMidiUniversalPacket> const& messages) noexcept
