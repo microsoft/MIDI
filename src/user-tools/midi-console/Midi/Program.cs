@@ -42,7 +42,7 @@ app.Configure(config =>
             .WithAlias("ump-endpoints")
             .WithAlias("ep")
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
-            .WithExample("enumerate", "midi-services-endpoints", "--include-loopback")
+            .WithExample("enumerate", "midi-services-endpoints", "--include-diagnostic-loopback")
             .WithExample("enumerate", "endpoints")
             .WithExample("list", "endpoints")
             .WithExample("enum", "ep")
