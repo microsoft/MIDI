@@ -1088,4 +1088,10 @@ Timestamp</value>
   <data name="ErrorUnableToFindEndpointDevice" xml:space="preserve">
     <value>The supplied endpoint device id does not appear to match any device currently in the system.</value>
   </data>
+  <data name="ParameterMonitorEndpointDecodeMessages" xml:space="preserve">
+    <value>Show decoded information about the message</value>
+  </data>
+  <data name="ParameterMonitorEndpointIncludeTimestamp" xml:space="preserve">
+    <value>Include the timestamp in the displayed output</value>
+  </data>
 </root>

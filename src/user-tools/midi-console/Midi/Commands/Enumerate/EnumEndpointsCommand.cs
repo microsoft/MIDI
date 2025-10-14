@@ -18,9 +18,9 @@ namespace Microsoft.Midi.ConsoleApp
         public sealed class Settings : CommandSettings
         {
             [LocalizedDescription("ParameterEnumEndpointsIncludeEndpointId")]
-            [CommandOption("-i|--include-endpoint-id")]
-            [DefaultValue(true)]
-            public bool IncludeId { get; set; }
+            [CommandOption("-i|--show-endpoint-id")]
+            [DefaultValue(false)]
+            public bool ShowId { get; set; }
 
             [LocalizedDescription("ParameterEnumEndpointsIncludeLoopbackEndpoints")]
             [CommandOption("-l|--include-loopback")]
@@ -145,7 +145,7 @@ namespace Microsoft.Midi.ConsoleApp
             }
 
 
-            if (settings.IncludeId)
+            if (settings.ShowId)
             {
                 table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.EndpointDeviceId)));
             }
@@ -232,7 +232,11 @@ namespace Microsoft.Midi.ConsoleApp
                 }
             }
 
-            table.AddEmptyRow();
+
+            if (settings.Verbose || settings.ShowId)
+            {
+                table.AddEmptyRow();
+            }
 
         }
     }

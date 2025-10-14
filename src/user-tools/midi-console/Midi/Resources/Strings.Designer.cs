@@ -1195,11 +1195,29 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show decoded information about the message.
+        /// </summary>
+        internal static string ParameterMonitorEndpointDecodeMessages {
+            get {
+                return ResourceManager.GetString("ParameterMonitorEndpointDecodeMessages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The direction of the endpoint referenced by the Id. If this doesn&apos;t match the endpoint type, the connection will fail..
         /// </summary>
         internal static string ParameterMonitorEndpointDirectionDescription {
             get {
                 return ResourceManager.GetString("ParameterMonitorEndpointDirectionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include the timestamp in the displayed output.
+        /// </summary>
+        internal static string ParameterMonitorEndpointIncludeTimestamp {
+            get {
+                return ResourceManager.GetString("ParameterMonitorEndpointIncludeTimestamp", resourceCulture);
             }
         }
         

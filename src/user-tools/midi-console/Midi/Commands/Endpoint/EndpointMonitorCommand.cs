@@ -95,6 +95,18 @@ namespace Microsoft.Midi.ConsoleApp
             [DefaultValue(false)]
             public bool CalculateJitterStatistics { get; set; }
 
+            [LocalizedDescription("ParameterMonitorEndpointIncludeTimestamp")]
+            [CommandOption("-t|--include-timestamp")]
+            [DefaultValue(false)]
+            public bool IncludeTimestamp { get; set; }
+
+            [LocalizedDescription("ParameterMonitorEndpointDecodeMessages")]
+            [CommandOption("-d|--decode-messages")]
+            [DefaultValue(true)]
+            public bool DecodeMessages { get; set; }
+
+
+
             //[EnumLocalizedDescription("ParameterMonitorEndpointSkipToKeepUp", typeof(CaptureFieldDelimiter))]
             //[CommandOption("-k|--keep-up-display")]
             //[DefaultValue(false)]
@@ -180,7 +192,11 @@ namespace Microsoft.Midi.ConsoleApp
             using AutoResetEvent m_terminateMessageListenerThread = new AutoResetEvent(false);
 
 
-            MidiMessageTable displayTable = new MidiMessageTable(settings.Verbose);
+            MidiMessageTable displayTable = new MidiMessageTable(
+                settings.IncludeTimestamp,
+                settings.DecodeMessages,
+                settings.Verbose
+                );
 
         //    bool capturingToFile = false;
 
