@@ -10,6 +10,8 @@
 
 #include "pch.h"
 
+#include "midi_service_plugin_version.h"
+
 HRESULT
 CMidi2DiagnosticsPluginMetadataProvider::Initialize()
 {
@@ -32,8 +34,16 @@ CMidi2DiagnosticsPluginMetadataProvider::GetMetadata(
 
     internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_NAME, &metadata->Name);
     internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_DESCRIPTION, &metadata->Description);
-    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_AUTHOR, &metadata->Author);
-    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_VERSION, &metadata->Version);
+
+    wil::unique_cotaskmem_string tempAuthorString;
+    tempAuthorString = wil::make_cotaskmem_string_nothrow(internal::GetCurrentModuleVersionCompanyName().c_str());
+    RETURN_IF_NULL_ALLOC(tempAuthorString.get());
+    metadata->Author = tempAuthorString.release();
+
+    wil::unique_cotaskmem_string tempVersionString;
+    tempVersionString = wil::make_cotaskmem_string_nothrow(internal::GetCurrentModuleVersion().c_str());
+    RETURN_IF_NULL_ALLOC(tempVersionString.get());
+    metadata->Version = tempVersionString.release();
 
     metadata->SmallImagePath = NULL;                        // TODO
 

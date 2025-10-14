@@ -45,6 +45,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{A4512D
 		Inc\midi1_message_defs.h = Inc\midi1_message_defs.h
 		Inc\MidiDefs.h = Inc\MidiDefs.h
 		Inc\midi_group_terminal_blocks.h = Inc\midi_group_terminal_blocks.h
+		Inc\midi_service_plugin_version.h = Inc\midi_service_plugin_version.h
 		Inc\midi_timestamp.h = Inc\midi_timestamp.h
 		Inc\midi_ump.h = Inc\midi_ump.h
 		Inc\midi_ump_message_defs.h = Inc\midi_ump_message_defs.h
