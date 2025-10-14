@@ -23,7 +23,7 @@ namespace Microsoft.Midi.ConsoleApp
             public bool ShowId { get; set; }
 
             [LocalizedDescription("ParameterEnumEndpointsIncludeLoopbackEndpoints")]
-            [CommandOption("-l|--include-loopback")]
+            [CommandOption("-l|--include-diagnostic-loopback")]
             [DefaultValue(false)]
             public bool IncludeDiagnosticLoopback { get; set; }
 
@@ -61,6 +61,9 @@ namespace Microsoft.Midi.ConsoleApp
                     AnsiMarkupFormatter.SetTableBorderStyle(table);
 
                     table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("UMP Endpoints for Windows MIDI Services"));
+                    table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Transport"));
+                    table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("MIDI 2.0 Protocol"));
+                    table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Manufacturer"));
 
                     // Bidirectional endpoints
 
@@ -132,20 +135,28 @@ namespace Microsoft.Midi.ConsoleApp
         {
             var transportInfo = endpointInfo.GetTransportSuppliedInfo();
 
+            string manufacturerName = string.Empty;
+            string midi20 = string.Empty;
+
             if (transportInfo.ManufacturerName != "Microsoft" && transportInfo.ManufacturerName != string.Empty)
             {
-                table.AddRow(new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo.EndpointPurpose) + " " +
-                    AnsiMarkupFormatter.FormatManufacturerName(transportInfo.ManufacturerName) + " " +
-                    AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
+                manufacturerName = transportInfo.ManufacturerName;
             }
-            else
+
+            if (endpointInfo.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
             {
-                table.AddRow(new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo.EndpointPurpose) + " " +
-                    AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
+                midi20 = "Yes";
             }
 
+            table.AddRow(
+                new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo.EndpointPurpose) + " " + AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)),
+                new Markup(AnsiMarkupFormatter.FormatTransportMnemonic(transportInfo.TransportCode)),
+                new Markup(midi20),
+                new Markup(AnsiMarkupFormatter.FormatManufacturerName(transportInfo.ManufacturerName))
+                );
 
-            if (settings.ShowId)
+
+            if (settings.ShowId || settings.Verbose)
             {
                 table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.EndpointDeviceId)));
             }
@@ -234,6 +245,11 @@ namespace Microsoft.Midi.ConsoleApp
 
 
             if (settings.Verbose || settings.ShowId)
+            {
+                table.AddEmptyRow();
+            }
+
+            if (settings.Verbose)
             {
                 table.AddEmptyRow();
             }
