@@ -8,6 +8,9 @@
 
 #pragma once
 
+#ifndef UMP_ITERATOR_H
+#define UMP_ITERATOR_H
+
 #include <stdint.h>
 #include <cstddef>
 #include <iterator>
@@ -26,16 +29,16 @@ namespace WindowsMidiServicesInternal
         using reference = uint32_t&;
 
 
-        UmpBufferIterator() { throw std::runtime_error("Must be constructed with a pointer to the UMP data."); }
+        inline UmpBufferIterator() { throw std::runtime_error("Must be constructed with a pointer to the UMP data."); }
 
-        UmpBufferIterator(pointer bufferPointer, pointer copiedSentinal) :
+        inline UmpBufferIterator(pointer bufferPointer, pointer copiedSentinal) :
             current(bufferPointer),
             start(bufferPointer),
             sentinal(copiedSentinal)
         {
         }
 
-        UmpBufferIterator(pointer bufferPointer, uint32_t wordCount) :
+        inline UmpBufferIterator(pointer bufferPointer, uint32_t wordCount) :
             current(bufferPointer),
             start(bufferPointer),
             sentinal(bufferPointer + wordCount)
@@ -46,7 +49,7 @@ namespace WindowsMidiServicesInternal
         reference operator*() const { return *current; }
         pointer operator->() const { return current; }
 
-        UmpBufferIterator& operator++()
+        inline UmpBufferIterator& operator++()
         {
             // this is where we need to read the type and increment by the right number of words
             if (current != sentinal)
@@ -58,7 +61,7 @@ namespace WindowsMidiServicesInternal
             throw std::runtime_error("Invalid UMP. Past end of buffer.");
         }
 
-        UmpBufferIterator operator++(int)
+        inline UmpBufferIterator operator++(int)
         {
             UmpBufferIterator temp = *this;
 
@@ -67,39 +70,39 @@ namespace WindowsMidiServicesInternal
             return temp;
         }
 
-        bool operator==(const UmpBufferIterator& other) const { return current == other.current; }
-        bool operator!=(const UmpBufferIterator& other) const { return !(*this == other); }
+        inline bool operator==(const UmpBufferIterator& other) const { return current == other.current; }
+        inline bool operator!=(const UmpBufferIterator& other) const { return !(*this == other); }
 
-        bool operator<(const UmpBufferIterator& other)
+        inline bool operator<(const UmpBufferIterator& other) const
         {
             return this->current < other.current;
         }
 
-        bool operator>(const UmpBufferIterator& other)
+        inline bool operator>(const UmpBufferIterator& other) const
         {
             return this->current > other.current;
         }
 
-        bool operator>=(const UmpBufferIterator& other)
+        inline bool operator>=(const UmpBufferIterator& other) const
         {
             return this->current >= other.current;
         }
 
-        bool operator<=(const UmpBufferIterator& other)
+        inline bool operator<=(const UmpBufferIterator& other) const
         {
             return this->current <= other.current;
         }
 
-        UmpBufferIterator begin() { return UmpBufferIterator(start, sentinal); }
-        UmpBufferIterator end() { return UmpBufferIterator(sentinal, sentinal); }   // feels wrong
+        inline UmpBufferIterator begin() { return UmpBufferIterator(start, sentinal); }
+        inline UmpBufferIterator end() { return UmpBufferIterator(sentinal, sentinal); }   // feels wrong
 
-        pointer get()
+        inline pointer get()
         {
             return current;
         }
 
         // return the number of words in the message pointed to by current
-        uint8_t CurrentMessageWordCount()
+        inline uint8_t CurrentMessageWordCount() const
         {
             if (current != sentinal)
             {
@@ -109,7 +112,7 @@ namespace WindowsMidiServicesInternal
             throw std::runtime_error("Invalid UMP. Past end of buffer.");
         }
 
-        uint8_t CurrentMessageGroupIndex()
+        inline uint8_t CurrentMessageGroupIndex() const
         {
             if (current != sentinal)
             {
@@ -119,9 +122,9 @@ namespace WindowsMidiServicesInternal
             throw std::runtime_error("Invalid UMP. Past end of buffer.");
         }
 
-        uint32_t RemainingBufferWordCount()
+        inline uint32_t RemainingBufferWordCount() const
         {
-            if (current != sentinal)
+            if (current < sentinal)
             {
                 return static_cast<uint32_t>(sentinal - current);
             }
@@ -130,7 +133,7 @@ namespace WindowsMidiServicesInternal
         }
 
         // return true if the message type pointed to by current has a group field
-        bool CurrentMessageHasGroupField()
+        inline bool CurrentMessageHasGroupField() const
         {
             if (current != sentinal)
             {
@@ -141,9 +144,9 @@ namespace WindowsMidiServicesInternal
         }
 
         // returns true if there are enough words left to complete this message
-        bool CurrentMessageSeemsComplete()
+        inline bool CurrentMessageSeemsComplete() const
         {
-            if (current != sentinal)
+            if (current < sentinal)
             {
                 return RemainingBufferWordCount() >= CurrentMessageWordCount();
             }
@@ -162,4 +165,27 @@ namespace WindowsMidiServicesInternal
 
 
 
+
+    inline bool ValidateBufferHasCompleteUmps(_In_ uint32_t* buffer, _In_ uint32_t wordCount)
+    {
+        if (buffer == nullptr || wordCount == 0)
+        {
+            return false;
+        }
+
+        UmpBufferIterator iterator(buffer, wordCount);
+
+        for (auto it = iterator.begin(); it < iterator.end(); ++it)
+        {
+            if (!it.CurrentMessageSeemsComplete())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 }
+
+#endif

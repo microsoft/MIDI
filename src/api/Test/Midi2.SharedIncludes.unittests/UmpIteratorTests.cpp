@@ -176,3 +176,54 @@ void UmpIteratorTests::TestIncompleteBuffer()
     VERIFY_ARE_EQUAL(i, ARRAYSIZE(expectedFirstWords));
 
 }
+
+
+
+void UmpIteratorTests::TestValidateIncompleteBufferHasCompleteUmps()
+{
+    // test a mix of message sizes
+    uint32_t words[] =
+    {
+        0x20000001,
+        0x20000002,
+        0x20000003,
+        0x20000004,
+        0x20000005,
+        0x20000006,
+        0x40000001, 0x01234567,
+        0x40000002, 0x02345678,
+        0x40000003, 0x03456789,
+        0x20000007,
+        0x20000008,
+        0xF0000001, 0x18675309, 0x01010101, 0x02020202,
+        0xF0000002, 0x28675309, 0x21010101, 0x22020202,
+        0x20000009,
+        0xF0000003, 0x38675309,     // incomplete UMP
+    };
+
+    VERIFY_IS_FALSE(internal::ValidateBufferHasCompleteUmps(words, ARRAYSIZE(words)));
+}
+
+void UmpIteratorTests::TestValidateCompleteBufferHasCompleteUmps()
+{
+    uint32_t words[] =
+    {
+        0x20000001,
+        0x20000002,
+        0x20000003,
+        0x20000004,
+        0x20000005,
+        0x20000006,
+        0x40000001, 0x01234567,
+        0x40000002, 0x02345678,
+        0x40000003, 0x03456789,
+        0x20000007,
+        0x20000008,
+        0xF0000001, 0x18675309, 0x01010101, 0x02020202,
+        0xF0000002, 0x28675309, 0x21010101, 0x22020202,
+        0x20000009,
+    };
+
+    VERIFY_IS_TRUE(internal::ValidateBufferHasCompleteUmps(words, ARRAYSIZE(words)));
+
+}

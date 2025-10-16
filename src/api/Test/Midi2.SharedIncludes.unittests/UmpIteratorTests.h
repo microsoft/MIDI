@@ -32,6 +32,8 @@ public:
         TEST_METHOD(TestBasicIteration);
     TEST_METHOD(TestMixedIteration);
     TEST_METHOD(TestIncompleteBuffer);
+    TEST_METHOD(TestValidateIncompleteBufferHasCompleteUmps);
+    TEST_METHOD(TestValidateCompleteBufferHasCompleteUmps);
 
 
 private:
