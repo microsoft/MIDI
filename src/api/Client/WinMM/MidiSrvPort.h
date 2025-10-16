@@ -23,8 +23,8 @@ private:
     HRESULT Stop();
     HRESULT Close();
 
-    HRESULT QueryDeviceInterface(_In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
-    HRESULT QueryDeviceInterfaceSize(_In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
+    //HRESULT QueryDeviceInterface(_In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
+    //HRESULT QueryDeviceInterfaceSize(_In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
 
 
     // IMidiCallback, for receiving midi in messages from the service.

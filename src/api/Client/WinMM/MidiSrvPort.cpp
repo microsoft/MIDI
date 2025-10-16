@@ -109,27 +109,27 @@ CMidiPort::Shutdown()
     return S_OK;
 }
 
-_Use_decl_annotations_
-HRESULT
-CMidiPort::QueryDeviceInterface(DWORD_PTR param1, DWORD_PTR param2)
-{
-    auto interfaceStringPtr = reinterpret_cast<WCHAR*>(param1);
-    RETURN_HR_IF_NULL(E_INVALIDARG, interfaceStringPtr);
-    WindowsMidiServicesInternal::SafeCopyWStringToFixedArray(interfaceStringPtr, param2, m_InterfaceId);
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiPort::QueryDeviceInterfaceSize(DWORD_PTR param1, DWORD_PTR param2)
-{
-    auto sizePtr = reinterpret_cast<ULONG*>(param1);
-    RETURN_HR_IF_NULL(E_INVALIDARG, sizePtr);
-    *sizePtr = static_cast<ULONG>((m_InterfaceId.size() + 1) * sizeof(wchar_t));
-
-    return S_OK;
-}
+//_Use_decl_annotations_
+//HRESULT
+//CMidiPort::QueryDeviceInterface(DWORD_PTR param1, DWORD_PTR param2)
+//{
+//    auto interfaceStringPtr = reinterpret_cast<WCHAR*>(param1);
+//    RETURN_HR_IF_NULL(E_INVALIDARG, interfaceStringPtr);
+//    WindowsMidiServicesInternal::SafeCopyWStringToFixedArray(interfaceStringPtr, param2, m_InterfaceId);
+//
+//    return S_OK;
+//}
+//
+//_Use_decl_annotations_
+//HRESULT
+//CMidiPort::QueryDeviceInterfaceSize(DWORD_PTR param1, DWORD_PTR param2)
+//{
+//    auto sizePtr = reinterpret_cast<ULONG*>(param1);
+//    RETURN_HR_IF_NULL(E_INVALIDARG, sizePtr);
+//    *sizePtr = static_cast<ULONG>((m_InterfaceId.size() + 1) * sizeof(wchar_t));
+//
+//    return S_OK;
+//}
 
 
 
@@ -165,14 +165,14 @@ CMidiPort::MidMessage(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
             RETURN_IF_FAILED(Close());
             break;
 
-        case DRV_QUERYDEVICEINTERFACESIZE:
-            OutputDebugString(L"wdmaud2.drv CMidiPort::MidMessage: DRV_QUERYDEVICEINTERFACESIZE called\n");
-            RETURN_IF_FAILED(QueryDeviceInterfaceSize(param1, param2));
-            break;
-        case DRV_QUERYDEVICEINTERFACE:
-            OutputDebugString(L"wdmaud2.drv CMidiPort::MidMessage: DRV_QUERYDEVICEINTERFACE called\n");
-            RETURN_IF_FAILED(QueryDeviceInterface(param1, param2));
-            break;
+        //case DRV_QUERYDEVICEINTERFACESIZE:
+        //    OutputDebugString(L"wdmaud2.drv CMidiPort::MidMessage: DRV_QUERYDEVICEINTERFACESIZE called\n");
+        //    RETURN_IF_FAILED(QueryDeviceInterfaceSize(param1, param2));
+        //    break;
+        //case DRV_QUERYDEVICEINTERFACE:
+        //    OutputDebugString(L"wdmaud2.drv CMidiPort::MidMessage: DRV_QUERYDEVICEINTERFACE called\n");
+        //    RETURN_IF_FAILED(QueryDeviceInterface(param1, param2));
+        //    break;
 
         case DRVM_INIT:
             OutputDebugString(L"wdmaud2.drv CMidiPort::MidMessage: DRVM_INIT called\n");
@@ -218,14 +218,14 @@ CMidiPort::ModMessage(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
             RETURN_IF_FAILED(Close());
             break;
 
-        case DRV_QUERYDEVICEINTERFACESIZE:
-            OutputDebugString(L"wdmaud2.drv CMidiPort::ModMessage: DRV_QUERYDEVICEINTERFACESIZE called\n");
-            RETURN_IF_FAILED(QueryDeviceInterfaceSize(param1, param2));
-            break;
-        case DRV_QUERYDEVICEINTERFACE:
-            OutputDebugString(L"wdmaud2.drv CMidiPort::ModMessage: DRV_QUERYDEVICEINTERFACE called\n");
-            RETURN_IF_FAILED(QueryDeviceInterface(param1, param2));
-            break;
+        //case DRV_QUERYDEVICEINTERFACESIZE:
+        //    OutputDebugString(L"wdmaud2.drv CMidiPort::ModMessage: DRV_QUERYDEVICEINTERFACESIZE called\n");
+        //    RETURN_IF_FAILED(QueryDeviceInterfaceSize(param1, param2));
+        //    break;
+        //case DRV_QUERYDEVICEINTERFACE:
+        //    OutputDebugString(L"wdmaud2.drv CMidiPort::ModMessage: DRV_QUERYDEVICEINTERFACE called\n");
+        //    RETURN_IF_FAILED(QueryDeviceInterface(param1, param2));
+        //    break;
 
         case DRVM_INIT:
             OutputDebugString(L"wdmaud2.drv CMidiPort::ModMessage: DRVM_INIT called\n");
