@@ -143,11 +143,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // Begin COM extensions -----------------------------------------
 
-       // STDMETHOD_(UINT, GetSupportedMaxWordsPerTransmission)();
+        STDMETHOD_(UINT32, GetSupportedMaxMidiWordsPerTransmission)();
+
+        STDMETHOD_(BOOL, ValidateBufferHasOnlyCompleteUmps)(
+            _In_ UINT32* messages,
+            _In_ UINT32 wordCount
+            );
 
         STDMETHOD(SendMidiMessagesRaw)(
             _In_ UINT32* completeMessages,
-            _In_ UINT wordCount,
+            _In_ UINT32 wordCount,
             _In_ UINT64 timestamp
         );
 
@@ -156,6 +161,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         );
 
         STDMETHOD(RemoveMessagesReceivedCallback)();
+
+
 
         // End COM extensions --------------------------------------------
 

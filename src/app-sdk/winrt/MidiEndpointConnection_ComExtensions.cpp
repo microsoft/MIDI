@@ -10,15 +10,37 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
+#include "ump_iterator.h"
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
-    //UINT MidiEndpointConnection::GetSupportedMaxWordsPerTransmission()
-    //{
-    //    // TODO: Return whatever constant we're using to gate message count
+    UINT32 MidiEndpointConnection::GetSupportedMaxMidiWordsPerTransmission()
+    {
+        // the define is for bytes. Convert to MIDI words and return
+        return MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(UINT32);
+    }
 
-    //    return MAXIMUM_LOOPED_BUFFER_SIZE / sizeof(UINT32);
-    //}
+    _Use_decl_annotations_
+    BOOL MidiEndpointConnection::ValidateBufferHasOnlyCompleteUmps(
+        UINT32* messages,
+        UINT32 wordCount
+        )
+    {
+        if (messages == nullptr)
+        {
+            return FALSE;
+        }
 
+        if (wordCount == 0)
+        {
+            return FALSE;
+        }
+
+        return internal::ValidateBufferHasCompleteUmps(messages, wordCount);
+    }
+
+    // this just assumes that messages have been validated in some way
+    // before they are sent
     _Use_decl_annotations_
     HRESULT
     MidiEndpointConnection::SendMidiMessagesRaw(
@@ -42,6 +64,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
     )
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingPointer(messagesReceivedCallback, "Callback")
+        );
+
         RETURN_HR_IF_NULL(E_INVALIDARG, messagesReceivedCallback);
 
         // We now own a reference to this callback
@@ -54,6 +85,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     HRESULT
     MidiEndpointConnection::RemoveMessagesReceivedCallback()
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD)
+        );
+
         // Clear out the callback
         m_comCallback = nullptr;
 

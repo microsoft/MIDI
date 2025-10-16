@@ -10,6 +10,8 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
+#include "ump_iterator.h"
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
@@ -76,51 +78,64 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         try
         {
-            // one copy of the event args for this gets sent to all listeners and the main event
-            auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>(data, size, timestamp);
+            // Use the midi message iterator to loop through messages here. We raise the event for each message.
+            // If someone wants the raw buffer, there's a COM interface for that.
 
-            // we failed to create the event args
-            if (args == nullptr)
+            internal::UmpBufferIterator iterator(
+                static_cast<uint32_t*>(data), 
+                size / sizeof(uint32_t) );
+
+            for (auto it = iterator.begin(); it < iterator.end(); ++it)
             {
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Unable to create MidiMessageReceivedEventArgs", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                );
+                // one copy of the event args for this gets sent to all listeners and the main event
+                auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>(
+                    static_cast<PVOID>(it.get()), 
+                    static_cast<UINT>(it.CurrentMessageWordCount() * sizeof(uint32_t)), 
+                    timestamp);
 
-                OutputDebugString(L"MIDI App SDK: Unable to create MidiMessageReceivedEventArgs\n");
-
-                RETURN_IF_FAILED(E_POINTER);
-            }
-
-            bool skipMainMessageReceivedEvent = false;
-            bool skipFurtherListeners = false;
-
-            // If any listeners are hooked up, use them
-
-            if (m_messageProcessingPlugins && m_messageProcessingPlugins.Size() > 0)
-            {
-                // loop through listeners
-                for (const auto& plugin : m_messageProcessingPlugins)
+                // we failed to create the event args
+                if (args == nullptr)
                 {
-                    // This is synchronous by design, but that requires the listener (and the client app which sinks any event) to not block
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Unable to create MidiMessageReceivedEventArgs", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                    );
 
-                    plugin.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
+                    OutputDebugString(L"MIDI App SDK: Unable to create MidiMessageReceivedEventArgs\n");
 
-                    // if the listener has told us to skip further listeners, effectively 
-                    // removing this message from the queue, then break out of the loop
-                    if (skipFurtherListeners) break;
+                    RETURN_IF_FAILED(E_POINTER);
                 }
-            }
 
-            // if the main message received event is hooked up, and we're not skipping it, use it
-            if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
-            {
-                m_messageReceivedEvent(*this, *args);
+                bool skipMainMessageReceivedEvent = false;
+                bool skipFurtherListeners = false;
+
+                // If any listeners are hooked up, use them
+
+                if (m_messageProcessingPlugins && m_messageProcessingPlugins.Size() > 0)
+                {
+                    // loop through listeners
+                    for (const auto& plugin : m_messageProcessingPlugins)
+                    {
+                        // This is synchronous by design, but that requires the listener (and the client app which sinks any event) to not block
+
+                        plugin.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
+
+                        // if the listener has told us to skip further listeners, effectively 
+                        // removing this message from the queue, then break out of the loop
+                        if (skipFurtherListeners) break;
+                    }
+                }
+
+                // if the main message received event is hooked up, and we're not skipping it, use it
+                if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
+                {
+                    m_messageReceivedEvent(*this, *args);
+                }
             }
 
             return S_OK;
