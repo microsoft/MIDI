@@ -43,7 +43,9 @@
 #define MINIMUM_LOOPED_DATASIZE 1
 
 // largest UMP is 16 bytes
-#define MAXIMUM_LOOPED_UMP_DATASIZE 16
+//#define MAXIMUM_LOOPED_UMP_DATASIZE 16
+// but we now allow sending multiple UMPs at once. These need to be *complete* UMPs
+#define MAXIMUM_LOOPED_UMP_DATASIZE PAGE_SIZE
 
 // Libmidi2 chunks UMP to bytestream sysex messages with a max size of 20 bytes
 // per message
