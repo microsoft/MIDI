@@ -34,6 +34,8 @@ public:
     TEST_METHOD(TestIncompleteBuffer);
     TEST_METHOD(TestValidateIncompleteBufferHasCompleteUmps);
     TEST_METHOD(TestValidateCompleteBufferHasCompleteUmps);
+    TEST_METHOD(TestGetMessageType);
+    TEST_METHOD(TestCopyWordsToVector);
 
 
 private:

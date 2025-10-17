@@ -31,19 +31,17 @@ namespace WindowsMidiServicesInternal
 
         inline UmpBufferIterator() { throw std::runtime_error("Must be constructed with a pointer to the UMP data."); }
 
-        inline UmpBufferIterator(pointer bufferPointer, pointer copiedSentinal) :
+        inline UmpBufferIterator(_In_ pointer bufferPointer, _In_ pointer copiedSentinal) :
             current(bufferPointer),
             start(bufferPointer),
             sentinal(copiedSentinal)
-        {
-        }
+        { }
 
-        inline UmpBufferIterator(pointer bufferPointer, uint32_t wordCount) :
+        inline UmpBufferIterator(_In_ pointer bufferPointer, _In_ uint32_t wordCount) :
             current(bufferPointer),
             start(bufferPointer),
             sentinal(bufferPointer + wordCount)
-        {
-        }
+        { }
 
 
         reference operator*() const { return *current; }
@@ -70,25 +68,25 @@ namespace WindowsMidiServicesInternal
             return temp;
         }
 
-        inline bool operator==(const UmpBufferIterator& other) const { return current == other.current; }
-        inline bool operator!=(const UmpBufferIterator& other) const { return !(*this == other); }
+        inline bool operator==(_In_ const UmpBufferIterator& other) const { return current == other.current; }
+        inline bool operator!=(_In_ const UmpBufferIterator& other) const { return !(*this == other); }
 
-        inline bool operator<(const UmpBufferIterator& other) const
+        inline bool operator<(_In_ const UmpBufferIterator& other) const
         {
             return this->current < other.current;
         }
 
-        inline bool operator>(const UmpBufferIterator& other) const
+        inline bool operator>(_In_ const UmpBufferIterator& other) const
         {
             return this->current > other.current;
         }
 
-        inline bool operator>=(const UmpBufferIterator& other) const
+        inline bool operator>=(_In_ const UmpBufferIterator& other) const
         {
             return this->current >= other.current;
         }
 
-        inline bool operator<=(const UmpBufferIterator& other) const
+        inline bool operator<=(_In_ const UmpBufferIterator& other) const
         {
             return this->current <= other.current;
         }
@@ -99,6 +97,47 @@ namespace WindowsMidiServicesInternal
         inline pointer get()
         {
             return current;
+        }
+
+        inline uint32_t GetCurrentMessageWord(_In_ uint8_t const wordIndex) const
+        {
+            if (current != sentinal)
+            {
+                if (CurrentMessageSeemsComplete() && wordIndex < GetUmpLengthInMidiWordsFromFirstWord(*current))
+                {
+                    return *(current + wordIndex);
+                }
+
+                throw std::runtime_error("Word index out of range for this message.");
+
+            }
+
+            throw std::runtime_error("Invalid UMP. Past end of buffer.");
+        }
+
+        inline void CopyCurrentMessageToVector(_In_ std::vector<uint32_t>& destination) const
+        {
+            if (current != sentinal)
+            {
+                for (int i = 0; i < GetUmpLengthInMidiWordsFromFirstWord(*current); ++i)
+                {
+                    destination.push_back(*(current + i));
+                }
+
+                return;
+            }
+
+            throw std::runtime_error("Invalid UMP. Past end of buffer.");
+        }
+
+        inline uint8_t CurrentMessageType() const
+        {
+            if (current != sentinal)
+            {
+                return internal::GetUmpMessageTypeFromFirstWord(*current);
+            }
+
+            throw std::runtime_error("Invalid UMP. Past end of buffer.");
         }
 
         // return the number of words in the message pointed to by current
