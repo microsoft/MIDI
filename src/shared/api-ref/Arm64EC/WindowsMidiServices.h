@@ -992,6 +992,10 @@ EXTERN_C const IID IID_IMidiDeviceManager;
             /* [annotation][string][out] */ 
             _Out_opt_  LPWSTR *createdDeviceId) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE DeactivateVirtualParentDevice( 
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR instanceId) = 0;
+        
         virtual HRESULT STDMETHODCALLTYPE ActivateEndpoint( 
             /* [annotation][string][in] */ 
             _In_  LPCWSTR parentInstanceId,
@@ -1084,6 +1088,12 @@ EXTERN_C const IID IID_IMidiDeviceManager;
             /* [in] */ const SW_DEVICE_CREATE_INFO *createInfo,
             /* [annotation][string][out] */ 
             _Out_opt_  LPWSTR *createdDeviceId);
+        
+        DECLSPEC_XFGVIRT(IMidiDeviceManager, DeactivateVirtualParentDevice)
+        HRESULT ( STDMETHODCALLTYPE *DeactivateVirtualParentDevice )( 
+            IMidiDeviceManager * This,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR instanceId);
         
         DECLSPEC_XFGVIRT(IMidiDeviceManager, ActivateEndpoint)
         HRESULT ( STDMETHODCALLTYPE *ActivateEndpoint )( 
@@ -1182,6 +1192,9 @@ EXTERN_C const IID IID_IMidiDeviceManager;
 
 #define IMidiDeviceManager_ActivateVirtualParentDevice(This,devPropertyCount,devProperties,createInfo,createdDeviceId)	\
     ( (This)->lpVtbl -> ActivateVirtualParentDevice(This,devPropertyCount,devProperties,createInfo,createdDeviceId) ) 
+
+#define IMidiDeviceManager_DeactivateVirtualParentDevice(This,instanceId)	\
+    ( (This)->lpVtbl -> DeactivateVirtualParentDevice(This,instanceId) ) 
 
 #define IMidiDeviceManager_ActivateEndpoint(This,parentInstanceId,umpOnly,midiFlow,commonProperties,intPropertyCount,devPropertyCount,interfaceDevProperties,deviceDevProperties,createInfo,createdEndpointDeviceInterfaceId)	\
     ( (This)->lpVtbl -> ActivateEndpoint(This,parentInstanceId,umpOnly,midiFlow,commonProperties,intPropertyCount,devPropertyCount,interfaceDevProperties,deviceDevProperties,createInfo,createdEndpointDeviceInterfaceId) ) 

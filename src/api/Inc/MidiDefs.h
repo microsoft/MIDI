@@ -224,7 +224,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_PortAssignedGroupIndex, 18);     // DEVPROP_TYPE
 #define STRING_PKEY_MIDI_DriverDeviceInterface MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"19"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DriverDeviceInterface, 19);        // DEVPROP_TYPE_STRING
 
-
 // USB / KS Properties ============================================================================
 // Starts at 50
 

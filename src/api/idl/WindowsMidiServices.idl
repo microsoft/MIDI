@@ -274,6 +274,10 @@ interface IMidiDeviceManager : IUnknown
         [out, string, annotation("_Out_opt_")] LPWSTR* createdDeviceId
     );
 
+    HRESULT DeactivateVirtualParentDevice(
+        [in, string, annotation("_In_")] LPCWSTR instanceId
+    );
+
     HRESULT ActivateEndpoint(
         [in, string, annotation("_In_")] LPCWSTR parentInstanceId,
         [in, annotation("_In_")] BOOL umpOnly,

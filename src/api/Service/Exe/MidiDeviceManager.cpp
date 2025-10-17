@@ -14,6 +14,7 @@
 #include "MidiEndpointNameTable.h"
 #include "MidiClientManager.h"
 
+#include "midi_ksa_pin_map_property.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -537,6 +538,104 @@ SwMidiParentDeviceCreateCallback(
     // success or failure, signal we have completed.
     creationContext->CreationCompleted.SetEvent();
 }
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::DeactivateVirtualParentDevice(
+    LPCWSTR instanceId)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+    );
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, instanceId);
+
+    auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
+    RETURN_HR_IF(E_INVALIDARG, cleanId == L"");
+
+    std::vector<std::wstring> interfaceIds;
+    bool parentRemoved{ false };
+
+    do
+    {
+        // locate the MIDIPORT that identifies the swd
+        // NOTE: This uses instanceId, not the Device Interface Id
+        auto item = std::find_if(m_midiParents.begin(), m_midiParents.end(), [&](const std::unique_ptr<MIDIPARENTDEVICE>& parent)
+            {
+                if (internal::NormalizeDeviceInstanceIdWStringCopy(parent->InstanceId).starts_with(cleanId))
+                {
+                    return true;
+                }
+
+                return false;
+            });
+
+        // exit if the item was not found. We're done.
+        if (item == m_midiParents.end())
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Found no more matches in list. Breaking out of loop", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+            );
+
+            break;
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Found instance id in ports list. Erasing", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD),
+                TraceLoggingWideString(item->get()->DeviceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            // Add the interface ID of this port to a list
+            interfaceIds.push_back(internal::NormalizeEndpointInterfaceIdWStringCopy(item->get()->DeviceId.get()));
+
+            // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
+            // which will deactivate the device, done.
+            m_midiParents.erase(item);
+            parentRemoved = true;
+        }
+    } while (TRUE);
+
+
+    // now, need to remove any children
+    if (parentRemoved)
+    {
+        DeactivateEndpoint(instanceId);
+    }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+    );
+
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT
@@ -1653,7 +1752,7 @@ CMidiDeviceManager::DeactivateEndpoint
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
     );
 
@@ -2581,6 +2680,31 @@ CMidiDeviceManager::RebuildMidi1PortsForEndpoint(
 }
 
 
+// Expects the umpEndpointDeviceInfo object to have included the properties
+// STRING_PKEY_MIDI_DriverDeviceInterface
+// STRING_DEVPKEY_KsAggMidiGroupPinMap
+_Use_decl_annotations_
+std::wstring CMidiDeviceManager::GetWinMMDeviceInterfaceIdForGroup(
+    winrt::Windows::Devices::Enumeration::DeviceInformation umpEndpointDeviceInfo,
+    uint8_t groupIndex
+)
+{
+    UNREFERENCED_PARAMETER(umpEndpointDeviceInfo);
+    UNREFERENCED_PARAMETER(groupIndex);
+    // first, check to see if we have a pin map entry, which is created by KSA
+
+
+    // if no pin map entry, check to see if we have STRING_PKEY_MIDI_DriverDeviceInterface
+
+
+
+
+    // fallback is to return the UMP endpoint's id
+    return internal::NormalizeEndpointInterfaceIdWStringCopy(umpEndpointDeviceInfo.Id().c_str());
+}
+
+
+
 // TODO: If any of the ports in play here are actually in-use by WinMM or WinRT MIDI 1.0
 // we need to leave them alone for now. Otherwise, tearing down and rebuilding a port
 // like that just because a function block came through will end up being a problem.
@@ -2643,6 +2767,9 @@ CMidiDeviceManager::SyncMidi1Ports(
     additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
     additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
     
+    additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
+    additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);
+
     // We have function blocks to retrieve
     // build up the property keys to query for the function blocks
     std::wstring functionBlockBaseString = MIDI_STRING_PKEY_GUID;
