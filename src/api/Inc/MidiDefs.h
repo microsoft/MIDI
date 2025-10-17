@@ -217,6 +217,14 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ServiceAssignedPortNumber, 17);     // DEVPROP_T
 #define STRING_PKEY_MIDI_PortAssignedGroupIndex MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"18"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_PortAssignedGroupIndex, 18);     // DEVPROP_TYPE_UINT32
 
+// DRV_QUERYDEVICEINTERFACE compat for MIDI 1 ports. For KS and KSA, this will contain a string like
+// \\?\usb#vid_0582&pid_02f6&mi_00#6&33c4bbd&0&0000#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\global
+// \\?\bomebus#bomemidi#01#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\bomemidiout
+// For other transports, the string is up to the transport itself.
+#define STRING_PKEY_MIDI_DriverDeviceInterface MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"19"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DriverDeviceInterface, 19);        // DEVPROP_TYPE_STRING
+
+
 // USB / KS Properties ============================================================================
 // Starts at 50
 
@@ -662,6 +670,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPRO
 // this is the name table. We can have up to 32 created ports from a single endpoint
 #define STRING_PKEY_MIDI_Midi1PortNameTable MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"960"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNameTable, 960);              // DEVPROP_TYPE_BINARY : Midi1PortNameTable
+
 
 
 // Other Structures for properties =================================================================
