@@ -278,7 +278,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         midi2::MidiSendMessageResults SendMessageRaw(
             _In_ winrt::com_ptr<IMidiBidirectional> endpoint,
             _In_ void* data,
-            _In_ uint8_t sizeInBytes,
+            _In_ uint32_t sizeInBytes,
             _In_ internal::MidiTimestamp timestamp);
 
         _Success_(return != nullptr)
