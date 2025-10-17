@@ -245,7 +245,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
 
     return SendMidiMessageNow(
         MessageOptionFlags_None,
-        (PVOID)(message.Data), 
+        (PVOID)(message.Data.data()),
         message.ByteCount, 
         (LONGLONG)(message.Timestamp));
 
@@ -342,7 +342,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
         {
             // otherwise, we schedule the message
 
-            if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
+            if (size >= MINIMUM_UMP_DATASIZE /*&& size <= MAXIMUM_UMP_DATASIZE*/)
             {
                 // schedule the message for sending in the future
 
