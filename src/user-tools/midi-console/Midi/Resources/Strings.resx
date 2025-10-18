@@ -1094,4 +1094,7 @@ Timestamp</value>
   <data name="ParameterMonitorEndpointIncludeTimestamp" xml:space="preserve">
     <value>Include the timestamp in the displayed output</value>
   </data>
+  <data name="ParameterMonitorEndpointIncludeRealTimeMessages" xml:space="preserve">
+    <value>Include frequent/noisy messages like Clock pulse and Active Sense</value>
+  </data>
 </root>

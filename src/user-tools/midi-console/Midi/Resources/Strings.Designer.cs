@@ -1213,6 +1213,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include frequent/noisy messages like Clock pulse and Active Sense.
+        /// </summary>
+        internal static string ParameterMonitorEndpointIncludeRealTimeMessages {
+            get {
+                return ResourceManager.GetString("ParameterMonitorEndpointIncludeRealTimeMessages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Include the timestamp in the displayed output.
         /// </summary>
         internal static string ParameterMonitorEndpointIncludeTimestamp {

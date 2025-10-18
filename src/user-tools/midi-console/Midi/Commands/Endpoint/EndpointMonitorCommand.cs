@@ -105,6 +105,12 @@ namespace Microsoft.Midi.ConsoleApp
             [DefaultValue(true)]
             public bool DecodeMessages { get; set; }
 
+            [LocalizedDescription("ParameterMonitorEndpointIncludeRealTimeMessages")]
+            [CommandOption("-r|--include-real-time-messages")]
+            [DefaultValue(false)]
+            public bool IncludeRealTimeMessages { get; set; }
+
+
 
 
             //[EnumLocalizedDescription("ParameterMonitorEndpointSkipToKeepUp", typeof(CaptureFieldDelimiter))]
@@ -192,12 +198,6 @@ namespace Microsoft.Midi.ConsoleApp
             using AutoResetEvent m_terminateMessageListenerThread = new AutoResetEvent(false);
 
 
-            MidiMessageTable displayTable = new MidiMessageTable(
-                settings.IncludeTimestamp,
-                settings.DecodeMessages,
-                settings.Verbose
-                );
-
         //    bool capturingToFile = false;
 
             string endpointId = string.Empty;
@@ -230,6 +230,23 @@ namespace Microsoft.Midi.ConsoleApp
 
 
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+
+
+                var endpointInfo = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(endpointId);
+
+                if (endpointInfo == null)
+                {
+                    // exit
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToFindEndpointDevice));
+                    return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+                }
+
+                MidiMessageTable displayTable = new MidiMessageTable(
+                    endpointInfo.GetDeclaredEndpointInfo().SupportsMidi20Protocol,
+                    settings.IncludeTimestamp,
+                    settings.DecodeMessages,
+                    settings.Verbose
+                    );
 
 
                 //var table = new Table();
@@ -331,6 +348,24 @@ namespace Microsoft.Midi.ConsoleApp
 
                         connection.MessageReceived += (s, e) =>
                         {
+                            if (!settings.IncludeRealTimeMessages && e.MessageType == MidiMessageType.SystemCommon32)
+                            {
+                                var status = MidiMessageHelper.GetStatusFromSystemCommonMessage(e.PeekFirstWord());
+
+                                if (status == 0xF8) // clock
+                                    return;
+
+                                if (status == 0xFE) // active sense
+                                    return;
+                            }
+
+
+                            //if (!settings.IncludeRealTimeMessages &&  e.MessageType == MidiMessageType.UtilityMessage32)
+                            //{
+                            //    // TODO: filter out JR Clock etc
+                            //}
+
+
                             countMessagesReceived++;
 
                             // this captures stats to tell us how long it takes to receive and queue messages
