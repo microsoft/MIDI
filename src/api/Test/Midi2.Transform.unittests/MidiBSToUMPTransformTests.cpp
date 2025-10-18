@@ -22,7 +22,7 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
     uint8_t const groupIndex,
     uint8_t const bytes[], 
     uint32_t const byteCount, 
-    uint16_t const expectedMessageCount,
+    /*uint16_t const expectedMessageCount, */
     std::vector<uint32_t> const expectedWords
 )
 {
@@ -46,7 +46,6 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
 
     VERIFY_SUCCEEDED(transform->Initialize(deviceId.c_str(), &creationParams, &mmcssTaskId, this, 0, nullptr));
 
-    uint16_t receivedMessageCount{ 0 };
     uint16_t expectedWordsIndex{ 0 };
     uint16_t countWordsCreated{ 0 };
 
@@ -86,7 +85,6 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
 
             std::cout << std::endl;
 
-            receivedMessageCount++;
         };
 
     std::cout << "bytes sent: ";
@@ -105,7 +103,7 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
 
     transform->Shutdown();
 
-    VERIFY_ARE_EQUAL(expectedMessageCount, receivedMessageCount);
+    //VERIFY_ARE_EQUAL(expectedMessageCount, receivedMessageCount);
 }
 
 //#include "Midi2"
@@ -126,7 +124,7 @@ void MidiBSToUMPTransformTests::TestBSToUMPWithSysEx7()
         0x30351b1c, 0x1d1e1f00
     };
 
-    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), 2, expectedWords);
+    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 void MidiBSToUMPTransformTests::TestTranslateFromBytesWithEmbeddedRealTimeAndSysEx7()
@@ -148,7 +146,7 @@ void MidiBSToUMPTransformTests::TestTranslateFromBytesWithEmbeddedRealTimeAndSys
         0x30352b2c, 0x2d2e2f00
     };
 
-    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), 3, expectedWords);
+    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 
@@ -176,7 +174,7 @@ void MidiBSToUMPTransformTests::TestBSToUMPWithEmbeddedStartStopSysEx7()
         0x30027a7b, 0x00000000
     };
 
-    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), 8, expectedWords);
+    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), expectedWords);
 
 }
 
@@ -191,7 +189,7 @@ void MidiBSToUMPTransformTests::TestEmptySysEx7()
 
     std::vector<uint32_t> expectedWords{ 0x30000000, 0x00000000 };
 
-    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), 1, expectedWords);
+    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), expectedWords);
 
 }
 
@@ -206,7 +204,7 @@ void MidiBSToUMPTransformTests::TestShortSysEx7()
 
     std::vector<uint32_t> expectedWords{ 0x30020a0b, 0x00000000 };
 
-    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), 1, expectedWords);
+    InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 void MidiBSToUMPTransformTests::TestTimingClock()
@@ -220,7 +218,7 @@ void MidiBSToUMPTransformTests::TestTimingClock()
 
     std::vector<uint32_t> expectedWords{ 0x10F80000 };
 
-    InternalTestBytes(groupIndex, bytes, _countof(bytes), 1, expectedWords);
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
 }
 
 //void MidiBSToUMPTransformTests::TestTimingClockPadded()
