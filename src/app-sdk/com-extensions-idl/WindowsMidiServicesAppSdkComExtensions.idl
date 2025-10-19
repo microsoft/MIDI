@@ -34,9 +34,9 @@ interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
 	// processing queue before returning. The data pointer is only valid
 	// for the duration of this call.
 	HRESULT MessagesReceived(
-		[in, annotation("_In_")] UINT32* messages,
+		[in, annotation("_In_")] UINT64 timestamp,
 		[in, annotation("_In_")] UINT32 wordCount,
-		[in, annotation("_In_")] UINT64 timestamp
+		[in, annotation("_In_")] UINT32* messages
 	);
 };
 
@@ -56,17 +56,18 @@ interface IMidiEndpointConnectionRaw : IUnknown
 	// between messages and messages+wordcount. It does not 
 	// validate anything else about the UMPs.
 	BOOL ValidateBufferHasOnlyCompleteUmps(
-		[in, annotation("_In_")] UINT32* messages,
-		[in, annotation("_In_")] UINT32 wordCount);
+		[in, annotation("_In_")] UINT32 wordCount,
+		[in, annotation("_In_")] UINT32* messages
+	);
 
 	// before sending a buffer of messages, the caller is responsible
 	// for confirming that the buffer has only complete UMPs, and that
 	// the buffer is smaller than or equal to the transmission limit
 	HRESULT SendMidiMessagesRaw(
-		[in, annotation("_In_")] UINT32* completeMessages,
+		[in, annotation("_In_")] UINT64 timestamp,
 		[in, annotation("_In_")] UINT32 wordCount,
-		[in, annotation("_In_")] UINT64 timestamp
-	);
+		[in, annotation("_In_")] UINT32* completeMessages
+		);
 
 	// Wire up your callback handler. When this is in play, the normal
 	// WinRT message received events including those on listeners 

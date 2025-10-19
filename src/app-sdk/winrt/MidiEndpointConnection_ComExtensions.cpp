@@ -22,8 +22,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     BOOL MidiEndpointConnection::ValidateBufferHasOnlyCompleteUmps(
-        UINT32* messages,
-        UINT32 wordCount
+        UINT32 wordCount,
+        UINT32* messages
         )
     {
         if (messages == nullptr)
@@ -44,9 +44,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     HRESULT
     MidiEndpointConnection::SendMidiMessagesRaw(
-        UINT32* completeMessages,
+        UINT64 timestamp,
         UINT32 wordCount,
-        UINT64 timestamp
+        UINT32* completeMessages
     )
     {
         RETURN_HR_IF_NULL(E_FAIL, m_endpointTransport);

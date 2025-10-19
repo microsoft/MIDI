@@ -21,6 +21,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Packages", "Packages", "{FE75C8DD-3ECA-4B26-A5A2-07C1245DBFD3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Devices.Midi2.NetProjection", "projections\dotnet-and-cpp\Microsoft.Windows.Devices.Midi2.NetProjection.csproj", "{25F09B3A-0D97-4245-8591-262A0DFF4320}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WinRT", "WinRT", "{F5AE94B4-47A7-4D35-A9EE-65FD4CF58C4B}"
 EndProject
