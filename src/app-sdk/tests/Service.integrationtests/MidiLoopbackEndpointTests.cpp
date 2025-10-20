@@ -64,6 +64,15 @@ void MidiLoopbackEndpointTests::TestCreateLoopbackEndpoints()
 
             endpointAId = response.EndpointDeviceIdA;
             endpointBId = response.EndpointDeviceIdB;
+
+
+            // TODO: enumerate endpoints and verify that the endpoints are present
+
+
+            // Give a hoot. Don't pollute.
+            MidiLoopbackEndpointRemovalConfig removalConfig(response.AssociationId);
+            VERIFY_IS_TRUE(MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(removalConfig));
+
         }
         else
         {
@@ -74,8 +83,6 @@ void MidiLoopbackEndpointTests::TestCreateLoopbackEndpoints()
 
             VERIFY_FAIL();
         }
-
-        // TODO: enumerate endpoints and verify that the endpoints are present
 
     }
 

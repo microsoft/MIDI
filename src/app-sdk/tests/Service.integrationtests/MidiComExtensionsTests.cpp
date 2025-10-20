@@ -27,11 +27,11 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
-    //auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    //auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
-    auto connSend = session.CreateEndpointConnection(L"\\\\?\\swd#midisrv#midiu_ksa_11445416705185160265#{e7cce071-3c03-423f-88d3-f1045d02552b}");
-    auto connReceive = session.CreateEndpointConnection(L"\\\\?\\swd#midisrv#midiu_ksa_11445416705185160265#{e7cce071-3c03-423f-88d3-f1045d02552b}");
+    //auto connSend = session.CreateEndpointConnection(L"\\\\?\\swd#midisrv#midiu_ksa_11445416705185160265#{e7cce071-3c03-423f-88d3-f1045d02552b}");
+    //auto connReceive = session.CreateEndpointConnection(L"\\\\?\\swd#midisrv#midiu_ksa_11445416705185160265#{e7cce071-3c03-423f-88d3-f1045d02552b}");
 
 
     VERIFY_IS_NOT_NULL(connSend);
