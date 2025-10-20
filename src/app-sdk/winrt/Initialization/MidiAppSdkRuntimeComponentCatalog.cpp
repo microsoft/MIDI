@@ -240,30 +240,30 @@ MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace) 
                 MIDI_SDK_ROOT_NAMESPACE, MIDI_SDK_ROOT_NAMESPACE_LENGTH,
                 false) == CSTR_EQUAL)
             {
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Type is in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(typeOrNamespaceBuffer, "type or namespace")
-                );
+                //TraceLoggingWrite(
+                //    Midi2SdkTelemetryProvider::Provider(),
+                //    MIDI_TRACE_EVENT_INFO,
+                //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                //    TraceLoggingPointer(this, "this"),
+                //    TraceLoggingWideString(L"Type is in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                //    TraceLoggingWideString(typeOrNamespaceBuffer, "type or namespace")
+                //);
 
                 return true;
             }
         }
     }
 
-    TraceLoggingWrite(
-        Midi2SdkTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Type is NOT in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
-    );
+    //TraceLoggingWrite(
+    //    Midi2SdkTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Type is NOT in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
+    //);
 
 
     return false;
