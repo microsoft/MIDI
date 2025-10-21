@@ -13,8 +13,9 @@ class MidiVirtualMidiTransportTelemetryProvider : public wil::TraceLoggingProvid
     IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
         MidiVirtualMidiTransportTelemetryProvider,
         "Microsoft.Windows.Midi2.VirtualMidiTransport",
-        // {64ed8ddd-0036-5739-8591-ffc4c2eaa975}
-        (0x64ed8ddd,0x0036,0x5739,0x85,0x91,0xff,0xc4,0xc2,0xea,0xa9,0x75))
+        //PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.VirtualMidiTransport").Guid
+        // {8d08cf09-eca5-58d0-f722-4ef1eca95be2}
+        (0x8d08cf09,0xeca5,0x58d0,0xf7,0x22,0x4e,0xf1,0xec,0xa9,0x5b,0xe2))
 };
 
 using namespace ATL;
