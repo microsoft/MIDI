@@ -76,7 +76,7 @@
     <ClInclude Include="MidiEndpointTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="transport_defs.h">
+    <ClInclude Include="virtual_midi_transport_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.VirtualMidiBidi.h">

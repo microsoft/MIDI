@@ -1054,7 +1054,7 @@ CMidiEndpointProtocolWorker::Shutdown()
 
     if (m_midiBidiDevice)
     {
-        m_midiBidiDevice->Shutdown();
+        LOG_IF_FAILED(m_midiBidiDevice->Shutdown());
         m_midiBidiDevice.reset();
     }
 

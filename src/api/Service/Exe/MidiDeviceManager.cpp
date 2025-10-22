@@ -1763,20 +1763,17 @@ CMidiDeviceManager::DeactivateEndpoint
     auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
     RETURN_HR_IF(E_INVALIDARG, cleanId == L"");
 
-    std::vector<std::wstring> interfaceIds;
+    std::vector<std::wstring> interfaceIds{};
 
     // there may be more than one SWD associated with this instance id, as we reuse
     // the instance id for the legacy SWD, it just has a different activator and InterfaceClass.
+
     do
     {
         // locate the MIDIPORT that identifies the swd
         // NOTE: This uses instanceId, not the Device Interface Id
         auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
-                //OutputDebugString(L"Checking: ");
-                //OutputDebugString(Port->InstanceId.c_str());
-                //OutputDebugString(L"\n");
-
             // for MIDI 1 child ports for a device, the instance id can have a _n added where n is the group number
             // The transports only know about the UMP endpoint they created, therefore, we need to do a 
             // "starts with", not an exact match. 
@@ -1818,10 +1815,6 @@ CMidiDeviceManager::DeactivateEndpoint
                 TraceLoggingWideString(item->get()->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
-            //OutputDebugString(L"Erasing: ");
-            //OutputDebugString(item->get()->InstanceId.c_str());
-            //OutputDebugString(L"\n");
-
             // Add the interface ID of this port to a list
             interfaceIds.push_back(internal::NormalizeEndpointInterfaceIdWStringCopy(item->get()->DeviceInterfaceId.get()));
 
@@ -1835,18 +1828,15 @@ CMidiDeviceManager::DeactivateEndpoint
 
     if (portsRemoved)
     {
-        // now that we've removed UMP and WinMM ports, we need to compact the port numbers to keep them contiguous
-        RETURN_IF_FAILED(CompactPortNumbers());
-
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Notifying client manager of device removal", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingValue(interfaceIds.size(), "InterfaceIdCount"),
-            TraceLoggingWideString(interfaceIds.empty() ? L"<none>" : interfaceIds.front().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingWideString(L"Notifying client manager of device removal", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(interfaceIds.empty() ? L"<none>" : interfaceIds.front().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
          );
         
         // Notify client manager that device was removed
@@ -1865,6 +1855,10 @@ CMidiDeviceManager::DeactivateEndpoint
                 TraceLoggingWideString(L"No client manager set for device removal", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
         }
+
+        // Potential race condition here?
+        // now that we've removed UMP and WinMM ports, we need to compact the port numbers to keep them contiguous
+        RETURN_IF_FAILED(CompactPortNumbers());
     }
 
 
@@ -2669,10 +2663,13 @@ CMidiDeviceManager::RebuildMidi1PortsForEndpoint(
     for (auto& port : m_midiPorts)
     {
         std::wstring cleanPortId { port->DeviceInterfaceId.get() };
+        cleanPortId = internal::NormalizeEndpointInterfaceIdWStringCopy(cleanPortId);
 
         if (cleanPortId == cleanEndpointId)
         {
-            return SyncMidi1Ports(port.get());
+            RETURN_IF_FAILED(SyncMidi1Ports(port.get()));
+
+            return S_OK;
         }
     }
 
@@ -2680,6 +2677,7 @@ CMidiDeviceManager::RebuildMidi1PortsForEndpoint(
 }
 
 
+// TODO: This is in support of DRV_QUERYDEVICEINTERFACE calls in WinMM
 // Expects the umpEndpointDeviceInfo object to have included the properties
 // STRING_PKEY_MIDI_DriverDeviceInterface
 // STRING_DEVPKEY_KsAggMidiGroupPinMap
