@@ -193,16 +193,6 @@ RoActivateInstanceDetour(
     HSTRING activatableClassId, 
     IInspectable** instance)
 {
-    TraceLoggingWrite(
-        Midi2SdkTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(nullptr, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, NULL), "class")
-    );
-
 
     RETURN_HR_IF_NULL(E_INVALIDARG, activatableClassId);
     RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
@@ -213,6 +203,16 @@ RoActivateInstanceDetour(
         // not in-scope, so we fall back to the default implementation
         return TrueRoActivateInstance(activatableClassId, instance);
     }
+
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Type in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, NULL), "class")
+    );
 
 
     ActivationLocation location{ ActivationLocation::CurrentApartment };
@@ -277,15 +277,7 @@ RoGetActivationFactoryDetour(
     REFIID iid, 
     void** factory)
 {
-    TraceLoggingWrite(
-        Midi2SdkTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(nullptr, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, NULL), "class")
-    );
+
 
     RETURN_HR_IF_NULL(E_INVALIDARG, activatableClassId);
     RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
@@ -297,6 +289,15 @@ RoGetActivationFactoryDetour(
         return TrueRoGetActivationFactory(activatableClassId, iid, factory);
     }
 
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Type in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, NULL), "class")
+    );
 
     ActivationLocation location{ ActivationLocation::CurrentApartment };
     HRESULT hr = GetActivationLocation(activatableClassId, location);
