@@ -13,6 +13,10 @@
 #include "Endpoints.Virtual.MidiVirtualDeviceManager.g.cpp"
 
 
+// TODO: Should just reference the source file from the service plugin
+#define MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX L"MIDIU_APPDEV_"
+#define MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX L"MIDIU_APPPUB_"
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
     bool MidiVirtualDeviceManager::IsTransportAvailable() noexcept
@@ -20,6 +24,54 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         // TODO: Check to see if service transport is installed and running. May require a new service call
         return true;
     }
+
+
+
+    _Use_decl_annotations_
+    winrt::hstring MidiVirtualDeviceManager::GetAssociatedClientEndpointDeviceId(winrt::guid associationId) noexcept
+    {
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+        additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
+        additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
+
+        // we can't include custom properties in the selector, so we need to get all
+        // the midi interfaces and run through them, checking the associator
+        auto devices = enumeration::DeviceInformation::FindAllAsync(
+            MidiEndpointConnection::GetDeviceSelector(),
+            additionalProperties,
+            enumeration::DeviceInformationKind::DeviceInterface
+        ).get();
+
+        winrt::hstring stringifiedAssociationId { internal::GuidToString(associationId) };
+
+        if (devices != nullptr && devices.Size() > 0)
+        {
+            for (auto const& di : devices)
+            {
+                auto transportLayer = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(STRING_PKEY_MIDI_TransportLayer, di, foundation::GuidHelper::Empty());
+
+                if (transportLayer == TransportId())
+                {
+                    // it's a virtual device, let's check the associator id and the type
+                    auto associator = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, di, L"");
+
+                    if (!associator.empty() && associator == stringifiedAssociationId)
+                    {
+                        std::wstring searchId = internal::ToLowerTrimmedHStringCopy(di.Id()).c_str();
+                        std::wstring prefix = internal::ToLowerTrimmedWStringCopy(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX);
+
+                        if (searchId.find(prefix) != searchId.npos)
+                        {
+                            return internal::NormalizeEndpointInterfaceIdHStringCopy(di.Id());
+                        }
+                    }
+                }
+            }
+        }
+
+        return L""; // not found
+    }
+
 
     _Use_decl_annotations_
     virt::MidiVirtualDevice MidiVirtualDeviceManager::CreateVirtualDevice(
