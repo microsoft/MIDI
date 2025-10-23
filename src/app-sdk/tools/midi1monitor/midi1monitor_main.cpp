@@ -19,6 +19,40 @@
 bool m_showActiveSense{ false };
 bool m_showClock{ false };
 
+struct ReceivedMidiMessage
+{
+    uint64_t WindowsMidiServicesTimestamp;
+    //DWORD WinMMTimestamp;
+
+    bool IsLongMessage{ false };
+    bool IsError{ false };
+
+    std::vector<byte> Data { 0,0,0 };   // the normal case for anything but sysex
+};
+
+std::queue<ReceivedMidiMessage> m_messages{ };
+wil::srwlock m_messagesLock;
+
+struct MidiInputPort
+{
+    uint16_t Index;
+    std::wstring Name;
+};
+
+std::vector<MidiInputPort> m_midiInputs{};
+
+uint32_t m_countAllBytesReceived{ 0 };          
+uint32_t m_countStatusBytesReceived{ 0 };
+
+uint64_t m_timestampFirstMessageReceived{ 0 };
+uint64_t m_timestampLastMessageReceived{ 0 };
+
+#define MIDI_BUFFER_SIZE 4096
+
+byte m_buffer[MIDI_BUFFER_SIZE]{ 0 };
+MIDIHDR m_header{ };
+HMIDIIN m_hMidiIn{ };
+
 
 
 void WriteInfo(std::string info)
@@ -45,13 +79,6 @@ void WriteLabel(std::string label)
 }
 
 
-struct MidiInputPort
-{
-    uint16_t Index;
-    std::wstring Name;
-};
-
-std::vector<MidiInputPort> m_midiInputs{};
 
 
 void LoadWinMMDevices()
@@ -75,13 +102,6 @@ void LoadWinMMDevices()
             m_midiInputs.push_back(port);
         }
     }
-
-    //std::sort(m_midiInputs.begin(), m_midiInputs.end(),
-    //    [](MidiInputPort a, MidiInputPort b)
-    //    {
-    //        return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
-    //    });
-
 }
 
 void DisplayAllWinMMInputs()
@@ -102,18 +122,21 @@ void DisplayAllWinMMInputs()
 
 #define LINE_LENGTH 79
 
-uint32_t m_countAllBytesReceived{ 0 };
-uint32_t m_countStatusBytesReceived{ 0 };
+
 
 void DisplayStatusByte(byte status, bool isError)
 {
-    if (status == MIDI_EOX)
+    if (status == MIDI_SYSEX)
     {
-        std::cout << " ";
+        std::cout << "\n" << std::hex << std::setw(2) << dye::light_green((uint16_t)status);
+    }
+    else if (status == MIDI_EOX)
+    {
+        std::cout << " " << std::hex << std::setw(2) << dye::light_green((uint16_t)status);
     }
     else
     {
-        std::cout << std::endl;
+        std::cout << "\n";
     }
 
     if (isError)
@@ -145,8 +168,6 @@ void DisplayStatusByte(byte status, bool isError)
     }
     else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
     {
-
-
         std::cout << std::hex << std::setw(2) << dye::grey((uint16_t)status);
     }
 
@@ -184,175 +205,216 @@ void DisplayDecodedChannelVoiceMessage(std::string messageName, uint8_t channel,
 
 }
 
+
+
 //concurrency::task<void> 
-void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
+void DisplayMidiMessage(ReceivedMidiMessage& msg)
 {
-    UNREFERENCED_PARAMETER(dwTimestamp);
+    m_countStatusBytesReceived++;
+    m_countAllBytesReceived++;
 
-    DWORD safeMessage = dwMidiMessage;
+    auto status = msg.Data[0];
 
-    //return concurrency::create_task([&]
-    //{
-        // message format 0 | data 2 | data 1 | status
+    if (status == MIDI_ACTIVESENSE && !m_showActiveSense)
+    {
+        return;
+    }
 
-        byte status = static_cast<byte>(safeMessage & 0x000000FF);
-        byte data1 = static_cast<byte>((safeMessage & 0x0000FF00) >> 8);
-        byte data2 = static_cast<byte>((safeMessage & 0x00FF0000) >> 16);
+    if (status == MIDI_TIMINGCLOCK && !m_showClock)
+    {
+        return;
+    }
 
-        m_countStatusBytesReceived++;
+    DisplayStatusByte(status, msg.IsError);
+
+
+    if (MIDI_MESSAGE_IS_TWO_BYTES(status) ||
+        MIDI_MESSAGE_IS_THREE_BYTES(status))
+    {
+        DisplayDataByte(msg.Data[1], msg.IsError);
         m_countAllBytesReceived++;
+    }
 
-        if (status == MIDI_ACTIVESENSE && !m_showActiveSense)
+    if (MIDI_MESSAGE_IS_THREE_BYTES(status))
+    {
+        DisplayDataByte(msg.Data[2], msg.IsError);
+        m_countAllBytesReceived++;
+    }
+
+    // display a decoding of the message to the right
+
+    if (status != MIDI_SYSEX && status != MIDI_EOX)
+    {
+        uint16_t spaces{ 0 };
+
+        if (MIDI_MESSAGE_IS_ONE_BYTE(status))
         {
-            return;
+            spaces = 6;
         }
-
-        if (status == MIDI_TIMINGCLOCK && !m_showClock)
+        else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
         {
-            return;
-        }
-
-        DisplayStatusByte(status, isError);
-
-
-        if (MIDI_MESSAGE_IS_TWO_BYTES(status) ||
-            MIDI_MESSAGE_IS_THREE_BYTES(status))
-        {
-            DisplayDataByte(data1, isError);
-            m_countAllBytesReceived++;
-        }
-
-        if (MIDI_MESSAGE_IS_THREE_BYTES(status))
-        {
-            DisplayDataByte(data2, isError);
-            m_countAllBytesReceived++;
-        }
-
-        // display a decoding of the message to the right
-
-        if (status != MIDI_SYSEX && status != MIDI_EOX)
-        {
-            uint16_t spaces{ 0 };
-
-            if (MIDI_MESSAGE_IS_ONE_BYTE(status))
-            {
-                spaces = 6;
-            }
-            else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
-            {
-                spaces = 3;
-            }
-            else
-            {
-                spaces = 1;
-            }
-
-            std::cout << std::setw(spaces + 2) << std::setfill(' ') << "";
-
-            if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
-            {
-                uint8_t channel = (status & 0x0F) + 1;
-
-                switch (status & 0xF0)
-                {
-                case MIDI_NOTEOFF:
-                    DisplayDecodedChannelVoiceMessage("Note Off", channel, "Note", data1, "Velocity", data2);
-                    break;
-                case MIDI_NOTEON:
-                    DisplayDecodedChannelVoiceMessage("Note On", channel, "Note", data1, "Velocity", data2);
-                    break;
-                case MIDI_POLYAFTERTOUCH:
-                    DisplayDecodedChannelVoiceMessage("Poly Aftertouch", channel, "Note", data1, "Pressure", data2);
-                    break;
-                case MIDI_CONTROLCHANGE:
-                    DisplayDecodedChannelVoiceMessage("Control Change", channel, "Controller", data1, "Value", data2);
-                    break;
-                case MIDI_PROGRAMCHANGE:
-                    DisplayDecodedChannelVoiceMessage("Program Change", channel, "Program", data1);
-                    break;
-                case MIDI_MONOAFTERTOUCH:
-                    DisplayDecodedChannelVoiceMessage("Channel Pressure", channel, "Pressure", data1);
-                    break;
-                case MIDI_PITCHBEND:
-                    DisplayDecodedChannelVoiceMessage("Pitch Bend", channel, "LSB", data1, "MSB", data2);
-                    break;
-                default:
-                    break;
-                }
-            }
-            else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
-            {
-                switch (status)
-                {
-                case MIDI_TIMINGCLOCK:
-                    std::cout << dye::light_aqua("System Real-Time: Clock");
-                    break;
-                case MIDI_START:
-                    std::cout << dye::green("System Real-Time: Start");
-                    break;
-                case MIDI_CONTINUE:
-                    std::cout << dye::light_yellow("System Real-Time: Continue");
-                    break;
-                case MIDI_STOP:
-                    std::cout << dye::red("System Real-Time: Stop");
-                    break;
-                case MIDI_ACTIVESENSE:
-                    std::cout << dye::grey("System Real-Time: Active Sense");
-                    break;
-                case MIDI_RESET:
-                    std::cout << dye::light_red("System Real-Time: Reset");
-                    break;
-                }
-            }
-        }
-    //});
-}
-
-//concurrency::task<void> 
-void DisplayMidiLongMessage(LPMIDIHDR header, DWORD dwTimestamp, bool error)
-{
-    UNREFERENCED_PARAMETER(dwTimestamp);
-
-    // To do this async, needs to memcpy the data into another buffer, which itself
-    // can be expensive and/or require managing a chain of buffers.
-    
-    //return concurrency::create_task([&]
-    //{
-        if (header)
-        {
-            byte* current = (byte*)(header->lpData);
-
-            while (header->dwBytesRecorded-- && current != nullptr)
-            {
-                if (MIDI_BYTE_IS_STATUS_BYTE(*current))
-                {
-                    DisplayStatusByte(*current, error);
-                    m_countStatusBytesReceived++;
-                    m_countAllBytesReceived++;
-                }
-                else
-                {
-                    DisplayDataByte(*current, error);
-                    m_countAllBytesReceived++;
-                }
-
-                current++;
-                m_countAllBytesReceived++;
-            }
+            spaces = 3;
         }
         else
         {
-            WriteError("Header is null");
+            spaces = 1;
         }
-    //});
+
+        std::cout << std::setw(spaces + 2) << std::setfill(' ') << "";
+
+        if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
+        {
+            uint8_t channel = (status & 0x0F) + 1;
+
+            switch (status & 0xF0)
+            {
+            case MIDI_NOTEOFF:
+                DisplayDecodedChannelVoiceMessage("Note Off", channel, "Note", msg.Data[1], "Velocity", msg.Data[2]);
+                break;
+            case MIDI_NOTEON:
+                DisplayDecodedChannelVoiceMessage("Note On", channel, "Note", msg.Data[1], "Velocity", msg.Data[2]);
+                break;
+            case MIDI_POLYAFTERTOUCH:
+                DisplayDecodedChannelVoiceMessage("Poly Aftertouch", channel, "Note", msg.Data[1], "Pressure", msg.Data[2]);
+                break;
+            case MIDI_CONTROLCHANGE:
+                DisplayDecodedChannelVoiceMessage("Control Change", channel, "Controller", msg.Data[1], "Value", msg.Data[2]);
+                break;
+            case MIDI_PROGRAMCHANGE:
+                DisplayDecodedChannelVoiceMessage("Program Change", channel, "Program", msg.Data[1]);
+                break;
+            case MIDI_MONOAFTERTOUCH:
+                DisplayDecodedChannelVoiceMessage("Channel Pressure", channel, "Pressure", msg.Data[1]);
+                break;
+            case MIDI_PITCHBEND:
+                DisplayDecodedChannelVoiceMessage("Pitch Bend", channel, "LSB", msg.Data[1], "MSB", msg.Data[2]);
+                break;
+            default:
+                break;
+            }
+        }
+        else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
+        {
+            switch (status)
+            {
+            case MIDI_TIMINGCLOCK:
+                std::cout << dye::light_aqua("System Real-Time: Clock");
+                break;
+            case MIDI_START:
+                std::cout << dye::green("System Real-Time: Start");
+                break;
+            case MIDI_CONTINUE:
+                std::cout << dye::light_yellow("System Real-Time: Continue");
+                break;
+            case MIDI_STOP:
+                std::cout << dye::red("System Real-Time: Stop");
+                break;
+            case MIDI_ACTIVESENSE:
+                std::cout << dye::grey("System Real-Time: Active Sense");
+                break;
+            case MIDI_RESET:
+                std::cout << dye::light_red("System Real-Time: Reset");
+                break;
+            }
+        }
+    }
 }
 
-#define MIDI_BUFFER_SIZE 4096
+void DisplayMidiLongMessage(ReceivedMidiMessage& msg)
+{
+    for (auto const& b : msg.Data)
+    {
+        if (MIDI_BYTE_IS_STATUS_BYTE(b))
+        {
+            DisplayStatusByte(b, msg.IsError);
+            m_countStatusBytesReceived++;
+            m_countAllBytesReceived++;
+        }
+        else
+        {
+            DisplayDataByte(b, msg.IsError);
+            m_countAllBytesReceived++;
+        }
 
-byte m_buffer[MIDI_BUFFER_SIZE]{ 0 };
-MIDIHDR m_header{ };
-HMIDIIN m_hMidiIn{ };
+        m_countAllBytesReceived++;
+    }
+}
 
+
+void MessageDisplayWorker(std::stop_token token)
+{
+    while (!token.stop_requested())
+    {       
+        if (m_messages.size() > 0)
+        {
+            auto lock = m_messagesLock.lock_exclusive();
+            auto msg = m_messages.front();
+            m_messages.pop();
+            lock.reset();
+
+            if (msg.IsLongMessage)
+            {
+                DisplayMidiLongMessage(msg);
+            }
+            else
+            {
+                DisplayMidiMessage(msg);
+            }
+
+           // Sleep(0);
+        }
+        else
+        {
+         //   Sleep(1);
+        }
+
+    }
+
+}
+
+
+void EnqueueMidiDataMessage(
+    uint64_t windowsMidiServicesTimestamp,
+    DWORD dwParam1,
+    DWORD dwParam2,
+    bool isError)
+{
+    byte status = static_cast<byte>(dwParam1 & 0x000000FF);
+    byte data1 = static_cast<byte>((dwParam1 & 0x0000FF00) >> 8);
+    byte data2 = static_cast<byte>((dwParam1 & 0x00FF0000) >> 16);
+
+    ReceivedMidiMessage msg{};
+    msg.WindowsMidiServicesTimestamp = windowsMidiServicesTimestamp;
+    msg.Data[0] = status;
+    msg.Data[1] = data1;
+    msg.Data[2] = data2;
+    msg.IsError = isError;
+    msg.IsLongMessage = false;
+
+    auto lock = m_messagesLock.lock_exclusive();
+    m_messages.push(msg);
+}
+
+void EnqueueMidiLongDataMessage(
+    uint64_t windowsMidiServicesTimestamp,
+    LPMIDIHDR header,
+    DWORD dwParam2,
+    bool isError)
+{
+    ReceivedMidiMessage msg{};
+
+    auto count = header->dwBytesRecorded;
+    auto start = (byte*)(header->lpData);
+
+    std::vector<byte> data(start, start+count);
+    msg.WindowsMidiServicesTimestamp = windowsMidiServicesTimestamp;
+    msg.Data = std::move(data);
+    msg.IsError = isError;
+    msg.IsLongMessage = true;
+
+    auto lock = m_messagesLock.lock_exclusive();
+    m_messages.push(msg);
+}
 
 
 void CALLBACK OnMidiMessageReceived(
@@ -368,33 +430,66 @@ void CALLBACK OnMidiMessageReceived(
 
     switch (wMsg)
     {
-    case MIM_OPEN:
-        break;
-    case MIM_CLOSE:
-        break;
     case MIM_DATA:
-        DisplayMidiMessage(static_cast<DWORD>(dwParam1), static_cast<DWORD>(dwParam2), false);
+        m_timestampLastMessageReceived = WindowsMidiServicesInternal::GetCurrentMidiTimestamp();
+        EnqueueMidiDataMessage(
+            m_timestampLastMessageReceived, 
+            static_cast<DWORD>(dwParam1), 
+            static_cast<DWORD>(dwParam2), 
+            false);
         break;
-    case MIM_LONGDATA:
-        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, static_cast<DWORD>(dwParam2), false);
-        midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
-        break;
+
     case MIM_ERROR:
-        DisplayMidiMessage(static_cast<DWORD>(dwParam1), static_cast<DWORD>(dwParam2), true);
+        m_timestampLastMessageReceived = WindowsMidiServicesInternal::GetCurrentMidiTimestamp();
+        EnqueueMidiDataMessage(
+            m_timestampLastMessageReceived,
+            static_cast<DWORD>(dwParam1),
+            static_cast<DWORD>(dwParam2),
+            true);
         break;
-    case MIM_LONGERROR:
-        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, static_cast<DWORD>(dwParam2), true);
+
+    case MIM_LONGDATA:
+        m_timestampLastMessageReceived = WindowsMidiServicesInternal::GetCurrentMidiTimestamp();
+        EnqueueMidiLongDataMessage(
+            m_timestampLastMessageReceived,
+            (LPMIDIHDR)dwParam1,
+            static_cast<DWORD>(dwParam2),
+            false);
+
         midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
         break;
+
+    case MIM_LONGERROR:
+        m_timestampLastMessageReceived = WindowsMidiServicesInternal::GetCurrentMidiTimestamp();
+        EnqueueMidiLongDataMessage(
+            m_timestampLastMessageReceived,
+            (LPMIDIHDR)dwParam1,
+            static_cast<DWORD>(dwParam2),
+            true);
+
+        midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
+        break;
+
     case MIM_MOREDATA:
         break;
+
     default:
         break;
     }
+
+    if (m_timestampFirstMessageReceived == 0)
+    {
+        m_timestampFirstMessageReceived = m_timestampLastMessageReceived;
+    }
+
 }
 
 #define RETURN_INVALID_PORT_NUMBER 1
 #define RETURN_UNABLE_TO_OPEN_PORT 2
+
+
+std::jthread m_displayThread;
+
 
 int __cdecl main(int argc, char* argv[])
 {
@@ -482,6 +577,14 @@ int __cdecl main(int argc, char* argv[])
         midiInPrepareHeader(m_hMidiIn, &m_header, sizeof(MIDIHDR));
         midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
 
+
+        
+
+
+        // Create background thread for displaying messages
+        std::jthread displayThread(&MessageDisplayWorker);
+        m_displayThread = std::move(displayThread);
+
         midiInStart(m_hMidiIn);
     }
     else
@@ -509,12 +612,40 @@ int __cdecl main(int argc, char* argv[])
             m_showClock = !m_showClock;
         }
 
+        Sleep(0);
     }
 
     midiInUnprepareHeader(m_hMidiIn, &m_header, sizeof(MIDIHDR));
 
+    m_displayThread.request_stop();
+
     midiInStop(m_hMidiIn);
     midiInClose(m_hMidiIn);
+
+
+
+    // Show counts of data received as well as first and last timestamp
+
+    uint64_t elapsedTicks = m_timestampLastMessageReceived - m_timestampFirstMessageReceived;
+
+    uint64_t freq = WindowsMidiServicesInternal::GetMidiTimestampFrequency();
+    auto elapsedMilliseconds = WindowsMidiServicesInternal::ConvertTimestampToFractionalMilliseconds(elapsedTicks, freq);
+
+    auto averageMillisecondsPerByte = elapsedMilliseconds / m_countAllBytesReceived ;
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << "Total Bytes Received:          " << dye::aqua(m_countAllBytesReceived) << std::endl;
+    std::cout << "Status Bytes Received:         " << dye::aqua(m_countStatusBytesReceived) << std::endl;
+    std::cout << std::endl;
+    std::cout << "Timestamp First Message:       " << dye::green(m_timestampFirstMessageReceived) << std::endl;
+    std::cout << "Timestamp Last Message:        " << dye::green(m_timestampLastMessageReceived) << std::endl;
+    std::cout << "Elapsed Ticks:                 " << dye::green(elapsedTicks) << std::endl;
+    std::cout << std::endl;
+    std::cout << "Elapsed Milliseconds:          " << dye::yellow(elapsedMilliseconds) << std::endl;
+    std::cout << "Average Milliseconds per byte: " << dye::yellow(averageMillisecondsPerByte) << std::endl;
+
+    std::cout << std::endl;
 
     return 0;
 }

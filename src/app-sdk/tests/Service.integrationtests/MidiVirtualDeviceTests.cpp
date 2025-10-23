@@ -13,21 +13,24 @@
 void MidiVirtualDeviceTests::TestCreateVirtualDevice()
 {
     auto initializer = InitWinRTAndSDK_MTA();
-    {
 
+
+    {
         LOG_OUTPUT(L"TestCreateVirtualDevice **********************************************************************");
 
-        //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+        winrt::hstring createdClientEndpointId;
+        winrt::hstring createdDeviceEndpointId;
 
+                
 
-        winrt::hstring endpointSuppliedName = L"Endpoint From Test";
+        winrt::hstring endpointSuppliedName = L"TAEF Virtual Endpoint";
 
-        winrt::hstring userSuppliedName = L"User Supplied Endpoint From Test";
+        winrt::hstring userSuppliedName = L"TAEF Virtual Endpoint (User Named)";
         winrt::hstring userSuppliedDescription = L"This is the user-supplied description";
 
-        winrt::hstring transportSuppliedName = L"Transport Supplied Endpoint From Test";
+        winrt::hstring transportSuppliedName = L"TAEF Virtual Endpoint (Transport Named)";
         winrt::hstring transportSuppliedDescription = L"This is the transport-supplied description";
-        winrt::hstring transportSuppliedManufacturerName = L"Manufacturer Name";
+        winrt::hstring transportSuppliedManufacturerName = L"TAEF Manufacturer Name";
 
 
         // endpoint information returned from endpoint discovery
@@ -101,6 +104,8 @@ void MidiVirtualDeviceTests::TestCreateVirtualDevice()
         LOG_OUTPUT(L"Created virtual device");
         LOG_OUTPUT(virtualDevice.DeviceEndpointDeviceId().c_str());
 
+        createdDeviceEndpointId = virtualDevice.DeviceEndpointDeviceId();
+
 
         // create the endpoint connection to the device-side endpoint
         // to prevent confusion, this endpoint is not enumerated to 
@@ -130,12 +135,59 @@ void MidiVirtualDeviceTests::TestCreateVirtualDevice()
         // the client-side endpoint will become visible to other apps once Open() completes
         VERIFY_IS_TRUE(connection.Open());
 
+        // provide time for the client endpoint to be created. We could do this with a watcher
+        // if we want to be more appropriate about the process
+        LOG_OUTPUT(L"Sleeping for a moment to give time to create the client-side connection");
+        Sleep(2000);
+
+        // Test SDK function to get client-side device id
+        LOG_OUTPUT(L"Validating that we have a client-side SWD");
+        createdClientEndpointId = MidiVirtualDeviceManager::GetAssociatedClientEndpointDeviceId(virtualDevice.AssociationId());
+        VERIFY_IS_FALSE(createdClientEndpointId.empty());
+        LOG_OUTPUT(createdClientEndpointId.c_str());
+
+        // validate that both endpoints now exist
+        LOG_OUTPUT(L"Validating that the device-side endpoint exists");
+        auto deviceEndpointInfo = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(createdDeviceEndpointId);
+        VERIFY_IS_NOT_NULL(deviceEndpointInfo);
+
+        LOG_OUTPUT(L"Validating that the client-side endpoint exists");
+        auto clientEndpointInfo = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(createdClientEndpointId);
+        VERIFY_IS_NOT_NULL(clientEndpointInfo);
+
+
+        // TODO: Should probably do some other virtual device functional tests here
+
+
+    
+        LOG_OUTPUT(L"Removing message processing plugin");
+        connection.RemoveMessageProcessingPlugin(virtualDevice.PluginId());
+
+        // shut down the app/device-side connection. This will tear down 
+        // client and device endpoints
+        LOG_OUTPUT(L"Disconnecting endpoint connection and closing the session");
+        session.DisconnectEndpointConnection(connection.ConnectionId());
+
+        LOG_OUTPUT(L"Sleeping for a moment to give time to destroy the devices");
+        Sleep(3000);
+
+        // validate device endpoint was removed
+        LOG_OUTPUT(L"Validating that device-side endpoint has been removed");
+        deviceEndpointInfo = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(createdDeviceEndpointId);
+        VERIFY_IS_NULL(deviceEndpointInfo);
+
+        // Validate client endpoint was removed as well
+        LOG_OUTPUT(L"Validating that client-side endpoint has been removed");
+        clientEndpointInfo = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(createdClientEndpointId);
+        VERIFY_IS_NULL(clientEndpointInfo);
+
+        session.Close();
     }
 
-    // in this example, we put all the allocations in a sub-scope so no need to set them
-    // all to nullptr before shutting down WinRT
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr. You can also put them
+    // in a sub-scope as we've done here
+
     ShutdownSDKAndWinRT(initializer);
 
 }
-
-

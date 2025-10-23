@@ -1055,4 +1055,46 @@ Timestamp</value>
   <data name="PropertyTablePropertyValuePortNamingApproachDefault" xml:space="preserve">
     <value>Use system-wide default setting</value>
   </data>
+  <data name="CommandMeasureDescription" xml:space="preserve">
+    <value>Measure MIDI performance</value>
+  </data>
+  <data name="CommandMeasureLoopbackPerformanceDescription" xml:space="preserve">
+    <value>Measure MIDI latency and jitter using two endpoints that are connected together. For example, a MIDI 1.0 USB interface with out and in connected via  a DIN cable.</value>
+  </data>
+  <data name="ParameterMeasureDestinationEndpointDeviceId" xml:space="preserve">
+    <value>The endpoint to send messages to</value>
+  </data>
+  <data name="ParameterMeasureSourceEndpointDeviceId" xml:space="preserve">
+    <value>The endpoint to listen to for incoming messages</value>
+  </data>
+  <data name="ParameterMeasureDestinationGroupNumber" xml:space="preserve">
+    <value>The group number (1-16) for the group you want to send the messages out on.</value>
+  </data>
+  <data name="ParameterMeasureSourceGroupNumber" xml:space="preserve">
+    <value>The group number (1-16) for the group you want to listen to incoming messages on.</value>
+  </data>
+  <data name="PleasePickDestinationEndpoint" xml:space="preserve">
+    <value>Please pick an endpoint to use to send the messages to</value>
+  </data>
+  <data name="PleasePickSourceEndpoint" xml:space="preserve">
+    <value>Please pick an endpoint to use for listening to incoming messages</value>
+  </data>
+  <data name="ParameterMeasureUseScheduler" xml:space="preserve">
+    <value>Set this flag to use the outgoing message scheduler to send the messages</value>
+  </data>
+  <data name="ParameterMeasureUseMidi2" xml:space="preserve">
+    <value>Set this flag to use MIDI 2.0 channel voice messages rather than MIDI 1.0 channel voice messages</value>
+  </data>
+  <data name="ErrorUnableToFindEndpointDevice" xml:space="preserve">
+    <value>The supplied endpoint device id does not appear to match any device currently in the system.</value>
+  </data>
+  <data name="ParameterMonitorEndpointDecodeMessages" xml:space="preserve">
+    <value>Show decoded information about the message</value>
+  </data>
+  <data name="ParameterMonitorEndpointIncludeTimestamp" xml:space="preserve">
+    <value>Include the timestamp in the displayed output</value>
+  </data>
+  <data name="ParameterMonitorEndpointIncludeRealTimeMessages" xml:space="preserve">
+    <value>Include frequent/noisy messages like Clock pulse and Active Sense</value>
+  </data>
 </root>

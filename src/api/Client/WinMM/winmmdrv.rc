@@ -8,7 +8,7 @@
 
 #define VER_FILETYPE                VFT_DLL
 #define VER_FILESUBTYPE             VFT_UNKNOWN
-#define VER_FILEDESCRIPTION_STR     "Windows MIDI 2 wdmaud2 driver"
+#define VER_FILEDESCRIPTION_STR     "Windows MIDI Services WinMM service interface driver"
 #define VER_INTERNALNAME_STR        "wdmaud2.drv"
 #define VER_ORIGINALFILENAME_STR    "wdmaud2.drv"
 

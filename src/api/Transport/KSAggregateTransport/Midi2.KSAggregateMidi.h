@@ -11,23 +11,6 @@
 #ifndef MIDI2_KSAGGREGATEMIDI_H
 #define MIDI2_KSAGGREGATEMIDI_H
 
-typedef struct {
-    UINT ByteCount;                         // total size of this struct, in bytes, including the Filter Id and its null terminator
-    BYTE GroupIndex;                        // index (0-15) of the group this pin maps to
-    UINT32 PinId;                           // KS Pin number
-    MidiFlow PinDataFlow;                   // an input pin is MidiFlowIn, and from the user's perspective, a MIDI Output
-    WCHAR FilterId[1];                      // full filter id for this pin
-} KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY, * PKSAGGMIDI_PIN_MAP_PROPERTY_ENTRY;
-
-typedef struct {
-    UINT32 TotalByteCount;                          // total size of all entries and this header
-    KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY Entries[1];   // List of property entries
-} KSAGGMIDI_PIN_MAP_PROPERTY_VALUE, * PKSAGGMIDI_PIN_MAP_PROPERTY_VALUE;
-
-#define SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_VALUE_HEADER (sizeof(UINT32))
-#define SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY_WITHOUT_STRING (sizeof(KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY) - sizeof(WCHAR))
-
-
 
 class CMidi2KSAggregateMidi
 {

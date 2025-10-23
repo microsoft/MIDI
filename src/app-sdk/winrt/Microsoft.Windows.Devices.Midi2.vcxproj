@@ -172,9 +172,9 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;$(SolutionDir)vsfiles\intermediate\com-extensions-idl\$(Platform)\$(Configuration)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;$(SolutionDir)vsfiles\intermediate\com-extensions-idl\$(Platform)\$(Configuration)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;$(SolutionDir)vsfiles\intermediate\com-extensions-idl\$(Platform)\$(Configuration)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
@@ -223,9 +223,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;$(SolutionDir)vsfiles\intermediate\com-extensions-idl\$(Platform)\$(Configuration)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;$(SolutionDir)vsfiles\intermediate\com-extensions-idl\$(Platform)\$(Configuration)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;$(SolutionDir)vsfiles\intermediate\com-extensions-idl\$(Platform)\$(Configuration)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
@@ -497,6 +497,7 @@
     <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
       <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_ComExtensions.cpp" />
     <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
     </ClCompile>

@@ -17,9 +17,14 @@
 
 #define MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE 20
 
+
+#include "WindowsMidiServicesAppSdkComExtensions.h"
+#include "WindowsMidiServicesAppSdkComExtensions_i.c"
+
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
-    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, IMidiCallback> 
+    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, IMidiCallback, IMidiEndpointConnectionRaw>
     {
         MidiEndpointConnection() { m_maxAllowedTimestampOffset = internal::GetMidiTimestampFrequency() * MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE; }
         ~MidiEndpointConnection();
@@ -135,6 +140,33 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         STDMETHOD(Callback)(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG timestamp, _In_ LONGLONG) override;
 
+
+        // Begin COM extensions -----------------------------------------
+
+        STDMETHOD_(UINT32, GetSupportedMaxMidiWordsPerTransmission)();
+
+        STDMETHOD_(BOOL, ValidateBufferHasOnlyCompleteUmps)(
+            _In_ UINT32 wordCount,
+            _In_ UINT32* messages
+            );
+
+        STDMETHOD(SendMidiMessagesRaw)(
+            _In_ UINT64 timestamp,
+            _In_ UINT32 wordCount,
+            _In_ UINT32* completeMessages
+        );
+
+        STDMETHOD(SetMessagesReceivedCallback)(
+            _In_ IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
+        );
+
+        STDMETHOD(RemoveMessagesReceivedCallback)();
+
+
+
+        // End COM extensions --------------------------------------------
+
+
         winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return m_messageReceivedEvent.add(handler);
@@ -219,6 +251,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::com_ptr<IMidiTransport> m_serviceTransport{ nullptr };
         winrt::com_ptr<IMidiBidirectional> m_endpointTransport{ nullptr };
 
+        winrt::com_ptr<IMidiEndpointConnectionMessagesReceivedCallback> m_comCallback{ nullptr };
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
@@ -245,7 +278,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         midi2::MidiSendMessageResults SendMessageRaw(
             _In_ winrt::com_ptr<IMidiBidirectional> endpoint,
             _In_ void* data,
-            _In_ uint8_t sizeInBytes,
+            _In_ uint32_t sizeInBytes,
             _In_ internal::MidiTimestamp timestamp);
 
         _Success_(return != nullptr)

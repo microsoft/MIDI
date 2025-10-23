@@ -22,6 +22,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         static virt::MidiVirtualDevice CreateVirtualDevice(_In_ virt::MidiVirtualDeviceCreationConfig creationConfig) noexcept;
         //static bool RemoveVirtualDevice(_In_ virt::MidiVirtualDeviceRemovalConfig removalConfig) noexcept;
+
+        static winrt::hstring GetAssociatedClientEndpointDeviceId(_In_ winrt::guid associationId) noexcept;
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::factory_implementation

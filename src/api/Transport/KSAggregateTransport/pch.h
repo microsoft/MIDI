@@ -95,7 +95,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "Midi2KSAggregateTransport_i.c"
 #include "Midi2KSAggregateTransport.h"
 
-
+#include "midi_ksa_pin_map_property.h"
 
 #include "dllmain.h"
 

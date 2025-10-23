@@ -47,7 +47,7 @@ public:
         _In_ uint8_t const groupIndex,
         _In_reads_bytes_(byteCount) uint8_t const bytes[], 
         _In_ uint32_t const byteCount, 
-        _In_ uint16_t const expectedMessageCount,
+        /*_In_ uint16_t const expectedMessageCount,*/
         _In_ std::vector<uint32_t> const expectedWords);
 
     STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)

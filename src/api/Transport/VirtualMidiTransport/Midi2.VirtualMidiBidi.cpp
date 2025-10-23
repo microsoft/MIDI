@@ -122,9 +122,9 @@ CMidi2VirtualMidiBidi::Shutdown()
     m_callback = nullptr;
     m_callbackContext = 0;
 
-    //UnlinkAllAssociatedBidi();
-    m_linkedBidi = nullptr;
-    m_linkedBidiCallback = nullptr;
+    UnlinkAssociatedCallback();
+    //m_linkedBidi = nullptr;
+    //m_linkedBidiCallback = nullptr;
 
 
     if (m_isDeviceSide)
@@ -148,6 +148,7 @@ CMidi2VirtualMidiBidi::SendMidiMessage(
     LONGLONG Position
 )
 {
+#ifdef _DEBUG
     TraceLoggingWrite(
         MidiVirtualMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -162,7 +163,7 @@ CMidi2VirtualMidiBidi::SendMidiMessage(
         TraceLoggingUInt64(Position, "timestamp"),
         TraceLoggingGuid(m_sessionId, "session id")
     );
-
+#endif
 
     // message received from the device
 
@@ -212,6 +213,7 @@ CMidi2VirtualMidiBidi::Callback(
     LONGLONG context
 )
 {
+#ifdef _DEBUG
     TraceLoggingWrite(
         MidiVirtualMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -226,6 +228,7 @@ CMidi2VirtualMidiBidi::Callback(
         TraceLoggingUInt64(Position, "timestamp"),
         TraceLoggingGuid(m_sessionId, "session id")
     );
+#endif
 
     // message received from the client
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));

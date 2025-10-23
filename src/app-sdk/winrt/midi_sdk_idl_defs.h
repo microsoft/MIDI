@@ -128,5 +128,4 @@
 #define UUID_IMidiServiceTransportPluginConfig				"8087b303-0519-31d1-c0de-ff0000000060"
 
 
-
 #endif

@@ -982,19 +982,6 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                             pinDefinition.PortIndexWithinThisFilterAndDirection
                         );
 
-
-                        //internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
-                        //    pinDefinition.PortNames,
-                        //    driverSuppliedName,
-                        //    endpointDefinition.ParentDeviceName,
-                        //    pinDefinition.FilterName,
-                        //    pinDefinition.PinName,
-                        //    customPortName,
-                        //    pinDefinition.PortNames.DataFlowFromUserPerspective,
-                        //    pinDefinition.PortIndexWithinThisFilterAndDirection,
-                        //    pinDefinition.GroupIndex
-                        //);
-
                         endpointDefinition.MidiPins.push_back(pinDefinition);
                     }
                     else

@@ -27,6 +27,8 @@
 #include <format>
 #include <filesystem>
 
+
+// wil\cppwinrt.h must be included before any other WinRT includes.
 #include <wil\cppwinrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>

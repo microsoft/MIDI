@@ -83,8 +83,14 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
     );
 #endif
 
-    // can only transform 1 message at a time
+    // can only transform 1 set of messages at a time
     auto lock = m_SendLock.lock();
+
+
+    // we can keep this as a local because of how the callback works
+    std::vector<BYTE> translatedBytes{};
+    translatedBytes.reserve(length);        // as an approximation of output data size, this is reasonable
+
 
     // Send the UMP(s) to the parser
     uint32_t *data = (uint32_t *)inputData;
@@ -92,54 +98,30 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
     {
         m_UMP2BS.UMPStreamParse(data[i]);
 
-        // retrieve the bytestream message from the parser
-        // and send it on
+        // retrieve the bytestream message from the parser and add to our translated data
         while (m_UMP2BS.availableBS())
         {
-            UINT messageByteCount{ 0 };
-
-            BYTE byteStream[MAXIMUM_LIBMIDI2_BYTESTREAM_DATASIZE];
-            UINT byteIndex;
-            for(byteIndex = 0; byteIndex < _countof(byteStream) && m_UMP2BS.availableBS(); byteIndex++)
-            {
-                messageByteCount++;
-                byteStream[byteIndex] = m_UMP2BS.readBS();
-            }
-
-            if (messageByteCount > 0)
-            {
-                //TraceLoggingWrite(
-                //    MidiUMP2BSTransformTelemetryProvider::Provider(),
-                //    MIDI_TRACE_EVENT_VERBOSE,
-                //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                //    TraceLoggingPointer(this, "this"),
-                //    TraceLoggingWideString(L"Translated to", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                //    TraceLoggingHexUInt8Array(static_cast<uint8_t*>(byteStream), static_cast<uint16_t>(messageByteCount), "translated data"),
-                //    TraceLoggingUInt32(static_cast<uint32_t>(messageByteCount), "length bytes"),
-                //    TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-                //);
-
-                // For transforms, by convention the context contains the group index.
-                auto hr = m_Callback->Callback(
-                    (MessageOptionFlags) (optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
-                    &(byteStream[0]),
-                    messageByteCount,
-                    position,
-                    m_UMP2BS.group);
-
-                if (FAILED(hr))
-                {
-                    m_UMP2BS.resetBuffer();
-                    RETURN_IF_FAILED(hr);
-                }
-
-            }
+            translatedBytes.push_back(m_UMP2BS.readBS());
         }
     }
 
-    // we're done for now
-    //m_UMP2BS.resetBuffer();
+    // send the translated version of everything we've received in this call
+    if (translatedBytes.size() > 0)
+    {
+        // For transforms, by convention the context contains the group index.
+        auto hr = m_Callback->Callback(
+            (MessageOptionFlags)(optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
+            static_cast<PVOID>(translatedBytes.data()),
+            static_cast<UINT>(translatedBytes.size()),
+            position,
+            m_UMP2BS.group);
+
+        if (FAILED(hr))
+        {
+            m_UMP2BS.resetBuffer();
+            RETURN_IF_FAILED(hr);
+        }
+    }
 
     return S_OK;
 }

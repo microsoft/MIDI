@@ -9,7 +9,7 @@
 
 #pragma once
 
-class CMidi2VirtualMidiTransportModule : public ATL::CAtlDllModuleT< CMidi2VirtualMidiTransportModule >
+class CMidi2VirtualMidiTransportModule : public ATL::CAtlDllModuleT<CMidi2VirtualMidiTransportModule>
 {
 public :
     DECLARE_LIBID(LIBID_Midi2VirtualMidiTransportLib)

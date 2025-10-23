@@ -7,7 +7,7 @@
 // ============================================================================
 
 #include "stdafx.h"
-
+#include "ump_iterator.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -275,6 +275,16 @@ CMidiEndpointProtocolWorker::Start(
         // we just hang out until endProcessing is set.
         m_endProcessing.wait();
 
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"EndProcessing fired. Ending worker thread.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
         return S_OK;
        
     }
@@ -285,6 +295,16 @@ CMidiEndpointProtocolWorker::Start(
 HRESULT 
 CMidiEndpointProtocolWorker::SetDiscoveryCompleteProperty()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
     // this function is called when discovery has completed or timed out
     
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
@@ -349,26 +369,35 @@ CMidiEndpointProtocolWorker::Callback(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
 
-    if (size == UMP128_BYTE_COUNT)
+
+    internal::UmpBufferIterator bufferIterator(
+        static_cast<uint32_t*>(data), 
+        size / sizeof(uint32_t)
+        );
+
+    for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
     {
-        internal::PackedUmp128 ump;
-
-        if (internal::FillPackedUmp128FromBytePointer((byte*)data, (uint8_t)size, ump))
+        if (it.CurrentMessageWordCount() == 4 && it.CurrentMessageType() == MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE)
         {
-            // if type F, process it.
+            internal::PackedUmp128 ump;
 
-            if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE)
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Stream message received.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            if (internal::FillPackedUmp128FromBytePointer(
+                (uint8_t*)it.get(),
+                it.CurrentMessageWordCount() * sizeof(uint32_t),
+                ump
+            ))
+
             {
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Stream message received.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-                );
-
                 auto messageStatus = internal::GetStatusFromStreamMessageFirstWord(ump.word0);
 
                 switch (messageStatus)
@@ -408,34 +437,21 @@ CMidiEndpointProtocolWorker::Callback(
                 }
 
                 LOG_IF_FAILED(CheckIfDiscoveryComplete());
-
             }
             else
             {
-                // not a stream message. Ignore and move on
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Failed to parse stream message into UMP128.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
             }
         }
-        else
-        {
-            // couldn't fill the UMP. Shouldn't happen since we pre-validate
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Couldn't fill the UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-            );
-
-            RETURN_IF_FAILED(E_FAIL);
-        }
     }
-    else
-    {
-        // Not a UMP128 so can't be a stream message. Ignore and fall out quickly
-    }
-
 
     return S_OK;
 }
@@ -1038,7 +1054,7 @@ CMidiEndpointProtocolWorker::Shutdown()
 
     if (m_midiBidiDevice)
     {
-        m_midiBidiDevice->Shutdown();
+        LOG_IF_FAILED(m_midiBidiDevice->Shutdown());
         m_midiBidiDevice.reset();
     }
 

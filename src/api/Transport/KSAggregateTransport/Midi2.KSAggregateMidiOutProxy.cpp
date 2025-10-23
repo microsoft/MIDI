@@ -145,6 +145,7 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
     return S_OK;
 }
 
+// this is the callback from the translator
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiOutProxy::Callback(

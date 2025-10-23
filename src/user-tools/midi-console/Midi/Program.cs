@@ -42,7 +42,7 @@ app.Configure(config =>
             .WithAlias("ump-endpoints")
             .WithAlias("ep")
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
-            .WithExample("enumerate", "midi-services-endpoints", "--include-loopback")
+            .WithExample("enumerate", "midi-services-endpoints", "--include-diagnostic-loopback")
             .WithExample("enumerate", "endpoints")
             .WithExample("list", "endpoints")
             .WithExample("enum", "ep")
@@ -237,6 +237,21 @@ app.Configure(config =>
         .WithDescription(Strings.CommandWatchEndpointsDescription)
         .WithExample("watch-endpoints")
         ;
+
+
+    config.AddBranch("measure", measure =>
+    {
+        measure.SetDescription(Strings.CommandMeasureDescription);
+
+
+        measure.AddCommand<MeasureLoopbackJitterCommand>("loopback-jitter")
+            .WithAlias("jitter")
+            .WithDescription(Strings.CommandMeasureLoopbackPerformanceDescription)
+            .WithExample("measure", "loopback-jitter")
+            ;
+
+    });
+
 
     /*
     config.AddBranch<SimulateCommandSettings>("simulate", cache =>

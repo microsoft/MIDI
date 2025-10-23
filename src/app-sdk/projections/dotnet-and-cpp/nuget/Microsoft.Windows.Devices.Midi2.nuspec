@@ -61,6 +61,12 @@
       <file target="build\native\include\winmidi\init"        src="..\..\..\client-initialization-redist\Microsoft.Windows.Devices.Midi2.Initialization.hpp" />
       <file target="build\native\include\winmidi\init"        src="..\..\..\..\..\build\staging\version\WindowsMidiServicesVersion.h" />
 
+      <!-- COM Extensions -->
+      <file target="build\native\include\winmidi"             src="..\..\..\..\..\build\staging\app-sdk\WindowsMidiServicesAppSdkComExtensions.h" />
+      <file target="build\native\include\winmidi"             src="..\..\..\..\..\build\staging\app-sdk\WindowsMidiServicesAppSdkComExtensions_i.c" />
+      <file target="build\native\include\winmidi"             src="..\..\..\..\..\build\staging\app-sdk\WindowsMidiServicesAppSdkComExtensions_p.c" />
+
+
       <!-- These are of questionable use due to cppwinrt version mismatch possibilities ================================================ -->
 
       <!--

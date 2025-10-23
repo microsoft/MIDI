@@ -18,7 +18,7 @@ using namespace winrt::Windows::Devices::Enumeration;
 struct KsAggregateEndpointMidiPinDefinition
 {
     //std::wstring KSDriverSuppliedName;
-    std::wstring FilterDeviceId;
+    std::wstring FilterDeviceId;                // this is also the value needed by WinMM for DRV_QUERYDEVICEINTERFACE
     std::wstring FilterName;
 
     ULONG PinNumber;

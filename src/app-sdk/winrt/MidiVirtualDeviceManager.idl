@@ -26,6 +26,8 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
         static MidiVirtualDevice CreateVirtualDevice(
             MidiVirtualDeviceCreationConfig creationConfig);
 
+        static String GetAssociatedClientEndpointDeviceId(Guid associationId);
+
         //static Boolean RemoveVirtualDevice(
         //    MidiVirtualDeviceRemovalConfig removalConfig);
     }

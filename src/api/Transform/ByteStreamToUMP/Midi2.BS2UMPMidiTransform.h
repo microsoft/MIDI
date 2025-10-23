@@ -21,8 +21,8 @@ private:
     wil::com_ptr_nothrow<IMidiCallback> m_Callback;
     bytestreamToUMP m_BS2UMP;
 
-    uint32_t m_umpMessage[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
-    uint8_t m_umpMessageCurrentWordCount{ 0 };
+   // uint32_t m_umpMessage[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
+   // uint8_t m_umpMessageCurrentWordCount{ 0 };
 };
 
 

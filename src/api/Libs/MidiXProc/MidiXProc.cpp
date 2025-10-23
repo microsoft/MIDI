@@ -434,6 +434,8 @@ CMidiXProc::SendMidiMessage(
     }
     else
     {
+        // TODO: This value needs to change. We may want to use something bigger like 16k
+
         RETURN_HR_IF(E_INVALIDARG, length > MAXIMUM_LOOPED_UMP_DATASIZE);
     }
 

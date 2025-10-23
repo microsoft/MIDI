@@ -1,0 +1,87 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Classic COM interfaces which allow access to pointer-based data
+// without additional allocations, validation, or intermediaries. 
+// These also allow for sending and receiving multiple messages
+// in bulk. In the case of sending, the sender must ensure that
+// the words sent represent full messages
+
+import "unknwn.idl";
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+#define UUID_IMidiEndpointConnectionMessagesReceivedCallback        8087b303-0519-31d1-31d1-000000000010
+#define UUID_IMidiEndpointConnectionRaw                             8087b303-0519-31d1-31d1-000000000020
+
+
+[
+	object,
+	local,
+	uuid(UUID_IMidiEndpointConnectionMessagesReceivedCallback)
+]
+interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
+{
+	// This is a non-allocating callback that can return any number of
+	// messages in a single call. The implementor of the interface is
+	// required to quickly take the messages and add them to an internal
+	// processing queue before returning. The data pointer is only valid
+	// for the duration of this call.
+	HRESULT MessagesReceived(
+		[in, annotation("_In_")] UINT64 timestamp,
+		[in, annotation("_In_")] UINT32 wordCount,
+		[in, annotation("_In_")] UINT32* messages
+	);
+};
+
+
+
+[
+	object,
+	local,
+	uuid(UUID_IMidiEndpointConnectionRaw)
+]
+interface IMidiEndpointConnectionRaw : IUnknown
+{
+	// transmission limit for a single call
+	UINT32 GetSupportedMaxMidiWordsPerTransmission();
+
+	// returns true if the buffer contains only valid UMP lengths
+	// between messages and messages+wordcount. It does not 
+	// validate anything else about the UMPs.
+	BOOL ValidateBufferHasOnlyCompleteUmps(
+		[in, annotation("_In_")] UINT32 wordCount,
+		[in, annotation("_In_")] UINT32* messages
+	);
+
+	// before sending a buffer of messages, the caller is responsible
+	// for confirming that the buffer has only complete UMPs, and that
+	// the buffer is smaller than or equal to the transmission limit
+	HRESULT SendMidiMessagesRaw(
+		[in, annotation("_In_")] UINT64 timestamp,
+		[in, annotation("_In_")] UINT32 wordCount,
+		[in, annotation("_In_")] UINT32* completeMessages
+		);
+
+	// Wire up your callback handler. When this is in play, the normal
+	// WinRT message received events including those on listeners 
+	// associated with the connection, will not fire. This is designed
+	// solely to be a super fast and efficient callback. You can only
+	// have one callback handler for a given connection.
+	HRESULT SetMessagesReceivedCallback(
+		[in, annotation("_In_")] IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
+	);
+
+	// Remove your callback handler and reinstant normal event routing.
+	// Do this before adding a new callback handler, or when you are
+	// cleaning up your connection.
+	HRESULT RemoveMessagesReceivedCallback();
+};
+
+

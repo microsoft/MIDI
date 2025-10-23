@@ -256,6 +256,17 @@ public:
         if (client != m_Clients.end())
         {
             m_Clients.erase(client);
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Client removed from internal list", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt64(handle, "MIDI Client Handle"),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
         }
         else
         {
@@ -272,6 +283,18 @@ public:
                 TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
         }
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt64(handle, "MIDI Client Handle"),
+            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
     }
 
     // by default, pipes are not group filtered
@@ -280,6 +303,16 @@ public:
 
     void Invalidate()
     {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
         auto lock = m_Lock.lock_exclusive();
 
         if (!m_Invalidated)
@@ -290,8 +323,9 @@ public:
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingWideString(L"Marking pipe invalid", MIDI_TRACE_EVENT_MESSAGE_FIELD));
+                TraceLoggingWideString(L"Lock acquired. Marking pipe invalid", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
 
             m_Invalidated = true;
         }
@@ -303,8 +337,9 @@ public:
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingWideString(L"Invalidate() called but pipe already invalid", MIDI_TRACE_EVENT_MESSAGE_FIELD));
+                TraceLoggingWideString(L"Invalidate() called but pipe already invalid", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
         }
     }
 

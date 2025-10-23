@@ -506,7 +506,7 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
     GUID sessionId, 
     DWORD clientProcessId,
     LPCWSTR connectionEndpointInterfaceId,
-    MidiClientHandle /*clientHandle*/
+    MidiClientHandle clientHandle
 )
 {
     TraceLoggingWrite(
@@ -515,9 +515,11 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(sessionId),
-        TraceLoggingUInt32(clientProcessId),
-        TraceLoggingWideString(connectionEndpointInterfaceId)
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(sessionId, "session id"),
+        TraceLoggingUInt32(clientProcessId, "Client Process Id"),
+        TraceLoggingWideString(connectionEndpointInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt64(clientHandle, "Client Handle")
     );
 
     auto lock = m_sessionsLock.lock();

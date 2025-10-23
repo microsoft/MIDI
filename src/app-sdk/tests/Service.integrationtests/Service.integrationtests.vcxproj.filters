@@ -2,6 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -51,6 +52,9 @@
     <ClInclude Include="MidiVirtualDeviceTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MidiComExtensionsTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiEndpointConnectionBufferTests.cpp">
@@ -81,6 +85,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="MidiVirtualDeviceTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiComExtensionsTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

@@ -105,8 +105,8 @@ MidiEndpointTable::OnClientConnected(
                 // add the client
                 //entry.MidiClientConnections.push_back(clientBidi);
                 entry.MidiClientBidi = clientBidi;
-                LOG_IF_FAILED(entry.MidiDeviceBidi->LinkAssociatedCallback(entry.MidiClientBidi));
-                LOG_IF_FAILED(entry.MidiClientBidi->LinkAssociatedCallback(entry.MidiDeviceBidi));
+                RETURN_IF_FAILED(entry.MidiDeviceBidi->LinkAssociatedCallback(entry.MidiClientBidi));
+                RETURN_IF_FAILED(entry.MidiClientBidi->LinkAssociatedCallback(entry.MidiDeviceBidi));
 
                 m_endpoints[associationId] = entry;
             }
@@ -114,7 +114,7 @@ MidiEndpointTable::OnClientConnected(
             {
                 // couldn't find the entry
 
-                LOG_IF_FAILED(E_FAIL);  // cause fallback error to be logged
+                LOG_IF_FAILED(E_NOTFOUND);  // cause fallback error to be logged
 
                 TraceLoggingWrite(
                     MidiVirtualMidiTransportTelemetryProvider::Provider(),
@@ -168,6 +168,7 @@ MidiEndpointTable::OnClientDisconnected(
                 if (entry.MidiDeviceBidi != nullptr)
                 {
                     LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
+                    entry.MidiDeviceBidi.reset();
                 }
 
                 if (entry.MidiClientBidi != nullptr)
@@ -383,6 +384,17 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(
                             TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                         );
 
+
+                        TraceLoggingWrite(
+                            MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Unlinking MIDI Client BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                        );
+
                         if (entry.MidiClientBidi != nullptr)
                         {
                             LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
@@ -392,13 +404,43 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(
                         LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
                         entry.MidiDeviceBidi.reset();
 
+                        TraceLoggingWrite(
+                            MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Removing client visibile endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                        );
 
-                        RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));
+                        // remove the client endpoint. This will also trigger removal of MIDI 1.0 endpoints
+                        LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));
+
+                        TraceLoggingWrite(
+                            MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Removing app host endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                        );
 
                         // deactivate the device
-                        // TODO: Should this really be done on device disconnect vs an explicit delete command?
                         RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteDeviceEndpoint(entry.CreatedShortDeviceInstanceId));
+                        
                         m_endpoints.erase(entry.VirtualEndpointAssociationId);
+
+                        TraceLoggingWrite(
+                            MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Endpoint teardown complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                        );
 
                         return S_OK;
                     }

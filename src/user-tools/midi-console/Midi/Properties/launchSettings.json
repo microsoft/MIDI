@@ -66,6 +66,10 @@
     "Play Notes": {
       "commandName": "Project",
       "commandLineArgs": "endpoint play-notes 70 71 72 73 74 75 76 77 78 79 --forever"
+    },
+    "Measure Loopback Jitter": {
+      "commandName": "Project",
+      "commandLineArgs": "measure loopback-jitter"
     }
   }
 }

@@ -9,16 +9,7 @@
 
 #include "pch.h"
 
-
-//_Use_decl_annotations_
-//HRESULT
-//CMidi2KSAggregateMidi::Callback(PVOID data,
-//    UINT length,
-//    LONGLONG position)
-//{
-//    // translate from the devices to this
-//}
-
+#include "ump_iterator.h"
 
 
 _Use_decl_annotations_
@@ -407,52 +398,124 @@ CMidi2KSAggregateMidi::SendMidiMessage(
 
     if (length >= sizeof(uint32_t))
     {
-        //auto originalWord0 = internal::MidiWordFromVoidPointer(data);
-        auto originalWord0 = internal::MidiWord0FromVoidMessageDataPointer(inputData);
+        uint32_t pendingWordCount{ 0 };
+        bool sendPendingWords{ false };
+        uint8_t currentGroupIndex{ 0 };
 
-        if (internal::MessageHasGroupField(originalWord0))
+        internal::UmpBufferIterator bufferIterator(
+            static_cast<uint32_t*>(inputData), 
+            length / sizeof(uint32_t));
+
+        auto transmissionStart = bufferIterator.begin();
+        auto nextTransmissionStart = bufferIterator.begin();
+
+        auto it = bufferIterator.begin();
+
+        // iterate through the list of messages until we get to an incompatible message we need
+        // to skip, or we get to the end of the list. To avoid memory allocation from creating a
+        // working list, just walk the pointer and  adjust the length as needed and send at any 
+        // of these events:
+        // - End of the buffer
+        // - The Group Index changes
+        // - We hit a groupless message
+        // - The last message is incomplete
+
+        while (it < bufferIterator.end())
         {
-            uint8_t groupIndex = internal::GetGroupIndexFromFirstWord(originalWord0);
-
-            auto mapEntry = m_midiOutDeviceGroupMap.find(groupIndex);
-
-            if (mapEntry != m_midiOutDeviceGroupMap.end())
+            if (it.CurrentMessageSeemsComplete())
             {
-                RETURN_IF_FAILED(mapEntry->second->SendMidiMessage(optionFlags, inputData, length, position));
+                if (it.CurrentMessageHasGroupField())
+                {
+                    if (pendingWordCount > 0 && it.CurrentMessageGroupIndex() != currentGroupIndex)
+                    {
+                        // group index has changed. We need to send what we have and prep a new transmission
 
-                return S_OK;
+                        sendPendingWords = true;
+                        nextTransmissionStart = it;
+
+                        // do not increment iterator so we process this next time around
+                    }
+                    else
+                    {
+                        pendingWordCount += it.CurrentMessageWordCount();
+                        currentGroupIndex = it.CurrentMessageGroupIndex();
+
+                        ++it;
+                    }
+                }
+                else
+                {
+                    // skip this message
+                    ++it;
+                    nextTransmissionStart = it;
+
+                    // this message doesn't have a group field, so if we have pending words
+                    // send them, and then skip this message
+                    if (pendingWordCount > 0)
+                    {
+                        sendPendingWords = true;
+                    }
+                    else
+                    {
+                        transmissionStart = it;
+                    }
+                }
             }
             else
             {
-                // invalid group. Dump the message
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Group not found in group to pin map. Silently dropping message.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingUInt8(groupIndex, "Group Index from Message")
-                );
+                ++it;
 
-                return S_OK;
+                if (pendingWordCount > 0)
+                {
+                    sendPendingWords = true;
+                }
+                else
+                {
+                    // break out because invalid message
+                    break;
+                }
+            }
 
+            // force a send if we're at the end of the buffer
+            sendPendingWords = sendPendingWords || (it >= bufferIterator.end());
+
+            if (sendPendingWords && pendingWordCount > 0)
+            {
+                // send the message
+
+                auto mapEntry = m_midiOutDeviceGroupMap.find(currentGroupIndex);
+
+                if (mapEntry != m_midiOutDeviceGroupMap.end())
+                {
+                    RETURN_IF_FAILED(mapEntry->second->SendMidiMessage(
+                        optionFlags, 
+                        transmissionStart.get(), 
+                        pendingWordCount * sizeof(uint32_t), 
+                        position));
+
+                }
+                else
+                {
+                    // invalid group. Dump the message
+                    TraceLoggingWrite(
+                        MidiKSAggregateTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Group not found in group to pin map. Silently dropping message.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingUInt8(currentGroupIndex, "Group Index from Message")
+                    );
+                }
+
+                // reset for next iteration
+                sendPendingWords = false;
+                pendingWordCount = 0;
+                transmissionStart = nextTransmissionStart;
             }
         }
-        else
-        {
-            // it's a message type with no group field. We just drop it and move ok
-            TraceLoggingWrite(
-                MidiKSAggregateTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Groupless message sent to aggregated KS endpoint. Silently dropping message.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
 
-            return S_OK;
-        }
+        return S_OK;
     }
     else
     {

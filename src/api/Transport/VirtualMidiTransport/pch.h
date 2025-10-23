@@ -56,6 +56,8 @@
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+#include "mmdeviceapi.h"    // for E_NOTFOUND
+
 #include <vector>
 #include <string>
 
@@ -80,7 +82,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "swd_helpers.h"
 #include "resource_util.h"
 
-#include "transport_defs.h"
+#include "virtual_midi_transport_defs.h"
 
 #include "Midi2VirtualMidiTransport_i.c"
 #include "Midi2VirtualMidiTransport.h"

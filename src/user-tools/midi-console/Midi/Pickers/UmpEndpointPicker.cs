@@ -96,10 +96,8 @@ namespace Microsoft.Midi.ConsoleApp
             }
         }
 
-
-        public static string PickEndpoint()
+        public static string PickEndpoint(string prompt)
         {
-            //Console.WriteLine("DEBUG: PickEndpoint");
 
             var choices = new List<UmpEndpointPickerEntry>();
 
@@ -115,10 +113,10 @@ namespace Microsoft.Midi.ConsoleApp
                 var result = AnsiConsole.Prompt(
                     new SelectionPrompt<UmpEndpointPickerEntry>()
                         .PageSize(20)
-                        .Title(Strings.EndpointPickerPleaseSelectEndpoint)
+                        .Title(prompt)
                         .HighlightStyle(selectionStyle)
                         .AddChoices(choices)
-                    ) ;
+                    );
 
                 if (result != null)
                 {
@@ -132,6 +130,11 @@ namespace Microsoft.Midi.ConsoleApp
 
             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.CommonStringCanceled));
             return string.Empty;
+        }
+
+        public static string PickEndpoint()
+        {
+            return PickEndpoint(Strings.EndpointPickerPleaseSelectEndpoint);
         }
 
     }

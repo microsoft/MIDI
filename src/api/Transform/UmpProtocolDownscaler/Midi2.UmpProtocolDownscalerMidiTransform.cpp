@@ -12,6 +12,7 @@
 
 #include "Midi2.UmpProtocolDownscalerMidiTransform.h"
 
+#include "ump_iterator.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -240,61 +241,55 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     if (!m_downscalingRequiredForEndpoint && !m_upscalingRequiredForEndpoint)
     {
         RETURN_IF_FAILED(m_Callback->Callback(optionFlags, inputData, length, timestamp, m_Context));
+
+        return S_OK;
     }
     else if (m_downscalingRequiredForEndpoint)
     {
-        if (length >= sizeof(uint32_t))
+        RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
+
+        std::vector<uint32_t> translatedWords{};
+        translatedWords.reserve(length / sizeof(uint32_t));
+
+        internal::UmpBufferIterator iterator(
+            static_cast<uint32_t*>(inputData), 
+            length / sizeof(uint32_t));
+
+
+        for (auto it = iterator.begin(); it < iterator.end(); ++it)
         {
-            // downscale only MIDI 2.0 channel voice messages : message type 4. Everything else passes through
-            if (internal::GetUmpMessageTypeFromFirstWord(internal::MidiWord0FromVoidMessageDataPointer(inputData)) != 4)
+            // type 4 messages are the only ones which require downscaling
+            if (it.CurrentMessageType() == 4)
             {
-                RETURN_IF_FAILED(m_Callback->Callback(optionFlags, inputData, length, timestamp, m_Context));
+                // type 4 messages have two words
+                m_umpToMidi1.UMPStreamParse(it.GetCurrentMessageWord(0));
+                m_umpToMidi1.UMPStreamParse(it.GetCurrentMessageWord(1));
 
-                return S_OK;
-            }
-
-            // Send the UMP(s) to the parser
-            uint32_t* data = (uint32_t*)inputData;
-            for (UINT i = 0; i < (length / sizeof(uint32_t)); i++)
-            {
-                m_umpToMidi1.UMPStreamParse(data[i]);
-            }
-
-            // retrieve the message from the parser
-            // and send it on
-            while (m_umpToMidi1.availableUMP())
-            {
-                uint32_t words[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
-                UINT wordCount{ 0 };
-
-                for (wordCount = 0; wordCount < _countof(words) && m_umpToMidi1.availableUMP(); wordCount++)
+                while (m_umpToMidi1.availableUMP())
                 {
-                    words[wordCount] = m_umpToMidi1.readUMP();
-                }
-
-                if (wordCount > 0)
-                {
-                    // we use return here instead of log, because the number of UMPs created should be no more than 1
-                    RETURN_IF_FAILED(m_Callback->Callback(optionFlags, &(words[0]), wordCount * sizeof(uint32_t), timestamp, m_Context));
+                    while (m_umpToMidi1.availableUMP())
+                    {
+                        translatedWords.push_back(m_umpToMidi1.readUMP());
+                    }
                 }
             }
-        }
-        else
-        {
-            // not a valid UMP
+            else
+            {
+                // not type 4, so no downscaling required. Just add it to the destination
+                it.CopyCurrentMessageToVector(translatedWords);
+            }
 
-            TraceLoggingWrite(
-                MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Invalid UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingUInt32(length, "Message length in Bytes"),
-                TraceLoggingUInt64(timestamp, "Message timestamp")
-            );
         }
+
+        // send all the translated or copied messages
+        RETURN_IF_FAILED(m_Callback->Callback(
+            optionFlags, 
+            static_cast<PVOID>(translatedWords.data()),
+            static_cast<UINT>(translatedWords.size() * sizeof(uint32_t)),
+            timestamp, 
+            m_Context));
+
+        return S_OK;
 
     }
     else if (m_upscalingRequiredForEndpoint)
@@ -308,8 +303,13 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
         return S_OK;
     }
+    else
+    {
+        // nothing to do. something is wrong here. This plugin shouldn't have been added to the chain.
 
-    return S_OK;
+        return E_FAIL;
+    }
+
 }
 
 
@@ -317,8 +317,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
 
 
-
-
+// This has to be here due to the header-only implementation of libmidi2 and how the includes work
 
 _Use_decl_annotations_
 HRESULT

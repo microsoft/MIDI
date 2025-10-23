@@ -388,7 +388,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TransportState.h" />
-    <ClInclude Include="transport_defs.h" />
+    <ClInclude Include="virtual_midi_transport_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.VirtualMidiTransport.h" />
     <ClInclude Include="Midi2.VirtualMidiBidi.h" />

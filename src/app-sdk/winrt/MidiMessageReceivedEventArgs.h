@@ -26,6 +26,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         MidiMessageReceivedEventArgs() = default;
 
         // internal implementation constructor
+        //MidiMessageReceivedEventArgs(_In_ PVOID data, _In_ UINT sizeInBytes, _In_ internal::MidiTimestamp);
         MidiMessageReceivedEventArgs(_In_ PVOID data, _In_ UINT sizeInBytes, _In_ internal::MidiTimestamp);
 
         midi2::MidiPacketType PacketType() const noexcept;

@@ -405,6 +405,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         m_messageReceivedEvent.clear();
         m_endpointDeviceDisconnectedEvent.clear();
         m_endpointDeviceReconnectedEvent.clear();
+
+        if (m_comCallback != nullptr)
+        {
+            LOG_IF_FAILED(RemoveMessagesReceivedCallback());
+        }
     }
 
     _Use_decl_annotations_

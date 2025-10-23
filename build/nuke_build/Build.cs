@@ -310,10 +310,34 @@ class Build : NukeBuild
                     .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
-
             }
 
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
+            var sdkIntermediateRootFolder = AppSdkSolutionFolder / "vsfiles" / "intermediate";
+
+            // header files and similar
+            foreach (var sourcePlatform in SdkPlatforms)
+            {
+                // the solution compiles these apps to Arm64 when target is EC.
+                string stagingPlatform = sourcePlatform;
+                if (sourcePlatform.ToLower() == "arm64ec")
+                {
+                    stagingPlatform = "Arm64";
+                }
+
+                // sample manifest
+                //     FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+
+                // bootstrap files
+                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+
+                // these are not architecture-specific
+                FileSystemTasks.CopyFileToDirectory(sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions.h", AppSdkStagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_i.c", AppSdkStagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_p.c", AppSdkStagingFolder, FileExistsPolicy.Overwrite, true);
+            }
+
 
             //        string rid = $"net8.0-windows{TargetWindowsSdkVersion}";
 
@@ -328,10 +352,18 @@ class Build : NukeBuild
                 sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.pri");
                 sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.pdb");
 
-                // todo: if other DLLs are required here, add them
-                //    sdkBinaries.Add(sdkOutputRootFolder / "WindowsMidiServicesClientInitialization" / sourcePlatform / Configuration.Release / $"WindowsMidiServicesClientInitialization.dll");
+                string stagingPlatform = sourcePlatform;
+                if (sourcePlatform.ToLower() == "arm64ec")
+                {
+                    stagingPlatform = "arm64";
+                }
 
+                foreach (var file in sdkBinaries)
+                {
+                    FileSystemTasks.CopyFileToDirectory(file, AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                }
 
+                
                 // create the nuget package
                 // todo: it would be better to see if any of the generated winmds have changed and only
                 // do this step if those have changed. Maybe do a before/after date/time check?
@@ -346,16 +378,6 @@ class Build : NukeBuild
                 );
 
 
-                string stagingPlatform = sourcePlatform;
-                if (sourcePlatform.ToLower() == "arm64ec")
-                {
-                    stagingPlatform = "arm64";
-                }
-
-                foreach (var file in sdkBinaries)
-                {
-                    FileSystemTasks.CopyFileToDirectory(file, AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                }
             }
 
             // copy the NuGet package over to this release
@@ -367,22 +389,6 @@ class Build : NukeBuild
                 true);
 
 
-            foreach (var sourcePlatform in SdkPlatforms)
-            {
-                // the solution compiles these apps to Arm64 when target is EC.
-                string stagingPlatform = sourcePlatform;
-                if (sourcePlatform.ToLower() == "arm64ec")
-                {
-                    stagingPlatform = "Arm64";
-                }
-
-                // sample manifest
-           //     FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-
-                // bootstrap files
-                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-            }
 
 
         });

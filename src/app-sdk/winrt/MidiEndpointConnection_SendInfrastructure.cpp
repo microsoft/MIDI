@@ -54,12 +54,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
 
 
-
+    // this has to also support sending multiple messages at once.
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMessageRaw(
         winrt::com_ptr<IMidiBidirectional> endpoint,
         void* data,
-        uint8_t sizeInBytes,
+        uint32_t sizeInBytes,
         internal::MidiTimestamp timestamp)
     {
 #ifdef _DEBUG
