@@ -17,13 +17,16 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendReceiveMessages **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"COM TestSendReceiveMessages");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -120,5 +123,4 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
     connReceive = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }

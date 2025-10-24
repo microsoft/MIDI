@@ -14,11 +14,13 @@ void MidiLoopbackEndpointTests::TestCreateLoopbackEndpoints()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
+
     {
-
-        LOG_OUTPUT(L"TestCreateLoopbackEndpoints **********************************************************************");
-
-        //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
         winrt::hstring endpointAId{};
         winrt::hstring endpointBId{};
@@ -85,9 +87,5 @@ void MidiLoopbackEndpointTests::TestCreateLoopbackEndpoints()
         }
 
     }
-
-    // in this example, we just put all the WinRT allocations in a sub-scope so we
-    // don't have to set all of them to nullptr before calling this.
-    ShutdownSDKAndWinRT(initializer);
 }
 
