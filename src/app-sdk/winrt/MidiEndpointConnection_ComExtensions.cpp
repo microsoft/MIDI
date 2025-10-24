@@ -14,6 +14,7 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+    // This is also shared with the WinRT interface
     UINT32 MidiEndpointConnection::GetSupportedMaxMidiWordsPerTransmission()
     {
         // the define is for bytes. Convert to MIDI words and return
