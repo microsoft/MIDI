@@ -10,8 +10,30 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
+#include "ump_iterator.h"
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+
+    void CopyMidiMessageStructDataToWordVector(_In_ std::vector<uint32_t>& destination, _In_ MidiMessageStruct const& message)
+    {
+        auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
+
+        // have to hoop-jump here a little because this function needs the parameter
+        // to be const to allow calling from the winrt functions which themselves
+        // take in a const parameter. Don't worry, we won't change the pointer :P
+        auto nonConst = const_cast<MidiMessageStruct*>(&message);
+        uint32_t* messageData = reinterpret_cast<uint32_t*>(nonConst);
+
+        for (int i = 0; i < messageWordCount; i++)
+        {
+            destination.push_back(*(messageData + i));
+        }
+
+    }
+
+
+
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesBuffer(
         internal::MidiTimestamp const timestamp,
@@ -36,6 +58,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingUInt32(byteCount, "byte count")
         );
 #endif
+
+        // validate that we're not sending more than the allowed number of words
+        if (static_cast<uint32_t>(byteCount / sizeof(uint32_t)) > static_cast<uint32_t>(GetSupportedMaxMidiWordsPerTransmission()))
+        {
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::TransmissionWordCountExceeded;
+        }
+
+
         winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
 
         auto interop = bufferReference.as<IMemoryBufferByteAccess>();
@@ -88,72 +118,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             // endianness becomes a concern so we need to make sure we treat this as words
             uint8_t* byteDataPointer = dataPointer + byteOffset;
-            uint32_t bytesProcessed{ 0 };
 
-            while (true)
-            {
-                uint8_t bytesInThisMessage = internal::GetUmpLengthInBytesFromFirstWord(*(uint32_t*)byteDataPointer);
+            auto result = SendMessageRaw(
+                m_endpointTransport, 
+                static_cast<void*>(byteDataPointer), 
+                byteCount, 
+                timestamp);
 
-                if (bytesProcessed + bytesInThisMessage <= byteCount)
-                {
-                    auto result = SendMessageRaw(m_endpointTransport, (void*)(byteDataPointer), bytesInThisMessage, timestamp);
-
-                    if (SendMessageFailed(result))
-                    {
-                        LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-                        TraceLoggingWrite(
-                            Midi2SdkTelemetryProvider::Provider(),
-                            MIDI_SDK_TRACE_EVENT_ERROR,
-                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                            TraceLoggingWideString(L"Send failed. SendMessageRaw failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                        );
-
-                        OutputDebugString(L"MIDI App SDK: Send failed. SendMessageRaw failed\n");
-
-                        return result;
-                    }
-                }
-                else
-                {
-                    LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
-
-                    TraceLoggingWrite(
-                        Midi2SdkTelemetryProvider::Provider(),
-                        MIDI_SDK_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Send partially failed. Ran out of data when sending multiple messages", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                    );
-
-                    OutputDebugString(L"MIDI App SDK: Send partially failed. Ran out of data when sending multiple messages\n");
-
-
-                    auto returnValue = midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange ;
-
-                    if (bytesProcessed > 0)
-                    {
-                        returnValue |= midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
-                    }
-
-                    return returnValue;
-                }
-
-                bytesProcessed += bytesInThisMessage;
-                byteDataPointer += bytesInThisMessage;
-
-                if (bytesProcessed >= byteCount)
-                {
-                    break;
-                }
-            }
-
-            if (bytesProcessed != byteCount)
+            if (SendMessageFailed(result))
             {
                 LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
@@ -163,15 +135,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Send failed. Finished, but bytes processed != supplied count", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed. SendMessageRaw failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
 
-                OutputDebugString(L"MIDI App SDK: Send failed. Finished, but bytes processed != supplied count\n");
+                OutputDebugString(L"MIDI App SDK: Send failed. SendMessageRaw failed\n");
 
-
-                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
+                return result;
             }
+
         }
         else
         {
@@ -216,29 +188,34 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD)
         );
 #endif
-        uint32_t i{ 0 };
 
-        uint32_t messageWords[4]{ 0,0,0,0 };   // we reuse this storage
-
-        auto iter = words.First();
-
-        while (iter.HasCurrent())
+        // we don't support a buffer size of 0 or a null buffer
+        if (words == nullptr)
         {
-            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iter.Current());
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageOther;
+        }
 
-            for (uint32_t j = 0; j < messageWordCount; j++)
+        // this copy is unfortunate, but the WinRT type doesn't support pointer access 
+        // to the data and iiterable is not guaranteed to be contiguous. If you need 
+        // faster sending without this allocation, use the COM extension
+        std::vector<uint32_t> wordList{};
+        std::copy(begin(words), end(words), std::back_inserter(wordList));
+
+        // validate that we're not sending more than the allowed number of words
+        if (static_cast<uint64_t>(wordList.size()) > static_cast<uint64_t>(GetSupportedMaxMidiWordsPerTransmission()))
+        {
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::TransmissionWordCountExceeded;
+        }
+
+
+        // validate that the messages are complete. If you don't want this step, you
+        // need to use the COM extension
+        internal::UmpBufferIterator bufferIterator(wordList.data(), static_cast<uint32_t>(wordList.size()));
+
+        for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
+        {
+            if (!it.CurrentMessageSeemsComplete())
             {
-                //messageWords[j] = words.GetAt(i + j);
-
-                messageWords[j] = iter.Current();
-                iter.MoveNext();
-            }
-
-            auto sendMessageResult = SendMessageRaw(m_endpointTransport, (VOID*)(messageWords), messageWordCount * sizeof(uint32_t), timestamp);
-
-            if (SendMessageFailed(sendMessageResult))
-            {
-                // failed. Log and return. We fail on first problem.
                 LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
                 TraceLoggingWrite(
@@ -247,22 +224,43 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Send failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Incomplete messages in send buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
 
-                OutputDebugString(L"MIDI App SDK: Send failed.\n");
+                OutputDebugString(L"MIDI App SDK: Incomplete messages in send buffer.\n");
 
-
-                if (i > 0)
-                {
-                    sendMessageResult |= midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
-                }
-
-                return sendMessageResult;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
+        }
 
-            i += messageWordCount;
+
+        // SendMessageRaw supports multiple messages. However, it doesn't do any
+        // validation of the messages, so we had to do that above.
+        auto sendMessageResult = SendMessageRaw(
+            m_endpointTransport, 
+            static_cast<void*>(wordList.data()),
+            static_cast<uint32_t>(wordList.size() * sizeof(uint32_t)), 
+            timestamp);
+
+        if (SendMessageFailed(sendMessageResult))
+        {
+            // failed. Log and return. We fail on first problem.
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Send failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            OutputDebugString(L"MIDI App SDK: Send failed.\n");
+
+            return sendMessageResult;
         }
 
         return midi2::MidiSendMessageResults::Succeeded;
@@ -293,50 +291,30 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         );
 #endif
 
-        uint32_t i{ startIndex };
-        uint32_t wordsSent{ 0 };
-
-        while (i < words.size() && wordsSent < wordCount)
+        // we don't support a buffer size of 0 or a null buffer
+        if (words.size() == 0 || wordCount == 0)
         {
-            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words[i]);
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageOther;
+        }
 
-            if (i + messageWordCount <= words.size())
+        // validate that we're not sending more than the allowed number of words
+        if (wordCount > static_cast<uint32_t>(GetSupportedMaxMidiWordsPerTransmission()))
+        {
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::TransmissionWordCountExceeded;
+        }
+
+
+        // validate that the messages are complete. If you don't want this step, you
+        // need to use the COM extension
+        internal::UmpBufferIterator bufferIterator(
+            (uint32_t*)(words.data() + startIndex), 
+            static_cast<uint32_t>(wordCount));
+
+        for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
+        {
+            if (!it.CurrentMessageSeemsComplete())
             {
-                auto sendMessageResult = SendMessageRaw(m_endpointTransport, (VOID*)(words.data() + i), messageWordCount * sizeof(uint32_t), timestamp);
-
-                if (SendMessageFailed(sendMessageResult))
-                {
-                    // failed. Log and return. We fail on first problem.
-                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-                    TraceLoggingWrite(
-                        Midi2SdkTelemetryProvider::Provider(),
-                        MIDI_SDK_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Send failed.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                    );
-
-                    OutputDebugString(L"MIDI App SDK: Send failed.\n");
-
-
-                    if (i > 0)
-                    {
-                        sendMessageResult |= midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
-                    }
-
-                    return sendMessageResult;
-                }
-
-                i += messageWordCount;
-                wordsSent += messageWordCount;
-            }
-            else
-            {
-                // failed. Log and return. We fail on first problem.
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -344,16 +322,42 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Send failed. Index out of bounds", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Incomplete messages in send buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
 
-                OutputDebugString(L"MIDI App SDK: Send failed. Index out of bounds\n");
+                OutputDebugString(L"MIDI App SDK: Incomplete messages in send buffer.\n");
 
-
-                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
-
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
+        }
+
+        // SendMessageRaw supports multiple messages. However, it doesn't do any
+        // validation of the messages, so we had to do that above.
+        auto sendMessageResult = SendMessageRaw(
+            m_endpointTransport,
+            (PVOID)((words.data() + startIndex)),
+            static_cast<uint32_t>((wordCount) * sizeof(uint32_t)),
+            timestamp);
+
+        if (SendMessageFailed(sendMessageResult))
+        {
+            // failed. Log and return. We fail on first problem.
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Send failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            OutputDebugString(L"MIDI App SDK: Send failed.\n");
+
+            return sendMessageResult;
         }
 
         return midi2::MidiSendMessageResults::Succeeded;
@@ -380,34 +384,44 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD)
         );
 #endif
+
+        std::vector<uint32_t> wordList;
+
         for (auto const& message : messages)
         {
-            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
-            auto sendMessageResult = SendMessageRaw(m_endpointTransport, (VOID*)&message, messageWordCount * sizeof(uint32_t), timestamp);
+            CopyMidiMessageStructDataToWordVector(wordList, message);
+        }
 
-            if (SendMessageFailed(sendMessageResult))
-            {
-                // failed. Log and return. We fail on first problem.
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+        // we've already validated the message integrity as part of the copy, so we can just send
 
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Send failed.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                );
+        auto sendMessageResult = SendMessageRaw(
+            m_endpointTransport,
+            static_cast<void*>(wordList.data()),
+            static_cast<uint32_t>(wordList.size() * sizeof(uint32_t)),
+            timestamp);
 
-                OutputDebugString(L"MIDI App SDK: Send failed.\n");
+        if (SendMessageFailed(sendMessageResult))
+        {
+            // failed. Log and return. We fail on first problem.
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Send failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
-                return sendMessageResult;
-            }
+            OutputDebugString(L"MIDI App SDK: Send failed.\n");
+
+            return sendMessageResult;
         }
 
         return midi2::MidiSendMessageResults::Succeeded;
+
     }
 
 
@@ -436,36 +450,39 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         );
 #endif
 
-        auto iterator = messages.begin() + startIndex;
-        auto endpoint = iterator + messageCount;
+        std::vector<uint32_t> wordList;
 
-        while (iterator < messages.end() && iterator < endpoint)
+        for (auto i = startIndex; i < startIndex + messageCount; i++)
         {
-            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iterator->Word0);
-            auto sendMessageResult = SendMessageRaw(m_endpointTransport, (VOID*)iterator, messageWordCount * sizeof(uint32_t), timestamp);
+            CopyMidiMessageStructDataToWordVector(wordList, messages[i]);
+        }
 
-            if (SendMessageFailed(sendMessageResult))
-            {
-                // failed. Log and return. We fail on first problem.
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+        // we've already validated the message integrity as part of the copy, so we can just send
 
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Send failed.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                );
+        auto sendMessageResult = SendMessageRaw(
+            m_endpointTransport,
+            static_cast<void*>(wordList.data()),
+            static_cast<uint32_t>(wordList.size() * sizeof(uint32_t)),
+            timestamp);
 
-                OutputDebugString(L"MIDI App SDK: Send failed.\n");
+        if (SendMessageFailed(sendMessageResult))
+        {
+            // failed. Log and return. We fail on first problem.
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Send failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
-                return sendMessageResult;
-            }
+            OutputDebugString(L"MIDI App SDK: Send failed.\n");
 
-            iterator++;
+            return sendMessageResult;
         }
 
         return midi2::MidiSendMessageResults::Succeeded;
