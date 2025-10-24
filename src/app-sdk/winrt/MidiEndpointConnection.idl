@@ -66,5 +66,7 @@ namespace Microsoft.Windows.Devices.Midi2
         MidiSendMessageResults SendMultipleMessagesStructArray(UInt64 timestamp, UInt32 startIndex, UInt32 messageCount, MidiMessageStruct[] messages);
 
         MidiSendMessageResults SendMultipleMessagesBuffer(UInt64 timestamp, UInt32 byteOffset, UInt32 byteCount, Windows.Foundation.IMemoryBuffer buffer);
+
+        UInt32 GetSupportedMaxMidiWordsPerTransmission();
     }
 }
