@@ -27,6 +27,7 @@ namespace Microsoft.Windows.Devices.Midi2
         InvalidMessageOther =               0x00200000,
         DataIndexOutOfRange =               0x00400000,
         TimestampOutOfRange =               0x00800000,
+        TransmissionWordCountExceeded =     0x01000000,
 
         MessageListPartiallyProcessed =     0x00F00000,
 
