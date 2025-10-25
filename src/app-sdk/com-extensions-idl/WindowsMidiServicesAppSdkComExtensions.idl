@@ -34,6 +34,8 @@ interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
 	// processing queue before returning. The data pointer is only valid
 	// for the duration of this call.
 	HRESULT MessagesReceived(
+		[in, annotation("_In_")] GUID sessionId,
+		[in, annotation("_In_")] GUID connectionId,
 		[in, annotation("_In_")] UINT64 timestamp,
 		[in, annotation("_In_")] UINT32 wordCount,
 		[in, annotation("_In_")] UINT32* messages
