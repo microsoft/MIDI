@@ -10,7 +10,7 @@ tags: session, connection, endpoint
 ---
 WinRT is designed to work across multiple languages in a type-safe way. As a result, WinRT APIs cannot expose functions which take pointers as parameters, or return pointers as their result.
 
-To provide more efficiency for the C++ and other COM-aware and pointer-friendly languages which use this SDK, and which often already have their own code to validate the integrity of UMPs, we've added a small set of COM extensions which can be used for send and receive of multiple messages
+To provide more efficiency for the C++ and other COM-aware and pointer-friendly languages which use this SDK, and which often already have their own code to validate the integrity of UMPs, we've added a small set of COM extensions which can be used for send and receive of multiple messages. These are primarily designed for use with Digital Audio Workstation apps, and cross-platform plugin / app frameworks using languages like C++ and Delphi.
 
 > IMPORTANT: When using these interfaces, it is essential that you fully release and reset any COM references before shutting down the SDK and unitializing the apartment. Failure to do so may result in crashes when you shut down the SDK or when you uninitialize COM.
 
@@ -26,7 +26,9 @@ MidiEndpointConnection connection = session.CreateEndpointConnection(MidiDiagnos
 auto receiveConnectionExtension = connection.as<IMidiEndpointConnectionRaw>();
 ```
 
-The interface is as follows:
+You must call the `as<>` or `QueryInterface` on the default interface of the `MidiEndpointConnection` type as shown above. Do not call it on secondary interfaces. The interface is not CoCreatable itself, and exists only as an implemention in `MidiEndpointConnection`.
+
+The `IMidiEndpointConnectionRaw` interface is as follows:
 
 ```cpp
 #define UUID_IMidiEndpointConnectionRaw 8087b303-0519-31d1-31d1-000000000020
@@ -112,11 +114,17 @@ interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
 
 | Function | Description |
 | -------- | ----------- |
-| `MessagesReceived` | Called when one or more messages have been received from the endpoint. How many messages are included in a single call depends largely upon how the endpoint receives and passes them along. The messages data pointer is valid only for the duration of the call, as it is a pointer into the cross-process memory-mapped buffer shared with the service. All data must be copied and not referenced. The session id and connection id are provided for convenience when using a centralized message handler. Your handler should return an S_OK HRESULT when it completes. The messages will be invalidated in the cross-process buffer regardless of the return value from this callback. |
+| `MessagesReceived` | Called when one or more messages have been received from the endpoint. How many messages are included in a single call depends largely upon how the endpoint receives and passes them along, and what additional processing is done on the data in the service. 
+
+The session id and connection id are provided for convenience when using a centralized message handler. 
+
+The messages data pointer is valid only for the duration of the call, as it is a pointer into the cross-process memory-mapped buffer shared with the service. Therefore, all data must be copied and not referenced. 
+
+Your handler should return an S_OK HRESULT when it completes. The messages will be invalidated in the cross-process buffer regardless of the return value from this callback. |
 
 > IMPORTANT: These interfaces are provided for speed and efficiency. When a `MidiEndpointConnection` has a registered `IMidiEndpointConnectionMessagesReceivedCallback`, it will completely bypass all other message handling code, including any listeners and event handlers. Therefore, this cannot be combined with, for example, implementing a Virtual Device app, which is implemented as a connection listener.
 
-The headers required to use these interfaces are included in the NuGet package and the vcpkg starting in Release Candidate 1
+The C++ headers required to use these interfaces are included in the NuGet package and the vcpkg starting in Release Candidate 1, in the `winmidi` subfolder. The IDL is available on GitHub for languages which can process those files directly. No other implementation files are provided for the COM interface.
 
 ```cpp
 #include "winmidi/WindowsMidiServicesAppSdkComExtensions.h"
