@@ -119,6 +119,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             // endianness becomes a concern so we need to make sure we treat this as words
             uint8_t* byteDataPointer = dataPointer + byteOffset;
 
+
+
+            // TODO: Validate the data using the ump iterator
+
+            // TODO: Validate length isn't > largest transmission size
+
+
+
+
+
+
+
+
             auto result = SendMessageRaw(
                 m_endpointTransport, 
                 static_cast<void*>(byteDataPointer), 

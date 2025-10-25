@@ -28,6 +28,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             {
                 // when you use the COM extensions, we bypass all other processing of incoming messages
                 return m_comCallback->MessagesReceived(
+                    m_sessionId,
+                    m_connectionId,
                     static_cast<ULONGLONG>(timestamp),
                     size / sizeof(uint32_t),
                     static_cast<UINT32*>(data)

@@ -57,8 +57,10 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
     uint32_t m_countWordsReceived { 0 };
 
 
-    m_midiInCallback = [&](UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    m_midiInCallback = [&](GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
         {
+            UNREFERENCED_PARAMETER(sessionId);
+            UNREFERENCED_PARAMETER(connectionId);
             UNREFERENCED_PARAMETER(timestamp);
             UNREFERENCED_PARAMETER(messages);
 
@@ -104,10 +106,11 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
     // verify that we didn't receive additional words
     VERIFY_ARE_EQUAL(sendBuffer.size(), m_countWordsReceived);
 
-    // unhook our callback and release the COM referneces
+    // unhook our callback and release the COM references
     // you must do this before otherwise shutting down the connection
     // because these hold out-of-band references to the WinRT types
     receiveConnectionExtension->RemoveMessagesReceivedCallback();
+    m_midiInCallback = nullptr;
     receiveConnectionExtension = nullptr;
     sendConnectionExtension = nullptr;
 

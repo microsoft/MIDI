@@ -28,11 +28,11 @@ public:
 
         TEST_METHOD(TestSendReceiveMessages);
 
-        STDMETHOD(MessagesReceived)(UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+        STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
         {
             if (m_midiInCallback)
             {
-                m_midiInCallback(timestamp, wordCount, messages);
+                m_midiInCallback(sessionId, connectionId, timestamp, wordCount, messages);
             }
             return S_OK;
         }
@@ -42,7 +42,7 @@ public:
         STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    std::function<void(UINT64, UINT32, UINT32*)> m_midiInCallback;
+    std::function<void(GUID, GUID, UINT64, UINT32, UINT32*)> m_midiInCallback;
 
 
 };
