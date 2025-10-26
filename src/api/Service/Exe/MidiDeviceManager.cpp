@@ -2682,23 +2682,78 @@ CMidiDeviceManager::RebuildMidi1PortsForEndpoint(
 // STRING_PKEY_MIDI_DriverDeviceInterface
 // STRING_DEVPKEY_KsAggMidiGroupPinMap
 _Use_decl_annotations_
-std::wstring CMidiDeviceManager::GetWinMMDeviceInterfaceIdForGroup(
-    winrt::Windows::Devices::Enumeration::DeviceInformation umpEndpointDeviceInfo,
-    uint8_t groupIndex
+std::wstring CMidiDeviceManager::GetWinMMDeviceInterfaceIdForGroupFromParentEndpoint(
+    winrt::Windows::Devices::Enumeration::DeviceInformation const& umpEndpointDeviceInfo,
+    uint8_t const groupIndex,
+    MidiFlow const flowFromBlockPerspective
 )
 {
-    UNREFERENCED_PARAMETER(umpEndpointDeviceInfo);
-    UNREFERENCED_PARAMETER(groupIndex);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt8(groupIndex, "group index"),
+        TraceLoggingUInt32(flowFromBlockPerspective, "flow from block perspective"),
+        TraceLoggingWideString(umpEndpointDeviceInfo.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+
+    // this is our fallback value: the parent endpoint's Id. This is likely to be useful only
+    // for non-USB transports
+    std::wstring deviceInterfaceId { };
+
+    KSAPinMapEntryInternal pinMapEntry{ };
+
     // first, check to see if we have a pin map entry, which is created by KSA
+    if (SUCCEEDED(GetPinMapEntry(umpEndpointDeviceInfo, groupIndex, flowFromBlockPerspective, pinMapEntry)) &&
+        !pinMapEntry.FilterId.empty())
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Using filter Id from pin map entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(pinMapEntry.FilterId.c_str(), "filter id"),
+            TraceLoggingWideString(umpEndpointDeviceInfo.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+        deviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(pinMapEntry.FilterId);
+    }
+    else
+    {
+        // no pin map entry. check to see if we have STRING_PKEY_MIDI_DriverDeviceInterface
+
+        auto id = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_DriverDeviceInterface, umpEndpointDeviceInfo, L"");
+
+        if (!id.empty())
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Using filter Id from single property", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(id.c_str(), "filter id"),
+                TraceLoggingWideString(umpEndpointDeviceInfo.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            deviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(id.c_str());
+        }
+    }
 
 
-    // if no pin map entry, check to see if we have STRING_PKEY_MIDI_DriverDeviceInterface
+    if (internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId).empty())
+    {
+        deviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(umpEndpointDeviceInfo.Id().c_str());
+    }
 
-
-
-
-    // fallback is to return the UMP endpoint's id
-    return internal::NormalizeEndpointInterfaceIdWStringCopy(umpEndpointDeviceInfo.Id().c_str());
+    return deviceInterfaceId;
 }
 
 
@@ -2765,8 +2820,8 @@ CMidiDeviceManager::SyncMidi1Ports(
     additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
     additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
     
-    additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
-    additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);
+    additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);       // need this pin map to find filter id
+    additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);    // when no pin map is used, this has the filter id
 
     // We have function blocks to retrieve
     // build up the property keys to query for the function blocks
@@ -2941,6 +2996,16 @@ CMidiDeviceManager::SyncMidi1Ports(
                 interfaceProperties.push_back({{ PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr },
                     DEVPROP_TYPE_EMPTY, 0, NULL });
 
+                // required by WinMM. Change this property key if it's not the final one used
+                std::wstring winmmDeviceInterfaceId = GetWinMMDeviceInterfaceIdForGroupFromParentEndpoint(
+                    deviceInfo,
+                    static_cast<uint8_t>(groupIndex),
+                    flow == MidiFlow::MidiFlowIn ? MidiFlow::MidiFlowOut : MidiFlow::MidiFlowIn // this is from the pin/group perspective
+                );
+
+                interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_DriverDeviceInterface, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(winmmDeviceInterfaceId.c_str()) + 1)), (PVOID)winmmDeviceInterfaceId.c_str() });
+
                 // Finally, add the group index that is assigned to this interface
                 interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&groupIndex) });
@@ -2972,6 +3037,7 @@ CMidiDeviceManager::SyncMidi1Ports(
                 // so pop the endpoint specific properties off in preparation.
 
                 interfaceProperties.pop_back(); // customized endpoint name
+                interfaceProperties.pop_back(); // WinMM Driver Device Interface (parent Filter id)
                 interfaceProperties.pop_back(); // custom port number
                 interfaceProperties.pop_back(); // group index
             }
