@@ -110,6 +110,8 @@ public:
     TEST_METHOD(TestKsHandleWrapperQueryRemove_PinHandle);
     TEST_METHOD(TestKsHandleWrapperSurpriseRemove_PinHandle);
 
+    TEST_METHOD(TestDriverDeviceInterfaceIdIsPresent);
+
     TEST_METHOD(MultiThreadedMidiSendTest)
 
     STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
