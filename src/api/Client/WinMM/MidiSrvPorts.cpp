@@ -243,6 +243,7 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
             WCHAR deviceName[MAXPNAMELEN] = {0};
             DWORD servicePortNum {0};
             DWORD requiredSize {0};
+            WCHAR deviceDriverInterfaceId[MAX_PATH] = {0};
             std::unique_ptr<SP_DEVICE_INTERFACE_DETAIL_DATA> interfaceDetailData;
 
             // retrieve the device interface id string
@@ -313,6 +314,25 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
                 continue;
             }
 
+            // to support DRV_QUERYDEVICEINTERFACE
+            if (!SetupDiGetDeviceInterfaceProperty(
+                devInfo.get(),
+                &deviceInterfaceData,
+                &PKEY_MIDI_DriverDeviceInterface,
+                &propType,
+                (PBYTE)&deviceDriverInterfaceId,
+                sizeof(deviceDriverInterfaceId),
+                &requiredSize,
+                0))
+            {
+                continue;
+            }
+            if (propType != DEVPROP_TYPE_STRING ||
+                requiredSize < sizeof(WCHAR))
+            {
+                continue;
+            }
+
             // our port numbers start with 1 because they're the "global" port numbers
             // that the user should see and port 0 is reserved for the synth.
             // So, a service port number of 1 indicates that we have 1 port, and so on.
@@ -327,6 +347,7 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
             m_MidiPortInfo[flow][servicePortNum].PortNumber = servicePortNum;
             m_MidiPortInfo[flow][servicePortNum].Name = deviceName;
             m_MidiPortInfo[flow][servicePortNum].InterfaceId = interfaceDetailData->DevicePath;
+            m_MidiPortInfo[flow][servicePortNum].DriverDeviceInterfaceId = WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(deviceDriverInterfaceId);
             
             // Fill in the midiCaps for this port
             if (flow == MidiFlowOut)
@@ -497,7 +518,7 @@ CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDes
     RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
 
     // create the CMidiPort for this port.
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, portInfo->second.InterfaceId, flow, midiOpenDesc, flags));
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, portInfo->second.InterfaceId, portInfo->second.DriverDeviceInterfaceId, flow, midiOpenDesc, flags));
 
     *openedPort = (MidiPortHandle) midiPort.get();
 

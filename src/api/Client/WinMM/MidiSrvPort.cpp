@@ -30,7 +30,7 @@ CMidiPort::~CMidiPort()
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, MidiFlow flow, const MIDIOPENDESC* openDesc, DWORD_PTR flags)
+CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, std::wstring& driverDeviceInterfaceId, MidiFlow flow, const MIDIOPENDESC* openDesc, DWORD_PTR flags)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -47,10 +47,6 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
     DWORD mmcssTaskId {0};
     LARGE_INTEGER qpc{ 0 };
     
-    // TODO: Populate m_deviceInterfaceId using the property PKEY_MIDI_DriverDeviceInterface on the port
-
-
-
     QueryPerformanceFrequency(&qpc);
     m_qpcFrequency = qpc.QuadPart;
 
@@ -58,6 +54,8 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
     memcpy(&m_OpenDesc, openDesc, sizeof(m_OpenDesc));
     m_Flags = flags;
     m_InterfaceId = interfaceId;
+
+    m_driverDeviceInterfaceId = driverDeviceInterfaceId;    // for DRV_QUERYDEVICEINTERFACE
 
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
@@ -93,7 +91,7 @@ CMidiPort::Shutdown()
 
         std::swap(m_InBuffers, emptyQueue);
         m_InterfaceId.clear();
-        m_deviceInterfaceId.clear();
+        m_driverDeviceInterfaceId.clear();
 
         // openDesc and flags are used for the Winmm client callback,
         // safe to clear now that callback is completed.
@@ -120,7 +118,7 @@ CMidiPort::QueryDeviceInterface(DWORD_PTR param1, DWORD_PTR param2)
 {
     auto interfaceStringPtr = reinterpret_cast<WCHAR*>(param1);
     RETURN_HR_IF_NULL(E_INVALIDARG, interfaceStringPtr);
-    WindowsMidiServicesInternal::SafeCopyWStringToFixedArray(interfaceStringPtr, param2, m_deviceInterfaceId);
+    WindowsMidiServicesInternal::SafeCopyWStringToFixedArray(interfaceStringPtr, param2, m_driverDeviceInterfaceId);
 
     return S_OK;
 }
@@ -131,7 +129,7 @@ CMidiPort::QueryDeviceInterfaceSize(DWORD_PTR param1, DWORD_PTR param2)
 {
     auto sizePtr = reinterpret_cast<ULONG*>(param1);
     RETURN_HR_IF_NULL(E_INVALIDARG, sizePtr);
-    *sizePtr = static_cast<ULONG>((m_deviceInterfaceId.size() + 1) * sizeof(wchar_t));
+    *sizePtr = static_cast<ULONG>((m_driverDeviceInterfaceId.size() + 1) * sizeof(wchar_t));
 
     return S_OK;
 }

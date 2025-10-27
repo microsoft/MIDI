@@ -442,8 +442,10 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
 
         // duplicate data, but needed for other non-KS transports as well. Specifically used for WinMM DRV_QUERYDEVICEINTERFACE
+        // also needs to be lowercase (the WinMM call always returned a lowercase id)
+        std::wstring driverDeviceInterface = internal::ToLowerTrimmedWStringCopy(MidiPin->Id);
         interfaceDevProperties.push_back({ {PKEY_MIDI_DriverDeviceInterface, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
+                DEVPROP_TYPE_STRING, static_cast<ULONG>((driverDeviceInterface.length() + 1) * sizeof(WCHAR)), (PVOID)driverDeviceInterface.c_str() });
 
         interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MidiPin->TransportCapability });

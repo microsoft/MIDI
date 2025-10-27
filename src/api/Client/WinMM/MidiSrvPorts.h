@@ -12,6 +12,7 @@ typedef struct _PORT_INFO
     MidiFlow Flow{MidiFlowIn};
     std::wstring InterfaceId;
     std::wstring Name;
+    std::wstring DriverDeviceInterfaceId;
 
     MIDIINCAPSW MidiInCaps {0};
     MIDIOUTCAPSW MidiOutCaps {0};
