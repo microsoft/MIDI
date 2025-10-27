@@ -2345,6 +2345,37 @@ MidiTransportTests::MultiThreadedMidiSendTest()
     }
 }
 
+void
+MidiTransportTests::TestDriverDeviceInterfaceIdIsPresent()
+{
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> devices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(devices, [&](PMIDIU_DEVICE device)
+        {
+            if (device->MidiOne)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }));
+
+    if (devices.size() == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"No Midi 1 endpoints found. Cannot validate interface id");
+        return;
+    }
+
+    for (auto const& device: devices)
+    {
+        LOG_OUTPUT(L"* Endpoint: %s", device->DeviceId.c_str());
+        LOG_OUTPUT(L"  Driver Device Interface Id: %s", device->DriverDeviceInterfaceId.c_str());
+        VERIFY_IS_FALSE(device->DriverDeviceInterfaceId.empty());
+    }
+}
+
+
 bool MidiTransportTests::ClassSetup()
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);

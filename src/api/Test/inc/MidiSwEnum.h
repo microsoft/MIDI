@@ -9,6 +9,7 @@ public:
     std::wstring DeviceId;
     std::wstring DeviceInstanceId;
     std::wstring ParentDeviceInstanceId;
+    std::wstring DriverDeviceInterfaceId;
     std::wstring Name; // friendly name for this device
     MidiFlow Flow{ MidiFlowOut };
     MidiDataFormats SupportedDataFormats{ MidiDataFormats_Invalid };

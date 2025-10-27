@@ -49,6 +49,7 @@ MidiSWDeviceEnum::EnumerateDevices(
     additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
     additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
     additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
+    additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
 
     auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
 
@@ -93,6 +94,14 @@ MidiSWDeviceEnum::EnumerateDevices(
         }
         std::wstring deviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
         
+        std::wstring driverDeviceInterfaceId{};
+        prop = device.Properties().Lookup(STRING_PKEY_MIDI_DriverDeviceInterface);
+        if (prop)
+        {
+            driverDeviceInterfaceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
+        }      
+
+
         std::unique_ptr<MIDIU_DEVICE> midiDevice = std::make_unique<MIDIU_DEVICE>();
         if (!midiDevice)
         {
@@ -103,6 +112,7 @@ MidiSWDeviceEnum::EnumerateDevices(
         midiDevice->InterfaceClass = interfaceClass;
         midiDevice->DeviceId = deviceId;
         midiDevice->DeviceInstanceId = WindowsMidiServicesInternal::NormalizeDeviceInstanceIdWStringCopy(deviceInstanceId);
+        midiDevice->DriverDeviceInterfaceId = driverDeviceInterfaceId.c_str();
         midiDevice->Name = name;
         midiDevice->SupportedDataFormats = supportedDataFormats;
 
