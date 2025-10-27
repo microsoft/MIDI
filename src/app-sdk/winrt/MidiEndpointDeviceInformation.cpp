@@ -13,6 +13,9 @@
 
 #include "MidiEndpointCustomProperties.h"
 
+#include "mmdeviceapi.h"    // for E_NOTFOUND in the pin map property code
+#include "midi_ksa_pin_map_property.h"
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     winrt::hstring MidiEndpointDeviceInformation::ToString()
@@ -267,7 +270,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_InPinId);
         //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_OutPinId);
         //additionalProperties.Append(STRING_DEVPKEY_KsTransport);
-        //additionalProperties.Append(STRING_DEVPKEY_KsMidiGroupPinMap);
+        additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);
+        additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
 
         
 

@@ -14,14 +14,15 @@ void MidiVirtualDeviceTests::TestCreateVirtualDevice()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
 
     {
-        LOG_OUTPUT(L"TestCreateVirtualDevice **********************************************************************");
-
         winrt::hstring createdClientEndpointId;
-        winrt::hstring createdDeviceEndpointId;
-
-                
+        winrt::hstring createdDeviceEndpointId;               
 
         winrt::hstring endpointSuppliedName = L"TAEF Virtual Endpoint";
 
@@ -183,11 +184,5 @@ void MidiVirtualDeviceTests::TestCreateVirtualDevice()
 
         session.Close();
     }
-
-    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
-    // these don't go out of scope here and self-destruct, so we set them to nullptr. You can also put them
-    // in a sub-scope as we've done here
-
-    ShutdownSDKAndWinRT(initializer);
 
 }

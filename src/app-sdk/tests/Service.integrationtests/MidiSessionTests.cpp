@@ -13,6 +13,12 @@ void MidiSessionTests::TestCreateNewSession()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
+
     winrt::hstring sessionName = L"Test Session Name";
 
     auto session = MidiSession::Create(sessionName);
@@ -29,12 +35,17 @@ void MidiSessionTests::TestCreateNewSession()
     // these don't go out of scope here and self-destruct, so we set them to nullptr
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiSessionTests::TestSessionList()
 {
     auto initializer = InitWinRTAndSDK_MTA();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
 
     winrt::hstring session1Name = L"Session 1 Name";
     winrt::hstring session2Name = L"Session 2 Name";
@@ -72,8 +83,6 @@ void MidiSessionTests::TestSessionList()
     session2 = nullptr;
     sessionList = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
-
 }
 
 
@@ -81,7 +90,11 @@ void MidiSessionTests::TestUpdateSessionName()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
 
     winrt::hstring oldSessionName = L"Test Session Name";
     winrt::hstring newSessionName = L"New Session Name";
@@ -120,7 +133,5 @@ void MidiSessionTests::TestUpdateSessionName()
     // these don't go out of scope here and self-destruct, so we set them to nullptr
     session = nullptr;
     sessionList = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 
 }

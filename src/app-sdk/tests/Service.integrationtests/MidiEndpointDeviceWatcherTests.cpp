@@ -15,11 +15,17 @@ void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceIn
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
 
     wil::unique_event_nothrow enumerationCompleted;
     enumerationCompleted.create();
 
     auto watcher = MidiEndpointDeviceWatcher::Create(filter);
+    VERIFY_IS_NOT_NULL(watcher);
 
     // we're enumerating only the loopbacks, so that should be 2 endpoints total
     uint32_t numEndpointsActual{ 0 };
@@ -76,7 +82,6 @@ void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceIn
     // these don't go out of scope here and self-destruct, so we set them to nullptr
     watcher = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 

@@ -15,12 +15,6 @@ Connections allocate resources including send/receive buffers, and processing th
 
 To ensure an application is able to wire up processing plugins and event handlers before the connection is active, the connection returned by the `MidiSession` is not yet open. Once the connection is acquired, the application should assign event handlers, and optionally assign any message processing plugins. Once complete, the application calls the `Open()` function to connect to the service, create the queues, and begin sending and receiving messages.
 
-## A note on sending messages
-
-All `SendMessageXX` functions send a single Universal MIDI Packet message at a time. The pluralized versions `SendMessagesXX` will send multiple packets, in order, with the same timestamp.
-
-Currently, in the implementation behind the scenes, the service receives each timestamped message one at a time. We have the functions for sending more than one message as a developer convenience for similarity with other platforms, and also to allow for possible future optimization in the service communication code. In any case, those functions require fewer COM calls for the same number of messages and so will be slightly more efficient in some cases.
-
 ## Properties
 
 | Property | Description |
@@ -42,7 +36,24 @@ Currently, in the implementation behind the scenes, the service receives each ti
 | `SendMessageSucceeded (sendResult)` | Helper function to decipher the return result of a message sending function to tell if it succeeded. |
 | `SendMessageFailed (sendResult)` | Helper function to decipher the return result of a message sending function to tell if it failed. |
 
+## Other Functions
+
+| Function | Description |
+| -------- | ----------- |
+| `Open()` | Open the connection and start receiving messages. Wire up the message event handler before calling this method. |
+| `AddMessageProcessingPlugin (plugin)` | Add a message processing plugin to this connection |
+| `RemoveMessageProcessingPlugin (id)` | Remove a message processing plugin from this connection |
+| `GetSupportedMaxMidiWordsPerTransmission` | Returns the maximum number of MIDI words which can be sent in a single call |
+
+# Sending and Receiving Messages through WinRT
+
+There are multiple mechanisms available for sending and recieving messages, each suitable to different programming languages and app data storage models.
+
+In addition to these functions, C++ (and other COM-aware and pointer-friendly languages) developers can optionally use the COM Extensions to send and receive messages on a valid and open connection.
+
 ## Single-Message Sender Functions
+
+Each function sends a single message at a time. Each message must be a complete and valid Universal MIDI Packet.
 
 | Function | Description |
 | -------- | ----------- |
@@ -60,33 +71,34 @@ Currently, in the implementation behind the scenes, the service receives each ti
 
 ## Multiple-Message Sender Functions
 
-Currently, the service accepts a single message at a time, so these iterate over the messages internally, using the UMP type in the case of words, or just the packets themselves in the case of packets. However, these are present to enable us to optimize sending multiple messages to the service in the future, without you needing to change any of your code.
+When sending multiple messages, each message must be complete within the transmission. A single UMP shall not be split across multiple transmissions. If the transmission does not contain whole valid UMPs, the call will fail.
 
-In methods where there's a single timestamp, messages are sent as quickly as possible on that timestamp. If you send many messages, some other MIDI 1.0 devices may have buffer overflows on the devices themselves. This is not a condition we can detect. In those cases, we recommend using the single message sending functions with a delay between each message.
+When constructing the buffer or list to send, be sure to call `GetSupportedMaxMidiWordsPerTransmission` to get the maximum number of 32-bit MIDI words which can be sent in a single transmission. This number may change over time, and so should not be assumed to be a static constant.
 
-Finally, there's a practical limit to how many messages can be scheduled ahead of time. Performance degrades as the priority queue size increases, so do not send thousands of messages scheduled at a future time. Sending thousands of messages to be sent immediately is perfectly fine.
+These functions send all data at once, without allocating any additional buffers. Each message is sent with the same timestamp.
 
 | Function | Description |
 | -------- | ----------- |
-| `SendMultipleMessagesWordList (timestamp, words)` | When supplied an `IIterable` of 32 bit unsigned integers, this sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message. All messages are sent with the same timestamp.|
-| `SendMultipleMessagesWordArray (timestamp, startIndex, wordCount, words)` | Similar to the WordList approach, this will send multiple messages from an array, starting at the zero-based `startIndex` and continuing for `wordCount` words. The messages within that range must be valid and complete. All messages are sent with the same timestamp.|
-| `SendMultipleMessagesPacketList (messages)` | Send an `IIterable` of `IMidiUniversalPacket` messages, each with their own timestamp. |
-| `SendMultipleMessagesStructList (timestamp, messages)` | Send an `IIterable` of `MidiMessageStruct` messages. All messages are sent with the same timestamp|
-| `SendMultipleMessagesStructArray (timestamp, startIndex, messageCount, messages)` | Send an an array of `MidiMessageStruct` messages, starting at `startIndex` and continuing for `messageCount` messages. All messages are sent with the same timestamp|
 | `SendMultipleMessagesBuffer (timestamp, byteOffset, byteCount, buffer)` | Send multiple messages using the `IMemoryBuffer` approach and a single timestamp. |
+| `SendMultipleMessagesWordArray (timestamp, startIndex, wordCount, words)` | Similar to the WordList approach, this will send multiple messages from an array, starting at the zero-based `startIndex` and continuing for `wordCount` words. The messages within that range must be valid and complete.|
 
-When sending multiple messages, there is no implied all-or-nothing transaction. If an error is encountered when sending messages, the function stops processing the list at that point and returns a failure code, even if some messages were sent successfully.
+These functions need to copy the data to a new buffer, and then send in a single call. Each message is sent with the same timestamp.
+
+| Function | Description |
+| -------- | ----------- |
+| `SendMultipleMessagesWordList (timestamp, words)` | When supplied an `IIterable` of 32 bit unsigned integers, this sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message.|
+| `SendMultipleMessagesStructList (timestamp, messages)` | Send an `IIterable` of `MidiMessageStruct` messages. All messages are sent with the same timestamp|
+| `SendMultipleMessagesStructArray (timestamp, startIndex, messageCount, messages)` | Send an an array of `MidiMessageStruct` messages, starting at `startIndex` and continuing for `messageCount` messages.|
+
+This function sends each packet one at a time, because each packet has its own timestamp
+
+| Function | Description |
+| -------- | ----------- |
+| `SendMultipleMessagesPacketList (messages)` | Send an `IIterable` of `IMidiUniversalPacket` messages, each with their own timestamp. |
 
 > # Tip 
 > To learn more about how collections are handled in WinRT, and how they may convert to constructs like `std::vector`, see the [Collections with C++/WinRT](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/collections) page in our documentation.
 
-## Other Functions
-
-| Function | Description |
-| -------- | ----------- |
-| `Open()` | Open the connection and start receiving messages. Wire up the message event handler before calling this method. |
-| `AddMessageProcessingPlugin (plugin)` | Add a message processing plugin to this connection |
-| `RemoveMessageProcessingPlugin (id)` | Remove a message processing plugin from this connection |
 
 ## Events
 

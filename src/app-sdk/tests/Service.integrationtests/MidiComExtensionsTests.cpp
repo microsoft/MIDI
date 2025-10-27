@@ -17,13 +17,16 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendReceiveMessages **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"COM TestSendReceiveMessages");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -54,8 +57,10 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
     uint32_t m_countWordsReceived { 0 };
 
 
-    m_midiInCallback = [&](UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    m_midiInCallback = [&](GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
         {
+            UNREFERENCED_PARAMETER(sessionId);
+            UNREFERENCED_PARAMETER(connectionId);
             UNREFERENCED_PARAMETER(timestamp);
             UNREFERENCED_PARAMETER(messages);
 
@@ -101,10 +106,11 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
     // verify that we didn't receive additional words
     VERIFY_ARE_EQUAL(sendBuffer.size(), m_countWordsReceived);
 
-    // unhook our callback and release the COM referneces
+    // unhook our callback and release the COM references
     // you must do this before otherwise shutting down the connection
     // because these hold out-of-band references to the WinRT types
     receiveConnectionExtension->RemoveMessagesReceivedCallback();
+    m_midiInCallback = nullptr;
     receiveConnectionExtension = nullptr;
     sendConnectionExtension = nullptr;
 
@@ -120,5 +126,4 @@ void MidiComExtensionsTests::TestSendReceiveMessages()
     connReceive = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }

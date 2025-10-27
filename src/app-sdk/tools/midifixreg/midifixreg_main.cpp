@@ -121,11 +121,18 @@ bool CheckForAdminPermissions()
 
 bool ValueNeedsReplacing(std::wstring parentKey, std::wstring valueName, std::wstring requiredValue)
 {
-    auto val = wil::reg::get_value_string(HKEY_LOCAL_MACHINE, parentKey.c_str(), valueName.c_str());
-
-    if (val == requiredValue)
+    try
     {
-        return false;
+        auto val = wil::reg::get_value_string(HKEY_LOCAL_MACHINE, parentKey.c_str(), valueName.c_str());
+
+        if (val == requiredValue)
+        {
+            return false;
+        }
+    }
+    catch (...)
+    {
+        // missing key/value is a common cause of this
     }
 
     return true;

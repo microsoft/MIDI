@@ -11,15 +11,11 @@
 
 void MidiMessageSchedulerTests::TestScheduledMessagesTimingSmall()
 {
-    LOG_OUTPUT(L"Test timing small **********************************************************************");
-
     TestScheduledMessagesTiming(10);
 }
 
 void MidiMessageSchedulerTests::TestScheduledMessagesTimingLarge()
 {
-    LOG_OUTPUT(L"Test timing large **********************************************************************");
-
     TestScheduledMessagesTiming(200);
 }
 
@@ -33,16 +29,20 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    {
-        LOG_OUTPUT(L"Test timing **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
+
+    {
 
         wil::unique_event_nothrow allMessagesReceived;
         wil::critical_section messageLock;
 
         allMessagesReceived.create();
 
-        auto session = MidiSession::Create(L"Test Session Name");
+        auto session = MidiSession::Create(L"TestScheduledMessagesTiming");
 
         auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
         auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
@@ -152,26 +152,25 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
         session.Close();
     }
 
-    // in this example, we just put all the WinRT allocations in a sub-scope so we
-    // don't have to set all of them to nullptr before calling this.
-    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    {
-        LOG_OUTPUT(L"TestScheduledMessages **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-        //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    {
 
         wil::unique_event_nothrow allMessagesReceived;
         wil::critical_section messageLock;
 
         allMessagesReceived.create();
 
-        auto session = MidiSession::Create(L"Test Session Name");
+        auto session = MidiSession::Create(L"TestScheduledMessagesOrder");
 
         auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
         auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
@@ -270,8 +269,4 @@ void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
 
         session.Close();
     }
-
-    // in this example, we just put all the WinRT allocations in a sub-scope so we
-    // don't have to set all of them to nullptr before calling this.
-    ShutdownSDKAndWinRT(initializer);
 }

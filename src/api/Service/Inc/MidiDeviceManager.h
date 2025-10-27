@@ -110,7 +110,7 @@ public:
         _Out_opt_ LPWSTR*
     );
 
-    STDMETHOD(DeactivateVirtualParentDevice)(_In_ PCWSTR);   
+    STDMETHOD(DeactivateVirtualParentDevice)(_In_ LPCWSTR);   
 
     STDMETHOD(ActivateEndpoint)(
         _In_ PCWSTR,
@@ -213,9 +213,10 @@ private:
         _Inout_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
-    std::wstring GetWinMMDeviceInterfaceIdForGroup(
-        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation umpEndpointDeviceInfo,
-        _In_ uint8_t groupIndex
+    std::wstring GetWinMMDeviceInterfaceIdForGroupFromParentEndpoint(
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& umpEndpointDeviceInfo,
+        _In_ uint8_t const groupIndex,
+        _In_ MidiFlow const flowFromBlockPerspective
         );
 
     HRESULT SyncMidi1Ports(

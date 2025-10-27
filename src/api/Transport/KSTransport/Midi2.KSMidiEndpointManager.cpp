@@ -440,6 +440,11 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
+
+        // duplicate data, but needed for other non-KS transports as well. Specifically used for WinMM DRV_QUERYDEVICEINTERFACE
+        interfaceDevProperties.push_back({ {PKEY_MIDI_DriverDeviceInterface, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
+
         interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MidiPin->TransportCapability });
 

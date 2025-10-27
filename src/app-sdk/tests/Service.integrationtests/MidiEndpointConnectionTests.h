@@ -47,8 +47,15 @@ public:
 
     TEST_METHOD(TestSendAndReceiveMultipleMessageWordsList);
     TEST_METHOD(TestSendAndReceiveMultipleMessagePackets);
+    TEST_METHOD(TestSendAndReceiveMultipleMessageWordsArray);
+    TEST_METHOD(TestSendAndReceiveMultipleMessageWordsArraySubset);
+    TEST_METHOD(TestSendAndReceiveMultipleMessagesStructList);
+    TEST_METHOD(TestSendAndReceiveMultipleMessagesStructArray);
+    TEST_METHOD(TestSendAndReceiveMultipleMessagesStructArraySubset);
+
     TEST_METHOD(TestSendMultipleMessagePacketsSTA);
 
+    // Buffer tests are in MidiEndpointConnectionBufferTests
     
 
     //TEST_METHOD(TestSendMessageSuccessImmediateReturnCode);

@@ -13,8 +13,7 @@ void MidiInitializationTests::TestEnsureServiceAvailable()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestEnsureServiceAvailable **********************************************************************");
-
+    Sleep(1000);
 
     ShutdownSDKAndWinRT(initializer);
 }

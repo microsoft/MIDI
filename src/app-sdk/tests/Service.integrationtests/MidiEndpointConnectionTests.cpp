@@ -14,11 +14,13 @@ void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnC
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-    LOG_OUTPUT(L"TestSendMessageInvalidConnectionFailureReturnCode **********************************************************************");
-
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendMessageInvalidConnectionFailureReturnCode");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
 
     auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
@@ -44,7 +46,6 @@ void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnC
     connSend = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 
@@ -52,10 +53,13 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendMessageValidationFailureReturnCode **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendMessageValidationFailureReturnCode");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
 
     auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
@@ -81,7 +85,6 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
     connSend = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 //void MidiEndpointConnectionTests::TestSendMessageSuccessScheduledReturnCode()
@@ -141,13 +144,14 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-    LOG_OUTPUT(L"TestCreateBiDiLoopbackA **********************************************************************");
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
-
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestCreateBiDiLoopbackA");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
 
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
@@ -172,21 +176,20 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
     conn1 = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
-
 }
 
 void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-    LOG_OUTPUT(L"TestCreateBiDiLoopbackB **********************************************************************");
+    auto session = MidiSession::Create(L"TestCreateBiDiLoopbackB");
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
-
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -208,23 +211,22 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
     // these don't go out of scope here and self-destruct, so we set them to nullptr
     conn1 = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendAndReceiveUmpStruct **********************************************************************");
-
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendAndReceiveUmpStruct");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -303,7 +305,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
     connReceive = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 
@@ -311,15 +312,16 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendAndReceiveUmp32 **********************************************************************");
-
- //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendAndReceiveUmp32");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -413,14 +415,16 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
     connReceive = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendAndReceiveWords **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -428,8 +432,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
   //  uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendAndReceiveWords");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -454,6 +458,9 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
             VERIFY_IS_NOT_NULL(args);
 
             receivedMessageCount++;
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
 
             if (receivedMessageCount == numMessagesToSend)
             {
@@ -548,23 +555,23 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
     connReceive = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessageWordsList **********************************************************************");
-
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendAndReceiveMultipleMessageWordsList");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -593,6 +600,9 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
             VERIFY_IS_NOT_NULL(args);
 
             receivedMessageCount++;
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
 
             if (args.MessageType() == MidiMessageType::Midi1ChannelVoice32)
             {
@@ -644,7 +654,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
     std::cout << "Waiting for response" << std::endl;
 
     // Wait for incoming message
-    if (!allMessagesReceived.wait(10000))
+    if (!allMessagesReceived.wait(5000))
     {
         std::cout << "Failure waiting for messages, timed out." << std::endl;
     }
@@ -672,17 +682,629 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
     connReceive = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
+}
+
+void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsArraySubset()
+{
+    auto initializer = InitWinRTAndSDK_MTA();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+
+    auto session = MidiSession::Create(L"TestSendAndReceiveMultipleMessageWordsArraySubset");
+    VERIFY_IS_NOT_NULL(session);
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
+
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+
+    uint32_t receivedMessageCount{};
+    uint32_t sentMessageCount{};
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            receivedMessageCount++;
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
+
+            if (receivedMessageCount == sentMessageCount)
+            {
+                allMessagesReceived.SetEvent();
+            }
+
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    // open connection
+    VERIFY_IS_TRUE(connSend.Open());
+    VERIFY_IS_TRUE(connReceive.Open());
+
+    // send messages
+
+    std::cout << "Creating messages" << std::endl;
+
+
+    std::vector<uint32_t> wordList;
+
+    wordList.push_back(0x20000000);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000001);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000002);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000003);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000004);
+    wordList.push_back(0x20000005);
+    wordList.push_back(0x20000006);
+    wordList.push_back(0x20000007);
+
+    winrt::array_view<uint32_t> wordArray(wordList);
+
+    sentMessageCount = 3;
+
+    auto result = connSend.SendMultipleMessagesWordArray(
+        MidiClock::TimestampConstantSendImmediately(),
+        3,
+        7,  // this lines up with 3 messages
+        wordArray
+    );
+
+    std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+
+    std::cout << "Waiting for response" << std::endl;
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(5000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    std::cout << "Finished waiting. Unwiring event" << std::endl;
+
+    connReceive.MessageReceived(eventRevokeToken);
+
+    VERIFY_ARE_EQUAL(sentMessageCount, receivedMessageCount);
+
+    std::cout << "Disconnecting endpoints" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    std::cout << "Endpoints disconnected" << std::endl;
+
+    session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+
 }
 
 
 
-// this is a single-threaded test, so we're only going to send, not receive
-void MidiEndpointConnectionTests::TestSendMultipleMessagePacketsSTA()
+void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsArray()
+{
+    auto initializer = InitWinRTAndSDK_MTA();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    auto session = MidiSession::Create(L"Test Session Name");
+
+    VERIFY_IS_NOT_NULL(session);
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
+
+
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+
+    uint32_t receivedMessageCount{};
+
+    uint32_t numberOfType4MessagesSent = 4;
+    uint32_t numberOfType2MessagesSent = 4;
+
+    uint32_t numberOfType4MessagesReceived = 0;
+    uint32_t numberOfType2MessagesReceived = 0;
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            receivedMessageCount++;
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
+
+            if (args.MessageType() == MidiMessageType::Midi1ChannelVoice32)
+            {
+                numberOfType2MessagesReceived++;
+            }
+            else if (args.MessageType() == MidiMessageType::Midi2ChannelVoice64)
+            {
+                numberOfType4MessagesReceived++;
+            }
+
+
+            if (receivedMessageCount == numberOfType4MessagesSent + numberOfType2MessagesSent)
+            {
+                allMessagesReceived.SetEvent();
+            }
+
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    // open connection
+    VERIFY_IS_TRUE(connSend.Open());
+    VERIFY_IS_TRUE(connReceive.Open());
+
+    // send messages
+
+    std::cout << "Creating messages" << std::endl;
+
+
+    std::vector<uint32_t> wordList;
+
+    wordList.push_back(0x20000000);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000001);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000002);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000003);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000004);
+    wordList.push_back(0x20000005);
+    wordList.push_back(0x20000006);
+    wordList.push_back(0x20000007);
+
+    winrt::array_view<uint32_t> wordArray(wordList);
+
+    auto result = connSend.SendMultipleMessagesWordArray(
+        MidiClock::TimestampConstantSendImmediately(), 
+        0,
+        wordArray.size(),
+        wordArray
+        );
+
+    std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+
+    std::cout << "Waiting for response" << std::endl;
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(5000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    std::cout << "Finished waiting. Unwiring event" << std::endl;
+
+    connReceive.MessageReceived(eventRevokeToken);
+
+    VERIFY_ARE_EQUAL(receivedMessageCount, numberOfType4MessagesReceived + numberOfType2MessagesReceived);
+
+    std::cout << "Disconnecting endpoints" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    std::cout << "Endpoints disconnected" << std::endl;
+
+    session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+}
+
+void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructList()
 {
     auto initializer = InitWinRTAndSDK_STA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    auto session = MidiSession::Create(L"TestSendAndReceiveMultipleMessagesStructList");
+    VERIFY_IS_NOT_NULL(session);
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoint");
+
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+    uint32_t countMessagesSent { 0 };
+    uint32_t countMessagesReceived{ 0 };
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            countMessagesReceived++;
+
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
+
+            if (countMessagesReceived == countMessagesSent)
+            {
+                allMessagesReceived.SetEvent();
+            }
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    VERIFY_IS_TRUE(connSend.Open());
+    VERIFY_IS_TRUE(connReceive.Open());
+
+
+    // send messages
+    std::cout << "Creating messages" << std::endl;
+
+    // create the data
+    std::vector<MidiMessageStruct> structList;
+
+    for (uint32_t i = 0; i < 100; i++)
+    {
+        if (i % 2 == 0)
+        {
+            MidiMessageStruct s{};
+            s.Word0 = 0x20000000;
+            structList.push_back(s);
+        }
+        else
+        {
+            MidiMessageStruct s{};
+            s.Word0 = 0x40000000 + i;
+            s.Word1 = i;
+            structList.push_back(s);
+        }
+    }
+
+    countMessagesSent = static_cast<uint32_t>(structList.size());
+
+    auto result = connSend.SendMultipleMessagesStructList(
+        MidiClock::TimestampConstantSendImmediately(),
+        structList);
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+    std::cout << "Waiting for response" << std::endl;
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(5000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    std::cout << "Finished waiting. Unwiring event" << std::endl;
+
+    connReceive.MessageReceived(eventRevokeToken);
+
+    VERIFY_ARE_EQUAL(countMessagesSent, countMessagesReceived);
+
+    std::cout << "Disconnecting endpoints" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    std::cout << "Endpoints disconnected" << std::endl;
+
+    session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    structList.clear();
+    connSend = nullptr;
+    session = nullptr;
+}
+
+void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructArray()
+{
+    auto initializer = InitWinRTAndSDK_STA();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    auto session = MidiSession::Create(L"TestSendAndReceiveMultipleMessagesStructArray");
+    VERIFY_IS_NOT_NULL(session);
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoint");
+
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+
+    // open connection
+    uint32_t countMessagesSent = 20;
+    uint32_t countMessagesReceived{ 0 };
+
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            countMessagesReceived++;
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
+
+            if (countMessagesReceived == countMessagesSent)
+            {
+                allMessagesReceived.SetEvent();
+            }
+
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    VERIFY_IS_TRUE(connReceive.Open());
+    VERIFY_IS_TRUE(connSend.Open());
+
+
+    // send messages
+    std::cout << "Creating messages" << std::endl;
+
+    // create the data
+    std::vector<MidiMessageStruct> structList;
+
+    for (uint32_t i = 0; i < 100; i++)
+    {
+        if (i % 2 == 0)
+        {
+            MidiMessageStruct s{};
+            s.Word0 = 0x20000000;
+            structList.push_back(s);
+        }
+        else
+        {
+            MidiMessageStruct s{};
+            s.Word0 = 0x40000000 + i;
+            s.Word1 = i;
+            structList.push_back(s);
+        }
+    }
+
+    winrt::array_view<MidiMessageStruct> structArray(structList);
+
+    auto result = connSend.SendMultipleMessagesStructArray(
+        MidiClock::TimestampConstantSendImmediately(),
+        0,
+        static_cast<uint32_t>(structList.size()),
+        structArray);
+
+    if (!MidiEndpointConnection::SendMessageSucceeded(result))
+        std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+    std::cout << "Waiting for response" << std::endl;
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(5000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    std::cout << "Finished waiting. Unwiring event" << std::endl;
+
+    connReceive.MessageReceived(eventRevokeToken);
+
+    VERIFY_ARE_EQUAL(countMessagesSent, countMessagesReceived);
+
+    std::cout << "Disconnecting endpoints" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    std::cout << "Endpoints disconnected" << std::endl;
+
+    session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    structList.clear();
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+}
+
+void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructArraySubset()
+{
+    auto initializer = InitWinRTAndSDK_STA();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    auto session = MidiSession::Create(L"TestSendAndReceiveMultipleMessagesStructArraySubset");
+    VERIFY_IS_NOT_NULL(session);
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints");
+
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+    // send messages
+    std::cout << "Creating messages" << std::endl;
+
+    // create the data
+    std::vector<MidiMessageStruct> structList;
+
+    for (uint32_t i = 0; i < 100; i++)
+    {
+        if (i % 2 == 0)
+        {
+            MidiMessageStruct s{};
+            s.Word0 = 0x20000000;
+            structList.push_back(s);
+        }
+        else
+        {
+            MidiMessageStruct s{};
+            s.Word0 = 0x40000000 + i;
+            s.Word1 = i;
+            structList.push_back(s);
+        }
+    }
+
+    uint32_t startIndex = 10;
+    uint32_t countMessagesSent = 20;
+    uint32_t countMessagesReceived { 0 };
+
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            countMessagesReceived++;
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
+
+            if (countMessagesReceived == countMessagesSent)
+            {
+                allMessagesReceived.SetEvent();
+            }
+
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    VERIFY_IS_TRUE(connReceive.Open());
+    VERIFY_IS_TRUE(connSend.Open());
+
+    winrt::array_view<MidiMessageStruct> structArray(structList);
+
+    auto result = connSend.SendMultipleMessagesStructArray(
+        MidiClock::TimestampConstantSendImmediately(),
+        startIndex,
+        countMessagesSent,
+        structArray);
+
+    if (!MidiEndpointConnection::SendMessageSucceeded(result))
+        std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+    std::cout << "Waiting for response" << std::endl;
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(5000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    std::cout << "Finished waiting. Unwiring event" << std::endl;
+
+    connReceive.MessageReceived(eventRevokeToken);
+
+    VERIFY_ARE_EQUAL(countMessagesSent, countMessagesReceived);
+
+    std::cout << "Disconnecting endpoints" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    std::cout << "Endpoints disconnected" << std::endl;
+
+    session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    structList.clear();
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+}
+
+// this is a single-threaded test, so we're only going to send, not receive
+void MidiEndpointConnectionTests::TestSendMultipleMessagePacketsSTA()
+{
     LOG_OUTPUT(L"TestSendMultipleMessagePacketsSTA **********************************************************************");
+
+    auto initializer = InitWinRTAndSDK_STA();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -743,19 +1365,18 @@ void MidiEndpointConnectionTests::TestSendMultipleMessagePacketsSTA()
     connSend = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
-
-
-
-
 
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessagePackets **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
@@ -763,8 +1384,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
     allMessagesReceived.create();
 
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendAndReceiveMultipleMessagePackets");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -793,6 +1414,10 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
             VERIFY_IS_NOT_NULL(args);
 
             receivedMessageCount++;
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
+
 
             if (args.MessageType() == MidiMessageType::Midi1ChannelVoice32)
             {
@@ -850,7 +1475,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
     std::cout << "Waiting for response" << std::endl;
 
     // Wait for incoming message
-    if (!allMessagesReceived.wait(10000))
+    if (!allMessagesReceived.wait(5000))
     {
         std::cout << "Failure waiting for messages, timed out." << std::endl;
     }
@@ -878,24 +1503,20 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
     connSend = nullptr;
     connReceive = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 }
-
-
-
 
 
 void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendWordArrayBoundsError **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
-
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendWordArrayBoundsError");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -929,7 +1550,6 @@ void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
     connSend = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 
@@ -937,15 +1557,16 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendAndReceiveWordArray **********************************************************************");
-
- //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendAndReceiveWordArray");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -1019,8 +1640,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
     connSend = nullptr;
     connReceive = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 }
 
 

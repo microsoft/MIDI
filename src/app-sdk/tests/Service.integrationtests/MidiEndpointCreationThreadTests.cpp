@@ -100,6 +100,11 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
+
     m_receiveComplete.create();
     m_receiverReady.create();
 
@@ -145,7 +150,6 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
     // these don't go out of scope here and self-destruct, so we set them to nullptr
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 

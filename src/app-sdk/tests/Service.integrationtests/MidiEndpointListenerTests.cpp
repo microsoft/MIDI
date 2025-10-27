@@ -14,9 +14,10 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestMessageTypeListener **********************************************************************");
-
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -26,8 +27,8 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
 
 
 
-    auto session = MidiSession::Create(L"Listener Session Test");
-
+    auto session = MidiSession::Create(L"TestMessageTypeListener");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -124,8 +125,6 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
     connSend = nullptr;
     connReceive = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 }
 
 
@@ -133,9 +132,10 @@ void MidiEndpointListenerTests::TestGroupListener()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestGroupListener **********************************************************************");
-
- //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -143,10 +143,8 @@ void MidiEndpointListenerTests::TestGroupListener()
     uint32_t expectedMatchingMessageCount{ 0 }; // this is set down in the message sending section
     uint32_t receivedMatchingMessageCount{ 0 };
 
-
-
-    auto session = MidiSession::Create(L"Listener Session Test");
-
+    auto session = MidiSession::Create(L"TestGroupListener");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -255,17 +253,17 @@ void MidiEndpointListenerTests::TestGroupListener()
     connSend = nullptr;
     connReceive = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointListenerTests::TestGroupAndChannelListener()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestGroupAndChannelListener **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -276,7 +274,7 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
 
 
     auto session = MidiSession::Create(L"Listener Session Test");
-
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -392,7 +390,5 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
     connSend = nullptr;
     connReceive = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 }
 

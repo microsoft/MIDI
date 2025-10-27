@@ -20,10 +20,13 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendBuffer **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendBuffer");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -70,21 +73,22 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
     connSend = nullptr;
     session = nullptr;
 
-    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-
-    LOG_OUTPUT(L"TestSendAndReceiveBuffer **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendAndReceiveBuffer");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -151,6 +155,9 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
             VERIFY_IS_NOT_NULL(sender);
             VERIFY_IS_NOT_NULL(args);
 
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
+
             auto receivedByteCount = args.FillBuffer(receiveByteOffset, receiveBuffer);
 
             VERIFY_ARE_EQUAL(sentByteCount, receivedByteCount);
@@ -205,18 +212,19 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
     connReceive = nullptr;
     connSend = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendBufferBoundsError **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendBufferBoundsError");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -267,28 +275,23 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
     sendBuffer = nullptr;
     connSend = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
-    
 }
-
-
-
-
-
 
 void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessagesBuffer **********************************************************************");
+    auto cleanup = wil::scope_exit([&]
+        {
+            ShutdownSDKAndWinRT(initializer);
+        });
 
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::Create(L"Test Session Name");
-
+    auto session = MidiSession::Create(L"TestSendAndReceiveMultipleMessagesBuffer");
+    VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
@@ -384,7 +387,10 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer
     auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& /*sender*/, MidiMessageReceivedEventArgs const& args)
         {
             //VERIFY_IS_NOT_NULL(sender);
-            //VERIFY_IS_NOT_NULL(args);
+            VERIFY_IS_NOT_NULL(args);
+
+            auto ump = args.GetMessagePacket();
+            LOG_OUTPUT(ump.as<foundation::IStringable>().ToString().c_str());
 
             //auto receivedByteCount = args.FillBuffer(receiveBuffer, receiveByteOffset);
 
@@ -443,6 +449,4 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer
     connSend = nullptr;
     connReceive = nullptr;
     session = nullptr;
-
-    ShutdownSDKAndWinRT(initializer);
 }
