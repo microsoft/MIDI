@@ -11,6 +11,8 @@
 
 #include "WindowsMidiServices.h"
 
+//#include "mmdeviceapi.h"  // E_NOTFOUND
+
 #include <string>
 
 #ifndef MIDI_KSA_PIN_MAP_PROPERTY_H

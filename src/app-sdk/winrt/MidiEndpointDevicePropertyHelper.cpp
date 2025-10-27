@@ -230,6 +230,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_Midi1PortNamingSelection));
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_Midi1PortNameTable));
 
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_DriverDeviceInterface));
+
         //AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_KsAgg));
 
         m_initialized = true;
