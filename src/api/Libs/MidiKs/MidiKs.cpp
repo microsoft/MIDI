@@ -35,7 +35,8 @@ KSMidiDevice::Initialize(
     HANDLE filter,
     UINT pinId,
     MidiTransport transport,
-    ULONG& bufferSize
+    ULONG& bufferSize,
+    MessageOptionFlags optionFlags
 )
 {
     m_Transport = transport;
@@ -63,7 +64,7 @@ KSMidiDevice::Initialize(
 
     m_PinID = pinId;
 
-    RETURN_IF_FAILED(OpenStream(bufferSize));
+    RETURN_IF_FAILED(OpenStream(bufferSize, optionFlags));
     RETURN_IF_FAILED(PinSetState(KSSTATE_ACQUIRE));
     RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
     RETURN_IF_FAILED(PinSetState(KSSTATE_RUN));
@@ -73,7 +74,7 @@ KSMidiDevice::Initialize(
 
 _Use_decl_annotations_
 HRESULT
-KSMidiDevice::OpenStream(ULONG& bufferSize
+KSMidiDevice::OpenStream(ULONG& bufferSize, MessageOptionFlags optionFlags
 )
 {
     // Duplicate the handle to safely pass it to another component or store it.
@@ -93,6 +94,7 @@ KSMidiDevice::OpenStream(ULONG& bufferSize
         m_MidiPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(m_MidiPipe);
 
+        m_MidiPipe->MessageOptions = optionFlags;
         m_MidiPipe->DataFormat = (m_Transport == MidiTransport_CyclicByteStream)?MidiDataFormats_ByteStream:MidiDataFormats_UMP;
         m_CrossProcessMidiPump.reset(new (std::nothrow) CMidiXProc());
         RETURN_IF_NULL_ALLOC(m_CrossProcessMidiPump);
@@ -177,7 +179,7 @@ KSMidiDevice::PinSetState(
 
     // Using lamba function to prevent handle from dissapearing when being used. 
     RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctl(
+        return SyncIoctlTimeout(
             h,
             IOCTL_KS_PROPERTY,
             &property,
@@ -213,7 +215,7 @@ KSMidiDevice::ConfigureLoopedBuffer(ULONG& bufferSize
     }
 
     RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctl(
+        return SyncIoctlTimeout(
             h,
             IOCTL_KS_PROPERTY,
             &property,
@@ -246,7 +248,7 @@ KSMidiDevice::ConfigureLoopedRegisters()
     }
 
     RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctl(
+        return SyncIoctlTimeout(
             h,
             IOCTL_KS_PROPERTY,
             &property,
@@ -282,7 +284,7 @@ KSMidiDevice::ConfigureLoopedEvent()
     }
 
     RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctl(
+        return SyncIoctlTimeout(
             h,
             IOCTL_KS_PROPERTY,
             &property,
@@ -303,10 +305,11 @@ KSMidiOutDevice::Initialize(
     UINT pinId,
     MidiTransport transport,
     ULONG bufferSize,
-    DWORD* mmcssTaskId
+    DWORD* mmcssTaskId,    
+    MessageOptionFlags optionFlags
 )
 {
-    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize));
+    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize, optionFlags));
 
     m_MmcssTaskId = *mmcssTaskId;
     if (m_CrossProcessMidiPump)
@@ -400,7 +403,7 @@ KSMidiOutDevice::WritePacketMidiData(
     }
 
     HRESULT hr = m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctl(
+        return SyncIoctlTimeout(
             h,
             IOCTL_KS_WRITE_STREAM,
             nullptr,
@@ -552,12 +555,13 @@ KSMidiInDevice::Initialize(
     ULONG bufferSize,
     DWORD* mmcssTaskId,
     IMidiCallback *callback,
-    LONGLONG context
+    LONGLONG context,
+    MessageOptionFlags optionFlags
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == callback);
 
-    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize));
+    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize, optionFlags));
 
     if (m_CrossProcessMidiPump)
     {

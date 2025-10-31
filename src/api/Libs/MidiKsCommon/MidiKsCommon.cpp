@@ -30,6 +30,23 @@ SyncIoctl
     PULONG  pulBytesReturned
 )
 {
+    return SyncIoctlTimeout(hHandle, ulIoctl, pvInBuffer, cbInBuffer, pvOutBuffer, cbOutBuffer, pulBytesReturned, INFINITE);
+}
+
+_Use_decl_annotations_
+HRESULT 
+SyncIoctlTimeout
+(
+    HANDLE  hHandle,
+    ULONG   ulIoctl,
+    PVOID   pvInBuffer,
+    ULONG   cbInBuffer,
+    PVOID   pvOutBuffer,
+    ULONG   cbOutBuffer,
+    PULONG  pulBytesReturned,
+    ULONG   timeout
+)
+{
     OVERLAPPED overlapped;
     wil::unique_handle overlappedHandle;
     ULONG ulBytesReturned;
@@ -67,7 +84,7 @@ SyncIoctl
         if (lastError == ERROR_IO_PENDING)
         {
             lastError = ERROR_SUCCESS;
-            fRes = GetOverlappedResult(hHandle, &overlapped, pulBytesReturned, TRUE);
+            fRes = GetOverlappedResultEx(hHandle, &overlapped, pulBytesReturned, timeout, FALSE);
             if (!fRes)
             {
                 lastError = GetLastError();

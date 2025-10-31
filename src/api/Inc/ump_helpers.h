@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 
-
 #define MIDIWORDNIBBLE1(x) ((uint8_t)((x & 0xF0000000) >> 28))
 #define MIDIWORDNIBBLE2(x) ((uint8_t)((x & 0x0F000000) >> 24))
 #define MIDIWORDNIBBLE3(x) ((uint8_t)((x & 0x00F00000) >> 20))
@@ -895,11 +894,11 @@ namespace WindowsMidiServicesInternal
 
     // To preserve robust connection to all MIDI devices and systems, Senders shall obey the following data rules of the
     // MIDI 1.0 Protocol that govern interspersing other messages and termination of System Exclusive within a Group :
-    // � The Sender shall not send any other Message or UMP on the same Group between the Start and End of the
+    //   The Sender shall not send any other Message or UMP on the same Group between the Start and End of the
     //   System Exclusive Message, except for System Exclusive Continue UMPs, and System Real Time Messages.
-    // � System Real Time Messages on the same Group may be inserted between the UMPs of a System Exclusive
+    //   System Real Time Messages on the same Group may be inserted between the UMPs of a System Exclusive
     //   message, in order to maintain timing synchronization.
-    // � If any Message or UMP on the same Group, other than a System Exclusive Continue UMP or a System Real
+    //   If any Message or UMP on the same Group, other than a System Exclusive Continue UMP or a System Real
     //   Time Message, is sent after a System Exclusive Start UMP and before the associated System Exclusive End
     //   UMP, then that UMP shall terminate the System Exclusive Message.
     // Messages which are Groupless(MT = 0x0 and 0xF) and those which are sent to a different Group may be

@@ -50,6 +50,7 @@ MidiSWDeviceEnum::EnumerateDevices(
     additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
     additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
     additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
+    additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
 
     auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
 
@@ -99,8 +100,15 @@ MidiSWDeviceEnum::EnumerateDevices(
         if (prop)
         {
             driverDeviceInterfaceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
-        }      
+        }
 
+        UINT32 serviceAssignedPortNumber = 0;
+        prop = device.Properties().Lookup(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+        if (prop)
+        {
+            serviceAssignedPortNumber = winrt::unbox_value<uint32_t>(prop);
+        }
+        
 
         std::unique_ptr<MIDIU_DEVICE> midiDevice = std::make_unique<MIDIU_DEVICE>();
         if (!midiDevice)
@@ -118,11 +126,21 @@ MidiSWDeviceEnum::EnumerateDevices(
 
         if (winrt::guid(DEVINTERFACE_MIDI_INPUT) == interfaceClass)
         {
+            // service assigned port numbers skip index 0, going from 1 to N,
+            // winmm goes from 0 to N-1, so we need to subtract 1 from the midi in
+            // port number to get the winmm port number.
+            midiDevice->WinmmPortNumber = serviceAssignedPortNumber - 1;
             midiDevice->Flow = MidiFlowIn;
             midiDevice->MidiOne = TRUE;
         }
         else if (winrt::guid(DEVINTERFACE_MIDI_OUTPUT) == interfaceClass)
         {
+            // service assigned port numbers skip index 0, going from 1 to N,
+            // winmm port numbers go from 0 to N-1, but the midi synth
+            // is always at port 0 for midi out. The result of the -1 due to the
+            // indexing difference, and the +1 for the synth means that
+            // winmmPortNumber == serviceAssignedPortNumber for midi out.
+            midiDevice->WinmmPortNumber = serviceAssignedPortNumber;
             midiDevice->Flow = MidiFlowOut;
             midiDevice->MidiOne = TRUE;
         }

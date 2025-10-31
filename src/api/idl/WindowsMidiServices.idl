@@ -55,7 +55,8 @@ typedef enum
     MessageOptionFlags_None = 0,
     MessageOptionFlags_WaitForSendComplete = 1,
     MessageOptionFlags_ContextContainsGroupIndex = 2,
-    MessageOptionFlags_CallbackRetry = 4
+    MessageOptionFlags_CallbackRetry = 4,
+    MessageOptionFlags_SeparateUMPs = 8
 } MessageOptionFlags;
 
 cpp_quote("#define MessageOptionFlags_Valid 0x00000007")

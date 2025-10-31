@@ -601,7 +601,7 @@ CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiat
     prop.Set = KSPROPSETID_General;
     prop.Flags = KSPROPERTY_TYPE_GET;
 
-    auto hrComponent = SyncIoctl(
+    auto hrComponent = SyncIoctlTimeout(
         hInstantiatedFilter,
         IOCTL_KS_PROPERTY,
         &prop,

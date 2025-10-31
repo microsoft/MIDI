@@ -37,6 +37,9 @@ MMRESULT MMRESULT_FROM_HRESULT(HRESULT hResult)
                 case E_NOINTERFACE:
                     mmResult = MMSYSERR_NOTSUPPORTED;
                     break;
+                case STRSAFE_E_INSUFFICIENT_BUFFER:
+                    mmResult = MMSYSERR_MOREDATA;
+                    break;
                 case E_FAIL:
                 default:
                     mmResult = MMSYSERR_ERROR;

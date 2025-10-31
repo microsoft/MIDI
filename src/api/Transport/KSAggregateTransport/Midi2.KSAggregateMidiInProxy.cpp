@@ -57,7 +57,8 @@ CMidi2KSAggregateMidiInProxy::Initialize(
             bufferSize,
             mmcssTaskId,
             (IMidiCallback* )this,
-            context
+            context,
+            MessageOptionFlags_None
         );
 
     if (FAILED(initResult))

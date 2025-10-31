@@ -113,7 +113,8 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     {
         if (device->Flow == MidiFlowBidirectional &&
             (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MINMIDI") ||
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_0582&PID_0168&MI_00")) &&
             !device->MidiOne)
         {
             return true;
@@ -295,7 +296,8 @@ void Midi2ServiceTests::TestMidiServiceInvalidCreationParams()
     {
         if (device->Flow == MidiFlowBidirectional &&
             (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MINMIDI") ||
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_0582&PID_0168&MI_00")) &&
             !device->MidiOne)
         {
             return true;

@@ -219,7 +219,7 @@ StreamEngine::HandleIo()
                     {
                         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "%!FUNC! Invalid dataSize, aborting.");
                         // data is malformed, abort.
-                        return;
+                        goto cleanup;
                     }
 
                     ULONG bytesToCopy = dataSize + sizeof(UMPDATAFORMAT);
@@ -305,6 +305,7 @@ StreamEngine::HandleIo()
         } while (true);
     }
 
+cleanup:
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
 

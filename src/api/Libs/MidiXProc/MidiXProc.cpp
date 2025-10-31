@@ -26,6 +26,7 @@
 #include "MidiDefs.h"
 #include <TraceLoggingProvider.h>
 #include "MidiXProc.h"
+#include "ump_iterator.h"
 
 class MidiXProcTelemetryProvider : public wil::TraceLoggingProvider
 {
@@ -420,9 +421,6 @@ CMidiXProc::SendMidiMessage(
     LONGLONG position
 )
 {
-    bool bufferSent{false};
-    UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
-
     RETURN_HR_IF(E_UNEXPECTED, !m_MidiOut);
     RETURN_HR_IF(E_INVALIDARG, length < MINIMUM_LOOPED_DATASIZE);
     RETURN_HR_IF(E_INVALIDARG, (m_MidiOut->DataFormat != MidiDataFormats_ByteStream) && 
@@ -434,19 +432,60 @@ CMidiXProc::SendMidiMessage(
     }
     else
     {
-        // TODO: This value needs to change. We may want to use something bigger like 16k
-
         RETURN_HR_IF(E_INVALIDARG, length > MAXIMUM_LOOPED_UMP_DATASIZE);
     }
+
+    // include the option flags provided at initialization
+    optionFlags = (MessageOptionFlags) (optionFlags | m_MidiOut->MessageOptions);
+
+    if ((optionFlags & MessageOptionFlags_SeparateUMPs) == MessageOptionFlags_SeparateUMPs)
+    {
+        // If WaitForSendComplete is set and we're splitting the UMPs out, we don't want to wait for each message,
+        // we only need to wait for the last to be consumed. Adjust the option flag used for the send to remove the wait
+        MessageOptionFlags adjustedFlags = (MessageOptionFlags) (optionFlags & ~MessageOptionFlags_WaitForSendComplete);
+
+        WindowsMidiServicesInternal::UmpBufferIterator iterator(
+            static_cast<uint32_t*>(midiData), 
+            length / sizeof(uint32_t) );
+
+        // split the incoming data into separate ump's to add to the xproc queue
+        for (auto it = iterator.begin(); it < iterator.end(); ++it)
+        {
+            if (((optionFlags & MessageOptionFlags_WaitForSendComplete) == MessageOptionFlags_WaitForSendComplete) && 
+                (it.RemainingBufferWordCount() == it.CurrentMessageWordCount()))
+            {
+                // This is the last message and waiting for the send was requested, restore the original options
+                adjustedFlags = optionFlags;
+            }
+        
+            RETURN_IF_FAILED(SendMidiMessageInternal(adjustedFlags, it.get(), it.CurrentMessageWordCount() * sizeof(uint32_t), position));
+        }
+    }
+    else
+    {
+        RETURN_IF_FAILED(SendMidiMessageInternal(optionFlags, midiData, length, position));
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiXProc::SendMidiMessageInternal(
+    MessageOptionFlags optionFlags,
+    void * midiData,
+    UINT32 length,
+    LONGLONG position
+)
+{
+    bool bufferSent{false};
+    UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
 
     PMEMORY_MAPPED_REGISTERS registers = &(m_MidiOut->Registers);
     PMEMORY_MAPPED_DATA data = &(m_MidiOut->Data);
     bool retry {false};
     ULONG bufferWrittenPosition {0};
     ULONG startingReadPosition {0};
-
-    // include the option flags provided at initialization
-    optionFlags = (MessageOptionFlags) (optionFlags | m_MidiOut->MessageOptions);
 
     {
         // only 1 caller may add a message to the xproc queue at a time

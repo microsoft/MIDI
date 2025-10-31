@@ -108,6 +108,12 @@ public:
     static bool MMCSSUseEnabled();
 
 private:
+    HRESULT SendMidiMessageInternal(
+        _In_ MessageOptionFlags,
+        _In_ void *,
+        _In_ UINT32,
+        _In_ LONGLONG);
+
     BOOL m_OverwriteZeroTimestamp{ true };
 
     // only 1 client may send a message at a time on the cross process

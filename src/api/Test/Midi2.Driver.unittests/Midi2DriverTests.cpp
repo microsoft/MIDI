@@ -95,10 +95,10 @@ void Midi2DriverTests::TestMidiIO(MidiTransport transport)
     VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
 
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, this, 0));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, this, 0, MessageOptionFlags_None));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, MessageOptionFlags_None));
 
     LOG_OUTPUT(L"Writing midi data");
 
@@ -225,10 +225,10 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport transport, ULONG bu
     VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
 
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, this, 0));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, this, 0, MessageOptionFlags_None));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, MessageOptionFlags_None));
 
     LOG_OUTPUT(L"Writing midi data");
 
@@ -443,10 +443,10 @@ void Midi2DriverTests::TestMidiIO_Latency(MidiTransport transport, BOOL delayedM
     VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
 
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, this, 0));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, this, 0, MessageOptionFlags_None));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, transport, requestedBufferSize, &mmcssTaskId, MessageOptionFlags_None));
 
     LOG_OUTPUT(L"Writing midi data");
 
@@ -670,10 +670,10 @@ void Midi2DriverTests::TestBufferAllocationLimits()
 
         // driver initialization with all buffer sizes, for both midi in and out, should fail.
         requestedBufferSize = bufferSizes[i];
-        VERIFY_FAILED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, MidiTransport_CyclicUMP, requestedBufferSize, &mmcssTaskId, this, 0));
+        VERIFY_FAILED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, MidiTransport_CyclicUMP, requestedBufferSize, &mmcssTaskId, this, 0, MessageOptionFlags_None));
 
         requestedBufferSize = bufferSizes[i];
-        VERIFY_FAILED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, MidiTransport_CyclicUMP, requestedBufferSize, &mmcssTaskId));
+        VERIFY_FAILED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, MidiTransport_CyclicUMP, requestedBufferSize, &mmcssTaskId, MessageOptionFlags_None));
     }
 }
 
@@ -740,7 +740,7 @@ public:
 
         // Using lamba function to prevent handle from dissapearing when being used. 
         RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
-            return SyncIoctl(
+            return SyncIoctlTimeout(
                 h,
                 IOCTL_KS_PROPERTY,
                 &property,
@@ -768,7 +768,7 @@ public:
         property.RequestedBufferSize    = bufferSize;
 
         RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
-            return SyncIoctl(
+            return SyncIoctlTimeout(
                 h,
                 IOCTL_KS_PROPERTY,
                 &property,
@@ -798,7 +798,7 @@ public:
         property.Flags  = KSPROPERTY_TYPE_GET;
 
         RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
-            return SyncIoctl(
+            return SyncIoctlTimeout(
                 h,
                 IOCTL_KS_PROPERTY,
                 &property,
@@ -832,7 +832,7 @@ public:
         property.Flags  = KSPROPERTY_TYPE_SET;
 
         RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
-            return SyncIoctl(
+            return SyncIoctlTimeout(
                 h,
                 IOCTL_KS_PROPERTY,
                 &property,

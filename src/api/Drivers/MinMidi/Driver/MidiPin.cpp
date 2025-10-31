@@ -754,7 +754,7 @@ MidiPin::HandleIo()
                             // TBD: need to log an abort
 
                             // data is malformed, abort.
-                            return;
+                            goto cleanup;
                         }
 
                         ULONG bytesToCopy = dataSize + sizeof(LOOPEDDATAFORMAT);
@@ -873,6 +873,7 @@ MidiPin::HandleIo()
     // else, this is a midi in pin, nothing to do for this worker thread that is just
     // looping the midi out data back to midi in.
 
+cleanup:
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
 }
