@@ -324,7 +324,8 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004
         MessageOptionFlags_None	= 0,
         MessageOptionFlags_WaitForSendComplete	= 1,
         MessageOptionFlags_ContextContainsGroupIndex	= 2,
-        MessageOptionFlags_CallbackRetry	= 4
+        MessageOptionFlags_CallbackRetry	= 4,
+        MessageOptionFlags_SeparateUMPs	= 8
     } 	MessageOptionFlags;
 
 #define MessageOptionFlags_Valid 0x00000007
