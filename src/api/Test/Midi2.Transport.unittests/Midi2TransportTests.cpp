@@ -2384,11 +2384,11 @@ MidiTransportTests::TestDriverDeviceInterfaceIdIsPresent()
         // retrieve the size of the interface id reported by winmm
         if (device->Flow == MidiFlowOut)
         {
-            result = midiOutMessage((HMIDIOUT) device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR) &interfaceIdSize, 0);
+            result = midiOutMessage((HMIDIOUT)(uintptr_t)device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR) &interfaceIdSize, 0);
         }
         else
         {
-            result = midiInMessage((HMIDIIN) device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR) &interfaceIdSize, 0);
+            result = midiInMessage((HMIDIIN)(uintptr_t)device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR) &interfaceIdSize, 0);
         }
 
         // validate the size and allocate a storage buffer
@@ -2399,11 +2399,11 @@ MidiTransportTests::TestDriverDeviceInterfaceIdIsPresent()
         // retrieve the interface id from winmm
         if (device->Flow == MidiFlowOut)
         {
-            result = midiOutMessage((HMIDIOUT) device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR) winmmDeviceInterfaceId.get(), interfaceIdSize);
+            result = midiOutMessage((HMIDIOUT)(uintptr_t)device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR) winmmDeviceInterfaceId.get(), interfaceIdSize);
         }
         else
         {
-            result = midiInMessage((HMIDIIN) device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR) winmmDeviceInterfaceId.get(), interfaceIdSize);
+            result = midiInMessage((HMIDIIN)(uintptr_t)device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR) winmmDeviceInterfaceId.get(), interfaceIdSize);
         }
 
         // verify retrieval succeeded and that the string reported by winmm matches the string saved on the SWD
