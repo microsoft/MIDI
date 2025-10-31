@@ -10,7 +10,7 @@ class CMidiPort :
 public:
     CMidiPort();
     ~CMidiPort();
-    HRESULT RuntimeClassInitialize(_In_ GUID sessionId, _In_ std::wstring& interfaceId, _In_ std::wstring& driverDeviceInterfaceId, _In_ MidiFlow flow, _In_ const MIDIOPENDESC* openDesc, _In_ DWORD_PTR flags);
+    HRESULT RuntimeClassInitialize(_In_ GUID sessionId, _In_ std::wstring& interfaceId, _In_ MidiFlow flow, _In_ const MIDIOPENDESC* openDesc, _In_ DWORD_PTR flags);
     HRESULT Shutdown();
     HRESULT MidMessage(_In_ UINT msg, _In_  DWORD_PTR param1, _In_ DWORD_PTR param2);
     HRESULT ModMessage(_In_ UINT msg, _In_  DWORD_PTR param1, _In_ DWORD_PTR param2);
@@ -22,11 +22,6 @@ private:
     HRESULT Start();
     HRESULT Stop();
     HRESULT Close();
-
-    std::wstring m_driverDeviceInterfaceId;   // the hardware device interface id required for DRV_QUERYDEVICEINTERFACE
-    HRESULT QueryDeviceInterface(_In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
-    HRESULT QueryDeviceInterfaceSize(_In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
-
 
     // IMidiCallback, for receiving midi in messages from the service.
     STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context);

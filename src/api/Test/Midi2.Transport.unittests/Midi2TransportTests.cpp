@@ -20,6 +20,10 @@
 #include <setupapi.h>
 #include <cfgmgr32.h>
 
+#include <mmsystem.h>
+#include <mmeapi.h>
+#include <mmddk.h>
+
 #define TEST_APPID {0xc24cc593, 0xbc6b, 0x4726,{ 0xb5, 0x52, 0xbe, 0xc8, 0x2d, 0xed, 0xb6, 0x8c}}
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
@@ -701,6 +705,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
     DWORD mmcssTaskId{0};
     wil::unique_event_nothrow allMessagesReceived;
     UINT expectedMessageCount = delayedMessages ? (3000 / messageDelay) : 100000;
+    expectedMessageCount = (messageOptions == MessageOptionFlags_WaitForSendComplete) ? 300 : expectedMessageCount;
 
     LARGE_INTEGER performanceFrequency{ 0 };
     LARGE_INTEGER firstSend{ 0 };
@@ -1936,7 +1941,8 @@ public:
         DWORD mmcssTaskId{0};
         wil::unique_event_nothrow allMessagesReceived;
         UINT expectedMessageCount = 80000;
-    
+        expectedMessageCount = (testConfig.MessageOptions == MessageOptionFlags_WaitForSendComplete) ? 1000 : expectedMessageCount;
+       
         LARGE_INTEGER performanceFrequency{ 0 };
         LARGE_INTEGER firstSend{ 0 };
         LARGE_INTEGER lastReceive{ 0 };
@@ -2369,9 +2375,43 @@ MidiTransportTests::TestDriverDeviceInterfaceIdIsPresent()
 
     for (auto const& device: devices)
     {
+        // DriverDeviceInterfaceId on the SWD should be valid
+        VERIFY_IS_FALSE(device->DriverDeviceInterfaceId.empty());
+
+        ULONG interfaceIdSize = 0;
+        MMRESULT result;
+
+        // retrieve the size of the interface id reported by winmm
+        if (device->Flow == MidiFlowOut)
+        {
+            result = midiOutMessage((HMIDIOUT) device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR) &interfaceIdSize, 0);
+        }
+        else
+        {
+            result = midiInMessage((HMIDIIN) device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR) &interfaceIdSize, 0);
+        }
+
+        // validate the size and allocate a storage buffer
+        VERIFY_IS_TRUE(result == MMSYSERR_NOERROR);
+        VERIFY_IS_TRUE(interfaceIdSize > 0);
+        wil::unique_cotaskmem_string winmmDeviceInterfaceId(static_cast<PWSTR>(CoTaskMemAlloc(interfaceIdSize)));
+
+        // retrieve the interface id from winmm
+        if (device->Flow == MidiFlowOut)
+        {
+            result = midiOutMessage((HMIDIOUT) device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR) winmmDeviceInterfaceId.get(), interfaceIdSize);
+        }
+        else
+        {
+            result = midiInMessage((HMIDIIN) device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR) winmmDeviceInterfaceId.get(), interfaceIdSize);
+        }
+
+        // verify retrieval succeeded and that the string reported by winmm matches the string saved on the SWD
+        VERIFY_IS_TRUE(result == MMSYSERR_NOERROR);
         LOG_OUTPUT(L"* Endpoint: %s", device->DeviceId.c_str());
         LOG_OUTPUT(L"  Driver Device Interface Id: %s", device->DriverDeviceInterfaceId.c_str());
-        VERIFY_IS_FALSE(device->DriverDeviceInterfaceId.empty());
+        LOG_OUTPUT(L"  WinMM Driver Device Interface Id: %s", winmmDeviceInterfaceId.get());
+        VERIFY_IS_TRUE(device->DriverDeviceInterfaceId == winmmDeviceInterfaceId.get());
     }
 }
 

@@ -601,7 +601,7 @@ CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiat
     prop.Set = KSPROPSETID_General;
     prop.Flags = KSPROPERTY_TYPE_GET;
 
-    auto hrComponent = SyncIoctl(
+    auto hrComponent = SyncIoctlTimeout(
         hInstantiatedFilter,
         IOCTL_KS_PROPERTY,
         &prop,
@@ -981,6 +981,19 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                             pinDefinition.PinName,
                             pinDefinition.PortIndexWithinThisFilterAndDirection
                         );
+
+
+                        //internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
+                        //    pinDefinition.PortNames,
+                        //    driverSuppliedName,
+                        //    endpointDefinition.ParentDeviceName,
+                        //    pinDefinition.FilterName,
+                        //    pinDefinition.PinName,
+                        //    customPortName,
+                        //    pinDefinition.PortNames.DataFlowFromUserPerspective,
+                        //    pinDefinition.PortIndexWithinThisFilterAndDirection,
+                        //    pinDefinition.GroupIndex
+                        //);
 
                         endpointDefinition.MidiPins.push_back(pinDefinition);
                     }

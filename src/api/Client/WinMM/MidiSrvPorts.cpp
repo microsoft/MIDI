@@ -144,6 +144,10 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
                 hr = Close(MidiFlowIn, (MidiPortHandle) user);
             }
             break;
+        case DRV_QUERYDEVICEINTERFACE:
+        case DRV_QUERYDEVICEINTERFACESIZE:
+            hr = GetDeviceInterface(MidiFlowIn, deviceID, msg, param1, param2);
+            break;
         default:
             hr = ForwardMidMessage(msg, (MidiPortHandle) user, param1, param2);
     }
@@ -193,6 +197,10 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             {
                 hr = Close(MidiFlowOut, (MidiPortHandle) user);
             }
+            break;
+        case DRV_QUERYDEVICEINTERFACE:
+        case DRV_QUERYDEVICEINTERFACESIZE:
+            hr = GetDeviceInterface(MidiFlowOut, deviceID, msg, param1, param2);
             break;
         default:
             hr = ForwardModMessage(msg, (MidiPortHandle) user, param1, param2);
@@ -506,9 +514,14 @@ CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDes
     RETURN_HR_IF(E_POINTER, nullptr == openedPort);
     RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
 
-    // The port numbers provided to us by winmm start with 0, our port numbers
-    // start with 1 because they're the "global" port numbers that the user
-    // should see and port 0 is reserved for the synth.
+    // The port numbers provided to us by winmm start with index 0. Early in the design
+    // the intent was to skip port numbers to get the input and output port numbers to align,
+    // and because index 0 is always the midi synth it made sense to always start service port
+    // numbers at 1, so the service assigned port number matched the winmm port number.
+    // That strategy broke some legacy clients that didn't handle non-contiguous port numbers and
+    // was abandoned.
+    // We've left the service assigned port numbers as starting at index 1, so we have to add 1
+    // to the port number provided by winmm.
     UINT localPortNumber = portNumber + 1;
 
     RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_BADDEVICEID), localPortNumber > m_MidiPortCount[flow]);
@@ -518,7 +531,7 @@ CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDes
     RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
 
     // create the CMidiPort for this port.
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, portInfo->second.InterfaceId, portInfo->second.DriverDeviceInterfaceId, flow, midiOpenDesc, flags));
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, portInfo->second.InterfaceId, flow, midiOpenDesc, flags));
 
     *openedPort = (MidiPortHandle) midiPort.get();
 
@@ -558,6 +571,55 @@ CMidiPorts::Close(MidiFlow flow, MidiPortHandle portHandle)
     // remove it from the open ports list, even if cleanup fails.
     auto remove = wil::scope_exit([&]() { m_OpenPorts.erase(port); });
     RETURN_IF_FAILED(port->second->Shutdown());
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::GetDeviceInterface(MidiFlow flow, UINT portNumber, UINT msg, DWORD_PTR param1, DWORD_PTR param2)
+{
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)flow, "MidiFlow"),
+        TraceLoggingValue(portNumber, "portNumber"),
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
+
+    auto lock = m_Lock.lock();
+
+    // output memory pointer for both calls, for querying the interface this will
+    // be a non-null string pointer. For querying the size it will be a non-null pointer
+    // to a ulong.
+    RETURN_HR_IF(E_POINTER, NULL == param1);
+    RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
+
+    // The port numbers provided to us by winmm start with index 0. Early in the design
+    // the intent was to skip port numbers to get the input and output port numbers to align,
+    // and because index 0 is always the midi synth it made sense to always start service port
+    // numbers at 1, so the service assigned port number matched the winmm port number.
+    // That strategy broke some legacy clients that didn't handle non-contiguous port numbers and
+    // was abandoned.
+    // We've left the service assigned port numbers as starting at index 1, so we have to add 1
+    // to the port number provided by winmm.
+    UINT localPortNumber = portNumber + 1;
+    RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_BADDEVICEID), localPortNumber > m_MidiPortCount[flow]);
+    auto portInfo = m_MidiPortInfo[flow].find(localPortNumber);
+    RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
+
+    switch(msg)
+    {
+        case DRV_QUERYDEVICEINTERFACE:
+            RETURN_IF_FAILED(StringCchCopyW((PWSTR) param1, ((UINT)param2)/sizeof(wchar_t), portInfo->second.DriverDeviceInterfaceId.c_str()));
+            break;
+        case DRV_QUERYDEVICEINTERFACESIZE:
+            *((PULONG)param1) = static_cast<ULONG>((portInfo->second.DriverDeviceInterfaceId.size() + 1) * sizeof(wchar_t));
+            break;
+    }
 
     return S_OK;
 }

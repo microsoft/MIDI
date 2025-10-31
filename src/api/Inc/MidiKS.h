@@ -32,9 +32,10 @@ protected:
         _In_opt_ HANDLE,
         _In_ UINT,
         _In_ MidiTransport,
-        _In_ ULONG&);
+        _In_ ULONG&,
+        _In_ MessageOptionFlags);
 
-    HRESULT OpenStream(_In_ ULONG&);
+    HRESULT OpenStream(_In_ ULONG&, _In_ MessageOptionFlags);
 
     HRESULT PinSetState(
         _In_ KSSTATE);
@@ -67,7 +68,8 @@ public:
         _In_ UINT,
         _In_ MidiTransport,
         _In_ ULONG,
-        _In_ DWORD*);
+        _In_ DWORD*,
+        _In_ MessageOptionFlags);
 
     HRESULT SendMidiMessage(
         _In_ MessageOptionFlags,
@@ -104,7 +106,8 @@ public:
         _In_ ULONG,
         _In_ DWORD*,
         _In_ IMidiCallback *,
-        _In_ LONGLONG);
+        _In_ LONGLONG,
+        _In_ MessageOptionFlags);
 
     virtual
     HRESULT Shutdown();

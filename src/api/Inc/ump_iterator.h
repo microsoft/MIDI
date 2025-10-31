@@ -134,7 +134,7 @@ namespace WindowsMidiServicesInternal
         {
             if (current != sentinal)
             {
-                return internal::GetUmpMessageTypeFromFirstWord(*current);
+                return GetUmpMessageTypeFromFirstWord(*current);
             }
 
             throw std::runtime_error("Invalid UMP. Past end of buffer.");

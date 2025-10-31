@@ -45,6 +45,7 @@ private:
     HRESULT ForwardModMessage(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
 
     HRESULT GetOpenedPort(_In_ MidiFlow flow, _In_ MidiPortHandle portHandle, _In_ wil::com_ptr_nothrow<CMidiPort> &port);
+    HRESULT GetDeviceInterface(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ UINT msg, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
 
     wil::critical_section m_Lock;
 

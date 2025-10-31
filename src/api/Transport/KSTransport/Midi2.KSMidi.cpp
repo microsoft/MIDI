@@ -165,7 +165,7 @@ CMidi2KSMidi::Initialize(
     {
         midiInDevice.reset(new (std::nothrow) KSMidiInDevice());
         RETURN_IF_NULL_ALLOC(midiInDevice);
-        RETURN_IF_FAILED(midiInDevice->Initialize(device, handleDupe.get(), inPinId, transport, requestedBufferSize, mmcssTaskId, callback, context));
+        RETURN_IF_FAILED(midiInDevice->Initialize(device, handleDupe.get(), inPinId, transport, requestedBufferSize, mmcssTaskId, callback, context, creationParams->MessageOptions));
         m_MidiInDevice = std::move(midiInDevice);
     }
 
@@ -174,7 +174,8 @@ CMidi2KSMidi::Initialize(
 
         midiOutDevice.reset(new (std::nothrow) KSMidiOutDevice());
         RETURN_IF_NULL_ALLOC(midiOutDevice);
-        RETURN_IF_FAILED(midiOutDevice->Initialize(device, handleDupe.get(), outPinId, transport, requestedBufferSize, mmcssTaskId));
+        // KS midi out for UMP peripherals relies on separated UMP's
+        RETURN_IF_FAILED(midiOutDevice->Initialize(device, handleDupe.get(), outPinId, transport, requestedBufferSize, mmcssTaskId, (MessageOptionFlags) (creationParams->MessageOptions | MessageOptionFlags_SeparateUMPs)));
         m_MidiOutDevice = std::move(midiOutDevice);
     }
 

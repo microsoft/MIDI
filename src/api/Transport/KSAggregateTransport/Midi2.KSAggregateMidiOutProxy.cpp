@@ -53,7 +53,8 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
             pinId,
             MidiTransport::MidiTransport_StandardByteStream,
             bufferSize,
-            mmcssTaskId
+            mmcssTaskId,
+            MessageOptionFlags_None
         );
 
     if (FAILED(initResult))
@@ -145,7 +146,6 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
     return S_OK;
 }
 
-// this is the callback from the translator
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiOutProxy::Callback(
