@@ -1,5 +1,5 @@
 <Include>
-  <?define SetupVersionName="Service Preview 14 Arm64" ?>
-  <?define SetupVersionNumber="1.0.15-preview.14.57" ?>
-  <?define MidiSdkAndToolsVersion="1.0.15-preview.14.57" ?>
+  <?define SetupVersionName="SDK Release Candidate 1 Arm64" ?>
+  <?define SetupVersionNumber="1.0.14-rc.1.137" ?>
+  <?define MidiSdkAndToolsVersion="1.0.14-rc.1.137" ?>
 </Include>
