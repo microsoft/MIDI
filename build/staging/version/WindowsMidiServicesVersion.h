@@ -7,14 +7,14 @@
 
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_IS_PREVIEW                         true
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L"GitHub Preview"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2025-10-31"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2025-11-05"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"SDK Release Candidate 1"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"1.0.14-rc.1.137"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"1.0.14-rc.1.139"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      1
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      0
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      14
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               137
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"rc.1.137"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"1.0.14.137"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               139
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"rc.1.139"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"1.0.14.139"
 
 #endif
