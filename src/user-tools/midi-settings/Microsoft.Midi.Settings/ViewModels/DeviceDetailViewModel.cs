@@ -40,17 +40,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private MidiEndpointCustomizationViewModel customizationViewModel;
 
-        [ObservableProperty]
-        private bool hasFunctionBlocks;
-
-        [ObservableProperty]
-        private bool hasGroupTerminalBlocks;
 
         [ObservableProperty]
         private bool showGroupTerminalBlocks;
-
-        [ObservableProperty]
-        private bool hasParent;
 
         [ObservableProperty]
         private bool showMidi2Properties;
@@ -58,38 +50,10 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private bool showCustomizeButton;
 
-
         [ObservableProperty]
         private MidiEndpointWrapper endpointWrapper;
 
 
-        public ObservableCollection<MidiFunctionBlock> FunctionBlocks = [];
-        public ObservableCollection<MidiGroupTerminalBlock> GroupTerminalBlocks = [];
-
-
-        [ObservableProperty]
-        private MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
-
-        [ObservableProperty]
-        private MidiEndpointUserSuppliedInfo userSuppliedInfo;
-
-        [ObservableProperty]
-        private string name;
-
-        [ObservableProperty]
-        private string description;
-
-        [ObservableProperty]
-        private MidiDeclaredDeviceIdentity deviceIdentity;
-
-        [ObservableProperty]
-        private MidiDeclaredStreamConfiguration streamConfiguration;
-
-        [ObservableProperty]
-        private MidiDeclaredEndpointInfo endpointInfo;
-
-        [ObservableProperty]
-        private DeviceInformation parentDeviceInformation;
 
         private readonly ISynchronizationContextService _synchronizationContextService;
         private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
@@ -109,42 +73,11 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             System.Diagnostics.Debug.WriteLine("Start clearing properties");
 
-            //_endpointEnumerationService.EndpointUpdated += (s, e) =>
-            //{
-            //    if (EndpointWrapper != null && e.EndpointDeviceId == EndpointWrapper.Id)
-            //    {
-            //        _synchronizationContextService?.GetUIContext().Post(_ =>
-            //        {
-            //            System.Diagnostics.Debug.WriteLine("Refreshing VM properties due to Endpoint Update event.");
 
-            //            EndpointWrapper = _endpointEnumerationService.GetEndpointById(e.EndpointDeviceId);
-
-            //            RefreshVM();
-            //        }, null);
-            //    }
-            //};
-
-            // ugly, but there to prevent binding errors. Making everything nullable
-            // bleeds over into the xaml, requires converters, etc. messy AF.
-
-            this.TransportSuppliedInfo = new MidiEndpointTransportSuppliedInfo();
-            this.UserSuppliedInfo = new MidiEndpointUserSuppliedInfo();
-            this.DeviceIdentity = new MidiDeclaredDeviceIdentity();
-            this.StreamConfiguration = new MidiDeclaredStreamConfiguration();
-            this.EndpointInfo = new MidiDeclaredEndpointInfo();
-
-            // this.ParentDeviceInformation = null;
-
-            this.HasParent = false;
-            this.HasFunctionBlocks = false;
-            this.HasGroupTerminalBlocks = false;
             this.ShowMidi2Properties = false;
-
-
             this.ShowGroupTerminalBlocks = false;
 
             System.Diagnostics.Debug.WriteLine("Finished clearing properties");
-
 
             CopyEndpointDeviceIdCommand = new RelayCommand(
             () =>
@@ -215,48 +148,26 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 CustomizationViewModel = new MidiEndpointCustomizationViewModel(EndpointWrapper);
 
-                Name = EndpointWrapper.Name;
-                Description = EndpointWrapper.Description;
-
-                this.TransportSuppliedInfo = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo();
-                this.UserSuppliedInfo = EndpointWrapper.DeviceInformation.GetUserSuppliedInfo();
-                this.DeviceIdentity = EndpointWrapper.DeviceInformation.GetDeclaredDeviceIdentity();
-                this.StreamConfiguration = EndpointWrapper.DeviceInformation.GetDeclaredStreamConfiguration();
-                this.EndpointInfo = EndpointWrapper.DeviceInformation.GetDeclaredEndpointInfo();
-                this.ParentDeviceInformation = EndpointWrapper.DeviceInformation.GetParentDeviceInformation();
-
-                this.HasParent = this.ParentDeviceInformation != null;
-
                 // only show group terminal blocks for native UMP endpoints
                 this.ShowGroupTerminalBlocks = EndpointWrapper.IsNativeUmp;
             }
 
-            FunctionBlocks.Clear();
-            GroupTerminalBlocks.Clear();
-
             if (EndpointWrapper != null)
             {
-                foreach (var fb in EndpointWrapper.DeviceInformation.GetDeclaredFunctionBlocks())
-                {
-                    FunctionBlocks.Add(fb);
-                }
+                ShowMidi2Properties = (EndpointWrapper.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
 
-                foreach (var gtb in EndpointWrapper.DeviceInformation.GetGroupTerminalBlocks())
-                {
-                    GroupTerminalBlocks.Add(gtb);
-                }
+                // TODO: This should pull from a property of the transport
+                ShowCustomizeButton =
+                    EndpointWrapper.TransportSuppliedInfo.TransportCode.ToUpper() == "KS" ||
+                    EndpointWrapper.TransportSuppliedInfo.TransportCode.ToUpper() == "KSA";
+            }
+            else
+            {
+                ShowMidi2Properties = false;
+
+                ShowCustomizeButton = false;
             }
 
-            this.HasFunctionBlocks = FunctionBlocks.Count > 0;
-            this.HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
-
-
-            ShowMidi2Properties = (this.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
-
-            // TODO: This should pull from a property of the transport
-            ShowCustomizeButton =
-                TransportSuppliedInfo.TransportCode.ToUpper() == "KS" ||
-                TransportSuppliedInfo.TransportCode.ToUpper() == "KSA";
         }
 
         public void OnNavigatedFrom()

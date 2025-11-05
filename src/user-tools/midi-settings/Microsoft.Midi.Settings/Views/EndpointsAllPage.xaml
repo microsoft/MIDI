@@ -66,14 +66,14 @@
                     </Grid.ColumnDefinitions>
                    
                     <TextBlock Grid.Column="0" 
-                               Text="{x:Bind PortNumber}" 
+                               Text="{x:Bind PortNumber, Mode=OneWay}" 
                                TextAlignment="Left" 
                                Foreground="{StaticResource TextFillColorDisabledBrush}"
                                VerticalAlignment="Center"
                                HorizontalAlignment="Left"/>
 
                     <TextBlock Grid.Column="1" 
-                               Text="{x:Bind PortName}" 
+                               Text="{x:Bind PortName, Mode=OneWay}" 
                                Foreground="{StaticResource SystemFillColorAttentionBrush}"
                                />
                 </Grid>
@@ -194,7 +194,7 @@
 
                                                 <!-- Icon -->
                                                 <ImageIcon Grid.Column="0" 
-                                               Source="{x:Bind Image}" 
+                                               Source="{x:Bind Image, Mode=OneWay}" 
                                                Width="60" Height="60"
                                                Margin="8,0,16,0"/>
 
@@ -209,20 +209,20 @@
 
                                                     <!-- Name -->
                                                     <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                                        <TextBlock Text="{x:Bind Name}" 
-                                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
+                                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" 
+                                                                   Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
                                                         <TextBlock Opacity="0.5"
-                                                       Style="{StaticResource SmallPlainPropertyValue}"
-                                                       Visibility="{x:Bind HasManufacturerName, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                            <Run Text=" by " />
-                                            <Run Text="{x:Bind ManufacturerName}" />
+                                                                   Style="{StaticResource SmallPlainPropertyValue}"
+                                                                   Visibility="{x:Bind HasManufacturerName, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                            <Run Text=" by " />
+                                                            <Run Text="{x:Bind TransportSuppliedInfo.ManufacturerName}" />
                                                         </TextBlock>
                                                     </StackPanel>
 
                                                     <!-- Description -->
                                                     <TextBlock Grid.Row="1" 
                                                    Style="{StaticResource SmallPlainPropertyValueWithWrap}"
-                                                   Text="{x:Bind Description}"/>
+                                                   Text="{x:Bind Description, Mode=OneWay}"/>
 
                                                     <!-- Key properties -->
                                                     <Grid Grid.Row="2">
@@ -504,13 +504,13 @@
                                                Margin="0,0,16,16"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Top"
-                                               Source="{x:Bind Image}"
+                                               Source="{x:Bind Image, Mode=OneWay}"
                                                Stretch="Uniform"/>
 
 
 
                                             <!-- Name -->
-                                            <TextBlock Text="{x:Bind Name}" 
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" 
                                                    Grid.Row="0"
                                                    Grid.Column="1"
                                                    Margin="4,0,4,8"
@@ -522,11 +522,11 @@
                                                    Grid.Column="1"
                                                    Margin="4,0,4,4"
                                                    VerticalAlignment="Top"
-                                                   Text="{x:Bind Description}"
+                                                   Text="{x:Bind Description, Mode=OneWay}"
                                                    Style="{StaticResource EndpointCardDescriptionStyle}" />
 
                                             <!-- Manufacturer Name -->
-                                            <TextBlock Text="{x:Bind ManufacturerName}" 
+                                            <TextBlock Text="{x:Bind TransportSuppliedInfo.ManufacturerName}" 
                                                    Visibility="{x:Bind HasManufacturerName, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                    Grid.Row="2"
                                                    Grid.Column="1"
