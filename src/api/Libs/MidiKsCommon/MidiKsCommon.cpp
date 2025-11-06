@@ -27,24 +27,9 @@ SyncIoctl
     ULONG   cbInBuffer,
     PVOID   pvOutBuffer,
     ULONG   cbOutBuffer,
-    PULONG  pulBytesReturned
-)
-{
-    return SyncIoctlTimeout(hHandle, ulIoctl, pvInBuffer, cbInBuffer, pvOutBuffer, cbOutBuffer, pulBytesReturned, INFINITE);
-}
-
-_Use_decl_annotations_
-HRESULT 
-SyncIoctlTimeout
-(
-    HANDLE  hHandle,
-    ULONG   ulIoctl,
-    PVOID   pvInBuffer,
-    ULONG   cbInBuffer,
-    PVOID   pvOutBuffer,
-    ULONG   cbOutBuffer,
     PULONG  pulBytesReturned,
-    ULONG   timeout
+    ULONG   timeout,
+    HANDLE  terminateEvent
 )
 {
     OVERLAPPED overlapped;
@@ -64,9 +49,13 @@ SyncIoctlTimeout
         *pulBytesReturned = 0;
     });
 
-    overlappedHandle.reset(CreateEvent(NULL,FALSE,FALSE,NULL));
+    overlappedHandle.reset(CreateEvent(NULL,TRUE,FALSE,NULL));
     RETURN_LAST_ERROR_IF(overlappedHandle.get() == nullptr);
     overlapped.hEvent = overlappedHandle.get();
+
+    HANDLE waitEvents[] = { overlappedHandle.get(), terminateEvent };
+    // terminateEvent is optional, if present we wait for both, else only 1
+    UINT waitCount = (terminateEvent == NULL)?1:SIZEOF_ARRAY(waitEvents);
 
     BOOL fRes = DeviceIoControl(
         hHandle, 
@@ -84,10 +73,21 @@ SyncIoctlTimeout
         if (lastError == ERROR_IO_PENDING)
         {
             lastError = ERROR_SUCCESS;
-            fRes = GetOverlappedResultEx(hHandle, &overlapped, pulBytesReturned, timeout, FALSE);
-            if (!fRes)
+
+            DWORD dwReturn = WaitForMultipleObjects(waitCount, waitEvents, FALSE, timeout);
+            if(WAIT_OBJECT_0 == dwReturn)
             {
-                lastError = GetLastError();
+                fRes = GetOverlappedResult(hHandle, &overlapped, pulBytesReturned, TRUE);
+                if (!fRes)
+                {
+                    lastError = GetLastError();
+                }
+            }
+            else
+            {
+                lastError = ERROR_OPERATION_ABORTED;
+                // either terminated or wait abandoned, cancel any pending io
+                CancelIo(hHandle);
             }
         }
 

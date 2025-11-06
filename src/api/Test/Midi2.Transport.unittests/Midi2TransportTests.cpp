@@ -1798,6 +1798,12 @@ void MidiTransportTests::TestKsHandleWrapperQueryRemove_PinHandle()
     auto filterName = pinInfo.FilterName.get();
     UINT pinId = pinInfo.PinId;
 
+    MidiTransport transport = (MidiTransport) (pinInfo.TransportCapability & MidiTransport_CyclicUMP);
+    if (transport == MidiTransport_Invalid)
+    {
+        transport = (MidiTransport)(pinInfo.TransportCapability & MidiTransport_StandardByteStream);
+    }
+
     // Open filter handle
     KsHandleWrapper parentFilterWrapper(filterName);
     VERIFY_SUCCEEDED(parentFilterWrapper.Open());
@@ -1807,7 +1813,7 @@ void MidiTransportTests::TestKsHandleWrapperQueryRemove_PinHandle()
     VERIFY_IS_NOT_NULL(dupHandle.get());
 
     // Create pin wrapper
-    KsHandleWrapper pinWrapper(filterName, pinId, MidiTransport_CyclicUMP, dupHandle.get());
+    KsHandleWrapper pinWrapper(filterName, pinId, transport, dupHandle.get());
     VERIFY_SUCCEEDED(pinWrapper.Open());
 
     std::wstring instanceId;
@@ -1873,6 +1879,12 @@ void MidiTransportTests::TestKsHandleWrapperSurpriseRemove_PinHandle()
     auto filterName = pinInfo.FilterName.get();
     UINT pinId = pinInfo.PinId;
 
+    MidiTransport transport = (MidiTransport) (pinInfo.TransportCapability & MidiTransport_CyclicUMP);
+    if (transport == MidiTransport_Invalid)
+    {
+        transport = (MidiTransport)(pinInfo.TransportCapability & MidiTransport_StandardByteStream);
+    }
+
     // Open filter handle
     KsHandleWrapper parentFilterWrapper(filterName);
     VERIFY_SUCCEEDED(parentFilterWrapper.Open());
@@ -1882,7 +1894,7 @@ void MidiTransportTests::TestKsHandleWrapperSurpriseRemove_PinHandle()
     VERIFY_IS_NOT_NULL(dupHandle.get());
 
     // Create pin wrapper
-    KsHandleWrapper pinWrapper(filterName, pinId, MidiTransport_CyclicUMP, dupHandle.get());
+    KsHandleWrapper pinWrapper(filterName, pinId, transport, dupHandle.get());
     VERIFY_SUCCEEDED(pinWrapper.Open());
 
     // TODO: Simulate surprise remove
