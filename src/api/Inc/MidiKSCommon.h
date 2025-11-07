@@ -9,11 +9,6 @@
 
 #pragma once
 
-// apply a timeout to the wait for overlapped operations to complete, if
-// the ioctl doesn't complete within 5 seconds, it's safe to say that it's never going to complete,
-// fail the request.
-#define IOCTL_TIMEOUT 5000
-
 HRESULT 
 SyncIoctl(
     _In_ HANDLE  hHandle,
@@ -22,19 +17,9 @@ SyncIoctl(
     _In_ ULONG   cbInBuffer,
     _In_ PVOID   pvOutBuffer,
     _In_ ULONG   cbOutBuffer,
-    _In_opt_ PULONG  pulBytesReturned
-);
-
-HRESULT 
-SyncIoctlTimeout(
-    _In_ HANDLE  hHandle,
-    _In_ ULONG   ulIoctl,
-    _In_ PVOID   pvInBuffer,
-    _In_ ULONG   cbInBuffer,
-    _In_ PVOID   pvOutBuffer,
-    _In_ ULONG   cbOutBuffer,
     _In_opt_ PULONG  pulBytesReturned,
-    _In_ ULONG   timeout = IOCTL_TIMEOUT
+    _In_ ULONG   timeout = INFINITE,
+    _In_ HANDLE  terminateEvent = NULL
 );
 
 HRESULT

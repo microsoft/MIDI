@@ -740,7 +740,7 @@ public:
 
         // Using lamba function to prevent handle from dissapearing when being used. 
         RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
-            return SyncIoctlTimeout(
+            return SyncIoctl(
                 h,
                 IOCTL_KS_PROPERTY,
                 &property,
@@ -768,7 +768,7 @@ public:
         property.RequestedBufferSize    = bufferSize;
 
         RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
-            return SyncIoctlTimeout(
+            return SyncIoctl(
                 h,
                 IOCTL_KS_PROPERTY,
                 &property,
@@ -798,7 +798,7 @@ public:
         property.Flags  = KSPROPERTY_TYPE_GET;
 
         RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
-            return SyncIoctlTimeout(
+            return SyncIoctl(
                 h,
                 IOCTL_KS_PROPERTY,
                 &property,
@@ -832,7 +832,7 @@ public:
         property.Flags  = KSPROPERTY_TYPE_SET;
 
         RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
-            return SyncIoctlTimeout(
+            return SyncIoctl(
                 h,
                 IOCTL_KS_PROPERTY,
                 &property,

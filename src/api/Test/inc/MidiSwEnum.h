@@ -14,7 +14,7 @@ public:
     MidiFlow Flow{ MidiFlowOut };
     MidiDataFormats SupportedDataFormats{ MidiDataFormats_Invalid };
     BOOL MidiOne{ FALSE };
-    UINT32 WinmmPortNumber{ 0 }; // if MidiOne, the service assigned port number
+    UINT_PTR WinmmPortNumber{ 0 }; // if MidiOne, the service assigned port number
 } MIDIU_DEVICE, *PMIDIU_DEVICE;
 
 class MidiSWDeviceEnum
