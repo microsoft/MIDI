@@ -101,7 +101,7 @@ namespace WindowsMidiServicesInternal
 
         inline uint32_t GetCurrentMessageWord(_In_ uint8_t const wordIndex) const
         {
-            if (current != sentinal)
+            if (current < sentinal)
             {
                 if (CurrentMessageSeemsComplete() && wordIndex < GetUmpLengthInMidiWordsFromFirstWord(*current))
                 {
@@ -117,14 +117,19 @@ namespace WindowsMidiServicesInternal
 
         inline void CopyCurrentMessageToVector(_In_ std::vector<uint32_t>& destination) const
         {
-            if (current != sentinal)
+            if (current < sentinal)
             {
-                for (int i = 0; i < GetUmpLengthInMidiWordsFromFirstWord(*current); ++i)
+                if (CurrentMessageSeemsComplete())
                 {
-                    destination.push_back(*(current + i));
+                    for (int i = 0; i < GetUmpLengthInMidiWordsFromFirstWord(*current); ++i)
+                    {
+                        destination.push_back(*(current + i));
+                    }
+
+                    return;
                 }
 
-                return;
+                throw std::runtime_error("Invalid UMP, incomplete message.");
             }
 
             throw std::runtime_error("Invalid UMP. Past end of buffer.");
@@ -132,7 +137,7 @@ namespace WindowsMidiServicesInternal
 
         inline uint8_t CurrentMessageType() const
         {
-            if (current != sentinal)
+            if (current < sentinal)
             {
                 return GetUmpMessageTypeFromFirstWord(*current);
             }
@@ -143,7 +148,7 @@ namespace WindowsMidiServicesInternal
         // return the number of words in the message pointed to by current
         inline uint8_t CurrentMessageWordCount() const
         {
-            if (current != sentinal)
+            if (current < sentinal)
             {
                 return GetUmpLengthInMidiWordsFromFirstWord(*current);
             }
@@ -153,7 +158,7 @@ namespace WindowsMidiServicesInternal
 
         inline uint8_t CurrentMessageGroupIndex() const
         {
-            if (current != sentinal)
+            if (current < sentinal)
             {
                 return GetGroupIndexFromFirstWord(*current);
             }
@@ -174,7 +179,7 @@ namespace WindowsMidiServicesInternal
         // return true if the message type pointed to by current has a group field
         inline bool CurrentMessageHasGroupField() const
         {
-            if (current != sentinal)
+            if (current < sentinal)
             {
                 return MessageHasGroupField(*current);
             }
