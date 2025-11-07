@@ -14,10 +14,17 @@
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
     <Grid>
-        <ScrollViewer>
+        <Image Source="/Assets/AppIcon@2x.png" 
+               HorizontalAlignment="Right" 
+               VerticalAlignment="Bottom"
+               Stretch="None"
+               Margin="0,0,8,42"
+               Opacity="0.05"/>
+
+        <ScrollViewer Background="Transparent">
             <StackPanel x:Name="ContentArea"
-                    Grid.Column="0"
-                    Spacing="4">
+                        Grid.Column="0"
+                        Spacing="4">
                 <controls:SettingsExpander x:Name="AppThemeSettingsExpander"
                                    x:Uid="Settings_AppThemeExpander">
                     <controls:SettingsExpander.HeaderIcon>
@@ -127,16 +134,20 @@
                 </controls:SettingsExpander>
 
                 <TextBlock x:Uid="Settings_About" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
-                <controls:SettingsExpander x:Uid="SettingsPage_AboutCard">
+                <controls:SettingsExpander x:Name="AboutCard">
+                    <controls:SettingsExpander.Description>
+                        <TextBlock x:Name="AboutCard_Description"/>
+                    </controls:SettingsExpander.Description>
+                    <controls:SettingsExpander.Header>
+                        <TextBlock x:Name="AboutCard_Title"/>
+                    </controls:SettingsExpander.Header>
                     <controls:SettingsExpander.HeaderIcon>
-                        <BitmapIcon UriSource="Assets/SmallTile.scale-100.png" ShowAsMonochrome="False" />
+                        <BitmapIcon UriSource="Assets/AppIcon@2x.png" ShowAsMonochrome="False" />
                     </controls:SettingsExpander.HeaderIcon>
                     <TextBlock IsTextSelectionEnabled="True" 
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" 
                                Text="{x:Bind ViewModel.VersionDescription, Mode=OneWay}" />
                     <controls:SettingsExpander.Items>
-                        <controls:SettingsCard x:Uid="Settings_AboutDescription" />
-
                         <controls:SettingsCard x:Uid="Settings_AboutMidiDescription">
                             <StackPanel Orientation="Vertical">
                                 <HyperlinkButton x:Uid="SettingsPage_MidiOrgLink" 

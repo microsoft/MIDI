@@ -29,6 +29,11 @@ public sealed partial class SettingsPage : Page
         ViewModel = App.GetService<SettingsViewModel>();
 
         InitializeComponent();
+
+
+        AboutCard_Title.Text = ResourceExtensions.GetLocalized("AppDisplayName");
+        AboutCard_Description.Text = ResourceExtensions.GetLocalized("AppDescription");
+
     }
 
     private void WindowsDeveloperSettingsHyperlinkButton_Click(object sender, UI.Xaml.RoutedEventArgs e)

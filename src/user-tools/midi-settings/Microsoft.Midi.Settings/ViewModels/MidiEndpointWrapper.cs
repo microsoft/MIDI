@@ -172,6 +172,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 UserSuppliedInfo = DeviceInformation.GetUserSuppliedInfo();
                 DeviceIdentity = DeviceInformation.GetDeclaredDeviceIdentity();
                 StreamConfiguration = DeviceInformation.GetDeclaredStreamConfiguration();
+                EndpointInfo = DeviceInformation.GetDeclaredEndpointInfo();
 
                 // USB VID/PID
 
@@ -320,8 +321,12 @@ namespace Microsoft.Midi.Settings.ViewModels
                 var inputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageSource);
                 var outputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
 
+                System.Diagnostics.Debug.WriteLine($"MidiEndpointWrapper: Returned {Name} MIDI 1 input ports:  {inputPorts.Count}");
+                System.Diagnostics.Debug.WriteLine($"MidiEndpointWrapper: Returned {Name} MIDI 1 output ports: {outputPorts.Count}");
+
                 context.Post(_ =>
                 {
+
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread to update MIDI 1 port list");
 
                     Midi1InputPorts.Clear();

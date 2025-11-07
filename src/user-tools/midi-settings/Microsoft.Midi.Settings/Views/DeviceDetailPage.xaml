@@ -198,18 +198,18 @@
 
 
                         <TextBlock Text="{x:Bind ViewModel.EndpointWrapper.Id}" 
-                                       Grid.Column="0"
-                                       HorizontalAlignment="Right"
-                                       TextWrapping="NoWrap" 
-                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"
-                                       Margin="4"
-                                       IsTextSelectionEnabled="True" />
+                                    Grid.Column="0"
+                                    HorizontalAlignment="Right"
+                                    TextWrapping="NoWrap" 
+                                    Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"
+                                    Margin="4"
+                                    IsTextSelectionEnabled="True" />
 
                         <Button Margin="4,0,4,0"
-                                    Grid.Column="1"
-                                    Padding="4"
-                                    Background="Transparent"
-                                    Command="{x:Bind ViewModel.CopyEndpointDeviceIdCommand}">
+                                Grid.Column="1"
+                                Padding="4"
+                                Background="Transparent"
+                                Command="{x:Bind ViewModel.CopyEndpointDeviceIdCommand}">
                             <FontIcon Glyph="&#xE8C8;" FontSize="10"/>
                             <!-- Copy -->
                         </Button>
@@ -243,7 +243,7 @@
                                        HorizontalAlignment="Left"/>
 
                             <TextBlock HorizontalAlignment="Right">
-                                <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts, Mode=OneWay}" 
+                                <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1InputPorts, Mode=OneWay}" 
                                      Foreground="{StaticResource AppHighlightedText}"/>
                                 <Run Text="Port(s)" />
                             </TextBlock>
@@ -272,33 +272,34 @@
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Column="0" Grid.Row="0" 
-                                                   x:Uid="CommonTextBlockLabel_WinMMPortNumber" 
-                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                                       x:Uid="CommonTextBlockLabel_WinMMPortNumber" 
+                                                       Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                   Text="{x:Bind PortNumber }" 
-                                                   Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                       Text="{x:Bind PortNumber }" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
-                                                   x:Uid="CommonTextBlockLabel_WinRTPortId" 
-                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                                       x:Uid="CommonTextBlockLabel_WinRTPortId" 
+                                                       Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
-                                                   Text="{x:Bind PortDeviceId }" 
-                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                                       Text="{x:Bind PortDeviceId }" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
-                                                   x:Uid="CommonTextBlockLabel_MappedGroup"
-                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                                       x:Uid="CommonTextBlockLabel_MappedGroup"
+                                                       Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                   Text="{x:Bind Group.DisplayValue}" 
-                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                                       Text="{x:Bind Group.DisplayValue}" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
+                                            <!--
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                    x:Uid="CommonTextBlockLabel_Flow" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
                                                    Text="{x:Bind PortFlow }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
-
+                                            -->
                                         </Grid>
                                     </Grid>
                                 </controls:SettingsCard.Content>
@@ -373,13 +374,14 @@
                                                    Text="{x:Bind Group.DisplayValue, Mode=OneTime}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
+                                            <!--
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                    x:Uid="CommonTextBlockLabel_Flow" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
                                                    Text="{x:Bind PortFlow, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
-
+                                            -->
                                         </Grid>
                                     </Grid>
                                 </controls:SettingsCard.Content>
@@ -449,7 +451,7 @@
                             <controls:SettingsCard.Header>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" MinWidth="175" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
@@ -499,7 +501,7 @@
                             <controls:SettingsCard.Header>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" MinWidth="175" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
@@ -513,7 +515,7 @@
                                     <TextBlock Grid.Column="0" Grid.Row="0" x:Uid="CommonTextBlockLabel_SupportsMidi1Protocol" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.EndpointWrapper.EndpointInfo.SupportsMidi10Protocol, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                    <TextBlock Grid.Column="0" Grid.Row="1" x:Uid="CommonTextBlockLabel_SupportsMidi1Protocol" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="0" Grid.Row="1" x:Uid="CommonTextBlockLabel_SupportsMidi2Protocol" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointWrapper.EndpointInfo.SupportsMidi20Protocol, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="2" x:Uid="CommonTextBlockLabel_ConfiguredProtocol" Style="{StaticResource SmallPropertyLabel}" />
@@ -522,7 +524,7 @@
                                     <TextBlock Grid.Column="0" Grid.Row="3" x:Uid="CommonTextBlockLabel_ConfiguredSendJR" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.EndpointWrapper.StreamConfiguration.SendJitterReductionTimestamps, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                    <TextBlock Grid.Column="0" Grid.Row="4" x:Uid="CommonTextBlockLabel_ConfiguredReceiveJR.Text" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="0" Grid.Row="4" x:Uid="CommonTextBlockLabel_ConfiguredReceiveJR" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.EndpointWrapper.StreamConfiguration.ReceiveJitterReductionTimestamps, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 </Grid>
@@ -558,7 +560,7 @@
 
                                         <Grid Grid.Column="0" Margin="10,4,10,4">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" MinWidth="175" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -607,7 +609,7 @@
 
                                         <Grid Grid.Column="1" Margin="4">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" MinWidth="175" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -686,7 +688,7 @@
 
                                         <Grid Grid.Column="0" Margin="10,4,10,4">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" MinWidth="175" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -722,7 +724,7 @@
 
                                         <Grid Grid.Column="1" Margin="4">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" MinWidth="175" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -785,7 +787,7 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" MinWidth="175" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 

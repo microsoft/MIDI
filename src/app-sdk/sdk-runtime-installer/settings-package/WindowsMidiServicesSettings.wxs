@@ -72,6 +72,8 @@
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.ico" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon@2x.png" />
 
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Home-Background.png" />
+
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Loopback-Diagram.svg" />
 
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-AdvancedUsbSettings.svg" />
