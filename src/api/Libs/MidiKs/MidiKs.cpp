@@ -179,7 +179,7 @@ KSMidiDevice::PinSetState(
 
     // Using lamba function to prevent handle from dissapearing when being used. 
     RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctlTimeout(
+        return SyncIoctl(
             h,
             IOCTL_KS_PROPERTY,
             &property,
@@ -215,7 +215,7 @@ KSMidiDevice::ConfigureLoopedBuffer(ULONG& bufferSize
     }
 
     RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctlTimeout(
+        return SyncIoctl(
             h,
             IOCTL_KS_PROPERTY,
             &property,
@@ -248,7 +248,7 @@ KSMidiDevice::ConfigureLoopedRegisters()
     }
 
     RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctlTimeout(
+        return SyncIoctl(
             h,
             IOCTL_KS_PROPERTY,
             &property,
@@ -284,7 +284,7 @@ KSMidiDevice::ConfigureLoopedEvent()
     }
 
     RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctlTimeout(
+        return SyncIoctl(
             h,
             IOCTL_KS_PROPERTY,
             &property,
@@ -403,7 +403,7 @@ KSMidiOutDevice::WritePacketMidiData(
     }
 
     HRESULT hr = m_PinHandleWrapper->Execute([&](HANDLE h) {
-        return SyncIoctlTimeout(
+        return SyncIoctl(
             h,
             IOCTL_KS_WRITE_STREAM,
             nullptr,
@@ -423,21 +423,19 @@ KSMidiInDevice::Shutdown()
 {
     m_Running = FALSE;
 
-    // safe to clean up the base class now that any looped
-    // worker threads are cleaned up.
-    HRESULT hr = KSMidiDevice::Shutdown();
-
     if (m_ThreadHandle)
     {
-        // standard AVStream has an ioctl blocked on the read, which will not
-        // end until the pin is closed. So, if we are not looped, we need
-        // to clean up the base class first, and then the streaming thread.
-        // once the pin was closed it'll unblock and exit the worker thread
-        // due to the ioctl failure, allowing for cleanup to complete
+        // First shut down the worker thread so it will not
+        // attempt to use the pin/filter/swr lock after they've
+        // been cleaned up by the base clase.
         m_ThreadTerminateEvent.SetEvent();
         WaitForSingleObject(m_ThreadHandle.get(), INFINITE);
         m_ThreadHandle.reset();
     }
+
+    // safe to clean up the base class now that any looped
+    // worker threads are cleaned up.
+    HRESULT hr = KSMidiDevice::Shutdown();
 
     return hr;
 }
@@ -486,7 +484,9 @@ KSMidiInDevice::SendRequestToDriver()
                 0,
                 (UCHAR*)&kssh,
                 kssh.Size,
-                nullptr);
+                nullptr,
+                INFINITE,
+                m_ThreadTerminateEvent.get());
         });
 
         if (SUCCEEDED(hr))

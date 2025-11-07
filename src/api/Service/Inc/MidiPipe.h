@@ -59,14 +59,25 @@ public:
     
     virtual HRESULT RemoveConnectedPipe(wil::com_ptr_nothrow<CMidiPipe>& connectedOutputPipe)  
     {
-        auto lock = m_Lock.lock_exclusive();
-
-        auto item = m_ConnectedPipes.find((MidiPipeHandle)connectedOutputPipe.get());
-
-        if (item != m_ConnectedPipes.end())
         {
-            m_ConnectedPipes.erase(item);
-            return S_OK;
+            // check with the shared lock first to rule out no connection, to prevent
+            // undesireable interactions with unrelated pipes.
+            auto lock = m_Lock.lock_shared();
+            auto item = m_ConnectedPipes.find((MidiPipeHandle)connectedOutputPipe.get());
+            if (item == m_ConnectedPipes.end())
+            {
+                return E_INVALIDARG;
+            }
+        }
+
+        {
+            auto lock = m_Lock.lock_exclusive();
+            auto item = m_ConnectedPipes.find((MidiPipeHandle)connectedOutputPipe.get());
+            if (item != m_ConnectedPipes.end())
+            {
+                m_ConnectedPipes.erase(item);
+                return S_OK;
+            }
         }
 
         return E_INVALIDARG;
@@ -251,11 +262,50 @@ public:
             TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        auto lock = m_Lock.lock_exclusive();
-        auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
-        if (client != m_Clients.end())
         {
-            m_Clients.erase(client);
+            // check with the shared lock first to rule out no connection, to prevent
+            // undesireable interactions with unrelated pipes.
+            auto lock = m_Lock.lock_shared();
+            auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
+            if (client == m_Clients.end())
+            {
+                return;
+            }
+        }
+
+        {
+            auto lock = m_Lock.lock_exclusive();
+            auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
+            if (client != m_Clients.end())
+            {
+                m_Clients.erase(client);
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Client removed from internal list", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt64(handle, "MIDI Client Handle"),
+                    TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+            }
+            else
+            {
+                LOG_IF_FAILED(E_NOTFOUND);
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Client not found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt64(handle, "MIDI Client Handle"),
+                    TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+            }
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
@@ -263,37 +313,11 @@ public:
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Client removed from internal list", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingUInt64(handle, "MIDI Client Handle"),
                 TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
         }
-        else
-        {
-            LOG_IF_FAILED(E_NOTFOUND);
-
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Client not found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingUInt64(handle, "MIDI Client Handle"),
-                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-            );
-        }
-
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt64(handle, "MIDI Client Handle"),
-            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-        );
 
     }
 

@@ -30,6 +30,37 @@ void __RPC_USER midl_user_free(void __RPC_FAR* p)
     delete[] (BYTE*)p;
 }
 
+using namespace winrt::Windows::Devices::Enumeration;
+
+HRESULT
+GetEndpointNativeDataFormat(_In_ std::wstring midiDevice, _Inout_ BYTE& nativeDataFormat)
+{
+    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(midiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
+    if (prop)
+    {
+        try
+        {
+            // If a group index is provided by this device, it must be valid.
+            nativeDataFormat = (BYTE) winrt::unbox_value<uint8_t>(prop);
+
+            // minmidi doesn't specify a native data format, for the purposes of this test it's UMP.
+            if (nativeDataFormat == 0)
+            {
+                nativeDataFormat = MidiDataFormats_UMP;
+            }
+
+            RETURN_HR_IF(E_UNEXPECTED, nativeDataFormat != MidiDataFormats_ByteStream && nativeDataFormat != MidiDataFormats_UMP);
+        }
+        CATCH_LOG();
+    }
+
+    return S_OK;
+}
+
 // using the protocol and endpoint, retrieve the midisrv
 // rpc binding handle
 HRESULT GetMidiSrvBindingHandle(handle_t* bindingHandle)
@@ -163,6 +194,9 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
         }
     });
 
+    BYTE nativeDataFormat {0};
+    VERIFY_SUCCEEDED(GetEndpointNativeDataFormat(midiDevice.c_str(), nativeDataFormat));
+
     creationParams.DataFormat = MidiDataFormats_UMP;
     creationParams.Flow = MidiFlowBidirectional;
     creationParams.BufferSize = PAGE_SIZE;
@@ -256,9 +290,19 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     LOG_OUTPUT(L"Writing midi data");
     messagesExpected = 4;
     VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_64, sizeof(UMP64), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_96, sizeof(UMP96), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_128, sizeof(UMP128), 0));
+
+    if (nativeDataFormat == MidiDataFormats_ByteStream)
+    {
+        VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 0));
+        VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 0));
+        VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 0));
+    }
+    else
+    {
+        VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_64, sizeof(UMP64), 0));
+        VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_96, sizeof(UMP96), 0));
+        VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_128, sizeof(UMP128), 0));
+    }
 
     VERIFY_IS_TRUE(allMessagesReceived.wait(5000));
 

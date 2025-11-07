@@ -31,7 +31,7 @@ void UmpIteratorTests::TestBasicIteration()
 
     UmpBufferIterator bufferIterator(words, wordCount);
 
-    int i = 0;
+    uint32_t i = 0;
     for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
     {
         VERIFY_ARE_EQUAL(*it, words[i]);
@@ -90,7 +90,7 @@ void UmpIteratorTests::TestMixedIteration()
     uint32_t wordCount = ARRAYSIZE(words);
     UmpBufferIterator bufferIterator(words, wordCount);
 
-    int i = 0;
+    uint32_t i = 0;
     for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
     {
         std::cout << "Iterator Value: 0x" << std::hex << std::setw(8) << *it << std::endl;
@@ -151,7 +151,7 @@ void UmpIteratorTests::TestGetMessageType()
     uint32_t wordCount = ARRAYSIZE(words);
     UmpBufferIterator bufferIterator(words, wordCount);
 
-    int i = 0;
+    uint32_t i = 0;
     for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
     {
         std::cout << "Iterator Value: 0x" << std::hex << std::setw(8) << *it << std::endl;
@@ -212,7 +212,7 @@ void UmpIteratorTests::TestIncompleteBuffer()
     uint32_t wordCount = ARRAYSIZE(words);
     UmpBufferIterator bufferIterator(words, wordCount);
 
-    int i = 0;
+    uint32_t i = 0;
     for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
     {
         std::cout << "Iterator Value: 0x" << std::hex << std::setw(8) << *it << std::endl;
@@ -310,7 +310,7 @@ void UmpIteratorTests::TestCopyWordsToVector()
     }
 
     // now, check
-    for (int i = 0; i < ARRAYSIZE(words); i++)
+    for (uint32_t i = 0; i < ARRAYSIZE(words); i++)
     {
         VERIFY_ARE_EQUAL(words[i], destination[i]);
     }
