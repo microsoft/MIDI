@@ -42,6 +42,7 @@ struct KSAPinMapEntryInternal
 
 
 #define SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_VALUE_HEADER (sizeof(UINT32))
+#define SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY (sizeof(KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY))
 #define SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY_WITHOUT_STRING (sizeof(KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY) - sizeof(WCHAR))
 
 
@@ -77,25 +78,41 @@ inline HRESULT GetPinMapEntry(
     auto pheader = (PKSAGGMIDI_PIN_MAP_PROPERTY_VALUE)(propertyPointer);
     bytesRead += sizeof(UINT32);    // the only value in the header that takes up room
 
-    while (bytesRead < pheader->TotalByteCount && bytesRead < arraySize)
+    arraySize = min(pheader->TotalByteCount, arraySize);
+    while ((bytesRead + SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY) <= arraySize)
     {
         auto foundEntry = (PKSAGGMIDI_PIN_MAP_PROPERTY_ENTRY)(propertyPointer + bytesRead);
 
+        // if we only have sizeof(KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY) then the filter string is 0 length
+        // and invalid. So we bail out early because any table with a 0 length filter string
+        // invalidates the entire table. Same if the ByteCount is more than the data available
+        if (foundEntry->ByteCount <= SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY || foundEntry->ByteCount > (arraySize - bytesRead))
+        {
+            return E_NOTFOUND; // Invalid ByteCount
+        }
+
         if (foundEntry->GroupIndex == groupIndex && foundEntry->PinDataFlow == pinDataFlow)
         {
-            size_t entrySizeWithoutString = sizeof(KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY) - 1;
-
             entryToFill.GroupIndex = foundEntry->GroupIndex;
             entryToFill.PinDataFlow = foundEntry->PinDataFlow;
             entryToFill.PinId = foundEntry->PinId;
 
-            wchar_t* stringStart = foundEntry->FilterId;
-            size_t stringLength = (foundEntry->ByteCount - entrySizeWithoutString) / sizeof(wchar_t);
+            wchar_t* filterStringStart = foundEntry->FilterId;
+            size_t filterStringLength = (foundEntry->ByteCount - SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY_WITHOUT_STRING) / sizeof(wchar_t);
 
-            std::wstring filterId(stringStart, stringLength);
-            entryToFill.FilterId = filterId;
+            // shouldn't have an empty filter, but just in case, that's an invalid entry
+            // by default, the array size is a single wchar_t with 0 as the value
+            if (filterStringLength > 1)
+            {
+                std::wstring filterId(filterStringStart, filterStringLength);
+                entryToFill.FilterId = filterId;
 
-            return S_OK;
+                return S_OK;
+            }
+            else
+            {
+                return E_NOTFOUND;
+            }
         }
 
         bytesRead += foundEntry->ByteCount;
@@ -103,6 +120,7 @@ inline HRESULT GetPinMapEntry(
 
     return E_NOTFOUND;
 }
+
 
 
 // TODO: Code to write the pin map
