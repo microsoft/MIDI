@@ -63,7 +63,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         // TODO: Tons of strings in here that need to be localized
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             //if (!MidiServicesInitializer.EnsureServiceAvailable())
             //{

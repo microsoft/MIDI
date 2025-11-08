@@ -134,7 +134,7 @@ namespace Microsoft.Midi.ConsoleApp
             //AnsiConsole.WriteLine($"Count Messages Sent: {sentCount}");
         }
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             string destinationEndpointDeviceId = string.Empty;
             string sourceEndpointDeviceId = string.Empty;  

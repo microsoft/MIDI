@@ -52,46 +52,75 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (endpoints != null)
             {
-             //   Console.WriteLine("DEBUG: endpoint list returned");
+                const string supportsMidi2Indicator = "Midi 2.0  "; // optional field so include the trailing spaces
 
+                int maxEndpointNameWidth = 0;
+                int maxManufacturerNameWidth = 0;
+                int maxMidi2Width = 0;
+
+                // calculate sizes
                 foreach (var endpoint in endpoints)
                 {
-                    var parent = endpoint.GetParentDeviceInformation();
+                    maxEndpointNameWidth = Math.Max(endpoint.Name.Length + 2, maxEndpointNameWidth);
 
                     var transportInfo = endpoint.GetTransportSuppliedInfo();
-                    string fullName;
 
                     if (transportInfo.ManufacturerName != "Microsoft" && transportInfo.ManufacturerName != string.Empty)
                     {
-                        fullName = AnsiMarkupFormatter.FormatManufacturerName(transportInfo.ManufacturerName) + " " + AnsiMarkupFormatter.FormatEndpointName(endpoint.Name);
-                    }
-                    else
-                    {
-                        fullName = AnsiMarkupFormatter.FormatEndpointName(endpoint.Name);
+                        maxManufacturerNameWidth = Math.Max(transportInfo.ManufacturerName.Length, maxManufacturerNameWidth);
                     }
 
-                    if (parent != null)
+                    if (endpoint.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
                     {
-                        choices.Add(new UmpEndpointPickerEntry(
-                            AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " +
-                            (fullName + " [grey35](" + AnsiMarkupFormatter.EscapeString(endpoint.GetParentDeviceInformation().Name) + ")[/]").PadRight(80),
-                            endpoint.EndpointDeviceId));
-                    }
-                    else
-                    {
-                        choices.Add(new UmpEndpointPickerEntry(
-                            AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " +
-                            fullName.PadRight(80),
-                            endpoint.EndpointDeviceId));
+                        maxMidi2Width = supportsMidi2Indicator.Length;  
                     }
                 }
 
-              //  Console.WriteLine("DEBUG: sorting");
+                int totalLineWidth = 2 + maxEndpointNameWidth + maxMidi2Width + maxManufacturerNameWidth;
+
+
+                foreach (var endpoint in endpoints)
+                {
+                    //var parent = endpoint.GetParentDeviceInformation();
+
+                    var transportInfo = endpoint.GetTransportSuppliedInfo();
+
+                    string endpointNamePadded = endpoint.Name.PadRight(maxEndpointNameWidth, ' ');
+                    string manufacturerNamePadded;
+                    string midi2Padded = string.Empty;
+
+                    if (endpoint.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
+                    {
+                        midi2Padded = "[grey]" + supportsMidi2Indicator.PadRight(maxMidi2Width) + "[/]";  // optional field so include the trailing space
+                    }
+                    else
+                    {
+                        midi2Padded = new string(' ', maxMidi2Width);
+                    }
+
+                    if (transportInfo.ManufacturerName != "Microsoft" && transportInfo.ManufacturerName != string.Empty)
+                    {
+                        manufacturerNamePadded = transportInfo.ManufacturerName.PadRight(maxManufacturerNameWidth, ' ');
+                    }
+                    else
+                    {
+                        manufacturerNamePadded = new string(' ', maxManufacturerNameWidth);
+                    }
+
+                    choices.Add(new UmpEndpointPickerEntry(
+                        AnsiMarkupFormatter.GetEndpointIcon(endpoint) + " " +
+                        AnsiMarkupFormatter.FormatEndpointName(endpointNamePadded) +
+                        midi2Padded +
+                        AnsiMarkupFormatter.FormatManufacturerName(manufacturerNamePadded),
+                        endpoint.EndpointDeviceId));
+                }
+
+                //  Console.WriteLine("DEBUG: sorting");
 
                 choices.Sort();
 
                 // this feels so dirty               
-                choices.Add(new UmpEndpointPickerEntry("🔙 " + "(Cancel)".PadRight(80), "")); // TODO: Localize
+                choices.Add(new UmpEndpointPickerEntry("🔙 " + "(Cancel)".PadRight(totalLineWidth, ' '), "")); // TODO: Localize
 
             }
         }

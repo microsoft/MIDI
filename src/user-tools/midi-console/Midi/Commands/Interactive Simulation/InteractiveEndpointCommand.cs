@@ -45,7 +45,7 @@ namespace Microsoft.Midi.ConsoleApp
             return ValidationResult.Success();
         }
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             //if (!MidiServicesInitializer.EnsureServiceAvailable())
             //{

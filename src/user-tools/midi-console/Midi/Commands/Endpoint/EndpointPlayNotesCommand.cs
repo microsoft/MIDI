@@ -146,7 +146,7 @@ namespace Microsoft.Midi.ConsoleApp
         }
 
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             // we'll use this info when sleeping
     //        var systemTimerInfo = MidiClock.GetCurrentSystemTimerInfo();

@@ -45,9 +45,9 @@ namespace Microsoft.Midi.ConsoleApp
             switch (purpose)
             {
                 case MidiEndpointDevicePurpose.DiagnosticPing:
-                    return "📶";
+                    return "⚙";
                 case MidiEndpointDevicePurpose.DiagnosticLoopback:
-                    return "🔁";
+                    return "🛠️";
                 case MidiEndpointDevicePurpose.NormalMessageEndpoint:
                     return "🎹";
                 case MidiEndpointDevicePurpose.VirtualDeviceResponder:
@@ -56,6 +56,23 @@ namespace Microsoft.Midi.ConsoleApp
                     return "🎵";
             }
         }
+
+        public static string GetEndpointIcon(MidiEndpointDeviceInformation device)
+        {
+            if (device.GetTransportSuppliedInfo().TransportCode.ToLower() == "loop")
+            {
+                return "🔄️";
+            }
+            else if (device.GetTransportSuppliedInfo().TransportCode.ToLower() == "net2udp")
+            {
+                return "🛜";
+            }
+            else
+            {
+                return GetEndpointIcon(device.EndpointPurpose);
+            }
+        }
+
         public static string EscapeString(string s)
         {
             return s.Replace("[", "[[").Replace("]", "]]");
