@@ -77,6 +77,11 @@ bool CheckForWindowsMidiServices()
     // check for Windows MIDI Services (create the midisrvtransport COM object). If it fails, we do not
     // have Windows MIDI Services installed, and will not make any changes.
 
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: This succeeds during controlled rollout even when Windows MIDI Services is not yet enabled
+    // Needs to be changed to latest guidance
+
+
     wil::com_ptr_nothrow<IUnknown> servicePointer;
 
     auto hr = CoCreateInstance(
