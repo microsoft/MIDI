@@ -49,6 +49,7 @@ struct MidiPort
 {
     uint16_t Index;
     std::wstring Name;
+    bool IsError{ false };
 };
 
 std::vector<MidiPort> m_midiInputs{};
@@ -67,21 +68,23 @@ void LoadWinMMDevices()
 
         auto result = midiInGetDevCaps(i, &inputCaps, sizeof(inputCaps));
 
+        MidiPort port{};
+        port.Index = i;
+
         if (result == MMSYSERR_NOERROR)
         {
-            MidiPort port{};
-            port.Index = i;
             port.Name = inputCaps.szPname;
-
-            m_midiInputs.push_back(port);
+            port.IsError = false;
         }
-    }
+        else
+        {
+            port.Name = L"** Error **";
+            port.IsError = true;
+        }
 
-    //std::sort(m_midiInputs.begin(), m_midiInputs.end(),
-    //    [](MidiPort a, MidiPort b)
-    //    {
-    //        return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
-    //    });
+        m_midiInputs.push_back(port);
+
+    }
 
     // -----------------------------
 
@@ -93,35 +96,46 @@ void LoadWinMMDevices()
 
         auto result = midiOutGetDevCaps(i, &outputCaps, sizeof(outputCaps));
 
+        MidiPort port{};
+        port.Index = i;
+
         if (result == MMSYSERR_NOERROR)
         {
-            MidiPort port{};
-            port.Index = i;
             port.Name = outputCaps.szPname;
-
-            m_midiOutputs.push_back(port);
+            port.IsError = false;
         }
+        else
+        {
+            port.Name = L"** Error **";
+            port.IsError = true;
+        }
+
+        m_midiOutputs.push_back(port);
     }
-
-    //std::sort(m_midiOutputs.begin(), m_midiOutputs.end(),
-    //    [](MidiPort a, MidiPort b)
-    //    {
-    //        return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
-    //    });
-
 
 }
 
 void DisplayAllWinMMInputs()
 {
-    WriteInfo(std::to_string(m_midiInputs.size()) + " Available Input Ports (MIDI Sources)");
+    auto deviceCount = midiInGetNumDevs();
+    WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiInGetNumDevs");
+    WriteInfo(" " + std::to_string(m_midiInputs.size()) + " available Input Ports (MIDI Sources) found.");
     std::wcout << std::endl;
 
     for (auto const& port : m_midiInputs)
     {
-        std::cout
-            << std::setw(3) << dye::yellow(port.Index)
-            << dye::grey(" : ");
+        if (port.IsError)
+        {
+            std::cout
+                << std::setw(3) << dye::red(port.Index)
+                << dye::grey(" : ");
+        }
+        else
+        {
+            std::cout
+                << std::setw(3) << dye::yellow(port.Index)
+                << dye::grey(" : ");
+        }
 
         std::wcout
             << port.Name
@@ -133,14 +147,26 @@ void DisplayAllWinMMInputs()
 
 void DisplayAllWinMMOutputs()
 {
-    WriteInfo(std::to_string(m_midiOutputs.size()) + " Available Output Ports (MIDI Destinations)");
+    auto deviceCount = midiOutGetNumDevs();
+
+    WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiOutGetNumDevs");
+    WriteInfo(" " + std::to_string(m_midiOutputs.size()) + " available Output Ports (MIDI Destinations) found.");
     std::wcout << std::endl;
 
     for (auto const& port : m_midiOutputs)
     {
-        std::cout
-            << std::setw(3) << dye::yellow(port.Index)
-            << dye::grey(" : ");
+        if (port.IsError)
+        {
+            std::cout
+                << std::setw(3) << dye::red(port.Index)
+                << dye::grey(" : ");
+        }
+        else
+        {
+            std::cout
+                << std::setw(3) << dye::yellow(port.Index)
+                << dye::grey(" : ");
+        }
 
         std::wcout
             << port.Name
