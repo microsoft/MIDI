@@ -313,19 +313,19 @@ namespace Microsoft.Midi.ConsoleApp
             return "[darkseagreen]" + id.ToString() + "[/]";
         }
 
-        public static string FormatTransportMnemonic(string mnemonic)
+        public static string FormatTransportCode(string code)
         {
-            return "[darkgoldenrod]" + EscapeString(mnemonic.Trim()) + "[/]";
+            return "[darkgoldenrod]" + EscapeString(code) + "[/]";
         }
 
         public static string FormatTransportVersion(string version)
         {
-            return "[skyblue2]" + EscapeString(version.Trim()) + "[/]";
+            return "[skyblue2]" + EscapeString(version) + "[/]";
         }
 
         public static string FormatTransportAuthor(string author)
         {
-            return "[lightslateblue]" + EscapeString(author.Trim()) + "[/]";
+            return "[lightslateblue]" + EscapeString(author) + "[/]";
         }
 
 

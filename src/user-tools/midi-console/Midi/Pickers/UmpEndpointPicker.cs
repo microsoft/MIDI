@@ -57,6 +57,7 @@ namespace Microsoft.Midi.ConsoleApp
                 int maxEndpointNameWidth = 0;
                 int maxManufacturerNameWidth = 0;
                 int maxMidi2Width = 0;
+                int maxTransportCodeWidth = 0;
 
                 // calculate sizes
                 foreach (var endpoint in endpoints)
@@ -70,13 +71,15 @@ namespace Microsoft.Midi.ConsoleApp
                         maxManufacturerNameWidth = Math.Max(transportInfo.ManufacturerName.Length, maxManufacturerNameWidth);
                     }
 
+                    maxTransportCodeWidth = Math.Max(transportInfo.TransportCode.Length + 2, maxTransportCodeWidth);
+
                     if (endpoint.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
                     {
                         maxMidi2Width = supportsMidi2Indicator.Length;  
                     }
                 }
 
-                int totalLineWidth = 2 + maxEndpointNameWidth + maxMidi2Width + maxManufacturerNameWidth;
+                int totalLineWidth = 2 + maxEndpointNameWidth + maxTransportCodeWidth + maxMidi2Width + maxManufacturerNameWidth;
 
 
                 foreach (var endpoint in endpoints)
@@ -88,6 +91,7 @@ namespace Microsoft.Midi.ConsoleApp
                     string endpointNamePadded = endpoint.Name.PadRight(maxEndpointNameWidth, ' ');
                     string manufacturerNamePadded;
                     string midi2Padded = string.Empty;
+                    string transportCodePadded = transportInfo.TransportCode.PadRight(maxTransportCodeWidth, ' ');
 
                     if (endpoint.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
                     {
@@ -110,6 +114,7 @@ namespace Microsoft.Midi.ConsoleApp
                     choices.Add(new UmpEndpointPickerEntry(
                         AnsiMarkupFormatter.GetEndpointIcon(endpoint) + " " +
                         AnsiMarkupFormatter.FormatEndpointName(endpointNamePadded) +
+                        AnsiMarkupFormatter.FormatTransportCode(transportCodePadded) +
                         midi2Padded +
                         AnsiMarkupFormatter.FormatManufacturerName(manufacturerNamePadded),
                         endpoint.EndpointDeviceId));

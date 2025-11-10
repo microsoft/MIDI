@@ -47,7 +47,7 @@ namespace Microsoft.Midi.ConsoleApp
                 foreach (var transport in transportList)
                 {
                     table.AddRow(
-                        $"{AnsiMarkupFormatter.FormatTransportName(transport.Name)} ({AnsiMarkupFormatter.FormatTransportMnemonic(transport.TransportCode)}) Version {AnsiMarkupFormatter.FormatTransportVersion(transport.Version)}"
+                        $"{AnsiMarkupFormatter.FormatTransportName(transport.Name)} ({AnsiMarkupFormatter.FormatTransportCode(transport.TransportCode)}) Version {AnsiMarkupFormatter.FormatTransportVersion(transport.Version)}"
                         );
 
                     table.AddRow(
