@@ -65,21 +65,11 @@
             "type": "string",
             "enum": [
               "BuildAndPublishAll",
-              "T_BuildAndPackageElectronProjection",
-              "T_BuildAndPackAllAppSDKs",
-              "T_BuildAppSdkRuntimeAndToolsInstaller",
-              "T_BuildAppSDKToolsAndTests",
-              "T_BuildConsoleApp",
-              "T_BuildCppSamples",
-              "T_BuildCSharpSamples",
-              "T_BuildPowerShellProjection",
-              "T_BuildSettingsApp",
-              "T_BuildUserToolsSharedComponents",
-              "T_CopySharedDesignAssets",
+              "T_BuildInDevelopmentServicePlugins",
+              "T_BuildNetworkMidiInstaller",
+              "T_BuildVirtualPatchBayPluginInstaller",
               "T_CreateVersionIncludes",
-              "T_Prerequisites",
-              "T_ZipPowershellDevUtilities",
-              "T_ZipSamples"
+              "T_Prerequisites"
             ]
           }
         },
@@ -90,21 +80,11 @@
             "type": "string",
             "enum": [
               "BuildAndPublishAll",
-              "T_BuildAndPackageElectronProjection",
-              "T_BuildAndPackAllAppSDKs",
-              "T_BuildAppSdkRuntimeAndToolsInstaller",
-              "T_BuildAppSDKToolsAndTests",
-              "T_BuildConsoleApp",
-              "T_BuildCppSamples",
-              "T_BuildCSharpSamples",
-              "T_BuildPowerShellProjection",
-              "T_BuildSettingsApp",
-              "T_BuildUserToolsSharedComponents",
-              "T_CopySharedDesignAssets",
+              "T_BuildInDevelopmentServicePlugins",
+              "T_BuildNetworkMidiInstaller",
+              "T_BuildVirtualPatchBayPluginInstaller",
               "T_CreateVersionIncludes",
-              "T_Prerequisites",
-              "T_ZipPowershellDevUtilities",
-              "T_ZipSamples"
+              "T_Prerequisites"
             ]
           }
         },
