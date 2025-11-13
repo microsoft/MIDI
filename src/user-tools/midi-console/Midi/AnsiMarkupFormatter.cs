@@ -6,7 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Windows.AI.MachineLearning;
 using Windows.Devices.Enumeration;
 
 

@@ -18,7 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using static Nuke.Common.EnvironmentInfo;
-using static Nuke.Common.IO.FileSystemTasks;
+//using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 
 class Build : NukeBuild
@@ -266,7 +266,7 @@ class Build : NukeBuild
             MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
                 .SetMaxCpuCount(null)
-                .SetProcessArgumentConfigurator(_ => _.Add("/t:TransformAll"))
+                .AddProcessAdditionalArguments("/t:TransformAll")
                 .SetProperties(msbuildProperties)
                 .SetVerbosity(MSBuildVerbosity.Normal)
                 .EnableNodeReuse()
@@ -326,16 +326,16 @@ class Build : NukeBuild
                 }
 
                 // sample manifest
-                //     FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                //     (AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
 
                 // bootstrap files
-                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                (AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
+                //(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
 
                 // these are not architecture-specific
-                FileSystemTasks.CopyFileToDirectory(sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions.h", AppSdkStagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_i.c", AppSdkStagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_p.c", AppSdkStagingFolder, FileExistsPolicy.Overwrite, true);
+                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions.h").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
+                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_i.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
+                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_p.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
             }
 
 
@@ -360,7 +360,7 @@ class Build : NukeBuild
 
                 foreach (var file in sdkBinaries)
                 {
-                    FileSystemTasks.CopyFileToDirectory(file, AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                    file.CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
                 }
 
                 
@@ -382,13 +382,9 @@ class Build : NukeBuild
 
             // copy the NuGet package over to this release
 
-            FileSystemTasks.CopyFileToDirectory(
-                AppSdkNugetOutputFolder /  $"{NugetFullPackageIdWithVersion}.nupkg", 
+            (AppSdkNugetOutputFolder / $"{NugetFullPackageIdWithVersion}.nupkg").CopyToDirectory(
                 ThisReleaseFolder, 
-                FileExistsPolicy.Overwrite, 
-                true);
-
-
+                ExistsPolicy.FileOverwrite);
 
 
         });
@@ -489,12 +485,12 @@ class Build : NukeBuild
                 }
 
                 // Simple MIDI utilities
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiksinfo" / stagingPlatform / Configuration.Release / $"midiksinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midimdnsinfo" / stagingPlatform / Configuration.Release / $"midimdnsinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midi1monitor" / stagingPlatform / Configuration.Release / $"midi1monitor.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midi1enum" / stagingPlatform / Configuration.Release / $"midi1enum.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midifixreg" / stagingPlatform / Configuration.Release / $"midifixreg.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                (sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
+                (sdkOutputRootFolder / "midiksinfo" / stagingPlatform / Configuration.Release / $"midiksinfo.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
+                (sdkOutputRootFolder / "midimdnsinfo" / stagingPlatform / Configuration.Release / $"midimdnsinfo.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
+                (sdkOutputRootFolder / "midi1monitor" / stagingPlatform / Configuration.Release / $"midi1monitor.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
+                (sdkOutputRootFolder / "midi1enum" / stagingPlatform / Configuration.Release / $"midi1enum.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
+                (sdkOutputRootFolder / "midifixreg" / stagingPlatform / Configuration.Release / $"midifixreg.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
             }
         });
 
@@ -550,9 +546,8 @@ class Build : NukeBuild
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
 
                 string newInstallerName = $"Windows MIDI Services (SDK Runtime and Tools) {BuildVersionFullString}-{platform.ToLower()}.exe";
-                FileSystemTasks.CopyFile(
-                    AppSdkSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
-                    ThisReleaseFolder / newInstallerName);
+                (AppSdkSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe")
+                    .Copy(ThisReleaseFolder / newInstallerName);
 
                 BuiltSdkRuntimeInstallers[platform.ToLower()] = newInstallerName;
             }
@@ -765,7 +760,7 @@ class Build : NukeBuild
 
                 foreach (var f in paths)
                 {
-                    FileSystemTasks.CopyFileToDirectory(f, stagingFolder, FileExistsPolicy.Overwrite);
+                    f.CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
                 }
 
                 // Add Assets folder with app icon. This ends up special-cased
@@ -776,7 +771,7 @@ class Build : NukeBuild
 
                 foreach (var f in assets)
                 {
-                    FileSystemTasks.CopyFileToDirectory(f, stagingFolder, FileExistsPolicy.Overwrite);
+                    f.CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
                 }
 
                 // also write lines to the setup include file
@@ -839,23 +834,23 @@ class Build : NukeBuild
             var transportAssetsStagingRoot = assetsStagingRoot / "Transports";
             var endpointAssetsStagingRoot = assetsStagingRoot / "Endpoints";
 
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "APPPUB-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "BLE10-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "DIAG-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "KSA-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "KS-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "LOOP-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "NET2UDP-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            (designSourceFolder / "APPPUB-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "BLE10-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "DIAG-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "KSA-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "KS-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "LOOP-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "NET2UDP-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
 
 
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-apppub-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ble10-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-diag-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ksa-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ks-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-loop-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-net2udp-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            (designSourceFolder / "default-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "default-apppub-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "default-ble10-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "default-diag-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "default-ksa-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "default-ks-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "default-loop-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "default-net2udp-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
 
         });
 
@@ -929,30 +924,30 @@ class Build : NukeBuild
 
                 var stagingFolder = MidiConsoleStagingFolder / platform;
 
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.exe", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.deps.json", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.runtimeconfig.json", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.exe.manifest", stagingFolder, FileExistsPolicy.Overwrite, true);
+                (consoleOutputFolder / "midi.exe").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "midi.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "midi.deps.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "midi.runtimeconfig.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                //(consoleOutputFolder / "midi.exe.manifest", stagingFolder, ExistsPolicy.FileOverwrite);
 
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "WinRT.Runtime.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                (consoleOutputFolder / "WinRT.Runtime.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.SDK.NET.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                (consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "Microsoft.Windows.SDK.NET.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Spectre.Console.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Spectre.Console.Cli.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                (consoleOutputFolder / "Spectre.Console.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "Spectre.Console.Cli.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.CodeDom.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Diagnostics.EventLog.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Diagnostics.EventLog.Messages.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Management.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.ServiceProcess.ServiceController.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                (consoleOutputFolder / "System.CodeDom.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "System.Diagnostics.EventLog.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "System.Diagnostics.EventLog.Messages.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "System.Management.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "System.ServiceProcess.ServiceController.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
 
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    (runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, ExistsPolicy.FileOverwrite);
+            //    (runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, ExistsPolicy.FileOverwrite);
+                //(runtimesFolder / ns + ".winmd", stagingFolder, ExistsPolicy.FileOverwrite);
 
             }
 
@@ -1025,33 +1020,33 @@ class Build : NukeBuild
 
             var stagingFolder = MidiPowerShellStagingFolder / platform;
 
-            FileSystemTasks.CopyFileToDirectory(MidiPowerShellSolutionFolder / "WindowsMidiServices.psd1", stagingFolder, FileExistsPolicy.Overwrite, true);
+            (MidiPowerShellSolutionFolder / "WindowsMidiServices.psd1").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "WindowsMidiServices.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "WindowsMidiServices.deps.json", stagingFolder, FileExistsPolicy.Overwrite, true);
+            (psOutputFolder / "WindowsMidiServices.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "WindowsMidiServices.deps.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "WinRT.Runtime.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            (psOutputFolder / "WinRT.Runtime.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Microsoft.Windows.SDK.NET.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            (psOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "Microsoft.Windows.SDK.NET.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Microsoft.ApplicationInsights.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Microsoft.Win32.Registry.AccessControl.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Newtonsoft.Json.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.CodeDom.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Configuration.ConfigurationManager.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Diagnostics.EventLog.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.DirectoryServices.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Management.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Security.Cryptography.Pkcs.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Security.Cryptography.ProtectedData.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Security.Permissions.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Windows.Extensions.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            (psOutputFolder / "Microsoft.ApplicationInsights.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "Microsoft.Win32.Registry.AccessControl.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "Newtonsoft.Json.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.CodeDom.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.Configuration.ConfigurationManager.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.Diagnostics.EventLog.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.DirectoryServices.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.Management.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.Security.Cryptography.Pkcs.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.Security.Cryptography.ProtectedData.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.Security.Permissions.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+            (psOutputFolder / "System.Windows.Extensions.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
 
 
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    (runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, ExistsPolicy.FileOverwrite);
+            //    (runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, ExistsPolicy.FileOverwrite);
+            //(runtimesFolder / ns + ".winmd", stagingFolder, ExistsPolicy.FileOverwrite);
 
         }
 
@@ -1370,7 +1365,7 @@ class Build : NukeBuild
 
       //      foreach (var sdkFile in sdkFiles)
       //      {
-      //          FileSystemTasks.CopyFileToDirectory(
+      //          (
       //              sdkFile,
       //              platformOutputRootFolder,
       //              FileExistsPolicy.Overwrite,
@@ -1379,10 +1374,10 @@ class Build : NukeBuild
 
 
       //      // main windows metadata file
-      //      //FileSystemTasks.CopyFileToDirectory(
+      //      //(
       //      //    @"C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd",
       //      //    platformOutputRootFolder,
-      //      //    FileExistsPolicy.Overwrite, true);
+      //      //    ExistsPolicy.FileOverwrite);
 
       //      foreach (var ns in AppSdkAssemblies)
       //      {
@@ -1481,10 +1476,10 @@ class Build : NukeBuild
 
       //          //var sourceBinFolder = platformNamespaceFolder / "build" / "Release";
 
-      //          //FileSystemTasks.CopyFileToDirectory(
+      //          //(
       //          //    sourceBinFolder / "binding.node",
       //          //    nsReleaseRootFolder / "build" / "Release",
-      //          //    FileExistsPolicy.Overwrite, true);
+      //          //    ExistsPolicy.FileOverwrite);
 
       //          //// we also want the three files in the lib folder
 
@@ -1496,16 +1491,16 @@ class Build : NukeBuild
       //          //{
       //          //    //Console.WriteLine($"Copying Projection File: {libFile}");
 
-      //          //    FileSystemTasks.CopyFileToDirectory(
+      //          //    (
       //          //        libFile,
       //          //        nsReleaseRootFolder / "lib",
-      //          //        FileExistsPolicy.Overwrite, true);
+      //          //        ExistsPolicy.FileOverwrite);
       //          //}
 
-      //          //FileSystemTasks.CopyFileToDirectory(
+      //          //(
       //          //    nsFolder / "package.json",
       //          //    nsReleaseRootFolder,
-      //          //    FileExistsPolicy.Overwrite, true);
+      //          //    ExistsPolicy.FileOverwrite);
 
 
       //      }

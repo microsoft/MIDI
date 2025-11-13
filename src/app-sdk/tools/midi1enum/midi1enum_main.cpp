@@ -58,7 +58,10 @@ std::vector<MidiPort> m_midiOutputs{};
 
 void LoadWinMMDevices()
 {
-    //std::map<uint16_t, MIDIINCAPSW> midiInputDevices;
+    // needed for the looping option
+    m_midiInputs.clear();
+    m_midiOutputs.clear();
+
 
     auto inputDeviceCount = midiInGetNumDevs();
 
@@ -182,7 +185,7 @@ void DisplayAllWinMMOutputs()
 #define RETURN_INVALID_PORT_NUMBER 1
 #define RETURN_UNABLE_TO_OPEN_PORT 2
 
-int __cdecl main(int /*argc*/, char* /*argv[]*/)
+int __cdecl main(int argc, char* argv[])
 {
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
@@ -192,13 +195,61 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
     std::cout << dye::aqua(" List of WinMM/MME ports") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
 
-    LoadWinMMDevices();
+    bool loop{ false };
 
-    DisplayAllWinMMInputs();
+    if (argc >= 2)
+    {
+        std::string loopParam{ "--loop" };
+        std::string loopParamShort{ "-l" };
 
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+        std::string providedParam(argv[1]);
+       
+        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParam.c_str(), loopParam.size() + 1, providedParam.c_str(), providedParam.size() + 1)
+            == CSTR_EQUAL)
+        {
+            loop = true;
+        }
 
-    DisplayAllWinMMOutputs();
+        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParamShort.c_str(), loopParamShort.size() + 1, providedParam.c_str(), providedParam.size() + 1)
+            == CSTR_EQUAL)
+        {
+            loop = true;
+        }
+
+    }
+
+    while (true)
+    {
+        LoadWinMMDevices();
+
+        DisplayAllWinMMInputs();
+
+        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+
+        DisplayAllWinMMOutputs();
+
+        if (loop)
+        {
+            std::cout << dye::grey("Press space to enumerate again, or escape to close.") << std::endl;
+
+            auto ch = _getch();
+
+            if (ch == KEY_ESCAPE)
+            {
+                WriteInfo("\nClosing");
+                break;
+            }
+            else if (ch == KEY_SPACE)
+            {
+                // continue looping
+            }
+        }
+        else
+        {
+            // not looping, so bail
+            break;
+        }
+    }
 
 
     return 0;
