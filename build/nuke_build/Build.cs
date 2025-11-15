@@ -1,4 +1,5 @@
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Build.Locator;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.Execution;
@@ -23,6 +24,7 @@ using static Nuke.Common.IO.PathConstruction;
 
 class Build : NukeBuild
 {
+
     /// Support plugins are available for:
     ///   - JetBrains ReSharper        https://nuke.build/resharper
     ///   - JetBrains Rider            https://nuke.build/rider
@@ -162,7 +164,7 @@ class Build : NukeBuild
     AbsolutePath SamplesCSWinRTSolutionFolder => SamplesRootFolder / "csharp-net";
 
     
-    string[] SdkPlatformsIncludingAnyCpu => new string[] { "x64", "Arm64EC", "AnyCPU" };
+    string[] SdkPlatformsIncludingAnyCpu => new string[] { "AnyCPU", "x64", "Arm64EC"  };
     string[] SdkPlatforms => new string[] { "x64", "Arm64EC" };
     string[] ServiceAndApiPlatforms => new string[] { "x64", "Arm64" };
     string[] ServiceAndApiPlatformsAll => new string[] { "x64", "Arm64", "Arm64EC" };   // the order here matters because the dependencies in the solution aren't perfect
@@ -177,12 +179,52 @@ class Build : NukeBuild
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
+    string MSBuildPath;
+
+    void SetMSBuildVersion()
+    {
+        //MSBuildLocator.RegisterInstance(MSBuildLocator.QueryVisualStudioInstances().OrderByDescending(
+        //   instance => instance.Version).First());
+
+        //var instances = MSBuildLocator.QueryVisualStudioInstances().OrderByDescending(instance => instance.Version);
+
+        //foreach (var inst in instances)
+        //{
+        //    Console.WriteLine($"Instance Found: {inst.Version.ToString()}");
+        //    Console.WriteLine($"- MSBuild Path: {inst.MSBuildPath}");
+        //    Console.WriteLine();
+        //}
+
+        //MSBuildPath = MSBuildLocator.QueryVisualStudioInstances().OrderByDescending(
+        //    instance => instance.Version).First().MSBuildPath;
+
+        //Console.WriteLine($"Using: {MSBuildPath}");
+        //Console.WriteLine();
+
+
+
+        // I hate this, but build was picking up the v17 tools no matter what I did.
+        MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+
+        MSBuildTasks.MSBuildPath = MSBuildPath;
+    }
+
+    //protected override void OnBuildCreated()
+    //{
+    //    RegisterMSBuildVersion();
+
+    //    base.OnBuildCreated();
+    //}
+
 
     Target T_Prerequisites => _ => _
         .Executes(() =>
         {
             Logging.Level = LoggingLevel;
 
+            SetMSBuildVersion();
+
+            Console.WriteLine($"Found MSBuild here: {MSBuildPath}");
 
             BuildDate = DateTime.Today;
 
@@ -236,6 +278,8 @@ class Build : NukeBuild
         .DependsOn(T_Prerequisites)
         .Executes(() =>
         {
+
+
             string buildSource = "GitHub Preview";
             string versionName = VersionName;
             //string versionString = BuildVersionFullString;
@@ -264,6 +308,7 @@ class Build : NukeBuild
             msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version").ToString());
 
             MSBuildTasks.MSBuild(_ => _
+                .SetProcessToolPath(MSBuildTasks.MSBuildPath)
                 .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
                 .SetMaxCpuCount(null)
                 .AddProcessAdditionalArguments("/t:TransformAll")
@@ -282,7 +327,7 @@ class Build : NukeBuild
         {
         //    bool wxsWritten = false;
 
-            foreach (var platform in SdkPlatforms)
+            foreach (var platform in SdkPlatformsIncludingAnyCpu)
             {
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
 
@@ -300,6 +345,7 @@ class Build : NukeBuild
                 Console.Out.WriteLine($"Platform:      {platform}");
 
                 MSBuildTasks.MSBuild(_ => _
+                    .SetProcessToolPath(MSBuildTasks.MSBuildPath)
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
@@ -460,6 +506,7 @@ class Build : NukeBuild
 
 
                 MSBuildTasks.MSBuild(_ => _
+                    .SetProcessToolPath(MSBuildTasks.MSBuildPath)
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk-tools-and-tests.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
@@ -530,6 +577,7 @@ class Build : NukeBuild
 
 
                 MSBuildTasks.MSBuild(_ => _
+                    .SetProcessToolPath(MSBuildTasks.MSBuildPath)
                     .SetTargetPath(AppSdkSetupSolutionFolder / "midi-services-app-sdk-runtime-setup.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
@@ -1014,7 +1062,7 @@ class Build : NukeBuild
 
             // TODO: This doesn't deal with any localization content
 
-            var psOutputFolder = MidiPowerShellSolutionFolder / "bin" / Configuration.Release / $"net8.0-windows{TargetWindowsSdkVersion}" / rid;
+            var psOutputFolder = MidiPowerShellSolutionFolder / "bin" / Configuration.Release / $"net10.0-windows{TargetWindowsSdkVersion}" / rid;
             //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
             var runtimesFolder = psOutputFolder;
 
@@ -1237,6 +1285,7 @@ class Build : NukeBuild
 
 
                 MSBuildTasks.MSBuild(_ => _
+                    .SetProcessToolPath(MSBuildTasks.MSBuildPath)
                     .SetTargetPath(solution)
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
@@ -1606,6 +1655,7 @@ class Build : NukeBuild
         .DependsOn(T_ZipSamples)
         .Executes(() =>
         {
+
             if (BuiltSdkRuntimeInstallers.Count > 0)
             {
                 Console.WriteLine("\nBuilt SDK runtime installers:");
