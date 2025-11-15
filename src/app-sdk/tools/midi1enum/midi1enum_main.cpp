@@ -55,6 +55,8 @@ struct MidiPort
 std::vector<MidiPort> m_midiInputs{};
 std::vector<MidiPort> m_midiOutputs{};
 
+uint32_t m_midiInputCountNoErrors{ 0 };
+uint32_t m_midiOutputCountNoErrors{ 0 };
 
 void LoadWinMMDevices()
 {
@@ -62,6 +64,8 @@ void LoadWinMMDevices()
     m_midiInputs.clear();
     m_midiOutputs.clear();
 
+    m_midiInputCountNoErrors = 0;
+    m_midiOutputCountNoErrors = 0;
 
     auto inputDeviceCount = midiInGetNumDevs();
 
@@ -78,6 +82,8 @@ void LoadWinMMDevices()
         {
             port.Name = inputCaps.szPname;
             port.IsError = false;
+
+            m_midiInputCountNoErrors++;
         }
         else
         {
@@ -106,6 +112,8 @@ void LoadWinMMDevices()
         {
             port.Name = outputCaps.szPname;
             port.IsError = false;
+
+            m_midiOutputCountNoErrors++;
         }
         else
         {
@@ -122,7 +130,7 @@ void DisplayAllWinMMInputs()
 {
     auto deviceCount = midiInGetNumDevs();
     WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiInGetNumDevs");
-    WriteInfo(" " + std::to_string(m_midiInputs.size()) + " available Input Ports (MIDI Sources) found.");
+    WriteInfo(" " + std::to_string(m_midiInputCountNoErrors) + " valid Input Ports (MIDI Sources) found.");
     std::wcout << std::endl;
 
     for (auto const& port : m_midiInputs)
@@ -153,7 +161,7 @@ void DisplayAllWinMMOutputs()
     auto deviceCount = midiOutGetNumDevs();
 
     WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiOutGetNumDevs");
-    WriteInfo(" " + std::to_string(m_midiOutputs.size()) + " available Output Ports (MIDI Destinations) found.");
+    WriteInfo(" " + std::to_string(m_midiOutputCountNoErrors) + " valid Output Ports (MIDI Destinations) found.");
     std::wcout << std::endl;
 
     for (auto const& port : m_midiOutputs)
