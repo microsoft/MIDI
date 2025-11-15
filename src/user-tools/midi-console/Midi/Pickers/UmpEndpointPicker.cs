@@ -122,7 +122,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 //  Console.WriteLine("DEBUG: sorting");
 
-                choices.Sort();
+             //   choices.Sort();
 
                 // this feels so dirty               
                 choices.Add(new UmpEndpointPickerEntry("🔙 " + "(Cancel)".PadRight(totalLineWidth, ' '), "")); // TODO: Localize

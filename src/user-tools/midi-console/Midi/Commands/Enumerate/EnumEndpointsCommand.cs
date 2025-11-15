@@ -149,7 +149,7 @@ namespace Microsoft.Midi.ConsoleApp
             }
 
             table.AddRow(
-                new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo.EndpointPurpose) + " " + AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)),
+                new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo) + " " + AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)),
                 new Markup(AnsiMarkupFormatter.FormatTransportCode(transportInfo.TransportCode)),
                 new Markup(midi20),
                 new Markup(AnsiMarkupFormatter.FormatManufacturerName(transportInfo.ManufacturerName))
