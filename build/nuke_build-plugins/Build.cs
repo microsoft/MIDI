@@ -18,7 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using static Nuke.Common.EnvironmentInfo;
-using static Nuke.Common.IO.FileSystemTasks;
+//using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 
 class Build : NukeBuild
@@ -148,11 +148,32 @@ class Build : NukeBuild
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
 
+    string MSBuildPath;
+
+    void SetMSBuildVersionOld()
+    {
+
+        // I hate this, but build was picking up the v17 tools no matter what I did.
+        //MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+        MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+
+        MSBuildTasks.MSBuildPath = MSBuildPath;
+    }
+    void SetMSBuildVersionNew()
+    {
+
+        // I hate this, but build was picking up the v17 tools no matter what I did.
+        MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+
+        MSBuildTasks.MSBuildPath = MSBuildPath;
+    }
+
     Target T_Prerequisites => _ => _
         .Executes(() =>
         {
             Logging.Level = LoggingLevel;
 
+            SetMSBuildVersionNew();
 
             BuildDate = DateTime.Today;
 
@@ -236,7 +257,7 @@ class Build : NukeBuild
             MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
                 .SetMaxCpuCount(null)
-                .SetProcessArgumentConfigurator(_ => _.Add("/t:TransformAll"))
+                .AddProcessAdditionalArguments("/t:TransformAll")
                 .SetProperties(msbuildProperties)
                 .SetVerbosity(MSBuildVerbosity.Normal)
                 .EnableNodeReuse()
@@ -291,7 +312,7 @@ class Build : NukeBuild
 
                 foreach (var file in stagingFiles)
                 {
-                    FileSystemTasks.CopyFileToDirectory(file, ApiStagingFolder / servicePlatform, FileExistsPolicy.Overwrite, true);
+                    file.CopyToDirectory(ApiStagingFolder / servicePlatform, ExistsPolicy.FileOverwrite);
                 }
             }
         });
@@ -400,9 +421,9 @@ class Build : NukeBuild
 
             string newInstallerName = $"Windows MIDI Services (Network MIDI 2.0 Preview) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
-            FileSystemTasks.CopyFile(
-                NetworkMidiSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesNetworkMidiSetup.exe",
-                ThisReleaseFolder / newInstallerName);
+            var setupFile = NetworkMidiSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesNetworkMidiSetup.exe";
+
+            setupFile.Copy(ThisReleaseFolder / newInstallerName);
 
             BuiltNetworkMidiInstallers[platform.ToLower()] = newInstallerName;
 
@@ -453,9 +474,9 @@ class Build : NukeBuild
 
                 string newInstallerName = $"Windows MIDI Services (Virtual Patch Bay Preview) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
-                FileSystemTasks.CopyFile(
-                    VirtualPatchBaySetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesVirtualPatchBaySetup.exe",
-                    ThisReleaseFolder / newInstallerName);
+
+                var setupFile = VirtualPatchBaySetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesVirtualPatchBaySetup.exe";
+                setupFile.Copy(ThisReleaseFolder / newInstallerName);
 
                 BuiltVirtualPatchBayInstallers[platform.ToLower()] = newInstallerName;
 

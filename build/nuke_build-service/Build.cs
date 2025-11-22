@@ -18,7 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using static Nuke.Common.EnvironmentInfo;
-using static Nuke.Common.IO.FileSystemTasks;
+//using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 
 class Build : NukeBuild
@@ -145,12 +145,32 @@ class Build : NukeBuild
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
+    string MSBuildPath;
+
+    void SetMSBuildVersionOld()
+    {
+
+        // I hate this, but build was picking up the v17 tools no matter what I did.
+        //MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+        MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+
+        MSBuildTasks.MSBuildPath = MSBuildPath;
+    }
+    void SetMSBuildVersionNew()
+    {
+
+        // I hate this, but build was picking up the v17 tools no matter what I did.
+        MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+
+        MSBuildTasks.MSBuildPath = MSBuildPath;
+    }
 
     Target T_Prerequisites => _ => _
         .Executes(() =>
         {
             Logging.Level = LoggingLevel;
 
+            SetMSBuildVersionNew();
 
             BuildDate = DateTime.Today;
 
@@ -229,14 +249,19 @@ class Build : NukeBuild
 
             msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version").ToString());
 
+            SetMSBuildVersionNew();
+
             MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
                 .SetMaxCpuCount(null)
-                .SetProcessArgumentConfigurator(_ => _.Add("/t:TransformAll"))
+                .AddProcessAdditionalArguments("/t:TransformAll")
                 .SetProperties(msbuildProperties)
                 .SetVerbosity(MSBuildVerbosity.Normal)
                 .EnableNodeReuse()
             );
+
+            // WDK is broken for VS 2026, so have to use old VS 2022 MSBuild tools
+            SetMSBuildVersionOld();
 
         });
 
@@ -336,7 +361,7 @@ class Build : NukeBuild
 
             foreach (var file in stagingFiles)
             {
-                FileSystemTasks.CopyFileToDirectory(file, ApiStagingFolder / servicePlatform, FileExistsPolicy.Overwrite, true);
+                file.CopyToDirectory(ApiStagingFolder / servicePlatform, ExistsPolicy.FileOverwrite);
             }
         }
 
@@ -392,7 +417,7 @@ class Build : NukeBuild
             // copy the files over to the reference location
             foreach (var file in referenceFiles)
             {
-                FileSystemTasks.CopyFileToDirectory(file, ApiReferenceFolder / platform, FileExistsPolicy.Overwrite, true);
+                file.CopyToDirectory(ApiReferenceFolder / platform, ExistsPolicy.FileOverwrite);
             }
 
 
@@ -509,9 +534,8 @@ class Build : NukeBuild
 
                 string newInstallerName = $"Windows MIDI Services ({installerType}In-Box Service) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
-                FileSystemTasks.CopyFile(
-                    InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
-                    ThisReleaseFolder / newInstallerName);
+                var setupFile = InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe";
+                setupFile.Copy(ThisReleaseFolder / newInstallerName, ExistsPolicy.FileOverwrite);               
 
                 BuiltInBoxInstallers[platform.ToLower()] = newInstallerName;
             }
@@ -577,25 +601,25 @@ class Build : NukeBuild
             string driverFile = "wdmaud2.drv";
             string pdbFile = "wdmaud2.pdb";
 
-            CopyFile(ApiStagingFolder / "arm64" / driverFile, arm64 / driverFile, FileExistsPolicy.Fail, false);
-            CopyFile(ApiStagingFolder / "arm64" / pdbFile, arm64 / pdbFile, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperCmdFileFullPath, arm64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperPs1FileFullPath, arm64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
-            CopyFile(readmeFileFullPath, arm64 / readmeFileName, FileExistsPolicy.Fail, false);
+            (ApiStagingFolder / "arm64" / driverFile).Copy(arm64 / driverFile, ExistsPolicy.Fail);
+            (ApiStagingFolder / "arm64" / pdbFile).Copy(arm64 / pdbFile, ExistsPolicy.Fail); 
+            (regHelperCmdFileFullPath).Copy(arm64 / regHelperCmdFileName, ExistsPolicy.Fail);
+            (regHelperPs1FileFullPath).Copy(arm64 / regHelperPs1FileName, ExistsPolicy.Fail);
+            (readmeFileFullPath).Copy(arm64 / readmeFileName, ExistsPolicy.Fail);
 
 
-            CopyFile(ApiStagingFolder / "x64" / driverFile, x64 / driverFile, FileExistsPolicy.Fail, false);
-            CopyFile(ApiStagingFolder / "x64" / pdbFile, x64 / pdbFile, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperCmdFileFullPath, x64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperPs1FileFullPath, x64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
-            CopyFile(readmeFileFullPath, x64 / readmeFileName, FileExistsPolicy.Fail, false);
+            (ApiStagingFolder / "x64" / driverFile).Copy(x64 / driverFile, ExistsPolicy.Fail);
+            (ApiStagingFolder / "x64" / pdbFile).Copy(x64 / pdbFile, ExistsPolicy.Fail);
+            (regHelperCmdFileFullPath).Copy(x64 / regHelperCmdFileName, ExistsPolicy.Fail);
+            (regHelperPs1FileFullPath).Copy(x64 / regHelperPs1FileName, ExistsPolicy.Fail);
+            (readmeFileFullPath).Copy(x64 / readmeFileName, ExistsPolicy.Fail);
 
 
-            CopyFile(ApiStagingFolder / "Win32" / driverFile, x86 / driverFile, FileExistsPolicy.Fail, false);
-            CopyFile(ApiStagingFolder / "Win32" / pdbFile, x86 / pdbFile, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperx86CmdFileFullPath, x86 / regHelperx86CmdFileName, FileExistsPolicy.Fail, false);
-            CopyFile(regHelperx86Ps1FileFullPath, x86 / regHelperx86Ps1FileName, FileExistsPolicy.Fail, false);
-            CopyFile(readmeFileFullPath, x86 / readmeFileName, FileExistsPolicy.Fail, false);
+            (ApiStagingFolder / "Win32" / driverFile).Copy(x86 / driverFile, ExistsPolicy.Fail);
+            (ApiStagingFolder / "Win32" / pdbFile).Copy(x86 / pdbFile, ExistsPolicy.Fail);
+            (regHelperx86CmdFileFullPath).Copy(x86 / regHelperx86CmdFileName, ExistsPolicy.Fail);
+            (regHelperx86Ps1FileFullPath).Copy(x86 / regHelperx86Ps1FileName, ExistsPolicy.Fail);
+            (readmeFileFullPath).Copy(x86 / readmeFileName, ExistsPolicy.Fail);
 
 
             x64.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-x64.zip");

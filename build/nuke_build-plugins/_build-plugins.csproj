@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace></RootNamespace>
     <NoWarn>CS0649;CS0169;CA1050;CA1822;CA2211;IDE1006</NoWarn>
     <NukeRootDirectory>..</NukeRootDirectory>
@@ -12,12 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.CommandLine" Version="6.10.0">
+    <PackageReference Include="NuGet.CommandLine" Version="7.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Nuke.Common" Version="8.0.0" />
-    <PackageReference Include="Nuke.GitHub" Version="5.0.1" />
+    <PackageReference Include="Nuke.Common" Version="10.0.0" />
+    <PackageReference Include="Nuke.GitHub" Version="7.0.0" />
   </ItemGroup>
 
 </Project>
