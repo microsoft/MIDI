@@ -73,7 +73,8 @@ CmdletsToExport = @(
     "Open-MidiEndpointConnection", "Close-MidiEndpointConnection", 
     "Send-MidiMessage", 
     "Get-MidiMessageInfo",
-    "Start-MidiBeatClock", "Stop-MidiBeatClock")
+    "Start-MidiBeatClock", "Stop-MidiBeatClock",
+    "New-MidiLoopbackEndpointPair")
 
 # Variables to export from this module
 VariablesToExport = '*'
