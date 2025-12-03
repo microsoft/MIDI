@@ -287,11 +287,11 @@ StreamEngine::HandleIo()
 
                 if (bufferInUse >= READ_BUFFER_MAX_THRESHOLD)
                 {
-                    USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false);
+                    USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false, false);
                 }
                 else if (bufferInUse < READ_BUFFER_MIN_THRESHOLD)
                 {
-                    USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), true);
+                    USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), true, false);
                 }
             }
             else
@@ -576,10 +576,6 @@ StreamEngine::Pause()
     }
     else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
-        // Stop Continuous reader
-        WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
-        PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
-
         // Make sure we are not trying to change state while processing
         auto lock = m_MidiInLock.acquire();
 
@@ -588,18 +584,6 @@ StreamEngine::Pause()
         m_TotalDroppedBuffers = 0;
         m_ContiguousDroppedBuffers = 0;
         m_TotalBuffersProcessed = 0;
-
-        if (pDevCtx)
-        {
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
-                "%!FUNC! STOPPING Continuous Reader.");
-            USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false);
-        }
-        else
-        {
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
-                "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
-        }
 
         // shut down and clean up the worker thread.
         m_ThreadExitEvent.set();
@@ -711,7 +695,7 @@ StreamEngine::Run()
 
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! STARTING Continuous Reader.");
-            USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), true);
+            USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), true, false);
         }
         else
         {

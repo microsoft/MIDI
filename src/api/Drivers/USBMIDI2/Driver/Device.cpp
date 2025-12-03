@@ -473,12 +473,12 @@ EvtDeviceD0Entry(
     _In_  WDF_POWER_DEVICE_STATE PreviousState
 )
 {
-    UNREFERENCED_PARAMETER(Device);
     UNREFERENCED_PARAMETER(PreviousState);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     PAGED_CODE();
+    USBMIDI2DriverIoContinuousReader(Device, true, true);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -499,6 +499,7 @@ EvtDeviceD0Exit(
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     PAGED_CODE();
+    USBMIDI2DriverIoContinuousReader(Device, false, true);
 
     powerAction = WdfDeviceGetSystemPowerAction(Device);
 
@@ -2094,7 +2095,8 @@ _Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID USBMIDI2DriverIoContinuousReader(
     WDFDEVICE  Device,
-    BOOLEAN    runContinuousReader
+    BOOLEAN    runContinuousReader,
+    BOOLEAN    setActive
 )
 /*++
 Routine Description:
@@ -2106,6 +2108,7 @@ Arguments:
 
     Device - the device context
     runContinuousReader - boolean to indicate if to run the continuous reader if possible
+    setActive - indicate to set to Active state if applicable
 
 Return Value:
 
@@ -2119,14 +2122,22 @@ Return Value:
 
 
     pDeviceContext = GetDeviceContext(Device);
-
+    
     if (runContinuousReader)
     {
         KeAcquireSpinLock(&pDeviceContext->ContRdrLock, &oldLevel);
+        if (setActive && pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_IDLE)
+        {
+            pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_ACTIVE;
+        }
         if (pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_ACTIVE
             || pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_STOP)
         {
             status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDeviceContext->MidiInPipe));
+            if (status != STATUS_SUCCESS)
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error starting continuous reader. %!STATUS!", status);
+            }
             pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_RUNNING;
         }
         KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
@@ -2139,6 +2150,10 @@ Return Value:
             WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(pDeviceContext->MidiInPipe),
                 WdfIoTargetCancelSentIo);
             pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_STOP;
+        }
+        if (setActive && pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_STOP)
+        {
+            pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_ACTIVE;
         }
         KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
     }
