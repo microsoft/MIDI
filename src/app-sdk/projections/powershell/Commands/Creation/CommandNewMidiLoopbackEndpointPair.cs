@@ -35,15 +35,36 @@ namespace WindowsMidiServices
 
         protected override void ProcessRecord()
         {
+            try 
+            {
+                var sdkSessions = Microsoft.Windows.Devices.Midi2.Reporting.MidiReporting.GetActiveSessions();
+            }
+            catch
+            {
+                throw new Exception("No midi session found. Make sure to first run \"Start-MidiSession\"");
+            }
+
             var loopbackA = new Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointDefinition($"{LoopbackBaseName} (A)", UniqueIdentifier, Description);
             var loopbackB = new Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointDefinition($"{LoopbackBaseName} (B)", UniqueIdentifier, Description);
 
             var guid = Guid.NewGuid();
             var creationConfig = new Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig(guid, loopbackA, loopbackB);
             
-            var createdEndpoint = Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
-            
-            WriteObject($"Created new endpoint pair: {LoopbackBaseName} (A), {LoopbackBaseName} (B)");
+            try
+            {
+                var createdEndpoint = Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
+                WriteObject(createdEndpoint);
+            }
+            catch (Exception e)
+            {
+                ErrorRecord err = new ErrorRecord(
+                    e,
+                    "LoopbackCreationError",
+                    ErrorCategory.DeviceError,
+                    null);
+                WriteError(err);
+                return;
+            }
         }
     }
 
