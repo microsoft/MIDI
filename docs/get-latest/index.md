@@ -5,7 +5,7 @@ layout: sdk_download
 
 ## System Requirements
 
-> NOTE: During development, the only supported version of Windows is **Windows 11 Insider Canary** releases.
+> Please see current release notes for any system requirements.
 
 The **Windows MIDI Services runtime and tools** requires Windows 11 with the Windows MIDI Service, plugins, and USB driver pre-installed from Microsoft.
 
