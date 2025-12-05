@@ -1,34 +1,21 @@
 - title: "<span>Get the latest</span> Windows MIDI Services runtime and tools"
   featured: true
   type: "preview"
-  version: "1.0.13-preview.13.192"
-  description: This version requires the preview MIDI service which can be downloaded below, and a Windows Insider Canary build of Windows. <span>Get everything you need for a great MIDI experience on Windows 11.</span> Download and install the MIDI 2.0 runtime for apps, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI scripting, MIDI Console, and more, all in one package.
+  version: "1.0.14-rc.1.209"
+  description: <span>Requires current (December 5, 2025 or later) Windows Insider Dev or Windows Insider Beta</span> versions of Windows 11. Not for use with retail Windows builds. Get everything you need for a great MIDI experience on Windows 11 with Windows MIDI Services installed. Download and install the MIDI 2.0 runtime for apps, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI scripting, MIDI Console, and more, all in one package.
   label_x64: "Download Latest x64 Installer"
   link_x64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64"
   label_arm64: "Download Latest Arm64 Installer"
   link_arm64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64"
-  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-13
-
-- title: "Preview MIDI Service"
-  featured: false
-  type: "preview"
-  version: "1.0.13-preview.13.192"
-  description: Service and In-Box Service Plugins
-  label_x64: "Download x64 Installer"
-  link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-13/Windows.MIDI.Services.In-Box.Service.1.0.13-preview.13.192-x64.exe"
-  label_arm64: "Download Arm64 Installer"
-  link_arm64: "https://github.com/microsoft/MIDI/releases/download/preview-13/Windows.MIDI.Services.In-Box.Service.1.0.13-preview.13.192-arm64.exe"
-  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-13
-
+  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/rc-1
 
 - title: "Preview Network MIDI 2.0 Service Plugin"
   featured: false
   type: "preview"
-  version: "1.0.13-preview.13.192"
-  description: Try the new Network MIDI 2.0 preview
-  label_x64: "Download x64 Installer"
-  link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-13/Windows.MIDI.Services.Preview.Service.Plugins.1.0.13-preview.13.192-x64.exe"
-  label_arm64: "Download Arm64 Installer"
-  link_arm64: "https://github.com/microsoft/MIDI/releases/download/preview-13/Windows.MIDI.Services.Preview.Service.Plugins.1.0.13-preview.13.192-arm64.exe"
-  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-13
-  
+  version: "0.0.15-preview.15.9"
+  description: Try the new Network MIDI 2.0 preview. This is an in-development preview and is not yet stable. Requires Developer Mode to be set in Windows.
+  label_x64: "Get Network MIDI 2.0 for x64"
+  link_x64: "https://github.com/microsoft/MIDI/releases/download/rc-1/Windows.MIDI.Services.SDK.Runtime.and.Tools.1.0.14-rc.1.209-x64.exe"
+  label_arm64: "Get Network MIDI 2.0 for Arm64"
+  link_arm64: "https://github.com/microsoft/MIDI/releases/download/rc-1/Windows.MIDI.Services.Network.MIDI.2.0.Preview.0.0.15-preview.15.9-arm64.exe"
+  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/rc-1
