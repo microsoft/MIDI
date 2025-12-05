@@ -13,19 +13,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-
-    <PackageReference Include="Microsoft.Build.Locator" Version="1.10.12" />
     <PackageReference Include="Microsoft.Build" Version="18.0.2" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.10.12" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.0.2" ExcludeAssets="runtime" />
 
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="NJsonSchema.NewtonsoftJson" Version="11.5.2" />
     <PackageReference Include="NuGet.CommandLine" Version="7.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="NuGet.Frameworks" Version="7.0.0">
-      <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
     <PackageReference Include="Nuke.Common" Version="10.0.0" />
     <PackageReference Include="Nuke.GitHub" Version="7.0.0" />

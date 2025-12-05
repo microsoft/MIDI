@@ -720,7 +720,7 @@ class Build : NukeBuild
                     //.AddNoWarns(45)     // will this stop "MVVMTK0045" ?
                 );
 
-                var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / "net8.0-windows10.0.22621.0" / rid;
+                var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / "net10.0-windows10.0.22621.0" / rid;
                 var stagingFolder = MidiSettingsStagingFolder / platform;
 
                 stagingFolder.CreateOrCleanDirectory();
@@ -748,7 +748,7 @@ class Build : NukeBuild
                 paths.Add(settingsOutputFolder / "MidiSettings.deps.json");
                 paths.Add(settingsOutputFolder / "MidiSettings.runtimeconfig.json");
 
-                paths.Add(settingsOutputFolder / "resources.pri");
+                paths.Add(settingsOutputFolder / "MidiSettings.pri");
 
                 paths.Add(settingsOutputFolder / "Microsoft.Midi.Settings.Core.dll");
                 paths.Add(settingsOutputFolder / "Microsoft.Devices.Midi2.Tools.Shared.dll");
@@ -808,7 +808,7 @@ class Build : NukeBuild
 
                 foreach (var f in paths)
                 {
-                    f.CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                    f.CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
                 }
 
                 // Add Assets folder with app icon. This ends up special-cased
@@ -966,31 +966,31 @@ class Build : NukeBuild
 
                 // TODO: This doesn't deal with any localization content
 
-                var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / $"net8.0-windows{TargetWindowsSdkVersion}" / rid ;
+                var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / $"net10.0-windows{TargetWindowsSdkVersion}" / rid ;
                 //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
                 var runtimesFolder = consoleOutputFolder;
 
                 var stagingFolder = MidiConsoleStagingFolder / platform;
 
-                (consoleOutputFolder / "midi.exe").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "midi.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "midi.deps.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "midi.runtimeconfig.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "midi.exe").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "midi.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "midi.deps.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "midi.runtimeconfig.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
                 //(consoleOutputFolder / "midi.exe.manifest", stagingFolder, ExistsPolicy.FileOverwrite);
 
-                (consoleOutputFolder / "WinRT.Runtime.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "WinRT.Runtime.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 
-                (consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "Microsoft.Windows.SDK.NET.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "Microsoft.Windows.SDK.NET.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 
-                (consoleOutputFolder / "Spectre.Console.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "Spectre.Console.Cli.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "Spectre.Console.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "Spectre.Console.Cli.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 
-                (consoleOutputFolder / "System.CodeDom.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "System.Diagnostics.EventLog.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "System.Diagnostics.EventLog.Messages.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "System.Management.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-                (consoleOutputFolder / "System.ServiceProcess.ServiceController.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "System.CodeDom.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "System.Diagnostics.EventLog.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "System.Diagnostics.EventLog.Messages.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "System.Management.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "System.ServiceProcess.ServiceController.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 
 
             //    (runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, ExistsPolicy.FileOverwrite);
