@@ -6,7 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Windows.AI.MachineLearning;
 using Windows.Devices.Enumeration;
 
 
@@ -45,9 +44,9 @@ namespace Microsoft.Midi.ConsoleApp
             switch (purpose)
             {
                 case MidiEndpointDevicePurpose.DiagnosticPing:
-                    return "📶";
+                    return "⚙";
                 case MidiEndpointDevicePurpose.DiagnosticLoopback:
-                    return "🔁";
+                    return "🛠️";
                 case MidiEndpointDevicePurpose.NormalMessageEndpoint:
                     return "🎹";
                 case MidiEndpointDevicePurpose.VirtualDeviceResponder:
@@ -56,6 +55,23 @@ namespace Microsoft.Midi.ConsoleApp
                     return "🎵";
             }
         }
+
+        public static string GetEndpointIcon(MidiEndpointDeviceInformation device)
+        {
+            if (device.GetTransportSuppliedInfo().TransportCode.ToLower() == "loop")
+            {
+                return "🔄️";
+            }
+            else if (device.GetTransportSuppliedInfo().TransportCode.ToLower() == "net2udp")
+            {
+                return "🛜";
+            }
+            else
+            {
+                return GetEndpointIcon(device.EndpointPurpose);
+            }
+        }
+
         public static string EscapeString(string s)
         {
             return s.Replace("[", "[[").Replace("]", "]]");
@@ -296,19 +312,19 @@ namespace Microsoft.Midi.ConsoleApp
             return "[darkseagreen]" + id.ToString() + "[/]";
         }
 
-        public static string FormatTransportMnemonic(string mnemonic)
+        public static string FormatTransportCode(string code)
         {
-            return "[darkgoldenrod]" + EscapeString(mnemonic.Trim()) + "[/]";
+            return "[darkgoldenrod]" + EscapeString(code) + "[/]";
         }
 
         public static string FormatTransportVersion(string version)
         {
-            return "[skyblue2]" + EscapeString(version.Trim()) + "[/]";
+            return "[skyblue2]" + EscapeString(version) + "[/]";
         }
 
         public static string FormatTransportAuthor(string author)
         {
-            return "[lightslateblue]" + EscapeString(author.Trim()) + "[/]";
+            return "[lightslateblue]" + EscapeString(author) + "[/]";
         }
 
 

@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppDisplayName" xml:space="preserve">
-    <value>Windows Musician Settings PREVIEW</value>
+    <value>Windows MIDI and Musician Settings PREVIEW</value>
   </data>
   <data name="AppDescription" xml:space="preserve">
-    <value>Management, settings, and utility app for Windows MIDI Services. Features in the prototype do not necessarily represent committed features.</value>
+    <value>Management, settings, and utility app for Windows MIDI Services.</value>
   </data>
   <data name="Shell_Main.Content" xml:space="preserve">
     <value>Main</value>
@@ -183,9 +183,6 @@
   <data name="Settings_About.Text" xml:space="preserve">
     <value>About</value>
   </data>
-  <data name="Settings_AboutDescription.Header" xml:space="preserve">
-    <value>Management, settings, and utility app for Windows MIDI Services. Features in the prototype do not necessarily represent committed features.</value>
-  </data>
   <data name="SettingsPage_PrivacyTermsLink.Content" xml:space="preserve">
     <value>Microsoft Privacy Statement</value>
   </data>
@@ -240,14 +237,11 @@
   <data name="SettingsPage_DeveloperModeIsEnabledInfo.Text" xml:space="preserve">
     <value>Developer Mode is currently enabled on this PC, enabling you to install in-development and third-party unsigned service plugins. To turn it off, use Windows Settings.</value>
   </data>
-  <data name="SettingsPage_AboutCard.Header" xml:space="preserve">
-    <value>MIDI Settings</value>
-  </data>
   <data name="SettingsPage_AboutCard.Description" xml:space="preserve">
     <value>© 2025 Microsoft. All rights reserved.</value>
   </data>
   <data name="Settings_AboutDescriptionMidiDiscordLinkCard.Description" xml:space="preserve">
-    <value>For non-developers, or anyone wishing to discuss Windows MIDI Services, we host a Discord server.</value>
+    <value>For anyone wishing to discuss Windows MIDI Services, we host a Discord server.</value>
   </data>
   <data name="Settings_AboutDescriptionMidiRepoLinkCard.Description" xml:space="preserve">
     <value>Windows MIDI Services is an open source project hosted on GitHub. We encourage bug reports and pull requests.</value>
@@ -283,7 +277,7 @@
     <value>Below is a list of all MIDI devices as seen by the legacy MIDI 1.0 APIs, and the apps which use them.</value>
   </data>
   <data name="AppSessionName" xml:space="preserve">
-    <value>Windows Musician Settings</value>
+    <value>MIDI Settings</value>
   </data>
   <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
     <value>This page lists the full set of transport plugins installed and recognized by Windows MIDI Services on this PC. For information on the endpoint devices enumerated by these transport plugins, see the Devices page.</value>
@@ -707,5 +701,74 @@ This change will require a MIDI Service restart before it will take effect.</val
   </data>
   <data name="Midi1PortNamingValue_UseNewStyle" xml:space="preserve">
     <value>Use New-Style</value>
+  </data>
+  <data name="DeviceDetailPage_Tooltip_ChangeImage.Text" xml:space="preserve">
+    <value>Change image</value>
+  </data>
+  <data name="DeviceDetailPage_Tooltip_Customize.Text" xml:space="preserve">
+    <value>Rename endpoint, update description and other properties</value>
+  </data>
+  <data name="DeviceDetailPage_Button_Customize.Content" xml:space="preserve">
+    <value>Personalize</value>
+  </data>
+  <data name="Button_Panic.Content" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+  <data name="Button_Monitor.Content" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
+  <data name="DeviceDetailPage_EndpointDeviceIdLabel.Text" xml:space="preserve">
+    <value>Endpoint Device Id:</value>
+  </data>
+  <data name="DeviceDetailPage_Section_AssociatedMidi1Ports.Text" xml:space="preserve">
+    <value>Associated MIDI 1.0 API Ports</value>
+  </data>
+  <data name="DeviceDetailPage_HeaderSourceInputPorts.Text" xml:space="preserve">
+    <value>Source/Input Ports</value>
+  </data>
+  <data name="CommonTextBlockLabel_WinMMPortNumber.Text" xml:space="preserve">
+    <value>WinMM Port Number</value>
+  </data>
+  <data name="CommonTextBlockLabel_WinRTPortId.Text" xml:space="preserve">
+    <value>WinRT Port Id</value>
+  </data>
+  <data name="CommonTextBlockLabel_MappedGroup.Text" xml:space="preserve">
+    <value>Mapped Group</value>
+  </data>
+  <data name="CommonTextBlockLabel_Flow.Text" xml:space="preserve">
+    <value>Flow</value>
+  </data>
+  <data name="DeviceDetailPage_HeaderDestinationOutputPorts.Text" xml:space="preserve">
+    <value>Destination/Output Ports</value>
+  </data>
+  <data name="CommonTextBlockLabel_Name.Text" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CommonTextBlockLabel_Description.Text" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="CommonTextBlockLabel_SerialNumber.Text" xml:space="preserve">
+    <value>Serial Number</value>
+  </data>
+  <data name="CommonTextBlockLabel_TransportId.Text" xml:space="preserve">
+    <value>Transport Id</value>
+  </data>
+  <data name="CommonTextBlockLabel_TransportCode.Text" xml:space="preserve">
+    <value>Transport Code</value>
+  </data>
+  <data name="CommonTextBlockLabel_SupportsMidi1Protocol.Text" xml:space="preserve">
+    <value>Supports MIDI 1.0 Protocol</value>
+  </data>
+  <data name="CommonTextBlockLabel_SupportsMidi2Protocol.Text" xml:space="preserve">
+    <value>Supports MIDI 2.0 Protocol</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredProtocol.Text" xml:space="preserve">
+    <value>Configured Protocol</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredSendJR.Text" xml:space="preserve">
+    <value>Configured to send Jitter Reduction Timestamps</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredReceiveJR.Text" xml:space="preserve">
+    <value>Configured to receive Jitter Reduction Timestamps</value>
   </data>
 </root>

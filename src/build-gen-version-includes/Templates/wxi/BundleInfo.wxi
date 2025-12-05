@@ -1,6 +1,1 @@
 ﻿
-<Include>
-  <?define SetupVersionName="Preview 14" ?>
-  <?define SetupVersionNumber="1.0.14-preview.14.98" ?>
-  <?define MidiSdkAndToolsVersion="1.0.14-preview.14.98" ?>
-</Include>

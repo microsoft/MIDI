@@ -28,7 +28,7 @@ namespace Microsoft.Midi.ConsoleApp
             public bool Verbose { get; set; }
         }
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             // check to see if the service is running. 
             // NOTE: Equivalent code can't be moved to the SDK due to Desktop/WinRT limitations.

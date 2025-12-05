@@ -148,6 +148,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         TRANSPORTCREATIONPARAMS transportCreationParams{ };
         transportCreationParams.MessageOptions = MessageOptionFlags::MessageOptionFlags_None;
 
+        // Do not change this value. {7b303a88-0519-5150-0707-18675309d550}
+        transportCreationParams.CallingComponent = internal::StringToGuid(L"{7b303a88-0519-5150-0707-18675309d550}");
+
         if (m_connectionSettings != nullptr)
         {
             connectionSettingsJsonString = static_cast<LPCWSTR>(m_connectionSettings.SettingsJson().c_str());

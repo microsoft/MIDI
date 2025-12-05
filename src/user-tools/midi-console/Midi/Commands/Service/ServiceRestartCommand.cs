@@ -23,7 +23,7 @@ namespace Microsoft.Midi.ConsoleApp
         {
         }
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             // this command requires admin
 

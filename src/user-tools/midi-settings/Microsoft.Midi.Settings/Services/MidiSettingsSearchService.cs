@@ -80,14 +80,14 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
             result.DisplayDescription = endpoint.Description;
             result.Parameter = endpoint;
 
-            if (endpoint.TransportCode.ToLower().StartsWith("ks"))
+            if (endpoint.TransportSuppliedInfo.TransportCode.ToLower().StartsWith("ks"))
             {
                 result.AddKeyword("usb driver");
             }
 
             //result.AddKeyword(endpoint.Description);
-            result.AddKeyword(endpoint.TransportCode);
-            result.AddKeyword(endpoint.ManufacturerName);
+            result.AddKeyword(endpoint.TransportSuppliedInfo.TransportCode);
+            result.AddKeyword(endpoint.TransportSuppliedInfo.ManufacturerName);
 
             var parentName = endpoint.DeviceInformation.GetParentDeviceInformation().Name.Trim().ToLower();
             result.AddKeyword(parentName);

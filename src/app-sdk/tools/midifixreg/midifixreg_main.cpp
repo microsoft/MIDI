@@ -9,7 +9,31 @@
 
 #pragma once
 
-#include "pch.h"
+#pragma warning (push)
+#pragma warning (disable: 4005)
+
+#include <windows.h>
+#include <iostream>
+#include <iomanip>
+#include <string>
+
+#include <wrl\module.h>
+#include <wrl\event.h>
+#include <wil\com.h>
+#include <wil\resource.h>
+#include <wil\result_macros.h>
+#include <wil\tracelogging.h>
+#include <wil\registry.h>
+#include <wil\registry_helpers.h>
+
+#include <winmeta.h>
+//#include <TraceLoggingProvider.h>
+
+#include "wstring_util.h"
+
+namespace internal = ::WindowsMidiServicesInternal;
+
+#pragma warning (pop)
 
 #pragma warning(push)
 #pragma warning(disable: 4244)
@@ -76,6 +100,11 @@ bool CheckForWindowsMidiServices()
 {
     // check for Windows MIDI Services (create the midisrvtransport COM object). If it fails, we do not
     // have Windows MIDI Services installed, and will not make any changes.
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: This succeeds during controlled rollout even when Windows MIDI Services is not yet enabled
+    // Needs to be changed to latest guidance
+
 
     wil::com_ptr_nothrow<IUnknown> servicePointer;
 

@@ -30,11 +30,11 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     public IList<MidiEndpointWrapper> GetEndpointsForTransportCode(string transportCode)
     {
-        return _endpoints.Where(e => e.TransportCode == transportCode).ToList();
+        return _endpoints.Where(e => e.TransportSuppliedInfo.TransportCode == transportCode).ToList();
     }
     public IList<MidiEndpointWrapper> GetEndpointsForTransportId(Guid TransportId)
     {
-        return _endpoints.Where(e => e.TransportId == TransportId).ToList();
+        return _endpoints.Where(e => e.TransportSuppliedInfo.TransportId == TransportId).ToList();
     }
 
     public IList<MidiEndpointWrapper> GetEndpointsForPurpose(MidiEndpointDevicePurpose purpose)

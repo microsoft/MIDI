@@ -49,15 +49,23 @@ struct MidiPort
 {
     uint16_t Index;
     std::wstring Name;
+    bool IsError{ false };
 };
 
 std::vector<MidiPort> m_midiInputs{};
 std::vector<MidiPort> m_midiOutputs{};
 
+uint32_t m_midiInputCountNoErrors{ 0 };
+uint32_t m_midiOutputCountNoErrors{ 0 };
 
 void LoadWinMMDevices()
 {
-    //std::map<uint16_t, MIDIINCAPSW> midiInputDevices;
+    // needed for the looping option
+    m_midiInputs.clear();
+    m_midiOutputs.clear();
+
+    m_midiInputCountNoErrors = 0;
+    m_midiOutputCountNoErrors = 0;
 
     auto inputDeviceCount = midiInGetNumDevs();
 
@@ -67,21 +75,25 @@ void LoadWinMMDevices()
 
         auto result = midiInGetDevCaps(i, &inputCaps, sizeof(inputCaps));
 
+        MidiPort port{};
+        port.Index = i;
+
         if (result == MMSYSERR_NOERROR)
         {
-            MidiPort port{};
-            port.Index = i;
             port.Name = inputCaps.szPname;
+            port.IsError = false;
 
-            m_midiInputs.push_back(port);
+            m_midiInputCountNoErrors++;
         }
-    }
+        else
+        {
+            port.Name = L"** Error **";
+            port.IsError = true;
+        }
 
-    //std::sort(m_midiInputs.begin(), m_midiInputs.end(),
-    //    [](MidiPort a, MidiPort b)
-    //    {
-    //        return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
-    //    });
+        m_midiInputs.push_back(port);
+
+    }
 
     // -----------------------------
 
@@ -93,35 +105,48 @@ void LoadWinMMDevices()
 
         auto result = midiOutGetDevCaps(i, &outputCaps, sizeof(outputCaps));
 
+        MidiPort port{};
+        port.Index = i;
+
         if (result == MMSYSERR_NOERROR)
         {
-            MidiPort port{};
-            port.Index = i;
             port.Name = outputCaps.szPname;
+            port.IsError = false;
 
-            m_midiOutputs.push_back(port);
+            m_midiOutputCountNoErrors++;
         }
+        else
+        {
+            port.Name = L"** Error **";
+            port.IsError = true;
+        }
+
+        m_midiOutputs.push_back(port);
     }
-
-    //std::sort(m_midiOutputs.begin(), m_midiOutputs.end(),
-    //    [](MidiPort a, MidiPort b)
-    //    {
-    //        return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
-    //    });
-
 
 }
 
 void DisplayAllWinMMInputs()
 {
-    WriteInfo(std::to_string(m_midiInputs.size()) + " Available Input Ports (MIDI Sources)");
+    auto deviceCount = midiInGetNumDevs();
+    WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiInGetNumDevs");
+    WriteInfo(" " + std::to_string(m_midiInputCountNoErrors) + " valid Input Ports (MIDI Sources) found.");
     std::wcout << std::endl;
 
     for (auto const& port : m_midiInputs)
     {
-        std::cout
-            << std::setw(3) << dye::yellow(port.Index)
-            << dye::grey(" : ");
+        if (port.IsError)
+        {
+            std::cout
+                << std::setw(3) << dye::red(port.Index)
+                << dye::grey(" : ");
+        }
+        else
+        {
+            std::cout
+                << std::setw(3) << dye::yellow(port.Index)
+                << dye::grey(" : ");
+        }
 
         std::wcout
             << port.Name
@@ -133,14 +158,26 @@ void DisplayAllWinMMInputs()
 
 void DisplayAllWinMMOutputs()
 {
-    WriteInfo(std::to_string(m_midiOutputs.size()) + " Available Output Ports (MIDI Destinations)");
+    auto deviceCount = midiOutGetNumDevs();
+
+    WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiOutGetNumDevs");
+    WriteInfo(" " + std::to_string(m_midiOutputCountNoErrors) + " valid Output Ports (MIDI Destinations) found.");
     std::wcout << std::endl;
 
     for (auto const& port : m_midiOutputs)
     {
-        std::cout
-            << std::setw(3) << dye::yellow(port.Index)
-            << dye::grey(" : ");
+        if (port.IsError)
+        {
+            std::cout
+                << std::setw(3) << dye::red(port.Index)
+                << dye::grey(" : ");
+        }
+        else
+        {
+            std::cout
+                << std::setw(3) << dye::yellow(port.Index)
+                << dye::grey(" : ");
+        }
 
         std::wcout
             << port.Name
@@ -156,7 +193,7 @@ void DisplayAllWinMMOutputs()
 #define RETURN_INVALID_PORT_NUMBER 1
 #define RETURN_UNABLE_TO_OPEN_PORT 2
 
-int __cdecl main(int /*argc*/, char* /*argv[]*/)
+int __cdecl main(int argc, char* argv[])
 {
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
@@ -166,13 +203,61 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
     std::cout << dye::aqua(" List of WinMM/MME ports") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
 
-    LoadWinMMDevices();
+    bool loop{ false };
 
-    DisplayAllWinMMInputs();
+    if (argc >= 2)
+    {
+        std::string loopParam{ "--loop" };
+        std::string loopParamShort{ "-l" };
 
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+        std::string providedParam(argv[1]);
+       
+        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParam.c_str(), loopParam.size() + 1, providedParam.c_str(), providedParam.size() + 1)
+            == CSTR_EQUAL)
+        {
+            loop = true;
+        }
 
-    DisplayAllWinMMOutputs();
+        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParamShort.c_str(), loopParamShort.size() + 1, providedParam.c_str(), providedParam.size() + 1)
+            == CSTR_EQUAL)
+        {
+            loop = true;
+        }
+
+    }
+
+    while (true)
+    {
+        LoadWinMMDevices();
+
+        DisplayAllWinMMInputs();
+
+        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+
+        DisplayAllWinMMOutputs();
+
+        if (loop)
+        {
+            std::cout << dye::grey("Press space to enumerate again, or escape to close.") << std::endl;
+
+            auto ch = _getch();
+
+            if (ch == KEY_ESCAPE)
+            {
+                WriteInfo("\nClosing");
+                break;
+            }
+            else if (ch == KEY_SPACE)
+            {
+                // continue looping
+            }
+        }
+        else
+        {
+            // not looping, so bail
+            break;
+        }
+    }
 
 
     return 0;

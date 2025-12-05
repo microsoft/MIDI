@@ -63,6 +63,11 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ObservableCollection<TransportFilterEntry> Transports = [];
 
+        public ObservableCollection<MidiEndpointWrapper> Endpoints { get; } = [];
+
+        [ObservableProperty]
+        private string filterString = string.Empty;
+
 
         [ObservableProperty]
         private bool useListView = false;
@@ -100,7 +105,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                     _generalSettingsService.SetEndpointListLastUsedView(EndpointListView.CardView);
                 }
             }
-
 
         }
 
@@ -152,48 +156,70 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             SelectedTransport = all;
 
+
+
+            _enumerationService.EndpointAdded += (s, e) =>
+            {
+                RefreshMidiEndpointDevices();
+            };
+
+            _enumerationService.EndpointRemoved += (s, e) =>
+            {
+                RefreshMidiEndpointDevices();
+            };
+
+            _enumerationService.EndpointUpdated += (s, e) =>
+            {
+                RefreshMidiEndpointDevices();
+            };
         }
 
-        public ObservableCollection<MidiEndpointWrapper> Endpoints { get; } = [];
-
-        [ObservableProperty]
-        private string filterString = string.Empty;
 
         // todo: this should have a sort order and filter
         public void RefreshMidiEndpointDevices()
         {
             _synchronizationContextService.GetUIContext()?.Post(_ =>
             {
-                IList<MidiEndpointWrapper> results;
-
-                if (SelectedTransport.TransportCode == AllTransportsFilterCode)
+                try
                 {
-                    results = _enumerationService.GetEndpoints();
-                }
-                else
-                {
-                    results = _enumerationService.GetEndpointsForTransportCode(SelectedTransport.TransportCode);
-                }
+                    IList<MidiEndpointWrapper> results;
 
-                Endpoints.Clear();
-
-                foreach (var endpoint in results.OrderBy(e=>e.Name))
-                {
-                    if (FilterString.Trim() == string.Empty)
+                    if (SelectedTransport.TransportCode == AllTransportsFilterCode)
                     {
-                        Endpoints.Add(endpoint);
+                        results = _enumerationService.GetEndpoints();
                     }
                     else
                     {
-                        // TODO: process with filter
+                        results = _enumerationService.GetEndpointsForTransportCode(SelectedTransport.TransportCode);
+                    }
 
-                        if (endpoint.Name.StartsWith(FilterString))
+                    Endpoints.Clear();
+
+                    foreach (var endpoint in results.OrderBy(e => e.Name))
+                    {
+                        if (FilterString.Trim() == string.Empty)
                         {
                             Endpoints.Add(endpoint);
                         }
-                    }
+                        else
+                        {
+                            // TODO: process with filter
 
+                            if (endpoint.Name.StartsWith(FilterString))
+                            {
+                                Endpoints.Add(endpoint);
+                            }
+                        }
+
+                    }
                 }
+                catch (Exception ex)
+                {
+                    // TODO: LOG
+                    System.Diagnostics.Debug.WriteLine(" ** Exception updating endpoints all viewmodel");
+                    System.Diagnostics.Debug.WriteLine(ex);
+                }
+
             }, null);
         }
 

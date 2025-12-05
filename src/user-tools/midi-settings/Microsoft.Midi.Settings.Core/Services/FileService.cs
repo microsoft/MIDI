@@ -28,7 +28,7 @@ public class FileService : IFileService
                 return global::Windows.Data.Json.JsonObject.Parse(json);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // todo: log
         }

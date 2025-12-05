@@ -9,7 +9,21 @@
 #pragma once
 
 
-
+// TODO: Need to consider maps that work more like:
+// 
+// message type
+//    group
+//       status
+//       channel
+//          other CV properties
+//
+// and then each would have a destination with transforms
+//
+// That way, we can route messages to destinations based on channel etc, but also
+// be able to change the group/channel 
+// 
+// We may be able to genercize the transform side into a proper MIDI Transform
+//
 
 class CMidi2VirtualPatchBayRoutingEntry :
     public Microsoft::WRL::RuntimeClass<

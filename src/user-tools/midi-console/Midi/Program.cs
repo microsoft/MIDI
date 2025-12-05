@@ -239,18 +239,18 @@ app.Configure(config =>
         ;
 
 
-    config.AddBranch("measure", measure =>
-    {
-        measure.SetDescription(Strings.CommandMeasureDescription);
+    //config.AddBranch("measure", measure =>
+    //{
+    //    measure.SetDescription(Strings.CommandMeasureDescription);
 
 
-        measure.AddCommand<MeasureLoopbackJitterCommand>("loopback-jitter")
-            .WithAlias("jitter")
-            .WithDescription(Strings.CommandMeasureLoopbackPerformanceDescription)
-            .WithExample("measure", "loopback-jitter")
-            ;
+    //    measure.AddCommand<MeasureLoopbackJitterCommand>("loopback-jitter")
+    //        .WithAlias("jitter")
+    //        .WithDescription(Strings.CommandMeasureLoopbackPerformanceDescription)
+    //        .WithExample("measure", "loopback-jitter")
+    //        ;
 
-    });
+    //});
 
 
     /*

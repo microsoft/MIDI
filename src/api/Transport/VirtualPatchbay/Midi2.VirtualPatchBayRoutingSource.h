@@ -8,7 +8,7 @@
 
 #pragma once
 
-
+// TODO: See the Source for information on better routing filters
 
 class CMidi2VirtualPatchBayRoutingSource :
     public Microsoft::WRL::RuntimeClass<
@@ -39,7 +39,6 @@ private:
     
     // array of booleans. If an index is true, it is included
     std::array<bool, 16> m_includedGroupIndexes{ true };
-
 
     wil::com_ptr<IMidiBidirectional> m_sourceEndpointBidi{ nullptr };
 

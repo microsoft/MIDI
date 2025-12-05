@@ -53,7 +53,7 @@ namespace Microsoft.Midi.ConsoleApp
             return "[grey23]>[/] " + label + "";
         }
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             string endpointId = string.Empty;
 

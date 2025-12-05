@@ -1291,7 +1291,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         auto deviceSelector = GetMidi1PortDeviceSelector(portFlow);
         auto ports = GetMidi1PortCache(portFlow);
 
-        if (ports != nullptr && ports->Size() == 0 || refreshCache)
+        assert(ports != nullptr);
+
+        if (ports->Size() == 0 || refreshCache)
         {
             // TODO: Maybe we can filter on a common parent device id? Need to see if that will work in the query
             // including for software devices, merged devices, etc.
@@ -1317,6 +1319,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
                 for (auto const& device : searchResults)
                 {
+                    if (!device.IsEnabled()) continue;
+
+
                     auto id = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_AssociatedUMP, device, L"");
 
                     if (internal::NormalizeEndpointInterfaceIdHStringCopy(id) == m_id)

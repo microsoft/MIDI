@@ -51,7 +51,7 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.exe.manifest" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.deps.json" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.runtimeconfig.json" /> 
-      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\resources.pri" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.pri" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Midi.Settings.Core.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Devices.Midi2.Tools.Shared.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" /> 

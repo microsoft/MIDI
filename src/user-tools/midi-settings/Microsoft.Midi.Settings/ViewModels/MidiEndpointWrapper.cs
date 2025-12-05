@@ -19,6 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.Devices.Enumeration;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
@@ -39,25 +40,37 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
-        public string ManufacturerName { get; private set; }
-        public bool HasManufacturerName { get; private set; }
-        public string Name { get; private set; }
-        public string Description { get; private set; }
 
-        public string TransportCode { get; private set; }
+        [ObservableProperty]
+        private bool hasManufacturerName;
 
-        public Guid TransportId { get; private set; }
+        [ObservableProperty]
+        private string name;
 
-        public string Id { get; private set; }
+        [ObservableProperty]
+        private string description;
 
-        public string UniqueIdentifier { get; private set; }
-        public bool HasUniqueIdentifier { get; private set; }
 
-        public bool IsMultiClient { get; private set; }
-        public bool IsNativeUmp { get; private set; }
-        public bool SupportsMidi2 { get; private set; }
+        [ObservableProperty]
+        private string id;
 
-        public ImageSource Image { get; private set; }
+        [ObservableProperty]
+        private string uniqueIdentifier;
+
+        [ObservableProperty]
+        private bool hasUniqueIdentifier;
+
+        [ObservableProperty]
+        private bool isMultiClient;
+
+        [ObservableProperty]
+        private bool isNativeUmp;
+
+        [ObservableProperty]
+        private bool supportsMidi2;
+
+        [ObservableProperty]
+        private ImageSource image;
 
         [ObservableProperty]
         private bool hasUsbVidPid;
@@ -89,6 +102,40 @@ namespace Microsoft.Midi.Settings.ViewModels
         private int countMidi1OutputPorts;
 
         [ObservableProperty]
+        private MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
+
+        [ObservableProperty]
+        private MidiEndpointUserSuppliedInfo userSuppliedInfo;
+
+        [ObservableProperty]
+        private MidiDeclaredDeviceIdentity deviceIdentity;
+
+        [ObservableProperty]
+        private MidiDeclaredStreamConfiguration streamConfiguration;
+
+        [ObservableProperty]
+        private MidiDeclaredEndpointInfo endpointInfo;
+
+        public ObservableCollection<MidiFunctionBlock> FunctionBlocks = [];
+        public ObservableCollection<MidiGroupTerminalBlock> GroupTerminalBlocks = [];
+
+        [ObservableProperty]
+        private bool hasFunctionBlocks;
+
+        [ObservableProperty]
+        private bool hasGroupTerminalBlocks;
+
+
+        [ObservableProperty]
+        private DeviceInformation? parentDeviceInformation;
+
+        [ObservableProperty]
+        private bool hasParent;
+
+
+
+
+        [ObservableProperty]
         private MidiEndpointDeviceInformation deviceInformation;
 
         public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1InputPorts { get; private set; } = [];
@@ -115,38 +162,45 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 Name = DeviceInformation.Name;
                 Id = DeviceInformation.EndpointDeviceId;
-                TransportCode = DeviceInformation.GetTransportSuppliedInfo().TransportCode;
-                TransportId = DeviceInformation.GetTransportSuppliedInfo().TransportId;
 
-                ManufacturerName = DeviceInformation.GetTransportSuppliedInfo().ManufacturerName.Trim();
+                HasManufacturerName = !String.IsNullOrWhiteSpace(DeviceInformation.GetTransportSuppliedInfo().ManufacturerName);
 
-                HasManufacturerName = ManufacturerName != string.Empty;
 
-                if (DeviceInformation.GetTransportSuppliedInfo().VendorId > 0)
+                // General metadata
+
+                TransportSuppliedInfo = DeviceInformation.GetTransportSuppliedInfo();
+                UserSuppliedInfo = DeviceInformation.GetUserSuppliedInfo();
+                DeviceIdentity = DeviceInformation.GetDeclaredDeviceIdentity();
+                StreamConfiguration = DeviceInformation.GetDeclaredStreamConfiguration();
+                EndpointInfo = DeviceInformation.GetDeclaredEndpointInfo();
+
+                // USB VID/PID
+
+                if (TransportSuppliedInfo.VendorId > 0)
                 {
-                    UsbVendorIdFormatted = DeviceInformation.GetTransportSuppliedInfo().VendorId.ToString("X4");
+                    UsbVendorIdFormatted = TransportSuppliedInfo.VendorId.ToString("X4");
                 }
                 else
                 {
                     UsbVendorIdFormatted = string.Empty;
                 }
 
-                if (DeviceInformation.GetTransportSuppliedInfo().ProductId > 0)
+                if (TransportSuppliedInfo.ProductId > 0)
                 {
-                    UsbProductIdFormatted = DeviceInformation.GetTransportSuppliedInfo().ProductId.ToString("X4");
+                    UsbProductIdFormatted = TransportSuppliedInfo.ProductId.ToString("X4");
                 }
                 else
                 {
                     UsbProductIdFormatted = string.Empty;
                 }
 
+                HasUsbVidPid = TransportSuppliedInfo.VendorId > 0 &&
+                               TransportSuppliedInfo.ProductId > 0;
 
-                HasUsbVidPid = DeviceInformation.GetTransportSuppliedInfo().VendorId > 0 &&
-                               DeviceInformation.GetTransportSuppliedInfo().ProductId > 0;
 
                 // native UMP
 
-                if (DeviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
+                if (TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
                     IsNativeUmp = true;
                 }
@@ -167,15 +221,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
 
                 // description
-                if (DeviceInformation.GetUserSuppliedInfo().Description != string.Empty)
+                if (!String.IsNullOrWhiteSpace(UserSuppliedInfo.Description))
                 {
-                    Description = DeviceInformation.GetUserSuppliedInfo().Description;
+                    Description = UserSuppliedInfo.Description;
                 }
                 else
                 {
                     // look up the name of the transport given the transport id
                     Description = "A " +
-                        _transportInfoService.GetTransportForId(DeviceInformation.GetTransportSuppliedInfo().TransportId).Name +
+                        _transportInfoService.GetTransportForId(TransportSuppliedInfo.TransportId).Name +
                         " endpoint";
 
                     if (SupportsMidi2)
@@ -189,24 +243,25 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
 
                 // unique identifier
-                if (DeviceInformation.GetDeclaredEndpointInfo().ProductInstanceId != string.Empty)
+
+                if (!String.IsNullOrWhiteSpace(DeviceInformation.GetDeclaredEndpointInfo().ProductInstanceId))
                 {
                     UniqueIdentifier = DeviceInformation.GetDeclaredEndpointInfo().ProductInstanceId;
                 }
-                else if (DeviceInformation.GetTransportSuppliedInfo().SerialNumber != string.Empty)
+                else if (!String.IsNullOrWhiteSpace(TransportSuppliedInfo.SerialNumber))
                 {
-                    UniqueIdentifier = DeviceInformation.GetTransportSuppliedInfo().SerialNumber;
+                    UniqueIdentifier = TransportSuppliedInfo.SerialNumber;
                 }
                 else
                 {
                     UniqueIdentifier = string.Empty;
                 }
 
-                HasUniqueIdentifier = UniqueIdentifier != string.Empty;
+                HasUniqueIdentifier = !String.IsNullOrWhiteSpace(UniqueIdentifier);
 
                 // multi-client
 
-                if (DeviceInformation.GetTransportSuppliedInfo().SupportsMultiClient)
+                if (TransportSuppliedInfo.SupportsMultiClient)
                 {
                     IsMultiClient = true;
                 }
@@ -232,6 +287,29 @@ namespace Microsoft.Midi.Settings.ViewModels
                     var source = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
                     Image = source;
                 }
+
+
+                // function blocks
+                FunctionBlocks.Clear();
+                foreach (var fb in DeviceInformation.GetDeclaredFunctionBlocks())
+                {
+                    FunctionBlocks.Add(fb);
+                }
+                HasFunctionBlocks = FunctionBlocks.Count > 0;
+
+                // group terminal blocks
+                GroupTerminalBlocks.Clear();
+                foreach (var gtb in DeviceInformation.GetGroupTerminalBlocks())
+                {
+                    GroupTerminalBlocks.Add(gtb);
+                }
+                HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
+
+                // parent device info
+                ParentDeviceInformation = DeviceInformation.GetParentDeviceInformation();
+                HasParent = ParentDeviceInformation != null;
+
+
             }, null);
 
 
@@ -243,12 +321,16 @@ namespace Microsoft.Midi.Settings.ViewModels
                 var inputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageSource);
                 var outputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
 
+                System.Diagnostics.Debug.WriteLine($"MidiEndpointWrapper: Returned {Name} MIDI 1 input ports:  {inputPorts.Count}");
+                System.Diagnostics.Debug.WriteLine($"MidiEndpointWrapper: Returned {Name} MIDI 1 output ports: {outputPorts.Count}");
+
                 context.Post(_ =>
                 {
+
+                    System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread to update MIDI 1 port list");
+
                     Midi1InputPorts.Clear();
                     Midi1OutputPorts.Clear();
-
-                    System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread");
 
                     foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
                     {

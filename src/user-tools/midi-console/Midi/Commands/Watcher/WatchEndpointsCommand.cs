@@ -28,7 +28,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         private Settings _settings;
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             _settings = settings;
 

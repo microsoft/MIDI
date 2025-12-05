@@ -21,7 +21,7 @@ namespace Microsoft.Midi.ConsoleApp
         // this does a forced start of the service using SCM. It doesn't do a triggered start
         // like the SDK Initializer does
 
-        public override int Execute(CommandContext context, Settings settings)
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             // this command requires admin
 

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <StartupObject></StartupObject>
@@ -32,7 +32,7 @@
 
       <RollForward>LatestMinor</RollForward>
 
-      <WindowsSDKPackageVersion>10.0.22621.38</WindowsSDKPackageVersion>
+      <WindowsSDKPackageVersion>10.0.22621.57</WindowsSDKPackageVersion>
 
       <NoWin32Manifest>true</NoWin32Manifest>
 
@@ -40,15 +40,15 @@
 
   <PropertyGroup>
     <NoWarn>$(NoWarn);CS8625;CS8618;CS8305</NoWarn>
+    <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
-    <PackageReference Include="Spectre.Console" Version="0.49.1" />
-    <PackageReference Include="Spectre.Console.Cli" Version="0.49.1" />
+    <PackageReference Include="Spectre.Console" Version="0.53.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.53.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
   </ItemGroup>
