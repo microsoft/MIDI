@@ -474,11 +474,12 @@ EvtDeviceD0Entry(
 )
 {
     UNREFERENCED_PARAMETER(PreviousState);
+    UNREFERENCED_PARAMETER(Device);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     PAGED_CODE();
-    USBMIDI2DriverIoContinuousReader(Device, true, true);
+    //USBMIDI2DriverIoContinuousReader(Device, true, true);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -499,8 +500,6 @@ EvtDeviceD0Exit(
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     PAGED_CODE();
-    USBMIDI2DriverIoContinuousReader(Device, false, true);
-
     powerAction = WdfDeviceGetSystemPowerAction(Device);
 
     // 
@@ -514,6 +513,8 @@ EvtDeviceD0Exit(
 
         devCtx = GetDeviceContext(Device);
         ASSERT(devCtx != nullptr);
+
+        USBMIDI2DriverIoContinuousReader(Device, false, false);
 
         //
         // Get the current exit latency.
@@ -2120,6 +2121,7 @@ Return Value:
     NTSTATUS            status;
     KIRQL               oldLevel;
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     pDeviceContext = GetDeviceContext(Device);
     
@@ -2157,6 +2159,7 @@ Return Value:
         }
         KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
     }
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
 
 _Use_decl_annotations_

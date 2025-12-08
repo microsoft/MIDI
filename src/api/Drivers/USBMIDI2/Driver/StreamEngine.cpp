@@ -585,6 +585,9 @@ StreamEngine::Pause()
         m_ContiguousDroppedBuffers = 0;
         m_TotalBuffersProcessed = 0;
 
+        // Stop Continous Reader
+        USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false, false);
+
         // shut down and clean up the worker thread.
         m_ThreadExitEvent.set();
         m_ThreadExitedEvent.wait();
