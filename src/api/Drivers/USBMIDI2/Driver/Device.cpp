@@ -474,7 +474,6 @@ EvtDeviceD0Entry(
 )
 {
     UNREFERENCED_PARAMETER(PreviousState);
-    UNREFERENCED_PARAMETER(Device);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
