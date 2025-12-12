@@ -576,6 +576,9 @@ StreamEngine::Pause()
     }
     else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
+        // Stop Continous Reader
+        USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false, false);
+
         // Make sure we are not trying to change state while processing
         auto lock = m_MidiInLock.acquire();
 
@@ -584,9 +587,6 @@ StreamEngine::Pause()
         m_TotalDroppedBuffers = 0;
         m_ContiguousDroppedBuffers = 0;
         m_TotalBuffersProcessed = 0;
-
-        // Stop Continous Reader
-        USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false, false);
 
         // shut down and clean up the worker thread.
         m_ThreadExitEvent.set();
