@@ -2135,33 +2135,39 @@ Return Value:
         if (pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_ACTIVE
             || pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_STOP)
         {
+            pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_RUNNING;
+
             KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
             status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDeviceContext->MidiInPipe));
-            KeAcquireSpinLock(&pDeviceContext->ContRdrLock, &oldLevel);
             if (status != STATUS_SUCCESS)
             {
                 TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error starting continuous reader. %!STATUS!", status);
             }
-            pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_RUNNING;
         }
-        KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
+        else
+        {
+            KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
+        }
     }
     else
     {
         KeAcquireSpinLock(&pDeviceContext->ContRdrLock, &oldLevel);
         if (pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_RUNNING)
         {
+            pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_STOP;
+
             KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
             WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(pDeviceContext->MidiInPipe),
                 WdfIoTargetCancelSentIo);
-            KeAcquireSpinLock(&pDeviceContext->ContRdrLock, &oldLevel);
-            pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_STOP;
         }
-        if (setActive && pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_STOP)
+        else
         {
-            pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_ACTIVE;
+            if (setActive && pDeviceContext->ContRdrState == USBMIDI2_CONT_RDR_STOP)
+            {
+                pDeviceContext->ContRdrState = USBMIDI2_CONT_RDR_ACTIVE;
+            }
+            KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
         }
-        KeReleaseSpinLock(&pDeviceContext->ContRdrLock, oldLevel);
     }
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
