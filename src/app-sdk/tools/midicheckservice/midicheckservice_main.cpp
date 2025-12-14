@@ -50,11 +50,13 @@ void WriteError(std::string info)
 
 
 // return codes from this app
-#define RETURN_VALUE_SUCCESS                      0   // service has been installed and enabled
-#define RETURN_VALUE_NOT_INSTALLED                1   // service has not been installed, because the COM interfaces are not present
-#define RETURN_VALUE_NOT_ENABLED_OR_NOT_STARTED   2   // COM interface available, but service cannot be started. This may be due to Controlled Feature Rollout, or a system problem.
+#define MIDISRV_CHECK_RETURN_VALUE_SUCCESS                      0   // service has been installed and enabled
+#define MIDISRV_CHECK_RETURN_VALUE_SUCCESS_DEV_BUILD           -1   // service works but is a developer build, not the in-box build
 
-#define RETURN_VALUE_SKIPPED                      -1  // An option was passed which skipped evaluation. For example, --help
+#define MIDISRV_CHECK_RETURN_VALUE_NOT_INSTALLED                1   // service has not been installed, because the COM interfaces are not present
+#define MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_OR_NOT_STARTED   2   // COM interface available, but service cannot be started. This may be due to Controlled Feature Rollout, or a system problem.
+
+#define MIDISRV_CHECK_RETURN_VALUE_CHECK_SKIPPED                99  // An option was passed which skipped evaluation. For example, --help
 
 
 
@@ -166,6 +168,7 @@ bool VerifyMidiSrvConnectivity()
 
     auto hr = verifyConnectivity();
 
+
     if (FAILED(hr))
     {
         return false;
@@ -175,6 +178,8 @@ bool VerifyMidiSrvConnectivity()
 }
 
 // End RPC code ---------------
+
+
 
 void ShutdownMidisrv()
 {
@@ -196,6 +201,129 @@ void ShutdownMidisrv()
 
 }
 
+bool GetMidisrvPathName(std::wstring& pathName)
+{
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hService = NULL;
+    LPQUERY_SERVICE_CONFIGW lpServiceConfig = NULL;
+    DWORD dwBytesNeeded = 0;
+
+    std::wstring serviceName { L"midisrv" };
+
+    auto cleanup = wil::scope_exit([&]()
+    {
+        if (lpServiceConfig)
+        {
+            LocalFree(lpServiceConfig);
+        }
+
+        if (hService)
+        {
+            CloseServiceHandle(hService);
+        }
+
+        if (hSCManager)
+        {
+            CloseServiceHandle(hSCManager);
+        }
+
+    });
+
+
+    // Open the Service Control Manager
+    hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
+    if (!hSCManager) 
+    {
+        return false;
+    }
+
+    // Open the service
+    hService = OpenServiceW(hSCManager, serviceName.c_str(), SERVICE_QUERY_CONFIG);
+    if (!hService) 
+    {
+        return false;
+    }
+
+    if (!QueryServiceConfigW(hService, NULL, 0, &dwBytesNeeded))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) 
+        {
+            return false;
+        }
+    }
+    
+    lpServiceConfig =  (LPQUERY_SERVICE_CONFIGW)LocalAlloc(LPTR, dwBytesNeeded);
+    if (!lpServiceConfig) 
+    {
+        return false;
+    }
+
+    if (!QueryServiceConfigW(hService, lpServiceConfig, dwBytesNeeded, &dwBytesNeeded)) 
+    {
+        return false;
+    }
+
+    pathName.assign(lpServiceConfig->lpBinaryPathName);
+
+    return true;
+}
+
+// this is a simple function for use only in this tool. It's not to be used for any sort
+// of validation which has security implications
+bool ValidateInBoxMidisrvPath()
+{
+    std::wstring pathName{};
+    std::wstring system32{};
+
+
+    if (GetMidisrvPathName(pathName))
+    {
+        system32.resize(MAX_PATH);
+
+        auto ret = GetSystemDirectoryW(system32.data(), MAX_PATH);
+
+        if (ret == 0)
+        {
+            // couldn't get System32 folder
+            return false;
+        }
+
+        system32.resize(ret);
+
+        if (system32[0] == '\"' && system32[system32.size()-1] == '\"')
+        {
+            // remove leading and trailing quotes
+            system32 = system32.substr(1, system32.size()-2);
+        }
+
+        if (pathName[0] == '\"' && pathName[pathName.size()-1] == '\"')
+        {
+            // remove leading and trailing quotes
+            pathName = pathName.substr(1, pathName.size() - 2);
+        }
+
+
+        pathName = WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(pathName);
+        system32 = WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(system32);
+
+
+        if ((!pathName.empty() && !system32.empty()) && 
+            (pathName.starts_with(system32) || pathName.starts_with(L"\"" + system32 + L"\""))
+            )
+        {
+            // path name starts with system32 location, so this is very likely the in-box service
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
+    }
+
+    return false;
+}
+
 int __cdecl wmain(int argc, WCHAR* argv[])
 {
     // this also initializes COM
@@ -206,7 +334,7 @@ int __cdecl wmain(int argc, WCHAR* argv[])
     if (!ParseCommandLine(argc, argv))
     {
         // user picked help or some other option which skips evaluation
-        return static_cast<int>(RETURN_VALUE_SKIPPED);
+        return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_CHECK_SKIPPED);
     }
 
 
@@ -229,11 +357,20 @@ int __cdecl wmain(int argc, WCHAR* argv[])
 
         if (serviceAvailable)
         {
-            WriteInfo("Successfully tested connectivity to service: MIDI Service is available.");
-            WriteInfo("If you have manually installed the service on a PC on which this was not preinstalled,");
-            WriteInfo("this may be a false positive, as the MIDI 1.0 API compatibility will not be in place.");
+            if (ValidateInBoxMidisrvPath())
+            {
+                WriteInfo("Successfully tested connectivity to service: MIDI Service is available and running from System32.");
 
-            return static_cast<int>(RETURN_VALUE_SUCCESS);
+                return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_SUCCESS);
+            }
+            else
+            {
+                WriteInfo("Successfully tested connectivity to service: MIDI Service is available.");
+                WriteInfo("However, this appears to be a development build, and so may not have the right");
+                WriteInfo("connections to the MIDI 1.0 APIs, the MIDI 2.0 class driver, etc.");
+
+                return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_SUCCESS_DEV_BUILD);
+            }
         }
         else
         {
@@ -241,7 +378,7 @@ int __cdecl wmain(int argc, WCHAR* argv[])
 
             ShutdownMidisrv();
 
-            return static_cast<int>(RETURN_VALUE_NOT_ENABLED_OR_NOT_STARTED);
+            return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_OR_NOT_STARTED);
         }
 
 
@@ -253,7 +390,7 @@ int __cdecl wmain(int argc, WCHAR* argv[])
         ShutdownMidisrv();
 
         // service transport is not available.
-        return static_cast<int>(RETURN_VALUE_NOT_INSTALLED);
+        return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_INSTALLED);
     }
 }
 
