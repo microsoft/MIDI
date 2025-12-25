@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35209.166
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11304.174 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.NetworkMidiTransport", "Transport\UdpNetworkMidi2Transport\Midi2.NetworkMidiTransport.vcxproj", "{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}"
 EndProject
@@ -13,6 +13,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Ble1MidiTransport", "Transport\BleMidi1Transport\Midi2.Ble1MidiTransport.vcxproj", "{AD934155-A549-499E-9647-966139C36402}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.VirtualPatchBayTransport", "Transport\VirtualPatchbay\Midi2.VirtualPatchBayTransport.vcxproj", "{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Ble2MidiTransport", "Transport\BleMidi2Transport\Midi2.Ble2MidiTransport.vcxproj", "{28A17545-0C78-4752-8962-B6D3A0C0786C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiBleCommonLib", "Libs\MidiBleCommon\MidiBleCommonLib.vcxproj", "{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bluetooth", "Bluetooth", "{CD572030-537B-478A-8046-BA3D4C6BE60A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,9 +78,38 @@ Global
 		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|ARM64EC.Build.0 = Release|ARM64EC
 		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|x64.ActiveCfg = Release|x64
 		{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}.Release|x64.Build.0 = Release|x64
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Debug|ARM64.Build.0 = Debug|ARM64
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Debug|x64.ActiveCfg = Debug|x64
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Debug|x64.Build.0 = Debug|x64
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Release|ARM64.ActiveCfg = Release|ARM64
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Release|ARM64.Build.0 = Release|ARM64
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Release|x64.ActiveCfg = Release|x64
+		{28A17545-0C78-4752-8962-B6D3A0C0786C}.Release|x64.Build.0 = Release|x64
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Debug|ARM64.Build.0 = Debug|ARM64
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Debug|x64.ActiveCfg = Debug|x64
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Debug|x64.Build.0 = Debug|x64
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Release|ARM64.ActiveCfg = Release|ARM64
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Release|ARM64.Build.0 = Release|ARM64
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Release|x64.ActiveCfg = Release|x64
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AD934155-A549-499E-9647-966139C36402} = {CD572030-537B-478A-8046-BA3D4C6BE60A}
+		{28A17545-0C78-4752-8962-B6D3A0C0786C} = {CD572030-537B-478A-8046-BA3D4C6BE60A}
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E} = {CD572030-537B-478A-8046-BA3D4C6BE60A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FA3C2B04-54ED-4B96-8A5A-8B66C5E2148F}
