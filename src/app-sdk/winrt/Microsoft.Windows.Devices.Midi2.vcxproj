@@ -276,6 +276,7 @@
     <ClInclude Include="MidiVirtualPatchBayRouteCreationConfig.h">
       <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteDefinition.h" />
     <ClInclude Include="MidiVirtualPatchBayRouteRemovalConfig.h">
       <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
     </ClInclude>
@@ -509,6 +510,7 @@
     <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
       <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteStatus.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -799,6 +801,7 @@
     <ClCompile Include="MidiVirtualPatchBayRouteCreationConfig.cpp">
       <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteDefinition.cpp" />
     <ClCompile Include="MidiVirtualPatchBayRouteRemovalConfig.cpp">
       <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
     </ClCompile>
@@ -839,6 +842,7 @@
     <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
       <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteStatus.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi1PortNamingApproachEnum.idl" />
@@ -970,8 +974,8 @@
     <Midl Include="MidiVirtualPatchBayRouteCreationConfig.idl" />
     <Midl Include="MidiVirtualPatchBayRouteCreationResult.idl" />
     <Midl Include="MidiVirtualPatchBayRouteDefinition.idl" />
-    <Midl Include="MidiVirtualPatchBayRouteDestinationTransform.idl" />
     <Midl Include="MidiVirtualPatchBayRouteRemovalConfig.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteStatus.idl" />
     <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl" />
     <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl" />
     <Midl Include="MidiVirtualPatchBaySourceDefinition.idl" />

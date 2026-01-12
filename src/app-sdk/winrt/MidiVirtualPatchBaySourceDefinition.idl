@@ -24,32 +24,21 @@ namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 
     [experimental]
     [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBaySourceDefinition")]
+    [static_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBaySourceDefinitionStatics")]
     runtimeclass MidiVirtualPatchBaySourceDefinition
     {
         MidiVirtualPatchBaySourceDefinition();
 
         MidiVirtualPatchBaySourceDefinition(
-            Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria matchCriteria,
-            IVector<Microsoft.Windows.Devices.Midi2.MidiMessageType> includedMessageTypes,
-            IVector<Microsoft.Windows.Devices.Midi2.MidiGroup> includedGroups,
-            IVector<Microsoft.Windows.Devices.Midi2.MidiChannel> includedChannels
+            Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria matchCriteria
         );
 
         Boolean IsEnabled;
 
         Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria EndpointMatchCriteria;
 
-        // These criteria all work together. If you want separate criteria for different
-        // groups or channels, or message types, you need to create separate routes
-        IVector<Microsoft.Windows.Devices.Midi2.MidiMessageType> IncludedMessageTypes{ get; };
-        IVector<Microsoft.Windows.Devices.Midi2.MidiGroup> IncludedGroups{ get; };
-        IVector<Microsoft.Windows.Devices.Midi2.MidiChannel> IncludedChannels{ get; };
 
-        // if a MIDI 2 channel voice message
-        IVector<Microsoft.Windows.Devices.Midi2.Messages.Midi2ChannelVoiceMessageStatus> IncludedMidi2ChannelVoiceMessageStatuses{ get; };
-
-        // if a MIDI 1 channel voice message
-        IVector<Microsoft.Windows.Devices.Midi2.Messages.Midi1ChannelVoiceMessageStatus> IncludedMidi1ChannelVoiceMessageStatuses{ get; };
+        // TODO: Chain of source transform/filter definitions
 
 
         static MidiVirtualPatchBaySourceDefinition CreateFromConfigJson(String jsonSection);

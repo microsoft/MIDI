@@ -6,20 +6,24 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
-#include "MidiVirtualPatchBayRouteCreationConfig.h"
-#include "VirtualPatchBay.MidiVirtualPatchBayRouteCreationConfig.g.cpp"
+#pragma once
+#include "VirtualPatchBay.MidiVirtualPatchBayRouteStatus.g.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
-    _Use_decl_annotations_
-    MidiVirtualPatchBayRouteCreationConfig::MidiVirtualPatchBayRouteCreationConfig(vpb::MidiVirtualPatchBayRouteDefinition const& definition) noexcept
+    struct MidiVirtualPatchBayRouteStatus : MidiVirtualPatchBayRouteStatusT<MidiVirtualPatchBayRouteStatus>
     {
-        m_routeDefinition = definition;
-    }
+        MidiVirtualPatchBayRouteStatus() = default;
 
-    json::JsonObject MidiVirtualPatchBayRouteCreationConfig::GetConfigJson()
-    {
-        throw hresult_not_implemented();
-    }
+        winrt::guid RouteId() { return m_routeId; }
+        bool IsEnabled() { return m_isEnabled; }
+
+
+    private:
+        winrt::guid m_routeId;
+        bool m_isEnabled;
+
+
+
+    };
 }

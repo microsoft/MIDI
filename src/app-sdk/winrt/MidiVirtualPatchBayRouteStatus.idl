@@ -10,21 +10,18 @@
 
 import "MidiApiContracts.idl";
 
-import "IMidiServiceTransportPluginConfig.idl";
-
-import "MidiVirtualPatchBayRouteDefinition.idl";
-
+import "MidiServiceConfigEndpointMatchCriteria.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
-    [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayRouteCreationConfig")]
-    runtimeclass MidiVirtualPatchBayRouteCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayRouteStatus")]
+    runtimeclass MidiVirtualPatchBayRouteStatus
     {
-        MidiVirtualPatchBayRouteCreationConfig();
-        MidiVirtualPatchBayRouteCreationConfig(MidiVirtualPatchBayRouteDefinition definition);
+        Guid RouteId{ get; };
+        Boolean IsEnabled{ get; };
 
-        MidiVirtualPatchBayRouteDefinition Definition;
+        // TODO: Each source and each destination with the resolved endpoint device id, or a error message if not resolved
+
     }
 }
-

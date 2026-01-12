@@ -7,31 +7,26 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiVirtualPatchBaySourceDefinition.h"
-#include "VirtualPatchBay.MidiVirtualPatchBaySourceDefinition.g.cpp"
+#include "MidiVirtualPatchBayRouteDefinition.h"
+#include "VirtualPatchBay.MidiVirtualPatchBayRouteDefinition.g.cpp"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
-
     _Use_decl_annotations_
-    vpb::MidiVirtualPatchBaySourceDefinition MidiVirtualPatchBaySourceDefinition::CreateFromConfigJson(
-        winrt::hstring const& jsonSection) noexcept
+    vpb::MidiVirtualPatchBayRouteDefinition MidiVirtualPatchBayRouteDefinition::CreateFromConfigJson(winrt::hstring const& jsonSection) noexcept
     {
         // TODO
 
         UNREFERENCED_PARAMETER(jsonSection);
 
         return nullptr;
-
     }
 
-    json::JsonObject MidiVirtualPatchBaySourceDefinition::GetConfigJson() const noexcept
+
+    json::JsonObject MidiVirtualPatchBayRouteDefinition::GetConfigJson() const noexcept
     {
         // TODO
 
         return nullptr;
     }
-
-
-
 }

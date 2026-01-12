@@ -11,24 +11,29 @@
 import "MidiApiContracts.idl";
 
 import "MidiServiceConfigEndpointMatchCriteria.idl";
-import "MidiVirtualPatchBayRouteDestinationTransform.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
     [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayDestinationDefinition")]
+    [static_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayDestinationDefinitionStatics")]
     runtimeclass MidiVirtualPatchBayDestinationDefinition
     {
         MidiVirtualPatchBayDestinationDefinition();
+
+    MidiVirtualPatchBayDestinationDefinition(
+            Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria matchCriteria
+        );
 
         Boolean IsEnabled;
 
         Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria EndpointMatchCriteria;
 
-        // mapping and transforms between the source and destination
-        MidiVirtualPatchBayRouteDestinationTransform Transform;
 
+        // TODO: Chain of destination transform/filter definitions
+
+
+        static MidiVirtualPatchBayDestinationDefinition CreateFromConfigJson(String jsonSection);
         Windows.Data.Json.JsonObject GetConfigJson();
-
     }
 }

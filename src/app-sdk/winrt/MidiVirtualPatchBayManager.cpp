@@ -55,7 +55,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
 
     _Use_decl_annotations_
     vpb::MidiVirtualPatchBayRouteDefinition MidiVirtualPatchBayManager::GetRoute(
-        winrt::guid routeId)
+        winrt::guid const& routeId)
+    {
+        UNREFERENCED_PARAMETER(routeId);
+
+        throw hresult_not_implemented();
+    }
+
+
+    _Use_decl_annotations_
+    vpb::MidiVirtualPatchBayRouteStatus MidiVirtualPatchBayManager::GetRouteStatus(
+        winrt::guid const& routeId)
     {
         UNREFERENCED_PARAMETER(routeId);
 

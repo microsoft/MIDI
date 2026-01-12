@@ -154,6 +154,12 @@
     <ClCompile Include="MidiVirtualPatchBaySourceDefinition.cpp">
       <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteDefinition.cpp">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteStatus.cpp">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -321,6 +327,12 @@
       <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </ClInclude>
     <ClInclude Include="MidiVirtualPatchBaySourceDefinition.h">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteDefinition.h">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteStatus.h">
       <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </ClInclude>
   </ItemGroup>
@@ -724,10 +736,10 @@
     <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl">
       <Filter>SDK\Endpoints\VirtualPatchBay\Configs</Filter>
     </Midl>
-    <Midl Include="MidiVirtualPatchBayRouteDestinationTransform.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay\Transforms</Filter>
-    </Midl>
     <Midl Include="MidiVirtualPatchBayRouteDefinition.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteStatus.idl">
       <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </Midl>
   </ItemGroup>
