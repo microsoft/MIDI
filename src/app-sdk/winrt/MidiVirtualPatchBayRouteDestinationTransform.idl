@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+import "MidiVirtualPatchBaySourceDefinition.idl";
+import "MidiVirtualPatchBayDestinationDefinition.idl";
+
+import "MidiChannel.idl";
+import "MidiGroup.idl";
+
+import "MidiMessageTypeEnum.idl";
+import "Midi1ChannelVoiceMessageStatusEnum.idl";
+import "Midi2ChannelVoiceMessageStatusEnum.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
+{
+    [experimental]
+    [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayDestinationTransform")]
+    runtimeclass MidiVirtualPatchBayRouteDestinationTransform
+    {
+        MidiVirtualPatchBayRouteDestinationTransform();
+
+        MidiGroup GetGroupMappedDestination(MidiGroup sourceGroup);
+        void SetGroupMappedDestination(MidiGroup sourceGroup, MidiGroup destinationGroup);
+
+        MidiChannel GetChannelMappedDestination(MidiChannel sourceChannel);
+        void SetChannelMappedDestination(MidiChannel sourceChannel, MidiChannel destinationChannel);
+
+        static MidiVirtualPatchBayRouteDestinationTransform CreateFromConfigJson(String jsonSection);
+        Windows.Data.Json.JsonObject GetConfigJson();
+    }
+}

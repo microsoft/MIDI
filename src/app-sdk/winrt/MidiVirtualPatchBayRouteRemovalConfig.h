@@ -21,7 +21,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
 
         winrt::guid TransportId() { return m_transportId; }
         bool IsFromCurrentConfigFile() { return m_isFromCurrentConfigFile; }
-        winrt::hstring GetConfigJson();
+        json::JsonObject GetConfigJson();
 
     private:
         winrt::guid m_routeId{};

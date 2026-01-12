@@ -90,8 +90,8 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiXProc.h"
 
-#include "Midi2Ble1MidiTransport_i.c"
-#include "Midi2Ble1MidiTransport.h"
+#include "Midi2Ble2MidiTransport_i.c"
+#include "Midi2Ble2MidiTransport.h"
 
 #include "dllmain.h"
 
@@ -100,21 +100,21 @@ namespace internal = ::WindowsMidiServicesInternal;
 //#include "boost/circular_buffer.hpp"
 
 #include "transport_defs.h"
-#include "ble1_json_defs.h"
+//#include "ble2_json_defs.h"
 
 #include "midi_ble_utilities.h"
 
-class CMidi2Ble1MidiEndpointManager;
-class CMidi2Ble1MidiConfigurationManager;
+class CMidi2Ble2MidiEndpointManager;
+class CMidi2Ble2MidiConfigurationManager;
 class MidiBleAdvertiser;
 
 #include "TransportState.h"
 
-#include "Midi2.Ble1MidiTransport.h"
-#include "Midi2.Ble1MidiBidi.h"
-#include "Midi2.Ble1MidiEndpointManager.h"
-#include "Midi2.Ble1MidiConfigurationManager.h"
-#include "Midi2.Ble1MidiPluginMetadataProvider.h"
+#include "Midi2.Ble2MidiTransport.h"
+#include "Midi2.Ble2MidiBidi.h"
+#include "Midi2.Ble2MidiEndpointManager.h"
+#include "Midi2.Ble2MidiConfigurationManager.h"
+#include "Midi2.Ble2MidiPluginMetadataProvider.h"
 
 #include "MidiBleAdvertiser.h"
 

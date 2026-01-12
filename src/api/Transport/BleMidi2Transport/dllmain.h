@@ -9,11 +9,11 @@
 
 #pragma once
 
-class CMidi2Ble1MidiTransportModule : public ATL::CAtlDllModuleT<CMidi2Ble1MidiTransportModule>
+class CMidi2Ble2MidiTransportModule : public ATL::CAtlDllModuleT<CMidi2Ble2MidiTransportModule>
 {
 public :
-    DECLARE_LIBID(LIBID_Midi2Ble1MidiTransportLib)
-    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2BLE1MIDITRANSPORT, "{34cf426c-6683-4851-8e0f-7693ca011921}")
+    DECLARE_LIBID(LIBID_Midi2Ble2MidiTransportLib)
+    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2BLE2MIDITRANSPORT, "{c0bb738e-2753-43b1-aef9-5d10c6629f16}")
 };
 
-extern class CMidi2Ble1MidiTransportModule _AtlModule;
+extern class CMidi2Ble2MidiTransportModule _AtlModule;

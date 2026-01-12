@@ -2,7 +2,7 @@
 
 #include "pch.h"
 
-CMidi2Ble1MidiTransportModule _AtlModule;
+CMidi2Ble2MidiTransportModule _AtlModule;
 
 extern "C" BOOL WINAPI
 DllMain(
@@ -13,7 +13,7 @@ DllMain(
 {
     if (Reason == DLL_PROCESS_ATTACH)
     {
-        wil::SetResultTelemetryFallback(MidiBle1MidiTransportTelemetryProvider::FallbackTelemetryCallback);
+        wil::SetResultTelemetryFallback(MidiBle2MidiTransportTelemetryProvider::FallbackTelemetryCallback);
     }
 
     return _AtlModule.DllMain(Reason, Reserved);

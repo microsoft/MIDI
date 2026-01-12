@@ -10,7 +10,6 @@
 
 import "MidiApiContracts.idl";
 
-import "MidiVirtualPatchBayRouteDefinition.idl";
 import "IMidiServiceTransportPluginConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay

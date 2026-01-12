@@ -40,9 +40,9 @@
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
 
-#include <wil\com.h>
-#include <wil\resource.h>
-#include <wil\result_macros.h>
+//#include <wil\com.h>
+//#include <wil\resource.h>
+//#include <wil\result_macros.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
@@ -67,5 +67,6 @@
 //#include <WindowsMidiServicesVersion.h>
 
 //#include "MidiSrvRPC.h"
+#include "midicheckservice_rpc.h"
 
 namespace internal = ::WindowsMidiServicesInternal;

@@ -61,6 +61,14 @@
   <PropertyGroup>
     <NoWarn>$(NoWarn);MVVMTK0050;MVVMTK0045;CS8618;CS8305</NoWarn>
   </PropertyGroup>
+
+
+  <ItemGroup>
+    <Compile Remove="Views\Transport Setup\**" />
+    <EmbeddedResource Remove="Views\Transport Setup\**" />
+    <None Remove="Views\Transport Setup\**" />
+    <Page Remove="Views\Transport Setup\**" />
+  </ItemGroup>
   
 	<ItemGroup>
 	  <Content Remove="Assets\AppIcon.ico" />
@@ -81,9 +89,9 @@
     <None Remove="Views\EndpointsKsaPage.xaml" />
     <None Remove="Views\EndpointsNet2UdpPage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
+    <None Remove="Views\MidiVirtualPatchBaySetupPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
     <None Remove="Views\PluginsTransportPage.xaml" />
-    <None Remove="Views\RoutesPage.xaml" />
     <None Remove="Views\SetupPage.xaml" />
     <None Remove="Views\TroubleshootingPage.xaml" />
     <None Remove="Views\WinMMMidi1DevicesPage.xaml" />
@@ -163,6 +171,9 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\MidiVirtualPatchBaySetupPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\AdvancedUsbSettingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -189,9 +200,6 @@
     </Page>
     <Page Update="Views\WinMMMidi1DevicesPage.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-    </Page>
-    <Page Update="Views\RoutesPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Views\HomePage.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -286,6 +294,12 @@
     <ItemGroup>
       <Folder Include="Generated Files\" />
       <Folder Include="Generated Files\CsWinRT\" />
+      <Folder Include="Views\Core Pages\" />
+      <Folder Include="Views\Endpoint Management Pages\" />
+      <Folder Include="Views\Tools Pages\" />
+    </ItemGroup>
+    <ItemGroup>
+      <PRIResource Remove="Views\Transport Setup\**" />
     </ItemGroup>
 
 </Project>

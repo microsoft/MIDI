@@ -8,7 +8,7 @@
 
 #pragma once
 
-class CMidi2Ble1MidiBidi : 
+class CMidi2Ble2MidiBidi : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
         IMidiBidirectional,

@@ -92,6 +92,11 @@ public partial class ShellViewModel : ObservableRecipient
     [ObservableProperty]
     private bool showBle10MidiInLeftNav = false;
 
+    [ObservableProperty]
+    private bool showBle20MidiInLeftNav = false;
+
+    [ObservableProperty]
+    private bool showVirtualPatchBayInLeftNav = false;
 
     private void UpdateVisibilityOfLeftNavSections()
     {
@@ -107,12 +112,23 @@ public partial class ShellViewModel : ObservableRecipient
                 case "BLE10":
                     ShowBle10MidiInLeftNav = _configFileService.IsConfigFileActive;
                     break;
+                case "BLE20":
+                    ShowBle20MidiInLeftNav = _configFileService.IsConfigFileActive;
+                    break;
                 case "NET2UDP":
                     ShowNetworkMidi2InLeftNav = _configFileService.IsConfigFileActive;
+                    break;
+                case "VPB":
+                    ShowVirtualPatchBayInLeftNav = _configFileService.IsConfigFileActive;
                     break;
 
             }
         }
+
+
+        // TODO: TEMP
+        ShowVirtualPatchBayInLeftNav = _configFileService.IsConfigFileActive;
+
     }
 
 

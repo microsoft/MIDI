@@ -136,6 +136,24 @@
     <ClCompile Include="MidiEndpointConnection_ComExtensions.cpp">
       <Filter>SDK\Core\Session</Filter>
     </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayDestinationDefinition.cpp">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayManager.cpp">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteCreationConfig.cpp">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteRemovalConfig.cpp">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteUpdateConfig.cpp">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBaySourceDefinition.cpp">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -286,6 +304,24 @@
     </ClInclude>
     <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
       <Filter>SDK\ServiceConfig</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayDestinationDefinition.h">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayManager.h">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteCreationConfig.h">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteRemovalConfig.h">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteUpdateConfig.h">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBaySourceDefinition.h">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -664,6 +700,36 @@
     <Midl Include="MidiNetworkClientConnectionResult.idl">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
+    <Midl Include="MidiVirtualPatchBayManager.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBaySourceDefinition.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayDestinationDefinition.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteCreationConfig.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay\Configs</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteCreationResult.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay\Configs</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteRemovalConfig.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay\Configs</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay\Configs</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay\Configs</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteDestinationTransform.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay\Transforms</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteDefinition.idl">
+      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -793,6 +859,12 @@
     </Filter>
     <Filter Include="SDK\Utilities\Metadata">
       <UniqueIdentifier>{d8e3509e-8653-4710-916e-12fead5ce184}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Endpoints\VirtualPatchBay\Transforms">
+      <UniqueIdentifier>{4e176fbe-5dd3-4ded-96ca-ed41fc99a04c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Endpoints\VirtualPatchBay\Configs">
+      <UniqueIdentifier>{f55703b7-7124-49a3-8d13-fb201ab4bdcf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

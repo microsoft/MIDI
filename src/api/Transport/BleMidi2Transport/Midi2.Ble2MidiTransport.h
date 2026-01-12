@@ -8,31 +8,31 @@
 
 #pragma once
 
-class MidiBle1MidiTransportTelemetryProvider : public wil::TraceLoggingProvider
+class MidiBle2MidiTransportTelemetryProvider : public wil::TraceLoggingProvider
 {
     IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
-        MidiBle1MidiTransportTelemetryProvider,
-        "Microsoft.Windows.Midi2.Ble1MidiTransport",
-        // 7c2237b1-fa15-530f-3b15-3cf59ef6542d from hash of name using:
-        // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.Ble1MidiTransport").Guid
-        (0x7c2237b1,0xfa15,0x530f,0x3b,0x1f,0x3c,0xf5,0x9e,0xf6,0x54,0x2d))
+        MidiBle2MidiTransportTelemetryProvider,
+        "Microsoft.Windows.Midi2.Ble2MidiTransport",
+        // a62ca586-f59a-5046-0c50-1e905dfe9355 from hash of name using:
+        // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.Ble2MidiTransport").Guid
+        (0xa62ca586,0xf59a,0x5046,0x0c,0x50,0x1e,0x90,0x5d,0xfe,0x93,0x55))
 };
 
 using namespace ATL;
 
-class ATL_NO_VTABLE CMidi2Ble1MidiTransport :
+class ATL_NO_VTABLE CMidi2Ble2MidiTransport :
     public CComObjectRootEx<CComMultiThreadModel>,
-    public CComCoClass<CMidi2Ble1MidiTransport, &CLSID_Midi2Ble1MidiTransport>,
+    public CComCoClass<CMidi2Ble2MidiTransport, &CLSID_Midi2Ble2MidiTransport>,
     public IMidiTransport
 {
 public:
-    CMidi2Ble1MidiTransport()
+    CMidi2Ble2MidiTransport()
     {
     }
 
-    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2BLE1MIDITRANSPORT)
+    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2BLE2MIDITRANSPORT)
 
-    BEGIN_COM_MAP(CMidi2Ble1MidiTransport)
+    BEGIN_COM_MAP(CMidi2Ble2MidiTransport)
         COM_INTERFACE_ENTRY(IMidiTransport)
     END_COM_MAP()
 
@@ -42,4 +42,4 @@ public:
 private:
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(Midi2Ble1MidiTransport), CMidi2Ble1MidiTransport)
+OBJECT_ENTRY_AUTO(__uuidof(Midi2Ble2MidiTransport), CMidi2Ble2MidiTransport)

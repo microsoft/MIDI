@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "unknwn.idl";
+
+import "WindowsMidiServices.idl";
+
+#include "midi_channel_transform_clsid.h"
+
+[
+    uuid(LIBID_RAW_Midi2ChannelTransform),
+    version(1.0),
+]
+library Midi2ChannelTransformLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(CLSID_RAW_Midi2ChannelTransform), version(1.0)]
+    coclass Midi2ChannelTransform
+    {
+        [default] interface IMidiDataTransform;
+    }
+};
+

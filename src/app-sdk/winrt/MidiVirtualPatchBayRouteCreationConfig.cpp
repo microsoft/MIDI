@@ -19,7 +19,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
         m_routeId = routeId;
     }
 
-    winrt::hstring MidiVirtualPatchBayRouteCreationConfig::GetConfigJson()
+    json::JsonObject MidiVirtualPatchBayRouteCreationConfig::GetConfigJson()
     {
         throw hresult_not_implemented();
     }

@@ -25,7 +25,7 @@ TransportState& TransportState::Current()
 HRESULT
 TransportState::ConstructEndpointManager()
 {
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2Ble1MidiEndpointManager>(&m_endpointManager));
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2Ble2MidiEndpointManager>(&m_endpointManager));
 
     return S_OK;
 }
@@ -33,7 +33,7 @@ TransportState::ConstructEndpointManager()
 HRESULT
 TransportState::ConstructConfigurationManager()
 {
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2Ble1MidiConfigurationManager>(&m_configurationManager));
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2Ble2MidiConfigurationManager>(&m_configurationManager));
 
     return S_OK;
 }

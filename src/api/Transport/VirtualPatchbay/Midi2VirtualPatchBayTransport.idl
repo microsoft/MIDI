@@ -13,16 +13,17 @@ import "unknwn.idl";
 
 import "WindowsMidiServices.idl";
 
+#include "virtual_patch_bay_clsid.h"
 
 [
-    uuid(51F2C928-D846-45E9-BFA8-058BC804FF3E),
+    uuid(LIBID_RAW_Midi2VirtualPatchBayTransport),
     version(1.0),
 ]
 library Midi2VirtualPatchBayTransportLib
 {
     importlib("stdole2.tlb");
 
-    [uuid(B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D), version(1.0)]
+    [uuid(CLSID_RAW_Midi2VirtualPatchBayTransport), version(1.0)]
     coclass Midi2VirtualPatchBayTransport
     {
         [default] interface IMidiTransport;

@@ -11,7 +11,9 @@
 import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
+
 import "MidiVirtualPatchBayRouteDefinition.idl";
+
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
@@ -21,12 +23,7 @@ namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
     {
         MidiVirtualPatchBayRouteCreationConfig();
 
-        MidiVirtualPatchBayRouteCreationConfig(
-            Guid routeId
-        );
-
-        Guid RouteId;
-
+        MidiVirtualPatchBayRouteDefinition Definition;
     }
 }
 

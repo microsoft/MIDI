@@ -24,12 +24,12 @@ public:
 //    MidiTransportSettings TransportSettings{ };
 
 
-    wil::com_ptr<CMidi2Ble1MidiEndpointManager> GetEndpointManager()
+    wil::com_ptr<CMidi2Ble2MidiEndpointManager> GetEndpointManager()
     {
         return m_endpointManager;
     }
 
-    wil::com_ptr<CMidi2Ble1MidiConfigurationManager> GetConfigurationManager()
+    wil::com_ptr<CMidi2Ble2MidiConfigurationManager> GetConfigurationManager()
     {
         return m_configurationManager;
     }
@@ -108,8 +108,8 @@ private:
     ~TransportState();
 
 
-    wil::com_ptr<CMidi2Ble1MidiEndpointManager> m_endpointManager;
-    wil::com_ptr<CMidi2Ble1MidiConfigurationManager> m_configurationManager;
+    wil::com_ptr<CMidi2Ble2MidiEndpointManager> m_endpointManager;
+    wil::com_ptr<CMidi2Ble2MidiConfigurationManager> m_configurationManager;
 
     //std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
     //std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };

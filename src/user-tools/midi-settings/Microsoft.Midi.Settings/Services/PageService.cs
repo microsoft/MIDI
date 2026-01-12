@@ -30,7 +30,6 @@ public class PageService : IPageService
 
 
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
-        Configure<RoutesViewModel, RoutesPage>();
 
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
 
@@ -54,6 +53,7 @@ public class PageService : IPageService
         Configure<LivePerformanceSettingsViewModel, LivePerformanceSettingsPage>();
         Configure<AdvancedUsbSettingsViewModel, AdvancedUsbSettingsPage>();
 
+        Configure<MidiVirtualPatchBaySetupViewModel, MidiVirtualPatchBaySetupPage>();
 
         Configure<HomeViewModel, HomePage>();
     }

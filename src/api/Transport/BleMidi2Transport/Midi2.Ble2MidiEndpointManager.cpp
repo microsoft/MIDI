@@ -8,7 +8,7 @@
 
 
 #include "pch.h"
-#include "midi2.Ble1MidiTransport.h"
+#include "midi2.Ble2MidiTransport.h"
 
 using namespace wil;
 using namespace Microsoft::WRL;
@@ -19,13 +19,13 @@ using namespace Microsoft::WRL::Wrappers;
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiEndpointManager::Initialize(
+CMidi2Ble2MidiEndpointManager::Initialize(
     IMidiDeviceManager* midiDeviceManager,
     IMidiEndpointProtocolManager* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -52,7 +52,7 @@ CMidi2Ble1MidiEndpointManager::Initialize(
     RETURN_IF_FAILED(StartRemoteHostWatcher());
 
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -65,10 +65,10 @@ CMidi2Ble1MidiEndpointManager::Initialize(
 
 
 HRESULT
-CMidi2Ble1MidiEndpointManager::StartRemoteHostWatcher()
+CMidi2Ble2MidiEndpointManager::StartRemoteHostWatcher()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -108,16 +108,16 @@ CMidi2Ble1MidiEndpointManager::StartRemoteHostWatcher()
         enumeration::DeviceInformationKind::AssociationEndpointService);
 
     // add event handlers
-    m_deviceWatcherAddedToken = m_deviceWatcher.Added({ this, &CMidi2Ble1MidiEndpointManager::OnDeviceWatcherAdded });
-    m_deviceWatcherUpdatedToken = m_deviceWatcher.Updated({ this, &CMidi2Ble1MidiEndpointManager::OnDeviceWatcherUpdated });
-    m_deviceWatcherRemovedToken = m_deviceWatcher.Removed({ this, &CMidi2Ble1MidiEndpointManager::OnDeviceWatcherRemoved });
-    m_deviceWatcherStoppedToken = m_deviceWatcher.Stopped({ this, &CMidi2Ble1MidiEndpointManager::OnDeviceWatcherStopped });
+    m_deviceWatcherAddedToken = m_deviceWatcher.Added({ this, &CMidi2Ble2MidiEndpointManager::OnDeviceWatcherAdded });
+    m_deviceWatcherUpdatedToken = m_deviceWatcher.Updated({ this, &CMidi2Ble2MidiEndpointManager::OnDeviceWatcherUpdated });
+    m_deviceWatcherRemovedToken = m_deviceWatcher.Removed({ this, &CMidi2Ble2MidiEndpointManager::OnDeviceWatcherRemoved });
+    m_deviceWatcherStoppedToken = m_deviceWatcher.Stopped({ this, &CMidi2Ble2MidiEndpointManager::OnDeviceWatcherStopped });
 
     // start the watcher
     m_deviceWatcher.Start();
 
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -130,10 +130,10 @@ CMidi2Ble1MidiEndpointManager::StartRemoteHostWatcher()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatcher const&, enumeration::DeviceInformation const& args)
+CMidi2Ble2MidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatcher const&, enumeration::DeviceInformation const& args)
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -152,7 +152,7 @@ CMidi2Ble1MidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatcher c
     WakeupBackgroundEndpointCreatorThread();
 
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -165,7 +165,7 @@ CMidi2Ble1MidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatcher c
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& /*args*/)
+CMidi2Ble2MidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& /*args*/)
 {
     //TraceLoggingWrite(
     //    MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -185,10 +185,10 @@ CMidi2Ble1MidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiEndpointManager::OnDeviceWatcherRemoved(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& args)
+CMidi2Ble2MidiEndpointManager::OnDeviceWatcherRemoved(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& args)
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -205,7 +205,7 @@ CMidi2Ble1MidiEndpointManager::OnDeviceWatcherRemoved(enumeration::DeviceWatcher
     }
 
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -218,10 +218,10 @@ CMidi2Ble1MidiEndpointManager::OnDeviceWatcherRemoved(enumeration::DeviceWatcher
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiEndpointManager::OnDeviceWatcherStopped(enumeration::DeviceWatcher const&, foundation::IInspectable const&)
+CMidi2Ble2MidiEndpointManager::OnDeviceWatcherStopped(enumeration::DeviceWatcher const&, foundation::IInspectable const&)
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -234,10 +234,10 @@ CMidi2Ble1MidiEndpointManager::OnDeviceWatcherStopped(enumeration::DeviceWatcher
 }
 
 HRESULT
-CMidi2Ble1MidiEndpointManager::WakeupBackgroundEndpointCreatorThread()
+CMidi2Ble2MidiEndpointManager::WakeupBackgroundEndpointCreatorThread()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -251,10 +251,10 @@ CMidi2Ble1MidiEndpointManager::WakeupBackgroundEndpointCreatorThread()
 }
 
 HRESULT
-CMidi2Ble1MidiEndpointManager::StartBackgroundEndpointCreator()
+CMidi2Ble2MidiEndpointManager::StartBackgroundEndpointCreator()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -263,12 +263,12 @@ CMidi2Ble1MidiEndpointManager::StartBackgroundEndpointCreator()
     );
 
 
-    m_backgroundEndpointCreatorThread = std::jthread(std::bind_front(&CMidi2Ble1MidiEndpointManager::EndpointCreatorWorker, this));
+    m_backgroundEndpointCreatorThread = std::jthread(std::bind_front(&CMidi2Ble2MidiEndpointManager::EndpointCreatorWorker, this));
     m_backgroundEndpointCreatorThread.detach();
 
 
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -329,10 +329,10 @@ CMidi2Ble1MidiEndpointManager::StartBackgroundEndpointCreator()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToken)
+CMidi2Ble2MidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToken)
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -567,10 +567,10 @@ CMidi2Ble1MidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToken)
 
 
 HRESULT
-CMidi2Ble1MidiEndpointManager::CreateParentDevice()
+CMidi2Ble2MidiEndpointManager::CreateParentDevice()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -604,7 +604,7 @@ CMidi2Ble1MidiEndpointManager::CreateParentDevice()
     m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
 
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -618,11 +618,11 @@ CMidi2Ble1MidiEndpointManager::CreateParentDevice()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiEndpointManager::DeleteEndpoint(
+CMidi2Ble2MidiEndpointManager::DeleteEndpoint(
     std::wstring deviceInstanceId)
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -641,7 +641,7 @@ CMidi2Ble1MidiEndpointManager::DeleteEndpoint(
     else
     {
         TraceLoggingWrite(
-            MidiBle1MidiTransportTelemetryProvider::Provider(),
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
@@ -657,12 +657,12 @@ CMidi2Ble1MidiEndpointManager::DeleteEndpoint(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiEndpointManager::InitiateDiscoveryAndNegotiation(
+CMidi2Ble2MidiEndpointManager::InitiateDiscoveryAndNegotiation(
     std::wstring const& endpointDeviceInterfaceId
 )
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -882,10 +882,10 @@ CMidi2Ble1MidiEndpointManager::InitiateDiscoveryAndNegotiation(
 
 
 HRESULT
-CMidi2Ble1MidiEndpointManager::Shutdown()
+CMidi2Ble2MidiEndpointManager::Shutdown()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -926,7 +926,7 @@ CMidi2Ble1MidiEndpointManager::Shutdown()
     m_initialized = false;
 
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),

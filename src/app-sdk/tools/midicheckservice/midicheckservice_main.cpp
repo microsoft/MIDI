@@ -19,27 +19,30 @@
 #include <boost\program_options.hpp>
 namespace po = boost::program_options;
 
+// RPC code that complicates this source.
+#include "midicheckservice_rpc.h"
 
-#include "MidiSrvRpc_c.c"   // not for use directly by applications. The RPC calls are an internal implementation detail and may change at any point
+// return codes from the cmdline
+#include "midicheckservice_return_codes.h"
 
 bool m_optionQuiet{ false };
 
 
-void WriteHeading(std::string info)
+void WriteHeading(_In_ std::string info)
 {
     if (m_optionQuiet) return;
 
     std::cout << std::endl << dye::aqua(info) << std::endl;
 }
 
-void WriteInfo(std::string info)
+void WriteInfo(_In_ std::string info)
 {
     if (m_optionQuiet) return;
 
     std::cout << " - " << dye::white(info) << std::endl;
 }
 
-void WriteError(std::string info)
+void WriteError(_In_ std::string info)
 {
     if (m_optionQuiet) return;
 
@@ -47,16 +50,6 @@ void WriteError(std::string info)
 }
 
 #define LINE_LENGTH 96
-
-
-// return codes from this app
-#define MIDISRV_CHECK_RETURN_VALUE_SUCCESS                      0   // service has been installed and enabled
-#define MIDISRV_CHECK_RETURN_VALUE_SUCCESS_DEV_BUILD           -1   // service works but is a developer build, not the in-box build
-
-#define MIDISRV_CHECK_RETURN_VALUE_NOT_INSTALLED                1   // service has not been installed, because the COM interfaces are not present
-#define MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_OR_NOT_STARTED   2   // COM interface available, but service cannot be started. This may be due to Controlled Feature Rollout, or a system problem.
-
-#define MIDISRV_CHECK_RETURN_VALUE_CHECK_SKIPPED                99  // An option was passed which skipped evaluation. For example, --help
 
 
 
@@ -87,7 +80,7 @@ void SetupOptions()
 }
 
 // returns true if the program should continue running
-bool ParseCommandLine(int argc, WCHAR* argv[])
+bool ParseCommandLine(_In_ int argc, _In_ WCHAR* argv[])
 {
     po::store(po::parse_command_line(argc, argv, m_optionsDesc), m_optionsMap);
     po::notify(m_optionsMap);
@@ -109,86 +102,12 @@ bool ParseCommandLine(int argc, WCHAR* argv[])
     return true;
 }
 
-// this RPC code is used by this tool, but is not supported for use by applications 
-// directly. It could change in the future, as an internal implementation detail of 
-// Windows MIDI Services.
-
-_Use_decl_annotations_
-void __RPC_FAR* __RPC_USER midl_user_allocate(size_t byteCount
-)
-{
-    return (void*)new (std::nothrow) BYTE[byteCount];
-}
-
-_Use_decl_annotations_
-void __RPC_USER midl_user_free(void __RPC_FAR* pointer
-)
-{
-    delete[](BYTE*)pointer;
-}
-
-bool VerifyMidiSrvConnectivity()
-{
-    wil::unique_rpc_binding bindingHandle;
-    bindingHandle = NULL;
-
-    RPC_WSTR stringBinding = nullptr;
-    auto cleanupOnExit = wil::scope_exit([&]()
-        {
-            if (stringBinding)
-            {
-                RpcStringFree(&stringBinding);
-            }
-        });
-
-    RpcStringBindingCompose(
-        nullptr,
-        (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
-        nullptr,
-        nullptr,
-        nullptr,
-        &stringBinding);
-
-    RpcBindingFromStringBinding(
-        stringBinding,
-        &bindingHandle);
-
-    bool result = false;
-
-    auto verifyConnectivity = ([&]()
-        {
-            // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
-            // with structured exception handling.
-            RpcTryExcept result = MidiSrvVerifyConnectivity(bindingHandle.get());
-            RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
-            RpcEndExcept
-
-            return S_OK;
-        });
-
-    auto hr = verifyConnectivity();
-
-
-    if (FAILED(hr))
-    {
-        return false;
-    }
-
-    return result;
-}
-
-// End RPC code ---------------
-
-
 
 void ShutdownMidisrv()
 {
     WriteInfo("Shutting down the MIDI service, if present. You may receive an elevation prompt for this action.");
 
-    if (!m_optionQuiet)
-    {
-        system("pause");
-    }
+    system("pause");
 
     ShellExecute(
         NULL,
@@ -201,7 +120,7 @@ void ShutdownMidisrv()
 
 }
 
-bool GetMidisrvPathName(std::wstring& pathName)
+bool GetMidisrvPathName(_In_ std::wstring& pathName)
 {
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hService = NULL;
@@ -324,7 +243,7 @@ bool ValidateInBoxMidisrvPath()
     return false;
 }
 
-int __cdecl wmain(int argc, WCHAR* argv[])
+int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
 {
     // this also initializes COM
     winrt::init_apartment();
@@ -337,13 +256,15 @@ int __cdecl wmain(int argc, WCHAR* argv[])
         return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_CHECK_SKIPPED);
     }
 
-
     if (!m_optionQuiet)
     {
         std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
         std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
         std::cout << dye::aqua(" Copyright 2025- Microsoft Corporation.") << std::endl;
         std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
+        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+        std::cout << dye::light_aqua(" If this is a Windows Insider Dev or Beta build of Windows released before our official") << std::endl;
+        std::cout << dye::light_aqua(" 24h2+ retail release, you may receive an incorrect positive result from this test. ") << std::endl;
         std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
         std::cout << std::endl;
     }
@@ -376,7 +297,12 @@ int __cdecl wmain(int argc, WCHAR* argv[])
         {
             WriteError("MIDI Service is not available. It may not yet be enabled on this PC via Controlled Feature Rollout.");
 
-            ShutdownMidisrv();
+            // we only shut down midisrv if we're not running in quiet mode. The reason is the shutdown
+            // will throw up a UAC prompt
+            if (!m_optionQuiet)
+            {
+                ShutdownMidisrv();
+            }
 
             return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_OR_NOT_STARTED);
         }

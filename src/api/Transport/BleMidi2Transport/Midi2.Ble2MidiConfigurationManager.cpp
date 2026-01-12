@@ -12,7 +12,7 @@ using namespace winrt::Windows::Networking;
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiConfigurationManager::Initialize(
+CMidi2Ble2MidiConfigurationManager::Initialize(
     GUID transportId,
     IMidiDeviceManager* midiDeviceManager,
     IMidiServiceConfigurationManager* midiServiceConfigurationManager
@@ -23,7 +23,7 @@ CMidi2Ble1MidiConfigurationManager::Initialize(
 
 
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -110,13 +110,13 @@ CMidi2Ble1MidiConfigurationManager::Initialize(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiConfigurationManager::UpdateConfiguration(
+CMidi2Ble2MidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
     LPWSTR* response
 )
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -487,10 +487,10 @@ CMidi2Ble1MidiConfigurationManager::UpdateConfiguration(
 
 
 HRESULT
-CMidi2Ble1MidiConfigurationManager::Shutdown()
+CMidi2Ble2MidiConfigurationManager::Shutdown()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),

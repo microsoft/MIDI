@@ -2,7 +2,7 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {9b751900-2103-4d38-8d48-4c7282c1532e} = s 'Midi2Ble1MidiTransport Class'
+		ForceRemove {5dc87270-f318-4838-a4f9-6aadc63e925f} = s 'Midi2Ble1MidiTransport Class'
 		{
 			InprocServer32 = s '%MODULE%'
 			{

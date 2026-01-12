@@ -12,10 +12,10 @@
 
 
 HRESULT
-CMidi2Ble1MidiPluginMetadataProvider::Initialize()
+CMidi2Ble2MidiPluginMetadataProvider::Initialize()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -30,11 +30,11 @@ CMidi2Ble1MidiPluginMetadataProvider::Initialize()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiPluginMetadataProvider::GetMetadata(
+CMidi2Ble2MidiPluginMetadataProvider::GetMetadata(
     PTRANSPORTMETADATA metadata)
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -69,10 +69,10 @@ CMidi2Ble1MidiPluginMetadataProvider::GetMetadata(
 }
 
 HRESULT
-CMidi2Ble1MidiPluginMetadataProvider::Shutdown()
+CMidi2Ble2MidiPluginMetadataProvider::Shutdown()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),

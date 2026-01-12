@@ -11,24 +11,49 @@
 import "MidiApiContracts.idl";
 
 import "MidiGroup.idl";
+import "MidiChannel.idl";
 import "MidiMessageTypeEnum.idl";
+import "MidiServiceConfigEndpointMatchCriteria.idl";
+
+import "Midi1ChannelVoiceMessageStatusEnum.idl";
+import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
+    // "source" is currently limited to MIDI Sources (a MIDI input)
+
     [experimental]
     [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBaySourceDefinition")]
     runtimeclass MidiVirtualPatchBaySourceDefinition
     {
         MidiVirtualPatchBaySourceDefinition();
 
+        MidiVirtualPatchBaySourceDefinition(
+            Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria matchCriteria,
+            IVector<Microsoft.Windows.Devices.Midi2.MidiMessageType> includedMessageTypes,
+            IVector<Microsoft.Windows.Devices.Midi2.MidiGroup> includedGroups,
+            IVector<Microsoft.Windows.Devices.Midi2.MidiChannel> includedChannels
+        );
+
         Boolean IsEnabled;
 
-        String EndpointDeviceId;            // TODO: May want to have fuzzy match here
+        Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria EndpointMatchCriteria;
 
-        // message types to include. If empty, all types are included.
+        // These criteria all work together. If you want separate criteria for different
+        // groups or channels, or message types, you need to create separate routes
         IVector<Microsoft.Windows.Devices.Midi2.MidiMessageType> IncludedMessageTypes{ get; };
-
-        // only for messages with groups. If this is empty, all groups are included.
         IVector<Microsoft.Windows.Devices.Midi2.MidiGroup> IncludedGroups{ get; };
+        IVector<Microsoft.Windows.Devices.Midi2.MidiChannel> IncludedChannels{ get; };
+
+        // if a MIDI 2 channel voice message
+        IVector<Microsoft.Windows.Devices.Midi2.Messages.Midi2ChannelVoiceMessageStatus> IncludedMidi2ChannelVoiceMessageStatuses{ get; };
+
+        // if a MIDI 1 channel voice message
+        IVector<Microsoft.Windows.Devices.Midi2.Messages.Midi1ChannelVoiceMessageStatus> IncludedMidi1ChannelVoiceMessageStatuses{ get; };
+
+
+        static MidiVirtualPatchBaySourceDefinition CreateFromConfigJson(String jsonSection);
+        Windows.Data.Json.JsonObject GetConfigJson();
+
     }
 }

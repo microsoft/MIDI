@@ -9,7 +9,7 @@
 #pragma once
 
 
-class CMidi2Ble1MidiPluginMetadataProvider :
+class CMidi2Ble2MidiPluginMetadataProvider :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
     IMidiServiceTransportPluginMetadataProvider>

@@ -196,11 +196,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="color.hpp" />
+    <ClInclude Include="midicheckservice_return_codes.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="midicheckservice_main.cpp" />
+    <ClCompile Include="midicheckservice_rpc.cpp" />
+    <ClInclude Include="midicheckservice_rpc.h" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

@@ -11,7 +11,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiBidi::Initialize(
+CMidi2Ble2MidiBidi::Initialize(
     LPCWSTR endpointDeviceInterfaceId,
     PTRANSPORTCREATIONPARAMS,
     DWORD *,
@@ -21,7 +21,7 @@ CMidi2Ble1MidiBidi::Initialize(
 )
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -57,10 +57,10 @@ CMidi2Ble1MidiBidi::Initialize(
 }
 
 HRESULT
-CMidi2Ble1MidiBidi::Shutdown()
+CMidi2Ble2MidiBidi::Shutdown()
 {
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -84,7 +84,7 @@ CMidi2Ble1MidiBidi::Shutdown()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiBidi::SendMidiMessage(
+CMidi2Ble2MidiBidi::SendMidiMessage(
     MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
@@ -93,7 +93,7 @@ CMidi2Ble1MidiBidi::SendMidiMessage(
 {
 #ifdef _DEBUG
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -104,7 +104,7 @@ CMidi2Ble1MidiBidi::SendMidiMessage(
     );
 #else
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -131,7 +131,7 @@ CMidi2Ble1MidiBidi::SendMidiMessage(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiBidi::Callback(
+CMidi2Ble2MidiBidi::Callback(
     MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
@@ -141,7 +141,7 @@ CMidi2Ble1MidiBidi::Callback(
 {
 #ifdef _DEBUG
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -152,7 +152,7 @@ CMidi2Ble1MidiBidi::Callback(
     );
 #else
     TraceLoggingWrite(
-        MidiBle1MidiTransportTelemetryProvider::Provider(),
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),

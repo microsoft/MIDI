@@ -11,7 +11,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2Ble1MidiTransport::Activate(
+CMidi2Ble2MidiTransport::Activate(
     REFIID riid,
     void **requestedInterface
 )
@@ -21,7 +21,7 @@ CMidi2Ble1MidiTransport::Activate(
     if (__uuidof(IMidiBidirectional) == riid)
     {
         TraceLoggingWrite(
-            MidiBle1MidiTransportTelemetryProvider::Provider(),
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -30,7 +30,7 @@ CMidi2Ble1MidiTransport::Activate(
         );
 
         wil::com_ptr_nothrow<IMidiBidirectional> midiBidi;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2Ble1MidiBidi>(&midiBidi));
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2Ble2MidiBidi>(&midiBidi));
         *requestedInterface = midiBidi.detach();
     }
 
@@ -38,7 +38,7 @@ CMidi2Ble1MidiTransport::Activate(
     else if (__uuidof(IMidiEndpointManager) == riid)
     {
         TraceLoggingWrite(
-            MidiBle1MidiTransportTelemetryProvider::Provider(),
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -59,7 +59,7 @@ CMidi2Ble1MidiTransport::Activate(
     else if (__uuidof(IMidiTransportConfigurationManager) == riid)
     {
         TraceLoggingWrite(
-            MidiBle1MidiTransportTelemetryProvider::Provider(),
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -79,7 +79,7 @@ CMidi2Ble1MidiTransport::Activate(
     else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == riid)
     {
         TraceLoggingWrite(
-            MidiBle1MidiTransportTelemetryProvider::Provider(),
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -88,14 +88,14 @@ CMidi2Ble1MidiTransport::Activate(
         );
 
         wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> metadataProvider;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2Ble1MidiPluginMetadataProvider>(&metadataProvider));
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2Ble2MidiPluginMetadataProvider>(&metadataProvider));
         *requestedInterface = metadataProvider.detach();
     }
 
     else
     {
         TraceLoggingWrite(
-            MidiBle1MidiTransportTelemetryProvider::Provider(),
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
