@@ -157,6 +157,8 @@ CMidiEndpointProtocolWorker::Start(
     ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams
 )
 {
+    auto lock = m_lock.lock();
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -167,6 +169,10 @@ CMidiEndpointProtocolWorker::Start(
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+    if (m_endProcessing.is_signaled())
+    {
+        return S_OK;
+    }
 
     m_inInitialFunctionBlockDiscovery = true;
 
@@ -350,7 +356,7 @@ CMidiEndpointProtocolWorker::Callback(
     LONGLONG position,
     LONGLONG context)
 {
-
+    
     //TraceLoggingWrite(
     //    MidiSrvTelemetryProvider::Provider(),
     //    MIDI_TRACE_EVENT_WARNING,
@@ -1052,6 +1058,7 @@ CMidiEndpointProtocolWorker::Shutdown()
     // signal to stop worker thread
     EndProcessing();
 
+    auto lock = m_lock.lock();
     if (m_midiBidiDevice)
     {
         LOG_IF_FAILED(m_midiBidiDevice->Shutdown());

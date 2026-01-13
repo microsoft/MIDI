@@ -54,9 +54,12 @@ KsHandleWrapper::KsHandleWrapper(std::wstring pwszFilterName, UINT pinId, MidiTr
 
 KsHandleWrapper::~KsHandleWrapper()
 {
-    auto lock = m_lock.lock_exclusive();
+    // UnregisterForNotifications blocks until all callbacks have completed,
+    // do not acquire the lock here, because doing so will block callbacks from completing
     UnregisterForNotifications();
     m_handle.reset();
+    m_OnRemoveCallback = nullptr;
+    m_OnRestoreCallback = nullptr;
 }
 
 HRESULT KsHandleWrapper::Open()
@@ -142,11 +145,13 @@ void KsHandleWrapper::SetHandle(wil::unique_handle handle)
 
 void KsHandleWrapper::OnDeviceQueryRemove()
 {
-    // When calling queryRemove on a pin handle, need to shut down the cross process first
-    if (m_handleType == HandleType::Pin)
+    // If the handle user is registered, notify them that it is about
+    // to close
+    if (m_OnRemoveCallback)
     {
-        //CMidiXProc::Invalidate()
+        m_OnRemoveCallback();
     }
+
     // Close the handle to allow PnP to remove the device
     Close();
 }
@@ -155,10 +160,24 @@ void KsHandleWrapper::OnDeviceQueryRemoveCancel()
 {
     // Reopen the handle
     Open();
+
+    // If the handle user is registered, notify them that it is has
+    // been restored
+    if (m_OnRestoreCallback)
+    {
+        m_OnRestoreCallback();
+    }
 }
 
 void KsHandleWrapper::OnDeviceRemove()
 {
+    // If the handle user is registered, notify them that it is about
+    // to close
+    if (m_OnRemoveCallback)
+    {
+        m_OnRemoveCallback();
+    }
+
     // Surprise removal: close the handle
     Close();
 }
@@ -171,10 +190,19 @@ HRESULT KsHandleWrapper::RegisterForNotifications()
         return E_HANDLE;
     }
 
+    // If our threadpool cleanup worker doesn't yet exist, create
+    // it now
+    if (!m_ThreadpoolWork)
+    {
+        m_ThreadpoolWork = std::make_unique<ThreadpoolWork>();
+    }
+
     if (m_notifyContext)
     {
-        // TODO: spin off a worker to unregister the old context.
-        // CM_Unregister_Notification(m_notifyContext);
+        // spin off a worker to unregister the old context, doing this in a callback
+        // will deadlock because CM_Unregister_Notification blocks until all callbacks
+        // have completed
+        m_ThreadpoolWork->Submit([h = m_notifyContext]{ CM_Unregister_Notification(h); });
         m_notifyContext = nullptr;
     }
 
@@ -198,6 +226,14 @@ void KsHandleWrapper::UnregisterForNotifications()
     {
         CM_Unregister_Notification(m_notifyContext);
         m_notifyContext = nullptr;
+    }
+
+    if (m_ThreadpoolWork)
+    {
+        // This will wait until all callbacks have completed before
+        // returning, ensuring that all previous calls to CM_Register_Notification have
+        // been closed.
+        m_ThreadpoolWork.reset();
     }
 }
 
