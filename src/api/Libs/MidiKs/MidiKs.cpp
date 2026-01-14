@@ -12,6 +12,7 @@
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
+#include <wil\resource.h>
 
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
@@ -36,7 +37,11 @@ KSMidiDevice::Initialize(
     UINT pinId,
     MidiTransport transport,
     ULONG& bufferSize,
-    MessageOptionFlags optionFlags
+    DWORD* mmcssTaskId,
+    MessageOptionFlags optionFlags,
+    MidiFlow flow,
+    IMidiCallback *callback,
+    LONGLONG context
 )
 {
     m_Transport = transport;
@@ -62,56 +67,138 @@ KSMidiDevice::Initialize(
         RETURN_IF_FAILED(m_FilterHandleWrapper->RegisterForNotifications());
     }
 
+    // cache the pin id, callback, context, and the requested
+    // mmcss task id, these are needed to restore state in the event of a
+    // query remove cancel
     m_PinID = pinId;
+    m_Callback = callback;
+    m_Context = context;
+    m_MmcssTaskId = *mmcssTaskId;
+    m_BufferSize = bufferSize;
+    m_OptionFlags = optionFlags;
+    m_Flow = flow;
 
-    RETURN_IF_FAILED(OpenStream(bufferSize, optionFlags));
-    RETURN_IF_FAILED(PinSetState(KSSTATE_ACQUIRE));
-    RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
-    RETURN_IF_FAILED(PinSetState(KSSTATE_RUN));
+    // Open and start the stream (handles both cross process and legacy transfers)
+    // Opening the stream enables removal and restore callbacks, so we need to hold the
+    // lock for the remainder of initialization
+    auto lock = m_lock.lock_exclusive();
+    RETURN_IF_FAILED(OpenStream());
+
+    // return the mmcss task id and buffer size actually used.
+    *mmcssTaskId = m_MmcssTaskId;
+    bufferSize = m_BufferSize;
 
     return S_OK;
 }
 
+void
+KSMidiDevice::OnRemoveCallback()
+{
+    // Block until initialization and any pending message sends
+    // have completed
+    auto lock = m_lock.lock_exclusive();
+
+    // we have a surprise removal/query remove, 
+    // shut down the cross process midi pump to prevent further
+    // attempts to use the shared memory buffers.
+    if (m_CrossProcessMidiPump)
+    {
+        m_CrossProcessMidiPump->Shutdown();
+        m_CrossProcessMidiPump.reset();
+    }
+
+    m_DeviceRemoved = true;
+}
+
+void
+KSMidiDevice::OnRestoreCallback()
+{
+    // Block until initialization and any pending message sends
+    // have completed
+    auto lock = m_lock.lock_exclusive();
+
+    if (m_DeviceRemoved)
+    {
+        // The device was removed and query remove was cancelled,
+        // restore the stream
+        if (SUCCEEDED(OpenStream()))
+        {
+            m_DeviceRemoved = false;
+        }
+    }
+}
+
 _Use_decl_annotations_
 HRESULT
-KSMidiDevice::OpenStream(ULONG& bufferSize, MessageOptionFlags optionFlags
-)
+KSMidiDevice::OpenStream()
 {
-    // Duplicate the handle to safely pass it to another component or store it.
-    wil::unique_handle handleDupe(m_FilterHandleWrapper->GetHandle());
-    RETURN_IF_NULL_ALLOC(handleDupe);
+    auto cleanupOnFailure = wil::scope_exit([&]() {
+        if (m_CrossProcessMidiPump)
+        {
+            m_CrossProcessMidiPump->Shutdown();
+            m_CrossProcessMidiPump.reset();
+        }
+    });
 
-    m_PinHandleWrapper = std::make_unique<KsHandleWrapper>(m_FilterFilename.get(), m_PinID, m_Transport, handleDupe.get());
-    RETURN_IF_FAILED(m_PinHandleWrapper->Open());
+    // If we do not yet have the pin handle wrapper, create and initialize it
+    if (!m_PinHandleWrapper)
+    {   
+        // Duplicate the handle to safely pass it to another component or store it.
+        wil::unique_handle handleDupe(m_FilterHandleWrapper->GetHandle());
+        RETURN_IF_NULL_ALLOC(handleDupe);
+
+        m_PinHandleWrapper = std::make_unique<KsHandleWrapper>(m_FilterFilename.get(), m_PinID, m_Transport, handleDupe.get());
+
+        // register our callbacks before the pin is opened, so the handler is ready
+        // to go immediately after it is opened.
+        RETURN_IF_FAILED(m_PinHandleWrapper->RegisterOnRemoveCallback([this]()
+            {
+                OnRemoveCallback();
+            }));
+        RETURN_IF_FAILED(m_PinHandleWrapper->RegisterOnRestoreCallback([this]()
+            {
+                OnRestoreCallback();
+            }));
+
+        RETURN_IF_FAILED(m_PinHandleWrapper->Open());
+    }
 
     BOOL looped = ((m_Transport == MidiTransport_CyclicByteStream) || (m_Transport == MidiTransport_CyclicUMP));
 
     if (looped)
     {
-        GUID generatedName;
-        wil::unique_cotaskmem_string readEventName;
+        // If we do not yet have the MEMORY_MAPPED_PIPE data filled in, create and initialize
+        // it.
+        if (!m_MidiPipe)
+        {
+            GUID generatedName;
+            wil::unique_cotaskmem_string readEventName;
 
-        m_MidiPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
-        RETURN_IF_NULL_ALLOC(m_MidiPipe);
+            m_MidiPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
+            RETURN_IF_NULL_ALLOC(m_MidiPipe);
 
-        m_MidiPipe->MessageOptions = optionFlags;
-        m_MidiPipe->DataFormat = (m_Transport == MidiTransport_CyclicByteStream)?MidiDataFormats_ByteStream:MidiDataFormats_UMP;
+            m_MidiPipe->MessageOptions = m_OptionFlags;
+            m_MidiPipe->DataFormat = (m_Transport == MidiTransport_CyclicByteStream)?MidiDataFormats_ByteStream:MidiDataFormats_UMP;
+
+            // generate a unique name for the read event
+            RETURN_IF_FAILED(CoCreateGuid(&generatedName));
+            RETURN_IF_FAILED(StringFromCLSID(generatedName, &readEventName));
+
+            m_MidiPipe->WriteEvent.create(wil::EventOptions::ManualReset);
+
+            m_MidiPipe->ReadEventName = L"Global\\";
+            m_MidiPipe->ReadEventName += readEventName.get();
+            m_MidiPipe->ReadEvent.reset(CreateEvent(NULL, TRUE, FALSE, m_MidiPipe->ReadEventName.c_str()));
+        }
+
+        // We're looped, so create the cross process midi pump and configure
+        // for cross process data flow
         m_CrossProcessMidiPump.reset(new (std::nothrow) CMidiXProc());
         RETURN_IF_NULL_ALLOC(m_CrossProcessMidiPump);
 
-        // generate a unique name for the read event
-        RETURN_IF_FAILED(CoCreateGuid(&generatedName));
-        RETURN_IF_FAILED(StringFromCLSID(generatedName, &readEventName));
-
-        m_MidiPipe->WriteEvent.create(wil::EventOptions::ManualReset);
-
-        m_MidiPipe->ReadEventName = L"Global\\";
-        m_MidiPipe->ReadEventName += readEventName.get();
-        m_MidiPipe->ReadEvent.reset(CreateEvent(NULL, TRUE, FALSE, m_MidiPipe->ReadEventName.c_str()));
-
         // if we're looped (cyclic buffer), we need to
         // configure the buffer, registers, and event.
-        RETURN_IF_FAILED(ConfigureLoopedBuffer(bufferSize));
+        RETURN_IF_FAILED(ConfigureLoopedBuffer());
         RETURN_IF_FAILED(ConfigureLoopedRegisters());
         RETURN_IF_FAILED(ConfigureLoopedEvent());
     }
@@ -119,8 +206,22 @@ KSMidiDevice::OpenStream(ULONG& bufferSize, MessageOptionFlags optionFlags
     {
         // Buffer size isn't applicable for
         // legacy messages sent through ioctl
-        bufferSize = 0;
+        m_BufferSize = 0;
     }
+
+    // Start the pin (applicable for both looped and legacy)
+    RETURN_IF_FAILED(PinSetState(KSSTATE_ACQUIRE));
+    RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
+    RETURN_IF_FAILED(PinSetState(KSSTATE_RUN));
+
+    // The pin is ready to go, initialize the cross process midi pump to start moving data
+    if (m_CrossProcessMidiPump)
+    {
+        std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(&m_MmcssTaskId, (m_Flow == MidiFlowIn)?m_MidiPipe:emptyPipe, (m_Flow == MidiFlowOut)?m_MidiPipe:emptyPipe, m_Callback, m_Context, true));
+    }
+
+    cleanupOnFailure.release();
 
     return S_OK;
 }
@@ -128,25 +229,31 @@ KSMidiDevice::OpenStream(ULONG& bufferSize, MessageOptionFlags optionFlags
 HRESULT
 KSMidiDevice::Shutdown()
 {
-    // tear down all cross process work before
-    // closing out pin and filter handles, which will
-    // invalidate the memory addresses.
-    if (m_CrossProcessMidiPump)
     {
-        m_CrossProcessMidiPump->Shutdown();
-        m_CrossProcessMidiPump.reset();
-    }
+        auto lock = m_lock.lock_exclusive();
 
-    if (m_MidiPipe)
-    {
-        m_MidiPipe.reset();
-    }
+        // tear down all cross process work before
+        // closing out pin and filter handles, which will
+        // invalidate the memory addresses.
+        if (m_CrossProcessMidiPump)
+        {
+            m_CrossProcessMidiPump->Shutdown();
+            m_CrossProcessMidiPump.reset();
+        }
 
-    if (m_PinHandleWrapper && m_PinHandleWrapper->IsOpen())
-    {
-        RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
-        RETURN_IF_FAILED(PinSetState(KSSTATE_ACQUIRE));
-        RETURN_IF_FAILED(PinSetState(KSSTATE_STOP));
+        if (m_MidiPipe)
+        {
+            m_MidiPipe->Data.BufferAddress = nullptr;
+            m_MidiPipe->Registers.ReadPosition = nullptr;
+            m_MidiPipe->Registers.WritePosition = nullptr;
+        }
+
+        if (m_PinHandleWrapper && m_PinHandleWrapper->IsOpen())
+        {
+            RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
+            RETURN_IF_FAILED(PinSetState(KSSTATE_ACQUIRE));
+            RETURN_IF_FAILED(PinSetState(KSSTATE_STOP));
+        }
     }
 
     m_PinHandleWrapper.reset();
@@ -194,8 +301,7 @@ KSMidiDevice::PinSetState(
 
 _Use_decl_annotations_
 HRESULT
-KSMidiDevice::ConfigureLoopedBuffer(ULONG& bufferSize
-)
+KSMidiDevice::ConfigureLoopedBuffer()
 {
     KSMIDILOOPED_BUFFER_PROPERTY property {0};
     KSMIDILOOPED_BUFFER buffer{0};
@@ -207,7 +313,7 @@ KSMidiDevice::ConfigureLoopedBuffer(ULONG& bufferSize
 
     // Seems to be a reasonable balance for now,
     // TBD make this configurable via api or registry.
-    property.RequestedBufferSize    = bufferSize;
+    property.RequestedBufferSize    = m_BufferSize;
 
     if (!m_PinHandleWrapper)
     {
@@ -226,7 +332,7 @@ KSMidiDevice::ConfigureLoopedBuffer(ULONG& bufferSize
     }));
 
     m_MidiPipe->Data.BufferAddress = (PBYTE) buffer.BufferAddress;
-    bufferSize = m_MidiPipe->Data.BufferSize = buffer.ActualBufferSize;
+    m_BufferSize = m_MidiPipe->Data.BufferSize = buffer.ActualBufferSize;
 
     return S_OK;
 }
@@ -309,16 +415,7 @@ KSMidiOutDevice::Initialize(
     MessageOptionFlags optionFlags
 )
 {
-    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize, optionFlags));
-
-    m_MmcssTaskId = *mmcssTaskId;
-    if (m_CrossProcessMidiPump)
-    {
-        std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
-        // we're sending midi messages here, so this is a midi out pipe, midi in pipe is unused
-        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(mmcssTaskId, emptyPipe, m_MidiPipe, nullptr, 0, true));
-    }
-    *mmcssTaskId = m_MmcssTaskId;
+    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize, mmcssTaskId, optionFlags, MidiFlowOut, nullptr, 0));
 
     return S_OK;
 }
@@ -332,8 +429,11 @@ KSMidiOutDevice::SendMidiMessage(
     LONGLONG position
 )
 {
+    auto lock = m_lock.lock_shared();
+
     // The length must be one of the valid UMP data lengths
     RETURN_HR_IF(E_INVALIDARG, length == 0);
+    RETURN_HR_IF(E_HANDLE, m_DeviceRemoved);
 
     if (m_CrossProcessMidiPump)
     {
@@ -561,15 +661,10 @@ KSMidiInDevice::Initialize(
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == callback);
 
-    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize, optionFlags));
+    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize, mmcssTaskId, optionFlags, MidiFlowIn, callback, context));
 
-    if (m_CrossProcessMidiPump)
-    {
-        std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
-        // we're getting midi messages here, so this is a midi in pipe, midi out pipe is unused
-        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(mmcssTaskId, m_MidiPipe, emptyPipe, callback, context, true));
-    }
-    else
+    // Spin up the worker thread if using IOCTL_KS_READ_STREAM
+    if (m_Transport == MidiTransport_StandardByteStream)
     {
         m_MmcssTaskId = *mmcssTaskId;
 

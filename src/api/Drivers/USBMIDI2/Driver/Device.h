@@ -278,7 +278,8 @@ NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverIoContinuousReader(
     _In_ WDFDEVICE  Device,
-    _In_ BOOLEAN    runContinuousReader
+    _In_ BOOLEAN    runContinuousReader,
+    _In_ BOOLEAN    setActive
 );
 
 //

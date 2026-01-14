@@ -28,21 +28,38 @@ protected:
 
     virtual
     HRESULT Initialize(
-        _In_ LPCWSTR,
-        _In_opt_ HANDLE,
-        _In_ UINT,
-        _In_ MidiTransport,
-        _In_ ULONG&,
-        _In_ MessageOptionFlags);
+        _In_ LPCWSTR device,
+        _In_opt_ HANDLE filter,
+        _In_ UINT pinId,
+        _In_ MidiTransport transport,
+        _In_ ULONG& bufferSize,
+        _In_ DWORD* mmcssTaskId,
+        _In_ MessageOptionFlags optionFlags,
+        _In_ MidiFlow flow,
+        _In_ IMidiCallback *callback,
+        _In_ LONGLONG context
+        );
 
-    HRESULT OpenStream(_In_ ULONG&, _In_ MessageOptionFlags);
+    HRESULT OpenStream();
 
     HRESULT PinSetState(
         _In_ KSSTATE);
 
-    HRESULT ConfigureLoopedBuffer(_In_ ULONG&);
+    HRESULT ConfigureLoopedBuffer();
     HRESULT ConfigureLoopedRegisters();
     HRESULT ConfigureLoopedEvent();
+
+    // state and callbacks required to handle removal on a surprise removal
+    // or query remove, and restore on a query remove cancel.
+    wil::srwlock m_lock;
+    MidiFlow m_Flow{ MidiFlowOut };
+    bool m_DeviceRemoved {false};
+    IMidiCallback * m_Callback {nullptr};
+    LONGLONG m_Context {0};
+    ULONG m_BufferSize {0};
+    MessageOptionFlags m_OptionFlags {MessageOptionFlags_None};
+    void OnRemoveCallback();
+    void OnRestoreCallback();
 
     std::unique_ptr<KsHandleWrapper> m_FilterHandleWrapper;
     std::unique_ptr<KsHandleWrapper> m_PinHandleWrapper;

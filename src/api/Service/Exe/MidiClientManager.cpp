@@ -551,7 +551,8 @@ CMidiClientManager::GetMidiProtocolDownscalerTransform(
     auto transforms = m_TransformPipes.equal_range(devicePipe->MidiDevice());
     for (auto& transform = transforms.first; transform != transforms.second; ++transform)
     {
-        if (flow == transform->second->Flow() && 
+        if (transform->second->IsDevicePipe(devicePipe) &&
+            flow == transform->second->Flow() && 
             transform->second->TransformGuid() == transformGuid)
         {
             RETURN_HR_IF(E_UNEXPECTED, transformPipe);
@@ -578,7 +579,7 @@ CMidiClientManager::GetMidiProtocolDownscalerTransform(
         wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager = m_DeviceManager.get();
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
 
-        RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));
+        RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), devicePipe, &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));
         transformPipe = transform.get();
 
         // connect the transform to the device
@@ -704,7 +705,8 @@ CMidiClientManager::GetMidiTransform(
         auto transforms = m_TransformPipes.equal_range(devicePipe->MidiDevice());
         for (auto& transform = transforms.first; transform != transforms.second; ++transform)
         {
-            if (flow == transform->second->Flow() &&
+            if (transform->second->IsDevicePipe(devicePipe) &&
+                flow == transform->second->Flow() &&
                 dataFormatFrom == transform->second->DataFormatIn() &&
                 dataFormatTo == transform->second->DataFormatOut())
             {
@@ -783,7 +785,7 @@ CMidiClientManager::GetMidiTransform(
         wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager = m_DeviceManager.get();
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
 
-        RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));
+        RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), devicePipe, &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));
         transformPipe = transform.get();
 
         // connect the transform to the device
@@ -861,7 +863,8 @@ CMidiClientManager::GetMidiScheduler(
     {
         //wil::com_ptr_nothrow<CMidiTransformPipe> pipe = transform->second.get();
 
-        if (transform->second->TransformGuid() == __uuidof(Midi2SchedulerTransform))
+        if (transform->second->IsDevicePipe(devicePipe) && 
+            transform->second->TransformGuid() == __uuidof(Midi2SchedulerTransform))
         {
             transformPipe = transform->second;
             break;
@@ -894,7 +897,7 @@ CMidiClientManager::GetMidiScheduler(
         wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager = m_DeviceManager.get();
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
 
-        RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));
+        RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), devicePipe, &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));
 
         transformPipe = transform.get();
 

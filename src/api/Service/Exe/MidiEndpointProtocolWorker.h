@@ -46,6 +46,8 @@ public:
     void EndProcessing() { if (m_endProcessing.is_valid() && !m_endProcessing.is_signaled()) m_endProcessing.SetEvent(); }
 
 private:
+    wil::critical_section m_lock;
+
     std::wstring m_endpointDeviceInterfaceId;
     //std::wstring m_deviceInstanceId;
     GUID m_sessionId{};

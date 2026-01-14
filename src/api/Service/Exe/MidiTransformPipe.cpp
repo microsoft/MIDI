@@ -12,6 +12,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiTransformPipe::Initialize(
     LPCWSTR device,
+    wil::com_ptr_nothrow<CMidiPipe>& devicePipe,
     PMIDISRV_TRANSFORMCREATION_PARAMS pipeCreationParams,
     DWORD* mmcssTaskId,
     IMidiDeviceManager* midiDeviceManager
@@ -32,6 +33,8 @@ CMidiTransformPipe::Initialize(
     TRANSFORMCREATIONPARAMS creationParams {};
 
     m_TransformGuid = pipeCreationParams->TransformGuid;
+
+    m_DevicePipe = devicePipe;
 
     // Confirm that this component is either signed, or we are in developer mode.
     // Else, do not use it.

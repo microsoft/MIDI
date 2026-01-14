@@ -24,6 +24,7 @@ class CMidiTransformPipe : public CMidiPipe
 public:
     
     HRESULT Initialize(_In_ LPCWSTR, // device it's associated to
+                            _In_ wil::com_ptr_nothrow<CMidiPipe>& devicePipe,
                             _In_ PMIDISRV_TRANSFORMCREATION_PARAMS, // what transform to create
                             _In_ DWORD *, // mmcss
                             _In_ IMidiDeviceManager* // MidiDeviceManager to provide to transforms that need to update device properties
@@ -34,7 +35,13 @@ public:
 
     GUID TransformGuid();
 
+    BOOL IsDevicePipe(_In_ wil::com_ptr_nothrow<CMidiPipe>& devicePipe)
+    {
+        return (BOOL) (m_DevicePipe == devicePipe);
+    }
+
 private:
+    wil::com_ptr_nothrow<CMidiPipe> m_DevicePipe;
     wil::com_ptr_nothrow<IMidiDataTransform> m_MidiDataTransform;
     winrt::guid m_TransformGuid{};
 };
