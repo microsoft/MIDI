@@ -39,13 +39,13 @@ class MidiXProcTelemetryProvider : public wil::TraceLoggingProvider
 
 // infinite timeouts when waiting for read events cause the server to just hang
 // waits for more than 5 seconds cause UI app hang crashes.
-#define MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT 1000
+#define MIDI_XPROC_BUFFER_AVAILABLE_WAIT_TIMEOUT 1000
 
-// timeout waiting for the messages to be recieved
+// timeout waiting for the messages to be received
 // waits for more than 5 seconds cause UI app hang crashes.
-#define MIDI_XPROC_BUFFER_EMPTY_WAIT_TIMEOUT 1000
+#define MIDI_XPROC_BUFFER_RECEIVED_WAIT 1000
 
-// timeout waiting for the messages to be recieved
+// timeout waiting for the messages to be received
 #define MIDI_XPROC_CALLBACK_RETRY_TIMEOUT 1000
 
 _Use_decl_annotations_
@@ -240,7 +240,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiXProc::WaitForSendComplete(ULONG startingReadPosition, ULONG BufferWrittenPosition, UINT32 BufferLength)
 {
-    // Wait for midi messages to be recieved by other end of pipe
+    // Wait for midi messages to be received by other end of pipe
     if (m_MidiOut)
     {
         // Open a new handle to the read event, this will be a different handle than the
@@ -331,7 +331,7 @@ CMidiXProc::WaitForSendComplete(ULONG startingReadPosition, ULONG BufferWrittenP
         do
         {
             // wait for either the other end to read the buffer, termination, or timeout with no messages read
-            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_EMPTY_WAIT_TIMEOUT);
+            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_RECEIVED_WAIT);
             if (ret == (WAIT_OBJECT_0 + 1))
             {
                 // this is a manual reset event, so reset the event before reading the updated position so
@@ -683,7 +683,7 @@ CMidiXProc::SendMidiMessageInternal(
                 // to always wait for a retry. Wait for the client to read some data out of the buffer to
                 // make space
                 HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
-                DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT);
+                DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_AVAILABLE_WAIT_TIMEOUT);
                 if (ret == (WAIT_OBJECT_0 + 1))
                 {
                     // space has been made, try again.

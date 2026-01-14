@@ -799,7 +799,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
         midiMessagesReceived++;
 
         // now calculate the round trip statistics based upon
-        // the timestamp on the message that was just recieved relative
+        // the timestamp on the message that was just received relative
         // to when it was sent.
         roundTripLatency = qpc.QuadPart - payloadPosition;
 
@@ -926,7 +926,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
                 // we're advancing, so we can continue waiting.
                 continueWaiting = true;
                 lastReceivedMessageCount = midiMessagesReceived;
-                LOG_OUTPUT(L"%d messages recieved so far, still waiting...", lastReceivedMessageCount);
+                LOG_OUTPUT(L"%d messages received so far, still waiting...", lastReceivedMessageCount);
             }
         }
     } while(continueWaiting);
@@ -2051,7 +2051,7 @@ public:
                 midiMessagesReceived++;
         
                 // now calculate the round trip statistics based upon
-                // the timestamp on the message that was just recieved relative
+                // the timestamp on the message that was just received relative
                 // to when it was sent.
                 roundTripLatency = qpc.QuadPart - payloadPosition;
         
@@ -2188,7 +2188,7 @@ public:
                     // we're advancing, so we can continue waiting.
                     continueWaiting = true;
                     lastReceivedMessageCount = midiMessagesReceived;
-                    LOG_OUTPUT(L"%s - %d messages recieved so far, still waiting...", testConfig.SessionName.c_str(), lastReceivedMessageCount);
+                    LOG_OUTPUT(L"%s - %d messages received so far, still waiting...", testConfig.SessionName.c_str(), lastReceivedMessageCount);
                 }
             }
         } while(continueWaiting);
