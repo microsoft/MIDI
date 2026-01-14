@@ -1770,6 +1770,8 @@ CMidiDeviceManager::DeactivateEndpoint
 
     do
     {
+        auto lock = m_midiPortsLock.lock();
+
         // locate the MIDIPORT that identifies the swd
         // NOTE: This uses instanceId, not the Device Interface Id
         auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
@@ -2659,6 +2661,8 @@ CMidiDeviceManager::RebuildMidi1PortsForEndpoint(
 )
 {
     std::wstring cleanEndpointId { internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId) };
+
+    auto lock = m_midiPortsLock.lock();
 
     for (auto& port : m_midiPorts)
     {

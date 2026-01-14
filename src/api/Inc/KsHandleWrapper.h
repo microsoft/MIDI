@@ -9,6 +9,8 @@
 #pragma once
 
 #include <cfgmgr32.h>
+#include <functional>
+#include "threadpoolwork.h"
 
 enum class HandleType
 {
@@ -61,12 +63,43 @@ public:
         return func(m_handle.get());
     }
 
+    HRESULT RegisterOnRemoveCallback(std::function<void()> OnRemoveCallback)
+    {
+        auto lock = m_lock.lock_exclusive();
+
+        RETURN_HR_IF(E_INVALIDARG, nullptr == OnRemoveCallback);
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), nullptr != m_OnRemoveCallback);
+
+        m_OnRemoveCallback = std::move(OnRemoveCallback);
+
+        return S_OK;
+    }
+
+    HRESULT RegisterOnRestoreCallback(std::function<void()> OnRestoreCallback)
+    {
+        auto lock = m_lock.lock_exclusive();
+
+        RETURN_HR_IF(E_INVALIDARG, nullptr == OnRestoreCallback);
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), nullptr != m_OnRestoreCallback);
+
+        m_OnRestoreCallback = std::move(OnRestoreCallback);
+
+        return S_OK;
+    }
+
 private:
 
     wil::srwlock m_lock;
     wil::unique_handle m_handle;
     std::wstring m_filterName;
     HCMNOTIFICATION m_notifyContext = nullptr;
+
+    // async processing of unregister required if needed during a callback
+    std::unique_ptr<ThreadpoolWork> m_ThreadpoolWork;
+
+    // notify the handle wrapper client of the remove/restore if needed
+    std::function<void()> m_OnRemoveCallback;
+    std::function<void()> m_OnRestoreCallback;
 
     // Specifies if it's a filter or pin handle.
     HandleType m_handleType;
