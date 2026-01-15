@@ -1,0 +1,16 @@
+﻿<Window x:Class="MessageLight.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MessageLight"
+        mc:Ignorable="d"
+        Title="MIDI Message Light" Height="450" Width="800">
+    <Grid>
+        <!-- Click to change connection -->
+        <Button x:Name="ShowConnectionSetup">
+            
+        </Button>
+        
+    </Grid>
+</Window>
