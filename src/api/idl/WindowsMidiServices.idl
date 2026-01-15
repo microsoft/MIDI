@@ -96,7 +96,7 @@ interface IMidiTransport : IUnknown
 //
 // The position is specified as either 0, or a QPC.
 // Usage of the position depends upon the context of the callback, whether MidiIn or MidiOut.
-// For MidiIn, the position should be the QPC at the time the midi message was recieved from the transport, or 
+// For MidiIn, the position should be the QPC at the time the midi message was received from the transport, or 
 // the QPC when it was first received by the service.
 // For MidiOut, the position should either be 0 indicating that it should be delivered immediately, or the QPC 
 // that it should be delivered at for scheduled playback.
