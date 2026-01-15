@@ -263,7 +263,7 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport transport, ULONG bu
                 // we're advancing, so we can continue waiting.
                 continueWaiting = true;
                 lastReceivedMessageCount = midiMessagesReceived;
-                LOG_OUTPUT(L"%d messages recieved so far, still waiting...", lastReceivedMessageCount);
+                LOG_OUTPUT(L"%d messages received so far, still waiting...", lastReceivedMessageCount);
             }
         }
     } while(continueWaiting);
@@ -397,7 +397,7 @@ void Midi2DriverTests::TestMidiIO_Latency(MidiTransport transport, BOOL delayedM
         midiMessagesReceived++;
 
         // now calculate the round trip statistics based upon
-        // the timestamp on the message that was just recieved relative
+        // the timestamp on the message that was just received relative
         // to when it was sent.
         roundTripLatency = qpc.QuadPart - payloadPosition;
 
@@ -523,7 +523,7 @@ void Midi2DriverTests::TestMidiIO_Latency(MidiTransport transport, BOOL delayedM
                 // we're advancing, so we can continue waiting.
                 continueWaiting = true;
                 lastReceivedMessageCount = midiMessagesReceived;
-                LOG_OUTPUT(L"%d messages recieved so far, still waiting...", lastReceivedMessageCount);
+                LOG_OUTPUT(L"%d messages received so far, still waiting...", lastReceivedMessageCount);
             }
         }
     } while(continueWaiting);

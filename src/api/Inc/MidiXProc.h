@@ -120,6 +120,7 @@ private:
     // queue
     wil::critical_section m_MessageSendLock;
     bool m_PipeStalled {false};
+    ULONG m_StalledReadPosition {0};
     ULONGLONG m_SequentialDroppedBuffers {0};
     ULONGLONG m_TotalDroppedBuffers {0};
 
