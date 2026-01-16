@@ -243,6 +243,38 @@ bool ValidateInBoxMidisrvPath()
     return false;
 }
 
+
+bool VerifyWdmaud2Registry()
+{
+    std::wstring drivers32HklmKey = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
+
+    
+    for (int i = 0; i < 10; i++)
+    {
+        std::wstring valueName = (i == 0 ? L"midi" : L"midi" + std::to_wstring(i));
+
+        try
+        {
+            auto val = wil::reg::get_value_string(HKEY_LOCAL_MACHINE, drivers32HklmKey.c_str(), valueName.c_str());
+
+            if (val == L"wdmaud2.drv")
+            {
+                return true;
+            }
+        }
+        catch(...)
+        {
+            //WriteError(L"Unable to open value " + valueName);
+        }
+
+    }
+
+    return false;
+}
+
+
+
+
 int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
 {
     // this also initializes COM
@@ -269,9 +301,24 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
         std::cout << std::endl;
     }
 
-    // activation checks
     try
     {
+
+        WriteHeading("Looking for wdmaud2.drv in registry");
+
+        bool wdmaud2Enabled = VerifyWdmaud2Registry();
+
+        if (wdmaud2Enabled)
+        {
+            WriteInfo("Successfully verified wdmaud2.drv is present in registry.");
+        }
+        else
+        {
+            WriteInfo("wdmaud2.drv is not present in registry. Most likely, the feature has not yet been enabled on this PC.");
+            return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_IN_REGISTRY);
+        }
+
+        // activation checks
         WriteHeading("Testing MIDI Service Activation");
 
         bool serviceAvailable = VerifyMidiSrvConnectivity();
