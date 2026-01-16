@@ -5,12 +5,124 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MessageLight"
         mc:Ignorable="d"
-        Title="MIDI Message Light" Height="450" Width="800">
-    <Grid>
-        <!-- Click to change connection -->
-        <Button x:Name="ShowConnectionSetup">
+        Background="Transparent"
+        Title="MIDI Message Light">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <Storyboard x:Key="MessageReceived">
+                <!--<ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Visible</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>-->
+                <!--<DoubleAnimation BeginTime="0:0:0.0" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2"/>-->
+                <DoubleAnimation BeginTime="0:0:0.2" 
+                                 Storyboard.TargetName="Indicator"
+                                 Storyboard.TargetProperty="Opacity" 
+                                 From="1" To="0" 
+                                 Duration="0:0:0.5"/>
+
+                <DoubleAnimation BeginTime="0:0:0" 
+                                 Storyboard.TargetName="IndicatorScaleTransform"
+                                 Storyboard.TargetProperty="ScaleX"
+                                 From="0.2" To="1.0" 
+                                 Duration="0:0:0.2">
+                    <DoubleAnimation.EasingFunction>
+                        <ExponentialEase />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation BeginTime="0:0:0" 
+                                 Storyboard.TargetName="IndicatorScaleTransform"
+                                 Storyboard.TargetProperty="ScaleY"
+                                 From="0.2" To="1.0" 
+                                 Duration="0:0:0.2">
+                    <DoubleAnimation.EasingFunction>
+                        <ExponentialEase />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <!--<ObjectAnimationUsingKeyFrames BeginTime="0:0:5.5" Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Hidden</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>-->
+            </Storyboard>
+        </ResourceDictionary>
+
+
+
+        <!--<Style TargetType="Ellipse" x:Key="IndicatorStyle">
             
-        </Button>
+        </Style>-->
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         
+        <Grid Grid.Row="0" Background="#FF303030">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Endpoint"
+                       Foreground="Teal"
+                       Grid.Row="0"
+                       Grid.Column="0" 
+                       Margin="8"
+                       VerticalAlignment="Center"/>
+            <ComboBox Grid.Row="0" 
+                      Grid.Column="1"
+                      Margin="8"
+                      MinWidth="200"
+                      VerticalAlignment="Center"
+                      x:Name="AvailableEndpoints"
+                      ItemsSource="{Binding Endpoints, Mode=OneWay}"
+                      SelectionChanged="AvailableEndpoints_SelectionChanged"
+                      />
+
+            <TextBlock x:Name="ConnectionStatus"
+                       VerticalAlignment="Center"
+                       Foreground="Teal"
+                       Grid.Row="0"
+                       Grid.Column="2"
+                       Margin="8" />
+        </Grid>
+
+        <Canvas Grid.Row="1"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              x:Name="ContentPanel">
+            
+        </Canvas>
+        
+        <!--<Ellipse x:Name="Indicator" 
+                 Grid.Row="1"
+                 Width="400"
+                 Height="400"
+                 Margin="40"
+                 Fill="Black"
+                 RenderTransformOrigin="0.5,0.5"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center">
+            <Ellipse.RenderTransform>
+                <ScaleTransform x:Name="IndicatorScaleTransform" 
+                                ScaleX="0.5" 
+                                ScaleY="0.5"  />
+            </Ellipse.RenderTransform>
+        </Ellipse>-->
+
     </Grid>
 </Window>
