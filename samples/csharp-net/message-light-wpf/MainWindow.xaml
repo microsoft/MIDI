@@ -8,57 +8,6 @@
         Background="Transparent"
         Title="MIDI Message Light">
 
-    <Window.Resources>
-        <ResourceDictionary>
-            <Storyboard x:Key="MessageReceived">
-                <!--<ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetProperty="Visibility">
-                    <DiscreteObjectKeyFrame KeyTime="0">
-                        <DiscreteObjectKeyFrame.Value>
-                            <Visibility>Visible</Visibility>
-                        </DiscreteObjectKeyFrame.Value>
-                    </DiscreteObjectKeyFrame>
-                </ObjectAnimationUsingKeyFrames>-->
-                <!--<DoubleAnimation BeginTime="0:0:0.0" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2"/>-->
-                <DoubleAnimation BeginTime="0:0:0.2" 
-                                 Storyboard.TargetName="Indicator"
-                                 Storyboard.TargetProperty="Opacity" 
-                                 From="1" To="0" 
-                                 Duration="0:0:0.5"/>
-
-                <DoubleAnimation BeginTime="0:0:0" 
-                                 Storyboard.TargetName="IndicatorScaleTransform"
-                                 Storyboard.TargetProperty="ScaleX"
-                                 From="0.2" To="1.0" 
-                                 Duration="0:0:0.2">
-                    <DoubleAnimation.EasingFunction>
-                        <ExponentialEase />
-                    </DoubleAnimation.EasingFunction>
-                </DoubleAnimation>
-                <DoubleAnimation BeginTime="0:0:0" 
-                                 Storyboard.TargetName="IndicatorScaleTransform"
-                                 Storyboard.TargetProperty="ScaleY"
-                                 From="0.2" To="1.0" 
-                                 Duration="0:0:0.2">
-                    <DoubleAnimation.EasingFunction>
-                        <ExponentialEase />
-                    </DoubleAnimation.EasingFunction>
-                </DoubleAnimation>
-                <!--<ObjectAnimationUsingKeyFrames BeginTime="0:0:5.5" Storyboard.TargetProperty="Visibility">
-                    <DiscreteObjectKeyFrame KeyTime="0">
-                        <DiscreteObjectKeyFrame.Value>
-                            <Visibility>Hidden</Visibility>
-                        </DiscreteObjectKeyFrame.Value>
-                    </DiscreteObjectKeyFrame>
-                </ObjectAnimationUsingKeyFrames>-->
-            </Storyboard>
-        </ResourceDictionary>
-
-
-
-        <!--<Style TargetType="Ellipse" x:Key="IndicatorStyle">
-            
-        </Style>-->
-    </Window.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
@@ -107,22 +56,6 @@
               x:Name="ContentPanel">
             
         </Canvas>
-        
-        <!--<Ellipse x:Name="Indicator" 
-                 Grid.Row="1"
-                 Width="400"
-                 Height="400"
-                 Margin="40"
-                 Fill="Black"
-                 RenderTransformOrigin="0.5,0.5"
-                 HorizontalAlignment="Center"
-                 VerticalAlignment="Center">
-            <Ellipse.RenderTransform>
-                <ScaleTransform x:Name="IndicatorScaleTransform" 
-                                ScaleX="0.5" 
-                                ScaleY="0.5"  />
-            </Ellipse.RenderTransform>
-        </Ellipse>-->
 
     </Grid>
 </Window>
