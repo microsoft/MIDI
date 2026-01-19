@@ -418,8 +418,8 @@ int __cdecl main()
 
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
-    std::cout << dye::aqua(" Copyright 2025- Microsoft Corporation.") << std::endl;
-    std::cout << dye::aqua(" Information, license, and source available at https ://aka.ms/midi") << std::endl;
+    std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
+    std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" Enumerating MIDI kernel streaming devices, using the MIDI class drivers or a third-party MIDI 1.0/2.0 driver.") << std::endl;
     std::cout << dye::aqua(" Typically, these devices are USB, but other KS drivers will be included in the enumeration.") << std::endl;

@@ -193,7 +193,7 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
 
     WriteDoubleLineSeparator();
     WriteInfo("This tool is part of the Windows MIDI Services SDK and tools");
-    WriteInfo("Copyright 2025- Microsoft Corporation.");
+    WriteInfo("Copyright 2026- Microsoft Corporation.");
     WriteInfo("Information, license, and source available at https://aka.ms/midi");
     WriteDoubleLineSeparator();
 

@@ -292,7 +292,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
     {
         std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
         std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
-        std::cout << dye::aqua(" Copyright 2025- Microsoft Corporation.") << std::endl;
+        std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
         std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
         std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
         std::cout << dye::light_aqua(" If this is a Windows Insider Dev or Beta build of Windows released before our official") << std::endl;
@@ -303,7 +303,6 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
 
     try
     {
-
         WriteHeading("Looking for wdmaud2.drv in registry");
 
         bool wdmaud2Enabled = VerifyWdmaud2Registry();
@@ -314,7 +313,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
         }
         else
         {
-            WriteInfo("wdmaud2.drv is not present in registry. Most likely, the feature has not yet been enabled on this PC.");
+            WriteInfo("wdmaud2.drv is not present in registry in values midi-midi9. Most likely, the feature has not yet been enabled on this PC.");
             return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_IN_REGISTRY);
         }
 
