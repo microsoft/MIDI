@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
 
     }
 
-    winrt::hstring MidiVirtualPatchBayRouteRemovalConfig::GetConfigJson()
+    json::JsonObject MidiVirtualPatchBayRouteRemovalConfig::GetConfigJson()
     {
         throw hresult_not_implemented();
     }

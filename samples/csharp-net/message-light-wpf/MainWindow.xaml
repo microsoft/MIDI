@@ -1,0 +1,61 @@
+﻿<Window x:Class="MessageLight.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MessageLight"
+        mc:Ignorable="d"
+        Background="Transparent"
+        Title="MIDI Message Light">
+
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
+        <Grid Grid.Row="0" Background="#FF303030">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Endpoint"
+                       Foreground="Teal"
+                       Grid.Row="0"
+                       Grid.Column="0" 
+                       Margin="8"
+                       VerticalAlignment="Center"/>
+            <ComboBox Grid.Row="0" 
+                      Grid.Column="1"
+                      Margin="8"
+                      MinWidth="200"
+                      VerticalAlignment="Center"
+                      x:Name="AvailableEndpoints"
+                      ItemsSource="{Binding Endpoints, Mode=OneWay}"
+                      SelectionChanged="AvailableEndpoints_SelectionChanged"
+                      />
+
+            <TextBlock x:Name="ConnectionStatus"
+                       VerticalAlignment="Center"
+                       Foreground="Teal"
+                       Grid.Row="0"
+                       Grid.Column="2"
+                       Margin="8" />
+        </Grid>
+
+        <Canvas Grid.Row="1"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              x:Name="ContentPanel">
+            
+        </Canvas>
+
+    </Grid>
+</Window>

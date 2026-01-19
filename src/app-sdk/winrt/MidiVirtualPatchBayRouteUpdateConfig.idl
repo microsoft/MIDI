@@ -11,7 +11,6 @@
 
 import "MidiApiContracts.idl";
 
-import "MidiVirtualPatchBayRouteDefinition.idl";
 import "IMidiServiceTransportPluginConfig.idl";
 
 
@@ -28,5 +27,9 @@ namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
         );
 
         Guid RouteId;
+
+        // todo: all the updates for this config
+        // todo: do we just allow enable/disable for the update, and everything else is a new config?
+
     }
 }

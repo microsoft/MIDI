@@ -93,6 +93,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "strsafe.h"
 
 #include "transport_defs.h"
+#include "virtual_patch_bay_clsid.h"    // needs to be in before dllmain
 #include "dllmain.h"
 
 class CMidi2VirtualPatchBayEndpointManager;

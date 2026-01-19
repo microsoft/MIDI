@@ -15,7 +15,7 @@ import "MidiVirtualPatchBayRouteUpdateResult.idl";
 import "MidiVirtualPatchBayRouteCreationConfig.idl";
 import "MidiVirtualPatchBayRouteRemovalConfig.idl";
 import "MidiVirtualPatchBayRouteUpdateConfig.idl";
-import "MidiVirtualPatchBayRouteDefinition.idl";
+import "MidiVirtualPatchBayRouteStatus.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
@@ -38,6 +38,11 @@ namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 
         static Boolean RemoveRoute(
             MidiVirtualPatchBayRouteRemovalConfig removalConfig);
+
+        static MidiVirtualPatchBayRouteStatus GetRouteStatus(
+            Guid routeId
+        );
+
 
     }
 }

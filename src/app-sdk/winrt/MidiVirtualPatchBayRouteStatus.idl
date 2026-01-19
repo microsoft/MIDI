@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+import "MidiServiceConfigEndpointMatchCriteria.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
+{
+    [experimental]
+    [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayRouteStatus")]
+    runtimeclass MidiVirtualPatchBayRouteStatus
+    {
+        Guid RouteId{ get; };
+        Boolean IsEnabled{ get; };
+
+        // TODO: Each source and each destination with the resolved endpoint device id, or a error message if not resolved
+
+    }
+}

@@ -275,3 +275,16 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 
 #include "MidiImageAssetHelper.h"
 
+
+
+#include "MidiVirtualPatchBayDestinationDefinition.h"
+#include "MidiVirtualPatchBaySourceDefinition.h"
+#include "MidiVirtualPatchBayRouteDefinition.h"
+
+
+#include "MidiVirtualPatchBayRouteCreationConfig.h"
+#include "MidiVirtualPatchBayRouteRemovalConfig.h"
+#include "MidiVirtualPatchBayRouteUpdateConfig.h"
+
+//#include "MidiVirtualPatchBayRouteStatus.h"
+#include "MidiVirtualPatchBayManager.h"

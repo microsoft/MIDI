@@ -13,13 +13,12 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
     _Use_decl_annotations_
-    MidiVirtualPatchBayRouteCreationConfig::MidiVirtualPatchBayRouteCreationConfig(
-        winrt::guid const& routeId)
+    MidiVirtualPatchBayRouteCreationConfig::MidiVirtualPatchBayRouteCreationConfig(vpb::MidiVirtualPatchBayRouteDefinition const& definition) noexcept
     {
-        m_routeId = routeId;
+        m_routeDefinition = definition;
     }
 
-    winrt::hstring MidiVirtualPatchBayRouteCreationConfig::GetConfigJson()
+    json::JsonObject MidiVirtualPatchBayRouteCreationConfig::GetConfigJson()
     {
         throw hresult_not_implemented();
     }

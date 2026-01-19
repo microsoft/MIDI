@@ -195,6 +195,10 @@ public partial class App : Application
                     services.AddTransient<FirstRunExperiencePage>();
                     services.AddTransient<FirstRunExperienceViewModel>();
 
+
+                    services.AddTransient<MidiVirtualPatchBaySetupPage>();
+                    services.AddTransient<MidiVirtualPatchBaySetupViewModel>();
+
                     // Configuration
                     services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
                 }).

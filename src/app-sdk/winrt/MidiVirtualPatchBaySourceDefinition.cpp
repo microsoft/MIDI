@@ -13,4 +13,25 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
 
+    _Use_decl_annotations_
+    vpb::MidiVirtualPatchBaySourceDefinition MidiVirtualPatchBaySourceDefinition::CreateFromConfigJson(
+        winrt::hstring const& jsonSection) noexcept
+    {
+        // TODO
+
+        UNREFERENCED_PARAMETER(jsonSection);
+
+        return nullptr;
+
+    }
+
+    json::JsonObject MidiVirtualPatchBaySourceDefinition::GetConfigJson() const noexcept
+    {
+        // TODO
+
+        return nullptr;
+    }
+
+
+
 }

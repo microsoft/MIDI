@@ -6,16 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
-// This abstraction is unusual in that it doesn't create new endpoints, it simply
-// routes messages between existing endpoints. 
-
 #pragma once
 
-#define TRANSPORT_LAYER_GUID __uuidof(Midi2VirtualPatchBayTransport);
+#define TRANSPORT_LAYER_GUID    CLSID_Midi2VirtualPatchBayTransport
 
-#define TRANSPORT_MANUFACTURER L"Microsoft"
-#define TRANSPORT_CODE L"VPB"
+#define TRANSPORT_MANUFACTURER  L"Microsoft"
+#define TRANSPORT_CODE          L"VPB"
 
 // TODO: Names should be moved to .rc for localization
 

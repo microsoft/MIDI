@@ -1425,7 +1425,8 @@ int __cdecl main()
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_HEADER);
 
-    OutputHeader("This application Copyright (c) 2024- Microsoft Corporation");
+    OutputHeader("This tool is part of the Windows MIDI Services SDK and tools");
+    OutputHeader("Copyright 2026- Microsoft Corporation.");
     OutputHeader("Information, license, and source available at https://aka.ms/midi");
     OutputBlankLine();
     OutputHeader(MIDIDIAG_PRODUCT_NAME);

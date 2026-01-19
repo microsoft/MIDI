@@ -10,26 +10,30 @@
 
 import "MidiApiContracts.idl";
 
-import "MidiGroup.idl";
+import "MidiServiceConfigEndpointMatchCriteria.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
     [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayDestinationDefinition")]
+    [static_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayDestinationDefinitionStatics")]
     runtimeclass MidiVirtualPatchBayDestinationDefinition
     {
         MidiVirtualPatchBayDestinationDefinition();
 
+    MidiVirtualPatchBayDestinationDefinition(
+            Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria matchCriteria
+        );
+
         Boolean IsEnabled;
 
-        String EndpointDeviceId;            // TODO: May want to have fuzzy match here
+        Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria EndpointMatchCriteria;
 
-        // first group is incoming group. Second group is the group to transform it into in the destination
-        // If this map is empty, we map 1:1
-        // source group must be unique (0-15), but destination group can be duplicated to allow mapping multiple
-        // source groups to a single destination group. The opposite is not true, however - one source group
-        // cannot be mapped to multiple destination groups, as that would require duplicating messages
-        // This group map is also how we handle MIDI 1.0 devices and mapping to the correct port/cable.
-        IMap<Microsoft.Windows.Devices.Midi2.MidiGroup, Microsoft.Windows.Devices.Midi2.MidiGroup> GroupTransformMap{ get; };
+
+        // TODO: Chain of destination transform/filter definitions
+
+
+        static MidiVirtualPatchBayDestinationDefinition CreateFromConfigJson(String jsonSection);
+        Windows.Data.Json.JsonObject GetConfigJson();
     }
 }

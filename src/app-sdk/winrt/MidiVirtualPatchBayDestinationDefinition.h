@@ -16,17 +16,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
     {
         MidiVirtualPatchBayDestinationDefinition() = default;
 
-        bool IsEnabled() { return m_isEnabled; }
-        void IsEnabled(_In_ bool value) { m_isEnabled = value; }
+        MidiVirtualPatchBayDestinationDefinition(_In_ svc::MidiServiceConfigEndpointMatchCriteria const& matchCriteria) { m_matchCriteria = matchCriteria; }
 
-        winrt::hstring EndpointDeviceId() { return m_endpointDeviceId; }
-        void EndpointDeviceId (_In_ winrt::hstring const& value) { m_endpointDeviceId = value; }
+        bool IsEnabled() const noexcept { return m_isEnabled; }
+        void IsEnabled(_In_ bool value) noexcept { m_isEnabled = value; }
 
-        collections::IMap<midi2::MidiGroup, midi2::MidiGroup> GroupTransformMap();
+        svc::MidiServiceConfigEndpointMatchCriteria EndpointMatchCriteria() const noexcept { return m_matchCriteria; }
+        void EndpointMatchCriteria(_In_ svc::MidiServiceConfigEndpointMatchCriteria const& value) noexcept { m_matchCriteria = value; }
+
+        static vpb::MidiVirtualPatchBayDestinationDefinition CreateFromConfigJson(_In_ winrt::hstring const& jsonSection) noexcept;
+        json::JsonObject GetConfigJson() const noexcept;
 
     private:
         bool m_isEnabled{ true };
-        winrt::hstring m_endpointDeviceId{};
+
+        svc::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{};
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::factory_implementation

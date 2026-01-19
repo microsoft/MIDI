@@ -58,10 +58,25 @@ void WriteInfo(std::string info)
     std::cout << dye::aqua(info) << std::endl;
 }
 
+void WriteInfo(std::wstring info)
+{
+    std::cout << hue::aqua;
+    std::wcout << info;
+    std::cout << hue::reset << std::endl;
+}
+
 void WriteImportant(std::string info)
 {
     std::cout << dye::light_aqua(info) << std::endl;
 }
+
+void WriteImportant(std::wstring info)
+{
+    std::cout << hue::light_aqua;
+    std::wcout << info;
+    std::cout << hue::reset << std::endl;
+}
+
 
 void WriteSuperImportant(std::string info)
 {
@@ -178,7 +193,7 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
 
     WriteDoubleLineSeparator();
     WriteInfo("This tool is part of the Windows MIDI Services SDK and tools");
-    WriteInfo("Copyright 2025- Microsoft Corporation.");
+    WriteInfo("Copyright 2026- Microsoft Corporation.");
     WriteInfo("Information, license, and source available at https://aka.ms/midi");
     WriteDoubleLineSeparator();
 
@@ -221,7 +236,7 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
     {
         for (const auto& value_data : wil::make_range(wil::reg::value_iterator{ keyForDelete.get() }, wil::reg::value_iterator{}))
         {
-            std::string valueName(value_data.name.begin(), value_data.name.end());
+            std::wstring valueName(value_data.name.begin(), value_data.name.end());
 
             // Only allowed midi entries:
             // midi : wdmaud.drv
@@ -231,30 +246,28 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
             // we're going scorched earth here. 3P drivers shouldn't be listed anymore, so we simply remove them all and
             // create entries only for wdmaud.drv and wdmaud2.drv
 
-            if ((valueName.starts_with("midi")) &&
+            if ((valueName.starts_with(L"midi")) &&
                 /*(valueName != "midimapper") && */
-                (valueName != "MidisrvTransferComplete"))
+                (valueName != L"MidisrvTransferComplete"))
             {
                 auto checkValName = valueName;
                 checkValName.erase(0, 4);
 
-                if (checkValName.find_first_not_of("0123456789") == std::string::npos)
+                if (checkValName.find_first_not_of(L"0123456789") == std::string::npos)
                 {
                     if (value_data.type == REG_SZ)
                     {
                         auto valueDataW = wil::reg::get_value_string(HKEY_LOCAL_MACHINE, drivers32HklmKey.c_str(), value_data.name.c_str());
 
-                        std::string valueData(valueDataW.begin(), valueDataW.end());
-
-                        WriteImportant("- Found value '" + valueName + "' with value '" + valueData + "'");
+                        WriteImportant(L"- Found value '" + valueName + L"' with value '" + valueDataW + L"'");
                     }
                     else
                     {
-                        WriteImportant("- Found value '" + valueName + "' with incorrect value type.");
+                        WriteImportant(L"- Found value '" + valueName + L"' with incorrect value type.");
                     }
 
                     // we handle these two differently
-                    if (valueName != "midi" && valueName != "midi1")
+                    if (valueName != L"midi" && valueName != L"midi1")
                     {
                         valuesToDelete.push_back(value_data.name);
                     }
@@ -262,7 +275,7 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
                 else
                 {
                     // the string starts with "midi" but includes other characters than a number. Leaving it alone.
-                    WriteInfo("- Found value '" + valueName + "'. Leaving it alone.");
+                    WriteInfo(L"- Found value '" + valueName + L"'. Leaving it alone.");
                 }
 
             }

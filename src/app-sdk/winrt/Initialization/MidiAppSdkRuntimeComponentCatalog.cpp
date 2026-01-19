@@ -140,8 +140,17 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Metadata.MidiImageAssetHelper", defaultThreading });
 
+    // Virtual Patch Bay
 
-    
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".VirtualPatchBay.MidiVirtualPatchBayManager", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".VirtualPatchBay.MidiVirtualPatchBayRouteCreationConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".VirtualPatchBay.MidiVirtualPatchBayRouteRemovalConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".VirtualPatchBay.MidiVirtualPatchBayRouteUpdateConfig", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".VirtualPatchBay.MidiVirtualPatchBayRouteDefinition", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".VirtualPatchBay.MidiVirtualPatchBaySourceDefinition", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".VirtualPatchBay.MidiVirtualPatchBayDestinationDefinition", defaultThreading });
 
 
     return types;

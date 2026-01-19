@@ -28,10 +28,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
         static bool RemoveRoute(
             _In_ vpb::MidiVirtualPatchBayRouteRemovalConfig const& removalConfig);
 
+
         static collections::IVectorView<vpb::MidiVirtualPatchBayRouteDefinition> GetRoutes();
 
         static vpb::MidiVirtualPatchBayRouteDefinition GetRoute(
-            _In_ winrt::guid routeId);
+            _In_ winrt::guid const& routeId);
+
+        static vpb::MidiVirtualPatchBayRouteStatus GetRouteStatus(
+            _In_ winrt::guid const& routeId);
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::factory_implementation

@@ -267,6 +267,25 @@
     <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
       <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayDestinationDefinition.h">
+      <DependentUpon>MidiVirtualPatchBayDestinationDefinition.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayManager.h">
+      <DependentUpon>MidiVirtualPatchBayManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteCreationConfig.h">
+      <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteDefinition.h" />
+    <ClInclude Include="MidiVirtualPatchBayRouteRemovalConfig.h">
+      <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteUpdateConfig.h">
+      <DependentUpon>MidiVirtualPatchBayRouteUpdateConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBaySourceDefinition.h">
+      <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_sdk_idl_defs.h" />
     <ClInclude Include="MidiNetworkAdvertisedHost.h">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
@@ -491,6 +510,7 @@
     <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
       <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteStatus.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -772,6 +792,25 @@
     <ClCompile Include="MidiSystemExclusiveSender.cpp">
       <DependentUpon>MidiSystemExclusiveSender.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayDestinationDefinition.cpp">
+      <DependentUpon>MidiVirtualPatchBayDestinationDefinition.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayManager.cpp">
+      <DependentUpon>MidiVirtualPatchBayManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteCreationConfig.cpp">
+      <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteDefinition.cpp" />
+    <ClCompile Include="MidiVirtualPatchBayRouteRemovalConfig.cpp">
+      <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteUpdateConfig.cpp">
+      <DependentUpon>MidiVirtualPatchBayRouteUpdateConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBaySourceDefinition.cpp">
+      <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -803,6 +842,7 @@
     <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
       <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteStatus.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi1PortNamingApproachEnum.idl" />
@@ -929,6 +969,16 @@
     <Midl Include="MidiSystemExclusiveMessageHelper.idl" />
     <Midl Include="MidiSystemExclusiveSender.idl" />
     <Midl Include="MidiSystemExclusiveSendProgress.idl" />
+    <Midl Include="MidiVirtualPatchBayDestinationDefinition.idl" />
+    <Midl Include="MidiVirtualPatchBayManager.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteCreationConfig.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteCreationResult.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteDefinition.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteRemovalConfig.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteStatus.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl" />
+    <Midl Include="MidiVirtualPatchBaySourceDefinition.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

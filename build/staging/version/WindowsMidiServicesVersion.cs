@@ -9,15 +9,15 @@ namespace Microsoft.Windows.Devices.Midi2.Common
 	{
 		public const bool IsPreview = true;
 		public const string Source = "GitHub Preview";
-		public const string BuildDate = "2025-12-04";
-		public const string Name = "Plugin Preview 15";
-		public const string BuildFullVersion = "0.0.15-preview.15.9";
-		public const ushort VersionMajor = 0;
+		public const string BuildDate = "2026-01-18";
+		public const string Name = "SDK Release Candidate 1";
+		public const string BuildFullVersion = "1.0.14-rc.1.213";
+		public const ushort VersionMajor = 1;
 		public const ushort VersionMinor = 0;
-		public const ushort VersionPatch = 15;
-		public const ushort VersionBuildNumber = 9;
-		public const string Preview = "preview.15.9";
-		public const string AssemblyFullVersion = "0.0.15.9";
-		public const string FileFullVersion = "0.0.15.9";
+		public const ushort VersionPatch = 14;
+		public const ushort VersionBuildNumber = 213;
+		public const string Preview = "rc.1.213";
+		public const string AssemblyFullVersion = "1.0.14.213";
+		public const string FileFullVersion = "1.0.14.213";
 	}
 }

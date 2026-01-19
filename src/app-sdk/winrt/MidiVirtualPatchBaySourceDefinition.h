@@ -15,30 +15,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
     {
         MidiVirtualPatchBaySourceDefinition() = default;
 
-        bool IsEnabled() { return m_isEnabled; }
-        void IsEnabled(_In_ bool value) { m_isEnabled = value; }
+        MidiVirtualPatchBaySourceDefinition(_In_ svc::MidiServiceConfigEndpointMatchCriteria const& matchCriteria) { m_matchCriteria = matchCriteria; }
 
-        winrt::hstring EndpointDeviceId() { return m_endpointDeviceId; }
-        void EndpointDeviceId(_In_ winrt::hstring const& value) { m_endpointDeviceId = value; }
+        bool IsEnabled() const noexcept { return m_isEnabled; }
+        void IsEnabled(_In_ bool value) noexcept { m_isEnabled = value; }
 
+        svc::MidiServiceConfigEndpointMatchCriteria EndpointMatchCriteria() const noexcept { return m_matchCriteria; }
+        void EndpointMatchCriteria(_In_ svc::MidiServiceConfigEndpointMatchCriteria const& value) noexcept { m_matchCriteria = value; }
 
-        collections::IVector<midi2::MidiMessageType> IncludedMessageTypes() { return m_includedMessageTypes; }
-        //void IncludedMessageTypes(_In_ collections::IVector<midi2::MidiMessageType> const& value);
-
-        collections::IVector<midi2::MidiGroup> IncludedGroups() { return m_includedGroups; }
-        //void IncludedGroups(_In_ collections::IVector<midi2::MidiGroup> const& value);
+        static vpb::MidiVirtualPatchBaySourceDefinition CreateFromConfigJson(_In_ winrt::hstring const& jsonSection) noexcept;
+        json::JsonObject GetConfigJson() const noexcept;
 
     private:
         bool m_isEnabled{ true };
-        winrt::hstring m_endpointDeviceId{};
-
-        collections::IVector<midi2::MidiGroup> m_includedGroups
-            { winrt::multi_threaded_vector<midi2::MidiGroup>() };
-
-        collections::IVector<midi2::MidiMessageType> m_includedMessageTypes
-            { winrt::multi_threaded_vector<midi2::MidiMessageType>() };
-
-
+               
+        svc::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{ nullptr };
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::factory_implementation

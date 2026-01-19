@@ -10,24 +10,38 @@
 
 import "MidiApiContracts.idl";
 
+import "IMidiServiceTransportPluginConfig.idl";
+
 import "MidiVirtualPatchBaySourceDefinition.idl";
 import "MidiVirtualPatchBayDestinationDefinition.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
+    // this type is needed for listing existing routes as well as creating/updating routes
+
     [experimental]
     [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayRouteDefinition")]
+    [static_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayRouteDefinitionStatics")]
     runtimeclass MidiVirtualPatchBayRouteDefinition
     {
         MidiVirtualPatchBayRouteDefinition();
 
-        Boolean IsEnabled;
+        MidiVirtualPatchBayRouteDefinition(String name);
+        MidiVirtualPatchBayRouteDefinition(String name, String description);
 
-        IVector<MidiVirtualPatchBaySourceDefinition> Sources;
-        IVector<MidiVirtualPatchBayDestinationDefinition> Destinations;
+    
+        // we generate the id internally
+        Guid RouteId{ get; };
+
+        String Name;            // friendly name of the route
+        String Description;     // user-supplied description of the route
+        Boolean IsEnabled;      // true if this is enabled
+
+        IVector<MidiVirtualPatchBaySourceDefinition> Sources { get;};               // source endpoints and their transforms/filters
+        IVector<MidiVirtualPatchBayDestinationDefinition> Destinations{ get; };     // destination endpoints and their transforms/filters
+
 
         static MidiVirtualPatchBayRouteDefinition CreateFromConfigJson(String jsonSection);
-
-        String GetConfigJson();
+        Windows.Data.Json.JsonObject GetConfigJson();
     }
 }

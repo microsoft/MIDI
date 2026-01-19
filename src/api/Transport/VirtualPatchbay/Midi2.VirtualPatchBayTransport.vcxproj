@@ -308,6 +308,7 @@
     <ClInclude Include="MidiPatchBayTable.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="virtual_patch_bay_clsid.h" />
     <ClInclude Include="virtual_patch_bay_shared_types.h" />
   </ItemGroup>
   <ItemGroup>

@@ -14,19 +14,23 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
     struct MidiVirtualPatchBayRouteCreationConfig : MidiVirtualPatchBayRouteCreationConfigT<MidiVirtualPatchBayRouteCreationConfig>
     {
         MidiVirtualPatchBayRouteCreationConfig() = default;
-        MidiVirtualPatchBayRouteCreationConfig(_In_ winrt::guid const& routeId);
-        
-        winrt::guid RouteId() { return m_routeId; }
-        void RouteId(_In_ winrt::guid const& value) { m_routeId = value; }
+        MidiVirtualPatchBayRouteCreationConfig(_In_ vpb::MidiVirtualPatchBayRouteDefinition const& definition) noexcept;
 
         winrt::guid TransportId() { return m_transportId; }
+
         bool IsFromCurrentConfigFile() { return m_isFromCurrentConfigFile; }
-        winrt::hstring GetConfigJson();
+        json::JsonObject GetConfigJson();
+
+
+        vpb::MidiVirtualPatchBayRouteDefinition Definition() const noexcept{ return m_routeDefinition; }
+        void Definition(_In_ vpb::MidiVirtualPatchBayRouteDefinition const& value) noexcept { m_routeDefinition = value; }
 
     private:
         winrt::guid m_routeId{};
         winrt::guid m_transportId{};
         bool m_isFromCurrentConfigFile{ false };
+
+        vpb::MidiVirtualPatchBayRouteDefinition m_routeDefinition{ nullptr };
 
     };
 }

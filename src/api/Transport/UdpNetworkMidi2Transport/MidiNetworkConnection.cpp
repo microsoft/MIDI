@@ -1526,8 +1526,6 @@ MidiNetworkConnection::SendQueuedMidiMessagesToNetwork()
 
     RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
 
-    // TODO: We need to ensure we don't go over the UDP max packet size
-
     if (m_retransmitBuffer.size() > 0)
     {
         // write the Forward Error Correction packets using the retransmit buffer stored data
@@ -1542,6 +1540,13 @@ MidiNetworkConnection::SendQueuedMidiMessagesToNetwork()
     }
 
     // write the actual data we have
+
+
+    // TODO: Use the UMP iterator to fill up the UDP packet with as many whole messages
+    // as we can fit without going over. Then, if the queue is not empty, keep going until
+    // we're done.
+
+
     RETURN_IF_FAILED(m_writer->WriteCommandUmpMessages(sequenceNumber, m_outgoingUmpMessages));
     RETURN_IF_FAILED(m_writer->Send());
 

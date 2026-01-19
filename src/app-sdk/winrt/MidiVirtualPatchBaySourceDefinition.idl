@@ -11,24 +11,38 @@
 import "MidiApiContracts.idl";
 
 import "MidiGroup.idl";
+import "MidiChannel.idl";
 import "MidiMessageTypeEnum.idl";
+import "MidiServiceConfigEndpointMatchCriteria.idl";
+
+import "Midi1ChannelVoiceMessageStatusEnum.idl";
+import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
+    // "source" is currently limited to MIDI Sources (a MIDI input)
+
     [experimental]
     [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBaySourceDefinition")]
+    [static_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBaySourceDefinitionStatics")]
     runtimeclass MidiVirtualPatchBaySourceDefinition
     {
         MidiVirtualPatchBaySourceDefinition();
 
+        MidiVirtualPatchBaySourceDefinition(
+            Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria matchCriteria
+        );
+
         Boolean IsEnabled;
 
-        String EndpointDeviceId;            // TODO: May want to have fuzzy match here
+        Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria EndpointMatchCriteria;
 
-        // message types to include. If empty, all types are included.
-        IVector<Microsoft.Windows.Devices.Midi2.MidiMessageType> IncludedMessageTypes{ get; };
 
-        // only for messages with groups. If this is empty, all groups are included.
-        IVector<Microsoft.Windows.Devices.Midi2.MidiGroup> IncludedGroups{ get; };
+        // TODO: Chain of source transform/filter definitions
+
+
+        static MidiVirtualPatchBaySourceDefinition CreateFromConfigJson(String jsonSection);
+        Windows.Data.Json.JsonObject GetConfigJson();
+
     }
 }

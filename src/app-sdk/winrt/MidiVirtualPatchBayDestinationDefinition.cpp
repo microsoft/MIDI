@@ -12,9 +12,23 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
-    collections::IMap<midi2::MidiGroup, midi2::MidiGroup> MidiVirtualPatchBayDestinationDefinition::GroupTransformMap()
+
+    _Use_decl_annotations_
+    vpb::MidiVirtualPatchBayDestinationDefinition MidiVirtualPatchBayDestinationDefinition::CreateFromConfigJson(
+        winrt::hstring const& jsonSection) noexcept
     {
-        throw hresult_not_implemented();
+        // TODO
+
+        UNREFERENCED_PARAMETER(jsonSection);
+
+        return nullptr;
+    }
+
+    json::JsonObject MidiVirtualPatchBayDestinationDefinition::GetConfigJson() const noexcept
+    {
+        // TODO
+
+        return nullptr;
     }
 
 }

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.10.34825.169
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{C8B31D71-0226-4D2D-AC78-53D5C84F472F}"
 EndProject
@@ -35,6 +35,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{02EA68
 	ProjectSection(SolutionItems) = preProject
 		tests\SdkTestCommon.h = tests\SdkTestCommon.h
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midicheckservice", "tools\midicheckservice\midicheckservice.vcxproj", "{23F7308D-2891-4EF6-B470-719EC0B4EB67}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -240,6 +242,22 @@ Global
 		{3C2238C8-1087-40B5-9912-8BDBB6122183}.Release|ARM64EC.Build.0 = Release|ARM64
 		{3C2238C8-1087-40B5-9912-8BDBB6122183}.Release|x64.ActiveCfg = Release|x64
 		{3C2238C8-1087-40B5-9912-8BDBB6122183}.Release|x64.Build.0 = Release|x64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Debug|Any CPU.Build.0 = Debug|x64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Debug|ARM64.Build.0 = Debug|ARM64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Debug|x64.ActiveCfg = Debug|x64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Debug|x64.Build.0 = Debug|x64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Release|Any CPU.ActiveCfg = Release|x64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Release|Any CPU.Build.0 = Release|x64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Release|ARM64.ActiveCfg = Release|ARM64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Release|ARM64.Build.0 = Release|ARM64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Release|ARM64EC.ActiveCfg = Release|ARM64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Release|ARM64EC.Build.0 = Release|ARM64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Release|x64.ActiveCfg = Release|x64
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -258,6 +276,7 @@ Global
 		{3D35884E-2D93-436B-B6D5-E0570465CE18} = {C8B31D71-0226-4D2D-AC78-53D5C84F472F}
 		{3C2238C8-1087-40B5-9912-8BDBB6122183} = {C8B31D71-0226-4D2D-AC78-53D5C84F472F}
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {900D72D2-91F0-4E6C-B694-192FD48393D2}
+		{23F7308D-2891-4EF6-B470-719EC0B4EB67} = {C8B31D71-0226-4D2D-AC78-53D5C84F472F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AE1DF8B9-9FAB-4E20-8AC6-FF316882222F}

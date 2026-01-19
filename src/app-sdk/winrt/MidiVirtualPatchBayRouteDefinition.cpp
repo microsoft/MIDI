@@ -12,38 +12,21 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
-    vpb::MidiVirtualPatchBayRouteDefinition MidiVirtualPatchBayRouteDefinition::CreateFromConfigJson(winrt::hstring const& jsonSection)
+    _Use_decl_annotations_
+    vpb::MidiVirtualPatchBayRouteDefinition MidiVirtualPatchBayRouteDefinition::CreateFromConfigJson(winrt::hstring const& jsonSection) noexcept
     {
+        // TODO
+
         UNREFERENCED_PARAMETER(jsonSection);
 
-        throw hresult_not_implemented();
+        return nullptr;
     }
 
-    collections::IVector<vpb::MidiVirtualPatchBaySourceDefinition> MidiVirtualPatchBayRouteDefinition::Sources()
-    {
-        throw hresult_not_implemented();
-    }
-    void MidiVirtualPatchBayRouteDefinition::Sources(collections::IVector<vpb::MidiVirtualPatchBaySourceDefinition> const& value)
-    {
-        UNREFERENCED_PARAMETER(value);
 
-        throw hresult_not_implemented();
-    }
-
-    collections::IVector<vpb::MidiVirtualPatchBayDestinationDefinition> MidiVirtualPatchBayRouteDefinition::Destinations()
+    json::JsonObject MidiVirtualPatchBayRouteDefinition::GetConfigJson() const noexcept
     {
-        throw hresult_not_implemented();
-    }
+        // TODO
 
-    void MidiVirtualPatchBayRouteDefinition::Destinations(collections::IVector<vpb::MidiVirtualPatchBayDestinationDefinition> const& value)
-    {
-        UNREFERENCED_PARAMETER(value);
-
-        throw hresult_not_implemented();
-    }
-
-    winrt::hstring MidiVirtualPatchBayRouteDefinition::GetConfigJson()
-    {
-        throw hresult_not_implemented();
+        return nullptr;
     }
 }
