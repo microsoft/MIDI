@@ -4,6 +4,8 @@
 
 #include "midi2.UMP2BSTransform.h"
 
+#include "ump_iterator.h"
+
 _Use_decl_annotations_
 HRESULT
 CMidi2UMP2BSMidiTransform::Initialize(
@@ -83,29 +85,83 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
     );
 #endif
 
+    RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
+
     // can only transform 1 set of messages at a time
     auto lock = m_SendLock.lock();
 
+    WindowsMidiServicesInternal::UmpBufferIterator bufferIterator(static_cast<uint32_t*>(inputData), length / sizeof(uint32_t));
 
     // we can keep this as a local because of how the callback works
     std::vector<BYTE> translatedBytes{};
     translatedBytes.reserve(length);        // as an approximation of output data size, this is reasonable
 
+    byte currentTranslatedBytesGroupIndex = 127;
 
-    // Send the UMP(s) to the parser
-    uint32_t *data = (uint32_t *)inputData;
-    for (UINT i = 0; i < (length / sizeof(uint32_t)); i++)
+    auto it = bufferIterator.begin();
+
+    while (it < bufferIterator.end())
     {
-        m_UMP2BS.UMPStreamParse(data[i]);
-
-        // retrieve the bytestream message from the parser and add to our translated data
-        while (m_UMP2BS.availableBS())
+        if (it.CurrentMessageSeemsComplete())
         {
-            translatedBytes.push_back(m_UMP2BS.readBS());
+            auto currentMessageWordCount = it.CurrentMessageWordCount();
+
+            if (it.CurrentMessageGroupIndex() != currentTranslatedBytesGroupIndex)
+            {
+                // send the translated version of everything we've received in this call
+                if (translatedBytes.size() > 0)
+                {
+                    // For transforms, by convention the context contains the group index.
+                    auto hr = m_Callback->Callback(
+                        (MessageOptionFlags)(optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
+                        static_cast<PVOID>(translatedBytes.data()),
+                        static_cast<UINT>(translatedBytes.size()),
+                        position,
+                        currentTranslatedBytesGroupIndex);
+
+                    if (FAILED(hr))
+                    {
+                        m_UMP2BS.resetBuffer();
+                        RETURN_IF_FAILED(hr);
+                    }
+
+                    // clear the transmitted bytes
+                    translatedBytes.clear();
+                }
+
+                // workaround because UMP2BS short-circuits RPN/NRPN msb/lsb across groups
+                //uint8_t gr = m_UMP2BS.group;
+                m_UMP2BS.resetBuffer();
+                //m_UMP2BS.group = gr;
+                // end workaround
+
+                currentTranslatedBytesGroupIndex = it.CurrentMessageGroupIndex();
+            }
+
+            // parse entire single message
+            for (uint8_t i = 0; i < currentMessageWordCount; i++)
+            {
+                m_UMP2BS.UMPStreamParse(it.GetCurrentMessageWord(i));
+            }
+
+            while (m_UMP2BS.availableBS())
+            {
+                translatedBytes.push_back(m_UMP2BS.readBS());
+            }
         }
+        else
+        {
+            // incomplete UMP
+            m_UMP2BS.resetBuffer();
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+
+        ++it;   // moves to next message, not next word
     }
 
-    // send the translated version of everything we've received in this call
+
+
+    // get anything from the last spin round
     if (translatedBytes.size() > 0)
     {
         // For transforms, by convention the context contains the group index.
