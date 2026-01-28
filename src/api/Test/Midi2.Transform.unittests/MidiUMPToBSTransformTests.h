@@ -29,10 +29,13 @@ public:
     //TEST_METHOD_CLEANUP(TestCleanup);
 
     TEST_METHOD(TestChannelVoiceMessages);
+    TEST_METHOD(TestMixedGroupMessages);
+    TEST_METHOD(ValidateGithubIssue822);
 
     void InternalTestMessages(
         _In_ std::vector<uint32_t> words,
-        _In_ std::vector<uint8_t> const expectedBytes);
+        _In_ std::vector<uint8_t> const expectedBytes,
+        _In_ std::vector<uint8_t> const expectedGroups);
 
     STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
     {

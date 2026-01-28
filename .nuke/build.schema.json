@@ -25,21 +25,13 @@
       "type": "string",
       "enum": [
         "BuildAndPublishAll",
-        "T_BuildAndPackageElectronProjection",
-        "T_BuildAndPackAllAppSDKs",
-        "T_BuildAppSdkRuntimeAndToolsInstaller",
-        "T_BuildAppSDKToolsAndTests",
-        "T_BuildConsoleApp",
-        "T_BuildCppSamples",
-        "T_BuildCSharpSamples",
-        "T_BuildPowerShellProjection",
-        "T_BuildSettingsApp",
-        "T_BuildUserToolsSharedComponents",
-        "T_CopySharedDesignAssets",
+        "T_BuildServiceAndPlugins",
+        "T_BuildServiceAndPluginsInstaller",
         "T_CreateVersionIncludes",
         "T_Prerequisites",
         "T_ZipPowershellDevUtilities",
-        "T_ZipSamples"
+        "T_ZipServicePdbs",
+        "T_ZipWdmaud2"
       ]
     },
     "Verbosity": {
