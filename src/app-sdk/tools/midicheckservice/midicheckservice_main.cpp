@@ -274,6 +274,16 @@ bool VerifyWdmaud2Registry()
 
 
 
+void PauseIfAppropriate()
+{
+    if (!m_optionQuiet)
+    {
+        system("pause");
+    }
+
+}
+
+
 
 int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
 {
@@ -285,6 +295,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
     if (!ParseCommandLine(argc, argv))
     {
         // user picked help or some other option which skips evaluation
+        PauseIfAppropriate();
         return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_CHECK_SKIPPED);
     }
 
@@ -314,6 +325,8 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
         else
         {
             WriteInfo("wdmaud2.drv is not present in registry in values midi-midi9. Most likely, the feature has not yet been enabled on this PC.");
+
+            PauseIfAppropriate();
             return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_IN_REGISTRY);
         }
 
@@ -328,6 +341,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
             {
                 WriteInfo("Successfully tested connectivity to service: MIDI Service is available and running from System32.");
 
+                PauseIfAppropriate();
                 return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_SUCCESS);
             }
             else
@@ -336,6 +350,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
                 WriteInfo("However, this appears to be a development build, and so may not have the right");
                 WriteInfo("connections to the MIDI 1.0 APIs, the MIDI 2.0 class driver, etc.");
 
+                PauseIfAppropriate();
                 return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_SUCCESS_DEV_BUILD);
             }
         }
@@ -350,6 +365,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
                 ShutdownMidisrv();
             }
 
+            PauseIfAppropriate();
             return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_OR_NOT_STARTED);
         }
 
@@ -362,6 +378,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
         ShutdownMidisrv();
 
         // service transport is not available.
+        PauseIfAppropriate();
         return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_INSTALLED);
     }
 }
