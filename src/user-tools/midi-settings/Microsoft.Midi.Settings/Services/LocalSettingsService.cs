@@ -38,33 +38,34 @@ public class LocalSettingsService : ILocalSettingsService
         _fileService = fileService;
 
         //_settings = new Dictionary<string, object>();
+
     }
 
-    private async Task InitializeAsync()
+    public void Initialize()
     {
         if (!_isInitialized)
         {
-            _settings = await Task.Run(() => _fileService.Read(_applicationDataFolder, _settingsFile)) ?? global::Windows.Data.Json.JsonObject.Parse("{}");
+            _settings = _fileService.Read(_applicationDataFolder, _settingsFile) ?? global::Windows.Data.Json.JsonObject.Parse("{}");
 
             _isInitialized = true;
         }
     }
 
-    public async Task<T?> ReadSettingAsync<T>(string key)
+    public T? ReadSetting<T>(string key)
     {
         App.GetService<ILoggingService>().LogInfo("Enter");
+
+        Initialize();
 
         if (RuntimeHelper.IsMSIX)
         {
             if (ApplicationData.Current.LocalSettings.Values.TryGetValue(key, out var obj))
             {
-                return await Json.ToObjectAsync<T>((string)obj);
+                return Json.ToObject<T>((string)obj);
             }
         }
         else
         {
-            await InitializeAsync();
-
             if (_settings != null && _settings.TryGetValue(key, out var obj))
             {
                 //return await Json.ToObjectAsync<T>((string)obj);
@@ -75,21 +76,21 @@ public class LocalSettingsService : ILocalSettingsService
         return default;
     }
 
-    public async Task<T?> ReadSettingAsync<T>(string key, T defaultIfNotSet)
+    public T? ReadSetting<T>(string key, T defaultIfNotSet)
     {
         App.GetService<ILoggingService>().LogInfo("Enter");
+
+        Initialize();
 
         if (RuntimeHelper.IsMSIX)
         {
             if (ApplicationData.Current.LocalSettings.Values.TryGetValue(key, out var obj))
             {
-                return await Json.ToObjectAsync<T>((string)obj);
+                return Json.ToObject<T>((string)obj);
             }
         }
         else
         {
-            await InitializeAsync();
-
             if (_settings != null && _settings.TryGetValue(key, out var obj))
             {
                 //return await Json.ToObjectAsync<T>((string)obj);
@@ -100,21 +101,22 @@ public class LocalSettingsService : ILocalSettingsService
         return defaultIfNotSet;
     }
 
-    public async Task SaveSettingAsync<T>(string key, T value)
+    public void SaveSetting<T>(string key, T value)
     {
         App.GetService<ILoggingService>().LogInfo("Enter");
 
+        Initialize();
+
+
         if (RuntimeHelper.IsMSIX)
         {
-            ApplicationData.Current.LocalSettings.Values[key] = await Json.StringifyAsync(value);
+            ApplicationData.Current.LocalSettings.Values[key] = Json.Stringify(value);
         }
         else
         {
-            await InitializeAsync();
+            _settings[key] = global::Windows.Data.Json.JsonValue.Parse(Json.Stringify(value));
 
-            _settings[key] = global::Windows.Data.Json.JsonValue.Parse(await Json.StringifyAsync(value));
-
-            await Task.Run(() => _fileService.Save(_applicationDataFolder, _settingsFile, _settings));
+            _fileService.Save(_applicationDataFolder, _settingsFile, _settings);
         }
     }
 }

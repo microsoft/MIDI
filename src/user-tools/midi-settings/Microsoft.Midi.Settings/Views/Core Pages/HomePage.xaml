@@ -245,7 +245,11 @@
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                    
+                                    
+                                    
+                                    
+                                    <!--<controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
                                                        Command="{x:Bind ViewModel.CommonTaskSendSysExCommand}"
                                                        Visibility="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay,Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <controls:SettingsCard.Header>
@@ -254,11 +258,11 @@
                                         <controls:SettingsCard.HeaderIcon>
                                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe898;" Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>
+                                    </controls:SettingsCard>-->
 
-                                    <!--<Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0,1,0,0">
-                                <TextBlock x:Uid="CommonTasksGroup_ServiceAndDrivers" Style="{StaticResource HomeCardItemSeparatorStyle}"/>
-                            </Border>-->
+                                    
+                                    
+                                    
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
                                                            Command="{x:Bind ViewModel.CommonTaskSetServiceAutoStartCommand}">
@@ -271,7 +275,7 @@
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="False"
+                                    <!--<controls:SettingsCard IsClickEnabled="True" IsEnabled="False"
                                                            Command="{x:Bind ViewModel.CommonTaskAssignMidi1DeviceToNewDriverCommand}">
                                         <controls:SettingsCard.Header>
                                             <TextBlock x:Uid="CommonTasks_AssignMidi1DeviceToNewDriver" TextWrapping="WrapWholeWords" />
@@ -279,11 +283,8 @@
                                         <controls:SettingsCard.HeaderIcon>
                                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb9d;" Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>
+                                    </controls:SettingsCard>-->
 
-                                    <!--<Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0,1,0,0">
-                                <TextBlock x:Uid="CommonTasksGroup_Other" Style="{StaticResource HomeCardItemSeparatorStyle}"/>
-                            </Border>-->
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
                                                        Command="{x:Bind ViewModel.CommonTaskOpenMidiConsoleCommand}">

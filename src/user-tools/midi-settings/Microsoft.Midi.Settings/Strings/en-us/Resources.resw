@@ -771,4 +771,10 @@ This change will require a MIDI Service restart before it will take effect.</val
   <data name="CommonTextBlockLabel_ConfiguredReceiveJR.Text" xml:space="preserve">
     <value>Configured to receive Jitter Reduction Timestamps</value>
   </data>
+  <data name="SettingsPage_ShowPreviewToolsExpander.Header" xml:space="preserve">
+    <value>Enable Preview Tools</value>
+  </data>
+  <data name="SettingsPage_ShowPreviewToolsExpander.Description" xml:space="preserve">
+    <value>Enable preview tools like the System Exclusive message sender. These tools are not yet stable and may have bugs or incomplete functionality. Requires restarting this app to see the changes.</value>
+  </data>
 </root>

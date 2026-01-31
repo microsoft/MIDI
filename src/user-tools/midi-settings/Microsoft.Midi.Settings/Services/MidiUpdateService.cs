@@ -196,11 +196,11 @@ public class MidiUpdateService : IMidiUpdateService
     {
         get
         {
-            return _localSettingsService.ReadSettingAsync<bool>(AutoCheckSettingsKey, true).GetAwaiter().GetResult();
+            return _localSettingsService.ReadSetting<bool>(AutoCheckSettingsKey, true);
         }
         set
         {
-            _localSettingsService.SaveSettingAsync<bool>(AutoCheckSettingsKey, value).GetAwaiter().GetResult();
+            _localSettingsService.SaveSetting<bool>(AutoCheckSettingsKey, value);
         }
     }
 

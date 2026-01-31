@@ -98,6 +98,12 @@ public partial class ShellViewModel : ObservableRecipient
     [ObservableProperty]
     private bool showVirtualPatchBayInLeftNav = false;
 
+    [ObservableProperty]
+    private bool showSysExToolsInLeftNav = false;
+
+    [ObservableProperty]
+    private bool showToolsSectionInLeftNav = false;
+
     private void UpdateVisibilityOfLeftNavSections()
     {
         var transports = App.GetService<IMidiTransportInfoService>().GetAllTransports();
@@ -126,8 +132,15 @@ public partial class ShellViewModel : ObservableRecipient
         }
 
 
-        // TODO: TEMP
-        ShowVirtualPatchBayInLeftNav = _configFileService.IsConfigFileActive;
+        // SysEx and other tools
+        if (_generalSettingsService.GetPreviewToolsEnabled())
+        {
+            ShowSysExToolsInLeftNav = true;
+
+            // sysex is the only tool
+            ShowToolsSectionInLeftNav = true;
+        }
+
 
     }
 
