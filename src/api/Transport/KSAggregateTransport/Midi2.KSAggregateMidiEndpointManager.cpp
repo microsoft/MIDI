@@ -737,6 +737,38 @@ ParseParentIdIntoVidPidSerial(
 
 
 
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiEndpointManager::OnDeviceInterfaceAdded(
+    DeviceWatcher watcher,
+    DeviceInformation deviceInterface
+)
+{
+    UNREFERENCED_PARAMETER(watcher);
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(deviceInterface.Id().c_str(), "added interface")
+    );
+
+
+    // Check to see if the interface has pins we want
+
+    // if this has MIDI 1 pins, check to see if we already have an entry for the device
+    // create the device if we don't already have it
+    // get the USB vid/pid from the parent device, if it is a USB device
+
+
+
+    return S_OK;
+}
+
+
 _Use_decl_annotations_
 HRESULT 
 CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
