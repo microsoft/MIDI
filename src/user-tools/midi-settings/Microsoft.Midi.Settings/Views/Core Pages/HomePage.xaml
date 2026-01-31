@@ -552,7 +552,7 @@
 
                                     <controls:SettingsCard IsClickEnabled="False">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://learn.microsoft.com/windows/powertoys/">
+                                            <HyperlinkButton NavigateUri="https://aka.ms/getpowertoys/">
                                                 <HyperlinkButton.Content>
                                                     <TextBlock Text="Windows PowerToys (file management, crop and lock, and more)" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
@@ -567,9 +567,9 @@
 
                                     <controls:SettingsCard IsClickEnabled="False">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://aka.ms/powershell-release?tag=stable">
+                                            <HyperlinkButton NavigateUri="https://github.com/PowerShell/PowerShell/releases/tag/v7.6.0-preview.6">
                                                 <HyperlinkButton.Content>
-                                                    <TextBlock Text="PowerShell (useful for MIDI scripting and more)" TextWrapping="WrapWholeWords"/>
+                                                    <TextBlock Text="PowerShell 7.6 (useful for MIDI scripting and more)" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
