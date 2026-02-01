@@ -101,6 +101,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private void CompleteFirstRunSetup()
         {
             bool needServiceRestart = false;
+            bool serviceRestarted = false;
 
             ErrorMessage = string.Empty;
 
@@ -193,14 +194,16 @@ namespace Microsoft.Midi.Settings.ViewModels
                 info.FileName = "cmd.exe";
                 info.UseShellExecute = true;
                 info.Verb = "runas";
-                info.Arguments = "/c \"midi service set-auto-start --restart=false\"";
+
+                info.Arguments = "/c \"midi service set-auto-start --restart=true\"";
 
                 using (var proc = Process.Start(info))
                 {
                     if (proc != null)
                     {
                         proc.WaitForExit();
-                        needServiceRestart = true;
+                        needServiceRestart = false; // we take care of service restart above
+                        serviceRestarted = true;
                     }
                 }
             }
@@ -219,10 +222,21 @@ namespace Microsoft.Midi.Settings.ViewModels
                     {
                         proc.WaitForExit();
                         needServiceRestart = false;
+                        serviceRestarted = true;
                     }
                 }
 
             }
+
+
+
+
+            if (serviceRestarted)
+            {
+                // TODO: need to refresh all the data
+
+            }
+
 
             // set the flag saying the first-run setup is all done
             // or maybe we just want to trigger this on having a valid config file
