@@ -122,6 +122,7 @@ namespace Microsoft.Midi.Settings.Views
             ViewModel.CustomizationViewModel.ImageFileName = "";
 
             UserMetadataImagePreview.Source = null;
+            ViewModel.CustomizationViewModel.HasImage = false;
         }
 
         // edit popup
@@ -152,8 +153,8 @@ namespace Microsoft.Midi.Settings.Views
                 bitmapImage.SetSource(fileStream);
 
                 UserMetadataImagePreview.Source = bitmapImage;
+                ViewModel.CustomizationViewModel.HasImage = true;
             }
-
         }
 
         private void OnOpenConsoleMonitor(object sender, RoutedEventArgs e)

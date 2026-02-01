@@ -945,8 +945,9 @@
 
                         <Button Grid.Row="4"
                                 Click="RemoveImage_Click"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Top">
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Visibility="{x:Bind ViewModel.CustomizationViewModel.HasImage, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <SymbolIcon Symbol="Clear" />
                         </Button>
                         
