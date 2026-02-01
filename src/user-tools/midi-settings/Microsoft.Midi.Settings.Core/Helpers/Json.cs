@@ -25,10 +25,10 @@ public static class Json
         });
     }
 
-    public static async Task<string> StringifyAsync(object value)
+    public static string Stringify(object value)
     {
-        return await Task.Run<string>(() =>
-        {
+     //   return await Task.Run<string>(() =>
+        //{
             var serializerSettings = new JsonSerializerSettings();
             serializerSettings.StringEscapeHandling = StringEscapeHandling.EscapeNonAscii;           
 
@@ -36,6 +36,6 @@ public static class Json
 
             System.Diagnostics.Debug.WriteLine("Serialized: " + serialized);
             return serialized;
-        });
+        //});
     }
 }

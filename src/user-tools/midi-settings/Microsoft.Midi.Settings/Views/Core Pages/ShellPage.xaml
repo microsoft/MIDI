@@ -377,10 +377,11 @@
 
 
 
-                <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
+                <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"
+                                          Visibility="{x:Bind ViewModel.ShowToolsSectionInLeftNav}"/>
 
                 <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
-                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    Visibility="{x:Bind ViewModel.ShowSysExToolsInLeftNav, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-SysEx.svg" />
                     </NavigationViewItem.Icon>

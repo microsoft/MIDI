@@ -80,6 +80,24 @@
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
+                <controls:SettingsExpander x:Name="ShowPreviewToolsExpander"
+                                           x:Uid="SettingsPage_ShowPreviewToolsExpander"
+                                           IsExpanded="True">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xEC7A;" />
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical">
+                            <StackPanel Margin="0,-12,0,0">
+
+                                <ToggleSwitch x:Uid="SettingsPage_ShowPreviewTools_CheckSwitch" 
+                                          IsOn="{x:Bind ViewModel.ArePreviewToolsEnabled, Mode=TwoWay}"/>
+
+                            </StackPanel>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
                 <!--<controls:SettingsExpander x:Name="SdkChannelExpander"
                                    x:Uid="SettingsPage_SdkChannelExpander"
                                        IsExpanded="True">

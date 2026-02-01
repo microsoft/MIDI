@@ -20,25 +20,29 @@ class GeneralSettingsService : IGeneralSettingsService
     //private const string ShowDeveloperOptions_SettingsKey = "ShowDeveloperOptions";
     private const string MainWindowPositionAndSize_SettingsKey = "MainWindowPositionAndSize";
     private const string EndpointListLastUsedView_SettingsKey = "EndpointListLastUsedView";
+    private const string PreviewToolsEnabled_SettingsKey = "PreviewToolsEnabled";
+
+
+    
     //private bool _showDeveloperOptions;
 
-//    public event EventHandler? SettingsChanged;
+    //    public event EventHandler? SettingsChanged;
 
     public GeneralSettingsService(ILocalSettingsService localSettingsService)
     {
         _localSettingsService = localSettingsService;
     }
 
-    public async void SetMainWindowPositionAndSize(WindowRect value)
+    public void SetMainWindowPositionAndSize(WindowRect value)
     {
-        await _localSettingsService.SaveSettingAsync<WindowRect>(MainWindowPositionAndSize_SettingsKey, value);
+        _localSettingsService.SaveSetting<WindowRect>(MainWindowPositionAndSize_SettingsKey, value);
     }
 
     public WindowRect? GetMainWindowPositionAndSize()
     {
         try
         {
-            return _localSettingsService.ReadSettingAsync<WindowRect>(MainWindowPositionAndSize_SettingsKey).GetAwaiter().GetResult();
+            return _localSettingsService.ReadSetting<WindowRect>(MainWindowPositionAndSize_SettingsKey);
 
         }
         catch (Exception ex)
@@ -55,7 +59,7 @@ class GeneralSettingsService : IGeneralSettingsService
     {
         try
         {
-            return _localSettingsService.ReadSettingAsync<EndpointListView>(EndpointListLastUsedView_SettingsKey).GetAwaiter().GetResult();
+            return _localSettingsService.ReadSetting<EndpointListView>(EndpointListLastUsedView_SettingsKey);
 
         }
         catch (Exception ex)
@@ -68,10 +72,30 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public async void SetEndpointListLastUsedView(EndpointListView view)
     {
-        await _localSettingsService.SaveSettingAsync<EndpointListView>(EndpointListLastUsedView_SettingsKey, view);
+        _localSettingsService.SaveSetting<EndpointListView>(EndpointListLastUsedView_SettingsKey, view);
     }
 
 
+
+    public bool GetPreviewToolsEnabled()
+    {
+        try
+        {
+            return _localSettingsService.ReadSetting<bool>(PreviewToolsEnabled_SettingsKey);
+
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Error getting preview tools enabled/disabled", ex);
+
+            return false;
+        }
+    }
+
+    public void SetPreviewToolsEnabled(bool value)
+    {
+        _localSettingsService.SaveSetting<bool>(PreviewToolsEnabled_SettingsKey, value);
+    }
 
 
     //public bool ShowDeveloperOptions

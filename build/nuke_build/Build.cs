@@ -54,9 +54,9 @@ class Build : NukeBuild
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 14;
+    const UInt16 BuildVersionPatch = 15;
 
-    const UInt16 BuildVersionPreviewNumber = 1;
+    const UInt16 BuildVersionPreviewNumber = 2;
     string VersionName => "SDK Release Candidate " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ class Build : NukeBuild
     string NugetFullPackageIdWithVersion = "";
 
 
-    const string TargetWindowsSdkVersion = "10.0.22621.0";
+    const string TargetWindowsSdkVersion = "10.0.26100.0";
 
     DateTime BuildDate;
 
