@@ -100,7 +100,7 @@
                 # validate the file exists
                 if (Test-Path -Path $fullDllPath -PathType Leaf)
                 {
-                    Write-Host "Processing " -NoNewline -ForegroundColor DarkCyan
+                    Write-Host "Registering " -NoNewline -ForegroundColor DarkCyan
                     Write-Host $fullDllPath -ForegroundColor Cyan
 
                     # self-register
