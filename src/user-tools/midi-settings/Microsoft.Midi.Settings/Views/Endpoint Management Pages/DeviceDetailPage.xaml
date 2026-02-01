@@ -32,7 +32,7 @@
             <Button Grid.Column="0"
                     Margin="0,0,16,16"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
+                    VerticalAlignment="Center"
                     Background="Transparent"
                     BorderThickness="0"
                     Padding="0"
@@ -40,6 +40,8 @@
                     Click="Button_Click">
                 <Image Source="{x:Bind ViewModel.EndpointWrapper.Image, Mode=OneWay}"
                        Stretch="Uniform"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
                        />
                 <ToolTipService.ToolTip>
                     <TextBlock x:Uid="DeviceDetailPage_Tooltip_ChangeImage" />
@@ -828,15 +830,15 @@
             
             <ContentDialog.TitleTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Personalize MIDI Endpoint" />
-
                     </StackPanel>
                 </DataTemplate>
             </ContentDialog.TitleTemplate>
 
             <Grid Margin="0,16,0,0">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -877,8 +879,22 @@
                                Margin="0,8,0,8"/>
                 </Grid>
                 
-                <!-- Second row: content -->
+                <!-- Second row: warning if no serial number -->
+
                 <Grid Grid.Row="1" 
+                      Margin="0,16,0,0">
+                    <InfoBar Margin="0,0,15,15"
+                             x:Uid="EndpointPersonalizationUniqueIdInfoBar"
+                             CornerRadius="8"
+                             IsOpen="{x:Bind ViewModel.EndpointWrapper.HasUniqueIdentifier, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                             Severity="Warning"
+                             >
+                    </InfoBar>
+
+                </Grid>
+
+                <!-- Third row: content -->
+                <Grid Grid.Row="2" 
                       Margin="0,16,0,0"
                       ColumnSpacing="32">
                     <Grid.ColumnDefinitions>
@@ -926,6 +942,14 @@
                                    Stretch="Uniform"
                                    x:Name="UserMetadataImagePreview" />
                         </Button>
+
+                        <Button Grid.Row="4"
+                                Click="RemoveImage_Click"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top">
+                            <SymbolIcon Symbol="Clear" />
+                        </Button>
+                        
 
                         <TextBlock Grid.Row="5"
                                    Text="{x:Bind ViewModel.CustomizationViewModel.ImageFileName, Mode=TwoWay}"

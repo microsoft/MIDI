@@ -117,6 +117,13 @@ namespace Microsoft.Midi.Settings.Views
 
 
 
+        private void RemoveImage_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.CustomizationViewModel.ImageFileName = "";
+
+            UserMetadataImagePreview.Source = null;
+        }
+
         // edit popup
         private async void BrowseImage_Click(object sender, RoutedEventArgs e)
         {
