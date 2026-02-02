@@ -40,6 +40,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         private string imageFileName;
 
         [ObservableProperty]
+        private bool hasImage;
+
+        [ObservableProperty]
         private bool supportsMidiPolyphonicExpression;
 
         [ObservableProperty]
@@ -78,6 +81,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseClassicCompatible);
             midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseNewStyle);
 
+            HasImage = !string.IsNullOrEmpty(ImageFileName);
 
             // name table entries
 

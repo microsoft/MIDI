@@ -80,6 +80,8 @@ public interface IGeneralSettingsService
     public EndpointListView GetEndpointListLastUsedView();
     public void SetEndpointListLastUsedView(EndpointListView view);
 
+    public bool GetPreviewToolsEnabled();
+    public void SetPreviewToolsEnabled(bool value);
 
     Task InitializeAsync();
 

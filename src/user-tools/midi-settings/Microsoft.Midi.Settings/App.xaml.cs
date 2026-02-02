@@ -207,6 +207,8 @@ public partial class App : Application
 
             App.GetService<ILoggingService>().LogInfo("Starting up: Services registered.");
 
+            App.GetService<IGeneralSettingsService>().InitializeAsync().GetAwaiter().GetResult();
+
 
             //}
             //else

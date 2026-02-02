@@ -97,16 +97,14 @@
 
           <!-- arm64 install requires both the .NET 8 Arm64 and x64 versions -->
             
-            <!-- Source File is required only at build time for WiX to get info about the package -->
             <?if $(var.Platform) = ARM64 ?>
                 <ExePackage
                     Vital="true"
                     Permanent="true"
                     DisplayName="Microsoft .NET 10 Desktop Runtime"
-                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.0/windowsdesktop-runtime-10.0.0-win-arm64.exe"
-                    SourceFile="$(DependenciesSourceRootFolder)\arm64\windowsdesktop-runtime-10.0.0-win-arm64.exe"
-                    Compressed="no"
-                    DetectCondition="DotNetDesktopRuntimeVersion_arm64 &gt;= v10.0.0"
+                    SourceFile="$(DependenciesSourceRootFolder)\arm64\windowsdesktop-runtime-10.0.2-win-arm64.exe"
+                    Compressed="yes"
+                    DetectCondition="DotNetDesktopRuntimeVersion_arm64 &gt;= v10.0.2"
                     InstallArguments="/install /passive /norestart /log midi_dotnet10_arm64_install_log.txt"
                     UninstallArguments="/uninstall /passive /norestart /quiet"
                         />
@@ -115,10 +113,9 @@
                     Vital="true"
                     Permanent="true"
                     DisplayName="Microsoft .NET 10 Desktop Runtime"
-                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.0/windowsdesktop-runtime-10.0.0-win-x64.exe"
-                    SourceFile="$(DependenciesSourceRootFolder)\x64\windowsdesktop-runtime-10.0.0-win-x64.exe"
-                    Compressed="no"
-                    DetectCondition="DotNetDesktopRuntimeVersion_x64 &gt;= v10.0.0"
+                    SourceFile="$(DependenciesSourceRootFolder)\x64\windowsdesktop-runtime-10.0.2-win-x64.exe"
+                    Compressed="yes"
+                    DetectCondition="DotNetDesktopRuntimeVersion_x64 &gt;= v10.0.2"
                     InstallArguments="/install /passive /norestart /log midi_dotnet10_x64_install_log.txt"
                     UninstallArguments="/uninstall /passive /norestart /quiet"
                     />
@@ -127,10 +124,9 @@
                     Vital="true"
                     Permanent="true"
                     DisplayName="Microsoft .NET 10 Desktop Runtime"
-                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.0/windowsdesktop-runtime-10.0.0-win-x64.exe"
-                    SourceFile="$(DependenciesSourceRootFolder)\x64\windowsdesktop-runtime-10.0.0-win-x64.exe"
-                    Compressed="no"
-                    DetectCondition="DotNetDesktopRuntimeVersion_x64 &gt;= v10.0.0"
+                    SourceFile="$(DependenciesSourceRootFolder)\x64\windowsdesktop-runtime-10.0.2-win-x64.exe"
+                    Compressed="yes"
+                    DetectCondition="DotNetDesktopRuntimeVersion_x64 &gt;= v10.0.2"
                     InstallArguments="/install /passive /norestart /log midi_dotnet10_x64_install_log.txt"
                     UninstallArguments="/uninstall /passive /norestart /quiet"
                         />

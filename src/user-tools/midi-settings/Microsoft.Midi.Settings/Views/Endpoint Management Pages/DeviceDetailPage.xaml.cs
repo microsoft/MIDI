@@ -117,6 +117,14 @@ namespace Microsoft.Midi.Settings.Views
 
 
 
+        private void RemoveImage_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.CustomizationViewModel.ImageFileName = "";
+
+            UserMetadataImagePreview.Source = null;
+            ViewModel.CustomizationViewModel.HasImage = false;
+        }
+
         // edit popup
         private async void BrowseImage_Click(object sender, RoutedEventArgs e)
         {
@@ -145,8 +153,8 @@ namespace Microsoft.Midi.Settings.Views
                 bitmapImage.SetSource(fileStream);
 
                 UserMetadataImagePreview.Source = bitmapImage;
+                ViewModel.CustomizationViewModel.HasImage = true;
             }
-
         }
 
         private void OnOpenConsoleMonitor(object sender, RoutedEventArgs e)

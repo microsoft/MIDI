@@ -135,8 +135,8 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     //types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.RuntimeInformation.MidiRuntimeVersion", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.RuntimeInformation.MidiRuntimeInformation", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockGenerator", defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockDestination", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencing.MidiClockGenerator", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencing.MidiClockDestination", defaultThreading });
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Metadata.MidiImageAssetHelper", defaultThreading });
 
