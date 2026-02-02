@@ -20,7 +20,8 @@
 _Use_decl_annotations_
 void MidiUMPToBSTransformTests::InternalTestMessages(
     std::vector<uint32_t> const words,
-    std::vector<uint8_t> const expectedBytes
+    std::vector<uint8_t> const expectedBytes,
+    std::vector<uint8_t> const expectedGroups
 )
 {
     wil::com_ptr_nothrow<IMidiTransform> transformLib;
@@ -48,13 +49,38 @@ void MidiUMPToBSTransformTests::InternalTestMessages(
 
     // set the callback 
 
-    m_MidiInCallback = [&](PVOID payload, UINT payloadSize, LONGLONG /*payloadPosition*/, LONGLONG)
+    byte lastGroupIndex{ 127 }; // an invalid group index
+    int32_t currentGroupArrayIndex{ -1 };
+
+    m_MidiInCallback = [&](PVOID payload, UINT payloadSize, LONGLONG /*payloadPosition*/, LONGLONG context)
         {
             //std::cout << "callback" << std::endl;
 
             auto receivedBytes = static_cast<uint8_t*>(payload);
 
-            std::cout << "message received:" << std::endl;
+            std::cout << "message received for group " << context << ":" << std::endl;
+
+            // validate the group index
+            if (expectedGroups.size() > 0)
+            {
+                // group index has changed
+                if (lastGroupIndex != context)
+                {
+                    currentGroupArrayIndex++;
+
+                    // make sure we're not out of range on the group indexes
+                    if (currentGroupArrayIndex >= expectedGroups.size())
+                    {
+                        std::cout << "More group indexes reported than expected" << std::endl;
+                        VERIFY_FAIL();
+                    }
+
+                    lastGroupIndex = expectedGroups[currentGroupArrayIndex];
+                }
+
+                VERIFY_ARE_EQUAL(context, lastGroupIndex);
+            }
+
 
             for (uint32_t i = 0; i < payloadSize; i++)
             {
@@ -68,8 +94,9 @@ void MidiUMPToBSTransformTests::InternalTestMessages(
                 else
                 {
                     std::cout
+                        << "rec: 0x"
                         << std::setfill('0') << std::setw(2) << std::hex << (uint16_t)receivedBytes[i]
-                        << "(" << std::setfill('0') << std::setw(2) << std::hex << (uint16_t)(expectedBytes[expectedBytesIndex]) << ") ";
+                        << " (exp: 0x" << std::setfill('0') << std::setw(2) << std::hex << (uint16_t)(expectedBytes[expectedBytesIndex]) << ") ";
 
 
                     VERIFY_ARE_EQUAL(expectedBytes[expectedBytesIndex], receivedBytes[i]);
@@ -178,5 +205,167 @@ void MidiUMPToBSTransformTests::TestChannelVoiceMessages()
         0xCF, 0x1F,
     };
 
-    InternalTestMessages(input, expectedOutput);
+    std::vector<uint8_t> expectedGroups =
+    {
+        0
+    };
+
+    InternalTestMessages(input, expectedOutput, expectedGroups);
+}
+
+void MidiUMPToBSTransformTests::TestMixedGroupMessages()
+{
+    std::vector<uint32_t> input =
+    {
+        0x20E01230,
+        0x20E11231,
+        0x22E21232,
+        0x22E31233,
+        0x20E41234,
+        0x20E51235,
+        0x22E61236,
+        0x22E71237,
+        0x24E81238,
+        0x24E91239,
+        0x22EA123A,
+        0x22EB123B,
+        0x29EC123C,
+        0x20ED123D,
+        0x29EE123E,
+        0x21EF123F,
+    };
+
+    std::vector<uint8_t> expectedOutput =
+    {
+        0xE0, 0x12, 0x30,
+        0xE1, 0x12, 0x31,
+
+        0xE2, 0x12, 0x32,
+        0xE3, 0x12, 0x33,
+
+        0xE4, 0x12, 0x34,
+        0xE5, 0x12, 0x35,
+
+        0xE6, 0x12, 0x36,
+        0xE7, 0x12, 0x37,
+
+        0xE8, 0x12, 0x38,
+        0xE9, 0x12, 0x39,
+
+        0xEA, 0x12, 0x3A,
+        0xEB, 0x12, 0x3B,
+
+        0xEC, 0x12, 0x3C,
+
+        0xED, 0x12, 0x3D,
+
+        0xEE, 0x12, 0x3E,
+
+        0xEF, 0x12, 0x3F,
+    };
+
+
+    // only needs to contain the index when the group index changes
+    std::vector<uint8_t> expectedGroups =
+    {
+        0,
+        2,
+        0,
+        2,
+        4,
+        2,
+        9,
+        0,
+        9,
+        1
+    };
+
+    InternalTestMessages(input, expectedOutput, expectedGroups);
+}
+
+
+
+void MidiUMPToBSTransformTests::ValidateGithubIssue822()
+{
+
+    // figure out the 14 bit value from the 32 bit value
+
+    uint32_t data32_1 = 0x10000000;
+    uint16_t fourteenBit1 = (uint16_t)(data32_1 >> 18);
+    uint8_t fourteenBit1MSB = (uint8_t)((fourteenBit1 >> 7) & 0x7F);
+    uint8_t fourteenBit1LSB = (uint8_t)(fourteenBit1 & 0x7F);
+
+    uint32_t data32_2 = 0x90000000;
+    uint16_t fourteenBit2 = (uint16_t)(data32_2 >> 18);
+    uint8_t fourteenBit2MSB = (uint8_t)((fourteenBit2 >> 7) & 0x7F);
+    uint8_t fourteenBit2LSB = (uint8_t)(fourteenBit2 & 0x7F);
+
+
+    std::vector<uint32_t> input =
+    {
+        0x40201020, data32_1, // group 0 MSB 10, LSB 20, Data 1
+        0x43201020, data32_2, // group 3 with same RPN MSB 10, LSB 20
+
+        0x40201020, data32_1, // group 0 MSB 10, LSB 20
+        0x40201020, data32_2, // group 0 with same RPN MSB 10, and LSB 20
+
+        0x40201020, data32_1, // group 0 MSB 10, LSB 20
+        0x43201121, data32_2, // group 3 MSB 11, LSB 21
+
+        0x43201121, data32_1, // group 3 MSB 11, LSB 21
+    };
+
+
+    std::vector<uint8_t> expectedOutput =
+    {
+        // group 0
+        0xb0, 0x65, 0x10,   // NRPN MSB
+        0xb0, 0x64, 0x20,   // NRPN LSB
+        0xb0, 0x06, fourteenBit1MSB,   // NRPN data 1 (value / MSB)
+        0xb0, 0x26, fourteenBit1LSB,   // NRPN data 2 (fine adjustment / LSB)
+
+        // group 3
+        0xb0, 0x65, 0x10,   // NRPN MSB
+        0xb0, 0x64, 0x20,   // NRPN LSB
+        0xb0, 0x06, fourteenBit2MSB,   // NRPN data 1 (value / MSB)
+        0xb0, 0x26, fourteenBit2LSB,   // NRPN data 2 (fine adjustment / LSB)
+
+        // group 0
+        0xb0, 0x65, 0x10,   // NRPN MSB
+        0xb0, 0x64, 0x20,   // NRPN LSB
+        0xb0, 0x06, fourteenBit1MSB,   // NRPN data 1 (value / MSB)
+        0xb0, 0x26, fourteenBit1LSB,   // NRPN data 2 (fine adjustment / LSB)
+
+        // group 0 again with same MSB/LSB for NRPN, so just data comes through
+        0xb0, 0x06, fourteenBit2MSB,   // NRPN data 1 (value / MSB)
+        0xb0, 0x26, fourteenBit2LSB,   // NRPN data 2 (fine adjustment / LSB)
+
+        // group 0 again
+        0xb0, 0x06, fourteenBit1MSB,   // NRPN data 1 (value / MSB)
+        0xb0, 0x26, fourteenBit1LSB,   // NRPN data 2 (fine adjustment / LSB)
+
+        // group 3, but different NRPN LSB/MSB
+        0xb0, 0x65, 0x11,   // NRPN MSB
+        0xb0, 0x64, 0x21,   // NRPN LSB
+        0xb0, 0x06, fourteenBit2MSB,   // NRPN data 1 (value / MSB)
+        0xb0, 0x26, fourteenBit2LSB,   // NRPN data 2 (fine adjustment / LSB)
+
+        // group 3 again, same NRPN LSB/MSB
+        0xb0, 0x06, fourteenBit1MSB,   // NRPN data 1 (value / MSB)
+        0xb0, 0x26, fourteenBit1LSB,   // NRPN data 2 (fine adjustment / LSB)
+
+    };
+
+
+    // only needs to contain the index when the group index changes
+    std::vector<uint8_t> expectedGroups =
+    {
+        0,
+        3,
+        0,
+        3,
+    };
+
+    InternalTestMessages(input, expectedOutput, expectedGroups);
+
 }
