@@ -2366,6 +2366,11 @@ MidiTransportTests::MultiThreadedMidiSendTest()
 void
 MidiTransportTests::TestDriverDeviceInterfaceIdIsPresent()
 {
+    // retrieve the number of midi in/out ports before running, to ensure the service is
+    // started and winmm port information is fully initialized.
+    UINT numOutDevices = midiOutGetNumDevs();
+    UINT numInDevices = midiInGetNumDevs();
+
     std::vector<std::unique_ptr<MIDIU_DEVICE>> devices;
     VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(devices, [&](PMIDIU_DEVICE device)
         {
@@ -2396,10 +2401,12 @@ MidiTransportTests::TestDriverDeviceInterfaceIdIsPresent()
         // retrieve the size of the interface id reported by winmm
         if (device->Flow == MidiFlowOut)
         {
+            VERIFY_IS_TRUE(device->WinmmPortNumber <= numOutDevices);
             result = midiOutMessage((HMIDIOUT)(uintptr_t)device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR) &interfaceIdSize, 0);
         }
         else
         {
+            VERIFY_IS_TRUE(device->WinmmPortNumber <= numInDevices);
             result = midiInMessage((HMIDIIN)(uintptr_t)device->WinmmPortNumber, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR) &interfaceIdSize, 0);
         }
 
