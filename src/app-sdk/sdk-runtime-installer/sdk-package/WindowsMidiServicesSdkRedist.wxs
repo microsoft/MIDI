@@ -127,6 +127,27 @@
                           Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
         </Component>
 
+        <!-- Install MIDI check service Utility -->
+        <Component Id="MidiCheckServiceUtility"
+                   Permanent="no"
+                   Bitness="always64"
+                   Directory="TOOLSROOT_INSTALLFOLDER"
+                   Guid="49384aeb-c8ad-4ad1-8744-b83ad8d51fb1"  >
+          <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midicheckservice.exe" Vital="true" />
+
+          <!-- Add folder to path -->
+          <Environment Id="AddMidiCheckServiceToSystemPath"
+                          Name="PATH" Action="set" Part="last" System="yes"
+                          Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
+
+            <RegistryKey Root="HKLM"
+               Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+
+              <RegistryValue Type="string" Name="MidiCheckService" Value="[TOOLSROOT_INSTALLFOLDER]midicheckservice.exe" />
+
+            </RegistryKey>
+        </Component>
+
     
     <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
         <Component Id="WindowsMidiServicesAppSdkImplementationRegEntries"
@@ -152,6 +173,7 @@
             <ComponentRef Id="Midi1MonitorUtility"/>
             <ComponentRef Id="Midi1EnumUtility"/>
             <ComponentRef Id="MidiFixRegUtility"/>
+            <ComponentRef Id="MidiCheckServiceUtility"/>
         </Feature>
 
     </Package>
