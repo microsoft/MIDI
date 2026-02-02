@@ -18,6 +18,44 @@
         }
     }
     
+    function New-MidiTransportReg([String] $key, [String] $transportName, [String] $clsid)    
+    {
+        Write-Host "Reg Key: $key\$transportName" -ForegroundColor Cyan
+
+        $fullRegistryPath = $key + "\" + $transportName
+
+        # if the transport-specific key doesn't exist, create it.
+        if (-not (Test-Path $fullRegistryPath))
+        {
+            New-Item -Path $key -Name $transportName  
+        }
+        else
+        {
+            Write-Host " -- Key already exists" -ForegroundColor DarkGray
+        }
+
+        $existingProps = Get-ItemProperty -Path $fullRegistryPath -ErrorAction SilentlyContinue
+
+        if (-not ($existingProps.PSObject.Properties.Name -contains "CLSID"))
+        {
+            New-ItemProperty -Path $fullRegistryPath -Name "CLSID" -Value $clsid -PropertyType String
+        }
+        else
+        {
+            Write-Host " -- CLSID Value already exists" -ForegroundColor DarkGray
+        }
+
+        if (-not ($existingProps.PSObject.Properties.Name -contains "Enabled"))
+        {
+            New-ItemProperty -Path $fullRegistryPath -Name "Enabled" -Value 1 -PropertyType DWord
+        }
+        else
+        {
+            Write-Host " -- Enabled Value already exists" -ForegroundColor DarkGray
+        }
+
+    }
+
 
     Write-Host
     Write-Host "Windows MIDI Services In-Box Service Registration Restore" -ForegroundColor DarkCyan
@@ -124,6 +162,43 @@
                 }
             }
 
+
+            # create the required other reg entries, if missing
+
+            $microsoftPath = "HKLM:\SOFTWARE\Microsoft"
+            $wmsKey = "Windows MIDI Services"
+            $rootWmsKeyFullPath = ($microsoftPath + "\" + $wmsKey)
+
+            $transportKey = "Transport Plugins"
+            $transportKeyFullPath = $rootWmsKeyFullPath + "\" + $transportKey
+
+            $transformKey = "Endpoint Processing Plugins"
+            $transformKeyFullPath = $rootWmsKeyFullPath + "\" + $transformKey
+
+            # we don't want to create these keys if they already exist, because then settings get lost
+
+            if (-not (Test-Path -Path $rootWmsKeyFullPath))
+            {
+                New-Item -Path $microsoftPath -Name $wmsKey
+
+                # todo: also create the couple default reg entries
+
+            }
+
+            if (-not (Test-Path -Path $transportKeyFullPath))
+            {
+                New-Item -Path $rootWmsKeyFullPath -Name $transportKey
+            }
+
+            if (-not (Test-Path -Path $transformKeyFullPath))
+            {
+                New-Item -Path $rootWmsKeyFullPath -Name $transformKey
+            }
+
+            New-MidiTransportReg $transportKeyFullPath "Midi2KSTransport"           "{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}"
+            New-MidiTransportReg $transportKeyFullPath "Midi2KSAggregateTransport"  "{0f273b18-e372-4d95-87ac-c31c3d22e937}"
+            New-MidiTransportReg $transportKeyFullPath "Midi2VirtualMidiTransport"  "{8FEAAD91-70E1-4A19-997A-377720A719C1}"
+            New-MidiTransportReg $transportKeyFullPath "Midi2LoopbackMidiTransport" "{942BF02D-93C0-4EA8-B03E-D51156CA75E1}"
         }
         else
         {
