@@ -13,6 +13,7 @@ using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.ApplicationModel.Core;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
@@ -202,11 +204,17 @@ namespace Microsoft.Midi.Settings.ViewModels
                     if (proc != null)
                     {
                         proc.WaitForExit();
-                        needServiceRestart = false; // we take care of service restart above
-                        serviceRestarted = true;
                     }
+
+                    needServiceRestart = false; // we take care of service restart above
+                    serviceRestarted = true;
                 }
             }
+
+
+            // TODO: If ErrorMessage is not empty, we should display it here and not restart the service or app
+
+
 
             if (needServiceRestart)
             {
@@ -221,28 +229,40 @@ namespace Microsoft.Midi.Settings.ViewModels
                     if (proc != null)
                     {
                         proc.WaitForExit();
-                        needServiceRestart = false;
-                        serviceRestarted = true;
                     }
+
+                    needServiceRestart = false;
+                    serviceRestarted = true;
                 }
 
             }
 
 
-
-
             if (serviceRestarted)
             {
-                // TODO: need to refresh all the data
+                // For now, we'll just restart the app, but it would be 
+                // better to reload config file and reload data
+                string arguments = string.Empty;
 
+                var restartError = AppInstance.Restart(arguments);
+
+                switch (restartError)
+                {
+                    case AppRestartFailureReason.RestartPending:
+                        // TODO
+                        break;
+
+                    case AppRestartFailureReason.InvalidUser:
+                        // TODO
+                        break;
+
+                    case AppRestartFailureReason.Other:
+                        // TODO
+                        break;
+                }
             }
 
-
-            // set the flag saying the first-run setup is all done
-            // or maybe we just want to trigger this on having a valid config file
-            // that isn't the Default.midiconfig.json from earlier builds
-
-            m_navigationService.NavigateTo(typeof(HomeViewModel).FullName!);
+            //m_navigationService.NavigateTo(typeof(HomeViewModel).FullName!);
         }
 
 
