@@ -112,6 +112,14 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "Midi2UMP2BSTransform_i.c"
 
 
+// this gets replaced with the internal CFR check when pulled into Windows repo
+inline bool NewMidiFeatureUpdateKsa2603Enabled() { return true; }
+
+
+
+
+
+
 class CMidi2KSAggregateMidiEndpointManager;
 class CMidi2KSAggregateMidiInProxy;
 class CMidi2KSAggregateMidiOutProxy;

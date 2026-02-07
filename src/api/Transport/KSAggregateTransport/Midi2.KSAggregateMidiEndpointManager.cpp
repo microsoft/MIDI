@@ -44,31 +44,76 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
-    winrt::hstring parentDeviceSelector(
-        L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\" AND " \
-        L"System.Devices.Present:=System.StructuredQueryType.Boolean#True");
+    // needed for internal consumption. Gary to replace this with feature enablement check
+    // defined in pch.h
+    if (NewMidiFeatureUpdateKsa2603Enabled())
+    {
+        DWORD individualInterfaceEnumTimeoutMS{ DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS };
+        if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, KSA_INTERFACE_ENUM_TIMEOUT_REG_VALUE, &individualInterfaceEnumTimeoutMS)))
+        {
+            individualInterfaceEnumTimeoutMS = max(individualInterfaceEnumTimeoutMS, KSA_INTERFACE_ENUM_TIMEOUT_MS_MINIMUM_VALUE);
+            individualInterfaceEnumTimeoutMS = min(individualInterfaceEnumTimeoutMS, KSA_INTERFACE_ENUM_TIMEOUT_MS_MAXIMUM_VALUE);
 
-    // :=System.StructuredQueryType.Boolean#True
+            m_individualInterfaceEnumTimeoutMS = individualInterfaceEnumTimeoutMS;
+        }
+        else
+        {
+            m_individualInterfaceEnumTimeoutMS = DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS;
+        }
 
-    auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
 
-    additionalProps.Append(L"System.Devices.DeviceManufacturer");
-    additionalProps.Append(L"System.Devices.Manufacturer");
-    additionalProps.Append(L"System.Devices.Parent");
+        // the ksa2603 fix enumerates device interfaces instead of parent devices
 
-    m_watcher = DeviceInformation::CreateWatcher(parentDeviceSelector, additionalProps, DeviceInformationKind::Device);
+        winrt::hstring deviceInterfaceSelector(
+            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
+            L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
 
-    auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded);
-    auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved);
-    auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated);
-    auto deviceStoppedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped);
-    auto deviceEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted);
+        auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
 
-    m_DeviceAdded = m_watcher.Added(winrt::auto_revoke, deviceAddedHandler);
-    m_DeviceRemoved = m_watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
-    m_DeviceUpdated = m_watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
-    m_DeviceStopped = m_watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
-    m_DeviceEnumerationCompleted = m_watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+        m_watcher = DeviceInformation::CreateWatcher(deviceInterfaceSelector);
+
+        auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceInterfaceAdded);
+        auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceInterfaceRemoved);
+        auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceInterfaceUpdated);
+
+        auto deviceStoppedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped);
+        auto deviceEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted);
+
+        m_DeviceAdded = m_watcher.Added(winrt::auto_revoke, deviceAddedHandler);
+        m_DeviceRemoved = m_watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
+        m_DeviceUpdated = m_watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
+        m_DeviceStopped = m_watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
+        m_DeviceEnumerationCompleted = m_watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+    }
+    else
+    {
+        winrt::hstring parentDeviceSelector(
+            L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\" AND " \
+            L"System.Devices.Present:=System.StructuredQueryType.Boolean#True");
+
+        // :=System.StructuredQueryType.Boolean#True
+
+        auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
+
+        additionalProps.Append(L"System.Devices.DeviceManufacturer");
+        additionalProps.Append(L"System.Devices.Manufacturer");
+        additionalProps.Append(L"System.Devices.Parent");
+
+        m_watcher = DeviceInformation::CreateWatcher(parentDeviceSelector, additionalProps, DeviceInformationKind::Device);
+
+        auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded);
+        auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved);
+        auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated);
+        auto deviceStoppedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped);
+        auto deviceEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted);
+
+        m_DeviceAdded = m_watcher.Added(winrt::auto_revoke, deviceAddedHandler);
+        m_DeviceRemoved = m_watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
+        m_DeviceUpdated = m_watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
+        m_DeviceStopped = m_watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
+        m_DeviceEnumerationCompleted = m_watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+    }
+
 
     m_watcher.Start();
 
@@ -736,13 +781,13 @@ ParseParentIdIntoVidPidSerial(
 }
 
 
-
+// Assuming the update/add timeout is 250ms : UPDATE_TIMEOUT. May need to make this a registry setting.
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::OnDeviceInterfaceAdded(
+CMidi2KSAggregateMidiEndpointManager::OnFilterDeviceInterfaceAdded(
     DeviceWatcher watcher,
-    DeviceInformation deviceInterface
+    DeviceInformation filterDevice
 )
 {
     UNREFERENCED_PARAMETER(watcher);
@@ -753,20 +798,360 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceInterfaceAdded(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(deviceInterface.Id().c_str(), "added interface")
+        TraceLoggingWideString(filterDevice.Id().c_str(), "added interface")
     );
 
 
-    // Check to see if the interface has pins we want
+    //m_individualInterfaceEnumTimeoutMS
 
-    // if this has MIDI 1 pins, check to see if we already have an entry for the device
-    // create the device if we don't already have it
-    // get the USB vid/pid from the parent device, if it is a USB device
+    // Flow for interface ADDED
+    // - Check to see if this interface has a MIDI 1 pin. If not, bail.
+    // - Find the parent device (need to go an extra step up. Check KS code to see if similar now)
+    // - Check to see if we already have the parent device in the pending list. If not, create an entry in the pending list
+    // - Add the interface to the pending parent device
+    // - Reset the UPDATE_TIMEOUT timeout for this device (will need timeouts per-device, so maybe worker threads)
+    // - If no other changes for this device within that UPDATE_TIMEOUT, then 
+    //   - Build pin map
+    //   - Build GTBs
+    //   - Build name table
+    //   - Create the device 
+
+
+    std::wstring transportCode(TRANSPORT_CODE);
+    std::wstring driverSuppliedName{};
+
+
+
+
+    // Wrapper opens the handle internally.
+    KsHandleWrapper deviceHandleWrapper(filterDevice.Id().c_str());
+    RETURN_IF_FAILED(deviceHandleWrapper.Open());
+
+    // Using lamba function to prevent handle from dissapearing when being used. 
+    LOG_IF_FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+        return GetKSDriverSuppliedName(h, driverSuppliedName);
+        }));
+
+    // enumerate all the pins for this filter
+    ULONG cPins{ 0 };
+
+    HRESULT hr = deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+        return PinPropertySimple(h, 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins));
+        });
+
+    RETURN_IF_FAILED(hr);
+
+    // process the pins for this filter. Not all will be MIDI pins
+    for (UINT pinIndex = 0; pinIndex < cPins; pinIndex++)
+    {
+        //    bool isMidi1Pin{ false };
+
+            // TODO
+        std::wstring customPortName{};
+
+        // Check the communication capabilities of the pin so we can fail fast
+        KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
+
+        RETURN_IF_FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+            return PinPropertySimple(h, pinIndex, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION));
+            }));
+
+        // The external connector pin representing the physical connection
+        // has KSPIN_COMMUNICATION_NONE. We can only create on software IO pins which
+        // have a valid communication. Skip connector pins.
+        if (communication == KSPIN_COMMUNICATION_NONE)
+        {
+            continue;
+        }
+
+        // Duplicate the handle to safely pass it to another component or store it.
+        wil::unique_handle handleDupe(deviceHandleWrapper.GetHandle());
+        RETURN_IF_NULL_ALLOC(handleDupe);
+
+        // we try to open UMP only so we understand the device
+        KsHandleWrapper m_PinHandleWrapperUmp(filterDevice.Id().c_str(), pinIndex, MidiTransport_CyclicUMP, handleDupe.get());
+        if (SUCCEEDED(m_PinHandleWrapperUmp.Open()))
+        {
+            // this is a UMP pin. The KS transport will handle it, so we skip it here.
+            // In the future, we may want to bail on the first UMP pin we find.
+
+            continue;
+        }
+
+        // try to open as a MIDI 1 bytestream pin
+        KsHandleWrapper m_PinHandleWrapperMidi1(filterDevice.Id().c_str(), pinIndex, MidiTransport_StandardByteStream, handleDupe.get());
+        if (SUCCEEDED(m_PinHandleWrapperMidi1.Open()))
+        {
+            // this is a MIDI 1.0 byte format pin, so let's process it
+            KsAggregateEndpointMidiPinDefinition pinDefinition{ };
+
+            //pinDefinition.KSDriverSuppliedName = driverSuppliedName;
+            pinDefinition.PinNumber = pinIndex;
+            pinDefinition.FilterDeviceId = std::wstring{ filterDevice.Id() };
+            pinDefinition.FilterName = std::wstring{ filterDevice.Name() };
+
+            // find the name of the pin (supplied by iJack, and if not available, generated by the stack)
+            std::wstring pinName{ };
+
+            HRESULT pinNameHr = deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+                return GetPinName(h, pinIndex, pinName);
+                });
+
+            if (SUCCEEDED(pinNameHr))
+            {
+                pinDefinition.PinName = pinName;
+            }
+
+
+
+            // get the data flow so we know if this is a MIDI Input or a MIDI Output
+            KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
+
+            HRESULT dataFlowHr = deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+                return GetPinDataFlow(h, pinIndex, dataFlow);
+                });
+
+            if (SUCCEEDED(dataFlowHr))
+            {
+                if (dataFlow == KSPIN_DATAFLOW_IN)
+                {
+                    // MIDI Out (input to device)
+                    pinDefinition.PinDataFlow = MidiFlow::MidiFlowIn;
+                    pinDefinition.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;    // opposite
+
+                    pinDefinition.GroupIndex = static_cast<uint8_t>(midiOutputGroupIndexForDevice);
+
+                    pinDefinition.PortIndexWithinThisFilterAndDirection = static_cast<uint8_t>(midiOutputPinIndexForThisFilter);
+
+
+
+                    midiOutputPinIndexForThisFilter++;
+                    midiOutputGroupIndexForDevice++;
+                }
+                else if (dataFlow == KSPIN_DATAFLOW_OUT)
+                {
+                    // MIDI In (output from device)
+                    pinDefinition.PinDataFlow = MidiFlow::MidiFlowOut;
+                    pinDefinition.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;     // opposite
+
+                    pinDefinition.GroupIndex = static_cast<uint8_t>(midiInputGroupIndexForDevice);
+
+                    pinDefinition.PortIndexWithinThisFilterAndDirection = static_cast<uint8_t>(midiInputPinIndexForThisFilter);
+
+                    midiInputPinIndexForThisFilter++;
+                    midiInputGroupIndexForDevice++;
+                }
+
+                // This is where we build the proposed names
+                // =================================================
+
+                std::wstring customName = L"";
+
+                endpointDefinition.EndpointNameTable.PopulateEntryForMidi1DeviceUsingMidi1Driver(
+                    pinDefinition.GroupIndex,
+                    pinDefinition.DataFlowFromUserPerspective,
+                    customName,
+                    driverSuppliedName,
+                    pinDefinition.FilterName,
+                    pinDefinition.PinName,
+                    pinDefinition.PortIndexWithinThisFilterAndDirection
+                );
+
+                endpointDefinition.MidiPins.push_back(pinDefinition);
+            }
+            else
+            {
+                // this is a failure condition. Move on to next pin
+                RETURN_IF_FAILED(dataFlowHr);
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+    //auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    auto properties = parentDevice.Properties();
+
+    KsAggregateEndpointDefinition endpointDefinition{ };
+
+    auto deviceInstanceId = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceInstanceId", parentDevice, L"");
+    RETURN_HR_IF(E_FAIL, deviceInstanceId.empty());
+
+
+    auto systemDevicesParent = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Parent", parentDevice, L"");
+
+    endpointDefinition.ParentDeviceName = parentDevice.Name();
+    endpointDefinition.EndpointName = parentDevice.Name();
+    endpointDefinition.ParentDeviceInstanceId = parentDevice.Id();
+
+    if (!systemDevicesParent.empty())
+    {
+        LOG_IF_FAILED(ParseParentIdIntoVidPidSerial(systemDevicesParent, endpointDefinition));
+    }
+
+    // we set this if we find any compatible MIDI 1.0 byte format pins
+    bool isCompatibleMidi1Device{ false };
+
+    // enumerate all KS_CATEGORY_AUDIO filters for this parent media device
+    winrt::hstring filterDeviceSelector(
+        L"System.Devices.InterfaceClassGuid:=\"" + winrt::hstring(KS_CATEGORY_AUDIO_GUID) + "\""\
+        L" AND System.Devices.InterfaceEnabled:= System.StructuredQueryType.Boolean#True"\
+        L" AND System.Devices.DeviceInstanceId:= \"" + deviceInstanceId + L"\"");
+
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enumerating Filters", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(parentDevice.Id().c_str(), "parent device id")
+    );
+
+    auto filterDevices = DeviceInformation::FindAllAsync(filterDeviceSelector).get();
+
+    //ULONG midiInputGroupIndexForDevice{ 0 };
+    //ULONG midiOutputGroupIndexForDevice{ 0 };
+
+    //ULONG midiInputPinIndexForThisFilter{ 0 };
+    //ULONG midiOutputPinIndexForThisFilter{ 0 };
+
+
+
+        // now create the device
+
+        if (isCompatibleMidi1Device && endpointDefinition.MidiPins.size() > 0)
+        {
+            // only some vendor drivers provide an actual manufacturer
+            // and all the in-box drivers just provide the Generic USB Audio string
+            // TODO: Is "Generic USB Audio" a string that is localized? If so, this
+            // code will not have the intended effect outside of en-US
+            auto manufacturer = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceManufacturer", parentDevice, L"");
+            if (!manufacturer.empty() && manufacturer != L"(Generic USB Audio)" && manufacturer != L"Microsoft")
+            {
+                endpointDefinition.ManufacturerName = manufacturer;
+            }
+
+            // default hash is the device id. We don't have an iSerial here.
+            std::hash<std::wstring> hasher;
+            std::wstring hash;
+            hash = std::to_wstring(hasher(endpointDefinition.ParentDeviceInstanceId));
+
+            endpointDefinition.EndpointDeviceInstanceId = TRANSPORT_INSTANCE_ID_PREFIX + hash;
+
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Creating aggregate UMP endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            // We've enumerated all the pins on the device. Now create the aggregated UMP endpoint
+            RETURN_IF_FAILED(CreateMidiUmpEndpoint(endpointDefinition));
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"No compatible MIDI pins. This is normal in most cases.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        }
+    
+
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Filter Enumeration Complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(parentDevice.Id().c_str(), "parent device id")
+    );
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiEndpointManager::OnFilterDeviceInterfaceRemoved(
+    DeviceWatcher watcher,
+    DeviceInformationUpdate deviceInterfaceUpdate
+)
+{
+    UNREFERENCED_PARAMETER(watcher);
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "added interface")
+    );
+
+    // Flow for interface REMOVED
+    // - Check for the interface on the existing device
+    // - Update pin map to remove all entries with that interface
+    // - If this is the last interface, then remove the device. 
+    // - If not the last interface:
+    //   - Reset the UPDATE_TIMEOUT timeout for this device. If no other removals come through for this device during the timeout:
+    //     - Rebuild pin map, maintaining existing numbers where possible
+    //     - Rebuild GTBs, maintaining existing numbers where possible
+    //     - Recalculate name table
+    //     - call MidiDeviceManager::UpdateEndpointProperties. That will also recalculate MIDI 1 ports
+    //
 
 
 
     return S_OK;
 }
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiEndpointManager::OnFilterDeviceInterfaceUpdated(
+    DeviceWatcher watcher,
+    DeviceInformationUpdate deviceInterfaceUpdate
+)
+{
+    UNREFERENCED_PARAMETER(watcher);
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "updated interface")
+    );
+
+    // Flow for interface UPDATED
+    // - Check for any name changes
+    // - If any relevant changes recalculate GTBs and Name table as above and update properties
+    // 
+
+
+
+    return S_OK;
+}
+
+
+
 
 
 _Use_decl_annotations_
@@ -1101,9 +1486,6 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
     return S_OK;
 }
-
-
-
 
 
 _Use_decl_annotations_

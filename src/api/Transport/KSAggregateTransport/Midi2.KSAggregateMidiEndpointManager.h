@@ -14,6 +14,10 @@
 
 using namespace winrt::Windows::Devices::Enumeration;
 
+#define DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS           250
+#define KSA_INTERFACE_ENUM_TIMEOUT_MS_MINIMUM_VALUE     50
+#define KSA_INTERFACE_ENUM_TIMEOUT_MS_MAXIMUM_VALUE     2500
+#define KSA_INTERFACE_ENUM_TIMEOUT_REG_VALUE            L"KsaInterfaceEnumTimeoutMS"
 
 struct KsAggregateEndpointMidiPinDefinition
 {
@@ -78,7 +82,9 @@ private:
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
     // new interface-based approach
-    HRESULT OnDeviceInterfaceAdded(_In_ DeviceWatcher watcher, _In_ DeviceInformation deviceInterface);
+    HRESULT OnFilterDeviceInterfaceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
+    HRESULT OnFilterDeviceInterfaceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
+    HRESULT OnFilterDeviceInterfaceUpdated(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
 
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
@@ -97,5 +103,5 @@ private:
 
     HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
 
-
+    DWORD m_individualInterfaceEnumTimeoutMS { DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS };
 };

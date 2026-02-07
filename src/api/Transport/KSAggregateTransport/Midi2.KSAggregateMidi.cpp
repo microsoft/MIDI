@@ -205,40 +205,84 @@ CMidi2KSAggregateMidi::Initialize(
             wil::com_ptr_nothrow<CMidi2KSAggregateMidiInProxy> proxy;
             RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiInProxy>(&proxy));
 
-            auto initResult =
-                proxy->Initialize(
-                    endpointDeviceInterfaceId,
-                    handleDupe.get(),
-                    pinMapEntry->PinId,
-                    requestedBufferSize,
-                    mmCssTaskId,
-                    m_callback,
-                    context,
-                    pinMapEntry->GroupIndex
-                );
-
-            if (SUCCEEDED(initResult))
+            // needed for internal consumption. Gary to replace this with feature enablement check
+            // defined in pch.h
+            if (NewMidiFeatureUpdateKsa2603Enabled())
             {
-                m_midiInDeviceGroupMap.insert_or_assign(pinMapEntry->GroupIndex, std::move(proxy));
+                auto initResult =
+                    proxy->Initialize(
+                        filterInterfaceId.c_str(),
+                        handleDupe.get(),
+                        pinMapEntry->PinId,
+                        requestedBufferSize,
+                        mmCssTaskId,
+                        m_callback,
+                        context,
+                        pinMapEntry->GroupIndex
+                    );
+
+                if (SUCCEEDED(initResult))
+                {
+                    m_midiInDeviceGroupMap.insert_or_assign(pinMapEntry->GroupIndex, std::move(proxy));
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiKSAggregateTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Unable to initialize Midi Input proxy", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                        TraceLoggingUInt32(requestedBufferSize, "buffer size"),
+                        TraceLoggingUInt32(pinMapEntry->PinId, "pin id"),
+                        TraceLoggingUInt8(pinMapEntry->GroupIndex, "group"),
+                        TraceLoggingWideString(filterInterfaceId.c_str(), "filter")
+                    );
+
+                    RETURN_IF_FAILED(initResult);
+                }
             }
             else
             {
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Unable to initialize Midi Input proxy", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                    TraceLoggingUInt32(requestedBufferSize, "buffer size"),
-                    TraceLoggingUInt32(pinMapEntry->PinId, "pin id"),
-                    TraceLoggingUInt8(pinMapEntry->GroupIndex, "group"),
-                    TraceLoggingWideString(filterInterfaceId.c_str(), "filter")
-                );
+                auto initResult =
+                    proxy->Initialize(
+                        endpointDeviceInterfaceId,
+                        handleDupe.get(),
+                        pinMapEntry->PinId,
+                        requestedBufferSize,
+                        mmCssTaskId,
+                        m_callback,
+                        context,
+                        pinMapEntry->GroupIndex
+                    );
 
-                RETURN_IF_FAILED(initResult);
+                if (SUCCEEDED(initResult))
+                {
+                    m_midiInDeviceGroupMap.insert_or_assign(pinMapEntry->GroupIndex, std::move(proxy));
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiKSAggregateTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Unable to initialize Midi Input proxy", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                        TraceLoggingUInt32(requestedBufferSize, "buffer size"),
+                        TraceLoggingUInt32(pinMapEntry->PinId, "pin id"),
+                        TraceLoggingUInt8(pinMapEntry->GroupIndex, "group"),
+                        TraceLoggingWideString(filterInterfaceId.c_str(), "filter")
+                    );
+
+                    RETURN_IF_FAILED(initResult);
+                }
             }
+
+
         }
         else if (pinMapEntry->PinDataFlow == MidiFlow::MidiFlowIn)
         {
@@ -247,38 +291,79 @@ CMidi2KSAggregateMidi::Initialize(
             wil::com_ptr_nothrow<CMidi2KSAggregateMidiOutProxy> proxy;
             RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiOutProxy>(&proxy));
 
-            auto initResult =
-                proxy->Initialize(
-                    endpointDeviceInterfaceId,
-                    handleDupe.get(),
-                    pinMapEntry->PinId,
-                    requestedBufferSize,
-                    mmCssTaskId,
-                    context,
-                    pinMapEntry->GroupIndex
-                );
-
-            if (SUCCEEDED(initResult))
+            // needed for internal consumption. Gary to replace this with feature enablement check
+            // defined in pch.h
+            if (NewMidiFeatureUpdateKsa2603Enabled())
             {
-                m_midiOutDeviceGroupMap.insert_or_assign(pinMapEntry->GroupIndex, std::move(proxy));
+                auto initResult =
+                    proxy->Initialize(
+                        filterInterfaceId.c_str(),
+                        handleDupe.get(),
+                        pinMapEntry->PinId,
+                        requestedBufferSize,
+                        mmCssTaskId,
+                        context,
+                        pinMapEntry->GroupIndex
+                    );
+
+                if (SUCCEEDED(initResult))
+                {
+                    m_midiOutDeviceGroupMap.insert_or_assign(pinMapEntry->GroupIndex, std::move(proxy));
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiKSAggregateTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Unable to initialize Midi Output proxy", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                        TraceLoggingUInt32(requestedBufferSize, "buffer size"),
+                        TraceLoggingUInt32(pinMapEntry->PinId, "pin id"),
+                        TraceLoggingUInt8(pinMapEntry->GroupIndex, "group"),
+                        TraceLoggingWideString(filterInterfaceId.c_str(), "filter")
+                    );
+
+                    RETURN_IF_FAILED(initResult);
+                }
             }
             else
             {
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Unable to initialize Midi Output proxy", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                    TraceLoggingUInt32(requestedBufferSize, "buffer size"),
-                    TraceLoggingUInt32(pinMapEntry->PinId, "pin id"),
-                    TraceLoggingUInt8(pinMapEntry->GroupIndex, "group"),
-                    TraceLoggingWideString(filterInterfaceId.c_str(), "filter")
-                );
+                auto initResult =
+                    proxy->Initialize(
+                        endpointDeviceInterfaceId,
+                        handleDupe.get(),
+                        pinMapEntry->PinId,
+                        requestedBufferSize,
+                        mmCssTaskId,
+                        context,
+                        pinMapEntry->GroupIndex
+                    );
 
-                RETURN_IF_FAILED(initResult);
+                if (SUCCEEDED(initResult))
+                {
+                    m_midiOutDeviceGroupMap.insert_or_assign(pinMapEntry->GroupIndex, std::move(proxy));
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiKSAggregateTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Unable to initialize Midi Output proxy", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                        TraceLoggingUInt32(requestedBufferSize, "buffer size"),
+                        TraceLoggingUInt32(pinMapEntry->PinId, "pin id"),
+                        TraceLoggingUInt8(pinMapEntry->GroupIndex, "group"),
+                        TraceLoggingWideString(filterInterfaceId.c_str(), "filter")
+                    );
+
+                    RETURN_IF_FAILED(initResult);
+                }
             }
 
         }
