@@ -70,6 +70,10 @@
     "Measure Loopback Jitter": {
       "commandName": "Project",
       "commandLineArgs": "measure loopback-jitter"
+    },
+    "Create Loopback Endpoints": {
+      "commandName": "Project",
+      "commandLineArgs": "loopback create -a \"Test A\" -b \"Test B\""
     }
   }
 }

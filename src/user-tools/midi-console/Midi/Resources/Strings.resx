@@ -1097,4 +1097,57 @@ Timestamp</value>
   <data name="ParameterMonitorEndpointIncludeRealTimeMessages" xml:space="preserve">
     <value>Include frequent/noisy messages like Clock pulse and Active Sense</value>
   </data>
+  <data name="ParameterCreateLoopbackAssociationId" xml:space="preserve">
+    <value>Id used to associate the two endpoints. Also used when removing the loopback pair.</value>
+  </data>
+  <data name="ParameterCreateLoopbackNameA" xml:space="preserve">
+    <value>Unique name for the A-side of the loopback pair</value>
+  </data>
+  <data name="ParameterCreateLoopbackNameB" xml:space="preserve">
+    <value>Unique name for the B-side of the loopback pair</value>
+  </data>
+  <data name="ParameterCreateLoopbackUniqueIdentifier" xml:space="preserve">
+    <value>Unique identifier for the loopback pair</value>
+  </data>
+  <data name="CommandLoopbackDescription" xml:space="preserve">
+    <value>Operations on loopback endpoints.</value>
+  </data>
+  <data name="CommandCreateLoopbackDescription" xml:space="preserve">
+    <value>Create a temporary set of MIDI 2.0 (and MIDI 1.0) loopback endpoints, connected to each other. Messages sent to the A loopback will be received by B, and messages sent to B will be received by A. </value>
+  </data>
+  <data name="ErrorCreatingLoopback" xml:space="preserve">
+    <value>Error attempting to create loopback endpoints.</value>
+  </data>
+  <data name="MessageLoopbackCreationSuccess" xml:space="preserve">
+    <value>Loopback endpoints created.</value>
+  </data>
+  <data name="LabelLoopbackEndpointIdentifierA" xml:space="preserve">
+    <value>Endpoint A</value>
+  </data>
+  <data name="LabelLoopbackEndpointIdentifierB" xml:space="preserve">
+    <value>Endpoint B</value>
+  </data>
+  <data name="LabelAssociationId" xml:space="preserve">
+    <value>Association Id</value>
+  </data>
+  <data name="MessageLoopbackCreationSuccessDetails" xml:space="preserve">
+    <value>Unlike classic MIDI 1.0 loopbacks, these are fully MIDI 2.0-compatible bidirectional endpoints. Messages sent to Loopback A will be received by Loopback B. Messages sent by B will be received by A. MIDI 1.0 apps will see 4 created ports (2 sources, 2 destinations) as a result.
+
+These endpoints will disappear when the service or PC is restarted. To create permanent loopback endpoints, use the MIDI Settings app.</value>
+  </data>
+  <data name="CommandRemoveLoopbackDescription" xml:space="preserve">
+    <value>Remove a pair of loopback endpoints by providing the association id</value>
+  </data>
+  <data name="ParameterRemoveLoopbackAssociationId" xml:space="preserve">
+    <value>The Guid which uniquely identifies the loopback endpoint pair</value>
+  </data>
+  <data name="MessageLoopbackRemovalSuccess" xml:space="preserve">
+    <value>Loopback endpoint pair removed.</value>
+  </data>
+  <data name="ErrorRemovingLoopback" xml:space="preserve">
+    <value>Error attempting to remove endpoint loopback pair.</value>
+  </data>
+  <data name="ParameterCreateLoopbackRootName" xml:space="preserve">
+    <value>Provide a root name instead of individual endpoint names. "(A)" and "(B)" will be appended to this name to create the two endpoints.</value>
+  </data>
 </root>

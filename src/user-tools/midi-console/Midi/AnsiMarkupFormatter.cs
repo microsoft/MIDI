@@ -108,7 +108,11 @@ namespace Microsoft.Midi.ConsoleApp
             return "[darkseagreen3]" + EscapeString(versionInformation) + "[/]";
         }
 
-        
+        public static string FormatGeneralDetailMessage(string details)
+        {
+            return "[DarkSlateGray3]" + EscapeString(details) + "[/]";
+        }
+
 
         public static string FormatAppDescription(string description)
         {
@@ -159,6 +163,10 @@ namespace Microsoft.Midi.ConsoleApp
             return "[darkseagreen]" + EscapeString(id.Trim()) + "[/]";
         }
 
+        public static string FormatEndpointAssociationId(Guid id)
+        {
+            return "[darkseagreen]" + EscapeString(id.ToString()) + "[/]";
+        }
 
         public static string FormatFullEndpointInterfaceId(string id)
         {

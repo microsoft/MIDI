@@ -33,10 +33,22 @@ app.Configure(config =>
     config.CaseSensitivity(CaseSensitivity.None);
 
 
-    config.AddBranch("create", create =>
+    config.AddBranch("loopback", create =>
     {
-        create.AddCommand<CreateLoopbackCommand>("loopback")
+        create.SetDescription(Strings.CommandLoopbackDescription);
+
+        create.AddCommand<CreateLoopbackCommand>("create")
+            .WithDescription(Strings.CommandCreateLoopbackDescription)
+            .WithExample("loopback", "create", "--name-a", "\"My Loopback A\"", "--name-b", "\"My Loopback B\"")
         ;
+
+        create.AddCommand<RemoveLoopbackCommand>("remove")
+            .WithAlias("delete")
+            .WithDescription(Strings.CommandRemoveLoopbackDescription)
+            .WithExample("loopback", "remove", "--association-id", "{bb872b25-bc38-4009-a85a-559824398a13}")
+        ;
+
+
     });
 
 
