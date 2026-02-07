@@ -33,6 +33,13 @@ app.Configure(config =>
     config.CaseSensitivity(CaseSensitivity.None);
 
 
+    config.AddBranch("create", create =>
+    {
+        create.AddCommand<CreateLoopbackCommand>("loopback")
+        ;
+    });
+
+
     config.AddBranch("enumerate", enumerate =>
     {
         enumerate.SetDescription(Strings.CommandEnumerateDescription);
