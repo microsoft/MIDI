@@ -306,6 +306,8 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
         std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
         std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
         std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+        std::cout << dye::light_aqua(" This tool tells you if the new Windows MIDI Services is enabled on your PC.") << std::endl;
+        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
         std::cout << dye::light_aqua(" If this is a Windows Insider Dev or Beta build of Windows released before our official") << std::endl;
         std::cout << dye::light_aqua(" 24h2+ retail release, you may receive an incorrect positive result from this test. ") << std::endl;
         std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
