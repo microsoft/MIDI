@@ -118,7 +118,7 @@ CMidi2KSAggregateMidiInProxy::Callback(
     RETURN_HR_IF_NULL(E_POINTER, m_callback);
     RETURN_HR_IF_NULL(E_POINTER, m_bs2UmpTransform);
 
-#ifndef _DEBUG
+#ifdef _DEBUG
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
