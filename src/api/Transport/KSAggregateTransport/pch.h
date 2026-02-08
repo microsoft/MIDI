@@ -36,6 +36,8 @@
 #include <SDKDDKVer.h>
 
 #include <functional>
+#include <queue>
+#include <vector>
 
 
 #define _ATL_APARTMENT_THREADED

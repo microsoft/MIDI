@@ -93,6 +93,25 @@ private:
     wil::critical_section m_availableEndpointDefinitionsLock;
     std::map<std::wstring, KsAggregateEndpointDefinition> m_availableEndpointDefinitions;
     
+    wil::critical_section m_pendingEndpointDefinitionsLock;
+    std::vector<std::shared_ptr<KsAggregateEndpointDefinition>> m_pendingEndpointDefinitions;
+    HRESULT FindOrCreateMasterEndpointDefinitionForFilterDevice(
+            _In_ DeviceInformation,
+            _In_ std::shared_ptr<KsAggregateEndpointDefinition>&);
+    
+    bool KSAEndpointForDeviceExists(
+            _In_ std::wstring deviceInstanceId);
+
+    HRESULT GetNextGroupIndex(
+            _In_ std::shared_ptr<KsAggregateEndpointDefinition> definition,
+            _In_ MidiFlow dataFlowFromUserPerspective,
+            _In_ uint8_t& groupIndex);
+
+    wil::unique_event_nothrow m_endpointCreationThreadWakeup;
+    std::jthread m_endpointCreationThread;
+    void EndpointCreationThreadWorker(_In_ std::stop_token token);
+
+
     DeviceWatcher m_watcher{0};
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_DeviceAdded;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Removed_revoker m_DeviceRemoved;
