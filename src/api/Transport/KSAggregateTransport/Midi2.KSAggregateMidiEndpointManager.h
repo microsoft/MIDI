@@ -56,6 +56,10 @@ struct KsAggregateEndpointDefinition
     std::vector<KsAggregateEndpointMidiPinDefinition> MidiPins{ };
 
     WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{};
+
+    // new for 2603 fix, but does not impact the existing code
+    int8_t CurrentHighestMidiSourceGroupIndex{ -1 };
+    int8_t CurrentHighestMidiDestinationGroupIndex{ -1 };
 };
 
 
@@ -95,17 +99,22 @@ private:
     
     wil::critical_section m_pendingEndpointDefinitionsLock;
     std::vector<std::shared_ptr<KsAggregateEndpointDefinition>> m_pendingEndpointDefinitions;
-    HRESULT FindOrCreateMasterEndpointDefinitionForFilterDevice(
-            _In_ DeviceInformation,
-            _In_ std::shared_ptr<KsAggregateEndpointDefinition>&);
-    
-    bool KSAEndpointForDeviceExists(
-            _In_ std::wstring deviceInstanceId);
 
-    HRESULT GetNextGroupIndex(
-            _In_ std::shared_ptr<KsAggregateEndpointDefinition> definition,
-            _In_ MidiFlow dataFlowFromUserPerspective,
-            _In_ uint8_t& groupIndex);
+    HRESULT FindOrCreateMasterEndpointDefinitionForFilterDevice(
+        _In_ DeviceInformation,
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition>&);
+    
+    HRESULT GetMidi1FilterPins(
+        _In_ DeviceInformation,
+        _In_ std::vector<KsAggregateEndpointMidiPinDefinition>&);
+
+    bool KSAEndpointForDeviceExists(
+        _In_ std::wstring deviceInstanceId);
+
+    HRESULT IncrementAndGetNextGroupIndex(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition> definition,
+        _In_ MidiFlow dataFlowFromUserPerspective,
+        _In_ uint8_t& groupIndex);
 
     wil::unique_event_nothrow m_endpointCreationThreadWakeup;
     std::jthread m_endpointCreationThread;
