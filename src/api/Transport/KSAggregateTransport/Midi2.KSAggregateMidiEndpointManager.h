@@ -78,7 +78,8 @@ public:
 
 private:
     STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& masterEndpointDefinition);
-    
+    STDMETHOD(CreateMidiUmpEndpointV2)(_In_ std::shared_ptr<KsAggregateEndpointDefinition> masterEndpointDefinition);
+
     HRESULT OnDeviceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
     HRESULT OnDeviceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
     HRESULT OnDeviceUpdated(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
@@ -96,11 +97,16 @@ private:
 
     wil::critical_section m_availableEndpointDefinitionsLock;
     std::map<std::wstring, KsAggregateEndpointDefinition> m_availableEndpointDefinitions;
-    
+    std::map<std::wstring, std::shared_ptr<KsAggregateEndpointDefinition>> m_availableEndpointDefinitionsV2;    // for 2603 CFR update only
+
     wil::critical_section m_pendingEndpointDefinitionsLock;
     std::vector<std::shared_ptr<KsAggregateEndpointDefinition>> m_pendingEndpointDefinitions;
 
-    HRESULT FindOrCreateMasterEndpointDefinitionForFilterDevice(
+    HRESULT FindActivatedMasterEndpointDefinitionForFilterDevice(
+        _In_ std::wstring parentDeviceInstanceId,
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition>&);
+
+    HRESULT FindOrCreatePendingMasterEndpointDefinitionForFilterDevice(
         _In_ DeviceInformation,
         _In_ std::shared_ptr<KsAggregateEndpointDefinition>&);
     
@@ -116,9 +122,27 @@ private:
         _In_ MidiFlow dataFlowFromUserPerspective,
         _In_ uint8_t& groupIndex);
 
+    HRESULT UpdateNewPinDefinitions(
+        _In_ std::wstring filterDeviceid,
+        _In_ std::wstring driverSuppliedName,
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition> endpointDefinition);
+
+    HRESULT BuildPinsAndGroupTerminalBlocksPropertyData(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition> masterEndpointDefinition,
+        _In_ std::vector<std::byte>& pinMapPropertyData,
+        _In_ std::vector<internal::GroupTerminalBlockInternal>& groupTerminalBlocks);
+
+    HRESULT UpdateNameTableWithCustomProperties(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition> masterEndpointDefinition,
+        _In_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties);
+
     wil::unique_event_nothrow m_endpointCreationThreadWakeup;
     std::jthread m_endpointCreationThread;
     void EndpointCreationThreadWorker(_In_ std::stop_token token);
+
+    HRESULT UpdateExistingMidiUmpEndpointWithFilterChanges(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition> masterEndpointDefinition);
+
 
 
     DeviceWatcher m_watcher{0};
