@@ -14,7 +14,7 @@ We refer to the two connected endpoints as a Loopback Endpoint Pair.
 Each loopback pair includes
 
 | Property | Description |
-| -------- | ----------- |
+| ----------------- | ----------- |
 | Endpoint A Name | The name of the A-side endpoint |
 | Endpoint B Name | The name of the B-side endpoint |
 | Unique Identifier | Optional. This is the serial number or unique identifier for the pair. This enables endpoint customization using tools. |
@@ -26,7 +26,7 @@ Loopback Endpoint Pairs are typically used to connect one application to another
 
 Loopback Endpoint Pairs created through the MIDI Settings app are optionally stored in the Windows MIDI Services configuration file, and so persist beyond service restarts and Windows reboots.
 
-!(midi-settings-create-loopback.png)
+![MIDI Settings application Showing Loopbacks](midi-settings-create-loopback.png)
 
 ## MIDI Console
 
