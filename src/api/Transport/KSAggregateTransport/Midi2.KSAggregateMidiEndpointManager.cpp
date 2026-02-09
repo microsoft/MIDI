@@ -2048,7 +2048,7 @@ CMidi2KSAggregateMidiEndpointManager::OnFilterDeviceInterfaceAdded(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"KSA endpoint for this filter already activated. TEMP skipping.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"KSA endpoint for this filter already activated. Updating it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(filterDevice.Id().c_str(), "filter device id"),
             TraceLoggingWideString(parentInstanceId.c_str(), "parent instance id")
         );
@@ -2179,22 +2179,81 @@ CMidi2KSAggregateMidiEndpointManager::OnFilterDeviceInterfaceRemoved(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "added interface")
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "removed interface")
     );
 
-    // Flow for interface REMOVED
-    // - Check for the interface on the existing device
-    // - Update pin map to remove all entries with that interface
-    // - If this is the last interface, then remove the device. 
-    // - If not the last interface:
-    //   - Reset the UPDATE_TIMEOUT timeout for this device. If no other removals come through for this device during the timeout:
-    //     - Rebuild pin map, maintaining existing numbers where possible
-    //     - Rebuild GTBs, maintaining existing numbers where possible
-    //     - Recalculate name table
-    //     - call MidiDeviceManager::UpdateEndpointProperties. That will also recalculate MIDI 1 ports
-    //
+    std::wstring removedFilterDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(deviceInterfaceUpdate.Id().c_str()) };
+
+    // find an active device with this filter
+
+    std::shared_ptr<KsAggregateEndpointDefinition> endpointDefinition{ nullptr };
+
+  
+
+    for (auto& endpointListIterator : m_availableEndpointDefinitionsV2)
+    {
+        // check pins for this filter
+        for (auto& pin: endpointListIterator.second->MidiPins)
+        {
+            if (internal::NormalizeDeviceInstanceIdWStringCopy(pin.FilterDeviceId) == removedFilterDeviceId)
+            {
+                endpointDefinition = endpointListIterator.second;
+                break;
+            }
+        }
+
+    }
+
+    if (endpointDefinition != nullptr)
+    {
+        bool done { false };
+
+        while (!done)
+        {
+            auto foundIt = std::find_if(
+                endpointDefinition->MidiPins.begin(),
+                endpointDefinition->MidiPins.end(),
+                [&removedFilterDeviceId](KsAggregateEndpointMidiPinDefinition& pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin.FilterDeviceId) == removedFilterDeviceId; }
+            );
+
+            if (foundIt != endpointDefinition->MidiPins.end())
+            {
+                // erase the pin definition with this 
+                endpointDefinition->MidiPins.erase(foundIt);
+            }
+            else
+            {
+                // we've removed all the pins for this interface
+                done = true;
+            }
+        }
+
+        if (endpointDefinition->MidiPins.size() > 0)
+        {
+            // we've removed all the pins for this interface, but there are still
+            // pins left, so now it's time to update the endpoint
 
 
+            // TODO: Need to cache the name from the driver/registry so we don't have to do a lookup here.
+
+            // update remaining pins in existing endpoint definition
+            RETURN_IF_FAILED(UpdateNewPinDefinitions(removedFilterDeviceId, L"", endpointDefinition));
+            RETURN_IF_FAILED(UpdateExistingMidiUmpEndpointWithFilterChanges(endpointDefinition));
+        }
+        else
+        {
+            auto lock = m_availableEndpointDefinitionsLock.lock();
+
+            // notify the device manager using the InstanceId for this midi device
+            RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(
+                internal::NormalizeDeviceInstanceIdWStringCopy(endpointDefinition->EndpointDeviceInstanceId).c_str()));
+
+            // remove the endpoint from the list
+
+            m_availableEndpointDefinitionsV2.erase(internal::NormalizeDeviceInstanceIdWStringCopy(endpointDefinition->ParentDeviceInstanceId));
+        }
+    }
 
     return S_OK;
 }
