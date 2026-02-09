@@ -771,4 +771,16 @@ This change will require a MIDI Service restart before it will take effect.</val
   <data name="CommonTextBlockLabel_ConfiguredReceiveJR.Text" xml:space="preserve">
     <value>Configured to receive Jitter Reduction Timestamps</value>
   </data>
+  <data name="SettingsPage_ShowPreviewToolsExpander.Header" xml:space="preserve">
+    <value>Enable Preview Tools</value>
+  </data>
+  <data name="SettingsPage_ShowPreviewToolsExpander.Description" xml:space="preserve">
+    <value>Enable preview tools like the System Exclusive message sender. These tools are not yet stable and may have bugs or incomplete functionality. Requires restarting this app to see the changes.</value>
+  </data>
+  <data name="EndpointPersonalizationUniqueIdInfoBar.Message" xml:space="preserve">
+    <value>This MIDI device does not report a serial number or unique identifier. As a result, the customizations may not stay applied if you change how the device is connected to this PC (different USB port, or hub, for example). If you have more than one of these devices, and connect them at different times, Windows may not know which one to apply the personalization to.</value>
+  </data>
+  <data name="EndpointPersonalizationUniqueIdInfoBar.Title" xml:space="preserve">
+    <value>Personalization may not be permanent</value>
+  </data>
 </root>

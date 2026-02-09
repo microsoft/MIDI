@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using System.Diagnostics.Eventing.Reader;
 using System.Reflection;
 using System.Windows.Input;
 
@@ -52,6 +53,7 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
 
     private bool _isPreviewChannelEnabled = false;
     private bool _isUpdateCheckingEnabled = true;
+    private bool _arePreviewToolsEnabled = false;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
@@ -87,12 +89,23 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
         get => _midiUpdateService.GetAutoCheckForUpdatesEnabled();
         set => SetProperty(_isUpdateCheckingEnabled, value, (newValue) => 
         { 
-            _isUpdateCheckingEnabled = newValue;
-
             _midiUpdateService.SetAutoCheckForUpdatesEnabled(newValue);
+
+            _isUpdateCheckingEnabled = newValue;
         });
     }
 
+    
+    public bool ArePreviewToolsEnabled
+    {
+        get => _generalSettingsService.GetPreviewToolsEnabled();
+        set => SetProperty(_arePreviewToolsEnabled, value, (newValue) =>
+        {
+            _generalSettingsService.SetPreviewToolsEnabled(newValue);
+
+            _arePreviewToolsEnabled = newValue;
+        });
+    }
 
     public ElementTheme ElementTheme
     {
@@ -137,6 +150,8 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
             });
 
         _isUpdateCheckingEnabled = _midiUpdateService.GetAutoCheckForUpdatesEnabled();
+
+        _arePreviewToolsEnabled = _generalSettingsService.GetPreviewToolsEnabled();
 
         _isPreviewChannelEnabled = 
             (_midiUpdateService.GetCurrentPreferredChannel() == MidiRuntimeReleaseTypes.Preview);

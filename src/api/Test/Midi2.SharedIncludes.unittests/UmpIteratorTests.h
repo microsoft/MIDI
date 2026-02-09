@@ -36,6 +36,8 @@ public:
     TEST_METHOD(TestValidateCompleteBufferHasCompleteUmps);
     TEST_METHOD(TestGetMessageType);
     TEST_METHOD(TestCopyWordsToVector);
+    TEST_METHOD(TestGetMessageWordsByIndex);
+    
 
 
 private:

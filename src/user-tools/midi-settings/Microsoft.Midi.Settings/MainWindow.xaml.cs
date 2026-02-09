@@ -10,6 +10,7 @@ using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml.Media;
+using System.Threading.Tasks;
 using WinUIEx;
 
 namespace Microsoft.Midi.Settings;
@@ -46,9 +47,8 @@ public sealed partial class MainWindow// : WinUIEx.WindowEx
         this.Closed += MainWindow_Closed;
     }
 
-    private void MainWindow_Closed(object sender, UI.Xaml.WindowEventArgs args)
+    private async void MainWindow_Closed(object sender, UI.Xaml.WindowEventArgs args)
     {
-
         var settingsService = App.GetService<IGeneralSettingsService>();
 
         if (settingsService != null)
@@ -59,7 +59,10 @@ public sealed partial class MainWindow// : WinUIEx.WindowEx
                 this.AppWindow.Size.Width,
                 this.AppWindow.Size.Height);
 
-            settingsService.SetMainWindowPositionAndSize(r);
+            await Task.Run(() =>
+            {
+                settingsService.SetMainWindowPositionAndSize(r);
+            });
         }
 
     }
