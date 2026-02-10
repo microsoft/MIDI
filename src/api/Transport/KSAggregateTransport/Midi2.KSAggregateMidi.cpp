@@ -11,6 +11,7 @@
 
 #include "ump_iterator.h"
 
+#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -207,7 +208,7 @@ CMidi2KSAggregateMidi::Initialize(
 
             // needed for internal consumption. Gary to replace this with feature enablement check
             // defined in pch.h
-            if (NewMidiFeatureUpdateKsa2603Enabled())
+            if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
             {
                 auto initResult =
                     proxy->Initialize(
@@ -293,7 +294,7 @@ CMidi2KSAggregateMidi::Initialize(
 
             // needed for internal consumption. Gary to replace this with feature enablement check
             // defined in pch.h
-            if (NewMidiFeatureUpdateKsa2603Enabled())
+            if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
             {
                 auto initResult =
                     proxy->Initialize(

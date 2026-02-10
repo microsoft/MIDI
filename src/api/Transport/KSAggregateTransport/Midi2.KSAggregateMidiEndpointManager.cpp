@@ -13,6 +13,9 @@
 #include <sstream>      // for the string stream in parsing of VID/PID/Serial from parent id
 #include <iostream>     // for getline for string parsing of VID/PID/Serial from parent id
 
+#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
+
+
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
 using namespace winrt::Windows::Foundation;
@@ -46,7 +49,7 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 
     // needed for internal consumption. Gary to replace this with feature enablement check
     // defined in pch.h
-    if (NewMidiFeatureUpdateKsa2603Enabled())
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
     {
         DWORD individualInterfaceEnumTimeoutMS{ DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS };
         if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, KSA_INTERFACE_ENUM_TIMEOUT_REG_VALUE, &individualInterfaceEnumTimeoutMS)))
@@ -126,7 +129,7 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     // Wait for everything to be created so that they're available immediately after service start.
     m_EnumerationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
 
-    if (NewMidiFeatureUpdateKsa2603Enabled())
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
     {
         if (m_pendingEndpointDefinitions.size() > 0)
         {
@@ -1310,7 +1313,7 @@ CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiat
         &countBytesReturned
     );
 
-    if (NewMidiFeatureUpdateKsa2603Enabled())
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
     {
         // changed to not log the failure here. Failures are expected for many devices, and it's adding noise to error logs
         if (FAILED(hrComponent))
@@ -1976,6 +1979,22 @@ CMidi2KSAggregateMidiEndpointManager::UpdateNewPinDefinitions(
     }
 
     return S_OK;
+}
+
+
+
+
+HRESULT
+PopulatePinKSDataFormats(HANDLE filterHandle, Some_vector_of_pin_format_structs)
+{
+    //Try this, it should be a fairly easy thing to add to your change.
+    //    retrieve the :
+    //KSPROPSETID_Pin,
+    //    KSPROPERTY_PIN_DATARANGES,
+
+    //    limit to pins with(pKsDataFormat->MajorFormat == KSDATAFORMAT_TYPE_MUSIC)
+    //
+    // Retrieval is going to follow the same ksmultipleitemp pattern as KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS
 }
 
 
@@ -2732,7 +2751,7 @@ winrt::hstring CMidi2KSAggregateMidiEndpointManager::FindMatchingInstantiatedEnd
 {
     criteria.Normalize();
 
-    if (NewMidiFeatureUpdateKsa2603Enabled())
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
     {
         for (auto const& def : m_availableEndpointDefinitionsV2)
         {
@@ -2790,7 +2809,7 @@ CMidi2KSAggregateMidiEndpointManager::Shutdown()
         TraceLoggingPointer(this, "this")
         );
 
-    if (NewMidiFeatureUpdateKsa2603Enabled())
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
     {
         m_endpointCreationThread.request_stop();
         m_endpointCreationThreadWakeup.SetEvent();
