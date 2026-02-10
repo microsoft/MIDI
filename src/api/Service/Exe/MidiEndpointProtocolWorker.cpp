@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include "ump_iterator.h"
+#include "Feature_Servicing_MIDI2DeviceRemoval.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -157,70 +158,104 @@ CMidiEndpointProtocolWorker::Start(
     ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams
 )
 {
-    auto lock = m_lock.lock();
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-    );
-
-    if (m_endProcessing.is_signaled())
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        return S_OK;
-    }
+        auto lock = m_lock.lock();
 
-    m_inInitialFunctionBlockDiscovery = true;
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
 
-    // these are defaults, but discovery will tell us what we can really do here.
-    m_preferToSendJRTimestampsToEndpoint = negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint;
-    m_preferToReceiveJRTimestampsFromEndpoint = negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint;
-    m_preferredMidiProtocol = negotiationParams.PreferredMidiProtocol;
-
-    // We continue listening for and updating metadata even after we return.
-    // We don't raise any changed events here. Instead, anyone interested in getting
-    // changes after the initial negotiation can use a device watcher on that device
-    // and react to our stored property changes. This also helps prevent any races.
-
-    try
-    {
-        // we do this here instead of in initialize so this is created on the worker thread
-        if (!m_midiBidiDevice)
+        if (m_endProcessing.is_signaled())
         {
-            wil::com_ptr_nothrow<IMidiTransport> serviceTransport{ nullptr };
+            return S_OK;
+        }
 
-            // we only support UMP data format for protocol negotiation
-            TRANSPORTCREATIONPARAMS transportCreationParams{ };
-            transportCreationParams.MessageOptions = MessageOptionFlags_None;
-            transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
-            transportCreationParams.CallingComponent = MIDISRV_APIID;
+        m_inInitialFunctionBlockDiscovery = true;
 
-            DWORD mmcssTaskId{ 0 };
-            LONGLONG context{ 0 };
+        // these are defaults, but discovery will tell us what we can really do here.
+        m_preferToSendJRTimestampsToEndpoint = negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint;
+        m_preferToReceiveJRTimestampsFromEndpoint = negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint;
+        m_preferredMidiProtocol = negotiationParams.PreferredMidiProtocol;
 
-            // this is not a good idea, but we don't have a reference to the COM lib here
-            GUID midi2MidiSrvTransportIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
+        // We continue listening for and updating metadata even after we return.
+        // We don't raise any changed events here. Instead, anyone interested in getting
+        // changes after the initial negotiation can use a device watcher on that device
+        // and react to our stored property changes. This also helps prevent any races.
 
-            RETURN_IF_FAILED(internal::IsComponentPermitted(midi2MidiSrvTransportIID));
-            RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvTransportIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport)));
-            RETURN_IF_NULL_ALLOC(serviceTransport);
+        try
+        {
+            // we do this here instead of in initialize so this is created on the worker thread
+            if (!m_midiBidiDevice)
+            {
+                wil::com_ptr_nothrow<IMidiTransport> serviceTransport{ nullptr };
 
-            // create the bidi device
-            RETURN_IF_FAILED(serviceTransport->Activate(__uuidof(IMidiBidirectional), (void**)&m_midiBidiDevice));
-            RETURN_IF_NULL_ALLOC(m_midiBidiDevice);
+                // we only support UMP data format for protocol negotiation
+                TRANSPORTCREATIONPARAMS transportCreationParams{ };
+                transportCreationParams.MessageOptions = MessageOptionFlags_None;
+                transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
+                transportCreationParams.CallingComponent = MIDISRV_APIID;
 
-            RETURN_IF_FAILED(m_midiBidiDevice->Initialize(
-                (LPCWSTR)(m_endpointDeviceInterfaceId.c_str()),
-                &transportCreationParams,
-                &mmcssTaskId,
-                (IMidiCallback*)(this),
-                context,
-                m_sessionId
-            ));
+                DWORD mmcssTaskId{ 0 };
+                LONGLONG context{ 0 };
+
+                // this is not a good idea, but we don't have a reference to the COM lib here
+                GUID midi2MidiSrvTransportIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
+
+                RETURN_IF_FAILED(internal::IsComponentPermitted(midi2MidiSrvTransportIID));
+                RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvTransportIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport)));
+                RETURN_IF_NULL_ALLOC(serviceTransport);
+
+                // create the bidi device
+                RETURN_IF_FAILED(serviceTransport->Activate(__uuidof(IMidiBidirectional), (void**)&m_midiBidiDevice));
+                RETURN_IF_NULL_ALLOC(m_midiBidiDevice);
+
+                RETURN_IF_FAILED(m_midiBidiDevice->Initialize(
+                    (LPCWSTR)(m_endpointDeviceInterfaceId.c_str()),
+                    &transportCreationParams,
+                    &mmcssTaskId,
+                    (IMidiCallback*)(this),
+                    context,
+                    m_sessionId
+                ));
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Protocol negotiation connection created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+            }
+
+            // add this connection to the session tracker. The manager already logged the overall session
+            //LOG_IF_FAILED(m_sessionTracker->AddClientEndpointConnection(
+            //    m_sessionId,
+            //    m_deviceInterfaceId.c_str(),
+            //    (MidiClientHandle)nullptr));
+
+            if (!m_allInitialDiscoveryAndNegotiationMessagesReceived.is_valid())
+            {
+                RETURN_IF_FAILED(m_allInitialDiscoveryAndNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
+            }
+
+
+            m_declaredFunctionBlockCount = 0;
+
+            m_functionBlocks.clear();
+            m_functionBlockNames.clear();
+            m_endpointName.clear();
+            m_productInstanceId.clear();
+
+            m_alreadyTriedToNegotiationOnce = false;
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
@@ -228,73 +263,176 @@ CMidiEndpointProtocolWorker::Start(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Protocol negotiation connection created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Requesting discovery information", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
+
+            // start initial negotiation. Return when timed out or when we have all the requested info.
+            LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
+
+            // hang out until all info comes in or we time out
+            m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(m_discoveryTimeoutMS);
+
+            RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
+
+            // after timing out, or receiving everything, we set the Discovery Complete property
+            m_inInitialFunctionBlockDiscovery = false;
+            RETURN_IF_FAILED(SetDiscoveryCompleteProperty());
+
+
+
+            // we just hang out until endProcessing is set.
+            m_endProcessing.wait();
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"EndProcessing fired. Ending worker thread.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            return S_OK;
+           
         }
-
-        // add this connection to the session tracker. The manager already logged the overall session
-        //LOG_IF_FAILED(m_sessionTracker->AddClientEndpointConnection(
-        //    m_sessionId,
-        //    m_deviceInterfaceId.c_str(),
-        //    (MidiClientHandle)nullptr));
-
-        if (!m_allInitialDiscoveryAndNegotiationMessagesReceived.is_valid())
-        {
-            RETURN_IF_FAILED(m_allInitialDiscoveryAndNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
-        }
-
-
-        m_declaredFunctionBlockCount = 0;
-
-        m_functionBlocks.clear();
-        m_functionBlockNames.clear();
-        m_endpointName.clear();
-        m_productInstanceId.clear();
-
-        m_alreadyTriedToNegotiationOnce = false;
-
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Requesting discovery information", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-        );
-
-        // start initial negotiation. Return when timed out or when we have all the requested info.
-        LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
-
-        // hang out until all info comes in or we time out
-        m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(m_discoveryTimeoutMS);
-
-        RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
-
-        // after timing out, or receiving everything, we set the Discovery Complete property
-        m_inInitialFunctionBlockDiscovery = false;
-        RETURN_IF_FAILED(SetDiscoveryCompleteProperty());
-
-
-
-        // we just hang out until endProcessing is set.
-        m_endProcessing.wait();
-
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"EndProcessing fired. Ending worker thread.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-        );
-
-        return S_OK;
-       
+        CATCH_RETURN();
     }
-    CATCH_RETURN();
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+        m_inInitialFunctionBlockDiscovery = true;
+
+        // these are defaults, but discovery will tell us what we can really do here.
+        m_preferToSendJRTimestampsToEndpoint = negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint;
+        m_preferToReceiveJRTimestampsFromEndpoint = negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint;
+        m_preferredMidiProtocol = negotiationParams.PreferredMidiProtocol;
+
+        // We continue listening for and updating metadata even after we return.
+        // We don't raise any changed events here. Instead, anyone interested in getting
+        // changes after the initial negotiation can use a device watcher on that device
+        // and react to our stored property changes. This also helps prevent any races.
+
+        try
+        {
+            // we do this here instead of in initialize so this is created on the worker thread
+            if (!m_midiBidiDevice)
+            {
+                wil::com_ptr_nothrow<IMidiTransport> serviceTransport{ nullptr };
+
+                // we only support UMP data format for protocol negotiation
+                TRANSPORTCREATIONPARAMS transportCreationParams{ };
+                transportCreationParams.MessageOptions = MessageOptionFlags_None;
+                transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
+                transportCreationParams.CallingComponent = MIDISRV_APIID;
+
+                DWORD mmcssTaskId{ 0 };
+                LONGLONG context{ 0 };
+
+                // this is not a good idea, but we don't have a reference to the COM lib here
+                GUID midi2MidiSrvTransportIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
+
+                RETURN_IF_FAILED(internal::IsComponentPermitted(midi2MidiSrvTransportIID));
+                RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvTransportIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport)));
+                RETURN_IF_NULL_ALLOC(serviceTransport);
+
+                // create the bidi device
+                RETURN_IF_FAILED(serviceTransport->Activate(__uuidof(IMidiBidirectional), (void**)&m_midiBidiDevice));
+                RETURN_IF_NULL_ALLOC(m_midiBidiDevice);
+
+                RETURN_IF_FAILED(m_midiBidiDevice->Initialize(
+                    (LPCWSTR)(m_endpointDeviceInterfaceId.c_str()),
+                    &transportCreationParams,
+                    &mmcssTaskId,
+                    (IMidiCallback*)(this),
+                    context,
+                    m_sessionId
+                ));
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Protocol negotiation connection created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+            }
+
+            // add this connection to the session tracker. The manager already logged the overall session
+            //LOG_IF_FAILED(m_sessionTracker->AddClientEndpointConnection(
+            //    m_sessionId,
+            //    m_deviceInterfaceId.c_str(),
+            //    (MidiClientHandle)nullptr));
+
+            if (!m_allInitialDiscoveryAndNegotiationMessagesReceived.is_valid())
+            {
+                RETURN_IF_FAILED(m_allInitialDiscoveryAndNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
+            }
+
+
+            m_declaredFunctionBlockCount = 0;
+
+            m_functionBlocks.clear();
+            m_functionBlockNames.clear();
+            m_endpointName.clear();
+            m_productInstanceId.clear();
+
+            m_alreadyTriedToNegotiationOnce = false;
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Requesting discovery information", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            // start initial negotiation. Return when timed out or when we have all the requested info.
+            LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
+
+            // hang out until all info comes in or we time out
+            m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(m_discoveryTimeoutMS);
+
+            RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
+
+            // after timing out, or receiving everything, we set the Discovery Complete property
+            m_inInitialFunctionBlockDiscovery = false;
+            RETURN_IF_FAILED(SetDiscoveryCompleteProperty());
+
+
+
+            // we just hang out until endProcessing is set.
+            m_endProcessing.wait();
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"EndProcessing fired. Ending worker thread.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            return S_OK;
+           
+        }
+        CATCH_RETURN();
+    }
 }
 
 
@@ -1058,11 +1196,22 @@ CMidiEndpointProtocolWorker::Shutdown()
     // signal to stop worker thread
     EndProcessing();
 
-    auto lock = m_lock.lock();
-    if (m_midiBidiDevice)
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        LOG_IF_FAILED(m_midiBidiDevice->Shutdown());
-        m_midiBidiDevice.reset();
+        auto lock = m_lock.lock();
+        if (m_midiBidiDevice)
+        {
+            LOG_IF_FAILED(m_midiBidiDevice->Shutdown());
+            m_midiBidiDevice.reset();
+        }
+    }
+    else
+    {
+        if (m_midiBidiDevice)
+        {
+            LOG_IF_FAILED(m_midiBidiDevice->Shutdown());
+            m_midiBidiDevice.reset();
+        }
     }
 
     //if (m_sessionTracker)

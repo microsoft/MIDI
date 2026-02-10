@@ -216,6 +216,8 @@ void MidiUMPToBSTransformTests::TestChannelVoiceMessages()
 
 void MidiUMPToBSTransformTests::TestMixedGroupMessages()
 {
+    if (Feature_Servicing_MIDI2MultipleGroups::IsEnabled())
+    {
         std::vector<uint32_t> input =
         {
             0x20E01230,
@@ -282,12 +284,15 @@ void MidiUMPToBSTransformTests::TestMixedGroupMessages()
         };
 
         InternalTestMessages(input, expectedOutput, expectedGroups);
+    }
 }
 
 
 
 void MidiUMPToBSTransformTests::ValidateGithubIssue822()
 {
+    if (Feature_Servicing_MIDI2MultipleGroups::IsEnabled())
+    {
         // figure out the 14 bit value from the 32 bit value
 
         uint32_t data32_1 = 0x10000000;
@@ -367,4 +372,5 @@ void MidiUMPToBSTransformTests::ValidateGithubIssue822()
         };
 
         InternalTestMessages(input, expectedOutput, expectedGroups);
+    }
 }

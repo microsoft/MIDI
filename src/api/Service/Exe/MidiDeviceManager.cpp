@@ -16,6 +16,8 @@
 
 #include "midi_ksa_pin_map_property.h"
 
+#include "Feature_Servicing_MIDI2DeviceRemoval.h"
+
 using namespace winrt::Windows::Devices::Enumeration;
 
 const WCHAR driver32Path[]    = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
@@ -1768,64 +1770,126 @@ CMidiDeviceManager::DeactivateEndpoint
     // there may be more than one SWD associated with this instance id, as we reuse
     // the instance id for the legacy SWD, it just has a different activator and InterfaceClass.
 
-    do
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        auto lock = m_midiPortsLock.lock();
-
-        // locate the MIDIPORT that identifies the swd
-        // NOTE: This uses instanceId, not the Device Interface Id
-        auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+        do
         {
-            // for MIDI 1 child ports for a device, the instance id can have a _n added where n is the group number
-            // The transports only know about the UMP endpoint they created, therefore, we need to do a 
-            // "starts with", not an exact match. 
+            auto lock = m_midiPortsLock.lock();
 
-            if (internal::NormalizeDeviceInstanceIdWStringCopy(Port->InstanceId).starts_with(cleanId) ||
-                internal::NormalizeDeviceInstanceIdWStringCopy(Port->ParentInstanceId).starts_with(cleanId))
+            // locate the MIDIPORT that identifies the swd
+            // NOTE: This uses instanceId, not the Device Interface Id
+            auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
             {
-                return true;
+                // for MIDI 1 child ports for a device, the instance id can have a _n added where n is the group number
+                // The transports only know about the UMP endpoint they created, therefore, we need to do a 
+                // "starts with", not an exact match. 
+
+                if (internal::NormalizeDeviceInstanceIdWStringCopy(Port->InstanceId).starts_with(cleanId) ||
+                    internal::NormalizeDeviceInstanceIdWStringCopy(Port->ParentInstanceId).starts_with(cleanId))
+                {
+                    return true;
+                }
+
+                return false;
+            });
+
+            // exit if the item was not found. We're done.
+            if (item == m_midiPorts.end())
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Found no more matches in list. Breaking out of loop", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+                );
+
+                break;
             }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Found instance id in ports list. Erasing", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD),
+                    TraceLoggingWideString(item->get()->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
 
-            return false;
-        });
+                // Add the interface ID of this port to a list
+                interfaceIds.push_back(internal::NormalizeEndpointInterfaceIdWStringCopy(item->get()->DeviceInterfaceId.get()));
 
-        // exit if the item was not found. We're done.
-        if (item == m_midiPorts.end())
+                // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
+                // which will deactivate the device, done.
+                m_midiPorts.erase(item);
+                portsRemoved = true;
+            }
+        } while (TRUE);
+    }
+    else
+    {
+        do
         {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Found no more matches in list. Breaking out of loop", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
-            );
-
-            break;
-        }
-        else
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Found instance id in ports list. Erasing", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD),
-                TraceLoggingWideString(item->get()->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-            );
-
-            // Add the interface ID of this port to a list
-            interfaceIds.push_back(internal::NormalizeEndpointInterfaceIdWStringCopy(item->get()->DeviceInterfaceId.get()));
-
-            // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
-            // which will deactivate the device, done.
-            m_midiPorts.erase(item);
-            portsRemoved = true;
-        }
-    } while (TRUE);
+            // locate the MIDIPORT that identifies the swd
+            // NOTE: This uses instanceId, not the Device Interface Id
+            auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+            {
+                // for MIDI 1 child ports for a device, the instance id can have a _n added where n is the group number
+                // The transports only know about the UMP endpoint they created, therefore, we need to do a 
+                // "starts with", not an exact match. 
+        
+                if (internal::NormalizeDeviceInstanceIdWStringCopy(Port->InstanceId).starts_with(cleanId) ||
+                    internal::NormalizeDeviceInstanceIdWStringCopy(Port->ParentInstanceId).starts_with(cleanId))
+                {
+                    return true;
+                }
+        
+                return false;
+            });
+        
+            // exit if the item was not found. We're done.
+            if (item == m_midiPorts.end())
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Found no more matches in list. Breaking out of loop", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+                );
+        
+                break;
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Found instance id in ports list. Erasing", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD),
+                    TraceLoggingWideString(item->get()->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+        
+                // Add the interface ID of this port to a list
+                interfaceIds.push_back(internal::NormalizeEndpointInterfaceIdWStringCopy(item->get()->DeviceInterfaceId.get()));
+        
+                // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
+                // which will deactivate the device, done.
+                m_midiPorts.erase(item);
+                portsRemoved = true;
+            }
+        } while (TRUE);
+    }
 
 
     if (portsRemoved)
@@ -2662,18 +2726,36 @@ CMidiDeviceManager::RebuildMidi1PortsForEndpoint(
 {
     std::wstring cleanEndpointId { internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId) };
 
-    auto lock = m_midiPortsLock.lock();
-
-    for (auto& port : m_midiPorts)
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        std::wstring cleanPortId { port->DeviceInterfaceId.get() };
-        cleanPortId = internal::NormalizeEndpointInterfaceIdWStringCopy(cleanPortId);
+        auto lock = m_midiPortsLock.lock();
 
-        if (cleanPortId == cleanEndpointId)
+        for (auto& port : m_midiPorts)
         {
-            RETURN_IF_FAILED(SyncMidi1Ports(port.get()));
+            std::wstring cleanPortId { port->DeviceInterfaceId.get() };
+            cleanPortId = internal::NormalizeEndpointInterfaceIdWStringCopy(cleanPortId);
 
-            return S_OK;
+            if (cleanPortId == cleanEndpointId)
+            {
+                RETURN_IF_FAILED(SyncMidi1Ports(port.get()));
+
+                return S_OK;
+            }
+        }
+    }
+    else
+    {
+        for (auto& port : m_midiPorts)
+        {
+            std::wstring cleanPortId { port->DeviceInterfaceId.get() };
+            cleanPortId = internal::NormalizeEndpointInterfaceIdWStringCopy(cleanPortId);
+        
+            if (cleanPortId == cleanEndpointId)
+            {
+                RETURN_IF_FAILED(SyncMidi1Ports(port.get()));
+        
+                return S_OK;
+            }
         }
     }
 
