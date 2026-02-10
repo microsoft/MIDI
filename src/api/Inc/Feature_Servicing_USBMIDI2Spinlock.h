@@ -8,8 +8,15 @@
 
 #pragma once
 
-bool
-Feature_Servicing_USBMIDI2Spinlock_IsEnabled()
+inline bool Feature_Servicing_USBMIDI2Spinlock_IsEnabled()
 {
     return true;
+}
+
+inline void wil_InitializeFeatureStaging()
+{
+}
+
+inline void wil_UninitializeFeatureStaging()
+{
 }

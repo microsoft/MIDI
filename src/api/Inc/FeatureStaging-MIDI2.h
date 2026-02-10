@@ -8,7 +8,7 @@
 
 #pragma once
 
-class FeatureStaging-MIDI2
+class Feature_MIDI2
 {
 public:
     static bool IsEnabled()
