@@ -322,11 +322,12 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
 
         if (wdmaud2Enabled)
         {
-            WriteInfo("Successfully verified wdmaud2.drv is present in registry.");
+            WriteInfo("Successfully verified wdmaud2.drv is present in registry, as required by the new MIDI stack.");
         }
         else
         {
-            WriteInfo("wdmaud2.drv is not present in registry in values midi-midi9. Most likely, the feature has not yet been enabled on this PC.");
+            WriteError("wdmaud2.drv is not present in registry in values midi-midi9. Most likely, the feature has not yet been enabled on this PC.");
+            WriteError("The new Windows MIDI Services stack is not functional on this PC.");
 
             PauseIfAppropriate();
             return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_IN_REGISTRY);
@@ -351,6 +352,8 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
                 WriteInfo("Successfully tested connectivity to service: MIDI Service is available.");
                 WriteInfo("However, this appears to be a development build, and so may not have the right");
                 WriteInfo("connections to the MIDI 1.0 APIs, the MIDI 2.0 class driver, etc.");
+                WriteInfo("");
+                WriteInfo("As a result, MIDI 2.0 will work if the driver is present, but it's possible MIDI 1.0 APIs will not.");
 
                 PauseIfAppropriate();
                 return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_SUCCESS_DEV_BUILD);
@@ -359,6 +362,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
         else
         {
             WriteError("MIDI Service is not available. It may not yet be enabled on this PC via Controlled Feature Rollout.");
+            WriteError("The new Windows MIDI Services stack is not functional on this PC.");
 
             // we only shut down midisrv if we're not running in quiet mode. The reason is the shutdown
             // will throw up a UAC prompt
