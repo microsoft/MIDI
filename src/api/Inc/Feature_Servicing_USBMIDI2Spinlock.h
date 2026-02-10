@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+
+inline bool Feature_Servicing_USBMIDI2Spinlock_IsEnabled()
+{
+    return true;
+}
+
+inline void wil_InitializeFeatureStaging()
+{
+}
+
+inline void wil_UninitializeFeatureStaging()
+{
+}

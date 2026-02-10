@@ -551,12 +551,24 @@ CMidiClientManager::GetMidiProtocolDownscalerTransform(
     auto transforms = m_TransformPipes.equal_range(devicePipe->MidiDevice());
     for (auto& transform = transforms.first; transform != transforms.second; ++transform)
     {
-        if (transform->second->IsDevicePipe(devicePipe) &&
-            flow == transform->second->Flow() && 
-            transform->second->TransformGuid() == transformGuid)
+        if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
         {
-            RETURN_HR_IF(E_UNEXPECTED, transformPipe);
-            transformPipe = transform->second;
+            if (transform->second->IsDevicePipe(devicePipe) &&
+                flow == transform->second->Flow() && 
+                transform->second->TransformGuid() == transformGuid)
+            {
+                RETURN_HR_IF(E_UNEXPECTED, transformPipe);
+                transformPipe = transform->second;
+            }
+        }
+        else
+        {
+            if (flow == transform->second->Flow() && 
+                transform->second->TransformGuid() == transformGuid)
+            {
+                RETURN_HR_IF(E_UNEXPECTED, transformPipe);
+                transformPipe = transform->second;
+            }
         }
     }
 
@@ -705,13 +717,26 @@ CMidiClientManager::GetMidiTransform(
         auto transforms = m_TransformPipes.equal_range(devicePipe->MidiDevice());
         for (auto& transform = transforms.first; transform != transforms.second; ++transform)
         {
-            if (transform->second->IsDevicePipe(devicePipe) &&
-                flow == transform->second->Flow() &&
-                dataFormatFrom == transform->second->DataFormatIn() &&
-                dataFormatTo == transform->second->DataFormatOut())
+            if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
             {
-                RETURN_HR_IF(E_UNEXPECTED, transformPipe);
-                transformPipe = transform->second;
+                if (transform->second->IsDevicePipe(devicePipe) &&
+                    flow == transform->second->Flow() &&
+                    dataFormatFrom == transform->second->DataFormatIn() &&
+                    dataFormatTo == transform->second->DataFormatOut())
+                {
+                    RETURN_HR_IF(E_UNEXPECTED, transformPipe);
+                    transformPipe = transform->second;
+                }
+            }
+            else
+            {
+                if (flow == transform->second->Flow() &&
+                    dataFormatFrom == transform->second->DataFormatIn() &&
+                    dataFormatTo == transform->second->DataFormatOut())
+                {
+                    RETURN_HR_IF(E_UNEXPECTED, transformPipe);
+                    transformPipe = transform->second;
+                }
             }
         }
     }
@@ -863,11 +888,22 @@ CMidiClientManager::GetMidiScheduler(
     {
         //wil::com_ptr_nothrow<CMidiTransformPipe> pipe = transform->second.get();
 
-        if (transform->second->IsDevicePipe(devicePipe) && 
-            transform->second->TransformGuid() == __uuidof(Midi2SchedulerTransform))
+        if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
         {
-            transformPipe = transform->second;
-            break;
+            if (transform->second->IsDevicePipe(devicePipe) && 
+                transform->second->TransformGuid() == __uuidof(Midi2SchedulerTransform))
+            {
+                transformPipe = transform->second;
+                break;
+            }
+        }
+        else
+        {
+            if (transform->second->TransformGuid() == __uuidof(Midi2SchedulerTransform))
+            {
+                transformPipe = transform->second;
+                break;
+            }
         }
     }
 

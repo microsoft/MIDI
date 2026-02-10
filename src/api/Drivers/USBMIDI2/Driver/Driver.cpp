@@ -87,6 +87,8 @@ NOTE: Consider putting globals into context and using context cleanup
         RtlZeroMemory(&g_RegistryPath, sizeof(g_RegistryPath));
     }
 
+    wil_UninitializeFeatureStaging();
+
 exit:
     return;
 }
@@ -132,6 +134,8 @@ DriverEntry(
     
     PAGED_CODE(); 
     
+    wil_InitializeFeatureStaging();
+
     //
     // Initialize WPP Tracking
     //

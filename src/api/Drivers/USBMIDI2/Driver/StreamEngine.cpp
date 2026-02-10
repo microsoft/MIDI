@@ -43,6 +43,8 @@ Environment:
 #include "Trace.h"
 #include "StreamEngine.tmh"
 
+#include <Feature_Servicing_USBMIDI2Spinlock.h>
+
 // UMP 32 is 4 bytes
 #define MINIMUM_UMP_DATASIZE 4
 
@@ -576,17 +578,47 @@ StreamEngine::Pause()
     }
     else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
-        // Stop Continous Reader
-        USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false, false);
+        if (Feature_Servicing_USBMIDI2Spinlock_IsEnabled())
+        {
+            // Stop Continous Reader
+            USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false, false);
 
-        // Make sure we are not trying to change state while processing
-        auto lock = m_MidiInLock.acquire();
+            // Make sure we are not trying to change state while processing
+            auto lock = m_MidiInLock.acquire();
 
-        m_IsRunning = false;
-        m_ThreadExitEvent.set();
-        m_TotalDroppedBuffers = 0;
-        m_ContiguousDroppedBuffers = 0;
-        m_TotalBuffersProcessed = 0;
+            m_IsRunning = false;
+            m_ThreadExitEvent.set();
+            m_TotalDroppedBuffers = 0;
+            m_ContiguousDroppedBuffers = 0;
+            m_TotalBuffersProcessed = 0;
+        }
+        else
+        {
+            // Stop Continuous reader
+            WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
+            PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+            // Make sure we are not trying to change state while processing
+            auto lock = m_MidiInLock.acquire();
+
+            m_IsRunning = false;
+            m_ThreadExitEvent.set();
+            m_TotalDroppedBuffers = 0;
+            m_ContiguousDroppedBuffers = 0;
+            m_TotalBuffersProcessed = 0;
+
+            if (pDevCtx)
+            {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                    "%!FUNC! STOPPING Continuous Reader.");
+                USBMIDI2DriverIoContinuousReader(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)), false, false);
+            }
+            else
+            {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                    "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
+            }
+        }
 
         // shut down and clean up the worker thread.
         m_ThreadExitEvent.set();

@@ -34,7 +34,10 @@ CMidiTransformPipe::Initialize(
 
     m_TransformGuid = pipeCreationParams->TransformGuid;
 
-    m_DevicePipe = devicePipe;
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
+    {
+        m_DevicePipe = devicePipe;
+    }
 
     // Confirm that this component is either signed, or we are in developer mode.
     // Else, do not use it.
