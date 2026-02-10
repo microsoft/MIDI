@@ -75,6 +75,7 @@ extern "C" {
 #endif
 
 #include <wil\resource.h>
+#include <wil\staging.h>
 
 #include "Driver.h"
 #include "Device.h"

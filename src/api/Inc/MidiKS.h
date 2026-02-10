@@ -26,6 +26,16 @@ public:
 protected:
     KSMidiDevice() {}
 
+    // Begin remove with Feature_Servicing_MIDI2DeviceRemoval
+    virtual
+    HRESULT Initialize(
+        _In_ LPCWSTR,
+        _In_opt_ HANDLE,
+        _In_ UINT,
+        _In_ MidiTransport,
+        _In_ ULONG&,
+        _In_ MessageOptionFlags);
+    // End remove with Feature_Servicing_MIDI2DeviceRemoval
     virtual
     HRESULT Initialize(
         _In_ LPCWSTR device,
@@ -40,11 +50,17 @@ protected:
         _In_ LONGLONG context
         );
 
+    // Begin remove with Feature_Servicing_MIDI2DeviceRemoval
+    HRESULT OpenStream(_In_ ULONG&, _In_ MessageOptionFlags);
+    // End remove with Feature_Servicing_MIDI2DeviceRemoval
     HRESULT OpenStream();
 
     HRESULT PinSetState(
         _In_ KSSTATE);
 
+    // Begin remove with Feature_Servicing_MIDI2DeviceRemoval
+    HRESULT ConfigureLoopedBuffer(_In_ ULONG&);
+    // End remove with Feature_Servicing_MIDI2DeviceRemoval
     HRESULT ConfigureLoopedBuffer();
     HRESULT ConfigureLoopedRegisters();
     HRESULT ConfigureLoopedEvent();

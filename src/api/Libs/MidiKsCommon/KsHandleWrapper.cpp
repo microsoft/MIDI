@@ -54,12 +54,21 @@ KsHandleWrapper::KsHandleWrapper(std::wstring pwszFilterName, UINT pinId, MidiTr
 
 KsHandleWrapper::~KsHandleWrapper()
 {
-    // UnregisterForNotifications blocks until all callbacks have completed,
-    // do not acquire the lock here, because doing so will block callbacks from completing
-    UnregisterForNotifications();
-    m_handle.reset();
-    m_OnRemoveCallback = nullptr;
-    m_OnRestoreCallback = nullptr;
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
+    {
+        // UnregisterForNotifications blocks until all callbacks have completed,
+        // do not acquire the lock here, because doing so will block callbacks from completing
+        UnregisterForNotifications();
+        m_handle.reset();
+        m_OnRemoveCallback = nullptr;
+        m_OnRestoreCallback = nullptr;
+    }
+    else
+    {
+        auto lock = m_lock.lock_exclusive();
+        UnregisterForNotifications();
+        m_handle.reset();
+    }
 }
 
 HRESULT KsHandleWrapper::Open()
@@ -145,11 +154,22 @@ void KsHandleWrapper::SetHandle(wil::unique_handle handle)
 
 void KsHandleWrapper::OnDeviceQueryRemove()
 {
-    // If the handle user is registered, notify them that it is about
-    // to close
-    if (m_OnRemoveCallback)
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        m_OnRemoveCallback();
+        // If the handle user is registered, notify them that it is about
+        // to close
+        if (m_OnRemoveCallback)
+        {
+            m_OnRemoveCallback();
+        }
+    }
+    else
+    {
+        // When calling queryRemove on a pin handle, need to shut down the cross process first
+        if (m_handleType == HandleType::Pin)
+        {
+            //CMidiXProc::Invalidate()
+        }
     }
 
     // Close the handle to allow PnP to remove the device
@@ -161,21 +181,27 @@ void KsHandleWrapper::OnDeviceQueryRemoveCancel()
     // Reopen the handle
     Open();
 
-    // If the handle user is registered, notify them that it is has
-    // been restored
-    if (m_OnRestoreCallback)
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        m_OnRestoreCallback();
+        // If the handle user is registered, notify them that it is has
+        // been restored
+        if (m_OnRestoreCallback)
+        {
+            m_OnRestoreCallback();
+        }
     }
 }
 
 void KsHandleWrapper::OnDeviceRemove()
 {
-    // If the handle user is registered, notify them that it is about
-    // to close
-    if (m_OnRemoveCallback)
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        m_OnRemoveCallback();
+        // If the handle user is registered, notify them that it is about
+        // to close
+        if (m_OnRemoveCallback)
+        {
+            m_OnRemoveCallback();
+        }
     }
 
     // Surprise removal: close the handle
@@ -190,20 +216,32 @@ HRESULT KsHandleWrapper::RegisterForNotifications()
         return E_HANDLE;
     }
 
-    // If our threadpool cleanup worker doesn't yet exist, create
-    // it now
-    if (!m_ThreadpoolWork)
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        m_ThreadpoolWork = std::make_unique<ThreadpoolWork>();
-    }
+        // If our threadpool cleanup worker doesn't yet exist, create
+        // it now
+        if (!m_ThreadpoolWork)
+        {
+            m_ThreadpoolWork = std::make_unique<ThreadpoolWork>();
+        }
 
-    if (m_notifyContext)
+        if (m_notifyContext)
+        {
+            // spin off a worker to unregister the old context, doing this in a callback
+            // will deadlock because CM_Unregister_Notification blocks until all callbacks
+            // have completed
+            m_ThreadpoolWork->Submit([h = m_notifyContext]{ CM_Unregister_Notification(h); });
+            m_notifyContext = nullptr;
+        }
+    }
+    else
     {
-        // spin off a worker to unregister the old context, doing this in a callback
-        // will deadlock because CM_Unregister_Notification blocks until all callbacks
-        // have completed
-        m_ThreadpoolWork->Submit([h = m_notifyContext]{ CM_Unregister_Notification(h); });
-        m_notifyContext = nullptr;
+        if (m_notifyContext)
+        {
+            // TODO: spin off a worker to unregister the old context.
+            // CM_Unregister_Notification(m_notifyContext);
+            m_notifyContext = nullptr;
+        }
     }
 
     // Define the notification filter
@@ -228,12 +266,15 @@ void KsHandleWrapper::UnregisterForNotifications()
         m_notifyContext = nullptr;
     }
 
-    if (m_ThreadpoolWork)
+    if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
     {
-        // This will wait until all callbacks have completed before
-        // returning, ensuring that all previous calls to CM_Register_Notification have
-        // been closed.
-        m_ThreadpoolWork.reset();
+        if (m_ThreadpoolWork)
+        {
+            // This will wait until all callbacks have completed before
+            // returning, ensuring that all previous calls to CM_Register_Notification have
+            // been closed.
+            m_ThreadpoolWork.reset();
+        }
     }
 }
 

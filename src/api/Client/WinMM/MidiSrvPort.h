@@ -53,6 +53,7 @@ private:
     bool m_IsInRunningStatus {0};
     BYTE m_RunningStatus {0};
     std::queue<LPMIDIHDR> m_InBuffers;
+    bool m_IsDiscardingSysex {true};
     wil::unique_event m_BuffersAdded{wil::EventOptions::None};
 
     std::unique_ptr<CMidi2MidiSrv> m_MidisrvTransport;

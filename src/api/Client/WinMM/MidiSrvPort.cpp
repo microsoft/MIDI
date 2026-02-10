@@ -3,7 +3,16 @@
 #include "pch.h"
 #include "MidiSrvPort.h"
 
+#include <Feature_Servicing_MIDI2WinmmNoBufs.h>
+
 #define CALC_TICKS(pos) ((DWORD) (((pos) * 1000.0) / m_qpcFrequency))
+
+// Provide the calling app an opportunity to provide a buffer
+#define START_SYSEX_BUFFER_TIMEOUT 1
+
+// Mid sysex, we had buffers and ran out, give the app a larger,
+// but not unbounded, opportunity to provide a buffer.
+#define MID_SYSEX_BUFFER_TIMEOUT 10
 
 CMidiPort::CMidiPort()
 {
@@ -161,22 +170,49 @@ CMidiPort::ModMessage(UINT msg, DWORD_PTR param1, DWORD_PTR /*param2*/)
     //    TraceLoggingValue(param1, "param1"),
     //    TraceLoggingValue(param2, "param2"));
 
-    switch(msg)
+    if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
     {
-        case MODM_LONGDATA:
-            RETURN_IF_FAILED(SendLongMessage(reinterpret_cast<MIDIHDR*>(param1)));
-            break;
-        case MODM_DATA:
-            RETURN_IF_FAILED(SendMidiMessage(static_cast<UINT32>(param1)));
-            break;
-        case MODM_RESET:
-            RETURN_IF_FAILED(Reset());
-            break;
-        case MODM_CLOSE:
-            RETURN_IF_FAILED(Close());
-            break;
-        default:
-            RETURN_IF_FAILED(HRESULT_FROM_MMRESULT(MMSYSERR_NOTSUPPORTED));
+        switch(msg)
+        {
+            case MODM_LONGDATA:
+                RETURN_IF_FAILED(SendLongMessage(reinterpret_cast<MIDIHDR*>(param1)));
+                break;
+            case MODM_DATA:
+                RETURN_IF_FAILED(SendMidiMessage(static_cast<UINT32>(param1)));
+                break;
+            case MODM_RESET:
+                RETURN_IF_FAILED(Reset());
+                break;
+            case MODM_CLOSE:
+                RETURN_IF_FAILED(Close());
+                break;
+            case MODM_PREPARE:
+                // winmmbase handles modm_prepare when the driver doesn't handle it,
+                // this isn't an error that needs to be logged.
+                return(HRESULT_FROM_MMRESULT(MMSYSERR_NOTSUPPORTED));
+            default:
+                RETURN_IF_FAILED(HRESULT_FROM_MMRESULT(MMSYSERR_NOTSUPPORTED));
+        }
+    }
+    else
+    {
+        switch(msg)
+        {
+            case MODM_LONGDATA:
+                RETURN_IF_FAILED(SendLongMessage(reinterpret_cast<MIDIHDR*>(param1)));
+                break;
+            case MODM_DATA:
+                RETURN_IF_FAILED(SendMidiMessage(static_cast<UINT32>(param1)));
+                break;
+            case MODM_RESET:
+                RETURN_IF_FAILED(Reset());
+                break;
+            case MODM_CLOSE:
+                RETURN_IF_FAILED(Close());
+                break;
+            default:
+                RETURN_IF_FAILED(HRESULT_FROM_MMRESULT(MMSYSERR_NOTSUPPORTED));
+        }
     }
 
     return S_OK;
@@ -368,27 +404,61 @@ CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
 
     LPMIDIHDR buffer {nullptr};
 
-    // take the buffer that's being completed off the top of the queue
+    if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
     {
-        auto lock = m_BuffersLock.lock();
-        buffer = m_InBuffers.front();
-        m_InBuffers.pop();
+        // take the buffer that's being completed off the top of the queue,
+        // if one doesn't exist, then noop
+        {
+            auto lock = m_BuffersLock.lock();
+            if (!m_InBuffers.empty())
+            {
+                buffer = m_InBuffers.front();
+                m_InBuffers.pop();
+            }
+        }
+
+        if (buffer)
+        {
+            // calculate the timestamp for the message
+            DWORD ticks = CALC_TICKS(position - m_StartTime);
+
+            // mark it completed
+            buffer->dwFlags &= (~MHDR_INQUEUE);
+            buffer->dwFlags |= MHDR_DONE;
+
+            if((message == MIM_LONGERROR) && (buffer->dwBytesRecorded == 0))
+            {
+                // if no bytes recorded, its not really an error
+                message = MIM_LONGDATA;
+            }
+
+            WinmmClientCallback(message, reinterpret_cast<DWORD_PTR>(buffer), ticks);
+        }
     }
-
-    // calculate the timestamp for the message
-    DWORD ticks = CALC_TICKS(position - m_StartTime);
-
-    // mark it completed
-    buffer->dwFlags &= (~MHDR_INQUEUE);
-    buffer->dwFlags |= MHDR_DONE;
-
-    if((message == MIM_LONGERROR) && (buffer->dwBytesRecorded == 0))
+    else
     {
-        // if no bytes recorded, its not really an error
-        message = MIM_LONGDATA;
-    }
+        // take the buffer that's being completed off the top of the queue
+        {
+            auto lock = m_BuffersLock.lock();
+            buffer = m_InBuffers.front();
+            m_InBuffers.pop();
+        }
 
-    WinmmClientCallback(message, reinterpret_cast<DWORD_PTR>(buffer), ticks);
+        // calculate the timestamp for the message
+        DWORD ticks = CALC_TICKS(position - m_StartTime);
+
+        // mark it completed
+        buffer->dwFlags &= (~MHDR_INQUEUE);
+        buffer->dwFlags |= MHDR_DONE;
+
+        if((message == MIM_LONGERROR) && (buffer->dwBytesRecorded == 0))
+        {
+            // if no bytes recorded, its not really an error
+            message = MIM_LONGDATA;
+        }
+
+        WinmmClientCallback(message, reinterpret_cast<DWORD_PTR>(buffer), ticks);
+    }
 
     return S_OK;
 }
@@ -511,25 +581,54 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                 // we're not already processing sysex, but now we should start
                 if (MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                 {
-                    // we're not in SysEx mode, but this byte was provided
-                    // so we'll send it anyway
-                    // Convert from the QPC time to the number of ticks elapsed from the start time.
-                    DWORD ticks = CALC_TICKS(position - startTime);
-                    DWORD_PTR midiMessage = *callbackData;
-                    WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
+                    if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
+                    {
+                        // encountered a sysex end as the first byte of a message while
+                        // not in sysex, silently discard since we may not have a long
+                        // message buffer available and sysex doesn't go into short messages
+                    }
+                    else
+                    {
+                        // we're not in SysEx mode, but this byte was provided
+                        // so we'll send it anyway
+                        // Convert from the QPC time to the number of ticks elapsed from the start time.
+                        DWORD ticks = CALC_TICKS(position - startTime);
+                        DWORD_PTR midiMessage = *callbackData;
+                        WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
+                    }
                 }
                 else if (MIDI_BYTE_IS_SYSEX_START_STATUS(*callbackData))
                 {
                     // we weren't in SysEx mode, and now we're kicking
                     // into a SysEx stream
 
-                    // starting a new buffer of SysEx
+                    if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
                     {
-                        auto lock = m_BuffersLock.lock();
-                        if (!m_InBuffers.empty())
+                        // starting a new buffer of SysEx
                         {
-                            buffer = m_InBuffers.front();
+                            auto lock = m_BuffersLock.lock();
+                            m_BuffersAdded.ResetEvent();
+                            if (!m_InBuffers.empty())
+                            {
+                                buffer = m_InBuffers.front();
+                            }
+                            else
+                            {
+                                buffer = nullptr;
+                            }
                         }
+                    }
+                    else
+                    {
+                        // starting a new buffer of SysEx
+                        {
+                            auto lock = m_BuffersLock.lock();
+                            if (!m_InBuffers.empty())
+                            {
+                                buffer = m_InBuffers.front();
+                            }
+                        }
+
                     }
 
                     // get the buffer, add the F0
@@ -537,6 +636,12 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                     {
                         // put us into SysEx transfer state.
                         m_IsInSysex = true;
+                        if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
+                        {
+                            // and we have a buffer, so we're not discarding this sysex, or future
+                            // sysex without first waiting to see if a buffer comes.
+                            m_IsDiscardingSysex = false;
+                        }
 
                         BYTE* bufferData = (((BYTE*)buffer->lpData) + buffer->dwBytesRecorded);
 
@@ -546,15 +651,44 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                     }
                     else
                     {
-                        // couldn't get the buffer and couldn't add the sysex start byte
-                        // wait for either a buffer or the port to be stopped. 
-                        // Note: this blocks other data processing with an infinite wait
+                        if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
+                        {
+                            // If no buffer has ever been provided, or provided recently,
+                            // then silently drop this sysex.
+                            if (!m_IsDiscardingSysex)
+                            {
+                                // We're not discarding sysex, but we couldn't get the buffer
+                                // to add add the sysex start byte, so wait for a buffer to come, 
+                                // the port to be stopped, or a reasonable timeout for the buffer to come.
+                                // If we timeout, then we silently discard this whole sysex and future
+                                // sysex until a buffer is available when a sysex arrives.
 
-                        HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
-                        WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+                                HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
+                                DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, START_SYSEX_BUFFER_TIMEOUT);
+                                if (ret == WAIT_TIMEOUT)
+                                {
+                                    // exit sysex transfer state, discard this and future sysex data
+                                    m_IsDiscardingSysex = true;
+                                }
+                                else
+                                {
+                                    // now that we have a buffer, or have stopped, reprocess
+                                    continue;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // couldn't get the buffer and couldn't add the sysex start byte
+                            // wait for either a buffer or the port to be stopped. 
+                            // Note: this blocks other data processing with an infinite wait
 
-                        // now that we have a buffer, or have stopped, reprocess
-                        continue;
+                            HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
+                            WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+
+                            // now that we have a buffer, or have stopped, reprocess
+                            continue;
+                        }
                     }
                 }
                 else if (MIDI_BYTE_IS_STATUS_BYTE(*callbackData))
@@ -567,30 +701,60 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                 {
                     // Handle a data byte, and not sysex.
 
-                    if (countMidiMessageBytesReceived >= 1 && countMidiMessageBytesReceived < 3)
+                    if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
                     {
-                        inProgressMidiMessage[countMidiMessageBytesReceived++] = *callbackData;
+                        if (countMidiMessageBytesReceived >= 1 && countMidiMessageBytesReceived < 3)
+                        {
+                            inProgressMidiMessage[countMidiMessageBytesReceived++] = *callbackData;
+                        }
+                        // data which comes outside of a sysex is discarded, this can be because a sysex was
+                        // interrupted, or because we're discarding a sysex.
                     }
                     else
                     {
-                        // This is bad data. Could be the rest of an interrupted SysEx message.
-                        // We can just discard it, but it could be better for the receiving program
-                        // to do that. We could even put in a reg setting to control this behavior.
+                        if (countMidiMessageBytesReceived >= 1 && countMidiMessageBytesReceived < 3)
+                        {
+                            inProgressMidiMessage[countMidiMessageBytesReceived++] = *callbackData;
+                        }
+                        else
+                        {
+                            // This is bad data. Could be the rest of an interrupted SysEx message.
+                            // We can just discard it, but it could be better for the receiving program
+                            // to do that. We could even put in a reg setting to control this behavior.
 
-                        // Convert from the QPC time to the number of ticks elapsed from the start time.
-                        //DWORD ticks = CALC_TICKS(position - startTime);
-                        //DWORD_PTR midiMessage = *callbackData;
-                        //WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
+                            // Convert from the QPC time to the number of ticks elapsed from the start time.
+                            //DWORD ticks = CALC_TICKS(position - startTime);
+                            //DWORD_PTR midiMessage = *callbackData;
+                            //WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
+                        }
                     }
                 }
             }
             else if (m_IsInSysex)
             {
+                if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
                 {
-                    auto lock = m_BuffersLock.lock();
-                    if (!m_InBuffers.empty())
                     {
-                        buffer = m_InBuffers.front();
+                        auto lock = m_BuffersLock.lock();
+                        m_BuffersAdded.ResetEvent();
+                        if (!m_InBuffers.empty())
+                        {
+                            buffer = m_InBuffers.front();
+                        }
+                        else
+                        {
+                            buffer = nullptr;
+                        }
+                    }
+                }
+                else
+                {
+                    {
+                        auto lock = m_BuffersLock.lock();
+                        if (!m_InBuffers.empty())
+                        {
+                            buffer = m_InBuffers.front();
+                        }
                     }
                 }
 
@@ -639,11 +803,35 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                     // we have remaining callback data, but no buffer available, wait for either a buffer
                     // or the port to be stopped. Note: this blocks other data processing
 
-                    HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
-                    WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+                    if (Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled())
+                    {
+                        HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
+                        DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MID_SYSEX_BUFFER_TIMEOUT);
 
-                    // now that we have a buffer, or have stopped, reprocess this byte or end the loop
-                    continue;
+                        if (ret == WAIT_TIMEOUT)
+                        {
+                            // timeout waiting for a buffer to come from the app mid-sysex,
+                            // we are going to exit sysex transfer state, discard this and future sysex data.
+                            // Unfortunately, without a long buffer there's actually no way to report a long
+                            // buffer error to the client app, so they're just going to see that the sysex
+                            // never ends...
+                            m_IsInSysex = false;
+                            m_IsDiscardingSysex = true;
+                        }
+                        else
+                        {
+                            // now that we have a buffer, or have stopped, reprocess this byte or end the loop
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
+                        WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+
+                        // now that we have a buffer, or have stopped, reprocess this byte or end the loop
+                        continue;
+                    }
                 }
 
             }
@@ -696,15 +884,6 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
             ++callbackData;
             --callbackDataRemaining;
         }
-
-        //// We fell out of the loop. If callback data remaining is 0 and we have some sysex in the buffer, send it
-        //if (buffer && started)
-        //{
-        //    if (buffer->dwBytesRecorded > 0 && callbackDataRemaining == 0)
-        //    {
-        //        RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
-        //    }
-        //}
     }
 
     return S_OK;

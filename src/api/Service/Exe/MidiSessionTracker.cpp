@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include <filesystem>
+#include <FeatureStaging-MIDI2.h>
 
 
 _Use_decl_annotations_
@@ -98,7 +99,7 @@ CMidiSessionTracker::VerifyConnectivity()
         );
 
     // if this gets called, we have connectivity
-    return TRUE;
+    return (BOOL) Feature_MIDI2::IsEnabled();
 }
 
 _Use_decl_annotations_
