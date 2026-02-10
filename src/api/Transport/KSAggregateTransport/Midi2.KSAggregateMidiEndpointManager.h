@@ -56,11 +56,50 @@ struct KsAggregateEndpointDefinition
     std::vector<KsAggregateEndpointMidiPinDefinition> MidiPins{ };
 
     WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{};
+};
 
-    // new for 2603 fix, but does not impact the existing code
+
+
+// new structures because we need to be able to pull together
+// virtual endpoints, which have greater than 16 ins and/or outs
+// and so need the creation of multiple endpoints. Without the
+// new 2603 approach, only 16 in and out ports are available
+// per parent device (teVirtualMidi in this case). Also impacts
+// loopBE30.
+
+struct KsAggregateEndpointDefinitionV2
+{
+    std::wstring EndpointDeviceId{};
+
+    std::wstring EndpointName{};
+    std::wstring EndpointDeviceInstanceId{};
+
+    std::vector<KsAggregateEndpointMidiPinDefinition> MidiPins{ };
+
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{};
+
     int8_t CurrentHighestMidiSourceGroupIndex{ -1 };
     int8_t CurrentHighestMidiDestinationGroupIndex{ -1 };
 };
+
+
+struct KsAggregateParentDeviceDefinitionV2
+{
+    std::wstring DeviceName{};
+    std::wstring DeviceInstanceId{};
+    std::wstring DriverSuppliedDeviceName{};    // value from registry. Required for WinMM classic naming
+
+    uint16_t VID{ 0 };  // USB-only
+    uint16_t PID{ 0 };  // USB-only
+    std::wstring SerialNumber{};
+
+    std::wstring ManufacturerName{};
+
+    std::vector<KsAggregateEndpointDefinitionV2> Endpoints{ };  // most devices will have just one endpoint, but virtual can have > 1
+};
+
+
+
 
 
 class CMidi2KSAggregateMidiEndpointManager :
@@ -86,29 +125,33 @@ private:
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
-    // new interface-based approach
-    HRESULT OnFilterDeviceInterfaceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
-    HRESULT OnFilterDeviceInterfaceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
-    HRESULT OnFilterDeviceInterfaceUpdated(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
-
-
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
     wil::critical_section m_availableEndpointDefinitionsLock;
     std::map<std::wstring, KsAggregateEndpointDefinition> m_availableEndpointDefinitions;
-    std::map<std::wstring, std::shared_ptr<KsAggregateEndpointDefinition>> m_availableEndpointDefinitionsV2;    // for 2603 CFR update only
 
     wil::critical_section m_pendingEndpointDefinitionsLock;
     std::vector<std::shared_ptr<KsAggregateEndpointDefinition>> m_pendingEndpointDefinitions;
 
-    HRESULT FindActivatedMasterEndpointDefinitionForFilterDevice(
-        _In_ std::wstring parentDeviceInstanceId,
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition>&);
 
-    HRESULT FindOrCreatePendingMasterEndpointDefinitionForFilterDevice(
+
+    // new interface-based approachfor 2603 CFR update
+    HRESULT OnFilterDeviceInterfaceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
+    HRESULT OnFilterDeviceInterfaceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
+    HRESULT OnFilterDeviceInterfaceUpdated(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
+
+    std::map<std::wstring, std::shared_ptr<KsAggregateParentDeviceDefinitionV2>> m_availableEndpointDefinitionsV2;
+    std::vector<std::shared_ptr<KsAggregateParentDeviceDefinitionV2>> m_pendingEndpointDefinitionsV2;
+
+
+    HRESULT FindActivatedEndpointDefinitionForFilterDevice(
+        _In_ std::wstring parentDeviceInstanceId,
+        _In_ std::shared_ptr<KsAggregateEndpointDefinitionV2>&);
+
+    HRESULT FindOrCreatePendingEndpointDefinitionForFilterDevice(
         _In_ DeviceInformation,
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition>&);
+        _In_ std::shared_ptr<KsAggregateEndpointDefinitionV2>&);
     
     HRESULT GetMidi1FilterPins(
         _In_ DeviceInformation,
@@ -118,22 +161,22 @@ private:
         _In_ std::wstring deviceInstanceId);
 
     HRESULT IncrementAndGetNextGroupIndex(
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition> definition,
+        _In_ std::shared_ptr<KsAggregateEndpointDefinitionV2> definition,
         _In_ MidiFlow dataFlowFromUserPerspective,
         _In_ uint8_t& groupIndex);
 
     HRESULT UpdateNewPinDefinitions(
         _In_ std::wstring filterDeviceid,
         _In_ std::wstring driverSuppliedName,
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition> endpointDefinition);
+        _In_ std::shared_ptr<KsAggregateEndpointDefinitionV2> endpointDefinition);
 
     HRESULT BuildPinsAndGroupTerminalBlocksPropertyData(
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition> masterEndpointDefinition,
+        _In_ std::shared_ptr<KsAggregateEndpointDefinitionV2> masterEndpointDefinition,
         _In_ std::vector<std::byte>& pinMapPropertyData,
         _In_ std::vector<internal::GroupTerminalBlockInternal>& groupTerminalBlocks);
 
     HRESULT UpdateNameTableWithCustomProperties(
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition> masterEndpointDefinition,
+        _In_ std::shared_ptr<KsAggregateEndpointDefinitionV2> masterEndpointDefinition,
         _In_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties);
 
     wil::unique_event_nothrow m_endpointCreationThreadWakeup;
@@ -142,6 +185,7 @@ private:
 
     HRESULT UpdateExistingMidiUmpEndpointWithFilterChanges(
         _In_ std::shared_ptr<KsAggregateEndpointDefinition> masterEndpointDefinition);
+
 
 
 

@@ -1449,9 +1449,9 @@ ParseParentIdIntoVidPidSerial(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::FindActivatedMasterEndpointDefinitionForFilterDevice(
+CMidi2KSAggregateMidiEndpointManager::FindActivatedEndpointDefinitionForFilterDevice(
     std::wstring parentDeviceInstanceId,
-    std::shared_ptr<KsAggregateEndpointDefinition>& endpointDefinition
+    std::shared_ptr<KsAggregateEndpointDefinitionV2>& endpointDefinition
 )
 {
     for (auto const& entry : m_availableEndpointDefinitionsV2)
@@ -1471,9 +1471,9 @@ CMidi2KSAggregateMidiEndpointManager::FindActivatedMasterEndpointDefinitionForFi
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::FindOrCreatePendingMasterEndpointDefinitionForFilterDevice(
+CMidi2KSAggregateMidiEndpointManager::FindOrCreatePendingEndpointDefinitionForFilterDevice(
     DeviceInformation filterDevice,
-    std::shared_ptr<KsAggregateEndpointDefinition>& endpointDefinition
+    std::shared_ptr<KsAggregateEndpointDefinitionV2>& endpointDefinition
 )
 {
     TraceLoggingWrite(
