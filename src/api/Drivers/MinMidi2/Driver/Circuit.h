@@ -60,7 +60,7 @@ EVT_ACX_CIRCUIT_POWER_UP            EvtCircuitPowerUp;
 EVT_ACX_CIRCUIT_POWER_DOWN          EvtCircuitPowerDown;
 EVT_WDF_DEVICE_CONTEXT_CLEANUP      EvtPinContextCleanup;
 
-EVT_ACX_OBJECT_PROCESS_REQUEST      EvtPinInterfacesCallback;
+EVT_ACX_OBJECT_PREPROCESS_REQUEST   EvtPinDataRangesCallback;
 
 /* make internal prototypes usable from C++ */
 #ifdef __cplusplus

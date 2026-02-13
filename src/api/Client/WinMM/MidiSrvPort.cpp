@@ -607,13 +607,13 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                         // starting a new buffer of SysEx
                         {
                             auto lock = m_BuffersLock.lock();
-                            m_BuffersAdded.ResetEvent();
                             if (!m_InBuffers.empty())
                             {
                                 buffer = m_InBuffers.front();
                             }
                             else
                             {
+                                m_BuffersAdded.ResetEvent();
                                 buffer = nullptr;
                             }
                         }
@@ -744,13 +744,13 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                 {
                     {
                         auto lock = m_BuffersLock.lock();
-                        m_BuffersAdded.ResetEvent();
                         if (!m_InBuffers.empty())
                         {
                             buffer = m_InBuffers.front();
                         }
                         else
                         {
+                            m_BuffersAdded.ResetEvent();
                             buffer = nullptr;
                         }
                     }

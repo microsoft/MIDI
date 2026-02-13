@@ -65,6 +65,91 @@ DEFINE_GUID(MIDI_COMPONENT_GUID,    0xb0eb4f78, 0xfaa7, 0x4f28, 0x8f, 0x08, 0x9b
 _Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
+EvtPinDataRangesCallback(
+    _In_    ACXOBJECT Object,
+    _In_    ACXCONTEXT,
+    _In_    WDFREQUEST Request
+    )
+{
+    ACX_REQUEST_PARAMETERS params;
+
+    PAGED_CODE();
+
+    ACX_REQUEST_PARAMETERS_INIT(&params);
+    AcxRequestGetParameters(Request, &params);
+
+    // This should be an ACX pin property request for one of the expected pin id's, 
+    // for the dataranges property. All others should fall through to the default handler.
+    if (params.Type == AcxRequestTypeProperty &&
+        params.Parameters.Property.ItemType == AcxItemTypePin &&
+        (params.Parameters.Property.ItemId == MidiPinTypeMidiOut || params.Parameters.Property.ItemId == MidiPinTypeMidiIn) &&
+        params.Parameters.Property.Set == KSPROPSETID_Pin &&
+        params.Parameters.Property.Id == KSPROPERTY_PIN_DATARANGES &&
+        params.Parameters.Property.Verb == AcxPropertyVerbGet)
+    {
+        NTSTATUS    status = STATUS_NOT_SUPPORTED;
+        ULONG_PTR   outDataCb {0};
+        ULONG       valueCb = params.Parameters.Property.ValueCb;
+        // g_MidiFormat only contains a single format.
+        ULONG       minSize = sizeof(KSMULTIPLE_ITEM) + (1 * sizeof(KSDATARANGE_MUSIC));
+
+        if (valueCb == 0)
+        {
+            // Querying for the required allocation size, return the size
+            // and STATUS_BUFFER_OVERFLOW
+            outDataCb = minSize;
+            status = STATUS_BUFFER_OVERFLOW;
+        }
+        else if (valueCb < minSize)
+        {
+            // Invalid call
+            outDataCb = 0;
+            status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            // Output buffer will hold the required data, copy it into the KSMULTIPLE_ITEM
+
+            PKSMULTIPLE_ITEM    items = (PKSMULTIPLE_ITEM)params.Parameters.Property.Value;
+
+            // The KSDATARANGE_MUSIC follows the KSMULTIPLE_ITEM
+            PKSDATARANGE_MUSIC  ranges = (PKSDATARANGE_MUSIC)(items + 1);
+
+            // fill in the count, g_MidiFormat only contains 1 item.
+            items->Count = 1;
+            items->Size = minSize;
+
+            // Copy over the data range from g_MidiFormat
+            RtlCopyMemory(
+                (PVOID)ranges,
+                (PVOID)&g_MidiFormat,
+                sizeof(KSDATARANGE)
+            );
+
+            // We are actually returning a KSDATARANGE_MUSIC, not a KSDATARANGE,
+            // fix the size.
+            ranges->DataRange.FormatSize = sizeof(KSDATARANGE_MUSIC);
+
+            // fill out the remainder of the KSDATARANGE_MUSIC
+            ranges->Technology = KSMUSIC_TECHNOLOGY_PORT;
+            ranges->Channels = 0;
+            ranges->Notes = 0;
+            ranges->ChannelMask = 0xFFFF;
+
+            outDataCb = minSize;
+            status = STATUS_SUCCESS;
+        }
+
+        WdfRequestCompleteWithInformation(Request, status, outDataCb);
+        return;
+    }
+
+    (VOID)AcxCircuitDispatchAcxRequest((ACXCIRCUIT)Object, Request);
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+VOID
 EvtPinContextCleanup(
     WDFOBJECT      Pin
    )
@@ -213,6 +298,14 @@ Return Value:
     if (!NT_SUCCESS(status)) 
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "AcxCircuitInitAssignAcxCreateStreamCallback failed %!STATUS!", status);
+        goto exit;
+    }
+
+    status = AcxCircuitInitAssignAcxRequestPreprocessCallback(
+        circuitInit, EvtPinDataRangesCallback, (ACXCONTEXT)Device, AcxRequestTypeProperty, &KSPROPSETID_Pin, KSPROPERTY_PIN_DATARANGES);
+    if (!NT_SUCCESS(status)) 
+    {
+        ASSERT(FALSE);
         goto exit;
     }
 

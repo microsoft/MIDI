@@ -346,20 +346,20 @@ DataRangeSupportsTransport
 )
 {
     // Advance the pointer, the data range follows the KSMULTIPLE_ITEM    
-    PKSDATARANGE KsDataRange = reinterpret_cast<PKSDATARANGE> (dataRanges + 1);
+    PKSDATARANGE ksDataRange = reinterpret_cast<PKSDATARANGE> (dataRanges + 1);
 
     // iterate through all of the supported data ranges
     for (UINT i = 0; i < dataRanges->Count; i++)
     {
         // If the data range is midi, then this is success
-        if( IsEqualGUID(KsDataRange->MajorFormat, KSDATAFORMAT_TYPE_MUSIC) &&
-            IsEqualGUID(KsDataRange->SubFormat, (transport == MidiTransport_CyclicUMP) ? KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET : KSDATAFORMAT_SUBTYPE_MIDI))
+        if( IsEqualGUID(ksDataRange->MajorFormat, KSDATAFORMAT_TYPE_MUSIC) &&
+            IsEqualGUID(ksDataRange->SubFormat, (transport == MidiTransport_CyclicUMP) ? KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET : KSDATAFORMAT_SUBTYPE_MIDI))
         {
             return S_OK;
         }
 
         // This wasn't a midi data range, advance to the next data range to check
-        KsDataRange = reinterpret_cast<PKSDATARANGE>(  reinterpret_cast<BYTE*>(KsDataRange) + KsDataRange->FormatSize );
+        ksDataRange = reinterpret_cast<PKSDATARANGE>(  reinterpret_cast<BYTE*>(ksDataRange) + ksDataRange->FormatSize );
     }
 
     return HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE);
