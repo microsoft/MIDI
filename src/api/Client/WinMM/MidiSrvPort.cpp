@@ -607,13 +607,13 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                         // starting a new buffer of SysEx
                         {
                             auto lock = m_BuffersLock.lock();
-                            m_BuffersAdded.ResetEvent();
                             if (!m_InBuffers.empty())
                             {
                                 buffer = m_InBuffers.front();
                             }
                             else
                             {
+                                m_BuffersAdded.ResetEvent();
                                 buffer = nullptr;
                             }
                         }
@@ -667,13 +667,21 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                                 DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, START_SYSEX_BUFFER_TIMEOUT);
                                 if (ret == WAIT_TIMEOUT)
                                 {
-                                    // exit sysex transfer state, discard this and future sysex data
+                                    // exit sysex transfer state, discard this and future sysex data,
+                                    // fall through to move to the next byte in the message.
                                     m_IsDiscardingSysex = true;
+                                }
+                                else if ((ret == WAIT_OBJECT_0) || (ret == WAIT_OBJECT_0 + 1))
+                                {
+                                    // now that we have a buffer, or have stopped, reprocess
+                                    // this byte
+                                    continue;
                                 }
                                 else
                                 {
-                                    // now that we have a buffer, or have stopped, reprocess
-                                    continue;
+                                    // Don't spin infinitely in the event of a failed or
+                                    // abandoned wait
+                                    return HRESULT_FROM_WIN32(GetLastError());
                                 }
                             }
                         }
@@ -736,13 +744,13 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                 {
                     {
                         auto lock = m_BuffersLock.lock();
-                        m_BuffersAdded.ResetEvent();
                         if (!m_InBuffers.empty())
                         {
                             buffer = m_InBuffers.front();
                         }
                         else
                         {
+                            m_BuffersAdded.ResetEvent();
                             buffer = nullptr;
                         }
                     }
@@ -818,10 +826,17 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
                             m_IsInSysex = false;
                             m_IsDiscardingSysex = true;
                         }
+                        else if ((ret == WAIT_OBJECT_0) || (ret == WAIT_OBJECT_0 + 1))
+                        {
+                            // now that we have a buffer, or have stopped, reprocess
+                            // this byte
+                            continue;
+                        }
                         else
                         {
-                            // now that we have a buffer, or have stopped, reprocess this byte or end the loop
-                            continue;
+                            // Don't spin infinitely in the event of a failed or
+                            // abandoned wait
+                            return HRESULT_FROM_WIN32(GetLastError());
                         }
                     }
                     else

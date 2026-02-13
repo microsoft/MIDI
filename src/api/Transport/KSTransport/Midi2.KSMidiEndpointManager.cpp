@@ -10,6 +10,8 @@
 #include "pch.h"
 #include "midi2.kstransport.h"
 
+#include "Feature_Servicing_MIDI2FilterCreations.h"
+
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
 using namespace winrt::Windows::Foundation;
@@ -194,6 +196,26 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         if (KSPIN_COMMUNICATION_NONE == communication)
         {
             continue;
+        }
+
+        if (Feature_Servicing_MIDI2FilterCreations::IsEnabled())
+        {
+            std::unique_ptr<KSMULTIPLE_ITEM> dataRanges;
+            ULONG dataRangesSize {0};
+
+            // skip this pin if for some reason data ranges aren't valid
+            if (FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+                    return RetrieveDataRanges(h, i, (PKSMULTIPLE_ITEM*)&dataRanges, &dataRangesSize);
+                })))
+            {
+                continue;
+            }
+
+            // Skip this pin if it doesn't support cyclic UMP
+            if (FAILED(DataRangeSupportsTransport(dataRanges.get(), MidiTransport_CyclicUMP)))
+            {
+                continue;
+            }
         }
 
         // ================== Cyclic UMP Interfaces ===============================================
