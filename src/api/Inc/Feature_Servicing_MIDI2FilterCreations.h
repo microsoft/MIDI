@@ -16,3 +16,8 @@ public:
         return true;
     }
 };
+
+inline bool Feature_Servicing_MIDI2FilterCreations_IsEnabled()
+{
+    return true;
+}
