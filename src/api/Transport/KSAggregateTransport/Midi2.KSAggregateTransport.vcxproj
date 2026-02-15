@@ -359,6 +359,7 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.KSAggregateTransport.cpp" />
@@ -369,7 +370,7 @@
     <ClCompile Include="Midi2.KSAggregateMidiOutProxy.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager.cpp" />
+    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2KSAggregateTransport.idl" />
@@ -380,6 +381,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Inc\Midi2.KSAggregateMidiEndpointManager.h" />
     <ClInclude Include="TransportState.h" />
     <ClInclude Include="Transport_defs.h" />
     <ClInclude Include="dllmain.h" />
@@ -392,7 +394,7 @@
     <ClInclude Include="Midi2.KSAggregateMidiPluginMetadataProvider.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager.h" />
+    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager2.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.KSAggregateTransport.rc" />

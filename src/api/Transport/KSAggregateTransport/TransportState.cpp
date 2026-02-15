@@ -25,10 +25,20 @@ TransportState& TransportState::Current()
 HRESULT
 TransportState::ConstructEndpointManager()
 {
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiEndpointManager>(&m_endpointManager));
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    {
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiEndpointManager2>(&m_endpointManager2));
+    }
+    else
+    {
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiEndpointManager>(&m_endpointManager));
+    }
+
 
     return S_OK;
 }
+
+
 
 
 HRESULT

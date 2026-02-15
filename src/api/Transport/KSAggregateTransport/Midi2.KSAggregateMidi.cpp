@@ -11,8 +11,6 @@
 
 #include "ump_iterator.h"
 
-#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
-
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidi::Initialize(
