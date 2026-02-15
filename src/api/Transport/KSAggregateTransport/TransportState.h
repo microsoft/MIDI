@@ -23,7 +23,27 @@ public:
 
     wil::com_ptr<CMidi2KSAggregateMidiEndpointManager> GetEndpointManager()
     {
-        return m_endpointManager;
+        if (!Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+        {
+            return m_endpointManager;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    // for Feature_Servicing_MIDI2VirtualPortDriversFix
+    wil::com_ptr<CMidi2KSAggregateMidiEndpointManager2> GetEndpointManager2()
+    {
+        if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+        {
+            return m_endpointManager2;
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 
     wil::com_ptr<CMidi2KSAggregateMidiConfigurationManager> GetConfigurationManager()
@@ -51,6 +71,10 @@ private:
 
 
     wil::com_ptr<CMidi2KSAggregateMidiEndpointManager> m_endpointManager;
+
+    // for Feature_Servicing_MIDI2VirtualPortDriversFix
+    wil::com_ptr<CMidi2KSAggregateMidiEndpointManager2> m_endpointManager2 { nullptr };
+
     wil::com_ptr<CMidi2KSAggregateMidiConfigurationManager> m_configurationManager;
 
 };

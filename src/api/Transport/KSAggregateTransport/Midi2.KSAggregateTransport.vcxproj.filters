@@ -39,13 +39,16 @@
     <ClCompile Include="Midi2.KSAggregateMidiPluginMetadataProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager.cpp">
+    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Midi2.KSAggregateMidiInProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Midi2.KSAggregateMidiOutProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -94,13 +97,16 @@
     <ClInclude Include="Midi2.KSAggregateMidiPluginMetadataProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager.h">
+    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.KSAggregateMidiInProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.KSAggregateMidiOutProxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Inc\Midi2.KSAggregateMidiEndpointManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

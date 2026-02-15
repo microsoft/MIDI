@@ -36,6 +36,8 @@
 #include <SDKDDKVer.h>
 
 #include <functional>
+#include <queue>
+#include <vector>
 
 
 #define _ATL_APARTMENT_THREADED
@@ -111,8 +113,10 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "Midi2UMP2BSTransform.h"
 #include "Midi2UMP2BSTransform_i.c"
 
+#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
 
 class CMidi2KSAggregateMidiEndpointManager;
+class CMidi2KSAggregateMidiEndpointManager2;
 class CMidi2KSAggregateMidiInProxy;
 class CMidi2KSAggregateMidiOutProxy;
 class CMidi2KSAggregateMidiConfigurationManager;
@@ -125,6 +129,7 @@ class TransportState;
 #include "Midi2.KSAggregateMidi.h"
 #include "Midi2.KSAggregateMidiBidi.h"
 #include "Midi2.KSAggregateMidiEndpointManager.h"
+#include "Midi2.KSAggregateMidiEndpointManager2.h"
 #include "Midi2.KSAggregateMidiConfigurationManager.h"
 #include "Midi2.KSAggregateMidiPluginMetadataProvider.h"
 
