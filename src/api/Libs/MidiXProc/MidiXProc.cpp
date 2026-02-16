@@ -353,19 +353,21 @@ CMidiXProc::WaitForSendComplete(ULONG startingReadPosition, ULONG BufferWrittenP
                     // received a read event, retrieve the new read position
                     readPosition = InterlockedCompareExchange((LONG*)m_MidiOut->Registers.ReadPosition, 0, 0);
 
+                    // calculate the current linear read position, accounting for loops
+                    readPosition += (m_MidiOut->Data.BufferSize * loopcount);
+
                     // if the new read position is less than the previous, we've read past the end of the buffer,
                     // so we've completed a loop, increment the loop count.
                     if (readPosition < previousReadPosition)
                     {
                         loopcount++;
+                        // and add another buffer size to the position for this iteration
+                        readPosition += m_MidiOut->Data.BufferSize;
                     }
-
-                    // calculate the current linear read position, accounting for loops
-                    readPosition += (m_MidiOut->Data.BufferSize * loopcount);
 
                     // comparing linear positions, if the read position has advanced past the end of the buffer,
                     // then it has been read.
-                    if (readPosition > bufferWrittenEndPosition)
+                    if (readPosition >= bufferWrittenEndPosition)
                     {
                         return S_OK;
                     }
@@ -867,7 +869,7 @@ CMidiXProc::SendMidiMessageInternal(
         // callers to wait for their send to complete without blocking others from sending.
         if (bufferSent && (MessageOptionFlags_WaitForSendComplete == (optionFlags & MessageOptionFlags_WaitForSendComplete)))
         {
-            RETURN_IF_FAILED(WaitForSendComplete(startingReadPosition, bufferWrittenPosition, length));
+            RETURN_IF_FAILED(WaitForSendComplete(startingReadPosition, bufferWrittenPosition, requiredBufferSize));
         }
 
         // Failed to send the buffer due to insufficient space,
