@@ -381,7 +381,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Inc\Midi2.KSAggregateMidiEndpointManager.h" />
+    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager.h" />
     <ClInclude Include="TransportState.h" />
     <ClInclude Include="Transport_defs.h" />
     <ClInclude Include="dllmain.h" />

@@ -21,7 +21,6 @@ using namespace winrt::Windows::Devices::Enumeration;
 
 struct KsAggregateEndpointMidiPinDefinition2
 {
-    //std::wstring KSDriverSuppliedName;
     std::wstring FilterDeviceId;                // this is also the value needed by WinMM for DRV_QUERYDEVICEINTERFACE
     std::wstring FilterName;
 
@@ -33,12 +32,12 @@ struct KsAggregateEndpointMidiPinDefinition2
 
     uint8_t GroupIndex{ 0 };
     uint8_t PortIndexWithinThisFilterAndDirection{ 0 }; // not always the same as the group index. Example: MOTU Express 128 with separate filter for each in/out pair
-
- //   internal::Midi1PortNaming::Midi1PortNameEntry PortNames;
 };
 
 struct KsAggregateEndpointDefinition2
 {
+    std::wstring ParentDeviceInstanceId{};
+
     std::wstring EndpointDeviceId{};
 
     std::wstring EndpointName{};
@@ -47,6 +46,8 @@ struct KsAggregateEndpointDefinition2
     std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>> MidiPins{ };
 
     WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{ };
+
+    uint16_t EndpointIndexForThisParentDevice{ 0 };  
 };
 
 
@@ -57,25 +58,14 @@ public:
     std::wstring DeviceInstanceId{};
     std::wstring DriverSuppliedDeviceName{};    // value from registry. Required for WinMM classic naming
 
+    std::wstring NameDisambiguatorPrefix{};     // for when there are multiple of the same device attached
+
+
     uint16_t VID{ 0 };  // USB-only
     uint16_t PID{ 0 };  // USB-only
     std::wstring SerialNumber{};
 
     std::wstring ManufacturerName{};
-
-    std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> Endpoints{ };  // most devices will have just one endpoint, but virtual can have > 1
-
-
-    // This will add a pin, and create new endpoints as needed, assign the group index, etc.
-    // it will also update the name table given the info we have
-    HRESULT AddPin(_In_ std::shared_ptr<KsAggregateEndpointMidiPinDefinition> pin);
-
-    //HRESULT RemoveFilter(_In_ std::wstring filterId);
-
-    
-
-private:
-
 };
 
 
@@ -93,22 +83,10 @@ public:
     winrt::hstring FindMatchingInstantiatedEndpoint(_In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
 
 private:
+    DWORD m_individualInterfaceEnumTimeoutMS{ DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS };
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
-
-    wil::critical_section m_availableEndpointDefinitionsLock;
-    wil::critical_section m_pendingEndpointDefinitionsLock;
-
-    HRESULT ParseParentIdIntoVidPidSerial(
-            _In_ winrt::hstring systemDevicesParentValue,
-            _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDevice);
-
-    HRESULT GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName);
-    HRESULT GetPinDataFlow(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ KSPIN_DATAFLOW& dataFlow);
-
-    STDMETHOD(CreateMidiUmpEndpoint)(
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition, 
-        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice);
 
     HRESULT OnFilterDeviceInterfaceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
     HRESULT OnFilterDeviceInterfaceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
@@ -117,25 +95,57 @@ private:
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnDeviceWatcherStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
+
+    // key is parent device instance id. These don't get "activated" so we keep a single list
+    std::map<std::wstring, std::shared_ptr<KsAggregateParentDeviceDefinition2>> m_allParentDeviceDefinitions;
+    wil::critical_section m_allParentDeviceDefinitionsLock;
+
+    // these are all endpoints which have not yet been activated
+    std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> m_pendingEndpointDefinitions;
+    wil::critical_section m_pendingEndpointDefinitionsLock;
+
     // key is parent device instance id
-    std::map<std::wstring, std::shared_ptr<KsAggregateParentDeviceDefinition2>> m_availableEndpointDefinitions;
-    std::vector<std::shared_ptr<KsAggregateParentDeviceDefinition2>> m_pendingEndpointDefinitions;
+    std::map<std::wstring, std::shared_ptr<KsAggregateEndpointDefinition2>> m_activatedEndpointDefinitions;
+    wil::critical_section m_activatedEndpointDefinitionsLock;
+
+
+
+    bool ActiveKSAEndpointForDeviceExists(
+        _In_ std::wstring deviceInstanceId);
+
+    HRESULT ParseParentIdIntoVidPidSerial(
+            _In_ std::wstring systemDevicesParentValue,
+            _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDevice);
 
 
     HRESULT FindActivatedEndpointDefinitionForFilterDevice(
-        _In_ std::wstring parentDeviceInstanceId,
+        _In_ std::wstring filterDeviceId,
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
+
+
+    HRESULT FindOrCreateParentDeviceDefinitionForFilterDevice(
+            DeviceInformation filterDevice,
+            std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
 
     HRESULT FindOrCreatePendingEndpointDefinitionForFilterDevice(
         _In_ DeviceInformation,
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
     
+
+    HRESULT FindCurrentMaxEndpointIndexForParentDevice(
+        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDeviceDefinition, 
+        _In_ uint16_t& currentMaxIndex);
+
+
+    HRESULT GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName);
+    HRESULT GetPinDataFlow(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ KSPIN_DATAFLOW& dataFlow);
+
     HRESULT GetMidi1FilterPins(
         _In_ DeviceInformation,
         _In_ std::vector<KsAggregateEndpointMidiPinDefinition2>&);
 
-    bool ActiveKSAEndpointForDeviceExists(
-        _In_ std::wstring deviceInstanceId);
+    HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
+
 
     //HRESULT IncrementAndGetNextGroupIndex(
     //    _In_ std::shared_ptr<KsAggregateEndpointDefinitionV2> definition,
@@ -156,13 +166,21 @@ private:
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition,
         _In_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties);
 
+
+    // these two functions actually update the software devices in Windows
+
+    HRESULT DeviceCreateMidiUmpEndpoint(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition,
+        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice);
+
+    HRESULT DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition,
+        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice);
+
+
     wil::unique_event_nothrow m_endpointCreationThreadWakeup;
     std::jthread m_endpointCreationThread;
     void EndpointCreationThreadWorker(_In_ std::stop_token token);
-
-    HRESULT UpdateExistingMidiUmpEndpointWithFilterChanges(
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition,
-        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice);
 
 
     DeviceWatcher m_watcher{0};
@@ -173,7 +191,5 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
     wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
 
-    HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
 
-    DWORD m_individualInterfaceEnumTimeoutMS { DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS };
 };

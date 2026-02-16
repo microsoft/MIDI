@@ -106,7 +106,7 @@
     <ClInclude Include="Midi2.KSAggregateMidiOutProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Inc\Midi2.KSAggregateMidiEndpointManager.h">
+    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
