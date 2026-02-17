@@ -1946,11 +1946,19 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
     return S_OK;
 }
 
+
+// TODO: Potential problem with this code:
+// Because it's just using pin counts, after some add/removes
+// the group indexes could change. Is that ok? Seems not.
+// need to see what impact that will have on enumerated MIDI ports
+
 bool EndpointHasRoomForMoreNewPins(
     _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpoint,
     _In_ uint8_t countNewSourcePins,
     _In_ uint8_t countNewDestinationPins)
 {
+    if (endpoint == nullptr) return false;
+
 
     uint8_t countFoundSourcePins{ 0 };
     uint8_t countFoundDestinationPins{ 0 };
@@ -2023,6 +2031,23 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     uint8_t countEnumeratedMidiDestinationPins{ 0 };
     RETURN_IF_FAILED(GetMidi1FilterPins(filterDevice, pinList, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins));
 
+
+
+
+    // TODO: Should just get that list of pins back, and even if it's > 32, just break it up into separate 
+    // endpoints of pins (16 in, 16 out, max). May need a "distribute pins" type of function
+    // to return a vector of vectors of pins
+    // Can change the GetMidi1FilterPins to return a vector of KsAggregateEndpointMidiPinList entries, 
+    // each of which has a list of in pins and out pins or whatever ends up convenient
+    // 
+    // but we cannot have the same filter opened by two different endpoints, so we're effectively limited to 
+    // 16 in/16 out per filter
+    //
+
+
+
+
+
     if (pinList.size() == 0)
     {
         TraceLoggingWrite(
@@ -2088,6 +2113,8 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
         // check the latest endpoint first
 
+
+
         for (size_t i = foundEndpoints.size() - 1; i >= 0; i--)
         {
             auto ep = foundEndpoints[i];
@@ -2133,10 +2160,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         );
 
 
-        // TODO: Potential problem with this code:
-        // Because it's just using pin counts, after some add/removes
-        // the group indexes could change. Is that ok? Seems not.
-        // need to see what impact that will have on enumerated MIDI ports
+        foundEndpoints.clear();
         
         if (SUCCEEDED(FindAllActivatedEndpointDefinitionsForParentDevice(parentInstanceId.c_str(), foundEndpoints)))
         {
