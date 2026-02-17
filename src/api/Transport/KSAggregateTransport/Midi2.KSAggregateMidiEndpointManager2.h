@@ -47,7 +47,12 @@ struct KsAggregateEndpointDefinition2
 
     WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{ };
 
-    uint16_t EndpointIndexForThisParentDevice{ 0 };  
+    uint32_t EndpointIndexForThisParentDevice{ 0 };  
+
+
+    int8_t CurrentHighestMidiSourceGroupIndex{ -1 };
+    int8_t CurrentHighestMidiDestinationGroupIndex{ -1 };
+
 };
 
 
@@ -58,7 +63,7 @@ public:
     std::wstring DeviceInstanceId{};
     std::wstring DriverSuppliedDeviceName{};    // value from registry. Required for WinMM classic naming
 
-    std::wstring NameDisambiguatorPrefix{};     // for when there are multiple of the same device attached
+    uint32_t IndexOfDevicesWithThisSameName{ 0 };   // for when there are multiple of the same device
 
 
     uint16_t VID{ 0 };  // USB-only
@@ -114,27 +119,32 @@ private:
         _In_ std::wstring deviceInstanceId);
 
     HRESULT ParseParentIdIntoVidPidSerial(
-            _In_ std::wstring systemDevicesParentValue,
-            _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDevice);
+        _In_ std::wstring systemDevicesParentValue,
+        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDevice);
 
 
     HRESULT FindActivatedEndpointDefinitionForFilterDevice(
         _In_ std::wstring filterDeviceId,
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
 
+    HRESULT FindExistingParentDeviceDefinitionForEndpoint(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition,
+        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
 
     HRESULT FindOrCreateParentDeviceDefinitionForFilterDevice(
-            DeviceInformation filterDevice,
-            std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
+        _In_ DeviceInformation filterDevice,
+        _In_ KsHandleWrapper& filterDeviceWrapper,
+        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
 
     HRESULT FindOrCreatePendingEndpointDefinitionForFilterDevice(
         _In_ DeviceInformation,
+        _In_ KsHandleWrapper& filterDeviceHandleWrapper,
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
     
 
     HRESULT FindCurrentMaxEndpointIndexForParentDevice(
         _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDeviceDefinition, 
-        _In_ uint16_t& currentMaxIndex);
+        _In_ uint32_t& currentMaxIndex);
 
 
     HRESULT GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName);
@@ -142,15 +152,15 @@ private:
 
     HRESULT GetMidi1FilterPins(
         _In_ DeviceInformation,
-        _In_ std::vector<KsAggregateEndpointMidiPinDefinition2>&);
+        _In_ std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>>&);
 
     HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
 
 
-    //HRESULT IncrementAndGetNextGroupIndex(
-    //    _In_ std::shared_ptr<KsAggregateEndpointDefinitionV2> definition,
-    //    _In_ MidiFlow dataFlowFromUserPerspective,
-    //    _In_ uint8_t& groupIndex);
+    HRESULT IncrementAndGetNextGroupIndex(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> definition,
+        _In_ MidiFlow dataFlowFromUserPerspective,
+        _In_ uint8_t& groupIndex);
 
     HRESULT UpdateNewPinDefinitions(
         _In_ std::wstring filterDeviceid,
@@ -170,12 +180,10 @@ private:
     // these two functions actually update the software devices in Windows
 
     HRESULT DeviceCreateMidiUmpEndpoint(
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition,
-        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice);
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition);
 
     HRESULT DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition,
-        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice);
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition);
 
 
     wil::unique_event_nothrow m_endpointCreationThreadWakeup;
