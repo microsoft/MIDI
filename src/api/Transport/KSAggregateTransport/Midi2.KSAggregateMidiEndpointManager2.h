@@ -130,8 +130,12 @@ private:
 
     HRESULT FindAllActivatedEndpointDefinitionsForParentDevice(
         _In_ std::wstring parentDeviceInstanceId,
-        _Inout_ std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>>& endpointDefinitions
-        );
+        _Inout_ std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>>& endpointDefinitions);
+
+    HRESULT FindAllPendingEndpointDefinitionsForParentDevice(
+        _In_ std::wstring parentDeviceInstanceId,
+        _Inout_ std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>>& endpointDefinitions);
+
 
     HRESULT FindPendingEndpointDefinitionForParentDevice(
         _In_ std::wstring parentDeviceInstanceId,
@@ -160,7 +164,9 @@ private:
 
     HRESULT GetMidi1FilterPins(
         _In_ DeviceInformation,
-        _In_ std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>>&);
+        _In_ std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>>&,
+        _Inout_ uint8_t& countMidiSourcePinsAdded,
+        _Inout_ uint8_t& countMidiDestinationPinsAdded);
 
     HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
 

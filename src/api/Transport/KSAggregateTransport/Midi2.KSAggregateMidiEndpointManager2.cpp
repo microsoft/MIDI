@@ -1158,6 +1158,68 @@ CMidi2KSAggregateMidiEndpointManager2::FindAllActivatedEndpointDefinitionsForPar
 
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiEndpointManager2::FindAllPendingEndpointDefinitionsForParentDevice(
+    std::wstring parentDeviceInstanceId,
+    std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>>& endpointDefinitions
+)
+{
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(parentDeviceInstanceId.c_str(), "parent device instance id")
+    );
+
+    auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(parentDeviceInstanceId);
+
+    bool found{ false };
+
+    for (auto const& endpoint : m_pendingEndpointDefinitions)
+    {
+        if (internal::NormalizeDeviceInstanceIdWStringCopy(endpoint->ParentDeviceInstanceId) == cleanParentDeviceInstanceId)
+        {
+            endpointDefinitions.push_back(endpoint);
+            found = true;
+        }
+    }
+
+
+    if (found)
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"One or more matching endpoints found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanParentDeviceInstanceId.c_str(), "parent device instance id")
+        );
+
+        return S_OK;
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No matches found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanParentDeviceInstanceId.c_str(), "parent device instance id")
+        );
+
+        return E_NOTFOUND;
+    }
+
+}
+
 
 
 _Use_decl_annotations_
@@ -1673,14 +1735,17 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
     DeviceInformation filterDevice,
-    std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>>& pinListToAddTo
-)
+    std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>>& pinListToAddTo,
+    uint8_t& countMidiSourcePinsAdded,
+    uint8_t& countMidiDestinationPinsAdded
+    )
 {
     // Wrapper opens the handle internally.
     KsHandleWrapper deviceHandleWrapper(filterDevice.Id().c_str());
     RETURN_IF_FAILED(deviceHandleWrapper.Open());
 
-
+    countMidiSourcePinsAdded = 0;
+    countMidiDestinationPinsAdded = 0;
 
     // Driver-supplied name. This is needed for WinMM backwards compatibility
     std::wstring driverSuppliedName{};
@@ -1779,6 +1844,8 @@ CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
                     pinDefinition->PortIndexWithinThisFilterAndDirection = static_cast<uint8_t>(midiOutputPinIndexForThisFilter);
 
                     midiOutputPinIndexForThisFilter++;
+
+                    countMidiDestinationPinsAdded++;
                 }
                 else if (dataFlow == KSPIN_DATAFLOW_OUT)
                 {
@@ -1788,6 +1855,8 @@ CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
                     pinDefinition->PortIndexWithinThisFilterAndDirection = static_cast<uint8_t>(midiInputPinIndexForThisFilter);
 
                     midiInputPinIndexForThisFilter++;
+
+                    countMidiSourcePinsAdded++;
                 }
 
                 pinListToAddTo.push_back(pinDefinition);
@@ -1877,6 +1946,39 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
     return S_OK;
 }
 
+bool EndpointHasRoomForMoreNewPins(
+    _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpoint,
+    _In_ uint8_t countNewSourcePins,
+    _In_ uint8_t countNewDestinationPins)
+{
+
+    uint8_t countFoundSourcePins{ 0 };
+    uint8_t countFoundDestinationPins{ 0 };
+
+    // count the source and destination pins
+
+    for (auto const& pin : endpoint->MidiPins)
+    {
+        if (pin->DataFlowFromUserPerspective == MidiFlow::MidiFlowIn)
+        {
+            countFoundSourcePins++;
+        }
+        else
+        {
+            countFoundDestinationPins++;
+        }
+    }
+
+    if ((countFoundSourcePins + countNewSourcePins <= 16) &&
+        (countFoundDestinationPins + countNewDestinationPins <= 16))
+    {
+        return true;
+    }
+
+    return false;
+
+}
+
 
 _Use_decl_annotations_
 HRESULT
@@ -1917,7 +2019,9 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     // like group index and naming require the full context of all filters/pins on the
     // parent device. We want to get these before we try creating parents or endpoints
     std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>> pinList{ };
-    RETURN_IF_FAILED(GetMidi1FilterPins(filterDevice, pinList));
+    uint8_t countEnumeratedMidiSourcePins{ 0 };
+    uint8_t countEnumeratedMidiDestinationPins{ 0 };
+    RETURN_IF_FAILED(GetMidi1FilterPins(filterDevice, pinList, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins));
 
     if (pinList.size() == 0)
     {
@@ -1953,8 +2057,6 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     }
 
 
-
-
     // We have MIDI 1.0 pins to process, so we'll need to find or create a parent device
     // and also find or create an endpoint under that parent, which has sufficient room
     // for these pins.
@@ -1973,15 +2075,52 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         parentDeviceDefinition
         ));
 
+    std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> foundEndpoints{};
 
-    // ===================================================================
-    // Find or create the endpoint
-
-    std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition{ nullptr };
-
-    // check to see if we already have an *activated* endpoint for this filter
-    if (ActiveKSAEndpointForDeviceExists(parentInstanceId.c_str()))
+    // do we already have one or more pending endpoints for this?
+    if (SUCCEEDED(FindAllPendingEndpointDefinitionsForParentDevice(parentInstanceId.c_str(), foundEndpoints)))
     {
+        std::shared_ptr<KsAggregateEndpointDefinition2> existingPendingEndpointDefinition{ nullptr };
+
+        // find an endpoint with room for another interface with pins.
+        // We're going by the pin counts returned when we enumerated 
+        // all pins for this interface
+
+        // check the latest endpoint first
+
+        for (size_t i = foundEndpoints.size() - 1; i >= 0; i--)
+        {
+            auto ep = foundEndpoints[i];
+
+            if (EndpointHasRoomForMoreNewPins(ep, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins))
+            {
+                existingPendingEndpointDefinition = ep;
+
+                break;
+            }
+        }
+
+        // if this check fails, we fall through to creating a new endpoint definition
+        if (existingPendingEndpointDefinition != nullptr)
+        {
+            //// first MIDI 1 pin we're processing for this interface
+            //RETURN_IF_FAILED(FindActivatedEndpointDefinitionForFilterDevice(parentInstanceId.c_str(), existingActivatedEndpointDefinition));
+            //RETURN_HR_IF_NULL(E_POINTER, existingActivatedEndpointDefinition);
+
+            // add our new pins into the existing endpoint definition
+            existingPendingEndpointDefinition->MidiPins.insert(existingPendingEndpointDefinition->MidiPins.end(), pinList.begin(), pinList.end());
+            RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingPendingEndpointDefinition));
+
+            return S_OK;
+        }
+
+    }
+    else if (ActiveKSAEndpointForDeviceExists(parentInstanceId.c_str()))
+    {
+        std::shared_ptr<KsAggregateEndpointDefinition2> existingActivatedEndpointDefinition{ nullptr };
+
+        // check to see if we already have any activated endpoints for this device
+
         TraceLoggingWrite(
             MidiKSAggregateTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_VERBOSE,
@@ -1993,35 +2132,49 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
             TraceLoggingWideString(parentInstanceId.c_str(), "parent instance id")
         );
 
-        std::shared_ptr<KsAggregateEndpointDefinition2> existingActivatedEndpointDefinition { nullptr };
 
-        // Get all existing endpoint definitions for this parent device
-        // If the existing endpoint definition doesn't have room for this set of pins, we need to create a new one
-
-        std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> foundEndpoints {};
-
+        // TODO: Potential problem with this code:
+        // Because it's just using pin counts, after some add/removes
+        // the group indexes could change. Is that ok? Seems not.
+        // need to see what impact that will have on enumerated MIDI ports
+        
         if (SUCCEEDED(FindAllActivatedEndpointDefinitionsForParentDevice(parentInstanceId.c_str(), foundEndpoints)))
         {
             // find an endpoint with room for another interface with pins.
-            // We're going by the highest group index
+            // We're going by the pin counts returned when we enumerated 
+            // all pins for this interface
 
+            // check the latest endpoint first
+            
+            for (size_t i = foundEndpoints.size()-1; i >= 0; i--)
+            {
+                auto ep = foundEndpoints[i];
 
-            // TEMP
-            existingActivatedEndpointDefinition = foundEndpoints[0];
+                if (EndpointHasRoomForMoreNewPins(ep, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins))
+                {
+                    existingActivatedEndpointDefinition = ep;
+
+                    break;
+                }
+
+            }
         }
 
+        // if this check fails, we fall through to creating a new endpoint definition
+        if (existingActivatedEndpointDefinition != nullptr)
+        {
+            //// first MIDI 1 pin we're processing for this interface
+            //RETURN_IF_FAILED(FindActivatedEndpointDefinitionForFilterDevice(parentInstanceId.c_str(), existingActivatedEndpointDefinition));
+            //RETURN_HR_IF_NULL(E_POINTER, existingActivatedEndpointDefinition);
 
-        //// first MIDI 1 pin we're processing for this interface
-        //RETURN_IF_FAILED(FindActivatedEndpointDefinitionForFilterDevice(parentInstanceId.c_str(), existingActivatedEndpointDefinition));
-        //RETURN_HR_IF_NULL(E_POINTER, existingActivatedEndpointDefinition);
+            // add our new pins into the existing endpoint definition
+            existingActivatedEndpointDefinition->MidiPins.insert(existingActivatedEndpointDefinition->MidiPins.end(), pinList.begin(), pinList.end());
+            RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingActivatedEndpointDefinition));
 
-        // add our new pins into the existing endpoint definition
-        existingActivatedEndpointDefinition->MidiPins.insert(existingActivatedEndpointDefinition->MidiPins.end(), pinList.begin(), pinList.end());
-        RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingActivatedEndpointDefinition));
+            RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(existingActivatedEndpointDefinition));
 
-        RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(existingActivatedEndpointDefinition));
-
-        return S_OK;
+            return S_OK;
+        }
     }
     else
     {
@@ -2037,28 +2190,18 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         );
     }
 
-    // if the endpointDefinition is null, that means we haven't found an existing
-    // activated endpoint definition we need to use, and so we proceed to check
-    // for an existing pending endpoint definition. If found, it's used. If not
-    // found, the function will create a new one for us to use, with all the
-    // endpoint-specific details (excluding pins) populated.
-    if (endpointDefinition == nullptr)
-    {
-        // first MIDI 1 pin we're processing for this interface
-        RETURN_IF_FAILED(FindOrCreatePendingEndpointDefinitionForFilterDevice(filterDevice, endpointDefinition));
-        RETURN_HR_IF_NULL(E_POINTER, endpointDefinition);
 
+    // ===================================================================
+    // Create the endpoint
 
+    std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition{ nullptr };
 
-        // TODO: If the existing endpoint definition doesn't have room for this set of pins, we need to create a new one
+    RETURN_IF_FAILED(FindOrCreatePendingEndpointDefinitionForFilterDevice(filterDevice, endpointDefinition));
+    RETURN_HR_IF_NULL(E_POINTER, endpointDefinition);
 
-
-
-
-        // add our new pins into the existing endpoint definition
-        endpointDefinition->MidiPins.insert(endpointDefinition->MidiPins.end(), pinList.begin(), pinList.end());
-        pinList.clear();    // just make sure we don't use this one, accidentally
-    }
+    // add our new pins
+    endpointDefinition->MidiPins.insert(endpointDefinition->MidiPins.end(), pinList.begin(), pinList.end());
+    pinList.clear();    // just make sure we don't use this one, accidentally
 
     RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), endpointDefinition));
 
