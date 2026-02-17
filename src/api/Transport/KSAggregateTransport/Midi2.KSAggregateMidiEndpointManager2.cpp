@@ -893,7 +893,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager2::ParseParentIdIntoVidPidSerial(
     std::wstring systemDevicesParentValue, 
-    std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDevice)
+    std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice)
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, parentDevice);
 
@@ -987,6 +987,58 @@ CMidi2KSAggregateMidiEndpointManager2::ParseParentIdIntoVidPidSerial(
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiEndpointManager2::FindPendingEndpointDefinitionForParentDevice(
+    std::wstring parentDeviceInstanceId,
+    std::shared_ptr<KsAggregateEndpointDefinition2>& endpointDefinition)
+{
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(parentDeviceInstanceId.c_str(), "parent deviec instance id")
+    );
+
+    auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(parentDeviceInstanceId);
+
+    for (auto const& endpoint : m_pendingEndpointDefinitions)
+    {
+        if (internal::NormalizeDeviceInstanceIdWStringCopy(endpoint->ParentDeviceInstanceId) == cleanParentDeviceInstanceId)
+        {
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Match found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(parentDeviceInstanceId.c_str(), "parent deviec instance id")
+            );
+
+            endpointDefinition = endpoint;
+            return S_OK;
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"No match found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(parentDeviceInstanceId.c_str(), "parent deviec instance id")
+    );
+
+    endpointDefinition = nullptr;
+
+    return E_NOTFOUND;
+}
+
 
 _Use_decl_annotations_
 HRESULT
@@ -1044,6 +1096,69 @@ CMidi2KSAggregateMidiEndpointManager2::FindActivatedEndpointDefinitionForFilterD
     return E_NOTFOUND;
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiEndpointManager2::FindAllActivatedEndpointDefinitionsForParentDevice(
+    std::wstring parentDeviceInstanceId,
+    std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>>& endpointDefinitions
+)
+{
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(parentDeviceInstanceId.c_str(), "parent device instance id")
+    );
+
+    auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(parentDeviceInstanceId);
+
+    bool found { false };
+
+    for (auto const& endpoint : m_activatedEndpointDefinitions)
+    {
+        if (internal::NormalizeDeviceInstanceIdWStringCopy(endpoint.second->ParentDeviceInstanceId) == cleanParentDeviceInstanceId)
+        {
+            endpointDefinitions.push_back(endpoint.second);
+            found = true;
+        }
+    }
+
+
+    if (found)
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"One or more matching endpoints found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanParentDeviceInstanceId.c_str(), "parent device instance id")
+        );
+
+        return S_OK;
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No matches found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanParentDeviceInstanceId.c_str(), "parent device instance id")
+        );
+
+        return E_NOTFOUND;
+    }
+
+}
+
+
 
 _Use_decl_annotations_
 HRESULT
@@ -1052,12 +1167,46 @@ CMidi2KSAggregateMidiEndpointManager2::FindExistingParentDeviceDefinitionForEndp
     std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition
 )
 {
-    if (auto parent = m_allParentDeviceDefinitions.find(endpointDefinition->ParentDeviceInstanceId); parent != m_allParentDeviceDefinitions.end())
+    RETURN_HR_IF_NULL(E_INVALIDARG, endpointDefinition);
+
+    auto cleanDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(endpointDefinition->ParentDeviceInstanceId);
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Looking for matching parent", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(cleanDeviceInstanceId.c_str(), "parent device instance id")
+    );
+
+    if (auto parent = m_allParentDeviceDefinitions.find(cleanDeviceInstanceId); parent != m_allParentDeviceDefinitions.end())
     {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Match found.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanDeviceInstanceId.c_str(), "parent device instance id")
+        );
+
         parentDeviceDefinition = parent->second;
 
         return S_OK;
     }
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"No match found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(cleanDeviceInstanceId.c_str(), "parent device instance id")
+    );
 
     return E_NOTFOUND;
 }
@@ -1067,7 +1216,6 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager2::FindOrCreateParentDeviceDefinitionForFilterDevice(
     DeviceInformation filterDevice,
-    KsHandleWrapper& filterDeviceHandleWrapper,
     std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition
 )
 {
@@ -1125,32 +1273,23 @@ CMidi2KSAggregateMidiEndpointManager2::FindOrCreateParentDeviceDefinitionForFilt
     RETURN_HR_IF_NULL(E_OUTOFMEMORY, newParentDeviceDefinition);
 
     newParentDeviceDefinition->DeviceName = parentDevice.Name();
-    newParentDeviceDefinition->DeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(parentDevice.Id().c_str());
+    newParentDeviceDefinition->DeviceInstanceId = cleanParentDeviceInstanceId;
 
     LOG_IF_FAILED(ParseParentIdIntoVidPidSerial(newParentDeviceDefinition->DeviceInstanceId, newParentDeviceDefinition));
 
     // only some vendor drivers provide an actual manufacturer
     // and all the in-box drivers just provide the Generic USB Audio string
-    // TODO: Is "Generic USB Audio" a string that is localized? If so, this
-    // code will not have the intended effect outside of en-US
+    // TODO: Is "Generic USB Audio" a string that is localized? If so, this code will not have the intended effect outside of en-US
     auto manufacturer = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceManufacturer", parentDevice, L"");
+    auto manufacturer2 = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Manufacturer", parentDevice, L"");
     if (!manufacturer.empty() && manufacturer != L"(Generic USB Audio)" && manufacturer != L"Microsoft")
     {
         newParentDeviceDefinition->ManufacturerName = manufacturer;
     }
-
-    // Driver-supplied name. This is needed for WinMM backwards compatibility
-    std::wstring driverSuppliedName{};
-
-    // Using lamba function to prevent handle from dissapearing when being used. 
-    // we don't log the HRESULT because this is not critical and will often fail,
-    // adding unnecessary noise to the error logs
-    filterDeviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
-        return GetKSDriverSuppliedName(h, driverSuppliedName);
-        });
-
-    newParentDeviceDefinition->DriverSuppliedDeviceName = driverSuppliedName;
-
+    else if (!manufacturer2.empty() && manufacturer2 != L"(Generic USB Audio)" && manufacturer2 != L"Microsoft")
+    {
+        newParentDeviceDefinition->ManufacturerName = manufacturer2;
+    }
 
     // Do we need to disambiguate this parent because another of the same device already exists?
 
@@ -1174,6 +1313,16 @@ CMidi2KSAggregateMidiEndpointManager2::FindOrCreateParentDeviceDefinitionForFilt
 
     m_allParentDeviceDefinitions[newParentDeviceDefinition->DeviceInstanceId] = newParentDeviceDefinition;
     parentDeviceDefinition = newParentDeviceDefinition;
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Parent device definition added.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(newParentDeviceDefinition->DeviceInstanceId.c_str(), "key (device instance id)")
+    );
 
     return S_OK;
 }
@@ -1234,7 +1383,6 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager2::FindOrCreatePendingEndpointDefinitionForFilterDevice(
     DeviceInformation filterDevice,
-    KsHandleWrapper& filterDeviceHandleWrapper,
     std::shared_ptr<KsAggregateEndpointDefinition2>& endpointDefinition
 )
 {
@@ -1253,78 +1401,85 @@ CMidi2KSAggregateMidiEndpointManager2::FindOrCreatePendingEndpointDefinitionForF
     // this function locks the parent device list for the duration of the call
     RETURN_IF_FAILED(FindOrCreateParentDeviceDefinitionForFilterDevice(
         filterDevice,
-        filterDeviceHandleWrapper,
         parentDeviceDefinition
         ));
 
     RETURN_HR_IF_NULL(E_POINTER, parentDeviceDefinition);
 
 
-    // TODO: See if we already have an endpoint with space for the number of groups we're going to add
+    // See if we already have an endpoint with space for the number of groups we're going to add
 
-
-
-
-
-
-
-
-
-    // create a new endpoint
-    auto newEndpointDefinition = std::make_shared<KsAggregateEndpointDefinition2>();
-    RETURN_HR_IF_NULL(E_POINTER, parentDeviceDefinition);
-
-    // We need to ensure each endpoint has a unique id. They can't all use the ParentDeviceInstanceId as the
-    // instance id because now some devices will have multiple endpoints. Instead, we need to add a suffix to 
-    // that. We need this to be deterministic and not just a random GUID/number, so that device ids have a 
-    // chance to match up when next enumerated after a restart or connect/disconnect.
-
-    auto parentLock = m_allParentDeviceDefinitionsLock.lock();
-
-    uint32_t endpointIndexForThisParent{ 0 };
-    if (SUCCEEDED(FindCurrentMaxEndpointIndexForParentDevice(parentDeviceDefinition, endpointIndexForThisParent)))
+    std::shared_ptr<KsAggregateEndpointDefinition2> existingEndpointDefinition { nullptr };
+    if (SUCCEEDED(FindPendingEndpointDefinitionForParentDevice(parentDeviceDefinition->DeviceInstanceId, existingEndpointDefinition)))
     {
-        // increment the number here
-        endpointIndexForThisParent++;
-    }
+        RETURN_HR_IF_NULL(E_UNEXPECTED, existingEndpointDefinition);
 
-    newEndpointDefinition->EndpointIndexForThisParentDevice = endpointIndexForThisParent;
+        // TODO: Need to check to see if this endpoint has enough space for the new pins
 
-    // default hash is the device id.
-    std::hash<std::wstring> hasher;
-    std::wstring hash;
-    hash = std::to_wstring(hasher(parentDeviceDefinition->DeviceInstanceId));
+        endpointDefinition = existingEndpointDefinition;
 
-    if (endpointIndexForThisParent == 0)
-    {
-        newEndpointDefinition->EndpointName = parentDeviceDefinition->DeviceName;
-        newEndpointDefinition->EndpointDeviceInstanceId = TRANSPORT_INSTANCE_ID_PREFIX + hash;
+        return S_OK;
     }
     else
     {
-        // pad the string with "0" characters to the left of the number, up to 3 places total.
-        // we +1 so the second one is _002 and not _001
-        newEndpointDefinition->EndpointDeviceInstanceId = std::format(L"{0}{1}_{2:0>3}", TRANSPORT_INSTANCE_ID_PREFIX, hash, endpointIndexForThisParent + 1);
 
-        // add the name disambiguator to the endpoint. We +1 to the index for the same reasons as above. 
-        newEndpointDefinition->EndpointName = std::format(L"{0} ({1})", parentDeviceDefinition->DeviceName, endpointIndexForThisParent + 1);
-        //newEndpointDefinition->EndpointName = std::format(L"{1} - {0}", parentDeviceDefinition->DeviceName, endpointIndexForThisParent + 1);
+        // create a new endpoint
+        auto newEndpointDefinition = std::make_shared<KsAggregateEndpointDefinition2>();
+        RETURN_HR_IF_NULL(E_POINTER, newEndpointDefinition);
+
+        // We need to ensure each endpoint has a unique id. They can't all use the ParentDeviceInstanceId as the
+        // instance id because now some devices will have multiple endpoints. Instead, we need to add a suffix to 
+        // that. We need this to be deterministic and not just a random GUID/number, so that device ids have a 
+        // chance to match up when next enumerated after a restart or connect/disconnect.
+
+        auto parentLock = m_allParentDeviceDefinitionsLock.lock();
+
+        uint32_t endpointIndexForThisParent{ 0 };
+        if (SUCCEEDED(FindCurrentMaxEndpointIndexForParentDevice(parentDeviceDefinition, endpointIndexForThisParent)))
+        {
+            // increment the number here
+            endpointIndexForThisParent++;
+        }
+
+        newEndpointDefinition->ParentDeviceInstanceId = parentDeviceDefinition->DeviceInstanceId;
+        newEndpointDefinition->EndpointIndexForThisParentDevice = endpointIndexForThisParent;
+
+        // default hash is the device id.
+        std::hash<std::wstring> hasher;
+        std::wstring hash;
+        hash = std::to_wstring(hasher(parentDeviceDefinition->DeviceInstanceId));
+
+        if (endpointIndexForThisParent == 0)
+        {
+            newEndpointDefinition->EndpointName = parentDeviceDefinition->DeviceName;
+            newEndpointDefinition->EndpointDeviceInstanceId = TRANSPORT_INSTANCE_ID_PREFIX + hash;
+        }
+        else
+        {
+            // pad the string with "0" characters to the left of the number, up to 3 places total.
+            // we +1 so the second one is _002 and not _001
+            newEndpointDefinition->EndpointDeviceInstanceId = std::format(L"{0}{1}_{2:0>3}", TRANSPORT_INSTANCE_ID_PREFIX, hash, endpointIndexForThisParent + 1);
+
+            // add the name disambiguator to the endpoint. We +1 to the index for the same reasons as above. 
+            newEndpointDefinition->EndpointName = std::format(L"{0} ({1})", parentDeviceDefinition->DeviceName, endpointIndexForThisParent + 1);
+            //newEndpointDefinition->EndpointName = std::format(L"{1} - {0}", parentDeviceDefinition->DeviceName, endpointIndexForThisParent + 1);
+        }
+
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Adding pending aggregate UMP endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        m_pendingEndpointDefinitions.push_back(newEndpointDefinition);
+        endpointDefinition = newEndpointDefinition;
+
+        return S_OK;
     }
 
-    TraceLoggingWrite(
-        MidiKSAggregateTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Adding pending aggregate UMP endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    m_pendingEndpointDefinitions.push_back(newEndpointDefinition);
-    endpointDefinition = newEndpointDefinition;
-
-
-    return S_OK;
 }
 
 _Use_decl_annotations_
@@ -1472,7 +1627,6 @@ _Use_decl_annotations_
 bool CMidi2KSAggregateMidiEndpointManager2::ActiveKSAEndpointForDeviceExists(
     _In_ std::wstring parentDeviceInstanceId)
 {
-
     auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(parentDeviceInstanceId.c_str());
 
     for (auto const& entry : m_activatedEndpointDefinitions) 
@@ -1525,6 +1679,18 @@ CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
     // Wrapper opens the handle internally.
     KsHandleWrapper deviceHandleWrapper(filterDevice.Id().c_str());
     RETURN_IF_FAILED(deviceHandleWrapper.Open());
+
+
+
+    // Driver-supplied name. This is needed for WinMM backwards compatibility
+    std::wstring driverSuppliedName{};
+
+    // Using lamba function to prevent handle from dissapearing when being used. 
+    // we don't log the HRESULT because this is not critical and will often fail,
+    // adding unnecessary noise to the error logs
+    deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+        return GetKSDriverSuppliedName(h, driverSuppliedName);
+        });
 
     // =============================================================================================
     // Go through all the enumerated pins, looking for a MIDI 1.0 pin
@@ -1598,6 +1764,11 @@ CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
                 return GetPinDataFlow(h, pinIndex, dataFlow);
                 });
 
+
+
+            pinDefinition->DriverSuppliedName = driverSuppliedName;
+
+
             if (SUCCEEDED(dataFlowHr))
             {
                 if (dataFlow == KSPIN_DATAFLOW_IN)
@@ -1650,7 +1821,6 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
     std::wstring filterDeviceid, 
-    std::wstring driverSuppliedName, 
     std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition)
 {
     // At this point, we need to have *all* the pins for the endpoint, not just this filter
@@ -1689,6 +1859,7 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
         // guard against errors resulting in invalid group indexes
         RETURN_HR_IF(E_UNEXPECTED, !IS_VALID_GROUP_INDEX(pinDefinition->GroupIndex));
 
+
         std::wstring customName = L"";  // This is blank here. It gets folded in later during endpoint creation/update
 
         // Build the name table entry for this individual pin
@@ -1696,7 +1867,7 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
             pinDefinition->GroupIndex,
             pinDefinition->DataFlowFromUserPerspective,
             customName,
-            driverSuppliedName,
+            pinDefinition->DriverSuppliedName,
             pinDefinition->FilterName,
             pinDefinition->PinName,
             pinDefinition->PortIndexWithinThisFilterAndDirection
@@ -1799,7 +1970,6 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
     RETURN_IF_FAILED(FindOrCreateParentDeviceDefinitionForFilterDevice(
         filterDevice,
-        deviceHandleWrapper,
         parentDeviceDefinition
         ));
 
@@ -1807,16 +1977,11 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     // ===================================================================
     // Find or create the endpoint
 
-
     std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition{ nullptr };
 
     // check to see if we already have an *activated* endpoint for this filter
     if (ActiveKSAEndpointForDeviceExists(parentInstanceId.c_str()))
     {
-        // TODO: If the existing endpoint definition doesn't have room for this set of pins, we need to create a new one
-
-
-
         TraceLoggingWrite(
             MidiKSAggregateTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_VERBOSE,
@@ -1830,13 +1995,29 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
         std::shared_ptr<KsAggregateEndpointDefinition2> existingActivatedEndpointDefinition { nullptr };
 
-        // first MIDI 1 pin we're processing for this interface
-        RETURN_IF_FAILED(FindActivatedEndpointDefinitionForFilterDevice(parentInstanceId.c_str(), existingActivatedEndpointDefinition));
-        RETURN_HR_IF_NULL(E_POINTER, existingActivatedEndpointDefinition);
+        // Get all existing endpoint definitions for this parent device
+        // If the existing endpoint definition doesn't have room for this set of pins, we need to create a new one
+
+        std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> foundEndpoints {};
+
+        if (SUCCEEDED(FindAllActivatedEndpointDefinitionsForParentDevice(parentInstanceId.c_str(), foundEndpoints)))
+        {
+            // find an endpoint with room for another interface with pins.
+            // We're going by the highest group index
+
+
+            // TEMP
+            existingActivatedEndpointDefinition = foundEndpoints[0];
+        }
+
+
+        //// first MIDI 1 pin we're processing for this interface
+        //RETURN_IF_FAILED(FindActivatedEndpointDefinitionForFilterDevice(parentInstanceId.c_str(), existingActivatedEndpointDefinition));
+        //RETURN_HR_IF_NULL(E_POINTER, existingActivatedEndpointDefinition);
 
         // add our new pins into the existing endpoint definition
         existingActivatedEndpointDefinition->MidiPins.insert(existingActivatedEndpointDefinition->MidiPins.end(), pinList.begin(), pinList.end());
-        RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), parentDeviceDefinition->DriverSuppliedDeviceName, existingActivatedEndpointDefinition));
+        RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingActivatedEndpointDefinition));
 
         RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(existingActivatedEndpointDefinition));
 
@@ -1864,7 +2045,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     if (endpointDefinition == nullptr)
     {
         // first MIDI 1 pin we're processing for this interface
-        RETURN_IF_FAILED(FindOrCreatePendingEndpointDefinitionForFilterDevice(filterDevice, deviceHandleWrapper, endpointDefinition));
+        RETURN_IF_FAILED(FindOrCreatePendingEndpointDefinitionForFilterDevice(filterDevice, endpointDefinition));
         RETURN_HR_IF_NULL(E_POINTER, endpointDefinition);
 
 
@@ -1879,7 +2060,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         pinList.clear();    // just make sure we don't use this one, accidentally
     }
 
-    RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), parentDeviceDefinition->DriverSuppliedDeviceName, endpointDefinition));
+    RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), endpointDefinition));
 
     // we have an endpoint definition
     m_endpointCreationThreadWakeup.SetEvent();
@@ -1965,7 +2146,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved(
                 RETURN_HR_IF_NULL(E_UNEXPECTED, parentDeviceDefinition);
 
                 // update remaining pins in existing endpoint definition
-                RETURN_IF_FAILED(UpdateNewPinDefinitions(removedFilterDeviceId, parentDeviceDefinition->DriverSuppliedDeviceName, endpointDefinition));
+                RETURN_IF_FAILED(UpdateNewPinDefinitions(removedFilterDeviceId, endpointDefinition));
                 RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(endpointDefinition));
             }
             else

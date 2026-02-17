@@ -44,19 +44,24 @@ CMidi2KSAggregateTransport::Activate(
             TraceLoggingWideString(L"IMidiEndpointManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
-        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (TransportState::Current().GetEndpointManager() == nullptr)
-        {
-            TransportState::Current().ConstructEndpointManager();
-        }
-
-
         if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
         {
+            // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+            if (TransportState::Current().GetEndpointManager2() == nullptr)
+            {
+                TransportState::Current().ConstructEndpointManager();
+            }
+
             RETURN_IF_FAILED(TransportState::Current().GetEndpointManager2()->QueryInterface(iid, activatedInterface));
         }
         else
         {
+            // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+            if (TransportState::Current().GetEndpointManager() == nullptr)
+            {
+                TransportState::Current().ConstructEndpointManager();
+            }
+
             RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->QueryInterface(iid, activatedInterface));
         }
 

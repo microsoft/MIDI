@@ -24,7 +24,9 @@ struct KsAggregateEndpointMidiPinDefinition2
     std::wstring FilterDeviceId;                // this is also the value needed by WinMM for DRV_QUERYDEVICEINTERFACE
     std::wstring FilterName;
 
-    ULONG PinNumber;
+    std::wstring DriverSuppliedName{};          // value from registry. Required for WinMM classic naming. This was at parent level efore, but loopMIDI and similar register per-interface
+
+    ULONG PinNumber{ 0 };
     std::wstring PinName;
 
     MidiFlow PinDataFlow;
@@ -61,7 +63,6 @@ class KsAggregateParentDeviceDefinition2
 public:
     std::wstring DeviceName{};
     std::wstring DeviceInstanceId{};
-    std::wstring DriverSuppliedDeviceName{};    // value from registry. Required for WinMM classic naming
 
     uint32_t IndexOfDevicesWithThisSameName{ 0 };   // for when there are multiple of the same device
 
@@ -120,26 +121,33 @@ private:
 
     HRESULT ParseParentIdIntoVidPidSerial(
         _In_ std::wstring systemDevicesParentValue,
-        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDevice);
+        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice);
 
 
     HRESULT FindActivatedEndpointDefinitionForFilterDevice(
         _In_ std::wstring filterDeviceId,
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
+        _Inout_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
+
+    HRESULT FindAllActivatedEndpointDefinitionsForParentDevice(
+        _In_ std::wstring parentDeviceInstanceId,
+        _Inout_ std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>>& endpointDefinitions
+        );
+
+    HRESULT FindPendingEndpointDefinitionForParentDevice(
+        _In_ std::wstring parentDeviceInstanceId,
+        _Inout_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
 
     HRESULT FindExistingParentDeviceDefinitionForEndpoint(
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition,
-        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
+        _Inout_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
 
     HRESULT FindOrCreateParentDeviceDefinitionForFilterDevice(
         _In_ DeviceInformation filterDevice,
-        _In_ KsHandleWrapper& filterDeviceWrapper,
-        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
+        _Inout_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
 
     HRESULT FindOrCreatePendingEndpointDefinitionForFilterDevice(
         _In_ DeviceInformation,
-        _In_ KsHandleWrapper& filterDeviceHandleWrapper,
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
+        _Inout_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
     
 
     HRESULT FindCurrentMaxEndpointIndexForParentDevice(
@@ -164,7 +172,6 @@ private:
 
     HRESULT UpdateNewPinDefinitions(
         _In_ std::wstring filterDeviceid,
-        _In_ std::wstring driverSuppliedName,
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition);
 
     HRESULT BuildPinsAndGroupTerminalBlocksPropertyData(

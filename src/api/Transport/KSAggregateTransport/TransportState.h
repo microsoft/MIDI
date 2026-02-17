@@ -23,13 +23,13 @@ public:
 
     wil::com_ptr<CMidi2KSAggregateMidiEndpointManager> GetEndpointManager()
     {
-        if (!Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+        if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
         {
-            return m_endpointManager;
+            return nullptr;
         }
         else
         {
-            return nullptr;
+            return m_endpointManager;
         }
     }
 
