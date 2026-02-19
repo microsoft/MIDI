@@ -90,9 +90,48 @@ namespace Microsoft.Midi.Settings.Views
 
         private async void CreateNewLoopbackPair_Click(object sender, RoutedEventArgs e)
         {
-            Dialog_CreateLoopbackEndpoints.Resources["ContentDialogMaxHeight"] = Math.Max(800.0, this.ActualHeight);
+            Dialog_CreateLoopbackEndpoints.Resources["ContentDialogMaxHeight"] = Math.Max(1200.0, this.ActualHeight);
+
+            // TODO: Read this from local settings
+
+            NewLoopbackSwitchToQuickSetup();
 
             var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
+        }
+
+
+
+        private void NewLoopbackSwitchToQuickSetup()
+        {
+            SetupAdvancedPanel.Visibility = Visibility.Collapsed;
+            SetupQuickPanel.Visibility = Visibility.Visible;
+
+            SetupQuickButton.IsChecked = true;
+            SetupAdvancedButton.IsChecked = false;
+        }
+
+        private void NewLoopbackSwitchToAdvancedSetup()
+        {
+            SetupAdvancedPanel.Visibility = Visibility.Visible;
+            SetupQuickPanel.Visibility = Visibility.Collapsed;
+
+            SetupQuickButton.IsChecked = false;
+            SetupAdvancedButton.IsChecked = true;
+        }
+
+        private void SetupQuickButton_Click(object sender, RoutedEventArgs e)
+        {
+            NewLoopbackSwitchToQuickSetup();
+        }
+
+        private void SetupAdvancedButton_Click(object sender, RoutedEventArgs e)
+        {
+            NewLoopbackSwitchToAdvancedSetup();
+        }
+
+        private void Dialog_CreateLoopbackEndpoints_Closing(ContentDialog sender, ContentDialogClosingEventArgs args)
+        {
+
         }
 
 
