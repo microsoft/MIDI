@@ -721,7 +721,7 @@ class Build : NukeBuild
                     //.AddNoWarns(45)     // will this stop "MVVMTK0045" ?
                 );
 
-                var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / "net10.0-windows10.0.22621.0" / rid;
+                var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / $"net10.0-windows{TargetWindowsSdkVersion}" / rid;
                 var stagingFolder = MidiSettingsStagingFolder / platform;
 
                 stagingFolder.CreateOrCleanDirectory();
