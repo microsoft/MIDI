@@ -11,13 +11,13 @@ namespace Microsoft.Windows.Devices.Midi2.Common
 		public const string Source = "GitHub Preview";
 		public const string BuildDate = "2026-02-19";
 		public const string Name = "SDK Release Candidate 2";
-		public const string BuildFullVersion = "1.0.15-rc.2.15";
+		public const string BuildFullVersion = "1.0.15-rc.2.18";
 		public const ushort VersionMajor = 1;
 		public const ushort VersionMinor = 0;
 		public const ushort VersionPatch = 15;
-		public const ushort VersionBuildNumber = 15;
-		public const string Preview = "rc.2.15";
-		public const string AssemblyFullVersion = "1.0.15.15";
-		public const string FileFullVersion = "1.0.15.15";
+		public const ushort VersionBuildNumber = 18;
+		public const string Preview = "rc.2.18";
+		public const string AssemblyFullVersion = "1.0.15.18";
+		public const string FileFullVersion = "1.0.15.18";
 	}
 }
