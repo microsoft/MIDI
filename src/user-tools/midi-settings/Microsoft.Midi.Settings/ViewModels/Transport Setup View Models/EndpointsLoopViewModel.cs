@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -123,7 +124,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             get { return _newLoopbackEndpointBaseName; }
             set
             {
-                _newLoopbackEndpointBaseName = value.Trim();
+                _newLoopbackEndpointBaseName = value;
                 UpdateValidState();
                 OnPropertyChanged();
             }
@@ -135,7 +136,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             get { return _newLoopbackDescription; }
             set
             {
-                _newLoopbackDescription = value.Trim();
+                _newLoopbackDescription = value;
                 UpdateValidState();
                 OnPropertyChanged();
             }
@@ -147,12 +148,65 @@ namespace Microsoft.Midi.Settings.ViewModels
             get { return _newUniqueIdentifier; }
             set
             {
-                _newUniqueIdentifier = value.Trim();
+                _newUniqueIdentifier = value;
 
                 UpdateValidState();
                 OnPropertyChanged();
             }
         }
+
+
+
+        private string _newLoopbackEndpointAName;
+        public string NewLoopbackEndpointAName
+        {
+            get { return _newLoopbackEndpointAName; }
+            set
+            {
+                _newLoopbackEndpointAName = value;
+                UpdateValidState();
+                OnPropertyChanged();
+            }
+        }
+
+        private string _newLoopbackEndpointBName;
+        public string NewLoopbackEndpointBName
+        {
+            get { return _newLoopbackEndpointBName; }
+            set
+            {
+                _newLoopbackEndpointBName = value;
+                UpdateValidState();
+                OnPropertyChanged();
+            }
+        }
+
+        private string _newLoopbackEndpointADescription;
+        public string NewLoopbackEndpointADescription
+        {
+            get { return _newLoopbackEndpointADescription; }
+            set
+            {
+                _newLoopbackEndpointADescription = value;
+                UpdateValidState();
+                OnPropertyChanged();
+            }
+        }
+
+        private string _newLoopbackEndpointBDescription;
+        public string NewLoopbackEndpointBDescription
+        {
+            get { return _newLoopbackEndpointBDescription; }
+            set
+            {
+                _newLoopbackEndpointBDescription = value;
+                UpdateValidState();
+                OnPropertyChanged();
+            }
+        }
+
+
+
 
         [ObservableProperty]
         private bool newLoopbackIsPersistent;
@@ -170,13 +224,21 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void UpdateValidState()
         {
-            if (string.IsNullOrWhiteSpace(NewLoopbackEndpointBaseName) )
+            if (!string.IsNullOrEmpty(NewLoopbackEndpointAName) && !string.IsNullOrEmpty(NewLoopbackEndpointBName))
             {
-                ValidationErrorMessage = "Both endpoint names are required.";
-                NewLoopbackSettingsAreValid = false;
-                return;
-            }
+                // we're using the direct names
 
+
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(NewLoopbackEndpointBaseName))
+                {
+                    ValidationErrorMessage = "Both endpoint names are required. Please provide a base name, or specify individual names";
+                    NewLoopbackSettingsAreValid = false;
+                    return;
+                }
+            }
 
             // TODO: validate both names are not duplicates of any other endpoint name
 
@@ -227,28 +289,108 @@ namespace Microsoft.Midi.Settings.ViewModels
             NewUniqueIdentifier = uniqueId;
         }
 
+
+
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern int MessageBox(
+            IntPtr hWnd,
+            string lpText,
+            string lpCaption,
+            int uType);
+
+
         private void CreateNewLoopbackEndpoints()
         {
             var endpointA = new MidiLoopbackEndpointDefinition();
             var endpointB = new MidiLoopbackEndpointDefinition();
 
-            endpointA.Name = NewLoopbackEndpointBaseName.Trim() + " (A)";
-            endpointB.Name = NewLoopbackEndpointBaseName.Trim() + " (B)";
+
+            if (!string.IsNullOrEmpty(NewLoopbackEndpointAName) && !string.IsNullOrEmpty(NewLoopbackEndpointBName))
+            {
+                // Advanced setup chosen
+
+                endpointA.Name = NewLoopbackEndpointAName.Trim();
+                endpointB.Name = NewLoopbackEndpointBName.Trim();
+
+                if (!string.IsNullOrEmpty(NewLoopbackEndpointADescription))
+                {
+                    endpointA.Description = NewLoopbackEndpointADescription.Trim();
+                }
+
+                if (!string.IsNullOrEmpty(NewLoopbackEndpointBDescription))
+                {
+                    endpointB.Description = NewLoopbackEndpointBDescription.Trim();
+                }
+            }
+            else
+            {
+                // quick setup chosen
+
+                endpointA.Name = NewLoopbackEndpointBaseName.Trim() + " (A)";
+                endpointB.Name = NewLoopbackEndpointBaseName.Trim() + " (B)";
+
+                if (!string.IsNullOrEmpty(NewLoopbackDescription))
+                {
+                    endpointA.Description = NewLoopbackDescription.Trim();
+                    endpointB.Description = NewLoopbackDescription.Trim();
+                }
+            }
+
+
+            // TODO: Check for duplicates not just for loopbacks, but any other ports in the system
+            LoadExistingEndpointPairs();
+
+            bool duplicateNameFound = false;
+
+            string compareAName = endpointA.Name.ToLower().Trim();
+            string compareBName = endpointB.Name.ToLower().Trim();
+
+            foreach (var pair in MidiLoopbackEndpointPairs)
+            {
+                string a = pair.LoopA.Name.ToLower().Trim();
+                string b = pair.LoopB.Name.ToLower().Trim();
+
+                if (a == compareAName || a == compareBName)
+                {
+                    duplicateNameFound = true;
+                    break;
+                }
+                else if (b == compareAName || b == compareBName)
+                {
+                    duplicateNameFound = true;
+                    break;
+                }
+
+            }
+
+            if (duplicateNameFound)
+            {
+                // TODO: Need to show this and prevent the dialog from closing
+
+                ValidationErrorMessage = "The loopback endpoint names must be unique across all MIDI endpoint names.";
+                NewLoopbackSettingsAreValid = false;
+
+                // these message boxes are ugly, but it's the fastest way to get this out right now
+                MessageBox(
+                    (IntPtr)0,
+                    ValidationErrorMessage,
+                    "Unable to create loopback endpoints",
+                    0);
+
+                return;
+            }
+
+
 
             endpointA.UniqueId = CleanupUniqueId(NewUniqueIdentifier);
             endpointB.UniqueId = CleanupUniqueId(NewUniqueIdentifier);
 
             // descriptions are optional
-            // TODO: Allow setting the description in the dialog
-            endpointA.Description = NewLoopbackDescription.Trim();
-            endpointB.Description = NewLoopbackDescription.Trim();
-
             var associationId = GuidHelper.CreateNewGuid();
 
             var creationConfig = new MidiLoopbackEndpointCreationConfig(associationId, endpointA, endpointB);
 
             var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
-
 
             // TODO: if that worked, and these are persistent, add to configuration file
 
@@ -266,13 +408,41 @@ namespace Microsoft.Midi.Settings.ViewModels
                     else
                     {
                         // no config file
+
+                        // these message boxes are ugly, but it's the fastest way to get this out right now
+                        MessageBox(
+                            (IntPtr)0,
+                            "Missing MIDI configuration file",
+                            "Unable to create loopback endpoints",
+                            0);
+
                     }
                 }
                 else
                 {
-                    // update error information
+                    // these message boxes are ugly, but it's the fastest way to get this out right now
+                    MessageBox(
+                        (IntPtr)0,
+                        "Message from MIDI service: " + result.ErrorInformation,
+                        "Unable to create loopback endpoints",
+                        0);
                 }
             }
+
+            if (result.Success)
+            {
+                NewLoopbackEndpointAName = string.Empty;
+                NewLoopbackEndpointBName = string.Empty;
+
+                NewLoopbackEndpointADescription = string.Empty;
+                NewLoopbackEndpointBDescription = string.Empty;
+
+                NewLoopbackEndpointBaseName = string.Empty;
+                NewLoopbackDescription = string.Empty;
+
+                GenerateNewUniqueId();
+            }    
+
         }
 
 

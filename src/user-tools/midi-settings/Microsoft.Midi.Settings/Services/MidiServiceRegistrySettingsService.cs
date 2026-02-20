@@ -122,6 +122,12 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
             return true;
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Error setting registry DWORD value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
+
+            return false;
+        }
         catch (Exception ex)
         {
             App.GetService<ILoggingService>().LogError($"Error setting registry DWORD value for {keyName} : {valueName}", ex);
@@ -140,6 +146,12 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
             return true;
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Error setting registry Boolean value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
+
+            return false;
+        }
         catch (Exception ex)
         {
             App.GetService<ILoggingService>().LogError($"Error setting registry Boolean DWORD value for {keyName} : {valueName}", ex);
@@ -155,6 +167,12 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
             Microsoft.Win32.Registry.SetValue(keyName, valueName, newValue.Trim(), Win32.RegistryValueKind.String);
 
             return true;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Error setting registry String value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
+
+            return false;
         }
         catch (Exception ex)
         {

@@ -33,6 +33,25 @@ app.Configure(config =>
     config.CaseSensitivity(CaseSensitivity.None);
 
 
+    config.AddBranch("loopback", create =>
+    {
+        create.SetDescription(Strings.CommandLoopbackDescription);
+
+        create.AddCommand<CreateLoopbackCommand>("create")
+            .WithDescription(Strings.CommandCreateLoopbackDescription)
+            .WithExample("loopback", "create", "--name-a", "\"My Loopback A\"", "--name-b", "\"My Loopback B\"")
+        ;
+
+        create.AddCommand<RemoveLoopbackCommand>("remove")
+            .WithAlias("delete")
+            .WithDescription(Strings.CommandRemoveLoopbackDescription)
+            .WithExample("loopback", "remove", "--association-id", "{bb872b25-bc38-4009-a85a-559824398a13}")
+        ;
+
+
+    });
+
+
     config.AddBranch("enumerate", enumerate =>
     {
         enumerate.SetDescription(Strings.CommandEnumerateDescription);
@@ -285,6 +304,19 @@ AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppTitle(Strings.AppTitle));
 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation($"{Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.Name} ({Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.Source})"));
 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.BuildFullVersion));
 AnsiConsole.WriteLine();
+
+
+
+if (!Microsoft.Midi.Settings.Helpers.MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabled())
+{
+    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiFeatureNotEnabled));
+
+    return (int)MidiConsoleReturnCode.ErrorMidiServicesFeatureNotEnabled;
+}
+
+
+
+
 
 
 

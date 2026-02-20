@@ -538,6 +538,7 @@ class Build : NukeBuild
                 (sdkOutputRootFolder / "midi1monitor" / stagingPlatform / Configuration.Release / $"midi1monitor.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
                 (sdkOutputRootFolder / "midi1enum" / stagingPlatform / Configuration.Release / $"midi1enum.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
                 (sdkOutputRootFolder / "midifixreg" / stagingPlatform / Configuration.Release / $"midifixreg.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
+                (sdkOutputRootFolder / "midicheckservice" / stagingPlatform / Configuration.Release / $"midicheckservice.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
             }
         });
 
@@ -720,7 +721,7 @@ class Build : NukeBuild
                     //.AddNoWarns(45)     // will this stop "MVVMTK0045" ?
                 );
 
-                var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / "net10.0-windows10.0.22621.0" / rid;
+                var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / $"net10.0-windows{TargetWindowsSdkVersion}" / rid;
                 var stagingFolder = MidiSettingsStagingFolder / platform;
 
                 stagingFolder.CreateOrCleanDirectory();
@@ -977,6 +978,7 @@ class Build : NukeBuild
                 (consoleOutputFolder / "midi.deps.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
                 (consoleOutputFolder / "midi.runtimeconfig.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
                 //(consoleOutputFolder / "midi.exe.manifest", stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "Microsoft.Devices.Midi2.Tools.Shared.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 
                 (consoleOutputFolder / "WinRT.Runtime.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 

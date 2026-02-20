@@ -306,6 +306,8 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
         std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
         std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
         std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+        std::cout << dye::light_aqua(" This tool tells you if the new Windows MIDI Services is enabled on your PC.") << std::endl;
+        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
         std::cout << dye::light_aqua(" If this is a Windows Insider Dev or Beta build of Windows released before our official") << std::endl;
         std::cout << dye::light_aqua(" 24h2+ retail release, you may receive an incorrect positive result from this test. ") << std::endl;
         std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
@@ -320,11 +322,12 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
 
         if (wdmaud2Enabled)
         {
-            WriteInfo("Successfully verified wdmaud2.drv is present in registry.");
+            WriteInfo("Successfully verified wdmaud2.drv is present in registry, as required by the new MIDI stack.");
         }
         else
         {
-            WriteInfo("wdmaud2.drv is not present in registry in values midi-midi9. Most likely, the feature has not yet been enabled on this PC.");
+            WriteError("wdmaud2.drv is not present in registry in values midi-midi9. Most likely, the feature has not yet been enabled on this PC.");
+            WriteError("The new Windows MIDI Services stack is not functional on this PC.");
 
             PauseIfAppropriate();
             return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_NOT_ENABLED_IN_REGISTRY);
@@ -349,6 +352,8 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
                 WriteInfo("Successfully tested connectivity to service: MIDI Service is available.");
                 WriteInfo("However, this appears to be a development build, and so may not have the right");
                 WriteInfo("connections to the MIDI 1.0 APIs, the MIDI 2.0 class driver, etc.");
+                WriteInfo("");
+                WriteInfo("As a result, MIDI 2.0 will work if the driver is present, but it's possible MIDI 1.0 APIs will not.");
 
                 PauseIfAppropriate();
                 return static_cast<int>(MIDISRV_CHECK_RETURN_VALUE_SUCCESS_DEV_BUILD);
@@ -357,6 +362,7 @@ int __cdecl wmain(_In_ int argc, _In_ WCHAR* argv[])
         else
         {
             WriteError("MIDI Service is not available. It may not yet be enabled on this PC via Controlled Feature Rollout.");
+            WriteError("The new Windows MIDI Services stack is not functional on this PC.");
 
             // we only shut down midisrv if we're not running in quiet mode. The reason is the shutdown
             // will throw up a UAC prompt
