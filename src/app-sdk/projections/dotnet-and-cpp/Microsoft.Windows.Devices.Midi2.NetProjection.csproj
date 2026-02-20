@@ -41,7 +41,7 @@
 		<PackageOutputPath>$(SolutionDir)vsfiles\PublishedNuGet\</PackageOutputPath>
 		<SupportedOSPlatformVersion>10.0.26100.00</SupportedOSPlatformVersion>
 		<BaseOutputPath>$(SolutionDir)vsfiles\out\$(AssemblyName)\</BaseOutputPath>
-        <WindowsSDKPackageVersion>10.0.26100.38</WindowsSDKPackageVersion>
+        <WindowsSDKPackageVersion>10.0.26100.57</WindowsSDKPackageVersion>
 
         <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
         <ProduceReferenceAssembly>true</ProduceReferenceAssembly>

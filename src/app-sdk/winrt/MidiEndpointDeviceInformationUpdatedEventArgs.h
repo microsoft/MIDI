@@ -27,6 +27,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool AreAdditionalCapabilitiesUpdated() const noexcept { return m_updatedAdditionalCapabilities; }
         bool AreUniqueIdsUpdated() const noexcept { return m_updatedUniqueIds; }
 
+        bool AreGroupTerminalBlocksUpdated() const noexcept { return m_updatedGroupTerminalBlocks; }
+
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
 
         void InternalInitialize(
@@ -39,7 +41,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ bool const updatedFunctionBlocks,
             _In_ bool const updatedUserMetadata,
             _In_ bool const updatedAdditionalCapabilities,
-            _In_ bool const updatedUniqueIds
+            _In_ bool const updatedUniqueIds,
+            _In_ bool const updatedGroupTerminalBlocks
         ) noexcept;
 
     private:
@@ -51,6 +54,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool m_updatedUserMetadata{ false };
         bool m_updatedAdditionalCapabilities{ false };
         bool m_updatedUniqueIds{ false };
+
+        bool m_updatedGroupTerminalBlocks{ false };
 
         winrt::hstring m_endpointDeviceId{};
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };

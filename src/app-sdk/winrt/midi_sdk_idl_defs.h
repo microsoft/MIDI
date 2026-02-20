@@ -37,7 +37,9 @@
 
 #define UUID_IMidiEndpointDeviceInformationAddedEventArgs	8087b303-0519-31d1-c0de-dd000000b000
 #define UUID_IMidiEndpointDeviceInformationRemovedEventArgs	8087b303-0519-31d1-c0de-dd000000c000
-#define UUID_IMidiEndpointDeviceInformationUpdatedEventArgs	8087b303-0519-31d1-c0de-dd000000d000
+
+#define UUID_IMidiEndpointDeviceInformationUpdatedEventArgs	    8087b303-0519-31d1-c0de-dd000000d000
+#define UUID_IMidiEndpointDeviceInformationUpdatedEventArgs2    8087b303-0519-31d1-c0de-dd000000d002
 
 #define UUID_IMidiEndpointDeviceWatcher						8087b303-0519-31d1-c0de-dd000000e000
 #define UUID_IMidiEndpointDeviceWatcherStatics				8087b303-0519-31d1-c0de-ee000000e000

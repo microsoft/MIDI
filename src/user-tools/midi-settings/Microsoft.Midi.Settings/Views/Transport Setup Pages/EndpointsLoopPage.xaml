@@ -112,6 +112,7 @@
                        PrimaryButtonText="OK" 
                        IsPrimaryButtonEnabled="{x:Bind ViewModel.NewLoopbackSettingsAreValid, Mode=OneWay}"
                        CloseButtonText="Cancel"
+                       Closing="Dialog_CreateLoopbackEndpoints_Closing"
                        PrimaryButtonCommand="{x:Bind ViewModel.CreateLoopbackPairsCommand}"
                        >
             <ContentDialog.Resources>
@@ -143,19 +144,48 @@
                     </Image>
 
 
-                    <TextBlock TextWrapping="WrapWholeWords" 
+                    <!-- TODO: We should retain which setup option the user last used -->
+
+                    <StackPanel>
+                        <CommandBar HorizontalAlignment="Left"
+                                    Margin="0,0,0,8"
+                                    IsOpen="False"
+                                    DefaultLabelPosition="Right"
+                                    IsDynamicOverflowEnabled="False">
+                            <CommandBar.PrimaryCommands>
+
+                                <!-- Cards, Icons, or List -->
+
+                                <AppBarToggleButton x:Name="SetupQuickButton"
+                                                    VerticalAlignment="Center"
+                                                    Click="SetupQuickButton_Click"
+                                                    Label="Quick Setup">
+                                </AppBarToggleButton>
+
+                                <AppBarToggleButton x:Name="SetupAdvancedButton"
+                                                    VerticalAlignment="Center"
+                                                    Click="SetupAdvancedButton_Click"
+                                                    Label="Advanced Setup">
+                                </AppBarToggleButton>
+                            </CommandBar.PrimaryCommands>
+                        </CommandBar>
+                    </StackPanel>
+
+                    <!-- Simple setup. Just specify the base name. -->
+
+                    <StackPanel x:Name="SetupQuickPanel">
+                        <TextBlock TextWrapping="WrapWholeWords" 
                            Text="Please provide a base name for the loopback endpoints. To support use with MIDI 1.0 APIs, the name length cannot exceed 27 characters. The suffixes '(A)' and '(B)' will be appended to the base name to differentiate the two endpoints."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBox Grid.Column="0" 
+                            <TextBox Grid.Column="0" 
                                  VerticalAlignment="Top"
                                  Header="Loopback Base Name" 
                                  Width="250"
@@ -163,7 +193,7 @@
                                  MaxLength="27"
                                  Margin="13"/>
 
-                        <TextBox Grid.Column="1" 
+                            <TextBox Grid.Column="1" 
                                  VerticalAlignment="Top"
                                  Header="Description (Optional)" 
                                  Text="{x:Bind ViewModel.NewLoopbackDescription, Mode=TwoWay}"
@@ -172,28 +202,89 @@
                                  TextWrapping="Wrap"
                                  IsSpellCheckEnabled="True"
                                  Margin="13"/>
-                    </Grid>
+                        </Grid>
 
-                    <TextBlock TextWrapping="WrapWholeWords" 
+                    </StackPanel>
+
+                    
+                    
+                    
+                    <!-- Advanced Setup. Control over names, unique Id, etc. -->
+
+                    <StackPanel x:Name="SetupAdvancedPanel">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBox Grid.Column="0" 
+                                 Grid.Row="0"
+                                 VerticalAlignment="Top"
+                                 Header="Loopback A Name" 
+                                 Width="250"
+                                 Text="{x:Bind ViewModel.NewLoopbackEndpointAName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="31"
+                                 Margin="13"/>
+
+                            <TextBox Grid.Column="1" 
+                                 Grid.Row="0"
+                                 VerticalAlignment="Top"
+                                 Header="Description (Optional)" 
+                                 Text="{x:Bind ViewModel.NewLoopbackEndpointADescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="100"
+                                 MaxLength="500"
+                                 TextWrapping="Wrap"
+                                 IsSpellCheckEnabled="True"
+                                 Margin="13"/>
+
+                            <TextBox Grid.Column="0" 
+                                 Grid.Row="1"
+                                 VerticalAlignment="Top"
+                                 Header="Loopback B Name" 
+                                 Width="250"
+                                 Text="{x:Bind ViewModel.NewLoopbackEndpointBName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="31"
+                                 Margin="13"/>
+
+                            <TextBox Grid.Column="1" 
+                                 Grid.Row="1"
+                                 VerticalAlignment="Top"
+                                 Header="Description (Optional)" 
+                                 Text="{x:Bind ViewModel.NewLoopbackEndpointBDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="100"
+                                 MaxLength="500"
+                                 TextWrapping="Wrap"
+                                 IsSpellCheckEnabled="True"
+                                 Margin="13"/>
+
+                        </Grid>
+
+                        <TextBlock TextWrapping="WrapWholeWords" 
                            Text="All MIDI endpoints require a unique identifer. This can be any alpha-numeric text, no spaces or special characters, up to 32 characters long, that is unique within the endpoints for this transport. A default value has been created for you."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
-                        <TextBox Header="Unique Identifier" 
+                            <TextBox Header="Unique Identifier" 
                                  Text="{x:Bind ViewModel.NewUniqueIdentifier, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  MaxLength="32"
                                  Margin="13"/>
 
-                        <!-- second column is empty -->
-                    </Grid>
+                            <!-- second column is empty -->
+                        </Grid>
+                    </StackPanel>
 
-
+                   
 
                     <ToggleSwitch Margin="13"
                               IsEnabled="{x:Bind ViewModel.IsConfigFileActive, Mode=OneWay}"
