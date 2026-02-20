@@ -28,6 +28,7 @@ namespace Microsoft.Midi.ConsoleApp
         ErrorMalformedUmp = 300,
 
         ErrorServiceNotAvailable = 800,
+        ErrorMidiServicesFeatureNotEnabled = 801,
 
         ErrorInsufficientPermissions = 850,
 

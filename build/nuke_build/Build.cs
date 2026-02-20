@@ -978,6 +978,7 @@ class Build : NukeBuild
                 (consoleOutputFolder / "midi.deps.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
                 (consoleOutputFolder / "midi.runtimeconfig.json").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
                 //(consoleOutputFolder / "midi.exe.manifest", stagingFolder, ExistsPolicy.FileOverwrite);
+                (consoleOutputFolder / "Microsoft.Devices.Midi2.Tools.Shared.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 
                 (consoleOutputFolder / "WinRT.Runtime.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 

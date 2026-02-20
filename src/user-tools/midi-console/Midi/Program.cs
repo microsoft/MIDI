@@ -307,6 +307,19 @@ AnsiConsole.WriteLine();
 
 
 
+if (!Microsoft.Midi.Settings.Helpers.MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabled())
+{
+    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiFeatureNotEnabled));
+
+    return (int)MidiConsoleReturnCode.ErrorMidiServicesFeatureNotEnabled;
+}
+
+
+
+
+
+
+
 sdkInit.MidiDesktopAppSdkInitializer? initializer = null;
 
 try

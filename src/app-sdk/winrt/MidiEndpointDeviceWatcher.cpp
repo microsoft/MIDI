@@ -158,6 +158,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     bool updatedUserMetadata{ false };
                     bool updatedAdditionalCapabilities{ false };
                     bool updatedUniqueIds{ false };
+                    bool updatedGroupTerminalBlocks{ false };
 
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointName) ||
@@ -236,6 +237,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         updatedAdditionalCapabilities = true;
                     }
 
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_GroupTerminalBlocks)
+                        )
+                    {
+                        updatedGroupTerminalBlocks = true;
+                    }
+
                     newArgs->InternalInitialize(
                         args.Id(),
                         args,
@@ -246,7 +253,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         updatedFunctionBlocks,
                         updatedUserMetadata,
                         updatedAdditionalCapabilities,
-                        updatedUniqueIds
+                        updatedUniqueIds,
+                        updatedGroupTerminalBlocks
                         );
 
                     m_deviceUpdatedEvent(*this, *newArgs);

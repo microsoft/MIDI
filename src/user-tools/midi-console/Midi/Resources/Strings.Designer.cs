@@ -601,6 +601,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Windows MIDI Services feature does not appear to be enabled on this PC. Enablement for supported versions of Windows will come through Windows Update. If you believe this to be in error, then a driver uninstaller or registry tool may have fouled the registry entries for MIDI. Please run the midifixreg tool from an Administrator command prompt..
+        /// </summary>
+        internal static string ErrorMidiFeatureNotEnabled {
+            get {
+                return ResourceManager.GetString("ErrorMidiFeatureNotEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The MIDI Service is not available..
         /// </summary>
         internal static string ErrorMidiServiceNotAvailable {

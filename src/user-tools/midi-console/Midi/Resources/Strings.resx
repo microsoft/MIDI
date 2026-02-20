@@ -1150,4 +1150,7 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   <data name="ParameterCreateLoopbackRootName" xml:space="preserve">
     <value>Provide a root name instead of individual endpoint names. "(A)" and "(B)" will be appended to this name to create the two endpoints.</value>
   </data>
+  <data name="ErrorMidiFeatureNotEnabled" xml:space="preserve">
+    <value>The Windows MIDI Services feature does not appear to be enabled on this PC. Enablement for supported versions of Windows will come through Windows Update. If you believe this to be in error, then a driver uninstaller or registry tool may have fouled the registry entries for MIDI. Please run the midifixreg tool from an Administrator command prompt.</value>
+  </data>
 </root>

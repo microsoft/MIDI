@@ -47,7 +47,7 @@ namespace Microsoft.Midi.ConsoleApp
         // they should also be kept in-line with what the settings app creates
         const string LoopbackASuffix = " (A)";
         const string LoopbackBSuffix = " (B)";
-        const int MaxWinMMPortNameLength = 32;
+        const int MaxWinMMPortNameLength = 31;
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
         {
@@ -80,7 +80,7 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (settings.NameA.ToLower() == settings.NameB.ToLower())
             {
-                return ValidationResult.Error("The first 32 characters of each name cannot be the same.");
+                return ValidationResult.Error("The first 31 characters of each name cannot be the same.");
             }
 
 

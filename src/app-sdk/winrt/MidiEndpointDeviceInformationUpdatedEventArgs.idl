@@ -14,8 +14,16 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
+    [uuid(UUID_IMidiEndpointDeviceInformationUpdatedEventArgs2), version(1.0)]
+    interface IMidiEndpointDeviceInformationUpdatedEventArgs2
+    {
+        Boolean AreGroupTerminalBlocksUpdated{ get; };
+    };
+
+
+    [contract(MidiEnumerationApiContract, 1)]
     [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceInformationUpdatedEventArgs", UUID_IMidiEndpointDeviceInformationUpdatedEventArgs)]
-    runtimeclass MidiEndpointDeviceInformationUpdatedEventArgs
+    runtimeclass MidiEndpointDeviceInformationUpdatedEventArgs : IMidiEndpointDeviceInformationUpdatedEventArgs2
     {
         String EndpointDeviceId {get; };
 
