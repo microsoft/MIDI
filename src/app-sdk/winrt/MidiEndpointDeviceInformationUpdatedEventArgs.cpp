@@ -25,7 +25,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool const updatedFunctionBlocks,
         bool const updatedUserMetadata,
         bool const updatedAdditionalCapabilities,
-        bool const updatedUniqueIds
+        bool const updatedUniqueIds,
+        bool const updatedGroupTerminalBlocks
     ) noexcept
     {
 
@@ -41,6 +42,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         m_deviceInformationUpdate = deviceInformationUpdate;
 
         m_updatedUniqueIds = updatedUniqueIds;
+
+        m_updatedGroupTerminalBlocks = updatedGroupTerminalBlocks;
     }
 
 }

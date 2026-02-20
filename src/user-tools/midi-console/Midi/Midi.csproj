@@ -52,6 +52,9 @@
     <PackageReference Include="System.Management" Version="10.0.2" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.2" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\shared\Microsoft.Devices.Midi2.Tools.Shared\Microsoft.Devices.Midi2.Tools.Shared.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Resources\Strings.Designer.cs">
