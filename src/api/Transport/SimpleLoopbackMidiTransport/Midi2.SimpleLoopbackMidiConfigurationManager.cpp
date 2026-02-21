@@ -156,7 +156,6 @@ CMidi2SimpleLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                 // get the association string (GUID) name
                 auto associationKey = o.Current().Key();
-                //json::JsonObject associationObj;
 
                 auto associationObj = o.Current().Value().GetObject();
                
@@ -164,7 +163,7 @@ CMidi2SimpleLoopbackMidiConfigurationManager::UpdateConfiguration(
                 {
                     definition->AssociationId = associationKey;
 
-                    auto endpointObject = associationObj.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_SIMPLE_LOOPBACK_DEVICE_ENDPOINT_KEY, nullptr);
+                    auto endpointObject = associationObj.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY, nullptr);
 
                     if (endpointObject != nullptr)
                     {
@@ -266,7 +265,7 @@ CMidi2SimpleLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 // update the return json with the new Ids
                                 auto endpointIdAVal = json::JsonValue::CreateStringValue(definition->CreatedEndpointInterfaceId);
                                 responseObject.SetNamedValue(
-                                    MIDI_CONFIG_JSON_ENDPOINT_SIMPLE_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY,
+                                    MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY,
                                     endpointIdAVal);
 
                             }
@@ -303,7 +302,7 @@ CMidi2SimpleLoopbackMidiConfigurationManager::UpdateConfiguration(
                     }
                     else
                     {
-                        // couldn't get the endpointA or endpointB objects. Exit and return a fail
+                        // couldn't get the endpoint object. Exit and return a fail
 
                         TraceLoggingWrite(
                             MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -312,13 +311,15 @@ CMidi2SimpleLoopbackMidiConfigurationManager::UpdateConfiguration(
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
                             TraceLoggingWideString(associationKey.c_str(), "association key"),
-                            TraceLoggingWideString(L"Failed to get one or both endpoints from the JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                            TraceLoggingWideString(L"Failed to get endpoint from the JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                         );
+
+                        responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                            json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_PARSING_JSON)));
 
                         internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                         return E_FAIL;
-
                     }
                 }
                 else
@@ -332,6 +333,9 @@ CMidi2SimpleLoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(associationKey.c_str(), "association key"),
                         TraceLoggingWideString(L"Unable to convert association id property to a JsonObject", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     );
+
+                    responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                        json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_PARSING_JSON)));
 
                     internal::JsonStringifyObjectToOutParam(responseObject, response);
 
@@ -363,12 +367,15 @@ CMidi2SimpleLoopbackMidiConfigurationManager::UpdateConfiguration(
                 auto associationId = o.Current().GetString();
                 auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationId.c_str());
 
+                //auto uniqueId = device->Definition.EndpointUniqueIdentifier;
+
                 auto removalHr = TransportState::Current().GetEndpointManager()->DeleteEndpoint(device->Definition);
 
                 LOG_IF_FAILED(removalHr);
 
                 if (SUCCEEDED(removalHr))
                 {
+
                     TransportState::Current().GetEndpointTable()->RemoveDevice(associationId.c_str());
 
                     auto removeSuccessVal = json::JsonValue::CreateBooleanValue(true);

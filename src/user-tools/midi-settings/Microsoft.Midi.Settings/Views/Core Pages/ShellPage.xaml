@@ -338,6 +338,15 @@
                                           Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>-->
 
 
+                <NavigationViewItem x:Name="SectionBLOOP" 
+                                    Visibility="{x:Bind ViewModel.ShowBasicLoopbackMidiInLeftNav, Mode=OneWay}" 
+                                    x:Uid="Shell_EndpointsBasicLoop" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsBasicLoopViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-CreateBasicLoopbackEndpoints.svg" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
                 
                 <NavigationViewItem x:Name="SectionLOOP" 
                                     Visibility="{x:Bind ViewModel.ShowLoopbackMidiInLeftNav, Mode=OneWay}" 

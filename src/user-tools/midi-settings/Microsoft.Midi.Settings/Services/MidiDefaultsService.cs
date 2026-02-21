@@ -7,6 +7,7 @@
 // ============================================================================
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
 using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
 using Windows.Foundation;
 
@@ -16,6 +17,8 @@ public class MidiDefaultsService : IMidiDefaultsService
 {
     const string DefaultLoopbackAUniqueId = "DEFAULT";
     const string DefaultLoopbackBUniqueId = "DEFAULT";
+
+    const string DefaultBasicLoopbackUniqueId = "BASIC_DEF";
 
     public string GetDefaultMidiConfigName()
     {
@@ -37,15 +40,15 @@ public class MidiDefaultsService : IMidiDefaultsService
         // if endpoint A or B unique ids are empty, do not close. display suggestion to generate them
         // todo: need to limit to alpha plus just a couple other characters, and only 32 in length
 
-        endpointA.Name = "Default App Loopback (A)";    // TODO: Localize
-        endpointB.Name = "Default App Loopback (B)";    // TODO: Localize
+        endpointA.Name = "DefaultLoopbackAName".GetLocalized();
+        endpointB.Name = "DefaultLoopbackBName".GetLocalized();
 
         endpointA.UniqueId = DefaultLoopbackAUniqueId;
         endpointB.UniqueId = DefaultLoopbackBUniqueId;
 
         // descriptions are optional
-        endpointA.Description = "Default loopback endpoint for use by applications. This is the A-side of the loopback pair.";    // TODO: Localize
-        endpointB.Description = "Default loopback endpoint for use by applications. This is the B-side of the loopback pair.";    // TODO: Localize
+        endpointA.Description = "DefaultLoopbackADescription".GetLocalized();
+        endpointB.Description = "DefaultLoopbackBDescription".GetLocalized();
 
         // TODO: entries for the default groups to create, and their gtb names
 
@@ -56,10 +59,28 @@ public class MidiDefaultsService : IMidiDefaultsService
         return creationConfig;
     }
 
+    public MidiBasicLoopbackEndpointCreationConfig GetDefaultBasicLoopbackCreationConfig()
+    {
+        var endpoint = new MidiBasicLoopbackEndpointDefinition();
+
+        endpoint.Name = "DefaultBasicLoopbackName".GetLocalized();
+
+        endpoint.UniqueId = DefaultBasicLoopbackUniqueId;
+
+        // descriptions are optional
+        endpoint.Description = "DefaultBasicLoopbackDescription".GetLocalized();
+
+        // TODO: entries for the default groups to create, and their gtb names
+
+        var associationId = GuidHelper.CreateNewGuid();
+
+        var creationConfig = new MidiBasicLoopbackEndpointCreationConfig(associationId, endpoint);
+
+        return creationConfig;
+    }
+
     public bool DoesDefaultLoopbackAlreadyExist()
     {
-        // TODO: Check to see if an endpoint with the unique ids here already exists
-
         if (Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.DoesLoopbackAExist(DefaultLoopbackAUniqueId))
         {
             return true;
@@ -70,5 +91,9 @@ public class MidiDefaultsService : IMidiDefaultsService
         }
     }
 
+    public bool DoesDefaultBasicLoopbackAlreadyExist()
+    {
+        return Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.DoesLoopbackExist(DefaultBasicLoopbackUniqueId);
+    }
 
 }

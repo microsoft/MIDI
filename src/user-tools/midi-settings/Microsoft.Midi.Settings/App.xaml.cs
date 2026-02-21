@@ -164,6 +164,8 @@ public partial class App : Application
                     services.AddTransient<EndpointsLoopPage>();
                     services.AddTransient<EndpointsLoopViewModel>();
 
+                    services.AddTransient<EndpointsBasicLoopPage>();
+                    services.AddTransient<EndpointsBasicLoopViewModel>();
 
                     services.AddTransient<DeviceDetailPage>();
                     services.AddTransient<DeviceDetailViewModel>();
@@ -277,7 +279,13 @@ public partial class App : Application
             // power user/developer install process.
            // AppState.Current.InitializeService();
 
-            await App.GetService<IActivationService>().ActivateAsync(args);
+            var success = await App.GetService<IActivationService>().ActivateAsync(args);
+
+            if (!success)
+            {
+                App.GetService<ILoggingService>().LogError("Unable to startup app. Exiting.");
+                Exit();
+            }
         }
         catch (Exception ex)
         {

@@ -14,17 +14,17 @@
 #define TRANSPORT_LAYER_GUID __uuidof(Midi2SimpleLoopbackMidiTransport);
 
 #define TRANSPORT_MANUFACTURER L"Microsoft"
-#define TRANSPORT_CODE L"SLM"
+#define TRANSPORT_CODE L"BLOOP"
 
 // client SDK uses copies of these values. Do not change.
 
-#define MIDI_SIMPLE_LOOP_INSTANCE_ID_PREFIX L"MIDIU_SLM_"
+#define MIDI_SIMPLE_LOOP_INSTANCE_ID_PREFIX L"MIDIU_BLOOP_"
 
 
 // TODO: Names should be moved to .rc for localization
 
-#define TRANSPORT_PARENT_ID L"MIDIU_SLM_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 1.0 Loopback Devices"
+#define TRANSPORT_PARENT_ID L"MIDIU_BLOOP_TRANSPORT"
+#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 1.0 Basic Loopback Devices"
 #define LOOPBACK_PARENT_ROOT L"HTREE\\ROOT\\0"
 
 

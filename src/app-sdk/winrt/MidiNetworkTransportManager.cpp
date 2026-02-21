@@ -18,11 +18,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 {
     bool MidiNetworkTransportManager::IsTransportAvailable() noexcept
     {
-        // TODO: Check to see if service transport is installed and running. May require a new service call
+        auto transports = rept::MidiReporting::GetInstalledTransportPlugins();
 
-        // maybe just enumerate transports and check for this one, using existing calls
+        for (auto const& transport: transports)
+        {
+            if (transport.Id == TransportId())
+            {
+                return true;
+            }
+        }
 
-        return true;
+        return false;
     }
 
 

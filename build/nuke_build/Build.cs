@@ -890,6 +890,7 @@ class Build : NukeBuild
             (designSourceFolder / "KS-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
             (designSourceFolder / "LOOP-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
             (designSourceFolder / "NET2UDP-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "BLOOP-small.svg").CopyToDirectory(transportAssetsStagingRoot, ExistsPolicy.FileOverwrite);
 
 
             (designSourceFolder / "default-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
@@ -899,6 +900,7 @@ class Build : NukeBuild
             (designSourceFolder / "default-ksa-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
             (designSourceFolder / "default-ks-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
             (designSourceFolder / "default-loop-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
+            (designSourceFolder / "default-bloop-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
             (designSourceFolder / "default-net2udp-small.svg").CopyToDirectory(endpointAssetsStagingRoot, ExistsPolicy.FileOverwrite);
 
         });

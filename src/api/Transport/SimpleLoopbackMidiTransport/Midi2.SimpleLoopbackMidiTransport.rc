@@ -98,8 +98,8 @@ STRINGTABLE
 BEGIN
     IDS_PROJNAME                        "Midi2.SimpleLoopbackMidiTransport"
 
-    IDS_PLUGIN_METADATA_NAME            "Simple Loopback MIDI"
-    IDS_PLUGIN_METADATA_DESCRIPTION     "Provides MIDI 1.0-style loopback app-to-app MIDI support"
+    IDS_PLUGIN_METADATA_NAME            "Basic Loopback MIDI"
+    IDS_PLUGIN_METADATA_DESCRIPTION     "Provides MIDI 1.0-style basic loopback app-to-app MIDI support"
 
     IDS_ERROR_PARSING_JSON              "Error parsing JSON. Is it valid?"
     IDS_ERROR_DUPLICATE_UNIQUE_ID       "Unique identifier is already in use with another loopback endpoint."

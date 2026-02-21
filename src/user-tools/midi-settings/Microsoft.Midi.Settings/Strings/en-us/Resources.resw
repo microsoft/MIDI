@@ -307,7 +307,7 @@
     <value>MIDI 1.0 Drivers (USB, etc.)</value>
   </data>
   <data name="Shell_EndpointsLoop.Content" xml:space="preserve">
-    <value>Loopback Endpoints</value>
+    <value>MIDI 2.0 Loopback Endpoints</value>
   </data>
   <data name="Shell_EndpointsApp.Content" xml:space="preserve">
     <value>Virtual Device Apps</value>
@@ -792,5 +792,26 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   </data>
   <data name="Error_WindowsMIDIServicesNotEnabledMessageBoxTitle" xml:space="preserve">
     <value>Windows MIDI Services is not Enabled</value>
+  </data>
+  <data name="DefaultLoopbackAName" xml:space="preserve">
+    <value>Default App Loopback (A)</value>
+  </data>
+  <data name="DefaultLoopbackBName" xml:space="preserve">
+    <value>Default App Loopback (B)</value>
+  </data>
+  <data name="DefaultBasicLoopbackName" xml:space="preserve">
+    <value>Default Basic App Loopback</value>
+  </data>
+  <data name="DefaultLoopbackADescription" xml:space="preserve">
+    <value>Default loopback endpoint for use by applications. This is the A-side of the loopback pair.</value>
+  </data>
+  <data name="DefaultLoopbackBDescription" xml:space="preserve">
+    <value>Default loopback endpoint for use by applications. This is the B-side of the loopback pair.</value>
+  </data>
+  <data name="DefaultBasicLoopbackDescription" xml:space="preserve">
+    <value>Default basic MIDI 1.0 loopback endpoint for use by applications.</value>
+  </data>
+  <data name="Shell_EndpointsBasicLoop.Content" xml:space="preserve">
+    <value>MIDI 1.0 Loopback Endpoints</value>
   </data>
 </root>

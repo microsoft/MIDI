@@ -7,6 +7,7 @@
 // ============================================================================
 
 using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
+using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
 
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
@@ -16,5 +17,10 @@ public interface IMidiDefaultsService
     string GetDefaultMidiConfigFileName();
 
     MidiLoopbackEndpointCreationConfig GetDefaultLoopbackCreationConfig();
+    MidiBasicLoopbackEndpointCreationConfig GetDefaultBasicLoopbackCreationConfig();
+
     bool DoesDefaultLoopbackAlreadyExist();
+
+    bool DoesDefaultBasicLoopbackAlreadyExist();
+
 }

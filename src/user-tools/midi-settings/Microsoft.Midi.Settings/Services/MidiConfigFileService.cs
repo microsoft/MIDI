@@ -495,6 +495,53 @@ public class MidiConfigFile : IMidiConfigFile
 
 
 
+    public bool RemoveBasicLoopbackEndpoint(Guid associationId)
+    {
+        if (m_config == null) return false;
+
+        var transportSection = FindExistingTransportSection(m_config, Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.TransportId);
+        if (transportSection == null) return false;
+
+        var createSection = FindExistingTransportCreateObject(transportSection);
+        if (createSection == null) return false;
+
+        string endpointKey = associationId.ToString("B").ToUpper();
+
+        if (createSection.ContainsKey(endpointKey))
+        {
+            createSection.Remove(endpointKey);
+
+            return Save();
+        }
+
+        return false;
+    }
+
+
+
+    // this assumes the config has already been run against the service to create the pair. We're just storing them here.
+    public bool StoreBasicLoopbackEndpoint(Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointCreationConfig creationConfig)
+    {
+        if (m_config == null) return false;
+        if (creationConfig == null) return false;
+
+        // get the latest from disk
+        if (!Load())
+        {
+            return false;
+        }
+
+        if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+        {
+            // write the property
+
+            return Save();
+        }
+
+        return false;
+    }
+
+
 
     public bool RemoveLoopbackEndpointPair(Guid associationId)
     {

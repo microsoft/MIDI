@@ -40,16 +40,39 @@ app.Configure(config =>
         create.AddCommand<CreateLoopbackCommand>("create")
             .WithDescription(Strings.CommandCreateLoopbackDescription)
             .WithExample("loopback", "create", "--name-a", "\"My Loopback A\"", "--name-b", "\"My Loopback B\"")
+            .WithExample("midi2-loopback", "create", "--name-a", "\"My Loopback A\"", "--name-b", "\"My Loopback B\"")
         ;
 
         create.AddCommand<RemoveLoopbackCommand>("remove")
             .WithAlias("delete")
             .WithDescription(Strings.CommandRemoveLoopbackDescription)
             .WithExample("loopback", "remove", "--association-id", "{bb872b25-bc38-4009-a85a-559824398a13}")
+            .WithExample("midi2-loopback", "remove", "--association-id", "{bb872b25-bc38-4009-a85a-559824398a13}")
+        ;
+    })
+    .WithAlias("midi2-loopback")
+    .WithAlias("bidirectional-loopback");
+
+    config.AddBranch("basic-loopback", create =>
+    {
+        create.SetDescription(Strings.CommandBasicLoopbackDescription);
+
+        create.AddCommand<CreateBasicLoopbackCommand>("create")
+            .WithDescription(Strings.CommandCreateBasicLoopbackDescription)
+            .WithExample("basic-loopback", "create", "--name", "\"My Loopback\"")
+            .WithExample("midi1-loopback", "create", "--name", "\"My Loopback\"")
         ;
 
+        create.AddCommand<RemoveBasicLoopbackCommand>("remove")
+            .WithAlias("delete")
+            .WithDescription(Strings.CommandRemoveBasicLoopbackDescription)
+            .WithExample("basic-loopback", "remove", "--association-id", "{bb872b25-bc38-4009-a85a-559824398a13}")
+            .WithExample("midi1-loopback", "remove", "--association-id", "{bb872b25-bc38-4009-a85a-559824398a13}")
+        ;
+    })
+    .WithAlias("midi1-loopback")
+    .WithAlias("simple-loopback");
 
-    });
 
 
     config.AddBranch("enumerate", enumerate =>

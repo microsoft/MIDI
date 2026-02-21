@@ -73,7 +73,7 @@
 #define UUID_IMidiSession									8087b303-0519-31d1-c0de-dd0000080000
 #define UUID_IMidiSessionStatics							8087b303-0519-31d1-c0de-ee0000080000
 
-// loopback endpoints
+// MIDI 2.0 loopback endpoints
 #define UUID_IMidiLoopbackEndpointCreationConfig			8087b303-0519-31d1-c0de-dd0000190000
 #define UUID_IMidiLoopbackEndpointRemovalConfig				8087b303-0519-31d1-c0de-dd00001a0000
 #define UUID_IMidiLoopbackEndpointManagerStatics			8087b303-0519-31d1-c0de-ee00001b0000
@@ -83,6 +83,11 @@
 #define UUID_IMidiVirtualDevice								8087b303-0519-31d1-c0de-dd00002b0000
 #define UUID_IMidiVirtualDeviceCreationConfig				8087b303-0519-31d1-c0de-dd00002c0000
 #define UUID_IMidiVirtualDeviceManagerStatics				8087b303-0519-31d1-c0de-ee00002d0000
+
+// simple loopback endpoints
+#define UUID_IMidiBasicLoopbackEndpointCreationConfig		8087b303-0519-31d1-c0de-dd0000390000
+#define UUID_IMidiBasicLoopbackEndpointRemovalConfig		8087b303-0519-31d1-c0de-dd00003a0000
+#define UUID_IMidiBasicLoopbackEndpointManagerStatics		8087b303-0519-31d1-c0de-ee00003b0000
 
 
 // TODO: Virtual Patch bay
