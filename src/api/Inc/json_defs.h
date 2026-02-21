@@ -82,14 +82,16 @@
 
 
 
-// loopback MIDI transport configuration
-
+// MIDI 2.0 loopback MIDI transport configuration
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY                            L"endpointA"
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY                            L"endpointB"
 
-
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY        L"endpointA"
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY        L"endpointB"
+
+// simple MIDI 1.0 loopback support
+#define MIDI_CONFIG_JSON_ENDPOINT_SIMPLE_LOOPBACK_DEVICE_ENDPOINT_KEY                              L"endpoint"
+#define MIDI_CONFIG_JSON_ENDPOINT_SIMPLE_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY        L"endpoint"
 
 
 

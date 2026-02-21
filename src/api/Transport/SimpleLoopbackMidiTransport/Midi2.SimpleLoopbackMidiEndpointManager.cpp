@@ -1,0 +1,409 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "pch.h"
+#include "midi2.SimpleLoopbackMidiTransport.h"
+
+#include "MidiEndpointNameTable.h"
+
+using namespace wil;
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+
+#define MAX_DEVICE_ID_LEN 200 // size in chars
+
+GUID TransportLayerGUID = TRANSPORT_LAYER_GUID;
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2SimpleLoopbackMidiEndpointManager::Initialize(
+    IMidiDeviceManager* midiDeviceManager, 
+    IMidiEndpointProtocolManager* midiEndpointProtocolManager
+)
+{
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
+
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_MidiProtocolManager));
+
+
+    m_TransportTransportId = TransportLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
+    m_ContainerId = m_TransportTransportId;           // we use the transport ID as the container ID for convenience
+
+    RETURN_IF_FAILED(CreateParentDevice());
+
+    m_initialized = true;
+
+    // this must be the last thing we do, as it relies on everything being initialized
+    LOG_IF_FAILED(ProcessWorkQueue());
+
+    return S_OK;
+}
+
+
+HRESULT
+CMidi2SimpleLoopbackMidiEndpointManager::ProcessWorkQueue()
+{
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+    uint32_t countItemsProcessed{ 0 };
+
+    while (!TransportState::Current().GetEndpointWorkQueue()->IsEmpty())
+    {
+        TransportWorkItem item{ };
+
+        if (TransportState::Current().GetEndpointWorkQueue()->GetNextWorkItem(item))
+        {
+            if (item.Type == TransportWorkItemWorkType::Create)
+            {
+                LOG_IF_FAILED(CreateEndpoint(item.Definition));
+
+                countItemsProcessed++;
+            }
+
+            // TODO: Process other types of work items
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(countItemsProcessed, "count items processed")
+    );
+
+    return S_OK;
+}
+
+
+HRESULT
+CMidi2SimpleLoopbackMidiEndpointManager::CreateParentDevice()
+{
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    // this happens before initialization is complete, so don't gate on m_initialized here
+
+    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
+
+    // the parent device parameters are set by the transport (this)
+    std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
+    std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_PARENT_ID) };
+
+    SW_DEVICE_CREATE_INFO createInfo = {};
+    createInfo.cbSize = sizeof(createInfo);
+    createInfo.pszInstanceId = parentDeviceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = parentDeviceName.c_str();
+    createInfo.pContainerId = &m_ContainerId;
+
+    wil::unique_cotaskmem_string newDeviceId;
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateVirtualParentDevice(
+        0,
+        nullptr,
+        &createInfo,
+        &newDeviceId
+    ));
+
+    m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId.get());
+
+
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(newDeviceId.get(), "New parent device instance id")
+    );
+
+    return S_OK;
+}
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2SimpleLoopbackMidiEndpointManager::DeleteEndpoint(
+    _In_ MidiSimpleLoopbackDeviceDefinition const& definition)
+{
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(definition.CreatedShortClientInstanceId.c_str()));
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2SimpleLoopbackMidiEndpointManager::CreateEndpoint(
+    std::shared_ptr<MidiSimpleLoopbackDeviceDefinition> definition
+    )
+{
+    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
+    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, definition);
+
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointName.empty(), "Empty endpoint name");
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->InstanceIdPrefix.empty(), "Empty endpoint prefix");
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointUniqueIdentifier.empty(), "Empty endpoint unique id");
+
+
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->InstanceIdPrefix.c_str(), "prefix"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(definition->EndpointName.c_str(), "name"),
+        TraceLoggingWideString(definition->EndpointDescription.c_str(), "description")
+        );
+
+
+
+    std::wstring transportCode(TRANSPORT_CODE);
+
+    //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
+    std::wstring endpointName = definition->EndpointName;
+    std::wstring endpointDescription = definition->EndpointDescription;
+
+    std::vector<DEVPROPERTY> interfaceDevProperties{};
+
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
+
+
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Adding endpoint properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(friendlyName.c_str(), "friendlyName"),
+        TraceLoggingWideString(transportCode.c_str(), "transport code"),
+        TraceLoggingWideString(endpointName.c_str(), "endpointName"),
+        TraceLoggingWideString(endpointDescription.c_str(), "endpointDescription")
+    );
+
+    // we keep this to keep the logical structure the same as the MIDI 2.0 loopback endpoints
+    interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (definition->AssociationId.length() + 1)), (PVOID)definition->AssociationId.c_str() });
+
+    // Device properties
+
+
+    SW_DEVICE_CREATE_INFO createInfo = {};
+    createInfo.cbSize = sizeof(createInfo);
+
+    // build the instance id, which becomes the middle of the SWD id
+    std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(
+        definition->InstanceIdPrefix + definition->EndpointUniqueIdentifier);
+
+    createInfo.pszInstanceId = instanceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = friendlyName.c_str();
+
+    wil::unique_cotaskmem_string newDeviceInterfaceId;
+
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Activating endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(instanceId.c_str(), "instance id")
+    );
+
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
+    commonProperties.TransportId = m_TransportTransportId;
+    commonProperties.EndpointDeviceType = MidiEndpointDeviceType::MidiEndpointDeviceType_Normal;
+    commonProperties.FriendlyName = friendlyName.c_str();
+    commonProperties.TransportCode = transportCode.c_str();
+    commonProperties.EndpointName = endpointName.c_str();
+    commonProperties.EndpointDescription = nullptr; // TODO: Should generate a default description here
+    commonProperties.CustomEndpointName = friendlyName.c_str(); // technically, the user supplied this so we put it in both spots
+    commonProperties.CustomEndpointDescription = endpointDescription.size() > 0 ? endpointDescription.c_str() : nullptr;
+    commonProperties.UniqueIdentifier = definition->EndpointUniqueIdentifier.c_str();
+    commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
+    commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
+
+    UINT32 capabilities {0};
+    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+    capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
+    capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
+    capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
+    commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
+
+
+    // add a single group terminal block in each direction to support MIDI 1.0 port creation without creating 16 ins and 16 outs.
+
+    // TODO: This should be set via the configuration sent up
+
+    std::vector<internal::GroupTerminalBlockInternal> blocks{ };
+
+    internal::GroupTerminalBlockInternal gtb1;
+    gtb1.Number = 1;             // gtb indexes start at 1
+    gtb1.GroupCount = 1;         // todo: we could get this from properties
+    gtb1.FirstGroupIndex = 0;    // group indexes start at 0
+    gtb1.Protocol = 0x11;        // 0x11 = MIDI 2.0
+    gtb1.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // MIDI Out from user's perspective
+    gtb1.Name = friendlyName; //+ L" Out";           // todo: get this from properties so folks can control the port name
+    blocks.push_back(gtb1);
+
+    internal::GroupTerminalBlockInternal gtb2;
+    gtb2.Number = 1;             // gtb indexes start at 1
+    gtb2.GroupCount = 1;         // todo: we could get this from properties
+    gtb2.FirstGroupIndex = 0;    // group indexes start at 0
+    gtb2.Protocol = 0x11;        // 0x11 = MIDI 2.0
+    gtb2.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;  // MIDI In from user's perspective
+    gtb2.Name = friendlyName; // + L" In";           // todo: get this from properties so folks can control the port name
+    blocks.push_back(gtb2);
+
+
+    std::vector<std::byte> groupTerminalBlockData;
+    if (internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, groupTerminalBlockData))
+    {
+        interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data() });
+
+    }
+
+    // Sort out MIDI 1.0 endpoint names
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{};
+
+    //interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+    //    DEVPROP_TYPE_UINT32, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data() });
+
+    //nameTable.EndpointLocalPortNameSelectionOverride = Midi1PortNameSelection::UseNewStyleName;
+    LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(L"", blocks));
+    LOG_IF_FAILED(nameTable.WriteProperties(interfaceDevProperties));
+
+    
+    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
+        (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
+        false,                                                  // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
+        MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
+        &commonProperties,
+        (ULONG)interfaceDevProperties.size(),
+        (ULONG)0,
+        interfaceDevProperties.data(),
+        nullptr,
+        &createInfo,
+        &newDeviceInterfaceId));
+
+
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Endpoint activated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(newDeviceInterfaceId.get(), "new device interface id")
+    );
+
+
+    // we need this for removal later
+    definition->CreatedShortClientInstanceId = instanceId;
+    definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
+
+    //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
+    //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
+
+
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Done", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier")
+    );
+
+    return S_OK;
+}
+
+
+
+HRESULT
+CMidi2SimpleLoopbackMidiEndpointManager::Shutdown()
+{
+    TraceLoggingWrite(
+        MidiSimpleLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
+    // destroy and release all the devices we have created
+
+//    LOG_IF_FAILED(TransportState::Current().GetEndpointTable()->Shutdown());
+
+    TransportState::Current().Shutdown();
+
+    m_MidiDeviceManager.reset();
+    m_MidiProtocolManager.reset();
+
+    m_initialized = false;
+
+    return S_OK;
+}
+

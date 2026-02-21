@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 18
-VisualStudioVersion = 18.1.11304.174
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.NetworkMidiTransport", "Transport\UdpNetworkMidi2Transport\Midi2.NetworkMidiTransport.vcxproj", "{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}"
 EndProject
@@ -20,15 +20,17 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiBleCommonLib", "Libs\Mi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bluetooth", "Bluetooth", "{CD572030-537B-478A-8046-BA3D4C6BE60A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiGroupTransform", "Transform\MidiGroupTransform\Midi2.MidiGroupTransform.vcxproj", "{C31CEE7B-8BEC-46A6-A8FD-74BABB01A4FB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.GroupTransform", "Transform\MidiGroupTransform\Midi2.MidiGroupTransform.vcxproj", "{C31CEE7B-8BEC-46A6-A8FD-74BABB01A4FB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiChannelTransform", "Transform\MidiChannelTransform\Midi2.MidiChannelTransform.vcxproj", "{5213B99D-75EB-4A05-A7D3-BF4D330D1806}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.ChannelTransform", "Transform\MidiChannelTransform\Midi2.MidiChannelTransform.vcxproj", "{5213B99D-75EB-4A05-A7D3-BF4D330D1806}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiMessageTypeFilterTransform", "Transform\MidiMessageTypeFilterTransform\Midi2.MidiMessageTypeFilterTransform.vcxproj", "{BDA9FF17-A218-47A2-B5F8-E546134E911B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MessageTypeFilterTransform", "Transform\MidiMessageTypeFilterTransform\Midi2.MidiMessageTypeFilterTransform.vcxproj", "{BDA9FF17-A218-47A2-B5F8-E546134E911B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transforms", "Transforms", "{4B61EF6C-453F-4A90-8DE5-DA0AD9F8D4A7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transports", "Transports", "{142E1CE4-DA01-4A77-8404-38D231A0F5A6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.SimpleLoopbackMidiTransport", "Transport\SimpleLoopbackMidiTransport\Midi2.SimpleLoopbackMidiTransport.vcxproj", "{0F94A751-9159-4A88-8A71-347151124548}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -148,6 +150,18 @@ Global
 		{BDA9FF17-A218-47A2-B5F8-E546134E911B}.Release|ARM64EC.Build.0 = Release|ARM64EC
 		{BDA9FF17-A218-47A2-B5F8-E546134E911B}.Release|x64.ActiveCfg = Release|x64
 		{BDA9FF17-A218-47A2-B5F8-E546134E911B}.Release|x64.Build.0 = Release|x64
+		{0F94A751-9159-4A88-8A71-347151124548}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{0F94A751-9159-4A88-8A71-347151124548}.Debug|ARM64.Build.0 = Debug|ARM64
+		{0F94A751-9159-4A88-8A71-347151124548}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{0F94A751-9159-4A88-8A71-347151124548}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{0F94A751-9159-4A88-8A71-347151124548}.Debug|x64.ActiveCfg = Debug|x64
+		{0F94A751-9159-4A88-8A71-347151124548}.Debug|x64.Build.0 = Debug|x64
+		{0F94A751-9159-4A88-8A71-347151124548}.Release|ARM64.ActiveCfg = Release|ARM64
+		{0F94A751-9159-4A88-8A71-347151124548}.Release|ARM64.Build.0 = Release|ARM64
+		{0F94A751-9159-4A88-8A71-347151124548}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{0F94A751-9159-4A88-8A71-347151124548}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{0F94A751-9159-4A88-8A71-347151124548}.Release|x64.ActiveCfg = Release|x64
+		{0F94A751-9159-4A88-8A71-347151124548}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -163,6 +177,7 @@ Global
 		{C31CEE7B-8BEC-46A6-A8FD-74BABB01A4FB} = {4B61EF6C-453F-4A90-8DE5-DA0AD9F8D4A7}
 		{5213B99D-75EB-4A05-A7D3-BF4D330D1806} = {4B61EF6C-453F-4A90-8DE5-DA0AD9F8D4A7}
 		{BDA9FF17-A218-47A2-B5F8-E546134E911B} = {4B61EF6C-453F-4A90-8DE5-DA0AD9F8D4A7}
+		{0F94A751-9159-4A88-8A71-347151124548} = {142E1CE4-DA01-4A77-8404-38D231A0F5A6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FA3C2B04-54ED-4B96-8A5A-8B66C5E2148F}
