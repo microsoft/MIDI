@@ -67,6 +67,13 @@
             <Environment Id="AddConsoleAppToSystemPath"
                             Name="PATH" Action="set" Part="last" System="yes"
                             Value="[CONSOLEAPP_INSTALLFOLDER]" Permanent="no"/>
+
+          <RegistryKey Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+
+            <RegistryValue Type="string" Name="MidiConsole" Value="[CONSOLEAPP_INSTALLFOLDER]midi.exe" />
+
+          </RegistryKey>
         </Component>
 
         <Feature Id="WindowsMidiServicesConsole">

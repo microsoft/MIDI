@@ -122,7 +122,7 @@
 
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Orientation="Vertical" >
-                    <TextBlock Text="Create MIDI Loopback Endpoints" 
+                    <TextBlock Text="Create MIDI 2.0 Bidirectional Loopback Endpoints" 
                            Style="{StaticResource DialogHeaderTextBlockStyle}"
                            Margin="13, 9, 13, 13"/>
 

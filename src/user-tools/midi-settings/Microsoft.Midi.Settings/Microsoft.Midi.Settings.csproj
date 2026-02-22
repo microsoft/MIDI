@@ -9,7 +9,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
         
-        <ApplicationIcon>Assets/AppIcon.ico</ApplicationIcon>
+        <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
         <ApplicationManifest>MidiSettings.exe.manifest</ApplicationManifest>
 		<Platforms>x64;ARM64</Platforms>
 		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
@@ -40,9 +40,14 @@
 
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
+        <GenerateNeutralResourcesLanguageAttribute>true</GenerateNeutralResourcesLanguageAttribute>
+        <Description>Windows MIDI Services Settings</Description>
+        <Authors>Pete Brown</Authors>
+        <Company>Microsoft Corporation</Company>
 
+        <Win32Icon>Assets\AppIcon.ico</Win32Icon>
 
-        <!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>-->
+      <!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>-->
 	
 	    <!--<WindowsSdkPackageVersion>10.0.20348.28</WindowsSdkPackageVersion>-->
 	    <!--<WindowsSdkPackageVersion>10.0.22621.29</WindowsSdkPackageVersion>-->

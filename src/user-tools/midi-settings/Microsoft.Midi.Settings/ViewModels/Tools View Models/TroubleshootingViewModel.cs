@@ -6,20 +6,21 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Principal;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
 using Microsoft.UI.Dispatching;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
+using System.ServiceProcess;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Input;
 
 
 namespace Microsoft.Midi.Settings.ViewModels;
@@ -47,6 +48,15 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
     private readonly IMidiConsoleToolsService _consoleToolsService;
     private readonly IMidiDiagnosticsService _diagnosticsService;
 
+
+    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern int MessageBox(
+        IntPtr hWnd,
+        string lpText,
+        string lpCaption,
+        int uType);
+
+
     public TroubleshootingViewModel(
         INavigationService navigationService,
         IMidiConsoleToolsService consoleToolsService,
@@ -61,13 +71,32 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
         RestartServiceCommand = new RelayCommand(
             () =>
             {
-                _consoleToolsService.RestartMidiService();
+                var success = _consoleToolsService.RestartMidiService();
+
+                if (!success)
+                {
+                    MessageBox(
+                        (IntPtr)0,
+                        "Unable to restart MIDI service.",
+                        "AppDisplayName".GetLocalized(),
+                        0);
+                }
+
             });
 
         MidiDiagCommand = new RelayCommand(
             () =>
             {
-                _diagnosticsService.CaptureMidiDiagOutputToNotepad();
+                var success = _diagnosticsService.CaptureMidiDiagOutputToNotepad();
+
+                if (!success)
+                {
+                    MessageBox(
+                        (IntPtr)0,
+                        "Unable to open mididiag tool to capture diagnostic information. You may want to reinstall the SDK Runtime and Tools.",
+                        "AppDisplayName".GetLocalized(),
+                        0);
+                }
             });
     }
 

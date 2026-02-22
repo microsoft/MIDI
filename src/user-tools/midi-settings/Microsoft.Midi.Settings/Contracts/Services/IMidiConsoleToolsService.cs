@@ -21,7 +21,7 @@ public interface IMidiConsoleToolsService
 
     bool MonitorEndpoint(string endpointDeviceId);
 
-
+    bool IsMidiConsolePresent();
 
 
     bool RestartMidiService();
