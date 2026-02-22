@@ -174,7 +174,9 @@
                             IsDynamicOverflowEnabled="False"
                             >
                     <CommandBar.PrimaryCommands>
-                        <AppBarButton x:Uid="Button_Monitor" Command="{x:Bind ViewModel.EndpointWrapper.MonitorEndpointCommand }" />
+                        <AppBarButton x:Uid="Button_Monitor" Command="{x:Bind ViewModel.EndpointWrapper.MonitorEndpointCommand }" 
+                                      Visibility="{x:Bind ViewModel.EndpointWrapper.CanMonitor, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                      />
 <!--                        
                         <AppBarButton Content="Send SysEx" />
                         <AppBarSeparator />

@@ -24,6 +24,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             // this command requires admin
 
             if (!UserHelper.CurrentUserHasAdminRights())
@@ -39,8 +41,10 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 controller = MidiServiceHelper.GetServiceController();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LoggingService.Current.LogError("Unable to find service", ex);
+
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{MidiServiceHelper.GetServiceName()}'. Is Windows MIDI Services installed?"));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
             }
@@ -72,8 +76,10 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.Success;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LoggingService.Current.LogError("Unable to stop service", ex);
+
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to stop service. It may be in-use by other apps, or it may be locked up. Consider killing the midisrv.exe process, or rebooting."));
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }

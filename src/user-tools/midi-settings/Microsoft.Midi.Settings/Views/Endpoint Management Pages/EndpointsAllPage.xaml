@@ -401,7 +401,8 @@
                                             </Button>
 
                                             <Button Content="Monitor"
-                                                Command="{x:Bind MonitorEndpointCommand}"/>
+                                                    IsEnabled="{x:Bind CanMonitor, Mode=OneWay}"
+                                                    Command="{x:Bind MonitorEndpointCommand}"/>
                                         </StackPanel>
 
                                     </controls:SettingsCard.Content>
@@ -727,6 +728,7 @@
                                                 HorizontalAlignment="Right">
 
                                             <Button Content="Monitor" Margin="4,8,4,8"
+                                                    IsEnabled="{x:Bind CanMonitor, Mode=OneWay}"
                                                     Command="{x:Bind MonitorEndpointCommand}"/>
 
                                             <!--<Button Content="Details >" Margin="4,8,4,8"

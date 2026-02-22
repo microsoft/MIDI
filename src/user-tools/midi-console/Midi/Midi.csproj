@@ -36,6 +36,11 @@
 
       <NoWin32Manifest>true</NoWin32Manifest>
 
+      <GenerateNeutralResourcesLanguageAttribute>true</GenerateNeutralResourcesLanguageAttribute>
+      <Description>Windows MIDI Services Console</Description>
+      <Authors>Pete Brown</Authors>
+      <Company>Microsoft Corporation</Company>
+    
   </PropertyGroup>
 
   <PropertyGroup>

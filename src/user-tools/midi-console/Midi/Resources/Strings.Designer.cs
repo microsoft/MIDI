@@ -1188,6 +1188,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Id (must be a valid GUID) used to identify the loopback before and after it has been created. Used when removing the loopback..
+        /// </summary>
+        internal static string ParameterCreateBasicLoopbackAssociationId {
+            get {
+                return ResourceManager.GetString("ParameterCreateBasicLoopbackAssociationId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The name of the basic MIDI 1.0 loopback endpoint.
         /// </summary>
         internal static string ParameterCreateBasicLoopbackName {
@@ -1197,7 +1206,16 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Id used to associate the two endpoints. Also used when removing the loopback pair..
+        ///   Looks up a localized string similar to Unique identifier for the MIDI 1.0 loopback endpoint.
+        /// </summary>
+        internal static string ParameterCreateBasicLoopbackUniqueIdentifier {
+            get {
+                return ResourceManager.GetString("ParameterCreateBasicLoopbackUniqueIdentifier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Id (must be a valid GUID) used to associate the two endpoints. Also used when removing the loopback pair..
         /// </summary>
         internal static string ParameterCreateLoopbackAssociationId {
             get {

@@ -17,21 +17,90 @@ namespace Microsoft.Midi.Settings.Services;
 
 public class MidiConsoleToolsService : IMidiConsoleToolsService
 {
+    private const string MidiRootRegKey = @"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows MIDI Services";
+    private const string MidiSdkRootRegKey = MidiRootRegKey + @"\Desktop App SDK Runtime";
+    private const string MidiConsolePathRegValue = "MidiConsole";
+
+    private static string GetMidiConsolePath()
+    {
+        try
+        {
+            string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Tools\Console\midi.exe";
+
+            string consolePath = string.Empty;
+
+            var value = Microsoft.Win32.Registry.GetValue(MidiSdkRootRegKey, MidiConsolePathRegValue, defaultPath);
+
+            if (value == null)
+            {
+                // happens when the key does not exist
+                consolePath = defaultPath;
+            }
+            else if (value is string)
+            {
+                consolePath = (string)value;
+            }
+            else
+            {
+                consolePath = defaultPath;
+            }
+
+            return consolePath;
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception getting MIDI Console Path", ex);
+
+            return string.Empty;
+        }
+    }
+
+
+    public bool IsMidiConsolePresent()
+    {
+        var path = GetMidiConsolePath();
+
+        if (string.IsNullOrEmpty(path))
+        {
+            App.GetService<ILoggingService>().LogError($"MIDI Console path is blank.");
+
+            return false;
+        }
+
+        if (!File.Exists(path))
+        {
+            App.GetService<ILoggingService>().LogError($"MIDI Console does not exist in path '{path}' ");
+
+            return false;
+        }
+
+        return true;
+    }
+
     public bool OpenMidiConsole()
     {
         try
         {
-            string arguments =
-                " new-tab --title \"Windows MIDI Services Console\"" +
-                " cmd /k midi.exe";
+            if (IsMidiConsolePresent())
+            {
+                var consoleExe = GetMidiConsolePath();
 
-            var consoleProcess = new System.Diagnostics.Process();
+                string arguments =
+                    " new-tab --title \"Windows MIDI Services Console\"" +
+                    $" cmd /k \"{consoleExe}\"";
 
-            consoleProcess.StartInfo.FileName = "wt";
-            consoleProcess.StartInfo.Arguments = arguments;
-            consoleProcess.StartInfo.UseShellExecute = false;
-            
-            return consoleProcess.Start();
+                var consoleProcess = new System.Diagnostics.Process();
+
+                consoleProcess.StartInfo.FileName = "wt";
+                consoleProcess.StartInfo.Arguments = arguments;
+                consoleProcess.StartInfo.UseShellExecute = false;
+
+                return consoleProcess.Start();
+            }
+            else
+            {
+                return false; 
+            }
         }
         catch (Exception ex)
         {
@@ -47,17 +116,26 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
     {
         try
         {
-            string arguments =
-                " new-tab --title \"Windows MIDI Services Console\"" +
-                $" cmd /k midi.exe endpoint {endpointDeviceId} monitor";
+            if (IsMidiConsolePresent())
+            {
+                var consoleExe = GetMidiConsolePath();
 
-            var consoleProcess = new System.Diagnostics.Process();
+                string arguments =
+                    " new-tab --title \"Windows MIDI Services Console\"" +
+                    $" cmd /k \"{consoleExe}\" endpoint {endpointDeviceId} monitor";
 
-            consoleProcess.StartInfo.FileName = "wt";
-            consoleProcess.StartInfo.Arguments = arguments;
-            consoleProcess.StartInfo.UseShellExecute = false;
+                var consoleProcess = new System.Diagnostics.Process();
 
-            return consoleProcess.Start();
+                consoleProcess.StartInfo.FileName = "wt";
+                consoleProcess.StartInfo.Arguments = arguments;
+                consoleProcess.StartInfo.UseShellExecute = false;
+
+                return consoleProcess.Start();
+            }
+            else
+            {
+                return false;
+            }
         }
         catch (Exception ex)
         {
@@ -73,16 +151,25 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
     {
         try
         {
-            string arguments = "service restart";
+            if (IsMidiConsolePresent())
+            {
+                var consoleExe = GetMidiConsolePath();
 
-            var consoleProcess = new System.Diagnostics.Process();
+                string arguments = "service restart";
 
-            consoleProcess.StartInfo.Verb = "runas";
-            consoleProcess.StartInfo.FileName = "midi";
-            consoleProcess.StartInfo.Arguments = arguments;
-            consoleProcess.StartInfo.UseShellExecute = true;
+                var consoleProcess = new System.Diagnostics.Process();
 
-            return consoleProcess.Start();
+                consoleProcess.StartInfo.Verb = "runas";
+                consoleProcess.StartInfo.FileName = consoleExe;
+                consoleProcess.StartInfo.Arguments = arguments;
+                consoleProcess.StartInfo.UseShellExecute = true;
+
+                return consoleProcess.Start();
+            }
+            else
+            {
+                return false; 
+            }
         }
         catch (Exception ex)
         {
