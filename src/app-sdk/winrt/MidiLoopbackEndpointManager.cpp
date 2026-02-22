@@ -21,8 +21,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 {
     bool MidiLoopbackEndpointManager::IsTransportAvailable() noexcept
     {
-        // TODO: Check to see if service transport is installed and running. May require a new service call
-        return true;
+        auto transports = rept::MidiReporting::GetInstalledTransportPlugins();
+
+        for (auto const& transport : transports)
+        {
+            if (transport.Id == TransportId())
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 

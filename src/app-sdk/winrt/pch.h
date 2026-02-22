@@ -107,6 +107,9 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback {};
 namespace loop = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback;
 
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback {};
+namespace bloop = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback;
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual {};
 namespace virt = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual;
 
@@ -192,13 +195,9 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiLoopbackEndpointCreationConfig.h"
 #include "MidiLoopbackEndpointRemovalConfig.h"
 
-//#include "MidiVirtualPatchBayManager.h"
-//#include "MidiVirtualPatchBayDestinationDefinition.h"
-//#include "MidiVirtualPatchBayRouteCreationConfig.h"
-//#include "MidiVirtualPatchBayRouteDefinition.h"
-//#include "MidiVirtualPatchBayRouteRemovalConfig.h"
-//#include "MidiVirtualPatchBayRouteUpdateConfig.h"
-//#include "MidiVirtualPatchBaySourceDefinition.h"
+#include "MidiBasicLoopbackEndpointManager.h"
+#include "MidiBasicLoopbackEndpointCreationConfig.h"
+#include "MidiBasicLoopbackEndpointRemovalConfig.h"
 
 #include "MidiStreamConfigRequestReceivedEventArgs.h"
 #include "MidiVirtualDevice.h"

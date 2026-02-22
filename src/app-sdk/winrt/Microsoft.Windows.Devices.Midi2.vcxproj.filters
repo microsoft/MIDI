@@ -160,6 +160,15 @@
     <ClCompile Include="MidiVirtualPatchBayRouteStatus.cpp">
       <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointManager.cpp">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -334,6 +343,15 @@
     </ClInclude>
     <ClInclude Include="MidiVirtualPatchBayRouteStatus.h">
       <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointManager.h">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -742,6 +760,21 @@
     <Midl Include="MidiVirtualPatchBayRouteStatus.idl">
       <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointCreationConfig.idl">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointCreationResult.idl">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointDefinition.idl">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointManager.idl">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -877,6 +910,9 @@
     </Filter>
     <Filter Include="SDK\Endpoints\VirtualPatchBay\Configs">
       <UniqueIdentifier>{f55703b7-7124-49a3-8d13-fb201ab4bdcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Endpoints\Loopback-Basic">
+      <UniqueIdentifier>{7fb99c18-17fe-4e5f-9c7b-dc34b9a6e64f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

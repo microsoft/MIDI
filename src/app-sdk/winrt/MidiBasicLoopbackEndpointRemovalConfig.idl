@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+import "MidiBasicLoopbackEndpointDefinition.idl";
+import "IMidiServiceTransportPluginConfig.idl";
+
+
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback
+{
+    [contract(MidiEndpointsBasicLoopbackApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.IMidiBasicLoopbackEndpointRemovalConfig", UUID_IMidiBasicLoopbackEndpointRemovalConfig)]
+    runtimeclass MidiBasicLoopbackEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiBasicLoopbackEndpointRemovalConfig(Guid associationId);
+
+        Guid AssociationId;
+    }
+}

@@ -1110,7 +1110,7 @@ Timestamp</value>
     <value>Unique identifier for the loopback pair</value>
   </data>
   <data name="CommandLoopbackDescription" xml:space="preserve">
-    <value>Operations on loopback endpoints.</value>
+    <value>Operations on bidirectional (MIDI 2.0) loopback endpoints.</value>
   </data>
   <data name="CommandCreateLoopbackDescription" xml:space="preserve">
     <value>Create a temporary set of MIDI 2.0 (and MIDI 1.0) loopback endpoints, connected to each other. Messages sent to the A loopback will be received by B, and messages sent to B will be received by A. </value>
@@ -1152,5 +1152,26 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   </data>
   <data name="ErrorMidiFeatureNotEnabled" xml:space="preserve">
     <value>The Windows MIDI Services feature does not appear to be enabled on this PC. Enablement for supported versions of Windows will come through Windows Update. If you believe this to be in error, then a driver uninstaller or registry tool may have fouled the registry entries for MIDI. Please run the midifixreg tool from an Administrator command prompt.</value>
+  </data>
+  <data name="ParameterCreateBasicLoopbackName" xml:space="preserve">
+    <value>The name of the basic MIDI 1.0 loopback endpoint</value>
+  </data>
+  <data name="CommandCreateBasicLoopbackDescription" xml:space="preserve">
+    <value>Create a temporary basic MIDI 1.0 loopback endpoint for connecting two MIDI 1.0 applications together.</value>
+  </data>
+  <data name="MessageBasicLoopbackCreationSuccessDetails" xml:space="preserve">
+    <value>This endpoint will disappear when the MIDI service or PC is restarted. To create permanent loopback endpoints, use the MIDI Settings app.</value>
+  </data>
+  <data name="MessageBasicLoopbackCreationSuccess" xml:space="preserve">
+    <value>Loopback endpoint created</value>
+  </data>
+  <data name="LabelLoopbackEndpointIdentifier" xml:space="preserve">
+    <value>Endpoint Id</value>
+  </data>
+  <data name="CommandBasicLoopbackDescription" xml:space="preserve">
+    <value>Operations on MIDI 1.0 basic loopback endpoints</value>
+  </data>
+  <data name="CommandRemoveBasicLoopbackDescription" xml:space="preserve">
+    <value>Remove a basic MIDI 1.0 loopback endpoint by providing the association id</value>
   </data>
 </root>

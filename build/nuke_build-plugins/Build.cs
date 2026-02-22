@@ -121,6 +121,8 @@ class Build : NukeBuild
 
     AbsolutePath NetworkMidiSetupSolutionFolder => SourceRootFolder / "oob-setup-network";
     AbsolutePath VirtualPatchBaySetupSolutionFolder => SourceRootFolder / "oob-setup-virtual-patch-bay";
+    AbsolutePath SimpleLoopbackSetupSolutionFolder => SourceRootFolder / "oob-setup-simple-loopback";
+
 
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
 
@@ -143,6 +145,7 @@ class Build : NukeBuild
 
     Dictionary<string, string> BuiltNetworkMidiInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltVirtualPatchBayInstallers = new Dictionary<string, string>();
+    Dictionary<string, string> BuiltSimpleLoopbackInstallers = new Dictionary<string, string>();
 
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
@@ -309,6 +312,9 @@ class Build : NukeBuild
 
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualPatchBayTransport.dll");
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualPatchBayTransport.pdb");
+
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SimpleLoopbackMidiTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SimpleLoopbackMidiTransport.pdb");
 
                 foreach (var file in stagingFiles)
                 {
@@ -483,6 +489,61 @@ class Build : NukeBuild
             }
         });
 
+    Target T_BuildSimpleLoopbackPluginInstaller => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildInDevelopmentServicePlugins)
+        .Executes(() =>
+        {
+            // we build for Arm64 and x64. No EC required here
+            foreach (var platform in InstallerPlatforms)
+            {
+                UpdateSetupBundleInfoIncludeFile(platform);
+
+                //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+
+                string solutionDir = SimpleLoopbackSetupSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                Console.Out.WriteLine($"Platform:    {platform}");
+
+                NuGetTasks.NuGetRestore(_ => _
+                    .SetProcessWorkingDirectory(solutionDir)
+                    .SetSource(@"https://api.nuget.org/v3/index.json")
+                    .SetSolutionDirectory(solutionDir)
+                //.SetConfigFile(packagesConfigFullPath)
+                );
+
+                var output = MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(SimpleLoopbackSetupSolutionFolder / "midi-services-simple-loopback-setup.sln")
+                    .SetMaxCpuCount(null)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    .SetTargets("Clean", "Rebuild")
+                    .SetVerbosity(BuildVerbosity)
+                    .EnableNodeReuse()
+                );
+
+                string newInstallerName = $"Windows MIDI Services (Simple Loopback Preview) {BuildVersionFullString}-{platform.ToLower()}.exe";
+
+
+                var setupFile = SimpleLoopbackSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSimpleLoopbackSetup.exe";
+                setupFile.Copy(ThisReleaseFolder / newInstallerName);
+
+                BuiltSimpleLoopbackInstallers[platform.ToLower()] = newInstallerName;
+
+            }
+        });
+
+
+
 
     void RestoreNuGetPackagesForCPPProject(string vcxprojFilePath, string solutionDir, string packagesConfigFullPath)
     {
@@ -595,6 +656,7 @@ class Build : NukeBuild
         .DependsOn(T_BuildInDevelopmentServicePlugins)
         .DependsOn(T_BuildNetworkMidiInstaller)
         .DependsOn(T_BuildVirtualPatchBayPluginInstaller)
+        .DependsOn(T_BuildSimpleLoopbackPluginInstaller)
         .Executes(() =>
         {
 
@@ -626,7 +688,21 @@ class Build : NukeBuild
             {
                 Console.WriteLine("No Virtual Patch Bay installers built.");
             }
-            
+
+            if (BuiltSimpleLoopbackInstallers.Count > 0)
+            {
+                Console.WriteLine("\nBuilt Simple Loopback installers:");
+
+                foreach (var item in BuiltSimpleLoopbackInstallers)
+                {
+                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No Simple Loopback installers built.");
+            }
+
         });
 
 

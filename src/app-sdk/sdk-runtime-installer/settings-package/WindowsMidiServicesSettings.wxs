@@ -75,9 +75,11 @@
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Home-Background.png" />
 
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Loopback-Diagram.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\BasicLoopback-Diagram.svg" />
 
-            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-AdvancedUsbSettings.svg" />
+          <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-AdvancedUsbSettings.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-CreateLoopbackEndpoints.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-CreateBasicLoopbackEndpoints.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Developers.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Endpoints.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-GlobalSettings.svg" />
@@ -101,6 +103,7 @@
         <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-diag-small.svg" />
         <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-ksa-small.svg" />
         <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-ks-small.svg" />
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-bloop-small.svg" />
         <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-loop-small.svg" />
         <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-net2udp-small.svg" />
       </Component>
@@ -115,6 +118,7 @@
       <File Source="$(StagingSourceRootFolder)\Assets\Transports\ksa-small.svg" />
       <File Source="$(StagingSourceRootFolder)\Assets\Transports\ks-small.svg" />
       <File Source="$(StagingSourceRootFolder)\Assets\Transports\loop-small.svg" />
+      <File Source="$(StagingSourceRootFolder)\Assets\Transports\bloop-small.svg" />
       <File Source="$(StagingSourceRootFolder)\Assets\Transports\net2udp-small.svg" />
     </Component>
 
