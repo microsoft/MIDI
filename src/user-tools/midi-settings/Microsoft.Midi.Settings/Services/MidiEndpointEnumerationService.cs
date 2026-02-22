@@ -88,6 +88,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
         _watcher.EnumerationCompleted += OnDeviceWatcherEnumerationCompleted;
 
         _watcher.Start();
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
 
@@ -96,6 +98,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
         App.GetService<ILoggingService>().LogInfo("Enter");
 
         StartDeviceWatcher(false);
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     private readonly ISynchronizationContextService _synchronizationContextService;
@@ -107,7 +111,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private MidiEndpointWrapper BuildWrapper(MidiEndpointDeviceInformation deviceInformation)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        App.GetService<ILoggingService>().LogInfo("Building MidiEndpointWrapper");
 
         return new MidiEndpointWrapper(
             deviceInformation,
@@ -116,6 +120,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             _synchronizationContextService,
             App.GetService<IMidiConsoleToolsService>(),
             App.GetService<IMidiPanicService>());
+
     }
 
 
@@ -141,6 +146,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
                 EndpointAdded(this, args.AddedDevice);
             }
         }, null);
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     private void OnDeviceWatcherEndpointRemoved(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationRemovedEventArgs args)
@@ -160,6 +167,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
                 break;
             }
         }
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     private void OnDeviceWatcherEndpointUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
@@ -180,6 +189,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             }
         }
 
+        App.GetService<ILoggingService>().LogInfo("Exit");
+
     }
 
     private void OnDeviceWatcherStopped(MidiEndpointDeviceWatcher sender, object args)
@@ -189,6 +200,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private void ShutDownDeviceWatcher()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (_watcher != null)
         {
             _watcher.Stop();
@@ -200,6 +213,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
             _watcher = null;
         }
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
 

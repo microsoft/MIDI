@@ -88,6 +88,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Operations on MIDI 1.0 basic loopback endpoints.
+        /// </summary>
+        internal static string CommandBasicLoopbackDescription {
+            get {
+                return ResourceManager.GetString("CommandBasicLoopbackDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a temporary basic MIDI 1.0 loopback endpoint for connecting two MIDI 1.0 applications together..
+        /// </summary>
+        internal static string CommandCreateBasicLoopbackDescription {
+            get {
+                return ResourceManager.GetString("CommandCreateBasicLoopbackDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Create a temporary set of MIDI 2.0 (and MIDI 1.0) loopback endpoints, connected to each other. Messages sent to the A loopback will be received by B, and messages sent to B will be received by A. .
         /// </summary>
         internal static string CommandCreateLoopbackDescription {
@@ -205,7 +223,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Operations on loopback endpoints..
+        ///   Looks up a localized string similar to Operations on bidirectional (MIDI 2.0) loopback endpoints..
         /// </summary>
         internal static string CommandLoopbackDescription {
             get {
@@ -246,6 +264,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string CommandPlayNotesDescription {
             get {
                 return ResourceManager.GetString("CommandPlayNotesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove a basic MIDI 1.0 loopback endpoint by providing the association id.
+        /// </summary>
+        internal static string CommandRemoveBasicLoopbackDescription {
+            get {
+                return ResourceManager.GetString("CommandRemoveBasicLoopbackDescription", resourceCulture);
             }
         }
         
@@ -817,6 +844,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Endpoint Id.
+        /// </summary>
+        internal static string LabelLoopbackEndpointIdentifier {
+            get {
+                return ResourceManager.GetString("LabelLoopbackEndpointIdentifier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Endpoint A.
         /// </summary>
         internal static string LabelLoopbackEndpointIdentifierA {
@@ -831,6 +867,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string LabelLoopbackEndpointIdentifierB {
             get {
                 return ResourceManager.GetString("LabelLoopbackEndpointIdentifierB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loopback endpoint created.
+        /// </summary>
+        internal static string MessageBasicLoopbackCreationSuccess {
+            get {
+                return ResourceManager.GetString("MessageBasicLoopbackCreationSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This endpoint will disappear when the MIDI service or PC is restarted. To create permanent loopback endpoints, use the MIDI Settings app..
+        /// </summary>
+        internal static string MessageBasicLoopbackCreationSuccessDetails {
+            get {
+                return ResourceManager.GetString("MessageBasicLoopbackCreationSuccessDetails", resourceCulture);
             }
         }
         
@@ -1130,6 +1184,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ParameterCommonEndpointIdDescription {
             get {
                 return ResourceManager.GetString("ParameterCommonEndpointIdDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the basic MIDI 1.0 loopback endpoint.
+        /// </summary>
+        internal static string ParameterCreateBasicLoopbackName {
+            get {
+                return ResourceManager.GetString("ParameterCreateBasicLoopbackName", resourceCulture);
             }
         }
         

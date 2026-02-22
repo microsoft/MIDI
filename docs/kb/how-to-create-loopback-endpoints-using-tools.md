@@ -1,7 +1,7 @@
 ---
 layout: kb
-title: How to create loopback endpoints using the tools
-description: How customers can create loopback endpoints without coding.
+title: How to create MIDI 2.0 loopback endpoints using the tools
+description: How customers can create MIDI 2.0 loopback endpoints without coding.
 audience: everyone
 ---
 

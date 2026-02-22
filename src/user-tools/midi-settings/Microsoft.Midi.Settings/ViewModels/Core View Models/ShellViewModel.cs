@@ -90,6 +90,9 @@ public partial class ShellViewModel : ObservableRecipient
     private bool showLoopbackMidiInLeftNav = false;
 
     [ObservableProperty]
+    private bool showBasicLoopbackMidiInLeftNav = false;
+
+    [ObservableProperty]
     private bool showBle10MidiInLeftNav = false;
 
     [ObservableProperty]
@@ -114,6 +117,9 @@ public partial class ShellViewModel : ObservableRecipient
             {
                 case "LOOP":
                     ShowLoopbackMidiInLeftNav = _configFileService.IsConfigFileActive;
+                    break;
+                case "BLOOP":
+                    ShowBasicLoopbackMidiInLeftNav = _configFileService.IsConfigFileActive;
                     break;
                 case "BLE10":
                     ShowBle10MidiInLeftNav = _configFileService.IsConfigFileActive;

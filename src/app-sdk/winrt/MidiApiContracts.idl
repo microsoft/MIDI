@@ -53,6 +53,12 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints
         apicontract MidiEndpointsNetworkApiContract { };
     }
 
+    namespace BasicLoopback
+    {
+        [contractversion(1)]
+        apicontract MidiEndpointsBasicLoopbackApiContract { };
+    }
+
 }
 
 //namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay

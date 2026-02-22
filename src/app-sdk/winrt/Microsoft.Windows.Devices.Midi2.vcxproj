@@ -264,6 +264,9 @@
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
     <ClInclude Include="date_util.h" />
+    <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h" />
+    <ClInclude Include="MidiBasicLoopbackEndpointManager.h" />
+    <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h" />
     <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
       <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
     </ClInclude>
@@ -514,6 +517,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEndpointManager.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp" />
     <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
       <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
     </ClCompile>
@@ -931,6 +937,11 @@
     <Midl Include="MidiMessage96.idl" />
     <Midl Include="MidiMessageTypeEnum.idl" />
     <Midl Include="MidiPacketTypeEnum.idl" />
+    <Midl Include="MidiBasicLoopbackEndpointCreationConfig.idl" />
+    <Midl Include="MidiBasicLoopbackEndpointCreationResult.idl" />
+    <Midl Include="MidiBasicLoopbackEndpointDefinition.idl" />
+    <Midl Include="MidiBasicLoopbackEndpointManager.idl" />
+    <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl" />
     <Midl Include="MidiSystemTimerSettings.idl" />
     <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiReporting.idl" />

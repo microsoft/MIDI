@@ -73,6 +73,14 @@ public class ActivationService : IActivationService
             }
         }
 
+        // arbitrary minimum size to ensure we're not just a floating title bar
+        if (extents.Width < 600 || extents.Height < 400)
+        {
+            extents.Width = 600;
+            extents.Height = 400;
+        }
+
+
         App.MainWindow.AppWindow.Resize(new global::Windows.Graphics.SizeInt32(extents.Width, extents.Height));
 
 
@@ -95,13 +103,13 @@ public class ActivationService : IActivationService
 
     [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     static extern int MessageBox(
-    IntPtr hWnd,
-    string lpText,
-    string lpCaption,
-    int uType);
+                            IntPtr hWnd,
+                            string lpText,
+                            string lpCaption,
+                            int uType);
 
 
-    public async Task ActivateAsync(object activationArgs)
+    public async Task<bool> ActivateAsync(object activationArgs)
     {
         App.GetService<ILoggingService>().LogInfo("Enter");
 
@@ -112,10 +120,7 @@ public class ActivationService : IActivationService
 
         WindowsDeveloperModeHelper.Refresh();
 
-
-
         // Check for feature activation
-
 
         bool featureEnabled = MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabled();
 
@@ -129,6 +134,7 @@ public class ActivationService : IActivationService
                 "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized(),
                 0);
 
+            return false;
         }
         else
         {
@@ -149,37 +155,49 @@ public class ActivationService : IActivationService
                     });
                 }
 
+                if (_sdkService == null)
+                {
+                    return false;
+                }
+
                 // run as a task so the splash screen gets a chance to
                 // actually show up if it has been displayed.
                 await Task.Run(() =>
                 {
-                    if (_sdkService == null) return;
-
                     if (!_sdkService.InitializeSdk())
                     {
+                        App.GetService<ILoggingService>().LogError("Unable to initialize SDK");
+
                         MessageBox(
                             (IntPtr)0,
                             "Error_UnableToInitializeMidiRuntime".GetLocalized(),
                             "Error_StartupMessageBoxTitle".GetLocalized(),
                             0);
 
-                        //    Exit();
+                        return;
                     }
                     else if (!_sdkService.InitializeService())
                     {
+                        App.GetService<ILoggingService>().LogError("Unable to initialize Service");
+
                         MessageBox(
                             (IntPtr)0,
                             "Error_UnableToStartMidiService".GetLocalized(),
                             "Error_StartupMessageBoxTitle".GetLocalized(),
                             0);
 
-                        //Exit();
+                        return;
                     }
                     else
                     {
                         _enumerationService.Start();
                     }
                 });
+
+                if (!_sdkService.IsRuntimeInitialized || !_sdkService.IsServiceInitialized)
+                {
+                    return false;
+                }
             }
 
             //App.MainWindow = (MainWindow)e!;
@@ -215,52 +233,71 @@ public class ActivationService : IActivationService
             // Execute tasks after activation.
             await StartupAsync();
 
+            App.GetService<ILoggingService>().LogInfo("Exit");
+
+            return true;
         }
-
-
-
-
-
-        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     private async Task HandleActivationAsync(object activationArgs)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
-
-        var activationHandler = _activationHandlers.FirstOrDefault(h => h.CanHandle(activationArgs));
-
-        if (activationHandler != null)
+        try
         {
-            await activationHandler.HandleAsync(activationArgs);
-        }
+            App.GetService<ILoggingService>().LogInfo("Enter");
 
-        if (_defaultHandler.CanHandle(activationArgs))
+            var activationHandler = _activationHandlers.FirstOrDefault(h => h.CanHandle(activationArgs));
+
+            if (activationHandler != null)
+            {
+                await activationHandler.HandleAsync(activationArgs);
+            }
+
+            if (_defaultHandler.CanHandle(activationArgs))
+            {
+                await _defaultHandler.HandleAsync(activationArgs);
+            }
+
+            App.GetService<ILoggingService>().LogInfo("Exit");
+        }
+        catch (Exception ex)
         {
-            await _defaultHandler.HandleAsync(activationArgs);
+            App.GetService<ILoggingService>().LogError("Exception during HandleActivationAsync", ex);
         }
-
-        App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
     private async Task InitializeAsync()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        try
+        {
+            App.GetService<ILoggingService>().LogInfo("Enter");
 
-        await _themeSelectorService.InitializeAsync().ConfigureAwait(false);
-        await _generalSettingsService.InitializeAsync().ConfigureAwait(false);
-        await Task.CompletedTask;
+            await _themeSelectorService.InitializeAsync().ConfigureAwait(false);
+            await _generalSettingsService.InitializeAsync().ConfigureAwait(false);
+            await Task.CompletedTask;
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+            App.GetService<ILoggingService>().LogInfo("Exit");
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Exception during InitializeAsync", ex);
+        }
     }
 
     private async Task StartupAsync()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        try
+        {
+            App.GetService<ILoggingService>().LogInfo("Enter");
 
-        await _themeSelectorService.SetRequestedThemeAsync();
-        await Task.CompletedTask;
+            await _themeSelectorService.SetRequestedThemeAsync();
+            await Task.CompletedTask;
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+            App.GetService<ILoggingService>().LogInfo("Exit");
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Exception during StartupAsync", ex);
+        }
+
     }
 }

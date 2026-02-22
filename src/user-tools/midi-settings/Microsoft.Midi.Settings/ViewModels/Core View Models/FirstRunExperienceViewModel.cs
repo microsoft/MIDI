@@ -14,11 +14,13 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.AppLifecycle;
+using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
 using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -100,6 +102,15 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern int MessageBox(
+                            IntPtr hWnd,
+                            string lpText,
+                            string lpCaption,
+                            int uType);
+
+
+
         private void CompleteFirstRunSetup()
         {
             bool needServiceRestart = false;
@@ -146,29 +157,48 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 if (m_configFileService.CurrentConfig != null)
                 {
-                    var creationConfig = m_defaultsService.GetDefaultLoopbackCreationConfig();
+                    var midi2CreationConfig = m_defaultsService.GetDefaultLoopbackCreationConfig();
 
+                    // Create the MIDI 2.0 loopback
 
-                    // TODO: Verify they don't already exist
+                    var midi2result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(midi2CreationConfig);
 
-
-                    var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
-
-                    if (result.Success)
+                    if (midi2result.Success)
                     {
-                        m_configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+                        m_configFileService.CurrentConfig.StoreLoopbackEndpointPair(midi2CreationConfig);
                     }
                     else
                     {
                         // update error information
-                        ErrorMessage = "Error creating loopback endpoints. " + result.ErrorInformation;
+                        ErrorMessage = "Error creating MIDI 2.0 loopback endpoints. " + midi2result.ErrorInformation;
                     }
+
+
+                    // Create the basic loopback
+
+                    var midi1CreationConfig = m_defaultsService.GetDefaultBasicLoopbackCreationConfig();
+
+                    var midi1Result = MidiBasicLoopbackEndpointManager.CreateTransientLoopbackEndpoint(midi1CreationConfig);
+
+                    if (midi1Result.Success)
+                    {
+                        m_configFileService.CurrentConfig.StoreBasicLoopbackEndpoint(midi1CreationConfig);
+                    }
+                    else
+                    {
+                        // update error information
+                        ErrorMessage = "Error creating MIDI 1.0 basic loopback endpoints. " + midi1Result.ErrorInformation;
+
+                    }
+
+
                 }
                 else
                 {
                     // TODO: Report that a config file is needed
                     ErrorMessage = "Cannot create loopback endpoints without a valid config file.";
                 }
+
             }
 
             if (UseNewStyleWinMMPortNames)
@@ -240,6 +270,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (serviceRestarted)
             {
+                MessageBox(
+                    (IntPtr)0,
+                    "Message_SettingsAppWillNowRestart".GetLocalized(),
+                    "AppDisplayName".GetLocalized(),
+                    0);
+
                 // For now, we'll just restart the app, but it would be 
                 // better to reload config file and reload data
                 string arguments = string.Empty;
@@ -249,15 +285,27 @@ namespace Microsoft.Midi.Settings.ViewModels
                 switch (restartError)
                 {
                     case AppRestartFailureReason.RestartPending:
-                        // TODO
+                        MessageBox(
+                            (IntPtr)0,
+                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
+                            "AppDisplayName".GetLocalized(),
+                            0);
                         break;
 
                     case AppRestartFailureReason.InvalidUser:
-                        // TODO
+                        MessageBox(
+                            (IntPtr)0,
+                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
+                            "AppDisplayName".GetLocalized(),
+                            0);
                         break;
 
                     case AppRestartFailureReason.Other:
-                        // TODO
+                        MessageBox(
+                            (IntPtr)0,
+                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
+                            "AppDisplayName".GetLocalized(),
+                            0);
                         break;
                 }
             }
