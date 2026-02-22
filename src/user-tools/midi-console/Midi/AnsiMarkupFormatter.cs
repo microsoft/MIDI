@@ -64,7 +64,7 @@ namespace Microsoft.Midi.ConsoleApp
             }
             if (device.GetTransportSuppliedInfo().TransportCode.ToLower() == "bloop")
             {
-                return "↩️";
+                return "🔗";
             }
             else if (device.GetTransportSuppliedInfo().TransportCode.ToLower() == "net2udp")
             {

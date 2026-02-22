@@ -122,7 +122,7 @@
                            Margin="13, 9, 13, 13"/>
 
                     <TextBlock TextWrapping="WrapWholeWords" 
-                           Text="This is a traditional style lookback where everything sent out to the destination (Output) port arrives in the source (Input) port. This was designed specifically for cases where MIDI 2.0 bidirectional support is not needed or desired."
+                           Text="This is a traditional style lookback where everything sent out to the destination (Output) port arrives in the source (Input) port. This was designed specifically for cases where MIDI 2.0 bidirectional support is not needed or desired. Any number of applications may use these loopback endpoints, and you may create as many loopback endpoints as you need."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
@@ -193,7 +193,7 @@
                     <ToggleSwitch Margin="13"
                               IsEnabled="{x:Bind ViewModel.IsConfigFileActive, Mode=OneWay}"
                               IsOn="{x:Bind ViewModel.NewLoopbackIsPersistent, Mode=TwoWay}"
-                              Header="Retain this loopback pair across service restarts/reboots. If this control is disabled, please create a configuration file using the options on the home page." 
+                              Header="Retain this loopback endpoint across service restarts/reboots. If this control is disabled, please create a configuration file using the options on the home page." 
                               />
 
                     <TextBlock Text="{x:Bind ViewModel.ValidationErrorMessage, Mode=OneWay}"

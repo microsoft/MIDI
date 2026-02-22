@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -100,6 +101,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                 return CreateConfigurationFile || m_configFileService.IsConfigFileActive;
             }
         }
+
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern int MessageBox(
+                            IntPtr hWnd,
+                            string lpText,
+                            string lpCaption,
+                            int uType);
+
+
 
         private void CompleteFirstRunSetup()
         {
@@ -260,6 +270,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (serviceRestarted)
             {
+                MessageBox(
+                    (IntPtr)0,
+                    "Message_SettingsAppWillNowRestart".GetLocalized(),
+                    "AppDisplayName".GetLocalized(),
+                    0);
+
                 // For now, we'll just restart the app, but it would be 
                 // better to reload config file and reload data
                 string arguments = string.Empty;
@@ -269,15 +285,27 @@ namespace Microsoft.Midi.Settings.ViewModels
                 switch (restartError)
                 {
                     case AppRestartFailureReason.RestartPending:
-                        // TODO
+                        MessageBox(
+                            (IntPtr)0,
+                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
+                            "AppDisplayName".GetLocalized(),
+                            0);
                         break;
 
                     case AppRestartFailureReason.InvalidUser:
-                        // TODO
+                        MessageBox(
+                            (IntPtr)0,
+                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
+                            "AppDisplayName".GetLocalized(),
+                            0);
                         break;
 
                     case AppRestartFailureReason.Other:
-                        // TODO
+                        MessageBox(
+                            (IntPtr)0,
+                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
+                            "AppDisplayName".GetLocalized(),
+                            0);
                         break;
                 }
             }

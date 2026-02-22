@@ -814,4 +814,10 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   <data name="Shell_EndpointsBasicLoop.Content" xml:space="preserve">
     <value>MIDI 1.0 Loopback Endpoints</value>
   </data>
+  <data name="Message_SettingsAppWillNowRestart" xml:space="preserve">
+    <value>The MIDI Settings app will now restart.</value>
+  </data>
+  <data name="Error_SettingsAppCouldNotAutomaticallyRestart" xml:space="preserve">
+    <value>The MIDI Settings app could not automatically close and restart. Please close the application and then relaunch it.</value>
+  </data>
 </root>

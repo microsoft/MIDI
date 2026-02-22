@@ -24,12 +24,13 @@ At the time of this writing, we ship the following transports in the box:
 - **USB MIDI 1.0/2.0 UMP (KS)** for any USB device connected to the USB MIDI 2.0 UMP driver
 - **USB MIDI 1.0 byte format (KSA)** for any MIDI 1.0 device using our in-box USB MIDI 1.0 class driver, or a third-party driver
 - **Diagnostics / Testing Loopback and Ping (DIAG)** for use when you are checking the health of the system, or on a call with device or app support
-- **Simple loopback (LOOP)** for simply connecting two apps
+- **MIDI 1.0 Basic Loopback (BLOOP)** for creating a loopback endpoint that works like existing third-party loopback solutions.
+- **MIDI 2.0 Loopback (LOOP)** for simply connecting two apps using bidirectional MIDI 2.0 loopbacks
 - **MIDI 2.0 device app (APP)** for app-to-app MIDI with MIDI 2.0 discovery and protocol negotiation
 
-In the future, we have plans for BLE MIDI 1.0, Network MIDI 2.0 (demonstrated at NAMM Show 2025), a virtual patch bay / router, and others.
+In the future, we have plans for BLE MIDI 1.0, Network MIDI 2.0 (demonstrated at NAMM Show 2025 and 2026), a virtual patch bay / router, and others.
 
-If Developer Mode is not turned on in Windows Settings, all service plugins must be signed with a valid certificate by an authority that is recognized on the PC.
+If Developer Mode is not turned on in Windows Settings, all service plugins must be signed with a valid certificate by an authority that is recognized on the PC. The ones shipped with Windows are signed by Microsoft
 
 ![Transports listed in the MIDI Console]({{"/assets/images/console-enum-transports.png" | relative_url}})
 

@@ -1,8 +1,8 @@
 ---
 layout: kb
-title: How to Create Loopback Endpoint Pairs from Code
+title: How to Create MIDI 2.0 Loopback Endpoint Pairs from Code
 audience: developers
-description: How to create loopback endpoint pairs from code
+description: How to create MIDI 2.0 loopback endpoint pairs from code
 ---
 
 We'll assume here you've already initialized Windows MIDI Services and created a session.

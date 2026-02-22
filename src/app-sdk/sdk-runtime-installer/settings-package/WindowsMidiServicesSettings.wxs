@@ -75,8 +75,9 @@
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Home-Background.png" />
 
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Loopback-Diagram.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\BasicLoopback-Diagram.svg" />
 
-            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-AdvancedUsbSettings.svg" />
+          <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-AdvancedUsbSettings.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-CreateLoopbackEndpoints.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-CreateBasicLoopbackEndpoints.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Developers.svg" />
