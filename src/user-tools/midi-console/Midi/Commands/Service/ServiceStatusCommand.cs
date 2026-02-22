@@ -30,6 +30,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             // check to see if the service is running. 
             // NOTE: Equivalent code can't be moved to the SDK due to Desktop/WinRT limitations.
 
@@ -57,8 +59,10 @@ namespace Microsoft.Midi.ConsoleApp
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Service '{MidiServiceHelper.GetServiceName()}' status is {controller.Status.ToString()}. You may want to restart the service or reboot."));
                 }
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
+                LoggingService.Current.LogError("Unable to find service", ex);
+
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{MidiServiceHelper.GetServiceName()}'. Is Windows MIDI Services installed?\n"));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
             }

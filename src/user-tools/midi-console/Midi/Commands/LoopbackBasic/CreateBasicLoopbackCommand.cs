@@ -24,12 +24,12 @@ namespace Microsoft.Midi.ConsoleApp
             public string? Name { get; set; }
 
 
-            [LocalizedDescription("ParameterCreateLoopbackUniqueIdentifier")]
+            [LocalizedDescription("ParameterCreateBasicLoopbackUniqueIdentifier")]
             [CommandOption("-u|--unique-identifier")]
             public string? UniqueId { get; set; }
 
 
-            [LocalizedDescription("ParameterCreateLoopbackAssociationId")]
+            [LocalizedDescription("ParameterCreateBasicLoopbackAssociationId")]
             [CommandOption("-i|--association-id")]
             public Guid? AssociationId { get; set; }
         }
@@ -76,6 +76,8 @@ namespace Microsoft.Midi.ConsoleApp
         }
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             Guid associationId;
             string uniqueId;
 

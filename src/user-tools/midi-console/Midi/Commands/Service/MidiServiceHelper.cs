@@ -12,8 +12,8 @@ namespace Microsoft.Midi.ConsoleApp
 {
     internal class MidiServiceHelper
     {
-        private const int MAX_TRIES = 50;
-        private const int SLEEP_MS_PER_ATTEMPT = 250;
+        private const int MAX_TRIES = 100;
+        private const int SLEEP_MS_PER_ATTEMPT = 500;
 
         public static string GetServiceName()
         {

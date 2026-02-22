@@ -148,8 +148,10 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             // we'll use this info when sleeping
-    //        var systemTimerInfo = MidiClock.GetCurrentSystemTimerInfo();
+            //        var systemTimerInfo = MidiClock.GetCurrentSystemTimerInfo();
 
 
             string endpointId = string.Empty;

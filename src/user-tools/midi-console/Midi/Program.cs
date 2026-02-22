@@ -349,8 +349,10 @@ try
 {
     initializer = sdkInit.MidiDesktopAppSdkInitializer.Create();
 }
-catch (Exception)
+catch (Exception ex)
 {
+    LoggingService.Current.LogError(Strings.ErrorSdkInitializerInitializationFailedExceptionInCreate, ex);
+
     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailedExceptionInCreate));
     return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
 }
@@ -358,6 +360,8 @@ catch (Exception)
 
 if (initializer == null)
 {
+    LoggingService.Current.LogError(Strings.ErrorSdkInitializerInitializationFailed);
+
     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailed));
 
     return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
@@ -368,6 +372,8 @@ using (initializer)
     // initialize SDK runtime
     if (!initializer.InitializeSdkRuntime())
     {
+        LoggingService.Current.LogError(Strings.ErrorSdkInitializationFailed);
+
         AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializationFailed));
 
         return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
@@ -386,6 +392,8 @@ using (initializer)
         {
             if (!MidiServiceHelper.ServiceIsReallyRunning(controller))
             {
+                LoggingService.Current.LogInfo(Strings.StartingMidiService);
+
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.StartingMidiService));
             }
         }
@@ -393,6 +401,8 @@ using (initializer)
         // start the service
         if (!initializer.EnsureServiceAvailable())
         {
+            LoggingService.Current.LogError(Strings.ErrorMidiServiceNotAvailable);
+
             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
 
             return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -402,6 +412,8 @@ using (initializer)
     if (args.Length == 0)
     {
         // show app description only when no arguments supplied
+
+        LoggingService.Current.LogInfo(initializer.GetInstalledSdkDescription(true, true, true));
 
         AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppDescription(Strings.AppDescription));
         AnsiConsole.WriteLine();

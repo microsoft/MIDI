@@ -136,6 +136,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             string destinationEndpointDeviceId = string.Empty;
             string sourceEndpointDeviceId = string.Empty;  
 
