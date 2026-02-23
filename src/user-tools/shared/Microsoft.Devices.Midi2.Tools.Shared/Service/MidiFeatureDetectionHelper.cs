@@ -22,53 +22,56 @@ namespace Microsoft.Midi.Settings.Helpers
         private const string MidiSdkRootRegKey = MidiRootRegKey + @"\Desktop App SDK Runtime";
         private const string MidiCheckServicePathRegValue = "MidiCheckService";
 
-        public static bool IsWindowsMidiServicesFeatureEnabled()
+        public static async Task<bool> IsWindowsMidiServicesFeatureEnabledAsync()
         {
-            try
+            return await Task.Run(() =>
             {
-                string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Tools\midicheckservice.exe";
-
-                string checkServicePath = string.Empty;
-
-                var value = Microsoft.Win32.Registry.GetValue(MidiSdkRootRegKey, MidiCheckServicePathRegValue, defaultPath);
-
-                if (value == null)
+                try
                 {
-                    // happens when the key does not exist
-                    checkServicePath = defaultPath;
+                    string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Tools\midicheckservice.exe";
+
+                    string checkServicePath = string.Empty;
+
+                    var value = Microsoft.Win32.Registry.GetValue(MidiSdkRootRegKey, MidiCheckServicePathRegValue, defaultPath);
+
+                    if (value == null)
+                    {
+                        // happens when the key does not exist
+                        checkServicePath = defaultPath;
+                    }
+                    else if (value is string)
+                    {
+                        checkServicePath = (string)value;
+                    }
+                    else
+                    {
+                        checkServicePath = defaultPath;
+                    }
+
+                    var consoleProcess = new System.Diagnostics.Process();
+
+                    consoleProcess.StartInfo.FileName = checkServicePath;
+                    consoleProcess.StartInfo.Arguments = "--quiet";
+                    consoleProcess.StartInfo.UseShellExecute = false;
+                    consoleProcess.StartInfo.CreateNoWindow = true;
+
+                    consoleProcess.Start();
+                    consoleProcess.WaitForExit();
+
+                    var exitCode = consoleProcess.ExitCode;
+
+                    if (exitCode <= 0)
+                    {
+                        return true;
+                    }
+
                 }
-                else if (value is string)
+                catch (Exception)
                 {
-                    checkServicePath = (string)value;
-                }
-                else
-                {
-                    checkServicePath = defaultPath;
                 }
 
-                var consoleProcess = new System.Diagnostics.Process();
-
-                consoleProcess.StartInfo.FileName = checkServicePath;
-                consoleProcess.StartInfo.Arguments = "--quiet";
-                consoleProcess.StartInfo.UseShellExecute = false;
-                consoleProcess.StartInfo.CreateNoWindow = true;
-
-                consoleProcess.Start();
-                consoleProcess.WaitForExit();
-
-                var exitCode = consoleProcess.ExitCode;
-
-                if (exitCode <= 0)
-                {
-                    return true;
-                }
-
-            }
-            catch (Exception)
-            {
-            }
-
-            return false;
+                return false;
+            });
         }
 
 

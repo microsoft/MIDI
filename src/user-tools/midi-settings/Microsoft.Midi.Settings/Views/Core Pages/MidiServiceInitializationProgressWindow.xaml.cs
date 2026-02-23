@@ -32,13 +32,13 @@ namespace Microsoft.Midi.Settings.Views
     /// <summary>
     /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MidiServiceInitializationProgressWindow : WinUIEx.WindowEx
+    public sealed partial class MidiServiceInitializationProgressWindow : Window
     {
 
         public MidiServiceInitializationProgressWindow()
         {
             //this.ExtendsContentIntoTitleBar = true;
-            this.IsTitleBarVisible = false;
+            //this.IsTitleBarVisible = false;
 
             HwndExtensions.ToggleWindowStyle(this.GetWindowHandle(), false, WindowStyle.Border );
             
