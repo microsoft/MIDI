@@ -30,6 +30,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             var config = new MidiBasicLoopbackEndpointRemovalConfig(settings.AssociationId);
 
             var removalSuccess = MidiBasicLoopbackEndpointManager.RemoveTransientLoopbackEndpoint(config);

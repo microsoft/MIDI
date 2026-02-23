@@ -53,8 +53,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private MidiEndpointWrapper endpointWrapper;
 
-
-
         private readonly ISynchronizationContextService _synchronizationContextService;
         private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
@@ -70,6 +68,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             _endpointCustomizationService = endpointCustomizationService;
             _endpointEnumerationService = endpointEnumerationService;
             _configFileService = configFileService;
+
 
             System.Diagnostics.Debug.WriteLine("Start clearing properties");
 

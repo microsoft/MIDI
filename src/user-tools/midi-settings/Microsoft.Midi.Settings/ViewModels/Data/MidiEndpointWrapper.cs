@@ -133,7 +133,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         private bool hasParent;
 
 
-
+        [ObservableProperty]
+        private bool canMonitor;
 
         [ObservableProperty]
         private MidiEndpointDeviceInformation deviceInformation;
@@ -387,6 +388,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             _panicService = panicService;
             _transportInfoService = transportInfoService;
             _consoleToolsService = consoleToolsService;
+
+            CanMonitor = consoleToolsService.IsMidiConsolePresent();
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointWrapper>(
                 (param) =>

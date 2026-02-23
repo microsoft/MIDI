@@ -42,6 +42,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             bool atLeastOneEndpointFound = false;
 
             //if (!MidiServicesInitializer.EnsureServiceAvailable())
@@ -73,8 +75,10 @@ namespace Microsoft.Midi.ConsoleApp
                     {
                         selector = MidiEndpointConnection.GetDeviceSelector();
                     }
-                    catch (System.TypeInitializationException)
+                    catch (System.TypeInitializationException ex)
                     {
+                        LoggingService.Current.LogError("Error enumerating endpoints", ex);
+
                         AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
                         return;
                     }

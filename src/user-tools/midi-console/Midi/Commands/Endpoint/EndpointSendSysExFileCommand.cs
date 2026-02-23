@@ -78,6 +78,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             //if (!MidiServicesInitializer.EnsureServiceAvailable())
             //{
             //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
@@ -184,6 +186,8 @@ namespace Microsoft.Midi.ConsoleApp
                         }
                         catch (Exception ex)
                         {
+                            LoggingService.Current.LogError("Exception sending SysEx data", ex);
+
                             AnsiConsole.WriteLine($"Exception sending data: {ex.Message}");
                         }
 

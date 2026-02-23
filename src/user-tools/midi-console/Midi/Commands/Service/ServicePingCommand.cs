@@ -59,6 +59,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             //if (!MidiServicesInitializer.EnsureServiceAvailable())
             //{
             //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
@@ -155,14 +157,18 @@ namespace Microsoft.Midi.ConsoleApp
                 }
                 return 0;
             }
-            catch (System.TypeInitializationException)
+            catch (System.TypeInitializationException ex)
             {
+                LoggingService.Current.LogError(Strings.ErrorPingTestFailed, ex);
+
                 AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorPingTestFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
 
                 return (int)MidiConsoleReturnCode.ErrorWinRTTypeActivationFailure;
             }
             catch (Exception ex)
             {
+                LoggingService.Current.LogError(Strings.ErrorPingTestFailed, ex);
+
                 AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorPingTestFailed}: " + ex.Message));
 
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;

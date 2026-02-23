@@ -55,6 +55,11 @@
             <Environment Id="AddMidiDiagUtilityToSystemPath"
                             Name="PATH" Action="set" Part="last" System="yes"
                             Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
+
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+              <RegistryValue Type="string" Name="MidiDiag" Value="[TOOLSROOT_INSTALLFOLDER]mididiag.exe" />
+            </RegistryKey>
         </Component>
 
         <!-- Install MIDI USB Utility -->

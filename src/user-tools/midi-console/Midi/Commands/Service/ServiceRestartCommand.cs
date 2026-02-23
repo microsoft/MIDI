@@ -25,6 +25,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
             // this command requires admin
 
             if (!UserHelper.CurrentUserHasAdminRights())
@@ -40,8 +42,10 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 controller = MidiServiceHelper.GetServiceController();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LoggingService.Current.LogError("Unable to find service", ex);
+
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{MidiServiceHelper.GetServiceName()}'. Is Windows MIDI Services installed?"));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
             }
@@ -79,8 +83,10 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Done.") + " Use [cadetblue_1]midi service status[/] to verify service status.");
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LoggingService.Current.LogError("Unable to restart service", ex);
+
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to restart service. It may be locked in a tight loop due to an error. Consider killing the midisrv.exe process, or rebooting."));
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
