@@ -1564,7 +1564,15 @@ CMidi2KSAggregateMidiEndpointManager2::IncrementAndGetNextGroupIndex(
         groupIndex = definition->CurrentHighestMidiDestinationGroupIndex;
     }
 
-    return S_OK;
+    // some error checking just in case.
+    if (groupIndex > 15)
+    {
+        return E_FAIL;
+    }
+    else
+    {
+        return S_OK;
+    }
 }
 
 #define MAX_THREAD_WORKER_WAIT_TIME_MS 20000
@@ -1892,6 +1900,7 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
     std::wstring filterDeviceid, 
     std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition)
 {
+
     // At this point, we need to have *all* the pins for the endpoint, not just this filter
     for (auto& pinDefinition : endpointDefinition->MidiPins)
     {
@@ -1904,13 +1913,19 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
             continue;
         }
 
+        uint8_t groupIndex{ 0 };
+
         // Figure out the group index for the pin. This needs the context of the 
         // entire device. Failure to get the group index is fatal
+        // we use a temp variable for groupIndex so we don't corrupt the pin value.
         RETURN_IF_FAILED(IncrementAndGetNextGroupIndex(
             endpointDefinition, 
             pinDefinition->DataFlowFromUserPerspective, 
-            pinDefinition->GroupIndex
+            groupIndex
         ));
+
+        // we got the new group index, so use it.
+        pinDefinition->GroupIndex = groupIndex;
 
         TraceLoggingWrite(
             MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -2032,8 +2047,6 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     RETURN_IF_FAILED(GetMidi1FilterPins(filterDevice, pinList, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins));
 
 
-
-
     // TODO: Should just get that list of pins back, and even if it's > 32, just break it up into separate 
     // endpoints of pins (16 in, 16 out, max). May need a "distribute pins" type of function
     // to return a vector of vectors of pins
@@ -2113,8 +2126,6 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
         // check the latest endpoint first
 
-
-
         for (size_t i = foundEndpoints.size() - 1; i >= 0; i--)
         {
             auto ep = foundEndpoints[i];
@@ -2122,7 +2133,6 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
             if (EndpointHasRoomForMoreNewPins(ep, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins))
             {
                 existingPendingEndpointDefinition = ep;
-
                 break;
             }
         }
@@ -2159,7 +2169,6 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
             TraceLoggingWideString(parentInstanceId.c_str(), "parent instance id")
         );
 
-
         foundEndpoints.clear();
         
         if (SUCCEEDED(FindAllActivatedEndpointDefinitionsForParentDevice(parentInstanceId.c_str(), foundEndpoints)))
@@ -2177,10 +2186,8 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
                 if (EndpointHasRoomForMoreNewPins(ep, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins))
                 {
                     existingActivatedEndpointDefinition = ep;
-
                     break;
                 }
-
             }
         }
 
@@ -2199,6 +2206,10 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
             return S_OK;
         }
+        else
+        {
+            // fall through to creating a new endpoint
+        }
     }
     else
     {
@@ -2216,7 +2227,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
 
     // ===================================================================
-    // Create the endpoint
+    // Create a new endpoint
 
     std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition{ nullptr };
 
