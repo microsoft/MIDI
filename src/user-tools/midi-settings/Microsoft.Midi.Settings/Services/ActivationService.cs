@@ -120,10 +120,30 @@ public class ActivationService : IActivationService
 
         WindowsDeveloperModeHelper.Refresh();
 
+        var serviceController = MidiServiceHelper.GetServiceController();
+
+        if (serviceController == null)
+        {
+            App.GetService<ILoggingService>().LogError("Unable to get service controller");
+            return false;
+        }
+
+        if (!MidiServiceHelper.ServiceIsReallyRunning(serviceController))
+        {
+            // just initialize the service
+            System.Diagnostics.Debug.WriteLine("Showing loading window");
+
+            // we use the main Window's dispatcher, since AppWindow doesn't surface this
+            App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+            {
+                App.Splash.Show();
+                App.Splash.Activate();
+            });
+        }
+
         // Check for feature activation
-
-        bool featureEnabled = MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabled();
-
+        bool featureEnabled = true;
+        featureEnabled = await MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync();
         if (!featureEnabled)
         {
             App.GetService<ILoggingService>().LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
@@ -136,107 +156,92 @@ public class ActivationService : IActivationService
 
             return false;
         }
-        else
+
+        if (_sdkService == null)
         {
-            var serviceController = MidiServiceHelper.GetServiceController();
-
-            if (serviceController != null)
-            {
-                if (!MidiServiceHelper.ServiceIsReallyRunning(serviceController))
-                {
-                    // just initialize the service
-                    System.Diagnostics.Debug.WriteLine("Showing loading window");
-
-                    // we use the main Window's dispatcher, since AppWindow doesn't surface this
-                    App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
-                    {
-                        App.Splash.Show();
-                        App.Splash.Activate();
-                    });
-                }
-
-                if (_sdkService == null)
-                {
-                    return false;
-                }
-
-                // run as a task so the splash screen gets a chance to
-                // actually show up if it has been displayed.
-                await Task.Run(() =>
-                {
-                    if (!_sdkService.InitializeSdk())
-                    {
-                        App.GetService<ILoggingService>().LogError("Unable to initialize SDK");
-
-                        MessageBox(
-                            (IntPtr)0,
-                            "Error_UnableToInitializeMidiRuntime".GetLocalized(),
-                            "Error_StartupMessageBoxTitle".GetLocalized(),
-                            0);
-
-                        return;
-                    }
-                    else if (!_sdkService.InitializeService())
-                    {
-                        App.GetService<ILoggingService>().LogError("Unable to initialize Service");
-
-                        MessageBox(
-                            (IntPtr)0,
-                            "Error_UnableToStartMidiService".GetLocalized(),
-                            "Error_StartupMessageBoxTitle".GetLocalized(),
-                            0);
-
-                        return;
-                    }
-                    else
-                    {
-                        _enumerationService.Start();
-                    }
-                });
-
-                if (!_sdkService.IsRuntimeInitialized || !_sdkService.IsServiceInitialized)
-                {
-                    return false;
-                }
-            }
-
-            //App.MainWindow = (MainWindow)e!;
-
-            // restore window size from last close
-            PositionMainWindow();
-
-            // Set the MainWindow Content.
-            if (App.MainWindow.Content == null)
-            {
-                _shell = App.GetService<ShellPage>();
-                App.MainWindow.Content = _shell ?? new Frame();
-            }
-
-            // Handle activation via ActivationHandlers.
-            await HandleActivationAsync(activationArgs);
-
-            App.Splash.Close();
-
-            //if (App.Splash != null && App.Splash.Visible)
-            //{
-            //    App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
-            //    {
-            //        App.Splash.Close();
-            //    });
-            //}
-            //App.Splash.Dispatcher.ProcessEvents(CoreProcessEventsOption.ProcessAllIfPresent);
-
-            // Activate the MainWindow.
-            //App.MainWindow.Show();
-            App.MainWindow.Activate();
-
-            // Execute tasks after activation.
-            await StartupAsync();
-
-            App.GetService<ILoggingService>().LogInfo("Exit");
-
-            return true;
+            App.GetService<ILoggingService>().LogError("SDK Service is null");
+            return false;
         }
+
+        // run as a task so the splash screen gets a chance to
+        // actually show up if it has been displayed.
+        await Task.Run(() =>
+        {
+            if (!_sdkService.InitializeSdk())
+            {
+                App.GetService<ILoggingService>().LogError("Unable to initialize SDK");
+
+                MessageBox(
+                    (IntPtr)0,
+                    "Error_UnableToInitializeMidiRuntime".GetLocalized(),
+                    "Error_StartupMessageBoxTitle".GetLocalized(),
+                    0);
+
+                return;
+            }
+            else if (!_sdkService.InitializeService())
+            {
+                App.GetService<ILoggingService>().LogError("Unable to initialize Service");
+
+                MessageBox(
+                    (IntPtr)0,
+                    "Error_UnableToStartMidiService".GetLocalized(),
+                    "Error_StartupMessageBoxTitle".GetLocalized(),
+                    0);
+
+                return;
+            }
+            else
+            {
+                _enumerationService.Start();
+            }
+        });
+
+        if (!_sdkService.IsRuntimeInitialized || !_sdkService.IsServiceInitialized)
+        {
+            App.GetService<ILoggingService>().LogError("Runtime and/or service are not initialized");
+            return false;
+        }
+
+        //App.MainWindow = (MainWindow)e!;
+
+        // restore window size from last close
+        App.GetService<ILoggingService>().LogInfo("Positioning main window");
+        PositionMainWindow();
+
+        // Set the MainWindow Content.
+        App.GetService<ILoggingService>().LogInfo("Setting main window content");
+        if (App.MainWindow.Content == null)
+        {
+            _shell = App.GetService<ShellPage>();
+            App.MainWindow.Content = _shell ?? new Frame();
+        }
+
+        // Handle activation via ActivationHandlers.
+        await HandleActivationAsync(activationArgs);
+
+        App.GetService<ILoggingService>().LogInfo("Closing splash screen");
+        App.Splash.Close();
+
+        //if (App.Splash != null && App.Splash.Visible)
+        //{
+        //    App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+        //    {
+        //        App.Splash.Close();
+        //    });
+        //}
+        //App.Splash.Dispatcher.ProcessEvents(CoreProcessEventsOption.ProcessAllIfPresent);
+
+        // Activate the MainWindow.
+        //App.MainWindow.Show();
+        App.MainWindow.Activate();
+
+        // Execute tasks after activation.
+        await StartupAsync();
+
+        App.GetService<ILoggingService>().LogInfo("Exit");
+
+        return true;
     }
 
     private async Task HandleActivationAsync(object activationArgs)
