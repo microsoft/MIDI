@@ -54,7 +54,15 @@ public:
 
     HRESULT Shutdown()
     {
-        m_endpointManager.reset();
+        if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled)
+        {
+            m_endpointManager2.reset();
+        }
+        else
+        {
+            m_endpointManager.reset();
+        }
+
         m_configurationManager.reset();
 
         return S_OK;
