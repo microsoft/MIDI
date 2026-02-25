@@ -21,16 +21,18 @@ using namespace winrt::Windows::Devices::Enumeration;
 
 struct KsAggregateEndpointMidiPinDefinition2
 {
-    std::wstring FilterDeviceId;                // this is also the value needed by WinMM for DRV_QUERYDEVICEINTERFACE
-    std::wstring FilterName;
+    std::wstring FilterDeviceId{ };                // this is also the value needed by WinMM for DRV_QUERYDEVICEINTERFACE
+    std::wstring FilterName{ };
 
     std::wstring DriverSuppliedName{};          // value from registry. Required for WinMM classic naming. This was at parent level efore, but loopMIDI and similar register per-interface
 
     ULONG PinNumber{ 0 };
     std::wstring PinName;
 
-    MidiFlow PinDataFlow;
-    MidiFlow DataFlowFromUserPerspective;
+    MidiFlow PinDataFlow{ MidiFlow::MidiFlowOut };
+    MidiFlow DataFlowFromUserPerspective{ MidiFlow::MidiFlowOut };
+
+    bool NeedsGroupIndexAssigned{ true };
 
     uint8_t GroupIndex{ 0 };
     uint8_t PortIndexWithinThisFilterAndDirection{ 0 }; // not always the same as the group index. Example: MOTU Express 128 with separate filter for each in/out pair
@@ -45,15 +47,27 @@ struct KsAggregateEndpointDefinition2
     std::wstring EndpointName{};
     std::wstring EndpointDeviceInstanceId{};
 
-    std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>> MidiPins{ };
+    std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>> MidiSourcePins{ };
+    std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>> MidiDestinationPins{ };
+
+    inline std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>> GetAllPins()
+    {
+        std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>> allPins;
+        allPins.reserve(MidiSourcePins.size() + MidiDestinationPins.size());
+        allPins.insert(allPins.end(), MidiSourcePins.begin(), MidiSourcePins.end());
+        allPins.insert(allPins.end(), MidiDestinationPins.begin(), MidiDestinationPins.end());
+
+        return allPins;
+    }
+
+    inline void RemoveAllPinsForFilter(_In_ std::wstring const& filterId);
 
     WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{ };
 
     uint32_t EndpointIndexForThisParentDevice{ 0 };  
 
-
-    int8_t CurrentHighestMidiSourceGroupIndex{ -1 };
-    int8_t CurrentHighestMidiDestinationGroupIndex{ -1 };
+//    int8_t CurrentHighestMidiSourceGroupIndex{ -1 };
+//    int8_t CurrentHighestMidiDestinationGroupIndex{ -1 };
 
 };
 
@@ -149,14 +163,20 @@ private:
         _In_ DeviceInformation filterDevice,
         _Inout_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parentDeviceDefinition);
 
-    HRESULT FindOrCreatePendingEndpointDefinitionForFilterDevice(
+    HRESULT CreatePendingEndpointDefinitionForFilterDevice(
         _In_ DeviceInformation,
-        _Inout_ std::shared_ptr<KsAggregateEndpointDefinition2>&);
+        _Inout_ std::shared_ptr<KsAggregateEndpointDefinition2>&
+    );
     
 
-    HRESULT FindCurrentMaxEndpointIndexForParentDevice(
+    HRESULT FindUnusedEndpointIndexForParentDevice(
         _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDeviceDefinition, 
-        _In_ uint32_t& currentMaxIndex);
+        _In_ uint32_t& unusedIndex);
+
+    bool AddPinToEndpoint(
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpoint,
+        _In_ std::shared_ptr<KsAggregateEndpointMidiPinDefinition2> pin
+    );
 
 
     HRESULT GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName);
@@ -165,16 +185,16 @@ private:
     HRESULT GetMidi1FilterPins(
         _In_ DeviceInformation,
         _In_ std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>>&,
-        _Inout_ uint8_t& countMidiSourcePinsAdded,
-        _Inout_ uint8_t& countMidiDestinationPinsAdded);
+        _Inout_ uint32_t& countMidiSourcePinsAdded,
+        _Inout_ uint32_t& countMidiDestinationPinsAdded);
 
     HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
 
 
-    HRESULT IncrementAndGetNextGroupIndex(
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> definition,
-        _In_ MidiFlow dataFlowFromUserPerspective,
-        _In_ uint8_t& groupIndex);
+    //HRESULT IncrementAndGetNextGroupIndex(
+    //    _In_ std::shared_ptr<KsAggregateEndpointDefinition2> definition,
+    //    _In_ MidiFlow dataFlowFromUserPerspective,
+    //    _In_ uint8_t& groupIndex);
 
     HRESULT UpdateNewPinDefinitions(
         _In_ std::wstring filterDeviceid,
