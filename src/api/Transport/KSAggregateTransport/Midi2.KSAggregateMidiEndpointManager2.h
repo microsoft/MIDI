@@ -14,7 +14,7 @@
 
 using namespace winrt::Windows::Devices::Enumeration;
 
-#define DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS           250
+#define DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS           500
 #define KSA_INTERFACE_ENUM_TIMEOUT_MS_MINIMUM_VALUE     50
 #define KSA_INTERFACE_ENUM_TIMEOUT_MS_MAXIMUM_VALUE     2500
 #define KSA_INTERFACE_ENUM_TIMEOUT_REG_VALUE            L"KsaInterfaceEnumTimeoutMS"
