@@ -11,6 +11,9 @@
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.5" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\oob-setup-shared\custom-actions\customactions.csproj" />
   </ItemGroup>
 </Project>

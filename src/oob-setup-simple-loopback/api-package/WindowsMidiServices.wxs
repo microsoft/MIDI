@@ -1,4 +1,5 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util='http://wixtoolset.org/schemas/v4/wxs/util'>
 
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
@@ -49,12 +50,16 @@
 
                 <RegistryKey Key="Transport Plugins">
                   
+                  <!-- Permissions users: Everyone, Administrators, LocalSystem, LocalService, NetworkService, AuthenticatedUser, Guests, CREATOR OWNER, INTERACTIVE, and Users -->
+                  
                     <RegistryKey Key="Midi2SimpleLoopbackMidiTransport">
                         <RegistryValue Type="string" Name="CLSID" Value="{10088473-9478-4E62-850B-3D2315E135B8}">
-                          <Permission GenericAll="yes" User="Administrators"/>
+                          <util:PermissionEx Read="yes" User="Everyone"/>
+                          <util:PermissionEx GenericAll="yes" User="AuthenticatedUser"/>
                         </RegistryValue>
                         <RegistryValue Type="integer" Name="Enabled" Value="1">
-                          <Permission GenericAll="yes" User="Administrators"/>
+                          <util:PermissionEx Read="yes" User="Everyone"/>
+                          <util:PermissionEx GenericAll="yes" User="AuthenticatedUser"/>
                         </RegistryValue>
                     </RegistryKey>
                     
