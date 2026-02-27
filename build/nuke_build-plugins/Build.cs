@@ -12,6 +12,7 @@ using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Tools.Npm;
 using Nuke.Common.Tools.NuGet;
 using Nuke.Common.Utilities.Collections;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -460,8 +461,8 @@ class Build : NukeBuild
         // 如果版本文件不存在，创建默认版本文件
         if (!File.Exists(BuildVersionFile))
         {
-            Logger.Warn($"Version file not found: {BuildVersionFile}");
-            Logger.Warn("Creating default version file... / 正在创建默认版本文件...");
+            Log.Warning($"Version file not found: {BuildVersionFile}");
+            Log.Warning("Creating default version file... / 正在创建默认版本文件...");
             
             try
             {
@@ -469,12 +470,12 @@ class Build : NukeBuild
                 Directory.CreateDirectory(Path.GetDirectoryName(BuildVersionFile)!);
                 // 写入默认版本文件
                 File.WriteAllText(BuildVersionFile, DefaultVersionFileContent);
-                Logger.Info($"Default version file created: {BuildVersionFile}");
+                Log.Information($"Default version file created: {BuildVersionFile}");
             }
             catch (Exception ex)
             {
-                Logger.Error($"Failed to create version file: {ex.Message}");
-                Logger.Error("Using built-in default version / 使用内置默认版本");
+                Log.Error($"Failed to create version file: {ex.Message}");
+                Log.Error("Using built-in default version / 使用内置默认版本");
             }
         }
         
@@ -499,8 +500,8 @@ class Build : NukeBuild
                         !ushort.TryParse(versionParts[1], out _) ||
                         !ushort.TryParse(versionParts[2], out _))
                     {
-                        Logger.Error($"Invalid version format in line 1: '{validLines[0]}'");
-                        Logger.Error("Expected format: Major.Minor.Patch (e.g. 0.0.15) / 期望格式: 主版本.次版本.补丁 (例如 0.0.15)");
+                        Log.Error($"Invalid version format in line 1: '{validLines[0]}'");
+                        Log.Error("Expected format: Major.Minor.Patch (e.g. 0.0.15) / 期望格式: 主版本.次版本.补丁 (例如 0.0.15)");
                         hasError = true;
                     }
                     
@@ -516,8 +517,8 @@ class Build : NukeBuild
                         }
                         else
                         {
-                            Logger.Error($"Invalid preview number in line 2: '{validLines[1]}'");
-                            Logger.Error("Expected format: Preview.Minor.Build (e.g. 15.0.0 or 15.0) / 期望格式: 预览版本.次版本.构建号 (例如 15.0.0 或 15.0)");
+                            Log.Error($"Invalid preview number in line 2: '{validLines[1]}'");
+                            Log.Error("Expected format: Preview.Minor.Build (e.g. 15.0.0 or 15.0) / 期望格式: 预览版本.次版本.构建号 (例如 15.0.0 或 15.0)");
                             hasError = true;
                         }
                         
@@ -543,30 +544,30 @@ class Build : NukeBuild
                     
                     if (hasError)
                     {
-                        Logger.Error("Version file format error. Using default values / 版本文件格式错误。使用默认值");
-                        Logger.Error($"Default: Preview={BuildVersionPreviewNumber}, Build={BuildVersionBuildNumber}");
+                        Log.Error("Version file format error. Using default values / 版本文件格式错误。使用默认值");
+                        Log.Error($"Default: Preview={BuildVersionPreviewNumber}, Build={BuildVersionBuildNumber}");
                     }
                     else
                     {
-                        Logger.Info($"Version loaded: {validLines[0]}-preview.{BuildVersionPreviewNumber}.{BuildVersionBuildNumber}");
+                        Log.Information($"Version loaded: {validLines[0]}-preview.{BuildVersionPreviewNumber}.{BuildVersionBuildNumber}");
                     }
                 }
                 else
                 {
-                    Logger.Error($"Version file has insufficient lines: {validLines.Length} (expected at least 3)");
-                    Logger.Error("Please check the file format / 请检查文件格式");
+                    Log.Error($"Version file has insufficient lines: {validLines.Length} (expected at least 3)");
+                    Log.Error("Please check the file format / 请检查文件格式");
                 }
             }
             else
             {
-                Logger.Error("Version file still not available after creation attempt");
-                Logger.Error("Using default values / 使用默认值");
+                Log.Error("Version file still not available after creation attempt");
+                Log.Error("Using default values / 使用默认值");
             }
         }
         catch (Exception ex)
         {
-            Logger.Error($"Error reading version file: {ex.Message}");
-            Logger.Error("Using default values / 使用默认值");
+            Log.Error($"Error reading version file: {ex.Message}");
+            Log.Error("Using default values / 使用默认值");
         }
     }
 
