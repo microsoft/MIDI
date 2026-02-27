@@ -32,6 +32,10 @@ public:
         _In_ MidiBasicLoopbackDeviceDefinition const& definition
     );
 
+    HRESULT UpdateEndpointMutedStateProperty(
+        _In_ MidiBasicLoopbackDeviceDefinition const& definition
+    );
+
     bool IsInitialized() { return m_initialized; }
 
 private:

@@ -40,6 +40,8 @@ public:
 
     HRESULT SendMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
+        if (Definition.IsMuted) return S_OK;
+
         if (m_callback != nullptr)
         {
             return m_callback->Callback(MessageOptionFlags_None, message, size, position, context);

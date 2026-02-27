@@ -21,9 +21,14 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
+
     HRESULT ProcessCommand(
         _In_ json::JsonObject const& transportObject,
         _In_ json::JsonObject& responseObject);
+
+    HRESULT ExecuteCommandChangeMutedState(
+        _In_ std::wstring const& associationId,
+        _In_ bool const muted);
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
 

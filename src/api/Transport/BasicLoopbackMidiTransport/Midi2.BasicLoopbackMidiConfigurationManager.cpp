@@ -10,6 +10,7 @@
 
 #include "MidiEndpointCustomProperties.h"
 #include "json_transport_command_helper.h"
+#include <mmdeviceapi.h>
 
 _Use_decl_annotations_
 HRESULT
@@ -39,6 +40,25 @@ CMidi2BasicLoopbackMidiConfigurationManager::Initialize(
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
+    std::wstring const& associationId,
+    bool const isMuted)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointTable());
+
+    auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationId);
+    RETURN_HR_IF_NULL(E_NOTFOUND, device);
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
+
+    device->Definition.IsMuted = isMuted;
+    RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->UpdateEndpointMutedStateProperty(device->Definition));
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT
@@ -65,9 +85,40 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT ||
+        commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT)
+    {
+        bool mute = (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
+
+        // Check to see if we have an endpointdeviceid
+        if (auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID); 
+            arg != commandHelper.Arguments()->end())
+        {
+            auto hr = ExecuteCommandChangeMutedState(arg->second, mute);
+
+            if (hr == E_NOTFOUND)
+            {
+                internal::SetConfigurationResponseObjectFail(responseObject, L"Endpoint not found");
+            }
+            else if (SUCCEEDED(hr))
+            {
+                internal::SetConfigurationResponseObjectSuccess(responseObject);
+            }
+            else
+            {
+                RETURN_IF_FAILED(hr);
+            }
+        }
+        else
+        {
+            // no endpoint id
+            internal::SetConfigurationResponseObjectFail(responseObject, L"Missing association id");
+        }
 
     }
     else
@@ -173,6 +224,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         definition->EndpointDescription = endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
                         definition->EndpointUniqueIdentifier = endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
                         definition->InstanceIdPrefix = instanceIdPrefix;
+                        definition->IsMuted = endpointObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY, false);
 
                         if (definition->EndpointName.empty())
                         {

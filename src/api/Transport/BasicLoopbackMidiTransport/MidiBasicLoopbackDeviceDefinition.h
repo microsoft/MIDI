@@ -25,4 +25,7 @@ struct MidiBasicLoopbackDeviceDefinition
 
     std::wstring CreatedShortClientInstanceId{};
     std::wstring CreatedEndpointInterfaceId{};
+
+
+    bool IsMuted{ false };
 };
