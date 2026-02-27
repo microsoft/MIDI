@@ -1,11 +1,11 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
      xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
      >
 
     <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
     <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
 
     <?include $(StagingVersionIncludeFile) ?>

@@ -141,7 +141,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             var all = new TransportFilterEntry();
             all.TransportCode = AllTransportsFilterCode;
-            all.Name = "All endpoints for all transports";
+            all.Name = ResourceExtensions.GetLocalized("EndpointsAllPage_AllEndpoints");
 
             Transports.Add(all);
 

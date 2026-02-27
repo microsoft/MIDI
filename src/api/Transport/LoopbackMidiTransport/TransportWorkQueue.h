@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <mutex>
 
 enum TransportWorkItemWorkType
 {
@@ -46,6 +47,7 @@ public:
             return E_INVALIDARG;
         }
 
+        std::lock_guard<std::mutex> lock(m_mutex);
         m_workItems.emplace(TransportWorkItemWorkType::Create, definitionA, definitionB);
 
         return S_OK;
@@ -53,10 +55,10 @@ public:
 
     inline bool GetNextWorkItem(_Inout_ TransportWorkItem& workItem)
     {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
         if (!m_workItems.empty())
         {
-            // todo: any required locking
-
             auto item = m_workItems.front();
 
             workItem.DefinitionA = item.DefinitionA;
@@ -71,8 +73,13 @@ public:
         return false;
     }
 
-    bool IsEmpty() { return m_workItems.empty(); }
+    inline bool IsEmpty()
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return m_workItems.empty();
+    }
 
 private:
     std::queue<TransportWorkItem> m_workItems{};
+    std::mutex m_mutex;
 };

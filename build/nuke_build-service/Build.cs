@@ -1,4 +1,5 @@
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Build.Locator;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.Execution;
@@ -54,12 +55,12 @@ class Build : NukeBuild
     const UInt16 BuildVersionMinor = 0;
     const UInt16 BuildVersionPatch = 15;
 
-    const UInt16 BuildVersionPreviewNumber = 14;
+    UInt16 BuildVersionPreviewNumber = 14; // 从版本文件中读取，默认值为 14
     string VersionName => "Service Preview " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
 
-    UInt16 BuildVersionBuildNumber = 0; // gets read from the version file and reset with each patch change
+    UInt16 BuildVersionBuildNumber = 0; // 从版本文件中读取
 
     readonly string BuildMajorMinorPatch = BuildVersionMajor.ToString() + "." + BuildVersionMinor.ToString() + "." + BuildVersionPatch.ToString();
 
@@ -147,22 +148,115 @@ class Build : NukeBuild
 
     string MSBuildPath;
 
-    void SetMSBuildVersionOld()
+    void SetMSBuildVersion()
     {
+        // 首先使用 vswhere 检测 VS 实例（支持所有版本，包括最新的 VS 2026+）
+        string vswhereMsBuildPath = GetMSBuildPathFromVsWhere();
+        if (!string.IsNullOrEmpty(vswhereMsBuildPath))
+        {
+            Console.WriteLine($"Using VS from vswhere: {vswhereMsBuildPath}");
+            MSBuildPath = vswhereMsBuildPath;
+            MSBuildTasks.MSBuildPath = MSBuildPath;
+            return;
+        }
 
-        // I hate this, but build was picking up the v17 tools no matter what I did.
-        //MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
-        MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+        // 如果 vswhere 没有找到，使用 MSBuildLocator 作为后备
+        Console.WriteLine("vswhere did not find VS installation, falling back to MSBuildLocator...");
+
+        var allInstances = MSBuildLocator.QueryVisualStudioInstances()
+            .OrderByDescending(instance => instance.Version)
+            .ToList();
+
+        Console.WriteLine("All discovered instances:");
+        foreach (var inst in allInstances)
+        {
+            Console.WriteLine($"Instance Found: {inst.Version.ToString()} (DiscoveryType: {inst.DiscoveryType})");
+            Console.WriteLine($"- MSBuild Path: {inst.MSBuildPath}");
+            Console.WriteLine($"- Visual Studio Path: {inst.VisualStudioRootPath}");
+            Console.WriteLine();
+        }
+
+        // 优先选择 VisualStudioSetup 类型的实例
+        var vsInstances = allInstances
+            .Where(instance => instance.DiscoveryType == DiscoveryType.VisualStudioSetup);
+
+        var selectedInstance = vsInstances.FirstOrDefault() ?? allInstances.FirstOrDefault();
+
+        if (selectedInstance == null)
+        {
+            throw new InvalidOperationException("No MSBuild instance found. Please ensure Visual Studio or .NET SDK is installed.");
+        }
+
+        MSBuildPath = selectedInstance.MSBuildPath;
+
+        Console.WriteLine($"Using: {MSBuildPath}");
+        Console.WriteLine();
 
         MSBuildTasks.MSBuildPath = MSBuildPath;
     }
-    void SetMSBuildVersionNew()
+
+    string GetMSBuildPathFromVsWhere()
     {
+        try
+        {
+            var vswherePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                "Microsoft Visual Studio", "Installer", "vswhere.exe");
 
-        // I hate this, but build was picking up the v17 tools no matter what I did.
-        MSBuildPath = @"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe";
+            if (!File.Exists(vswherePath))
+            {
+                Console.WriteLine("vswhere.exe not found.");
+                return null;
+            }
 
-        MSBuildTasks.MSBuildPath = MSBuildPath;
+            // 使用 vswhere 查找最新的 VS 安装
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = vswherePath,
+                    Arguments = "-latest -products * -requires Microsoft.Component.MSBuild -property installationPath",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd().Trim();
+            process.WaitForExit();
+
+            if (string.IsNullOrEmpty(output) || !Directory.Exists(output))
+            {
+                Console.WriteLine("No Visual Studio installation found via vswhere.");
+                return null;
+            }
+
+            // 构建 MSBuild 路径
+            string msbuildPath = Path.Combine(output, "MSBuild", "Current", "Bin", "MSBuild.exe");
+
+            if (File.Exists(msbuildPath))
+            {
+                Console.WriteLine($"Found VS installation via vswhere: {output}");
+                return msbuildPath;
+            }
+
+            // 尝试 amd64 版本
+            msbuildPath = Path.Combine(output, "MSBuild", "Current", "Bin", "amd64", "MSBuild.exe");
+            if (File.Exists(msbuildPath))
+            {
+                Console.WriteLine($"Found VS installation (amd64) via vswhere: {output}");
+                return msbuildPath;
+            }
+
+            Console.WriteLine("MSBuild.exe not found in VS installation.");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error running vswhere: {ex.Message}");
+            return null;
+        }
     }
 
     Target T_Prerequisites => _ => _
@@ -170,7 +264,7 @@ class Build : NukeBuild
         {
             Logging.Level = LoggingLevel;
 
-            SetMSBuildVersionNew();
+            SetMSBuildVersion();
 
             BuildDate = DateTime.Today;
 
@@ -249,7 +343,7 @@ class Build : NukeBuild
 
             msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version").ToString());
 
-            SetMSBuildVersionNew();
+            SetMSBuildVersion();
 
             MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
@@ -261,7 +355,7 @@ class Build : NukeBuild
             );
 
             // WDK is broken for VS 2026, so have to use old VS 2022 MSBuild tools
-            SetMSBuildVersionOld();
+            SetMSBuildVersion();
 
         });
 
@@ -427,45 +521,150 @@ class Build : NukeBuild
 
 
 
+    // 默认版本配置内容
+    const string DefaultVersionFileContent = @"# Windows MIDI Services Service Version Configuration File
+# Windows MIDI Services Service 版本配置文件
+# Modify this file to update the version number without changing the code
+# 修改此文件即可更新版本号，无需修改代码
+#
+# Format:
+# 格式说明：
+# Line 1: Major.Minor.Patch (e.g.: 1.0.15) [Required]
+# 第1行：主版本号.次版本号.补丁版本号（例如：1.0.15）[必需]
+# Line 2: Preview.Minor.Build (e.g.: 14.0.0 or 14.0) [Optional]
+# 第2行：预览版本号.次版本号.构建号（例如：14.0.0 或 14.0）[可选]
+#
+# Note:
+# 注意：
+# Lines starting with # are treated as comments and will be ignored
+# 以 # 开头的行被视为注释，会被忽略
+#
+# Example:
+# 示例：1.0.15-preview.14.0.0
+
+1.0.15
+14.0.0
+";
+
     void IncrementBuildNumber()
     {
-        int newBuildNumber = 0;
-
-        if (File.Exists(BuildVersionFile))
+        // 从版本文件中读取版本信息
+        // 文件格式：
+        // 第1行：主版本号.次版本号.补丁版本号 (必需，例如: 1.0.15)
+        // 第2行：预览版本号.次版本号.构建号 (可选，支持 14.0.0 或 14.0 格式，默认为 14.0.0)
+        // 以 # 开头的行被视为注释，会被忽略
+        
+        // 如果版本文件不存在，创建默认版本文件
+        if (!File.Exists(BuildVersionFile))
         {
-            using (StreamReader reader = System.IO.File.OpenText(BuildVersionFile))
+            Logger.Warn($"Version file not found: {BuildVersionFile}");
+            Logger.Warn("Creating default version file... / 正在创建默认版本文件...");
+            
+            try
             {
-                // first line is major/minor/revision. Second is build number.
-                var versionLine = reader.ReadLine();
-                var buildLine = reader.ReadLine();
-
-                if (versionLine.Trim() == BuildMajorMinorPatch)
+                // 确保目录存在
+                Directory.CreateDirectory(Path.GetDirectoryName(BuildVersionFile)!);
+                // 写入默认版本文件
+                File.WriteAllText(BuildVersionFile, DefaultVersionFileContent);
+                Logger.Info($"Default version file created: {BuildVersionFile}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Failed to create version file: {ex.Message}");
+                Logger.Error("Using built-in default version / 使用内置默认版本");
+            }
+        }
+        
+        try
+        {
+            if (File.Exists(BuildVersionFile))
+            {
+                // 读取所有非注释行
+                var validLines = File.ReadAllLines(BuildVersionFile)
+                    .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("#"))
+                    .ToArray();
+                
+                // 只需要第1行存在即可
+                if (validLines.Length >= 1)
                 {
-                    if (int.TryParse(buildLine, out newBuildNumber))
+                    bool hasError = false;
+                    
+                    // 验证第1行版本号格式 (Major.Minor.Patch)
+                    var versionParts = validLines[0].Trim().Split('.');
+                    if (versionParts.Length != 3 || 
+                        !ushort.TryParse(versionParts[0], out _) ||
+                        !ushort.TryParse(versionParts[1], out _) ||
+                        !ushort.TryParse(versionParts[2], out _))
                     {
-                        newBuildNumber++;
+                        Logger.Error($"Invalid version format in line 1: '{validLines[0]}'");
+                        Logger.Error("Expected format: Major.Minor.Patch (e.g. 1.0.15) / 期望格式: 主版本.次版本.补丁 (例如 1.0.15)");
+                        hasError = true;
+                    }
+                    
+                    // 第2行是可选的，格式为 Preview.Minor.Build 或 Preview.Build
+                    if (validLines.Length >= 2)
+                    {
+                        var previewBuildParts = validLines[1].Trim().Split('.');
+                        
+                        // 读取预览版本号（第1部分）
+                        if (previewBuildParts.Length >= 1 && ushort.TryParse(previewBuildParts[0].Trim(), out ushort previewNumber))
+                        {
+                            BuildVersionPreviewNumber = previewNumber;
+                        }
+                        else
+                        {
+                            Logger.Error($"Invalid preview number in line 2: '{validLines[1]}'");
+                            Logger.Error("Expected format: Preview.Minor.Build (e.g. 14.0.0 or 14.0) / 期望格式: 预览版本.次版本.构建号 (例如 14.0.0 或 14.0)");
+                            hasError = true;
+                        }
+                        
+                        // 读取构建号（最后一部分）
+                        if (previewBuildParts.Length >= 2)
+                        {
+                            // 支持 Preview.Minor.Build (14.0.0) 或 Preview.Build (14.0) 格式
+                            int lastIndex = previewBuildParts.Length - 1;
+                            if (ushort.TryParse(previewBuildParts[lastIndex].Trim(), out ushort buildNumber))
+                            {
+                                BuildVersionBuildNumber = buildNumber;
+                            }
+                            else
+                            {
+                                BuildVersionBuildNumber = 0;
+                            }
+                        }
+                        else
+                        {
+                            BuildVersionBuildNumber = 0;
+                        }
+                    }
+                    
+                    if (hasError)
+                    {
+                        Logger.Error("Version file format error. Using default values / 版本文件格式错误。使用默认值");
+                        Logger.Error($"Default: Preview={BuildVersionPreviewNumber}, Build={BuildVersionBuildNumber}");
                     }
                     else
                     {
-                        newBuildNumber = 0;
+                        Logger.Info($"Version loaded: {validLines[0]}-preview.{BuildVersionPreviewNumber}.{BuildVersionBuildNumber}");
                     }
                 }
                 else
                 {
-                    // we'll write the new info
+                    Logger.Error($"Version file has insufficient lines: {validLines.Length} (expected at least 3)");
+                    Logger.Error("Please check the file format / 请检查文件格式");
                 }
-
+            }
+            else
+            {
+                Logger.Error("Version file still not available after creation attempt");
+                Logger.Error("Using default values / 使用默认值");
             }
         }
-
-        using (StreamWriter writer = System.IO.File.CreateText(BuildVersionFile))
+        catch (Exception ex)
         {
-            writer.WriteLine(BuildMajorMinorPatch);
-            writer.WriteLine(newBuildNumber.ToString());
+            Logger.Error($"Error reading version file: {ex.Message}");
+            Logger.Error("Using default values / 使用默认值");
         }
-
-        BuildVersionBuildNumber = (ushort)newBuildNumber;
-
     }
 
 

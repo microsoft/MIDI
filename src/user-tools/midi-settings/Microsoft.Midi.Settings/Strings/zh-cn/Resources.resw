@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI 和音乐人设置 预览版</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Windows MIDI Services 的管理、设置和工具应用。</value>
+  </data>
+  <data name="Shell_PluginsNavHeader.Content" xml:space="preserve">
+    <value>插件</value>
+  </data>
+  <data name="Shell_PluginsProcessing.Content" xml:space="preserve">
+    <value>处理和过滤</value>
+  </data>
+  <data name="Shell_Configurations.Content" xml:space="preserve">
+    <value>配置</value>
+  </data>
+  <data name="Shell_SetupNavHeader.Content" xml:space="preserve">
+    <value>设备和配置</value>
+  </data>
+  <data name="Shell_ManagementNavHeader.Content" xml:space="preserve">
+    <value>管理</value>
+  </data>
+  <data name="Shell_ManagementSessions.Content" xml:space="preserve">
+    <value>活动会话</value>
+  </data>
+  <data name="Shell_ToolsNavHeader.Content" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="Shell_ToolsSysEx.Text" xml:space="preserve">
+    <value>SysEx 传输</value>
+  </data>
+  <data name="Shell_ForDevelopers.Content" xml:space="preserve">
+    <value>开发者</value>
+  </data>
+  <data name="Settings_Personalization.Text" xml:space="preserve">
+    <value>个性化</value>
+  </data>
+  <data name="Settings_AppThemeExpander.Header" xml:space="preserve">
+    <value>应用主题</value>
+  </data>
+  <data name="Settings_Theme_Light.Content" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="Settings_Theme_Dark.Content" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="Settings_Theme_Default.Content" xml:space="preserve">
+    <value>使用系统设置</value>
+  </data>
+  <data name="Settings_About.Text" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="SettingsPage_PrivacyTermsLink.Content" xml:space="preserve">
+    <value>Microsoft 隐私声明</value>
+  </data>
+  <data name="SettingsPage_PrivacyTermsLink.NavigateUri" xml:space="preserve">
+    <value>https://privacy.microsoft.com/privacystatement</value>
+  </data>
+  <data name="Shell_PluginsTransport.Content" xml:space="preserve">
+    <value>传输</value>
+  </data>
+  <data name="Shell_MoreNavHeader.Content" xml:space="preserve">
+    <value>更多</value>
+  </data>
+  <data name="Shell_Troubleshooting.Text" xml:space="preserve">
+    <value>疑难解答</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeExpander.Description" xml:space="preserve">
+    <value>开发者选项通常适用于开发者以及与开发者合作测试预发布组件的用户。非开发者 MIDI 用户无需使用开发者选项，因为它们可能会对计算机上 MIDI 的稳定性、功能或性能产生不利影响。开发者选项要求将 PC 设置为开发者模式。</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeExpander.Header" xml:space="preserve">
+    <value>MIDI 开发者选项</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeLink.Content" xml:space="preserve">
+    <value>打开 Windows 设置"开发者"页面</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeIsDisabledInfo.Text" xml:space="preserve">
+    <value>开发者模式未启用。如果您想安装开发中和未签名的第三方服务插件，请在 Windows 设置中启用开发者模式。</value>
+  </data>
+  <data name="SettingsPage_DiscordLink.Content" xml:space="preserve">
+    <value>Discord 上的 Windows MIDI Services</value>
+  </data>
+  <data name="SettingsPage_DiscordLink.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/mididiscord</value>
+  </data>
+  <data name="SettingsPage_MidiRepoLink.Content" xml:space="preserve">
+    <value>GitHub 上的 Windows MIDI Services</value>
+  </data>
+  <data name="SettingsPage_MidiRepoLink.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midirepo</value>
+  </data>
+  <data name="SettingsPage_SendFeedbackButton.Content" xml:space="preserve">
+    <value>发送反馈</value>
+  </data>
+  <data name="Settings_AboutMidiDescription.Header" xml:space="preserve">
+    <value>MIDI® 和 MIDI® 标志是 MIDI® 协会的注册商标。经许可使用。Microsoft 是 MIDI® 协会的企业会员。AMEI 是 MIDI® 协会的日本合作伙伴，也是 Windows 上 USB MIDI 2.0 驱动程序的作者（与 AmeNote 合作开发）。</value>
+  </data>
+  <data name="Settings_AppThemeExpander.Description" xml:space="preserve">
+    <value>选择要显示的应用主题</value>
+  </data>
+  <data name="Settings_ShowDeveloperOptions.Header" xml:space="preserve">
+    <value>显示 MIDI 开发者选项</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeIsEnabledInfo.Text" xml:space="preserve">
+    <value>当前此 PC 已启用开发者模式，允许您安装开发中和第三方未签名服务插件。要关闭它，请使用 Windows 设置。</value>
+  </data>
+  <data name="SettingsPage_AboutCard.Description" xml:space="preserve">
+    <value>© 2025 Microsoft。保留所有权利。</value>
+  </data>
+  <data name="Settings_AboutDescriptionMidiDiscordLinkCard.Description" xml:space="preserve">
+    <value>如果您想讨论 Windows MIDI Services，我们托管了一个 Discord 服务器。</value>
+  </data>
+  <data name="Settings_AboutDescriptionMidiRepoLinkCard.Description" xml:space="preserve">
+    <value>Windows MIDI Services 是托管在 GitHub 上的开源项目。我们鼓励提交错误报告和拉取请求。</value>
+  </data>
+  <data name="Settings_AboutDescriptionPrivacyLinkCard.Description" xml:space="preserve">
+    <value>您的隐私很重要。</value>
+  </data>
+  <data name="Settings_AboutLocalizationCard.Header" xml:space="preserve">
+    <value>翻译鸣谢</value>
+  </data>
+  <data name="Settings_AboutLocalizationCard.Description" xml:space="preserve">
+    <value>感谢 Crostia 提供中文支持</value>
+  </data>
+  <data name="SettingsPage_LocalizationLink.Content" xml:space="preserve">
+    <value>Crostia (GitHub)</value>
+  </data>
+  <data name="SettingsPage_AmeiOrgLink.Content" xml:space="preserve">
+    <value>AMEI</value>
+  </data>
+  <data name="SettingsPage_AmeiOrgLink.NavigateUri" xml:space="preserve">
+    <value>https://www.amei.or.jp/</value>
+  </data>
+  <data name="SettingsPage_MidiOrgLink.Content" xml:space="preserve">
+    <value>MIDI 协会</value>
+  </data>
+  <data name="SettingsPage_MidiOrgLink.NavigateUri" xml:space="preserve">
+    <value>https://midi.org</value>
+  </data>
+  <data name="ShellPage_SettingsSearchBox.PlaceholderText" xml:space="preserve">
+    <value>查找设置</value>
+  </data>
+  <data name="Shell_WinRTMidi1ApiDevices.Content" xml:space="preserve">
+    <value>WinRT MIDI 1.0 端口</value>
+  </data>
+  <data name="Shell_Midi1ApiNavHeader.Content" xml:space="preserve">
+    <value>MIDI 1.0 API 端口</value>
+  </data>
+  <data name="Shell_MidiServicesNavHeader.Content" xml:space="preserve">
+    <value>Windows MIDI Services UMP 端点</value>
+  </data>
+  <data name="Midi1DevicesPage_Description.Text" xml:space="preserve">
+    <value>以下是传统 MIDI 1.0 API 看到的所有 MIDI 设备列表，以及使用它们的应用。</value>
+  </data>
+  <data name="AppSessionName" xml:space="preserve">
+    <value>MIDI 设置</value>
+  </data>
+  <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
+    <value>此页面列出了此 PC 上安装并被 Windows MIDI Services 识别的所有传输插件。有关这些传输插件枚举的端点设备信息，请参阅设备页面。</value>
+  </data>
+  <data name="HomePage_Description.Text" xml:space="preserve">
+    <value>Windows MIDI Services 仪表板</value>
+  </data>
+  <data name="Shell_Home.Content" xml:space="preserve">
+    <value>主页</value>
+  </data>
+  <data name="Shell_WinMMMidi1ApiDevices.Content" xml:space="preserve">
+    <value>WinMM MIDI 1.0 端口</value>
+  </data>
+  <data name="Shell_EndpointsAll.Content" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Shell_EndpointsKS.Content" xml:space="preserve">
+    <value>MIDI 2.0 UMP 驱动程序 (USB)</value>
+  </data>
+  <data name="Shell_EndpointsKsa.Content" xml:space="preserve">
+    <value>MIDI 1.0 驱动程序 (USB 等)</value>
+  </data>
+  <data name="Shell_EndpointsLoop.Content" xml:space="preserve">
+    <value>MIDI 2.0 环回端点</value>
+  </data>
+  <data name="Shell_EndpointsApp.Content" xml:space="preserve">
+    <value>虚拟设备应用</value>
+  </data>
+  <data name="Shell_EndpointsBle10.Content" xml:space="preserve">
+    <value>蓝牙 MIDI 1.0 (预览)</value>
+  </data>
+  <data name="Shell_EndpointsNet2Udp.Text" xml:space="preserve">
+    <value>网络 MIDI 2.0</value>
+  </data>
+  <data name="CreateLoopbackEndpointsWindowTitle" xml:space="preserve">
+    <value>创建环回端点</value>
+  </data>
+  <data name="DeviceDetailPage_ManufacturerLabel.Text" xml:space="preserve">
+    <value>制造商</value>
+  </data>
+  <data name="DeviceDetailPage_ProductInstanceId.Text" xml:space="preserve">
+    <value>产品实例 ID</value>
+  </data>
+  <data name="DeviceDetailPage_SerialNumber.Text" xml:space="preserve">
+    <value>序列号</value>
+  </data>
+  <data name="DeviceDetailPage_NativeDataFormat.Text" xml:space="preserve">
+    <value>原生数据格式</value>
+  </data>
+  <data name="DeviceDetailPage_TransportCode.Text" xml:space="preserve">
+    <value>传输代码</value>
+  </data>
+  <data name="ToolsSysExPageDescription.Text" xml:space="preserve">
+    <value>向所选端点发送系统独占 (SysEx) 二进制 7 位文件（典型的 MIDI 1.0 SysEx 文件）。对于较旧的设备或数据缓冲区非常小的设备，如果将传输延迟增加 10-50 毫秒，效果可能会更好。当通过 SysEx 发送大型音色库或固件升级时尤其如此。</value>
+  </data>
+  <data name="DeviceDetailPage_PersonalizationExpander.Description" xml:space="preserve">
+    <value>您可以自定义设备的某些设置，如名称和描述。应用可以使用此信息来显示设备信息。</value>
+  </data>
+  <data name="DeviceDetailPage_TransportExpander.Description" xml:space="preserve">
+    <value>MIDI Service 传输插件从底层传输（USB、网络、BLE 等）获取设备信息。</value>
+  </data>
+  <data name="DeviceDetailPage_TransportExpander.Header" xml:space="preserve">
+    <value>传输提供的信息</value>
+  </data>
+  <data name="DeviceDetailPage_Midi2ProtocolExpander.Header" xml:space="preserve">
+    <value>MIDI 2.0 协议内发现的信息</value>
+  </data>
+  <data name="DeviceDetailPage_Midi2ProtocolExpander.Description" xml:space="preserve">
+    <value>MIDI 2.0 协议包括设备发现。此处的信息即从此来源获取。</value>
+  </data>
+  <data name="DeviceDetailPage_FunctionBlocksExpander.Header" xml:space="preserve">
+    <value>功能块</value>
+  </data>
+  <data name="DeviceDetailPage_FunctionBlocksExpander.Description" xml:space="preserve">
+    <value>对于 MIDI 2.0 设备，功能块指示活动组及其有效方向。</value>
+  </data>
+  <data name="DeviceDetailPage_GroupTerminalBlocksExpander.Header" xml:space="preserve">
+    <value>组终端块</value>
+  </data>
+  <data name="DeviceDetailPage_GroupTerminalBlocksExpander.Description" xml:space="preserve">
+    <value>对于 USB MIDI 2.0 设备，当没有功能块可用时，组终端块是后备选项。它们指示活动组及其方向。对于 MIDI 1.0 设备，我们为每个 MIDI 插孔（以前称为"端口"）生成组终端块。</value>
+  </data>
+  <data name="DeviceDetailPage_ParentDeviceExpander.Header" xml:space="preserve">
+    <value>父设备</value>
+  </data>
+  <data name="DeviceDetailPage_ParentDeviceExpander.Description" xml:space="preserve">
+    <value>设备可能有多个 MIDI 端点。这是此端点的父设备。</value>
+  </data>
+  <data name="Shell_EndpointsDiagnostic.Content" xml:space="preserve">
+    <value>诊断</value>
+  </data>
+  <data name="CommonTasks_SetServiceAutoStart.Text" xml:space="preserve">
+    <value>设置 MIDI 服务在启动时自动启动（需要管理员账户）</value>
+  </data>
+  <data name="CommonTasks_AssignMidi1DeviceToNewDriver.Text" xml:space="preserve">
+    <value>设置 USB MIDI 1.0 设备使用新的快速 UMP MIDI 2.0 驱动程序（需要管理员账户）</value>
+  </data>
+  <data name="CommonTasks_CreateLoopbackEndpoints.Text" xml:space="preserve">
+    <value>创建环回端点，以便两个或更多应用可以使用 MIDI 消息进行通信</value>
+  </data>
+  <data name="CommonTasks_SendSysExFile.Text" xml:space="preserve">
+    <value>向端点发送系统独占数据文件（音色、固件等）</value>
+  </data>
+  <data name="CommonTasks_CaptureMidiDiag.Text" xml:space="preserve">
+    <value>将 MIDI 诊断信息捕获到文本文件，用于技术支持</value>
+  </data>
+  <data name="CommonTasks_OpenConsole.Text" xml:space="preserve">
+    <value>打开 Windows MIDI Services 控制台</value>
+  </data>
+  <data name="CommonTasks_SetUpNetworkMidi2.Text" xml:space="preserve">
+    <value>设置网络 MIDI 2.0 以启用 MIDI 消息发送到本地网络上的其他设备。</value>
+  </data>
+  <data name="CommonTasksGroup_Endpoints.Text" xml:space="preserve">
+    <value>端点</value>
+  </data>
+  <data name="CommonTasksGroup_ServiceAndDrivers.Text" xml:space="preserve">
+    <value>服务和驱动程序</value>
+  </data>
+  <data name="CommonTasksGroup_Other.Text" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="ForDevelopers_Discovery.Header" xml:space="preserve">
+    <value>发现和协议协商</value>
+  </data>
+  <data name="ForDevelopers_Discovery.Description" xml:space="preserve">
+    <value>通常开启。默认情况下，MIDI 服务为任何原生 UMP 设备执行 MIDI 2.0 发现和协议协商。如果您测试的设备在发送这些消息时会出错，请禁用此过程。需要重启 MIDI 服务。</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcss.Header" xml:space="preserve">
+    <value>为传入消息队列启用 MMCSS</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcss.Description" xml:space="preserve">
+    <value>通常关闭。MMCSS 线程是 Windows 中的有限资源，通常用于 DAW 应用中的音频处理线程。如果启用此功能，Windows MIDI Services 将使用 MMCSS 线程处理传入消息。这会减少客户端进程可用的 MMCSS 线程数量，并可能导致应用无法正常工作。</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcssToggle.OffContent" xml:space="preserve">
+    <value>Windows MIDI Services 将不会在客户端进程中使用 MMCSS 线程。这是推荐的选择。</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcssToggle.OnContent" xml:space="preserve">
+    <value>Windows MIDI Services 将在客户端进程中使用 MMCSS 线程。这可能导致某些应用出现故障。</value>
+  </data>
+  <data name="ForDevelopers_ServiceRestartRequired.Message" xml:space="preserve">
+    <value>必须重启 Windows MIDI Service (midisrv.exe) 才能使更改生效。</value>
+  </data>
+  <data name="Button_RestartMidiService.Content" xml:space="preserve">
+    <value>重启 MIDI 服务</value>
+  </data>
+  <data name="EndpointsLoopPage_CreateNewLoopbackButton.Content" xml:space="preserve">
+    <value>创建新的环回端点对</value>
+  </data>
+  <data name="EndpointsLoopPage_RemoveButton.Content" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="ManagementSessionsPage_SessionName.Text" xml:space="preserve">
+    <value>会话名称</value>
+  </data>
+  <data name="ManagementSessionsPage_Process.Text" xml:space="preserve">
+    <value>进程</value>
+  </data>
+  <data name="ManagementSessionsPage_ProcessId.Text" xml:space="preserve">
+    <value>进程 ID</value>
+  </data>
+  <data name="PluginsTransportPage_Version.Text" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="PluginsTransportPage_TransportCode.Text" xml:space="preserve">
+    <value>传输代码</value>
+  </data>
+  <data name="PluginsTransportPage_TransportId.Text" xml:space="preserve">
+    <value>传输 ID</value>
+  </data>
+  <data name="TroubleshootingPage_IntroText.Text" xml:space="preserve">
+    <value>如果您的 PC 上的 MIDI 遇到问题，以下工具可能帮助您恢复而无需重启。</value>
+  </data>
+  <data name="TroubleshootingPage_UnknownIssueHeader.Text" xml:space="preserve">
+    <value>如果您有未知问题</value>
+  </data>
+  <data name="TroubleshootingPage_RestartServiceCard_Header.Text" xml:space="preserve">
+    <value>重启 Windows MIDI 服务</value>
+  </data>
+  <data name="TroubleshootingPage_RestartServiceCard_Description.Text" xml:space="preserve">
+    <value>希望不会到这一步，但如果服务卡住了，您可以在这里重启它。</value>
+  </data>
+  <data name="TroubleshootingPage_SupportHeader.Text" xml:space="preserve">
+    <value>如果您正在与支持人员合作</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryToggleText.Text" xml:space="preserve">
+    <value>基于 MIDI 2.0 服务的发现和协议协商，这里推荐打开。</value>
+  </data>
+  <data name="TroubleshootingPage_ReportInfoCard_Header.Text" xml:space="preserve">
+    <value>报告 MIDI 系统信息</value>
+  </data>
+  <data name="TroubleshootingPage_ReportInfoCard_Description.Text" xml:space="preserve">
+    <value>如果您正在就应用程序或硬件的技术支持问题与支持人员合作，他们可能会要求您捕获 MIDI 系统信息到文件并发送给他们。在发送给您的支持联系人之前，您将能够查看捕获的信息。</value>
+  </data>
+  <data name="TroubleshootingPage_CaptureInfoButton.Content" xml:space="preserve">
+    <value>捕获 MIDI 系统信息</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDocumentation.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midi</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDocumentation.Content" xml:space="preserve">
+    <value>Windows MIDI Services 文档</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDiscord.Content" xml:space="preserve">
+    <value>Windows MIDI 和 ASIO Discord 服务器</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDiscord.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/mididiscord</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesGitHub.Content" xml:space="preserve">
+    <value>Windows MIDI Services GitHub 仓库</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesGitHub.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midirepo</value>
+  </data>
+  <data name="HyperlinkButton_MidiSpecifications.NavigateUri" xml:space="preserve">
+    <value>https://midi.org/specs</value>
+  </data>
+  <data name="HyperlinkButton_MidiSpecifications.Content" xml:space="preserve">
+    <value>MIDI 协会上的 MIDI 1.0 和 2.0 规范</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryTimeoutExpander.Header" xml:space="preserve">
+    <value>发现超时</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryTimeoutExpander.Description" xml:space="preserve">
+    <value>配置 MIDI 设备发现的超时时间，如果您的设备响应较慢，请增加此值。（默认值：10000 毫秒）</value>
+  </data>
+  <data name="ForDevelopers_CommitDiscoveryTimeoutButton.Content" xml:space="preserve">
+    <value>保存到注册表</value>
+  </data>
+  <data name="ForDevelopers_ReferenceMaterialsCard.Header" xml:space="preserve">
+    <value>参考资料</value>
+  </data>
+  <data name="ForDevelopers_SpecificationsCard.Header" xml:space="preserve">
+    <value>规范</value>
+  </data>
+  <data name="ForDevelopers_EnableDeveloperInstallationExpander.Header" xml:space="preserve">
+    <value>启用开发者版本安装</value>
+  </data>
+  <data name="ForDevelopers_EnableDeveloperInstallationExpander.Description" xml:space="preserve">
+    <value>为了安装服务或服务组件/插件的预览版，您必须首先获取用于组件注册的注册表项的所有权。如果您不先执行此操作，安装将显示成功，但使用的组件将不是您期望的组件。
+
+此步骤需要管理员权限，并且必须在任何新的 Windows 升级（不是更新，而是完整操作系统升级）后重复执行。</value>
+  </data>
+  <data name="ForDevelopers_PrepareForDeveloperInstallButton.Content" xml:space="preserve">
+    <value>准备预览/开发者安装</value>
+  </data>
+  <data name="ForDevelopers_ReplaceWdmaud2DrvButton.Content" xml:space="preserve">
+    <value>将 wdmaud2.drv 替换为开发者版本</value>
+  </data>
+  <data name="ForDevelopers_RebootRequired.Message" xml:space="preserve">
+    <value>所做的更改需要重启 PC 才能生效。</value>
+  </data>
+  <data name="Button_Reboot.Content" xml:space="preserve">
+    <value>立即重启</value>
+  </data>
+  <data name="ShellPage_AdministratorIndicator.Text" xml:space="preserve">
+    <value>管理员</value>
+  </data>
+  <data name="ShellPage_DeveloperModeIndicator.Text" xml:space="preserve">
+    <value>开发者模式已启用</value>
+  </data>
+  <data name="ShellPage_ServiceUnavailableIndicator.Text" xml:space="preserve">
+    <value>无 MIDI 服务</value>
+  </data>
+  <data name="Error_UnableToInitializeMidiRuntime" xml:space="preserve">
+    <value>无法初始化 Windows MIDI Services 运行时。是否已安装？</value>
+  </data>
+  <data name="Error_StartupMessageBoxTitle" xml:space="preserve">
+    <value>启动 MIDI 设置应用时出错</value>
+  </data>
+  <data name="Error_ExceptionThrownDuringSdkInitialization" xml:space="preserve">
+    <value>无法初始化 Windows MIDI Services 运行时。抛出异常：</value>
+  </data>
+  <data name="ForDevelopers_Description.Text" xml:space="preserve">
+    <value>这些设置仅供高级用户或开发和原型设计使用。更改此处的设置可能会导致使用 Windows MIDI Services 的应用和设备出现意外或不理想的行为。这些设置可能会在 Windows 升级时被重置。</value>
+  </data>
+  <data name="ForDevelopers_InstallPreviewSectionHeader.Text" xml:space="preserve">
+    <value>安装开发者/预览版本</value>
+  </data>
+  <data name="ForDevelopers_Midi2FeaturesSectionHeader.Text" xml:space="preserve">
+    <value>MIDI 2.0 功能</value>
+  </data>
+  <data name="ForDevelopers_RelatedSupportSectionHeader.Text" xml:space="preserve">
+    <value>相关支持</value>
+  </data>
+  <data name="ForDevelopers_SystemSettingsSectionHeader" xml:space="preserve">
+    <value>系统设置</value>
+  </data>
+  <data name="SettingsPage_SdkChannelExpander.Header" xml:space="preserve">
+    <value>启用预览 MIDI SDK 运行时和工具通道</value>
+  </data>
+  <data name="SettingsPage_SdkChannelExpander.Description" xml:space="preserve">
+    <value>启用预览版本的 SDK 运行时，包括可能具有错误的稳定功能。仅推荐技术用户或开发者使用。启用后，这只能通过卸载 SDK 运行时和工具、删除设置配置文件，然后重新安装 SDK 运行时和工具来更改。</value>
+  </data>
+  <data name="FirstRunSetup_Title.Text" xml:space="preserve">
+    <value>设置 Windows MIDI Services</value>
+  </data>
+  <data name="FirstRunSetup_ConfigFileDescription.Text" xml:space="preserve">
+    <value>许多 MIDI 自定义设置存储在可移植配置文件中。这些包括自定义端点属性（如名称）、持久环回端点定义以及网络 MIDI 主机和客户端重新连接。</value>
+  </data>
+  <data name="FirstRunSetup_CreateDefaultConfigFileSwitch.Header" xml:space="preserve">
+    <value>如果不存在则创建默认配置文件。</value>
+  </data>
+  <data name="FirstRunSetup_DefaultLoopbacksDescription.Text" xml:space="preserve">
+    <value>某些应用和工具（尤其是基于 Web 的应用和工具）依赖于已知的环回端点可用。这需要配置文件来存储环回端点信息。</value>
+  </data>
+  <data name="FirstRunSetup_CreateDefaultLoopbacksSwitch.Header" xml:space="preserve">
+    <value>如果不存在则创建默认环回端点。</value>
+  </data>
+  <data name="FirstRunSetup_PortNamesDescription.Text" xml:space="preserve">
+    <value>使用旧版 MIDI 1.0 API (WinMM) 的应用在许多应用和文件中使用端口名称作为标识符。默认情况下，我们使用与这些旧名称兼容的名称。但是，如果您想要更好的默认端口名称，请选择下面的选项。</value>
+  </data>
+  <data name="FirstRunSetup_UseNewPortNamesSwitch.Header" xml:space="preserve">
+    <value>使用新式 MIDI 1 端口名称。</value>
+  </data>
+  <data name="FirstRunSetup_MidiServiceStartupDescription.Text" xml:space="preserve">
+    <value>默认情况下，MIDI 服务设置为仅在应用进行第一个 MIDI 连接时启动。这确保不使用 MIDI 的用户不会影响 Windows 启动时间。但首次进行 MIDI 连接时，可能需要几秒钟。</value>
+  </data>
+  <data name="FirstRunSetup_MidiServiceStartupDescription2.Text" xml:space="preserve">
+    <value>如果您经常使用 MIDI，我们建议将服务设置为与 Windows 一起自动启动，这样您在建立连接时就无需等待。这需要管理员权限才能设置。</value>
+  </data>
+  <data name="FirstRunSetup_SetServiceAutoStartSwitch.Header" xml:space="preserve">
+    <value>设置 MIDI 服务与 Windows 一起自动启动</value>
+  </data>
+  <data name="SettingsPage_CheckForUpdatesExpander.Header" xml:space="preserve">
+    <value>检查 MIDI SDK 运行时更新</value>
+  </data>
+  <data name="SettingsPage_CheckForUpdatesExpander.Description" xml:space="preserve">
+    <value>启动 MIDI 设置应用时自动检查 MIDI SDK 运行时和工具的新版本。</value>
+  </data>
+  <data name="Error_UnableToStartMidiService" xml:space="preserve">
+    <value>无法启动 MIDI 服务。如果此问题持续存在，请终止 midisrv.exe 进程或重启您的 PC。</value>
+  </data>
+  <data name="Shell_AllMidiDevices.Content" xml:space="preserve">
+    <value>MIDI 设备和端点</value>
+  </data>
+  <data name="Shell_GlobalMidiSettings.Text" xml:space="preserve">
+    <value>全局 MIDI 设置</value>
+  </data>
+  <data name="Shell_ConfigureTransportsNavHeader.Content" xml:space="preserve">
+    <value>传输配置</value>
+  </data>
+  <data name="GlobalSettings_DefaultUseClassicMidi1PortNames.Content" xml:space="preserve">
+    <value>使用与之前版本的 Windows MIDI API 兼容的名称，并保持与应用中保存的 MIDI 项目的兼容性。</value>
+  </data>
+  <data name="GlobalSettings_DefaultUseNewStyleMidi1PortNames.Content" xml:space="preserve">
+    <value>使用 MIDI 设备制造商推荐的新式端口名称。（对于 USB 设备，这些名称在可用时使用 iJack 名称）。</value>
+  </data>
+  <data name="GlobalSettings_DefaultNamingExpander.Header" xml:space="preserve">
+    <value>默认 MIDI 1.0 端口命名</value>
+  </data>
+  <data name="GlobalSettings_DefaultNamingExpander.Description" xml:space="preserve">
+    <value>此处选择的选项将是使用经典 MIDI 1.0 内置或供应商驱动程序命名 MIDI 1.0 API 端口的默认方法。如果需要，可以按设备覆盖默认命名方法。
+
+如果您有许多使用 MIDI 1.0 设备的现有项目，并且需要保持命名兼容性以便 DAW 或其他应用自动发现设备，我们建议使用经典端口名称。否则，新式名称通常信息量更大。
+
+此更改需要重启 MIDI 服务才能生效。</value>
+  </data>
+  <data name="GlobalSettings_SetMidiServiceToAutoStartCard.Header" xml:space="preserve">
+    <value>设置 Windows MIDI Service (midisrv.exe) 与 Windows 一起自动启动，以减少应用在重启后首次调用 MIDI API 时的延迟。</value>
+  </data>
+  <data name="GlobalSettings_SetMidiServiceToAutoStartButton.Content" xml:space="preserve">
+    <value>设置 MIDI 服务为自动启动</value>
+  </data>
+  <data name="Shell_WindowsSettings.Text" xml:space="preserve">
+    <value>音乐家优化</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard.Header" xml:space="preserve">
+    <value>电源模式</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard.Description" xml:space="preserve">
+    <value>使用低延迟音频时，将 Windows 电源模式设置为最佳性能有助于提高处理器速度并减少故障。</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard_LaunchButton.Content" xml:space="preserve">
+    <value>打开 Windows 设置</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludeDawProcessButton.Content" xml:space="preserve">
+    <value>从 Defender 扫描中排除 DAW 进程</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludeDawProjectsFolderButton.Content" xml:space="preserve">
+    <value>排除 DAW 项目文件夹</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludePluginDataFoldersButton.Content" xml:space="preserve">
+    <value>排除插件数据文件夹</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard.Header" xml:space="preserve">
+    <value>Defender 设置</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard.Description" xml:space="preserve">
+    <value>您可以从 Windows Defender 扫描中排除特定的受信任进程和文件位置。这将显著提高这些位置的读取/写入速度，但您必须小心只放置受信任的内容和插件。</value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard.Header" xml:space="preserve">
+    <value>Windows 更新</value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard.Description" xml:space="preserve">
+    <value>虽然保持最新状态对安全性、功能和错误修复很重要，但您可以在工作期间暂停 Windows 更新一段时间。</value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard_PauseUpdatesButton.Content" xml:space="preserve">
+    <value>暂停更新 X 天</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeaturesCard.Header" xml:space="preserve">
+    <value>预安装的 Windows 功能</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeaturesCard.Description" xml:space="preserve">
+    <value>预安装的 Windows 功能对许多用户来说很好，但有时会干扰创作过程。您可以在此处轻松删除或禁用它们。卸载后，无法重新安装。</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WidgetsCard.Header" xml:space="preserve">
+    <value>小组件</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WeatherCard.Header" xml:space="preserve">
+    <value>天气</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_NewsCard.Header" xml:space="preserve">
+    <value>新闻</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_XboxCard.Header" xml:space="preserve">
+    <value>Xbox 应用</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_GameDvrCard.Header" xml:space="preserve">
+    <value>Game DVR</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_DesktopSpotlightCard.Header" xml:space="preserve">
+    <value>桌面聚焦</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_LockscreenTipsCard.Header" xml:space="preserve">
+    <value>锁屏提示</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WindowsSuggestionsCard.Header" xml:space="preserve">
+    <value>Windows 建议</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StartMenuWebSearchCard.Header" xml:space="preserve">
+    <value>开始菜单中的 Web 搜索</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_GeoLocationCard.Header" xml:space="preserve">
+    <value>地理位置</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_SolitaireAndGamesCard.Header" xml:space="preserve">
+    <value>纸牌和休闲游戏</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StartMenuRecommendedAppsCard.Header" xml:space="preserve">
+    <value>开始菜单中的推荐应用</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StickyKeysCard.Header" xml:space="preserve">
+    <value>粘滞键</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableRecoverableFeaturesCard.Header" xml:space="preserve">
+    <value>可配置的 Windows 功能</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableRecoverableFeaturesCard.Description" xml:space="preserve">
+    <value>这些功能可以轻松打开或关闭，但为了方便起见位于此处。</value>
+  </data>
+  <data name="Shell_MidiNavHeader.Content" xml:space="preserve">
+    <value>MIDI 设置</value>
+  </data>
+  <data name="Shell_LivePerformanceMode.Text" xml:space="preserve">
+    <value>现场表演模式</value>
+  </data>
+  <data name="Shell_AdvancedUsbSettings.Text" xml:space="preserve">
+    <value>高级 USB 设置</value>
+  </data>
+  <data name="DeviceDetailPage_UsbVidPid.Text" xml:space="preserve">
+    <value>USB VID/PID</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseGlobalDefault" xml:space="preserve">
+    <value>使用全局默认</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseClassicAPICompatible" xml:space="preserve">
+    <value>使用经典 API 兼容</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseNewStyle" xml:space="preserve">
+    <value>使用新式</value>
+  </data>
+  <data name="DeviceDetailPage_Tooltip_ChangeImage.Text" xml:space="preserve">
+    <value>更改图像</value>
+  </data>
+  <data name="DeviceDetailPage_Tooltip_Customize.Text" xml:space="preserve">
+    <value>重命名端点、更新描述和其他属性</value>
+  </data>
+  <data name="DeviceDetailPage_Button_Customize.Content" xml:space="preserve">
+    <value>个性化</value>
+  </data>
+  <data name="Button_Panic.Content" xml:space="preserve">
+    <value>紧急停止</value>
+  </data>
+  <data name="Button_Monitor.Content" xml:space="preserve">
+    <value>监控</value>
+  </data>
+  <data name="DeviceDetailPage_EndpointDeviceIdLabel.Text" xml:space="preserve">
+    <value>端点设备 ID：</value>
+  </data>
+  <data name="DeviceDetailPage_Section_AssociatedMidi1Ports.Text" xml:space="preserve">
+    <value>关联的 MIDI 1.0 API 端口</value>
+  </data>
+  <data name="DeviceDetailPage_HeaderSourceInputPorts.Text" xml:space="preserve">
+    <value>源/输入端口</value>
+  </data>
+  <data name="CommonTextBlockLabel_WinMMPortNumber.Text" xml:space="preserve">
+    <value>WinMM 端口号</value>
+  </data>
+  <data name="CommonTextBlockLabel_WinRTPortId.Text" xml:space="preserve">
+    <value>WinRT 端口 ID</value>
+  </data>
+  <data name="CommonTextBlockLabel_MappedGroup.Text" xml:space="preserve">
+    <value>映射组</value>
+  </data>
+  <data name="CommonTextBlockLabel_Flow.Text" xml:space="preserve">
+    <value>流</value>
+  </data>
+  <data name="DeviceDetailPage_HeaderDestinationOutputPorts.Text" xml:space="preserve">
+    <value>目标/输出端口</value>
+  </data>
+  <data name="CommonTextBlockLabel_Name.Text" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="CommonTextBlockLabel_Description.Text" xml:space="preserve">
+    <value>描述</value>
+  </data>
+  <data name="CommonTextBlockLabel_SerialNumber.Text" xml:space="preserve">
+    <value>序列号</value>
+  </data>
+  <data name="CommonTextBlockLabel_TransportId.Text" xml:space="preserve">
+    <value>传输 ID</value>
+  </data>
+  <data name="CommonTextBlockLabel_TransportCode.Text" xml:space="preserve">
+    <value>传输代码</value>
+  </data>
+  <data name="CommonTextBlockLabel_SupportsMidi1Protocol.Text" xml:space="preserve">
+    <value>支持 MIDI 1.0 协议</value>
+  </data>
+  <data name="CommonTextBlockLabel_SupportsMidi2Protocol.Text" xml:space="preserve">
+    <value>支持 MIDI 2.0 协议</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredProtocol.Text" xml:space="preserve">
+    <value>配置的协议</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredSendJR.Text" xml:space="preserve">
+    <value>配置为发送抖动减少时间戳</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredReceiveJR.Text" xml:space="preserve">
+    <value>配置为接收抖动减少时间戳</value>
+  </data>
+  <data name="SettingsPage_ShowPreviewToolsExpander.Header" xml:space="preserve">
+    <value>启用预览工具</value>
+  </data>
+  <data name="SettingsPage_ShowPreviewToolsExpander.Description" xml:space="preserve">
+    <value>启用系统独占消息发送器等预览工具。这些工具尚不稳定，可能具有错误或不完整的功能。需要重启此应用才能看到更改。</value>
+  </data>
+  <data name="EndpointPersonalizationUniqueIdInfoBar.Message" xml:space="preserve">
+    <value>此 MIDI 设备不报告序列号或唯一标识符。因此，如果您更改设备与此 PC 的连接方式（例如不同的 USB 端口或集线器），自定义设置可能不会保持应用。如果您有多个此类设备，并在不同时间连接它们，Windows 可能不知道将个性化设置应用于哪个设备。</value>
+  </data>
+  <data name="EndpointPersonalizationUniqueIdInfoBar.Title" xml:space="preserve">
+    <value>个性化可能不是永久的</value>
+  </data>
+  <data name="Error_MidiServicesFeatureNotEnabled" xml:space="preserve">
+    <value>此 PC 上似乎未启用 Windows MIDI Services 功能。受支持的 Windows 版本将通过 Windows 更新启用。
+
+如果之前已激活该功能，可能是驱动程序卸载程序或注册表重新排序工具破坏了 Windows MIDI Services。
+
+如果是这种情况，请以管理员身份打开命令提示符，输入 midifixreg，然后按照步骤操作。完成后，重启您的 PC。</value>
+  </data>
+  <data name="Error_WindowsMIDIServicesNotEnabledMessageBoxTitle" xml:space="preserve">
+    <value>Windows MIDI Services 未启用</value>
+  </data>
+  <data name="DefaultLoopbackAName" xml:space="preserve">
+    <value>默认应用环回 (A)</value>
+  </data>
+  <data name="DefaultLoopbackBName" xml:space="preserve">
+    <value>默认应用环回 (B)</value>
+  </data>
+  <data name="DefaultBasicLoopbackName" xml:space="preserve">
+    <value>默认基本应用环回</value>
+  </data>
+  <data name="DefaultLoopbackADescription" xml:space="preserve">
+    <value>应用使用的默认环回端点。这是环回对的 A 端。</value>
+  </data>
+  <data name="DefaultLoopbackBDescription" xml:space="preserve">
+    <value>应用使用的默认环回端点。这是环回对的 B 端。</value>
+  </data>
+  <data name="DefaultBasicLoopbackDescription" xml:space="preserve">
+    <value>应用使用的默认基本 MIDI 1.0 环回端点。</value>
+  </data>
+  <data name="Shell_EndpointsBasicLoop.Content" xml:space="preserve">
+    <value>MIDI 1.0 环回端点</value>
+  </data>
+  <data name="Message_SettingsAppWillNowRestart" xml:space="preserve">
+    <value>MIDI 设置应用现在将重启。</value>
+  </data>
+  <data name="Error_SettingsAppCouldNotAutomaticallyRestart" xml:space="preserve">
+    <value>MIDI 设置应用无法自动关闭并重启。请关闭应用程序，然后重新启动它。</value>
+  </data>
+  <data name="Settings_Language.Header" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Settings_Language.Description" xml:space="preserve">
+    <value>选择您的首选语言。需要重启应用。</value>
+  </data>
+  <data name="Settings_Language_English.Content" xml:space="preserve">
+    <value>English (United States)</value>
+  </data>
+  <data name="Settings_Language_ChineseSimplified.Content" xml:space="preserve">
+    <value>中文 (简体)</value>
+  </data>
+  <data name="LanguageChangeDialog_Title" xml:space="preserve">
+    <value>语言更改</value>
+  </data>
+  <data name="LanguageChangeDialog_Content" xml:space="preserve">
+    <value>应用需要重启以应用语言更改。立即重启？</value>
+  </data>
+  <data name="LanguageChangeDialog_PrimaryButton" xml:space="preserve">
+    <value>立即重启</value>
+  </data>
+  <data name="LanguageChangeDialog_SecondaryButton" xml:space="preserve">
+    <value>稍后</value>
+  </data>
+  <data name="HomePage_CommonMidiTasks.Text" xml:space="preserve">
+    <value>常见 MIDI 任务</value>
+  </data>
+  <data name="HomePage_HelpfulLinks.Text" xml:space="preserve">
+    <value>有用链接</value>
+  </data>
+  <data name="HomePage_UsefulTools.Text" xml:space="preserve">
+    <value>实用工具</value>
+  </data>
+  <data name="HomePage_ServiceUnavailable.Title" xml:space="preserve">
+    <value>服务不可用</value>
+  </data>
+  <data name="HomePage_ServiceUnavailable.Message" xml:space="preserve">
+    <value>无法启动 Windows MIDI Service。大多数选项将不可用。</value>
+  </data>
+  <data name="HomePage_FinishSetup.Title" xml:space="preserve">
+    <value>完成此 PC 上的 MIDI 设置和自定义</value>
+  </data>
+  <data name="HomePage_FinishSetup.Message" xml:space="preserve">
+    <value>创建所需的配置文件，然后自定义 Windows MIDI Services 以满足您的需求：启用便携式设置、设备和端口自定义、默认环回端点、自动 MIDI 服务启动等</value>
+  </data>
+  <data name="HomePage_Button_FinishSetup" xml:space="preserve">
+    <value>完成 MIDI 设置</value>
+  </data>
+  <data name="HomePage_NewRuntimeAvailable.Title" xml:space="preserve">
+    <value>新的 Windows MIDI Services 运行时可用</value>
+  </data>
+  <data name="HomePage_InstalledVersion" xml:space="preserve">
+    <value>已安装版本</value>
+  </data>
+  <data name="HomePage_NewVersion" xml:space="preserve">
+    <value>新版本</value>
+  </data>
+  <data name="HomePage_BuildDate" xml:space="preserve">
+    <value>构建日期</value>
+  </data>
+  <data name="HomePage_Button_UpdateRuntime.Content" xml:space="preserve">
+    <value>更新 SDK 运行时</value>
+  </data>
+  <data name="HomePage_Button_LearnMore" xml:space="preserve">
+    <value>了解更多...</value>
+  </data>
+  <data name="HomePage_CommonMidiTasks_Description.Text" xml:space="preserve">
+    <value>Windows MIDI Services 的常见任务和设置。</value>
+  </data>
+  <data name="HomePage_HelpfulLinks_Description.Text" xml:space="preserve">
+    <value>Windows MIDI Services 的文档和相关链接</value>
+  </data>
+  <data name="HomePage_UsefulTools_Description.Text" xml:space="preserve">
+    <value>您可能觉得有用的免费工具链接</value>
+  </data>
+  <data name="HomePage_Link_Documentation.Text" xml:space="preserve">
+    <value>Windows MIDI Services 文档</value>
+  </data>
+  <data name="HomePage_Link_Discord.Text" xml:space="preserve">
+    <value>Discord 服务器 - 用于问题、讨论和非开发者错误报告</value>
+  </data>
+  <data name="HomePage_Link_GitHubSource.Text" xml:space="preserve">
+    <value>GitHub 仓库 - Windows MIDI Services 源代码</value>
+  </data>
+  <data name="HomePage_Link_GitHubIssues.Text" xml:space="preserve">
+    <value>GitHub 仓库问题列表 - 已知问题和新问题报告</value>
+  </data>
+  <data name="HomePage_Link_PowerToys.Text" xml:space="preserve">
+    <value>Windows PowerToys（文件管理、裁剪和锁定等）</value>
+  </data>
+  <data name="HomePage_Link_PowerShell.Text" xml:space="preserve">
+    <value>PowerShell 7.6（适用于 MIDI 脚本等）</value>
+  </data>
+  <data name="HomePage_Link_LearnMore.Text" xml:space="preserve">
+    <value>了解更多...</value>
+  </data>
+  <data name="ShellPage_SearchBox.PlaceholderText" xml:space="preserve">
+    <value>查找设置、端点或端口</value>
+  </data>
+  <data name="EndpointsAllPage_CardsButton.Label" xml:space="preserve">
+    <value>卡片</value>
+  </data>
+  <data name="EndpointsAllPage_ListButton.Label" xml:space="preserve">
+    <value>列表</value>
+  </data>
+  <data name="EndpointsAllPage_AllEndpoints" xml:space="preserve">
+    <value>传输的所有端点</value>
+  </data>
+  <data name="EndpointsAllPage_Midi10ApiPorts.Text" xml:space="preserve">
+    <value>MIDI 1.0 API 端口</value>
+  </data>
+  <data name="EndpointsAllPage_SourceInput.Text" xml:space="preserve">
+    <value>源/输入</value>
+  </data>
+  <data name="EndpointsAllPage_DestinationOutput.Text" xml:space="preserve">
+    <value>目标/输出</value>
+  </data>
+  <data name="EndpointsAllPage_PanicButton.Content" xml:space="preserve">
+    <value>紧急停止</value>
+  </data>
+  <data name="EndpointsAllPage_MonitorButton.Content" xml:space="preserve">
+    <value>监控</value>
+  </data>
+</root>

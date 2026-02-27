@@ -5,8 +5,7 @@
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
-
-
+using Microsoft.Windows.Devices.Midi2.Endpoints;
 using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
 using Windows.Foundation;
 

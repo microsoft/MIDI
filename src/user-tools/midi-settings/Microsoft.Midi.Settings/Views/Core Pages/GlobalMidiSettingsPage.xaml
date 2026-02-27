@@ -26,10 +26,8 @@
                         <Button x:Uid="GlobalSettings_SetMidiServiceToAutoStartButton" 
                                 />
                     </controls:SettingsCard.Content>
-
                 </controls:SettingsCard>
-
-
+                
                 <controls:SettingsExpander IsExpanded="True"
                                            x:Uid="GlobalSettings_DefaultNamingExpander">
                     <controls:SettingsExpander.HeaderIcon>
@@ -55,18 +53,10 @@
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
-                <Button Content="Restart MIDI Service"
+                <Button x:Uid="Button_RestartMidiService"
                         Margin="0,16,0,0"
                         Command="{x:Bind ViewModel.RestartMidiServiceCommand}" />
-                
             </StackPanel>
-
-
-
-
-
-
         </ScrollViewer>
-        
     </Grid>
 </Page>

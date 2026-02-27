@@ -1,6 +1,6 @@
 ; Copyright (c) Microsoft Corporation.  All rights reserved.
 
-LIBRARY WDMAUD2
+LIBRARY wdmaud2.drv
 
 EXPORTS     
     modMessage

@@ -45,9 +45,7 @@
                             <InfoBar Margin="0,0,15,15"
                                  CornerRadius="8"
                                  IsOpen="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
-                                 Title="Service is Unavailable"
-                                 Message="The Windows MIDI Service was not able to be started. Most options will not be available."
-                                 Severity="Error"
+                                 x:Uid="HomePage_ServiceUnavailable"
                                  >
                             </InfoBar>
 
@@ -57,12 +55,10 @@
                             <InfoBar Margin="0,0,15,15"
                                      CornerRadius="8"
                                      IsOpen="{x:Bind ViewModel.IsFirstRunSetupComplete, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
-                                     Title="Finish MIDI setup and customization on this PC"
-                                     Message="Create the required configuration file and then customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
-                                     Severity="Warning"
+                                     x:Uid="HomePage_FinishSetup"
                                      >
                                 <InfoBar.ActionButton>
-                                    <Button Content="Finish MIDI Setup"
+                                    <Button x:Uid="HomePage_Button_FinishSetup"
                                         Command="{x:Bind ViewModel.LaunchFirstRunExperienceCommand}" />
                                 </InfoBar.ActionButton>
                             </InfoBar>
@@ -73,7 +69,7 @@
                             <InfoBar Margin="0,0,15,15"
                                      CornerRadius="8"
                                      IsOpen="{x:Bind ViewModel.IsNewerSdkRuntimeDownloadAvailable, Mode=OneWay}"
-                                     Title="New Windows MIDI Services Runtime Available"
+                                     x:Uid="HomePage_NewRuntimeAvailable"
                                      Severity="Informational"
                                      >
                                 <InfoBar.Content>
@@ -89,7 +85,7 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-                                            <TextBlock Text="Installed Version" 
+                                            <TextBlock x:Uid="HomePage_InstalledVersion" 
                                                        Grid.Column="0" 
                                                        Grid.Row="0" 
                                                        Style="{StaticResource SmallPropertyLabel}"/>
@@ -98,7 +94,7 @@
                                                        Grid.Row="0"
                                                        Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
 
-                                            <TextBlock Text="New Version" 
+                                            <TextBlock x:Uid="HomePage_NewVersion" 
                                                        Grid.Column="0" 
                                                        Grid.Row="1" 
                                                        Style="{StaticResource SmallPropertyLabel}"/>
@@ -107,7 +103,7 @@
                                                        Grid.Row="1"
                                                        Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
 
-                                            <TextBlock Text="Build Date" 
+                                            <TextBlock x:Uid="HomePage_BuildDate" 
                                                        Grid.Column="0" 
                                                        Grid.Row="2" 
                                                        Style="{StaticResource SmallPropertyLabel}"/>
@@ -122,16 +118,16 @@
                                                        Grid.Column="2"
                                                        Grid.RowSpan="2">
                                                 <Run Text="{x:Bind ViewModel.NewSdkRuntimeDownloadAvailableMessage, Mode=OneWay}" />
-                                                <Hyperlink NavigateUri="{x:Bind ViewModel.MidiSdkReleaseNotesUri}">Learn more...</Hyperlink>
+                                                <Hyperlink NavigateUri="{x:Bind ViewModel.MidiSdkReleaseNotesUri}"><Run x:Uid="HomePage_Link_LearnMore"/></Hyperlink>
                                             </TextBlock>
 
                                         </Grid>
 
-                                        <Button Content="Update SDK Runtime"
+                                        <Button x:Uid="HomePage_Button_UpdateRuntime"
                                                 Margin="0,12,0,16"
                                                 Click="UpdateSdkRuntime_Click"
                                                 IsEnabled="{x:Bind ViewModel.IsSdkDownloadInProgress, Mode=OneWay,Converter={StaticResource BoolNegationConverter}}"
-                                                />
+                                                HorizontalAlignment="Left"/>
                                     </StackPanel>
                                 </InfoBar.Content>
 
@@ -213,8 +209,8 @@
                             <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                                 <controls:SettingsExpander.Header>
                                     <StackPanel>
-                                        <TextBlock Text="Common MIDI tasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
-                                        <TextBlock Text="Common tasks and settings for Windows MIDI Services." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                                        <TextBlock x:Uid="HomePage_CommonMidiTasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                                        <TextBlock x:Uid="HomePage_CommonMidiTasks_Description" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
                                     </StackPanel>
                                 </controls:SettingsExpander.Header>
                                 <controls:SettingsExpander.Items>
@@ -467,8 +463,8 @@
                             <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                                 <controls:SettingsExpander.Header>
                                     <StackPanel>
-                                        <TextBlock Text="Helpful Links" Style="{StaticResource HomeCardHeaderTitleStyle}" />
-                                        <TextBlock Text="Links to documentation and more for Windows MIDI Services" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                                        <TextBlock x:Uid="HomePage_HelpfulLinks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                                        <TextBlock x:Uid="HomePage_HelpfulLinks_Description" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
                                     </StackPanel>
                                 </controls:SettingsExpander.Header>
 
@@ -478,7 +474,7 @@
                                         <controls:SettingsCard.Header>
                                             <HyperlinkButton NavigateUri="https://aka.ms/midi">
                                                 <HyperlinkButton.Content>
-                                                    <TextBlock Text="Windows MIDI Services documentation" TextWrapping="WrapWholeWords"/>
+                                                    <TextBlock x:Uid="HomePage_Link_Documentation" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
@@ -493,7 +489,7 @@
                                         <controls:SettingsCard.Header>
                                             <HyperlinkButton NavigateUri="https://aka.ms/mididiscord">
                                                 <HyperlinkButton.Content>
-                                                    <TextBlock Text="Discord Server for questions, discussions and non-developer bug reports" TextWrapping="WrapWholeWords"/>
+                                                    <TextBlock x:Uid="HomePage_Link_Discord" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
 
                                             </HyperlinkButton>
@@ -509,7 +505,7 @@
                                         <controls:SettingsCard.Header>
                                             <HyperlinkButton NavigateUri="https://aka.ms/midirepo">
                                                 <HyperlinkButton.Content>
-                                                    <TextBlock Text="GitHub Repo with source for Windows MIDI Services" TextWrapping="WrapWholeWords"/>
+                                                    <TextBlock x:Uid="HomePage_Link_GitHubSource" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
 
                                             </HyperlinkButton>
@@ -524,7 +520,7 @@
                                         <controls:SettingsCard.Header>
                                             <HyperlinkButton NavigateUri="https://aka.ms/midirepoissues">
                                                 <HyperlinkButton.Content>
-                                                    <TextBlock Text="GitHub Repo issues list for known issues and reporting new ones" TextWrapping="WrapWholeWords"/>
+                                                    <TextBlock x:Uid="HomePage_Link_GitHubIssues" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
 
                                             </HyperlinkButton>
@@ -543,8 +539,8 @@
                             <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                                 <controls:SettingsExpander.Header>
                                     <StackPanel>
-                                        <TextBlock Text="Useful tools" Style="{StaticResource HomeCardHeaderTitleStyle}" />
-                                        <TextBlock Text="Links to a few free tools you may find useful" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                                        <TextBlock x:Uid="HomePage_UsefulTools" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                                        <TextBlock x:Uid="HomePage_UsefulTools_Description" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
                                     </StackPanel>
                                 </controls:SettingsExpander.Header>
 
@@ -554,7 +550,7 @@
                                         <controls:SettingsCard.Header>
                                             <HyperlinkButton NavigateUri="https://aka.ms/getpowertoys/">
                                                 <HyperlinkButton.Content>
-                                                    <TextBlock Text="Windows PowerToys (file management, crop and lock, and more)" TextWrapping="WrapWholeWords"/>
+                                                    <TextBlock x:Uid="HomePage_Link_PowerToys" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
@@ -569,7 +565,7 @@
                                         <controls:SettingsCard.Header>
                                             <HyperlinkButton NavigateUri="https://github.com/PowerShell/PowerShell/releases/tag/v7.6.0-preview.6">
                                                 <HyperlinkButton.Content>
-                                                    <TextBlock Text="PowerShell 7.6 (useful for MIDI scripting and more)" TextWrapping="WrapWholeWords"/>
+                                                    <TextBlock x:Uid="HomePage_Link_PowerShell" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>

@@ -76,13 +76,13 @@
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Version" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="0" Grid.Row="0" x:Uid="PluginsTransportPage_Version" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind Version}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Transport Code" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="0" Grid.Row="1" x:Uid="PluginsTransportPage_TransportCode" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind TransportCode}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="0" Grid.Row="2" x:Uid="PluginsTransportPage_TransportId" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind Id}"  Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" IsTextSelectionEnabled="True" />
 
                                         </Grid>

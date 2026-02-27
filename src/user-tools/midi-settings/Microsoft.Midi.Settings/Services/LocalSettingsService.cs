@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -31,7 +31,8 @@ public class LocalSettingsService : ILocalSettingsService
 
     public LocalSettingsService(IFileService fileService)
     {
-        _programDataRoot = Environment.ExpandEnvironmentVariables("%ProgramData%");
+        // 使用 AppData 而不是 ProgramData，避免需要管理员权限
+        _programDataRoot = Environment.ExpandEnvironmentVariables("%AppData%");
         _applicationDataFolder = Path.Combine(_programDataRoot, @"Microsoft\MIDI\");
         _settingsFile = "SettingsApp.appconfig.json";
 
@@ -45,7 +46,16 @@ public class LocalSettingsService : ILocalSettingsService
     {
         if (!_isInitialized)
         {
-            _settings = _fileService.Read(_applicationDataFolder, _settingsFile) ?? global::Windows.Data.Json.JsonObject.Parse("{}");
+            try
+            {
+                _settings = _fileService.Read(_applicationDataFolder, _settingsFile) ?? global::Windows.Data.Json.JsonObject.Parse("{}");
+            }
+            catch (Exception ex)
+            {
+                // 如果读取失败，使用空对象
+                System.Diagnostics.Debug.WriteLine($"Failed to initialize settings: {ex.Message}");
+                _settings = global::Windows.Data.Json.JsonObject.Parse("{}");
+            }
 
             _isInitialized = true;
         }

@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:wincontrols="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
 
 
@@ -15,14 +16,14 @@
 
     <Grid x:Name="ContentArea">
         <ScrollViewer
-            HorizontalAlignment="Left"
             HorizontalScrollMode="Disabled"
             VerticalScrollBarVisibility="Auto"
             VerticalScrollMode="Auto">
             <StackPanel
-                HorizontalAlignment="Left"
                 Orientation="Vertical"
-                Spacing="4">
+                Spacing="4"
+                Margin="0,0,16,0"
+                HorizontalAlignment="Stretch">
                 <TextBlock
                     Margin="1,0,0,8"
                     HorizontalAlignment="Left"
@@ -92,23 +93,44 @@
                     </controls:SettingsExpander.HeaderIcon>
 
                     <controls:SettingsExpander.Items>
-                        <controls:SettingsCard >
-                            <ToggleSwitch x:Uid="ForDevelopers_DiscoveryToggle" IsOn="{x:Bind ViewModel.EnableDiscoveryAndProtocolNegotiation, Mode=TwoWay}" />
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <TextBlock x:Uid="ForDevelopers_DiscoveryToggleText"
+                                           TextWrapping="Wrap"/>
+                            </controls:SettingsCard.Header>
+                            <ToggleSwitch IsOn="{x:Bind ViewModel.EnableDiscoveryAndProtocolNegotiation, Mode=TwoWay}" />
                         </controls:SettingsCard>
-                        <controls:SettingsCard >
-                            <StackPanel Orientation="Horizontal">
-                                <Slider x:Uid="ForDevelopers_DiscoveryTimeoutSlider" 
-                                        Margin="5"
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+                <controls:SettingsExpander CornerRadius="9"
+                    x:Uid="ForDevelopers_DiscoveryTimeoutExpander"
+                    IsExpanded="True">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xe916;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
+
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard HorizontalContentAlignment="Stretch"
+                                               ContentAlignment="Vertical">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <wincontrols:NumberBox Grid.Column="0"
                                         Value="{x:Bind ViewModel.DiscoveryTimeout, Mode=TwoWay}" 
                                         Minimum="{x:Bind ViewModel.DiscoveryTimeoutMinimum, Mode=OneTime}"
                                         Maximum="{x:Bind ViewModel.DiscoveryTimeoutMaximum, Mode=OneTime}"
-                                        TickFrequency="2000"
-                                        StepFrequency="500"/>
-                                <Button Margin="20,5,5,5"
+                                        SpinButtonPlacementMode="Inline"
+                                        Width="200"/>
+                                <Rectangle Grid.Column="1" Fill="Transparent"/>
+                                <Button Grid.Column="2"
                                         x:Uid="ForDevelopers_CommitDiscoveryTimeoutButton"
                                         IsEnabled="{x:Bind ViewModel.DiscoveryTimeoutHasChanged, Mode=OneWay}"
                                         Command="{x:Bind ViewModel.CommitDiscoveryTimeoutCommand}" />
-                            </StackPanel>
+                            </Grid>
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
@@ -137,9 +159,9 @@
                            x:Uid="ForDevelopers_RelatedSupportSectionHeader"/>
 
                 <controls:SettingsCard CornerRadius="9"
+                    x:Uid="ForDevelopers_ReferenceMaterialsCard"
                     HorizontalContentAlignment="Left"
-                    ContentAlignment="Vertical"
-                    Header="Reference Materials">
+                    ContentAlignment="Vertical">
                     <controls:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xe7be;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsCard.HeaderIcon>
@@ -151,9 +173,9 @@
                 </controls:SettingsCard>
 
                 <controls:SettingsCard CornerRadius="9"
+                    x:Uid="ForDevelopers_SpecificationsCard"
                     HorizontalContentAlignment="Left"
-                    ContentAlignment="Vertical"
-                    Header="Specifications">
+                    ContentAlignment="Vertical">
                     <controls:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xe7be;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsCard.HeaderIcon>

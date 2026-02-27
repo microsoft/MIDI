@@ -66,6 +66,75 @@ CMidi2KSMidiEndpointManager::Initialize(
     // Wait for everything to be created so that they're available immediately after service start.
     m_EnumerationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
 
+    // ============================================================
+    // Initialize MIDI 1.0 Legacy Device Watcher (for loopMIDI, teVirtualMIDI, etc.)
+    // This provides compatibility with third-party virtual MIDI drivers
+    // that create MIDI 1.0 ports instead of native MIDI 2.0 endpoints.
+    // ============================================================
+    
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Initializing MIDI 1.0 legacy device watcher for loopMIDI/teVirtualMIDI compatibility", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    // Fix: Use proper MIDI device class GUIDs instead of Media Class GUID
+    // MIDI 1.0 Input devices: {504BE32C-CCF6-4D2C-B73F-6F8B3747E22B} (KSCATEGORY_MIDI_IN)
+    // MIDI 1.0 Output devices: {6DC23320-AB33-4CE4-80D4-BBB3EBBF2814} (KSCATEGORY_MIDI_OUT)
+    // This fixes the issue where only 16 loopback ports were visible and names were incorrect
+
+    winrt::hstring midi1InputSelector(
+        L"System.Devices.InterfaceClassGuid:\"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}\" AND "
+        L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+
+    winrt::hstring midi1OutputSelector(
+        L"System.Devices.InterfaceClassGuid:\"{6DC23320-AB33-4CE4-80D4-BBB3EBBF2814}\" AND "
+        L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+
+    // Create input device watcher
+    m_Midi1InWatcher = DeviceInformation::CreateWatcher(midi1InputSelector);
+
+    auto midi1InAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSMidiEndpointManager::OnMidi1InDeviceAdded);
+    auto midi1InRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnMidi1InDeviceRemoved);
+    auto midi1InUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnMidi1InDeviceUpdated);
+    auto midi1InEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSMidiEndpointManager::OnMidi1InEnumerationCompleted);
+
+    m_Midi1InDeviceAdded = m_Midi1InWatcher.Added(winrt::auto_revoke, midi1InAddedHandler);
+    m_Midi1InDeviceRemoved = m_Midi1InWatcher.Removed(winrt::auto_revoke, midi1InRemovedHandler);
+    m_Midi1InDeviceUpdated = m_Midi1InWatcher.Updated(winrt::auto_revoke, midi1InUpdatedHandler);
+    m_Midi1InDeviceEnumerationCompleted = m_Midi1InWatcher.EnumerationCompleted(winrt::auto_revoke, midi1InEnumerationCompletedHandler);
+
+    m_Midi1InWatcher.Start();
+    m_Midi1InEnumerationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
+
+    // Create output device watcher
+    m_Midi1OutWatcher = DeviceInformation::CreateWatcher(midi1OutputSelector);
+
+    auto midi1OutAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSMidiEndpointManager::OnMidi1OutDeviceAdded);
+    auto midi1OutRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnMidi1OutDeviceRemoved);
+    auto midi1OutUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnMidi1OutDeviceUpdated);
+    auto midi1OutEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSMidiEndpointManager::OnMidi1OutEnumerationCompleted);
+
+    m_Midi1OutDeviceAdded = m_Midi1OutWatcher.Added(winrt::auto_revoke, midi1OutAddedHandler);
+    m_Midi1OutDeviceRemoved = m_Midi1OutWatcher.Removed(winrt::auto_revoke, midi1OutRemovedHandler);
+    m_Midi1OutDeviceUpdated = m_Midi1OutWatcher.Updated(winrt::auto_revoke, midi1OutUpdatedHandler);
+    m_Midi1OutDeviceEnumerationCompleted = m_Midi1OutWatcher.EnumerationCompleted(winrt::auto_revoke, midi1OutEnumerationCompletedHandler);
+
+    m_Midi1OutWatcher.Start();
+    m_Midi1OutEnumerationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
+
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 legacy device watcher initialization complete", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     return S_OK;
 }
 
@@ -963,6 +1032,7 @@ CMidi2KSMidiEndpointManager::Shutdown()
 
     m_AvailableMidiPins.clear();
 
+    // Shutdown KS Device Watcher
     m_Watcher.Stop();
     m_EnumerationCompleted.wait(500);
     m_DeviceAdded.revoke();
@@ -971,8 +1041,455 @@ CMidi2KSMidiEndpointManager::Shutdown()
     m_DeviceStopped.revoke();
     m_DeviceEnumerationCompleted.revoke();
 
+    // Shutdown MIDI 1.0 Legacy Device Watchers
+    // Fix: Shutdown both input and output watchers
+    if (m_Midi1InWatcher)
+    {
+        m_Midi1InWatcher.Stop();
+        m_Midi1InEnumerationCompleted.wait(500);
+        m_Midi1InDeviceAdded.revoke();
+        m_Midi1InDeviceRemoved.revoke();
+        m_Midi1InDeviceUpdated.revoke();
+        m_Midi1InDeviceEnumerationCompleted.revoke();
+    }
+
+    if (m_Midi1OutWatcher)
+    {
+        m_Midi1OutWatcher.Stop();
+        m_Midi1OutEnumerationCompleted.wait(500);
+        m_Midi1OutDeviceAdded.revoke();
+        m_Midi1OutDeviceRemoved.revoke();
+        m_Midi1OutDeviceUpdated.revoke();
+        m_Midi1OutDeviceEnumerationCompleted.revoke();
+    }
+
+    m_Midi1DeviceToEndpointId.clear();
+
     m_midiDeviceManager.reset();
     m_midiProtocolManager.reset();
+
+    return S_OK;
+}
+
+
+// ============================================================================
+// MIDI 1.0 Legacy Device Support (for loopMIDI, teVirtualMIDI, etc.)
+// Fix: Split into separate input/output handlers to properly support more than 16 ports
+// ============================================================================
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::OnMidi1InDeviceAdded(
+    DeviceWatcher,
+    DeviceInformation device)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 input device added", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(device.Id().c_str(), "device id"),
+        TraceLoggingWideString(device.Name().c_str(), "device name")
+    );
+
+    // Create the endpoint for this MIDI 1.0 input device
+    HRESULT hr = CreateMidi1Endpoint(device, MidiFlowIn);
+    if (FAILED(hr))
+    {
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to create MIDI 1.0 input endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::OnMidi1InDeviceRemoved(
+    DeviceWatcher,
+    DeviceInformationUpdate deviceUpdate)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 input device removed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceUpdate.Id().c_str(), "device id")
+    );
+
+    std::wstring deviceId = deviceUpdate.Id().c_str();
+    
+    // Remove the endpoint associated with this device
+    HRESULT hr = RemoveMidi1Endpoint(deviceId);
+    if (FAILED(hr))
+    {
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to remove MIDI 1.0 input endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::OnMidi1InDeviceUpdated(
+    DeviceWatcher,
+    DeviceInformationUpdate update)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 input device updated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(update.Id().c_str(), "device id")
+    );
+
+    // For now, just log the update. In the future, this could handle
+    // property changes like device name changes.
+    for (auto const& prop : update.Properties())
+    {
+        OutputDebugString((std::wstring(L"MIDI1 IN: ") + std::wstring(prop.Key().c_str())).c_str());
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::OnMidi1InEnumerationCompleted(
+    DeviceWatcher,
+    winrt::Windows::Foundation::IInspectable)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 input device enumeration completed", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    m_Midi1InEnumerationCompleted.SetEvent();
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::OnMidi1OutDeviceAdded(
+    DeviceWatcher,
+    DeviceInformation device)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 output device added", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(device.Id().c_str(), "device id"),
+        TraceLoggingWideString(device.Name().c_str(), "device name")
+    );
+
+    // Create the endpoint for this MIDI 1.0 output device
+    HRESULT hr = CreateMidi1Endpoint(device, MidiFlowOut);
+    if (FAILED(hr))
+    {
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to create MIDI 1.0 output endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::OnMidi1OutDeviceRemoved(
+    DeviceWatcher,
+    DeviceInformationUpdate deviceUpdate)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 output device removed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceUpdate.Id().c_str(), "device id")
+    );
+
+    std::wstring deviceId = deviceUpdate.Id().c_str();
+    
+    // Remove the endpoint associated with this device
+    HRESULT hr = RemoveMidi1Endpoint(deviceId);
+    if (FAILED(hr))
+    {
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to remove MIDI 1.0 output endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::OnMidi1OutDeviceUpdated(
+    DeviceWatcher,
+    DeviceInformationUpdate update)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 output device updated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(update.Id().c_str(), "device id")
+    );
+
+    // For now, just log the update. In the future, this could handle
+    // property changes like device name changes.
+    for (auto const& prop : update.Properties())
+    {
+        OutputDebugString((std::wstring(L"MIDI1 OUT: ") + std::wstring(prop.Key().c_str())).c_str());
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::OnMidi1OutEnumerationCompleted(
+    DeviceWatcher,
+    winrt::Windows::Foundation::IInspectable)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MIDI 1.0 output device enumeration completed", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    m_Midi1OutEnumerationCompleted.SetEvent();
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::CreateMidi1Endpoint(
+    DeviceInformation& device,
+    MidiFlow flow)
+{
+    std::wstring deviceId = device.Id().c_str();
+    std::wstring deviceName = device.Name().c_str();
+    std::wstring transportCode(TRANSPORT_CODE);
+
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Creating MIDI 1.0 endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceId.c_str(), "device id"),
+        TraceLoggingWideString(deviceName.c_str(), "device name")
+    );
+
+    // Check if we already have an endpoint for this device
+    if (m_Midi1DeviceToEndpointId.find(deviceId) != m_Midi1DeviceToEndpointId.end())
+    {
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Endpoint already exists for this device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceId.c_str(), "device id")
+        );
+        return S_OK;
+    }
+
+    // Prepare device properties
+    std::vector<DEVPROPERTY> interfaceDeviceProperties;
+
+    // Set native data format to ByteStream (MIDI 1.0)
+    UINT32 nativeDataFormat = (UINT32)MidiDataFormats_ByteStream;
+    interfaceDeviceProperties.push_back(DEVPROPERTY{
+        { PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_UINT32, sizeof(UINT32), &nativeDataFormat });
+
+    // Mark as MIDI 1.0 legacy device
+    DEVPROP_BOOLEAN isMidi1Device = DEVPROP_TRUE;
+    interfaceDeviceProperties.push_back(DEVPROPERTY{
+        { PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), &isMidi1Device });
+
+    // Set the transport code
+    interfaceDeviceProperties.push_back(DEVPROPERTY{
+        { PKEY_MIDI_TransportCode, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_STRING, (ULONG)((transportCode.length() + 1) * sizeof(WCHAR)), (PVOID)transportCode.c_str() });
+
+    // Prepare common properties
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
+    commonProperties.TransportId = TRANSPORT_LAYER_GUID;
+    commonProperties.TransportCode = transportCode.c_str();
+    commonProperties.EndpointName = deviceName.c_str();
+    commonProperties.FriendlyName = deviceName.c_str();
+    commonProperties.EndpointDescription = L"MIDI 1.0 Legacy Device";
+    commonProperties.SupportedDataFormats = MidiDataFormats_ByteStream;
+    commonProperties.NativeDataFormat = MidiDataFormats_ByteStream;
+    commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
+
+    // Capabilities - MIDI 1.0 devices only support MIDI 1.0 protocol
+    UINT32 capabilities = 0;
+    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+    capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
+    commonProperties.Capabilities = (MidiEndpointCapabilities)capabilities;
+
+    // Generate a unique instance ID for this endpoint
+    std::hash<std::wstring> hasher;
+    std::wstring instanceId = MIDI_KS_INSTANCE_ID_PREFIX L"MIDI1_" + std::to_wstring(hasher(deviceId));
+
+    // Prepare SWD creation info
+    SW_DEVICE_CREATE_INFO createInfo = {};
+    createInfo.cbSize = sizeof(createInfo);
+    createInfo.pszInstanceId = instanceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = deviceName.c_str();
+
+    // Activate the endpoint
+    wil::unique_cotaskmem_string newDeviceInterfaceId;
+    HRESULT hr = m_midiDeviceManager->ActivateEndpoint(
+        nullptr,                    // parent instance ID (none for MIDI 1.0 devices)
+        FALSE,                      // not UMP-only (it's MIDI 1.0)
+        flow,
+        &commonProperties,
+        (ULONG)interfaceDeviceProperties.size(),
+        0,
+        interfaceDeviceProperties.data(),
+        nullptr,
+        &createInfo,
+        &newDeviceInterfaceId);
+
+    if (SUCCEEDED(hr))
+    {
+        // Store the mapping
+        m_Midi1DeviceToEndpointId[deviceId] = newDeviceInterfaceId.get();
+
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"MIDI 1.0 endpoint created successfully", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceId.c_str(), "device id"),
+            TraceLoggingWideString(newDeviceInterfaceId.get(), "endpoint id")
+        );
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to activate MIDI 1.0 endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+            TraceLoggingWideString(deviceId.c_str(), "device id")
+        );
+    }
+
+    return hr;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::RemoveMidi1Endpoint(
+    std::wstring const& deviceId)
+{
+    TraceLoggingWrite(
+        MidiKSTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Removing MIDI 1.0 endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceId.c_str(), "device id")
+    );
+
+    auto it = m_Midi1DeviceToEndpointId.find(deviceId);
+    if (it == m_Midi1DeviceToEndpointId.end())
+    {
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No endpoint found for device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceId.c_str(), "device id")
+        );
+        return S_OK;
+    }
+
+    std::wstring endpointId = it->second;
+
+    // Deactivate the endpoint
+    HRESULT hr = m_midiDeviceManager->DeactivateEndpoint(endpointId.c_str());
+    if (FAILED(hr))
+    {
+        TraceLoggingWrite(
+            MidiKSTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to deactivate endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+            TraceLoggingWideString(endpointId.c_str(), "endpoint id")
+        );
+    }
+
+    // Remove from our map
+    m_Midi1DeviceToEndpointId.erase(it);
 
     return S_OK;
 }

@@ -74,10 +74,56 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 
     m_watcher.Start();
 
+    // Start work queue thread for asynchronous device processing
+    StartWorkQueue();
+
     // Wait for everything to be created so that they're available immediately after service start.
     m_EnumerationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
 
     return S_OK;
+}
+
+void CMidi2KSAggregateMidiEndpointManager::StartWorkQueue()
+{
+    m_shutdownRequested.store(false);
+    m_deviceWorkQueue.m_workAvailable.SetEvent();
+    m_workQueueThread = std::jthread(&CMidi2KSAggregateMidiEndpointManager::WorkQueueThreadProc, this);
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Work queue started", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+}
+
+void CMidi2KSAggregateMidiEndpointManager::StopWorkQueue()
+{
+    m_shutdownRequested.store(true);
+    
+    // Wake up the work queue thread
+    m_deviceWorkQueue.m_workAvailable.SetEvent();
+
+    // Wait for thread to finish
+    if (m_workQueueThread.joinable())
+    {
+        m_workQueueThread.request_stop();
+        m_workQueueThread.join();
+    }
+
+    // Clear any remaining work items
+    m_deviceWorkQueue.Clear();
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Work queue stopped", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 }
 
 
@@ -748,13 +794,83 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 {
     UNREFERENCED_PARAMETER(watcher);
 
-    // HACK: this is super annoying (and embarrassing) to do. There's some race condition 
-    // here that we need to sort through. Maybe queue the device add updates and return 
-    // from this function immediately? That will require a queue worker that processes 
-    // the device adds and whatnot.
-    // Maybe better to use the non-WinRT versions of add/remove notification?
-    Sleep(500);
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(parentDevice.Id().c_str(), "Device added - queuing for processing")
+    );
 
+    // Instead of processing immediately (which can cause race conditions),
+    // enqueue the device for asynchronous processing with retry support
+    DeviceAddWorkItem workItem;
+    workItem.DeviceInfo = parentDevice;
+    workItem.RetryCount = 0;
+
+    m_deviceWorkQueue.Enqueue(std::move(workItem));
+
+    return S_OK;
+}
+
+// Work queue thread procedure
+void CMidi2KSAggregateMidiEndpointManager::WorkQueueThreadProc()
+{
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Work queue thread started", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    while (!m_shutdownRequested.load())
+    {
+        DeviceAddWorkItem workItem;
+
+        if (m_deviceWorkQueue.TryDequeue(workItem, 100))
+        {
+            HRESULT hr = ProcessDeviceAdd(workItem);
+
+            if (FAILED(hr) && workItem.RetryCount < DeviceAddWorkItem::MaxRetries)
+            {
+                // Retry with exponential backoff
+                workItem.RetryCount++;
+                DWORD delayMs = 100 * (1 << workItem.RetryCount); // 200ms, 400ms, 800ms, 1600ms, 3200ms
+                
+                TraceLoggingWrite(
+                    MidiKSAggregateTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Device processing failed, will retry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(workItem.DeviceInfo.Id().c_str(), "device id"),
+                    TraceLoggingUInt32(workItem.RetryCount, "retry count"),
+                    TraceLoggingUInt32(delayMs, "delay ms"),
+                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+                );
+
+                Sleep(delayMs);
+                m_deviceWorkQueue.Enqueue(std::move(workItem));
+            }
+            else if (FAILED(hr))
+            {
+                TraceLoggingWrite(
+                    MidiKSAggregateTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Device processing failed after all retries", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(workItem.DeviceInfo.Id().c_str(), "device id"),
+                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+                );
+            }
+        }
+    }
 
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -762,12 +878,26 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(parentDevice.Id().c_str(), "added parent device")
+        TraceLoggingWideString(L"Work queue thread stopped", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+}
+
+HRESULT CMidi2KSAggregateMidiEndpointManager::ProcessDeviceAdd(DeviceAddWorkItem& workItem)
+{
+    const DeviceInformation& parentDevice = workItem.DeviceInfo;
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(parentDevice.Id().c_str(), "Processing device add"),
+        TraceLoggingUInt32(workItem.RetryCount, "retry count")
     );
 
     std::wstring transportCode(TRANSPORT_CODE);
 
-    //auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     auto properties = parentDevice.Properties();
 
     KsAggregateEndpointDefinition endpointDefinition{ };
@@ -1355,6 +1485,9 @@ CMidi2KSAggregateMidiEndpointManager::Shutdown()
         Sleep(100);
         tries++;
     }
+
+    // Stop work queue before shutting down transport
+    StopWorkQueue();
 
     TransportState::Current().Shutdown();
 

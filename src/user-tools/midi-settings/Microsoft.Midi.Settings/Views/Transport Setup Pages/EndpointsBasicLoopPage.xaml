@@ -83,7 +83,7 @@
                                                        Style="{StaticResource SmallPlainPropertyValue}"/>
                                         </StackPanel>
 
-                                        <Button Content="Remove" 
+                                        <Button x:Uid="EndpointsLoopPage_RemoveButton"
                                                 Margin="16"
                                                 Command="{x:Bind RemoveCommand}"
                                                 />

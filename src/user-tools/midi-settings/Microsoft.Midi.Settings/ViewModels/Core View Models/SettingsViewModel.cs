@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -46,6 +46,7 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IGeneralSettingsService _generalSettingsService;
     private readonly IMidiUpdateService _midiUpdateService;
+    private readonly ILanguageService _languageService;
 
     private ElementTheme _elementTheme;
     //private bool _showDeveloperOptions;
@@ -54,6 +55,7 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
     private bool _isPreviewChannelEnabled = false;
     private bool _isUpdateCheckingEnabled = true;
     private bool _arePreviewToolsEnabled = false;
+    private string _selectedLanguage = "en-US";
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
@@ -107,6 +109,12 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
         });
     }
 
+    public string SelectedLanguage
+    {
+        get => _selectedLanguage;
+        set => SetProperty(ref _selectedLanguage, value);
+    }
+
     public ElementTheme ElementTheme
     {
         get => _elementTheme;
@@ -129,15 +137,18 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
         IThemeSelectorService themeSelectorService, 
         IMidiUpdateService midiUpdateService,
         ILocalSettingsService localSettingsService, 
-        IGeneralSettingsService generalSettingsService)
+        IGeneralSettingsService generalSettingsService,
+        ILanguageService languageService)
     {
         _midiUpdateService = midiUpdateService;
         _themeSelectorService = themeSelectorService;
         _localSettingsService = localSettingsService;
         _generalSettingsService = generalSettingsService;
+        _languageService = languageService;
 
         _elementTheme = _themeSelectorService.Theme;
         _versionDescription = GetVersionDescription();
+        _selectedLanguage = _languageService.CurrentLanguage;
 
         SwitchThemeCommand = new RelayCommand<ElementTheme>(
             async (param) =>

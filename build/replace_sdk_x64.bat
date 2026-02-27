@@ -7,8 +7,8 @@ echo This must be run as administrator.
 set sdkinstallpath="%ProgramFiles%\Windows MIDI Services\Desktop App SDK Runtime"
 set toolsinstallpath="%ProgramFiles%\Windows MIDI Services\Tools"
 
-set sdkbuildoutput="%midi_repo_root%src\app-sdk\VSFiles\out\Microsoft.Windows.Devices.Midi2\x64\Release"
-set diagbuildoutput="%midi_repo_root%src\app-sdk\VSFiles\out\mididiag\x64\Release"
+set sdkbuildoutput="d:\DVE\Projects\C++\MIDI\src\app-sdk\vsfiles\out\Microsoft.Windows.Devices.Midi2\x64\Release"
+set diagbuildoutput="d:\DVE\Projects\C++\MIDI\src\app-sdk\vsfiles\out\mididiag\x64\Release"
 
 echo Copying SDK files : dll
 copy /Y %sdkbuildoutput%\Microsoft.Windows.Devices.Midi2.dll %sdkinstallpath%

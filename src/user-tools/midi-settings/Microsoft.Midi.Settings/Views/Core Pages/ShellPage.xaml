@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="Microsoft.Midi.Settings.Views.ShellPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -92,7 +92,7 @@
                 
                 <controls:TitleBar.Content>
                     <AutoSuggestBox x:Name="SearchBox" 
-                                    PlaceholderText=" Find a setting, endpoint, or port" 
+                                    x:Uid="ShellPage_SearchBox"
                                     Canvas.ZIndex="100"
                                     QueryIcon="Find"
                                     HorizontalAlignment="Center"

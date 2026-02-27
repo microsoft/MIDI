@@ -168,10 +168,46 @@ CMidi2LoopbackMidiEndpointManager::DeleteEndpointPair(
         TraceLoggingPointer(this, "this")
     );
 
-    // we can't really do much with the return values here other than log them.
+    // Delete both endpoints and return error if either fails
+    HRESULT hrA = DeleteSingleEndpoint(definitionA);
+    HRESULT hrB = DeleteSingleEndpoint(definitionB);
 
-    LOG_IF_FAILED(DeleteSingleEndpoint(definitionA));
-    LOG_IF_FAILED(DeleteSingleEndpoint(definitionB));
+    if (FAILED(hrA))
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to delete endpoint A", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hrA, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+        return hrA;
+    }
+
+    if (FAILED(hrB))
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to delete endpoint B", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hrB, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+        return hrB;
+    }
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Both endpoints deleted successfully", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
@@ -19,6 +19,7 @@
           Microsoft.Windows.Devices.Midi2.Messages
           Microsoft.Windows.Devices.Midi2.ServiceConfig
           Microsoft.Windows.Devices.Midi2.Endpoints
+          Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback
           Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
           Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
           Microsoft.Windows.Devices.Midi2.Endpoints.Network

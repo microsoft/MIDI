@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
       <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
@@ -33,6 +33,7 @@
       <WindowsSDKPackageVersion>10.0.26100.57</WindowsSDKPackageVersion>
 
       <NoWin32Manifest>true</NoWin32Manifest>
+      <NoWarn>$(NoWarn);CS8012</NoWarn>
 
   </PropertyGroup>
 

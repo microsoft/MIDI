@@ -48,13 +48,13 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Session Name" Style="{StaticResource SmallPropertyLabel}" />
+                                        <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="ManagementSessionsPage_SessionName" Style="{StaticResource SmallPropertyLabel}" />
                                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind SessionInfo.SessionName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Process" Style="{StaticResource SmallPropertyLabel}" />
+                                        <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="ManagementSessionsPage_Process" Style="{StaticResource SmallPropertyLabel}" />
                                         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
                                             <TextBlock Text="{x:Bind SessionInfo.ProcessName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                            <TextBlock Text="process id: " Style="{StaticResource SmallPlainPropertyValue}"/>
+                                            <TextBlock x:Uid="ManagementSessionsPage_ProcessId" Style="{StaticResource SmallPlainPropertyValue}"/>
                                             <TextBlock Text="{x:Bind SessionInfo.ProcessId}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                         </StackPanel>
                                     </Grid>

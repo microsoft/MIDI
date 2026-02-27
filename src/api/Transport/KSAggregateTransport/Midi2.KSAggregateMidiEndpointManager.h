@@ -11,6 +11,10 @@
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointMatchCriteria.h"
 #include "MidiEndpointNameTable.h"
+#include <queue>
+#include <thread>
+#include <atomic>
+#include <stop_token>
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -51,7 +55,63 @@ struct KsAggregateEndpointDefinition
 
     std::vector<KsAggregateEndpointMidiPinDefinition> MidiPins{ };
 
-    WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{};
+    WindowsMidiServicesPluginConfigurationLib::MidiEndpointNameTable EndpointNameTable{};
+};
+
+// Work item for device addition processing
+struct DeviceAddWorkItem
+{
+    DeviceInformation DeviceInfo;
+    int RetryCount{ 0 };
+    static constexpr int MaxRetries = 5;
+};
+
+// Work queue for asynchronous device processing
+class DeviceWorkQueue
+{
+public:
+    void Enqueue(DeviceAddWorkItem item)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_workQueue.push(std::move(item));
+        m_workAvailable.SetEvent();
+    }
+
+    bool TryDequeue(DeviceAddWorkItem& item, DWORD timeoutMs = 100)
+    {
+        if (WaitForSingleObject(m_workAvailable.get(), timeoutMs) == WAIT_OBJECT_0)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            if (!m_workQueue.empty())
+            {
+                item = std::move(m_workQueue.front());
+                m_workQueue.pop();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool IsEmpty() const
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return m_workQueue.empty();
+    }
+
+    void Clear()
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        while (!m_workQueue.empty())
+        {
+            m_workQueue.pop();
+        }
+    }
+
+    wil::unique_event_nothrow m_workAvailable;
+
+private:
+    mutable std::mutex m_mutex;
+    std::queue<DeviceAddWorkItem> m_workQueue;
 };
 
 
@@ -77,6 +137,12 @@ private:
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
+    // Work queue processing
+    void StartWorkQueue();
+    void StopWorkQueue();
+    void WorkQueueThreadProc();
+    HRESULT ProcessDeviceAdd(DeviceAddWorkItem& workItem);
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
@@ -90,6 +156,11 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Stopped_revoker m_DeviceStopped;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
     wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
+
+    // Work queue for asynchronous device processing
+    DeviceWorkQueue m_deviceWorkQueue;
+    std::jthread m_workQueueThread;
+    std::atomic<bool> m_shutdownRequested{ false };
 
     HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
 

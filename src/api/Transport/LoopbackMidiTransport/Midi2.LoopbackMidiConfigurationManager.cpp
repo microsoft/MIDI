@@ -410,6 +410,27 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                 auto associationId = o.Current().GetString();
                 auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationId.c_str());
 
+                if (device == nullptr)
+                {
+                    TraceLoggingWrite(
+                        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Device not found in endpoint table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(associationId.c_str(), "associationId")
+                    );
+
+                    auto removeSuccessVal = json::JsonValue::CreateBooleanValue(false);
+                    responseObject.SetNamedValue(
+                        MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                        removeSuccessVal);
+
+                    o.MoveNext();
+                    continue;
+                }
+
                 auto removalHr = TransportState::Current().GetEndpointManager()->DeleteEndpointPair(device->DefinitionA, device->DefinitionB);
 
                 LOG_IF_FAILED(removalHr);
@@ -436,6 +457,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(L"Failed to remove device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingWideString(configurationJsonSection, "json")
                     );
+
+                    auto removeSuccessVal = json::JsonValue::CreateBooleanValue(false);
+                    responseObject.SetNamedValue(
+                        MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                        removeSuccessVal);
                 }
                     
 

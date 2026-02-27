@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -123,12 +123,6 @@
   <data name="AppDescription" xml:space="preserve">
     <value>Management, settings, and utility app for Windows MIDI Services.</value>
   </data>
-  <data name="Shell_Main.Content" xml:space="preserve">
-    <value>Main</value>
-  </data>
-  <data name="Shell_ContentGrid.Content" xml:space="preserve">
-    <value>ContentGrid</value>
-  </data>
   <data name="Shell_PluginsNavHeader.Content" xml:space="preserve">
     <value>Plugins</value>
   </data>
@@ -144,9 +138,6 @@
   <data name="Shell_ManagementNavHeader.Content" xml:space="preserve">
     <value>Management</value>
   </data>
-  <data name="Shell_ToolsMonitor.Content" xml:space="preserve">
-    <value>Traffic Monitor</value>
-  </data>
   <data name="Shell_ManagementSessions.Content" xml:space="preserve">
     <value>Active Sessions</value>
   </data>
@@ -155,12 +146,6 @@
   </data>
   <data name="Shell_ToolsSysEx.Text" xml:space="preserve">
     <value>SysEx Transfer</value>
-  </data>
-  <data name="Shell_ToolsConsole.Content" xml:space="preserve">
-    <value>Console</value>
-  </data>
-  <data name="Shell_ToolsTest.Content" xml:space="preserve">
-    <value>Device Test</value>
   </data>
   <data name="Shell_ForDevelopers.Content" xml:space="preserve">
     <value>Developers</value>
@@ -249,6 +234,15 @@
   <data name="Settings_AboutDescriptionPrivacyLinkCard.Description" xml:space="preserve">
     <value>Your privacy is important.</value>
   </data>
+  <data name="Settings_AboutLocalizationCard.Header" xml:space="preserve">
+    <value>Translation Credits</value>
+  </data>
+  <data name="Settings_AboutLocalizationCard.Description" xml:space="preserve">
+    <value>Thanks to Crostia for providing Chinese support</value>
+  </data>
+  <data name="SettingsPage_LocalizationLink.Content" xml:space="preserve">
+    <value>Crostia (GitHub)</value>
+  </data>
   <data name="SettingsPage_AmeiOrgLink.Content" xml:space="preserve">
     <value>AMEI</value>
   </data>
@@ -287,12 +281,6 @@
   </data>
   <data name="Shell_Home.Content" xml:space="preserve">
     <value>Home</value>
-  </data>
-  <data name="Shell_Routes.Content" xml:space="preserve">
-    <value>Routing</value>
-  </data>
-  <data name="Shell_SystemInfo.Content" xml:space="preserve">
-    <value>System Information</value>
   </data>
   <data name="Shell_WinMMMidi1ApiDevices.Content" xml:space="preserve">
     <value>WinMM MIDI 1.0 Ports</value>
@@ -420,20 +408,65 @@
   <data name="ForDevelopers_EnableMmcssToggle.OffContent" xml:space="preserve">
     <value>Windows MIDI Services will not use MMCSS threads in the client process. This is the recommended choice.</value>
   </data>
-  <data name="ForDevelopers_DiscoveryToggle.OffContent" xml:space="preserve">
-    <value>Service-based MIDI 2.0 discovery and protocol negotiation is currently disabled.</value>
-  </data>
   <data name="ForDevelopers_EnableMmcssToggle.OnContent" xml:space="preserve">
     <value>Windows MIDI Services will use MMCSS threads in the client process. This may cause some applications to malfunction.</value>
-  </data>
-  <data name="ForDevelopers_DiscoveryToggle.OnContent" xml:space="preserve">
-    <value>Service-based MIDI 2.0 discovery and protocol negotiation is currently enabled. This is the recommended choice.</value>
   </data>
   <data name="ForDevelopers_ServiceRestartRequired.Message" xml:space="preserve">
     <value>The Windows MIDI Service (midisrv.exe) must be restarted for changes to take effect.</value>
   </data>
   <data name="Button_RestartMidiService.Content" xml:space="preserve">
     <value>Restart MIDI Service</value>
+  </data>
+  <data name="EndpointsLoopPage_CreateNewLoopbackButton.Content" xml:space="preserve">
+    <value>Create New Loopback Endpoint Pair</value>
+  </data>
+  <data name="EndpointsLoopPage_RemoveButton.Content" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ManagementSessionsPage_SessionName.Text" xml:space="preserve">
+    <value>Session Name</value>
+  </data>
+  <data name="ManagementSessionsPage_Process.Text" xml:space="preserve">
+    <value>Process</value>
+  </data>
+  <data name="ManagementSessionsPage_ProcessId.Text" xml:space="preserve">
+    <value>process id</value>
+  </data>
+  <data name="PluginsTransportPage_Version.Text" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="PluginsTransportPage_TransportCode.Text" xml:space="preserve">
+    <value>Transport Code</value>
+  </data>
+  <data name="PluginsTransportPage_TransportId.Text" xml:space="preserve">
+    <value>Transport Id</value>
+  </data>
+  <data name="TroubleshootingPage_IntroText.Text" xml:space="preserve">
+    <value>If you are running into problems with MIDI on your PC, the tools below may help you recover without requiring a reboot.</value>
+  </data>
+  <data name="TroubleshootingPage_UnknownIssueHeader.Text" xml:space="preserve">
+    <value>If you have an unknown issue</value>
+  </data>
+  <data name="TroubleshootingPage_RestartServiceCard_Header.Text" xml:space="preserve">
+    <value>Restart Windows MIDI Services</value>
+  </data>
+  <data name="TroubleshootingPage_RestartServiceCard_Description.Text" xml:space="preserve">
+    <value>Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.</value>
+  </data>
+  <data name="TroubleshootingPage_SupportHeader.Text" xml:space="preserve">
+    <value>If you're working with support</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryToggleText.Text" xml:space="preserve">
+    <value>MIDI 2.0 service-based discovery and protocol negotiation, recommended to turn on.</value>
+  </data>
+  <data name="TroubleshootingPage_ReportInfoCard_Header.Text" xml:space="preserve">
+    <value>Report MIDI System Information</value>
+  </data>
+  <data name="TroubleshootingPage_ReportInfoCard_Description.Text" xml:space="preserve">
+    <value>If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact.</value>
+  </data>
+  <data name="TroubleshootingPage_CaptureInfoButton.Content" xml:space="preserve">
+    <value>Capture MIDI System Information</value>
   </data>
   <data name="HyperlinkButton_WindowsMidiServicesDocumentation.NavigateUri" xml:space="preserve">
     <value>https://aka.ms/midi</value>
@@ -459,11 +492,20 @@
   <data name="HyperlinkButton_MidiSpecifications.Content" xml:space="preserve">
     <value>MIDI 1.0 and 2.0 Specifications at the MIDI Association</value>
   </data>
-  <data name="ForDevelopers_DiscoveryTimeoutSlider.Header" xml:space="preserve">
-    <value>Discovery Timeout (milliseconds)</value>
+  <data name="ForDevelopers_DiscoveryTimeoutExpander.Header" xml:space="preserve">
+    <value>Discovery Timeout</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryTimeoutExpander.Description" xml:space="preserve">
+    <value>Configure the timeout period for MIDI device discovery. Increase this value if your devices respond slowly. (Default: 10000 milliseconds)</value>
   </data>
   <data name="ForDevelopers_CommitDiscoveryTimeoutButton.Content" xml:space="preserve">
     <value>Save to Registry</value>
+  </data>
+  <data name="ForDevelopers_ReferenceMaterialsCard.Header" xml:space="preserve">
+    <value>Reference Materials</value>
+  </data>
+  <data name="ForDevelopers_SpecificationsCard.Header" xml:space="preserve">
+    <value>Specifications</value>
   </data>
   <data name="ForDevelopers_EnableDeveloperInstallationExpander.Header" xml:space="preserve">
     <value>Enable Installation of Developer Releases</value>
@@ -819,5 +861,128 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   </data>
   <data name="Error_SettingsAppCouldNotAutomaticallyRestart" xml:space="preserve">
     <value>The MIDI Settings app could not automatically close and restart. Please close the application and then relaunch it.</value>
+  </data>
+  <data name="Settings_Language.Header" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings_Language.Description" xml:space="preserve">
+    <value>Select your preferred language. Requires restarting the app.</value>
+  </data>
+  <data name="Settings_Language_English.Content" xml:space="preserve">
+    <value>English (United States)</value>
+  </data>
+  <data name="Settings_Language_ChineseSimplified.Content" xml:space="preserve">
+    <value>中文 (简体)</value>
+  </data>
+  <data name="LanguageChangeDialog_Title" xml:space="preserve">
+    <value>Language Change</value>
+  </data>
+  <data name="LanguageChangeDialog_Content" xml:space="preserve">
+    <value>The app needs to restart to apply the language change. Restart now?</value>
+  </data>
+  <data name="LanguageChangeDialog_PrimaryButton" xml:space="preserve">
+    <value>Restart Now</value>
+  </data>
+  <data name="LanguageChangeDialog_SecondaryButton" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="HomePage_CommonMidiTasks.Text" xml:space="preserve">
+    <value>Common MIDI tasks</value>
+  </data>
+  <data name="HomePage_HelpfulLinks.Text" xml:space="preserve">
+    <value>Helpful Links</value>
+  </data>
+  <data name="HomePage_UsefulTools.Text" xml:space="preserve">
+    <value>Useful tools</value>
+  </data>
+  <data name="HomePage_ServiceUnavailable.Title" xml:space="preserve">
+    <value>Service is Unavailable</value>
+  </data>
+  <data name="HomePage_ServiceUnavailable.Message" xml:space="preserve">
+    <value>The Windows MIDI Service was not able to be started. Most options will not be available.</value>
+  </data>
+  <data name="HomePage_FinishSetup.Title" xml:space="preserve">
+    <value>Finish MIDI setup and customization on this PC</value>
+  </data>
+  <data name="HomePage_FinishSetup.Message" xml:space="preserve">
+    <value>Create the required configuration file and then customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more</value>
+  </data>
+  <data name="HomePage_Button_FinishSetup" xml:space="preserve">
+    <value>Finish MIDI Setup</value>
+  </data>
+  <data name="HomePage_NewRuntimeAvailable.Title" xml:space="preserve">
+    <value>New Windows MIDI Services Runtime Available</value>
+  </data>
+  <data name="HomePage_InstalledVersion" xml:space="preserve">
+    <value>Installed Version</value>
+  </data>
+  <data name="HomePage_NewVersion" xml:space="preserve">
+    <value>New Version</value>
+  </data>
+  <data name="HomePage_BuildDate" xml:space="preserve">
+    <value>Build Date</value>
+  </data>
+  <data name="HomePage_Button_UpdateRuntime.Content" xml:space="preserve">
+    <value>Update SDK Runtime</value>
+  </data>
+  <data name="HomePage_Button_LearnMore" xml:space="preserve">
+    <value>Learn more...</value>
+  </data>
+  <data name="HomePage_CommonMidiTasks_Description.Text" xml:space="preserve">
+    <value>Common tasks and settings for Windows MIDI Services.</value>
+  </data>
+  <data name="HomePage_HelpfulLinks_Description.Text" xml:space="preserve">
+    <value>Links to documentation and more for Windows MIDI Services</value>
+  </data>
+  <data name="HomePage_UsefulTools_Description.Text" xml:space="preserve">
+    <value>Links to a few free tools you may find useful</value>
+  </data>
+  <data name="HomePage_Link_Documentation.Text" xml:space="preserve">
+    <value>Windows MIDI Services documentation</value>
+  </data>
+  <data name="HomePage_Link_Discord.Text" xml:space="preserve">
+    <value>Discord Server for questions, discussions and non-developer bug reports</value>
+  </data>
+  <data name="HomePage_Link_GitHubSource.Text" xml:space="preserve">
+    <value>GitHub Repo with source for Windows MIDI Services</value>
+  </data>
+  <data name="HomePage_Link_GitHubIssues.Text" xml:space="preserve">
+    <value>GitHub Repo issues list for known issues and reporting new ones</value>
+  </data>
+  <data name="HomePage_Link_PowerToys.Text" xml:space="preserve">
+    <value>Windows PowerToys (file management, crop and lock, and more)</value>
+  </data>
+  <data name="HomePage_Link_PowerShell.Text" xml:space="preserve">
+    <value>PowerShell 7.6 (useful for MIDI scripting and more)</value>
+  </data>
+  <data name="HomePage_Link_LearnMore.Text" xml:space="preserve">
+    <value>Learn more...</value>
+  </data>
+  <data name="ShellPage_SearchBox.PlaceholderText" xml:space="preserve">
+    <value>Find a setting, endpoint, or port</value>
+  </data>
+  <data name="EndpointsAllPage_CardsButton.Label" xml:space="preserve">
+    <value>Cards</value>
+  </data>
+  <data name="EndpointsAllPage_ListButton.Label" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="EndpointsAllPage_AllEndpoints" xml:space="preserve">
+    <value>All endpoints for transports</value>
+  </data>
+  <data name="EndpointsAllPage_Midi10ApiPorts.Text" xml:space="preserve">
+    <value>MIDI 1.0 API Ports</value>
+  </data>
+  <data name="EndpointsAllPage_SourceInput.Text" xml:space="preserve">
+    <value>Source/Input</value>
+  </data>
+  <data name="EndpointsAllPage_DestinationOutput.Text" xml:space="preserve">
+    <value>Destination/Output</value>
+  </data>
+  <data name="EndpointsAllPage_PanicButton.Content" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+  <data name="EndpointsAllPage_MonitorButton.Content" xml:space="preserve">
+    <value>Monitor</value>
   </data>
 </root>

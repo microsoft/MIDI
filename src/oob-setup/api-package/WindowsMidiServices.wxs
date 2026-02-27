@@ -1,7 +1,7 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
 
     <Package  
           Name="Microsoft Windows MIDI Services (Preview Service) $(var.Platform)"

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
 	    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
@@ -129,8 +129,6 @@
       
       <PackageReference Include="System.Management" Version="10.0.2" />
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.2" />
-      <PackageReference Include="System.Text.Json" Version="10.0.2" />
-      <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 
       <PackageReference Include="WinUIEx" Version="2.9.0" />
 	  
@@ -295,6 +293,11 @@
         <Generator>ResXFileCodeGenerator</Generator>
         <LastGenOutput>Resources.Designer.cs</LastGenOutput>
         <CustomToolNamespace>Microsoft.Midi.Settings.Strings.en_us</CustomToolNamespace>
+      </PRIResource>
+      <PRIResource Update="Strings\zh-cn\Resources.resw">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+        <CustomToolNamespace>Microsoft.Midi.Settings.Strings.zh_cn</CustomToolNamespace>
       </PRIResource>
     </ItemGroup>
     <ItemGroup>

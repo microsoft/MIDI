@@ -217,8 +217,10 @@ namespace NodeRTLib
             var types = new Dictionary<Type, dynamic>();
             mainModel.Types = types;
 
-            var namespaces = new List<String>();
-            namespaces.Add("NodeRT");
+            var namespaces = new List<String>
+            {
+                "NodeRT"
+            };
             namespaces.AddRange(winRTNamespace.Split('.'));
             mainModel.Namespaces = namespaces;
             mainModel.WinRTNamespace = winRTNamespace;
@@ -427,7 +429,7 @@ namespace NodeRTLib
                 return null;
             }
 
-            return (dynamic model) =>
+            return model =>
             {
                 return template.Render(model);
             };
@@ -467,7 +469,7 @@ namespace NodeRTLib
 
         private static string GetTypeFullName(Type type)
         {
-            string cleanName = string.Empty;
+            string cleanName;
 
             // hack for MidiMessageStruct& parameter
             if (type.Name.EndsWith("&"))
@@ -763,8 +765,7 @@ namespace NodeRTLib
         public static bool IsMethodNotImplemented(MethodInfo info)
         {
             // check for array out parameters, as we currnetly do not support this other then some specific cases
-            string dummy;
-            if (IsArrayAsOut(info, out dummy))
+            if (IsArrayAsOut(info, out string dummy))
                 return false;
 
             if (info.GetParameters().Where(pi => pi.IsOut && pi.ParameterType.IsArray).Count() > 0)
@@ -799,7 +800,7 @@ namespace NodeRTLib
     public class DynamicDictionary : DynamicObject
     {
         // The inner dictionary.
-        Dictionary<string, object> dictionary
+        readonly Dictionary<string, object> dictionary
             = new Dictionary<string, object>();
 
         // This property returns the number of elements 
@@ -847,10 +848,10 @@ namespace NodeRTLib
     public class DynamicTemplate : DynamicObject
     {
         // The inner dictionary.
-        Dictionary<string, object> dictionary
+        readonly Dictionary<string, object> dictionary
             = new Dictionary<string, object>();
 
-        private string templateLocation;
+        private readonly string templateLocation;
 
         public string TemplateLocation
         {
@@ -860,7 +861,7 @@ namespace NodeRTLib
             }
         }
 
-        private string templateExtension;
+        private readonly string templateExtension;
 
         public string TemplateExtension
         {

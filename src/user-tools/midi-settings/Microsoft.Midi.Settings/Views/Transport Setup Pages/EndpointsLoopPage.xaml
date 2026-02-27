@@ -36,7 +36,7 @@
                 <StackPanel Orientation="Horizontal">
                     <Button x:Name="CreateNewLoopbackPair" 
                         Margin="5,13,13,13"
-                        Content="Create New Loopback Endpoint Pair"
+                        x:Uid="EndpointsLoopPage_CreateNewLoopbackButton"
                         Click="CreateNewLoopbackPair_Click"/>
 
                     <Button x:Name="CreateDefaultLoopbackPair" 
@@ -88,7 +88,7 @@
                                                        />
                                         </StackPanel>
 
-                                        <Button Content="Remove" 
+                                        <Button x:Uid="EndpointsLoopPage_RemoveButton"
                                                 Margin="16"
                                                 Command="{x:Bind RemoveCommand}"
                                                 />

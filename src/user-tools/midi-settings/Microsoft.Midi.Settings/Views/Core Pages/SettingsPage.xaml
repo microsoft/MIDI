@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="Microsoft.Midi.Settings.Views.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -57,6 +57,29 @@
                                         <xaml:ElementTheme>Default</xaml:ElementTheme>
                                     </RadioButton.CommandParameter>
                                 </RadioButton>
+                            </StackPanel>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+                <controls:SettingsExpander x:Name="LanguageSettingsExpander"
+                                   x:Uid="Settings_Language"
+                                       IsExpanded="True">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE8DE;" />
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical">
+                            <StackPanel Margin="0,-12,0,0" Spacing="8">
+                                <ComboBox x:Name="LanguageComboBox" 
+                                          SelectedValue="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}"
+                                          SelectedValuePath="Tag"
+                                          SelectionChanged="LanguageComboBox_SelectionChanged"
+                                          HorizontalAlignment="Left"
+                                          MinWidth="200">
+                                    <ComboBoxItem Content="English (United States)" Tag="en-US"/>
+                                    <ComboBoxItem Content="中文 (简体)" Tag="zh-CN"/>
+                                </ComboBox>
                             </StackPanel>
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
@@ -190,6 +213,12 @@
                         </controls:SettingsCard>
                         <controls:SettingsCard x:Uid="Settings_AboutDescriptionPrivacyLinkCard">
                             <HyperlinkButton x:Uid="SettingsPage_PrivacyTermsLink" 
+                                         Style="{StaticResource DefaultHyperlinkButtonStyle}"
+                                         Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+                        </controls:SettingsCard>
+                        <controls:SettingsCard x:Uid="Settings_AboutLocalizationCard">
+                            <HyperlinkButton x:Uid="SettingsPage_LocalizationLink" 
+                                         NavigateUri="https://github.com/Crostia/MIDI"
                                          Style="{StaticResource DefaultHyperlinkButtonStyle}"
                                          Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
                         </controls:SettingsCard>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -129,7 +129,12 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v18.0\TextTemplating\Microsoft.TextTemplating.targets" />
+  <!-- 使用 Visual Studio 环境变量自动检测路径 -->
+  <PropertyGroup>
+    <TextTemplatingTargetsPath Condition="'$(TextTemplatingTargetsPath)' == ''">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TextTemplating\Microsoft.TextTemplating.targets</TextTemplatingTargetsPath>
+  </PropertyGroup>
+  <Import Project="$(TextTemplatingTargetsPath)" Condition="Exists('$(TextTemplatingTargetsPath)')" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v18.0\TextTemplating\Microsoft.TextTemplating.targets" Condition="!Exists('$(TextTemplatingTargetsPath)')" />
 
 
 

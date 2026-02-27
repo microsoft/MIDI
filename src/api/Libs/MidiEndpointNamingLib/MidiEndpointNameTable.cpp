@@ -37,8 +37,9 @@ namespace WindowsMidiServicesNamingLib
 // we always write the total size in bytes (size_t), and then a number of these entries
 #define MIDI1_PORT_NAME_ENTRY_HEADER_SIZE (sizeof(size_t))
 
-// max of 32 total inputs/outputs
-#define MAX_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) * 32 + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
+// Fix: Increased max ports from 32 to 128 to support more loopMIDI/teVirtualMIDI ports
+// This resolves the issue where only 16-32 loopback ports were visible
+#define MAX_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) * 128 + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
 #define MIN_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
 
 // Default WinMM naming for MIDI 1 device using a MIDI 1 driver
@@ -52,16 +53,28 @@ std::wstring RemoveJustKSPinGeneratedSuffix(
 {
     std::wstring cleanedPinName{ WindowsMidiServicesInternal::TrimmedWStringCopy(pinName) };
 
+    // Fix: Extended suffixes to support up to 128 ports for loopMIDI/teVirtualMIDI compatibility
     std::wstring suffixesToRemove[] =
     {
         // In most cases I've seen, these are added by our USB and KS stack, not by the device
-        // Originally this went only to 16, but there are vendor driver devices with 32 total ports
-        // that can be configured to be any combo of inputs and outputs. The [:] is an odd one, produced
-        // by our stack when reading the 11th port (0-based number 10) from the ESI M8U eX.
+        // Extended from 32 to 128 to support more virtual MIDI ports
+        // The [:] is an odd one, produced by our stack when reading the 11th port (0-based number 10) from the ESI M8U eX.
         L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]",
         L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
         L"[17]", L"[18]", L"[19]", L"[20]", L"[21]", L"[22]", L"[23]", L"[24]",
         L"[25]", L"[26]", L"[27]", L"[28]", L"[29]", L"[30]", L"[31]", L"[32]",
+        L"[33]", L"[34]", L"[35]", L"[36]", L"[37]", L"[38]", L"[39]", L"[40]",
+        L"[41]", L"[42]", L"[43]", L"[44]", L"[45]", L"[46]", L"[47]", L"[48]",
+        L"[49]", L"[50]", L"[51]", L"[52]", L"[53]", L"[54]", L"[55]", L"[56]",
+        L"[57]", L"[58]", L"[59]", L"[60]", L"[61]", L"[62]", L"[63]", L"[64]",
+        L"[65]", L"[66]", L"[67]", L"[68]", L"[69]", L"[70]", L"[71]", L"[72]",
+        L"[73]", L"[74]", L"[75]", L"[76]", L"[77]", L"[78]", L"[79]", L"[80]",
+        L"[81]", L"[82]", L"[83]", L"[84]", L"[85]", L"[86]", L"[87]", L"[88]",
+        L"[89]", L"[90]", L"[91]", L"[92]", L"[93]", L"[94]", L"[95]", L"[96]",
+        L"[97]", L"[98]", L"[99]", L"[100]", L"[101]", L"[102]", L"[103]", L"[104]",
+        L"[105]", L"[106]", L"[107]", L"[108]", L"[109]", L"[110]", L"[111]", L"[112]",
+        L"[113]", L"[114]", L"[115]", L"[116]", L"[117]", L"[118]", L"[119]", L"[120]",
+        L"[121]", L"[122]", L"[123]", L"[124]", L"[125]", L"[126]", L"[127]", L"[128]",
         L"[:]"
     };
 

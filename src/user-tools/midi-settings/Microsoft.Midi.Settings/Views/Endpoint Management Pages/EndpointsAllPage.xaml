@@ -66,20 +66,18 @@
                     </Grid.ColumnDefinitions>
                    
                     <TextBlock Grid.Column="0" 
-                               Text="{x:Bind PortNumber, Mode=OneWay}" 
+                               Text="{x:Bind PortNumber, Mode=OneTime}" 
                                TextAlignment="Left" 
                                Foreground="{StaticResource TextFillColorDisabledBrush}"
                                VerticalAlignment="Center"
                                HorizontalAlignment="Left"/>
 
                     <TextBlock Grid.Column="1" 
-                               Text="{x:Bind PortName, Mode=OneWay}" 
+                               Text="{x:Bind PortName, Mode=OneTime}" 
                                Foreground="{StaticResource SystemFillColorAttentionBrush}"
                                />
                 </Grid>
             </DataTemplate>
-
-
         </ResourceDictionary>
     </Page.Resources>
 
@@ -107,7 +105,7 @@
 
                     <AppBarToggleButton x:Name="ViewCardsButton"
                                         VerticalAlignment="Center"
-                                        Label="Cards"
+                                        x:Uid="EndpointsAllPage_CardsButton"
                                         IsChecked="{x:Bind ViewModel.UseCardView, Mode=TwoWay}">
                         <AppBarToggleButton.Icon>
                             <FontIcon Glyph="&#xE737;" />
@@ -115,7 +113,7 @@
                     </AppBarToggleButton>
                     
                     <AppBarToggleButton x:Name="ViewListButton"
-                                        Label="List"
+                                        x:Uid="EndpointsAllPage_ListButton"
                                         IsChecked="{x:Bind ViewModel.UseListView, Mode=TwoWay}">
                         <AppBarToggleButton.Icon>
                             <FontIcon Glyph="&#xE8FD;" />
@@ -145,15 +143,9 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </AppBarElementContainer>
-                    
-                    
-                    
                 </CommandBar.PrimaryCommands>
             </CommandBar>
-           
         </Grid>
-
-
         <!-- Endpoint List - List View -->
         <ScrollView Grid.Row="2"
                     Visibility="{x:Bind ViewModel.UseListView, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -282,15 +274,9 @@
                                                                     <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint is restricted to a single application at a time." />
                                                                 </ToolTipService.ToolTip>
                                                             </Grid>
-
-
                                                         </StackPanel>
-
                                                     </Grid>
-
-
                                                 </Grid>
-
                                                 <!-- MIDI 1 Ports -->
                                                 <Grid Grid.Column="2"
                                           VerticalAlignment="Center">
@@ -302,7 +288,7 @@
                                                     </Grid.RowDefinitions>
 
                                                     <TextBlock Grid.Row="0" 
-                                                   Text="MIDI 1.0 API Ports"
+                                                   x:Uid="EndpointsAllPage_Midi10ApiPorts"
                                                    FontSize="{StaticResource SmallFontSize}"
                                                    Margin="4,4,0,4"
                                                    FontWeight="Bold"/>
@@ -331,16 +317,14 @@
                                                         </Grid.ColumnDefinitions>
 
                                                         <TextBlock Grid.Column="0"
-                                                       Text="Source/Input"
+                                                       x:Uid="EndpointsAllPage_SourceInput"
                                                        Style="{StaticResource SmallPropertyLabel}"/>
                                                         <TextBlock Grid.Column="1"
                                                        Text="{x:Bind SingleInputPortName, Mode=OneWay}"
                                                        Style="{StaticResource SmallPlainPropertyValue}"
                                                        Foreground="{StaticResource AppHighlightedText}"/>
                                                     </Grid>
-
-
-
+                                                    
                                                     <TextBlock Grid.Row="2" 
                                                    Visibility="{x:Bind HasSingleOutputPort, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
                                                Style="{StaticResource SmallPropertyLabel}">
@@ -365,23 +349,16 @@
                                                         </Grid.ColumnDefinitions>
 
                                                         <TextBlock Grid.Column="0" 
-                                                       Text="Destination/Output"
+                                                       x:Uid="EndpointsAllPage_DestinationOutput"
                                                        Style="{StaticResource SmallPropertyLabel}"/>
                                                         <TextBlock Grid.Column="1"
                                                        Text="{x:Bind SingleOutputPortName, Mode=OneWay}"
                                                        Style="{StaticResource SmallPlainPropertyValue}"
                                                        Foreground="{StaticResource AppHighlightedText}"/>
                                                     </Grid>
-
-
                                                 </Grid>
-
-
-
-
                                             </Grid>
                                         </Grid>
-
                                     </controls:SettingsCard.Header>
 
                                     <controls:SettingsCard.Content>
@@ -391,7 +368,7 @@
                                                     VerticalAlignment="Center"
                                                     Margin="8" 
                                                     Spacing="8">
-                                            <Button Content="Panic"
+                                            <Button x:Uid="EndpointsAllPage_PanicButton"
                                                 Command="{x:Bind SendPanicCommand}">
 
                                                 <ToolTipService.ToolTip>
@@ -400,36 +377,22 @@
                                                 </ToolTipService.ToolTip>
                                             </Button>
 
-                                            <Button Content="Monitor"
+                                            <Button x:Uid="EndpointsAllPage_MonitorButton"
                                                     IsEnabled="{x:Bind CanMonitor, Mode=OneWay}"
                                                     Command="{x:Bind MonitorEndpointCommand}"/>
                                         </StackPanel>
 
                                     </controls:SettingsCard.Content>
-
                                 </controls:SettingsCard>
-
-
-
                             </ItemContainer>
-                            
-
                         </DataTemplate>
                     </ItemsView.ItemTemplate>
-
                 </ItemsView>
-
-
             </Grid>
-
         </ScrollView>
-
-
         <!-- Endpoint List - Card View -->
         <ScrollViewer Grid.Row="2"
                       Visibility="{x:Bind ViewModel.UseCardView, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-
-
             <Grid Margin="-8,0,0,0" HorizontalAlignment="Stretch">
                 <GridView ItemsSource="{x:Bind ViewModel.Endpoints, Mode=OneWay}"
                           SelectionMode="None"
@@ -507,17 +470,14 @@
                                                VerticalAlignment="Top"
                                                Source="{x:Bind Image, Mode=OneWay}"
                                                Stretch="Uniform"/>
-
-
-
+                                               
                                             <!-- Name -->
                                             <TextBlock Text="{x:Bind Name, Mode=OneWay}" 
                                                    Grid.Row="0"
                                                    Grid.Column="1"
                                                    Margin="4,0,4,8"
                                                    Style="{StaticResource EndpointCardNameStyle}" />
-
-
+                                                   
                                             <!-- Description -->
                                             <TextBlock Grid.Row="1" 
                                                    Grid.Column="1"
@@ -533,11 +493,7 @@
                                                    Grid.Column="1"
                                                    Margin="4"
                                                    Opacity="0.5" />
-
                                         </Grid>
-
-
-
                                         <Grid Grid.Row="1"
                                           Margin="0,4,0,8"
                                           VerticalAlignment="Bottom">
@@ -549,7 +505,7 @@
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Row="0" 
-                                                   Text="MIDI 1.0 API Ports"
+                                                   x:Uid="EndpointsAllPage_Midi10ApiPorts"
                                                    FontSize="{StaticResource SmallFontSize}"
                                                    Margin="4,4,0,4"
                                                    FontWeight="Bold"/>
@@ -578,16 +534,13 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBlock Grid.Column="0"
-                                                       Text="Source/Input"
+                                                       x:Uid="EndpointsAllPage_SourceInput"
                                                        Style="{StaticResource SmallPropertyLabel}"/>
                                                 <TextBlock Grid.Column="1"
                                                        Text="{x:Bind SingleInputPortName, Mode=OneWay}"
                                                        Style="{StaticResource SmallPlainPropertyValue}"
                                                        Foreground="{StaticResource AppBlueColor}"/>
                                             </Grid>
-
-
-
                                             <TextBlock Grid.Row="2" 
                                                    Visibility="{x:Bind HasSingleOutputPort, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
                                                Style="{StaticResource SmallPropertyLabel}">
@@ -612,18 +565,14 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBlock Grid.Column="0" 
-                                                       Text="Destination/Output"
+                                                       x:Uid="EndpointsAllPage_DestinationOutput"
                                                        Style="{StaticResource SmallPropertyLabel}"/>
                                                 <TextBlock Grid.Column="1"
                                                        Text="{x:Bind SingleOutputPortName, Mode=OneWay}"
                                                        Style="{StaticResource SmallPlainPropertyValue}"
                                                        Foreground="{StaticResource AppBlueColor}"/>
                                             </Grid>
-
-
                                         </Grid>
-
-
                                         <Grid Grid.Row="2"
                                           Margin="0,8,0,8">
                                             <StackPanel Orientation="Horizontal">
@@ -650,8 +599,7 @@
                                                         <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint uses the classic MIDI 1.0 byte format" />
                                                     </ToolTipService.ToolTip>
                                                 </Grid>
-
-
+                                                
                                                 <Grid Style="{StaticResource MidiFeatureTagContainerGood}"
                                                   Visibility="{x:Bind HasUniqueIdentifier, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <TextBlock Text="Unique Id" Style="{StaticResource MidiFeatureTagText}"/>
@@ -666,8 +614,7 @@
                                                         <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint does not have a serial number or unique id. Customizations may be lost if you change the device connection." />
                                                     </ToolTipService.ToolTip>
                                                 </Grid>
-
-
+                                                
                                                 <Grid Style="{StaticResource MidiFeatureTagContainerGood}"
                                                   Visibility="{x:Bind IsMultiClient, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <TextBlock Text="Multi-client" Style="{StaticResource MidiFeatureTagText}"/>
@@ -682,16 +629,10 @@
                                                         <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint is restricted to a single application at a time." />
                                                     </ToolTipService.ToolTip>
                                                 </Grid>
-
-
                                             </StackPanel>
-
                                         </Grid>
-
-
                                     </Grid>
-
-
+                                    
                                     <Border HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch"
                                             Grid.Row="1"                                           
@@ -709,9 +650,8 @@
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                HorizontalAlignment="Left">
-                                            <Button Content="Panic"
+                                                Orientation="Horizontal"                                                HorizontalAlignment="Left">
+                                            <Button x:Uid="EndpointsAllPage_PanicButton"
                                                     Margin="4,8,4,8"
                                                     Command="{x:Bind SendPanicCommand}">
 
@@ -727,7 +667,7 @@
                                                 Orientation="Horizontal"
                                                 HorizontalAlignment="Right">
 
-                                            <Button Content="Monitor" Margin="4,8,4,8"
+                                            <Button x:Uid="EndpointsAllPage_MonitorButton" Margin="4,8,4,8"
                                                     IsEnabled="{x:Bind CanMonitor, Mode=OneWay}"
                                                     Command="{x:Bind MonitorEndpointCommand}"/>
 
@@ -754,26 +694,13 @@
                                         </Button>-->
 
                                         </StackPanel>
-
                                     </Grid>
                                 </Grid>
-
-
-
-                            </Grid>
-                            
+                            </Grid> 
                         </DataTemplate>
                     </GridView.ItemTemplate>
-                    
                 </GridView>
-                
-
             </Grid>
-
-            
         </ScrollViewer>
-
     </Grid>
-
 </Page>
-

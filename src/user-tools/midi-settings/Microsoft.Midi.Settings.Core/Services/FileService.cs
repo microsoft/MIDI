@@ -28,9 +28,15 @@ public class FileService : IFileService
                 return global::Windows.Data.Json.JsonObject.Parse(json);
             }
         }
-        catch (Exception)
+        catch (UnauthorizedAccessException ex)
         {
-            // todo: log
+            // 权限不足，返回空对象
+            System.Diagnostics.Debug.WriteLine($"Access denied to {folderPath}\\{fileName}: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            // 其他错误，返回空对象
+            System.Diagnostics.Debug.WriteLine($"Error reading {folderPath}\\{fileName}: {ex.Message}");
         }
 
         return default;
@@ -38,14 +44,27 @@ public class FileService : IFileService
 
     public void Save(string folderPath, string fileName, global::Windows.Data.Json.JsonObject content)
     {
-        if (!Directory.Exists(folderPath))
+        try
         {
-            Directory.CreateDirectory(folderPath);
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            var fileContent = content.Stringify();
+
+            File.WriteAllText(Path.Combine(folderPath, fileName), fileContent, Encoding.UTF8);
         }
-
-        var fileContent = content.Stringify();
-
-        File.WriteAllText(Path.Combine(folderPath, fileName), fileContent, Encoding.UTF8);
+        catch (UnauthorizedAccessException ex)
+        {
+            // 权限不足，记录错误但不中断
+            System.Diagnostics.Debug.WriteLine($"Access denied to save {folderPath}\\{fileName}: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            // 其他错误，记录错误
+            System.Diagnostics.Debug.WriteLine($"Error saving {folderPath}\\{fileName}: {ex.Message}");
+        }
     }
 
     public void Delete(string folderPath, string fileName)

@@ -104,6 +104,7 @@ public partial class App : Application
                     services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
                     services.AddSingleton<IGeneralSettingsService, GeneralSettingsService>();
 
+                    services.AddSingleton<ILanguageService, LanguageService>();
                     services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
                     services.AddTransient<INavigationViewService, NavigationViewService>();
 
@@ -268,6 +269,9 @@ public partial class App : Application
         try
         {
             App.GetService<ILoggingService>().LogInfo("Starting up: OnLaunched");
+
+            // Initialize language service
+            await App.GetService<ILanguageService>().InitializeAsync();
 
             // InitializationProgressWindow.Completed += (s,e) => 
 

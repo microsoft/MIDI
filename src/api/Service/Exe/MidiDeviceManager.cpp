@@ -1835,6 +1835,8 @@ CMidiDeviceManager::DeactivateEndpoint
     {
         do
         {
+            auto lock = m_midiPortsLock.lock();
+
             // locate the MIDIPORT that identifies the swd
             // NOTE: This uses instanceId, not the Device Interface Id
             auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
@@ -1925,20 +1927,34 @@ CMidiDeviceManager::DeactivateEndpoint
         // Potential race condition here?
         // now that we've removed UMP and WinMM ports, we need to compact the port numbers to keep them contiguous
         RETURN_IF_FAILED(CompactPortNumbers());
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+        );
+
+        return S_OK;
     }
+    else
+    {
+        // No ports were found/removed
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No ports found to remove", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+        );
 
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
-    );
-
-    return S_OK;
+        return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+    }
 }
 
 _Use_decl_annotations_
@@ -1957,11 +1973,35 @@ CMidiDeviceManager::RemoveEndpoint
         TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
     );
 
-    // deactivate, to ensure it's removed from the tracking list
-    // we are not deleting because it is beneficial to retain the SWD for caching.
-    // If the parent device is removed, all the child SWD's will also be deleted,
-    // so explicit removal here is not needed.
-    LOG_IF_FAILED(DeactivateEndpoint(instanceId));
+    // DeactivateEndpoint will remove the device from m_midiPorts, which will
+    // trigger SwDeviceClose via the shared_hswdevice destructor. This effectively
+    // removes the device from the system.
+    HRESULT hr = DeactivateEndpoint(instanceId);
+
+    if (FAILED(hr))
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"DeactivateEndpoint failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+            TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+        );
+        return hr;
+    }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Endpoint removed successfully", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+    );
 
     return S_OK;
 }
@@ -2174,8 +2214,6 @@ CMidiDeviceManager::CompactPortNumbers()
 }
 
 
-// TODO: This method should acquire a lock on something to ensure
-// we don't get two calls at the same time, given the same port number
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::AssignPortNumber(
@@ -2193,6 +2231,9 @@ CMidiDeviceManager::AssignPortNumber(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
+
+    // Acquire lock to prevent concurrent port number assignment
+    auto lock = m_midiPortsLock.lock();
 
     auto thisDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 

@@ -7,7 +7,8 @@ echo This must be run as administrator.
 set servicepath="%ProgramFiles%\Windows MIDI Services\Service"
 set apipath="%ProgramFiles%\Windows MIDI Services\API"
 set dmppath="%ProgramFiles%\Windows MIDI Services\"
-set buildoutput="%midi_repo_root%src\api\VSFiles\x64\Release"
+set buildoutput=d:\DVE\Projects\C++\MIDI\src\api\VSFiles\x64\Release
+set reporoot=d:\DVE\Projects\C++\MIDI
 
 echo Stopping midisrv
 net stop midisrv
@@ -16,7 +17,20 @@ echo stopping AEB
 net stop /Y AudioEndpointBuilder
 
 timeout 3
-%midi_repo_root%build\sfpcopy %buildoutput%\wdmaud2.drv %windir%\system32\wdmaud2.drv
+echo Taking ownership of wdmaud2.drv
+takeown /f %windir%\system32\wdmaud2.drv
+echo Granting permissions
+icacls %windir%\system32\wdmaud2.drv /grant administrators:F
+
+echo Stopping Windows Audio service
+net stop audiosrv
+
+echo Copying wdmaud2.drv to system32
+copy /Y "%buildoutput%\wdmaud2.drv" %windir%\system32\wdmaud2.drv
+if errorlevel 1 (
+    echo Failed to copy file. Trying alternative method...
+    powershell -ExecutionPolicy Bypass -Command "& '%reporoot%\build\sfpcopy.ps1' -Source '%buildoutput%\wdmaud2.drv' -Destination '%windir%\system32\wdmaud2.drv'"
+)
 
 net start audiosrv
 

@@ -69,11 +69,27 @@ private:
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
+    // MIDI 1.0 Legacy Device Support (for loopMIDI, teVirtualMIDI, etc.)
+    // Fix: Split into separate input/output handlers to properly support more than 16 ports
+    HRESULT OnMidi1InDeviceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
+    HRESULT OnMidi1InDeviceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
+    HRESULT OnMidi1InDeviceUpdated(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
+    HRESULT OnMidi1InEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
+
+    HRESULT OnMidi1OutDeviceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
+    HRESULT OnMidi1OutDeviceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
+    HRESULT OnMidi1OutDeviceUpdated(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
+    HRESULT OnMidi1OutEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
+
+    HRESULT CreateMidi1Endpoint(_In_ DeviceInformation& device, _In_ MidiFlow flow);
+    HRESULT RemoveMidi1Endpoint(_In_ std::wstring const& deviceId);
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
     std::vector<std::unique_ptr<MIDI_PIN_INFO>> m_AvailableMidiPins;
     
+    // KS Device Watcher (for USB MIDI 2.0 devices)
     DeviceWatcher m_Watcher{0};
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_DeviceAdded;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Removed_revoker m_DeviceRemoved;
@@ -81,6 +97,25 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Stopped_revoker m_DeviceStopped;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
     wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
+
+    // MIDI 1.0 Legacy Device Watcher (for loopMIDI, teVirtualMIDI, etc.)
+    // Fix: Use separate watchers for input and output devices to properly support more than 16 ports
+    DeviceWatcher m_Midi1InWatcher{ nullptr };
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_Midi1InDeviceAdded;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Removed_revoker m_Midi1InDeviceRemoved;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Updated_revoker m_Midi1InDeviceUpdated;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_Midi1InDeviceEnumerationCompleted;
+    wil::unique_event m_Midi1InEnumerationCompleted{ wil::EventOptions::None };
+
+    DeviceWatcher m_Midi1OutWatcher{ nullptr };
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_Midi1OutDeviceAdded;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Removed_revoker m_Midi1OutDeviceRemoved;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Updated_revoker m_Midi1OutDeviceUpdated;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_Midi1OutDeviceEnumerationCompleted;
+    wil::unique_event m_Midi1OutEnumerationCompleted{ wil::EventOptions::None };
+    
+    // Map to track MIDI 1.0 device interface IDs to their created endpoint IDs
+    std::map<std::wstring, std::wstring> m_Midi1DeviceToEndpointId;
 
 
 };

@@ -25,7 +25,7 @@
             <StackPanel Orientation="Vertical" Spacing="4">
                 <TextBlock TextWrapping="Wrap" 
                            Margin="1,0,0,8" 
-                           Text="If you are running into problems with MIDI on your PC, the tools below may help you recover without requiring a reboot.">
+                           x:Uid="TroubleshootingPage_IntroText">
                 </TextBlock>
 
                 <!--
@@ -87,22 +87,31 @@
 
 
 
-                <TextBlock Text="If you have an unknown issue" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+                <TextBlock x:Uid="TroubleshootingPage_UnknownIssueHeader" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
-                <controls:SettingsCard Header="Restart Windows MIDI Services"
-                           Description="Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.">
+                <controls:SettingsCard x:Name="RestartServiceCard">
+                    <controls:SettingsCard.Header>
+                        <TextBlock x:Uid="TroubleshootingPage_RestartServiceCard_Header"/>
+                    </controls:SettingsCard.Header>
+                    <controls:SettingsCard.Description>
+                        <TextBlock x:Uid="TroubleshootingPage_RestartServiceCard_Description" TextWrapping="Wrap"/>
+                    </controls:SettingsCard.Description>
                     <StackPanel>
-                        <Button Content="Restart MIDI Service"
+                        <Button x:Uid="Button_RestartMidiService"
                                 Command="{x:Bind ViewModel.RestartServiceCommand}"/>
                     </StackPanel>
                 </controls:SettingsCard>
 
-                <TextBlock Text="If you're working with support" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+                <TextBlock x:Uid="TroubleshootingPage_SupportHeader" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
-                <controls:SettingsCard Header="Report MIDI System Information"
-                                   Description="If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact."
-                                       >
-                    <Button Content="Capture MIDI System Information"
+                <controls:SettingsCard x:Name="ReportInfoCard">
+                    <controls:SettingsCard.Header>
+                        <TextBlock x:Uid="TroubleshootingPage_ReportInfoCard_Header"/>
+                    </controls:SettingsCard.Header>
+                    <controls:SettingsCard.Description>
+                        <TextBlock x:Uid="TroubleshootingPage_ReportInfoCard_Description" TextWrapping="Wrap"/>
+                    </controls:SettingsCard.Description>
+                    <Button x:Uid="TroubleshootingPage_CaptureInfoButton"
                             Command="{x:Bind ViewModel.MidiDiagCommand}"/>
                 </controls:SettingsCard>
 
