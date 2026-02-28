@@ -15,6 +15,7 @@
 #include <thread>
 #include <atomic>
 #include <stop_token>
+#include <mutex>
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -55,15 +56,19 @@ struct KsAggregateEndpointDefinition
 
     std::vector<KsAggregateEndpointMidiPinDefinition> MidiPins{ };
 
-    WindowsMidiServicesPluginConfigurationLib::MidiEndpointNameTable EndpointNameTable{};
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{};
 };
 
 // Work item for device addition processing
 struct DeviceAddWorkItem
 {
-    DeviceInformation DeviceInfo;
+    DeviceInformation DeviceInfo{ nullptr };
     int RetryCount{ 0 };
     static constexpr int MaxRetries = 5;
+
+    DeviceAddWorkItem() = default;
+    DeviceAddWorkItem(DeviceInformation const& deviceInfo, int retryCount) 
+        : DeviceInfo(deviceInfo), RetryCount(retryCount) {}
 };
 
 // Work queue for asynchronous device processing

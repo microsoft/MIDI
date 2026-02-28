@@ -805,9 +805,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
     // Instead of processing immediately (which can cause race conditions),
     // enqueue the device for asynchronous processing with retry support
-    DeviceAddWorkItem workItem;
-    workItem.DeviceInfo = parentDevice;
-    workItem.RetryCount = 0;
+    DeviceAddWorkItem workItem{ parentDevice, 0 };
 
     m_deviceWorkQueue.Enqueue(std::move(workItem));
 
