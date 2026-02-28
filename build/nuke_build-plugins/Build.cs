@@ -50,11 +50,11 @@ class Build : NukeBuild
 
     MidiBuildType BuildType => MidiBuildType.Preview; 
     
-    const UInt16 BuildVersionMajor = 0;
+    const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 15;
+    const UInt16 BuildVersionPatch = 0;
 
-    const UInt16 BuildVersionPreviewNumber = 15;
+    const UInt16 BuildVersionPreviewNumber = 1;
     string VersionName => "Plugin Preview " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
@@ -121,7 +121,7 @@ class Build : NukeBuild
 
     AbsolutePath NetworkMidiSetupSolutionFolder => SourceRootFolder / "oob-setup-network";
     AbsolutePath VirtualPatchBaySetupSolutionFolder => SourceRootFolder / "oob-setup-virtual-patch-bay";
-    AbsolutePath SimpleLoopbackSetupSolutionFolder => SourceRootFolder / "oob-setup-simple-loopback";
+    AbsolutePath BasicLoopbackSetupSolutionFolder => SourceRootFolder / "oob-setup-basic-loopback";
 
 
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
@@ -313,8 +313,8 @@ class Build : NukeBuild
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualPatchBayTransport.dll");
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualPatchBayTransport.pdb");
 
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SimpleLoopbackMidiTransport.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SimpleLoopbackMidiTransport.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BasicLoopbackMidiTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BasicLoopbackMidiTransport.pdb");
 
                 foreach (var file in stagingFiles)
                 {
@@ -489,7 +489,7 @@ class Build : NukeBuild
             }
         });
 
-    Target T_BuildSimpleLoopbackPluginInstaller => _ => _
+    Target T_BuildBasicLoopbackPluginInstaller => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildInDevelopmentServicePlugins)
         .Executes(() =>
@@ -501,7 +501,7 @@ class Build : NukeBuild
 
                 //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
 
-                string solutionDir = SimpleLoopbackSetupSolutionFolder.ToString() + @"\";
+                string solutionDir = BasicLoopbackSetupSolutionFolder.ToString() + @"\";
 
                 var msbuildProperties = new Dictionary<string, object>();
                 msbuildProperties.Add("Platform", platform);
@@ -519,7 +519,7 @@ class Build : NukeBuild
                 );
 
                 var output = MSBuildTasks.MSBuild(_ => _
-                    .SetTargetPath(SimpleLoopbackSetupSolutionFolder / "midi-services-simple-loopback-setup.sln")
+                    .SetTargetPath(BasicLoopbackSetupSolutionFolder / "midi-services-basic-loopback-setup.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
@@ -531,10 +531,10 @@ class Build : NukeBuild
                     .EnableNodeReuse()
                 );
 
-                string newInstallerName = $"Windows MIDI Services (Simple Loopback Preview) {BuildVersionFullString}-{platform.ToLower()}.exe";
+                string newInstallerName = $"Windows MIDI Services (Basic MIDI 1.0 Loopback Preview) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
 
-                var setupFile = SimpleLoopbackSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSimpleLoopbackSetup.exe";
+                var setupFile = BasicLoopbackSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesBasicLoopbackSetup.exe";
                 setupFile.Copy(ThisReleaseFolder / newInstallerName);
 
                 BuiltSimpleLoopbackInstallers[platform.ToLower()] = newInstallerName;
@@ -542,100 +542,6 @@ class Build : NukeBuild
             }
         });
 
-
-
-
-    void RestoreNuGetPackagesForCPPProject(string vcxprojFilePath, string solutionDir, string packagesConfigFullPath)
-    {
-        var projectDir = Path.GetDirectoryName(vcxprojFilePath);
-
-        NuGetTasks.NuGetInstall(_ => _
-            .SetProcessWorkingDirectory(projectDir)
-            .SetPreRelease(true)
-            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
-            .SetPackageID(NugetPackageId)
-            .SetDependencyVersion(DependencyVersion.Highest)
-        );
-
-        NuGetTasks.NuGetRestore(_ => _
-            .SetProcessWorkingDirectory(projectDir)
-            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
-            .SetSolutionDirectory(solutionDir)
-            //.SetConfigFile(packagesConfigFullPath)
-        );
-    }
-
-    void UpdateWindowsMidiServicesSdkPackagePropertyForCppProject(string vcxprojFilePath)
-    {
-        if (File.Exists(vcxprojFilePath))
-        {
-            // this is ugly and annoying to have to do.
-            //   XmlTasks.XmlPoke(configFilePath, @"/packages/package/id", NugetFullPackageId)
-
-            var doc = new XmlDocument();
-            doc.Load(vcxprojFilePath);
-
-            var manager = new XmlNamespaceManager(doc.NameTable);
-            manager.AddNamespace("msb", "http://schemas.microsoft.com/developer/msbuild/2003");
-
-            XmlElement element = doc.SelectSingleNode($"/msb:Project/msb:PropertyGroup/msb:WindowsMidiServicesSdkPackage", manager) as XmlElement;
-
-            // change the version attribute
-            if (element != null)
-            {
-                element.InnerText = NugetFullPackageIdWithVersion;
-
-                doc.Save(vcxprojFilePath);
-
-                Console.WriteLine($"Updated {vcxprojFilePath}");
-            }
-            else
-            {
-                throw new ArgumentException($"Failed to update SDK Package Value for '{vcxprojFilePath}'.");
-            }
-
-        }
-        else
-        {
-            throw new ArgumentException($"vcxproj file does not exist '{vcxprojFilePath}'.");
-        }
-
-    }
-
-    void UpdatePackagesConfigForCPPProject(string configFilePath)
-    {
-        if (File.Exists(configFilePath))
-        {
-            // this is ugly and annoying to have to do.
-            //   XmlTasks.XmlPoke(configFilePath, @"/packages/package/id", NugetFullPackageId)
-
-            var doc = new XmlDocument();
-            doc.Load(configFilePath);
-
-            XmlElement element = doc.SelectSingleNode($"/packages/package[@id = \"{NugetPackageId}\"]") as XmlElement;
-
-            // change the version attribute
-            if (element != null)
-            {
-                Console.WriteLine($"Updating {element}");
-
-                element.SetAttribute("version", NugetPackageVersion);
-
-                doc.Save(configFilePath);
-
-                Console.WriteLine($"Updated {configFilePath}");
-            }
-            else
-            {
-                throw new ArgumentException($"Failed to update NuGet Package Value for '{configFilePath}'.");
-            }
-
-        }
-        else
-        {
-            throw new ArgumentException($"Packages.config file does not exist '{configFilePath}'.");
-        }
-    }
 
 
 
@@ -656,7 +562,7 @@ class Build : NukeBuild
         .DependsOn(T_BuildInDevelopmentServicePlugins)
         .DependsOn(T_BuildNetworkMidiInstaller)
         .DependsOn(T_BuildVirtualPatchBayPluginInstaller)
-        .DependsOn(T_BuildSimpleLoopbackPluginInstaller)
+        .DependsOn(T_BuildBasicLoopbackPluginInstaller)
         .Executes(() =>
         {
 

@@ -25,13 +25,12 @@
       "type": "string",
       "enum": [
         "BuildAndPublishAll",
-        "T_BuildServiceAndPlugins",
-        "T_BuildServiceAndPluginsInstaller",
+        "T_BuildBasicLoopbackPluginInstaller",
+        "T_BuildInDevelopmentServicePlugins",
+        "T_BuildNetworkMidiInstaller",
+        "T_BuildVirtualPatchBayPluginInstaller",
         "T_CreateVersionIncludes",
-        "T_Prerequisites",
-        "T_ZipPowershellDevUtilities",
-        "T_ZipServicePdbs",
-        "T_ZipWdmaud2"
+        "T_Prerequisites"
       ]
     },
     "Verbosity": {

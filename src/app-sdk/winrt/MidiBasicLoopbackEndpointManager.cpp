@@ -125,6 +125,107 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
     }
 
+    _Use_decl_annotations_
+    bool MidiBasicLoopbackEndpointManager::MuteLoopback(_In_ winrt::guid const& associationId)
+    {
+        try
+        {
+            svc::MidiServiceTransportCommand cmd(TransportId());
 
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
+            cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
+
+            auto result = svc::MidiServiceConfig::SendTransportCommand(cmd);
+
+            if (result.Status == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                return true;
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to mute loopback", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(result.ServiceMessage.c_str()),
+                    TraceLoggingGuid(associationId, "association id")
+                );
+
+                return false;
+            }
+        }
+        catch (winrt::hresult_error ex)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to mute loopback. hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), "hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "error message"),
+                TraceLoggingGuid(associationId, "association id")
+            );
+
+            return false;
+        }
+
+
+    }
+
+    _Use_decl_annotations_
+    bool MidiBasicLoopbackEndpointManager::UnmuteLoopback(_In_ winrt::guid const& associationId)
+    {
+        try
+        {
+            svc::MidiServiceTransportCommand cmd(TransportId());
+
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
+            cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT);
+
+            auto result = svc::MidiServiceConfig::SendTransportCommand(cmd);
+
+            if (result.Status == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                return true;
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to unmute loopback", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(result.ServiceMessage.c_str()),
+                    TraceLoggingGuid(associationId, "association id")
+                );
+
+                return false;
+            }
+        }
+        catch (winrt::hresult_error ex)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to unmute loopback. hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), "hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "error message"),
+                TraceLoggingGuid(associationId, "association id")
+            );
+
+            return false;
+        }
+
+    }
 
 }

@@ -19,5 +19,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback
         String Name;
         String UniqueId;
         String Description;
+
+        Boolean IsMuted;
     };
 }

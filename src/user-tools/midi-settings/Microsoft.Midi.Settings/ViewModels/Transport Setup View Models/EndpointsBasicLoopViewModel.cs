@@ -39,6 +39,18 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public ICommand MuteCommand
+        {
+            get; private set;
+        }
+
+        public ICommand UnmuteCommand
+        {
+            get; private set;
+        }
+
+
+
         private readonly IMidiConfigFileService _configFileService;
 
         public MidiBasicLoopbackEndpoint(IMidiConfigFileService configFileService)
@@ -67,6 +79,68 @@ namespace Microsoft.Midi.Settings.ViewModels
                     }
 
                 });
+
+            MuteCommand = new RelayCommand(
+                () =>
+                {
+                    var associationId = MidiBasicLoopbackEndpointManager.GetAssociationId(Loop!.DeviceInformation);
+
+                    if (associationId != Guid.Empty)
+                    {
+                        var succeeded = MidiBasicLoopbackEndpointManager.MuteLoopback(associationId);
+
+                        if (succeeded)
+                        {
+                            if (_configFileService.CurrentConfig != null)
+                            {
+                                // todo: check return value
+                                _configFileService.CurrentConfig.StoreBasicLoopbackMutedProperty(associationId, true);
+                            }
+                        }
+                        else
+                        {
+                        }
+                    }
+                    else
+                    {
+                        // association id was empty, so not found.
+                        
+                        // TODO Show error
+                    }
+
+                });
+
+
+            UnmuteCommand = new RelayCommand(
+                () =>
+                {
+                    var associationId = MidiBasicLoopbackEndpointManager.GetAssociationId(Loop!.DeviceInformation);
+
+                    if (associationId != Guid.Empty)
+                    {
+                        var succeeded = MidiBasicLoopbackEndpointManager.UnmuteLoopback(associationId);
+
+                        if (succeeded)
+                        {
+                            if (_configFileService.CurrentConfig != null)
+                            {
+                                _configFileService.CurrentConfig.StoreBasicLoopbackMutedProperty(associationId, false);
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                    else
+                    {
+                        // association id was empty, so not found.
+                    }
+
+                });
+
+
+
             _configFileService = configFileService;
         }
 
@@ -327,6 +401,8 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
                 else
                 {
+                    App.GetService<ILoggingService>().LogError($"Unable to create basic loopback. Error '{result.ErrorInformation}'");
+
                     // these message boxes are ugly, but it's the fastest way to get this out right now
                     MessageBox(
                         (IntPtr)0,
@@ -352,13 +428,13 @@ namespace Microsoft.Midi.Settings.ViewModels
         
         private void LoadExistingEndpoints()
         {
-            System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpoints().");
+            App.GetService<ILoggingService>().LogInfo($"Enter");
 
             _contextService.GetUIContext().Post(_ =>
             {
                 lock (MidiBasicLoopbackEndpoints)
                 {
-                    System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpoints() (UI) : Acquired lock. Updating endpoints.");
+                    App.GetService<ILoggingService>().LogInfo($"Acquired lock. Updating endpoints");
 
                     var endpoints = _enumerationService.GetEndpointsForTransportId(MidiBasicLoopbackEndpointManager.TransportId);
 
@@ -386,7 +462,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         DefaultLoopbackExists = false;
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpoints() (UI) : Completed.");
+                    App.GetService<ILoggingService>().LogInfo($"Completed");
                 }
 
             }, null);
@@ -441,6 +517,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             CreateDefaultLoopbackCommand = new RelayCommand(
                 () =>
                 {
+                    App.GetService<ILoggingService>().LogInfo($"Enter");
+
                     var creationConfig = _defaultsService.GetDefaultBasicLoopbackCreationConfig();
 
                     var result = MidiBasicLoopbackEndpointManager.CreateTransientLoopbackEndpoint(creationConfig);
@@ -449,22 +527,34 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     if (result.Success)
                     {
+                        App.GetService<ILoggingService>().LogInfo($"Service reports success");
+
                         if (_configFileService.CurrentConfig != null)
                         {
-                            _configFileService.CurrentConfig.StoreBasicLoopbackEndpoint(creationConfig);
+                            if (_configFileService.CurrentConfig.StoreBasicLoopbackEndpoint(creationConfig))
+                            {
+                                App.GetService<ILoggingService>().LogInfo($"Loopback endpoint stored");
 
-                            LoadExistingEndpoints();
-                        }
-                        else
-                        {
-                            // TODO: unable to save. Current config is null
+                                LoadExistingEndpoints();
+                            }
+                            else
+                            {
+                                // TODO: unable to save. Current config is null
+                            }
+
                         }
 
                     }
-                    
+                    else
+                    {
+                        App.GetService<ILoggingService>().LogError($"Service reports failure creating default loopback '{result.ErrorInformation}'");
 
-                });
+                        // TODO: Display to user
+                    }
+                })
+            {
 
+            };
             _enumerationService.EndpointUpdated += (s, e) =>
             {
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' updated.");

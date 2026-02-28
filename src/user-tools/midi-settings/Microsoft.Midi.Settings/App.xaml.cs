@@ -289,8 +289,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            // an exception here usually results from a race condition during initialization when initialization failed.
-            // so just eat it here.
+            MessageBox((IntPtr)0, ex.ToString(), "Error launching MIDI Settings", 0);
 
             App.GetService<ILoggingService>().LogError("Error launching app", ex);
         }

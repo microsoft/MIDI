@@ -330,7 +330,7 @@ AnsiConsole.WriteLine();
 
 
 
-if (!Microsoft.Midi.Settings.Helpers.MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabled())
+if (!Microsoft.Midi.Settings.Helpers.MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync().GetAwaiter().GetResult())
 {
     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiFeatureNotEnabled));
 

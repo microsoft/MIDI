@@ -639,6 +639,10 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DE
 
 
 
+#define STRING_PKEY_MIDI_IsMuted MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"825"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_IsMuted, 825);     // DEVPROP_TYPE_BOOL
+
+
 
 // Additional Transport-specific properties ==================================================
 // Starts at 900
