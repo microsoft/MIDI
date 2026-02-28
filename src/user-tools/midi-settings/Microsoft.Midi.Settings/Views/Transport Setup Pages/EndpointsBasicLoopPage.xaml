@@ -125,7 +125,7 @@
 
                                             </Button>
 
-                                            <Button Margin="32,8,8,8"
+                                            <Button Margin="8,8,8,8"
                                                     Command="{x:Bind RemoveCommand}">
                                                 <FontIcon Glyph="&#xE74D;"/>
                                             </Button>
