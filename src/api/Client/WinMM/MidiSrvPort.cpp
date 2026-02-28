@@ -4,6 +4,7 @@
 #include "MidiSrvPort.h"
 
 #include <Feature_Servicing_MIDI2WinmmNoBufs.h>
+#include <Feature_Servicing_MIDI2WinmmAddBufferSizeCheck.h>
 
 #define CALC_TICKS(pos) ((DWORD) (((pos) * 1000.0) / m_qpcFrequency))
 
@@ -295,7 +296,33 @@ CMidiPort::AddBuffer(LPMIDIHDR buffer, DWORD_PTR bufferSize)
         TraceLoggingPointer(buffer, "buffer"),
         TraceLoggingValue(bufferSize, "bufferSize"));
 
-    RETURN_HR_IF(E_INVALIDARG, bufferSize < sizeof(MIDIHDR));
+    if (Feature_Servicing_MIDI2WinmmAddBufferSizeCheck::IsEnabled())
+    {
+        //
+        // Entries after dwFlags are for driver use, which wdmaud2.drv does not use.
+        //
+        // Some legacy apps pass in a structure which is too small to actually use those entries,
+        // meaning that if a driver were to use them it'd buffer overrun...
+        //
+        // Enforcing this minimum size ensures that adequate space is available for what wdmaud2 
+        // does require, ensuring that we don't buffer overrun, while being permissive of poorly
+        // behaving legacy applications.
+        //
+        // Wdmaud.drv doesn't do any size checks on the incoming buffer at all, making it possible
+        // for buffer overruns if an app were to pass in an impossibly small buffer. It's possible
+        // that some legacy apps are passing in 0 for the buffer size and wdmaud.drv would allow it.
+        //
+        // ***************** IMPORTANT ********************
+        // Do not use reserved, dwReserved, dwOffset, or lpNext, as those 
+        // may be outside of the buffer if the application provided a MIDIHDR that
+        // is too small.
+        //
+        RETURN_HR_IF(E_INVALIDARG, bufferSize < sizeof(BASEMIDIHDR));
+    }
+    else
+    {
+        RETURN_HR_IF(E_INVALIDARG, bufferSize < sizeof(MIDIHDR));
+    }
 
     buffer->dwFlags &= (~MHDR_DONE);
     buffer->dwFlags |= MHDR_INQUEUE;

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36705.20 d17.14
+VisualStudioVersion = 17.14.36705.20
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.NetworkMidiTransport", "Transport\UdpNetworkMidi2Transport\Midi2.NetworkMidiTransport.vcxproj", "{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}"
 EndProject
@@ -30,7 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transforms", "Transforms", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transports", "Transports", "{142E1CE4-DA01-4A77-8404-38D231A0F5A6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.SimpleLoopbackMidiTransport", "Transport\SimpleLoopbackMidiTransport\Midi2.SimpleLoopbackMidiTransport.vcxproj", "{0F94A751-9159-4A88-8A71-347151124548}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.BasicLoopbackMidiTransport", "Transport\BasicLoopbackMidiTransport\Midi2.BasicLoopbackMidiTransport.vcxproj", "{0F94A751-9159-4A88-8A71-347151124548}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -29,6 +29,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         static winrt::guid GetAssociationId(_In_ midi2::MidiEndpointDeviceInformation const& basicLoopbackEndpoint) noexcept;
 
         static bool DoesLoopbackExist(_In_ winrt::hstring const& uniqueIdentifier);
+
+
+        static bool MuteLoopback(_In_ winrt::guid const& associationId);
+        static bool UnmuteLoopback(_In_ winrt::guid const& associationId);
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::factory_implementation

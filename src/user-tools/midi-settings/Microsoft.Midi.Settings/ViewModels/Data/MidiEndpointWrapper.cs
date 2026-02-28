@@ -102,6 +102,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         private int countMidi1OutputPorts;
 
         [ObservableProperty]
+        private bool isMuted;
+
+        [ObservableProperty]
         private MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
 
         [ObservableProperty]
@@ -166,6 +169,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 HasManufacturerName = !String.IsNullOrWhiteSpace(DeviceInformation.GetTransportSuppliedInfo().ManufacturerName);
 
+
+                IsMuted = DeviceInformation.IsMuted;
 
                 // General metadata
 
@@ -244,24 +249,40 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
 
                 // unique identifier
+                UniqueIdentifier = string.Empty;
+                HasUniqueIdentifier = false;
 
                 if (!String.IsNullOrWhiteSpace(DeviceInformation.GetDeclaredEndpointInfo().ProductInstanceId))
                 {
                     UniqueIdentifier = DeviceInformation.GetDeclaredEndpointInfo().ProductInstanceId;
+                    HasUniqueIdentifier = !String.IsNullOrWhiteSpace(UniqueIdentifier);
                 }
                 else if (!String.IsNullOrWhiteSpace(TransportSuppliedInfo.SerialNumber))
                 {
                     UniqueIdentifier = TransportSuppliedInfo.SerialNumber;
-                }
-                else
-                {
-                    UniqueIdentifier = string.Empty;
+                    HasUniqueIdentifier = !String.IsNullOrWhiteSpace(UniqueIdentifier);
+
+                    // todo: may want to move this to a central location
+                    // these are hard-coded serial numbers found which are not actually unique
+                    string[] invalidUniqueIndentifiers =
+                    {
+                        "no serial number",
+                        "no_serial_number",
+                        "noserial",
+                        "ffff",
+                        "0000",
+                        "none"
+                    };
+
+                    bool invalidSerial = Array.Exists(invalidUniqueIndentifiers, serial => serial.Equals(UniqueIdentifier, StringComparison.OrdinalIgnoreCase));
+                    if (invalidSerial)
+                    {
+                        HasUniqueIdentifier = false;
+                    }
                 }
 
-                HasUniqueIdentifier = !String.IsNullOrWhiteSpace(UniqueIdentifier);
 
                 // multi-client
-
                 if (TransportSuppliedInfo.SupportsMultiClient)
                 {
                     IsMultiClient = true;

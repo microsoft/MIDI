@@ -2,6 +2,20 @@
 
 #pragma once
 
+// base definition of the MIDIHDR structure,
+// entries after dwFlags are for "driver" use, which
+// we do not use. Some legacy apps pass in an incorrect structure,
+// this definition ensures that adequate space is available for what
+// wdmaud2.drv requires, while still being permissive of poorly behaving
+// legacy applications.
+typedef struct basemidihdr_tag {
+    LPSTR       lpData;
+    DWORD       dwBufferLength;
+    DWORD       dwBytesRecorded;
+    DWORD_PTR   dwUser;
+    DWORD       dwFlags;
+} BASEMIDIHDR;
+
 class CMidiPort :
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,

@@ -170,7 +170,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
         if (configUpdate == nullptr)
         {
-            LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -194,51 +194,113 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         winrt::guid const& transportId,
         json::JsonObject const& fullConfigObject) noexcept
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingGuid(transportId, "transport id")
+        );
+
         // this initializes to a failure state, so we can just return it when we have a fail
         svc::MidiServiceConfigResponse response;
 
-        if (fullConfigObject == nullptr)
+        try
         {
-            LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
+            if (fullConfigObject == nullptr)
+            {
+                LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Configuration object SettingsJson is null", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(transportId, "transport id")
+                );
+
+                response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson;
+                return response;
+            }
+
+            auto responseJsonObject = InternalSendConfigJsonAndGetResponse(
+                transportId,
+                fullConfigObject
+            );
+
+            if (responseJsonObject == nullptr)
+            {
+                response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson;
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to update transport. Error processing config json", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(transportId, "transport id")
+                );
+
+                return response;
+            }
+
+            auto success = responseJsonObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
+
+            response.ServiceMessage = responseJsonObject.GetNamedString(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, L"");
+            response.ResponseJson = responseJsonObject.Stringify();
+
+            if (success)
+            {
+                response.Status = svc::MidiServiceConfigResponseStatus::Success;
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Succeeded", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(transportId, "transport id")
+                );
+
+                return response;
+            }
+            else
+            {
+                response.Status = svc::MidiServiceConfigResponseStatus::ErrorFromService;
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to update transport. Error from service", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(response.ServiceMessage.c_str(), "service message"),
+                    TraceLoggingGuid(transportId, "transport id")
+                );
+
+                return response;
+            }
+        }
+        catch (winrt::hresult_error ex)
+        {
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
                 MIDI_SDK_TRACE_EVENT_ERROR,
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Configuration object SettingsJson is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to update transport. hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), "hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "error message"),
+                TraceLoggingGuid(transportId, "transport id")
             );
-
-            response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson;
-            return response;
-        }
-
-        auto responseJsonObject = InternalSendConfigJsonAndGetResponse(
-            transportId,
-            fullConfigObject
-        );
-
-        if (responseJsonObject == nullptr)
-        {
-            response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson;
-            return response;
-        }
-
-        auto success = responseJsonObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
-
-        response.ServiceMessage = responseJsonObject.GetNamedString(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, L"");
-        response.ResponseJson = responseJsonObject.Stringify();
-
-        if (success)
-        {
-            response.Status = svc::MidiServiceConfigResponseStatus::Success;
-
-            return response;
-        }
-        else
-        {
-            response.Status = svc::MidiServiceConfigResponseStatus::ErrorFromService;
 
             return response;
         }

@@ -274,6 +274,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
 
         
+        additionalProperties.Append(STRING_PKEY_MIDI_IsMuted);
 
 
 
@@ -929,7 +930,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         return false;
     }
-
 
     _Use_decl_annotations_
     foundation::IReferenceArray<uint8_t> MidiEndpointDeviceInformation::GetBinaryProperty(winrt::hstring key) const noexcept
