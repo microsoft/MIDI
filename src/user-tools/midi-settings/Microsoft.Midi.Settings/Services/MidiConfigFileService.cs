@@ -11,7 +11,9 @@ using Microsoft.Midi.Settings.Contracts.Services;
 using Windows.Data.Json;
 using Microsoft.Midi.Settings.Config;
 using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
-using Windows.ApplicationModel.Contacts;    // we use the WinRT JSON libraries to be consistent with the service code
+using Windows.ApplicationModel.Contacts;
+using Windows.Devices.PointOfService;
+using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;    // we use the WinRT JSON libraries to be consistent with the service code
 
 namespace Microsoft.Midi.Settings.Services;
 
@@ -43,6 +45,9 @@ internal class MidiConfigConstants
 
         public const string NetworkClients = "clients";
         public const string NetworkHosts = "hosts";
+
+        public const string Muted = "muted";
+        public const string Endpoint = "endpoint";
     }
 
     //internal class Reg
@@ -134,6 +139,8 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 if (!obj.Keys.Contains(MidiConfigConstants.JsonKeys.Header))
                 {
+                    App.GetService<ILoggingService>().LogError("Missing config file header");
+
                     return false;
                 }
 
@@ -141,6 +148,7 @@ public class MidiConfigFile : IMidiConfigFile
 
                 if (!headerObject.Keys.Contains(MidiConfigConstants.JsonKeys.HeaderConfigName))
                 {
+                    App.GetService<ILoggingService>().LogError("Missing config file header config name");
                     return false;
                 }
 
@@ -177,6 +185,8 @@ public class MidiConfigFile : IMidiConfigFile
         {
             if (!File.Exists(m_fullFileName))
             {
+                App.GetService<ILoggingService>().LogError($"Config file '{m_fullFileName}' does not exist");
+
                 return false;
             }
 
@@ -218,6 +228,8 @@ public class MidiConfigFile : IMidiConfigFile
             }
             else
             {
+                App.GetService<ILoggingService>().LogError($"Unable to parse contents of config file");
+
                 return false;
             }
 
@@ -261,6 +273,8 @@ public class MidiConfigFile : IMidiConfigFile
 
     private JsonObject? FindExistingTransportSection(JsonObject mainConfigObject, Guid transportId)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter. Looking for transport '{transportId}'");
+
         string transportIdKey = transportId.ToString("B").ToUpper();
 
         System.Diagnostics.Debug.WriteLine($"Looking for section with this transport: {transportIdKey}");
@@ -275,6 +289,8 @@ public class MidiConfigFile : IMidiConfigFile
             }
         }
 
+        App.GetService<ILoggingService>().LogInfo($"Unable to find transport section");
+
         return null;
     }
 
@@ -282,20 +298,25 @@ public class MidiConfigFile : IMidiConfigFile
 
     private JsonObject FindOrCreateTransportSection(JsonObject mainConfigObject, Guid transportId)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter. Looking for transport '{transportId.ToString()}'");
+
         string transportIdKey = transportId.ToString("B").ToUpper();
 
         if (!mainConfigObject.Keys.Contains(MidiConfigConstants.JsonKeys.TransportPluginSettings))
         {
+            App.GetService<ILoggingService>().LogInfo($"Adding missing transport plugin settings section");
+
             // need to add transport plugin settings to the main config
             JsonObject section = new JsonObject();
             mainConfigObject.SetNamedValue(MidiConfigConstants.JsonKeys.TransportPluginSettings, section);
-
         }
 
         var transportPluginsSettings = mainConfigObject.GetNamedObject(MidiConfigConstants.JsonKeys.TransportPluginSettings);
 
         if (!transportPluginsSettings.Keys.Contains(transportIdKey))
         {
+            App.GetService<ILoggingService>().LogInfo($"Adding transport key '{transportId}'");
+
             // need to add section for this transport
             JsonObject section = new JsonObject();
             transportPluginsSettings.SetNamedValue(transportIdKey, section);
@@ -348,6 +369,31 @@ public class MidiConfigFile : IMidiConfigFile
 
 
         return removeArray;
+    }
+
+    private JsonObject? FindExistingTransportCreateObject(Guid transportId, Guid associationId)
+    {
+        if (m_config == null) return null;
+
+        var transportSection = FindExistingTransportSection(m_config, transportId);
+        if (transportSection == null) return null;
+
+        if (transportSection.Keys.Contains(MidiConfigConstants.JsonKeys.CommonCreate))
+        {
+            var createObject = transportSection.GetNamedObject(MidiConfigConstants.JsonKeys.CommonCreate);
+            if (createObject == null) return null;
+
+            if (createObject.Keys.Contains(associationId.ToString("B").ToUpper()))
+            {
+                var loopback = createObject.GetNamedObject(associationId.ToString("B").ToUpper());
+
+                if (loopback == null) return null;
+
+                return loopback;
+            }
+        }
+
+        return null;
     }
 
     private JsonObject? FindExistingTransportCreateObject(JsonObject parentTransportObject)
@@ -417,75 +463,90 @@ public class MidiConfigFile : IMidiConfigFile
 
     private bool MergeEndpointTransportSectionIntoJsonObject(JsonObject mainConfigObject, JsonObject objectToMergeIn)
     {
-        if (mainConfigObject == null) return false;
-        if (objectToMergeIn == null) return false;
-
-        // this assumes the object to merge in has a singular tree structure to pull in. We're
-        // not doing any recursion here. The intent is to do something like add another endpoint
-        // create section to the master document, without having to manually create everything.
-        //
-        // This works because the config json is always a full rooted object -- a valid config file
-        // in itself, albeit with only one specific section.
-
-
-        JsonObject currentMainConfigLevel = mainConfigObject;
-        JsonObject currentIncomingLevel = objectToMergeIn;
-
-        // find endpointTransportPluginSettings section in the object to merge in.
-
-        bool foundIncoming = false;
-        while (!foundIncoming && currentIncomingLevel.Keys.Count > 0)
+        try
         {
-            if (currentIncomingLevel.Keys.Contains(MidiConfigConstants.JsonKeys.TransportPluginSettings))
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
+            if (mainConfigObject == null) return false;
+            if (objectToMergeIn == null) return false;
+
+            // this assumes the object to merge in has a singular tree structure to pull in. We're
+            // not doing any recursion here. The intent is to do something like add another endpoint
+            // create section to the master document, without having to manually create everything.
+            //
+            // This works because the config json is always a full rooted object -- a valid config file
+            // in itself, albeit with only one specific section.
+
+
+            JsonObject currentMainConfigLevel = mainConfigObject;
+            JsonObject currentIncomingLevel = objectToMergeIn;
+
+            // find endpointTransportPluginSettings section in the object to merge in.
+
+            bool foundIncoming = false;
+            while (!foundIncoming && currentIncomingLevel.Keys.Count > 0)
             {
-                currentIncomingLevel = currentIncomingLevel[MidiConfigConstants.JsonKeys.TransportPluginSettings].GetObject();
-
-                foundIncoming = true;
-            }
-            else
-            {
-                // need to move down a level
-            }
-
-        }
-
-        if (!foundIncoming)
-        {
-            return false;
-        }
-
-        if (!mainConfigObject.Keys.Contains(MidiConfigConstants.JsonKeys.TransportPluginSettings))
-        {
-            var obj = new JsonObject();
-            mainConfigObject.Add(MidiConfigConstants.JsonKeys.TransportPluginSettings, obj);
-        }
-
-        currentMainConfigLevel = mainConfigObject[MidiConfigConstants.JsonKeys.TransportPluginSettings].GetObject();
-
-
-        bool done = false;
-        while (!done)
-        {
-            foreach (var key in currentIncomingLevel.Keys)
-            {
-                if (currentMainConfigLevel.Keys.Contains(key))
+                if (currentIncomingLevel.Keys.Contains(MidiConfigConstants.JsonKeys.TransportPluginSettings))
                 {
-                    // found the key, move to the next level. We're assuming objects here
-                    // which will throw an exception if it's not an object
-                    currentMainConfigLevel = currentMainConfigLevel[key].GetObject();
-                    currentIncomingLevel = currentIncomingLevel[key].GetObject();
+                    currentIncomingLevel = currentIncomingLevel[MidiConfigConstants.JsonKeys.TransportPluginSettings].GetObject();
+
+                    foundIncoming = true;
                 }
                 else
                 {
-                    // add it and we're done
-                    currentMainConfigLevel.Add(key, currentIncomingLevel[key]);
+                    // need to move down a level
+                }
 
-                    return true;
+            }
+
+            if (!foundIncoming)
+            {
+                App.GetService<ILoggingService>().LogInfo($"Incoming object not found");
+
+                return false;
+            }
+
+            if (!mainConfigObject.Keys.Contains(MidiConfigConstants.JsonKeys.TransportPluginSettings))
+            {
+                var obj = new JsonObject();
+                mainConfigObject.Add(MidiConfigConstants.JsonKeys.TransportPluginSettings, obj);
+            }
+
+            currentMainConfigLevel = mainConfigObject[MidiConfigConstants.JsonKeys.TransportPluginSettings].GetObject();
+
+
+            bool done = false;
+            while (!done)
+            {
+                foreach (var key in currentIncomingLevel.Keys)
+                {
+                    if (currentMainConfigLevel.Keys.Contains(key))
+                    {
+                        // found the key, move to the next level. We're assuming objects here
+                        // which will throw an exception if it's not an object
+                        currentMainConfigLevel = currentMainConfigLevel[key].GetObject();
+                        currentIncomingLevel = currentIncomingLevel[key].GetObject();
+                    }
+                    else
+                    {
+                        // add it and we're done
+                        currentMainConfigLevel.Add(key, currentIncomingLevel[key]);
+
+                        return true;
+                    }
                 }
             }
-        }
 
-        return false;
+            App.GetService<ILoggingService>().LogError($"Finished without merging object");
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception merging data into config", ex);
+
+            return false;
+        }
     }
 
 
@@ -497,24 +558,40 @@ public class MidiConfigFile : IMidiConfigFile
 
     public bool RemoveBasicLoopbackEndpoint(Guid associationId)
     {
-        if (m_config == null) return false;
-
-        var transportSection = FindExistingTransportSection(m_config, Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.TransportId);
-        if (transportSection == null) return false;
-
-        var createSection = FindExistingTransportCreateObject(transportSection);
-        if (createSection == null) return false;
-
-        string endpointKey = associationId.ToString("B").ToUpper();
-
-        if (createSection.ContainsKey(endpointKey))
+        try
         {
-            createSection.Remove(endpointKey);
+            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id: {associationId}");
 
-            return Save();
+            if (m_config == null) return false;
+
+            var transportSection = FindExistingTransportSection(m_config, Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.TransportId);
+            if (transportSection == null) return false;
+
+            var createSection = FindExistingTransportCreateObject(transportSection);
+            if (createSection == null) return false;
+
+            string endpointKey = associationId.ToString("B").ToUpper();
+
+            if (createSection.ContainsKey(endpointKey))
+            {
+                createSection.Remove(endpointKey);
+
+                App.GetService<ILoggingService>().LogInfo($"Saving: {associationId}");
+
+                return Save();
+            }
+
+            App.GetService<ILoggingService>().LogError($"Unable to find or save loopback {associationId}");
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception removing basic loopback endpoint. Association Id: {associationId}", ex);
+
+            return false;
         }
 
-        return false;
     }
 
 
@@ -522,47 +599,111 @@ public class MidiConfigFile : IMidiConfigFile
     // this assumes the config has already been run against the service to create the pair. We're just storing them here.
     public bool StoreBasicLoopbackEndpoint(Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointCreationConfig creationConfig)
     {
-        if (m_config == null) return false;
-        if (creationConfig == null) return false;
-
-        // get the latest from disk
-        if (!Load())
+        try
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id {creationConfig.AssociationId}");
+
+            if (m_config == null) return false;
+            if (creationConfig == null) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                return false;
+            }
+
+            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+            {
+                // write the property
+                App.GetService<ILoggingService>().LogInfo($"Saving. Association Id {creationConfig.AssociationId}");
+
+                return Save();
+            }
+
+            App.GetService<ILoggingService>().LogError($"Failed to store basic loopback endpoint {creationConfig.AssociationId}");
+
             return false;
         }
-
-        if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+        catch (Exception ex)
         {
-            // write the property
+            App.GetService<ILoggingService>().LogError($"Exception storing basic loopback endpoint. Association Id: {creationConfig.AssociationId}", ex);
 
-            return Save();
+            return false;
         }
-
-        return false;
     }
 
 
+    public bool StoreBasicLoopbackMutedProperty(Guid associationId, bool isMuted)
+    {
+        try
+        {
+            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id: {associationId}, isMuted: {isMuted} ");
+
+            if (m_config == null) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                return false;
+            }
+
+            // there's never an update object for loopbacks, only create objects.
+            var createObject = FindExistingTransportCreateObject(MidiBasicLoopbackEndpointManager.TransportId, associationId);
+            if (createObject == null) return false;
+
+            var endpointObject = createObject.GetNamedObject(MidiConfigConstants.JsonKeys.Endpoint, null);
+            if (endpointObject == null) return false;
+
+            endpointObject.SetNamedValue(MidiConfigConstants.JsonKeys.Muted, JsonValue.CreateBooleanValue(isMuted));
+
+            App.GetService<ILoggingService>().LogInfo($"Saving. Association Id: {associationId}, isMuted: {isMuted} ");
+
+            return Save();
+
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception storing muted property Association Id: {associationId}, isMuted: {isMuted}", ex);
+
+            return false;
+        }
+    }
 
     public bool RemoveLoopbackEndpointPair(Guid associationId)
     {
-        if (m_config == null) return false;
-
-        var transportSection = FindExistingTransportSection(m_config, Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.TransportId);
-        if (transportSection == null) return false;
-
-        var createSection = FindExistingTransportCreateObject(transportSection);
-        if (createSection == null) return false;
-
-        string endpointKey = associationId.ToString("B").ToUpper();
-
-        if (createSection.ContainsKey(endpointKey))
+        try
         {
-            createSection.Remove(endpointKey);
+            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id: {associationId}");
 
-            return Save();
+            if (m_config == null) return false;
+
+            var transportSection = FindExistingTransportSection(m_config, Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.TransportId);
+            if (transportSection == null) return false;
+
+            var createSection = FindExistingTransportCreateObject(transportSection);
+            if (createSection == null) return false;
+
+            string endpointKey = associationId.ToString("B").ToUpper();
+
+            if (createSection.ContainsKey(endpointKey))
+            {
+                createSection.Remove(endpointKey);
+
+                App.GetService<ILoggingService>().LogInfo($"Saving. Association Id: {associationId}");
+                return Save();
+            }
+
+            App.GetService<ILoggingService>().LogError($"Unable to remove loopback endpoint pair");
+            return false;
         }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception removing loopback pair Association Id: {associationId}", ex);
 
-        return false;
+            return false;
+        }
     }
 
 
@@ -570,75 +711,116 @@ public class MidiConfigFile : IMidiConfigFile
     // this assumes the config has already been run against the service to create the pair. We're just storing them here.
     public bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig)
     {
-        if (m_config == null) return false;
-        if (creationConfig == null) return false;
-
-        // get the latest from disk
-        if (!Load())
+        try
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id: {creationConfig.AssociationId}");
+
+            if (m_config == null) return false;
+            if (creationConfig == null) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                return false;
+            }
+
+            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+            {
+                // write the property
+
+                App.GetService<ILoggingService>().LogInfo($"Saving. Association Id: {{creationConfig.AssociationId}}\"");
+                return Save();
+            }
+
+            App.GetService<ILoggingService>().LogError($"Unable to remove loopback endpoint pair");
             return false;
         }
-
-        if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+        catch (Exception ex)
         {
-            // write the property
+            App.GetService<ILoggingService>().LogError($"Exception storing loopback pair Association Id: {creationConfig.AssociationId}", ex);
 
-            return Save();
+            return false;
         }
-
-        return false;
     }
 
 
     public bool StoreNetworkHost(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkHostCreationConfig creationConfig)
     {
-        if (m_config == null) return false;
-        if (creationConfig == null) return false;
-
-        // get the latest from disk
-        if (!Load())
+        try
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter. Id: {creationConfig.Id}");
+
+            if (m_config == null) return false;
+            if (creationConfig == null) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                return false;
+            }
+
+            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+            {
+                // write the property
+
+                App.GetService<ILoggingService>().LogInfo($"Saving. Id: {creationConfig.Id}");
+                return Save();
+            }
+
+            App.GetService<ILoggingService>().LogError($"Unable to store network host");
             return false;
         }
-
-        if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+        catch (Exception ex)
         {
-            // write the property
+            App.GetService<ILoggingService>().LogError($"Exception storing network host. Id: {creationConfig.Id}", ex);
 
-            return Save();
+            return false;
         }
-
-        return false;
     }
 
     public bool RemoveNetworkHost(string hostEntryId)
     {
-        if (m_config == null) return false;
-        if (string.IsNullOrEmpty(hostEntryId)) return false;
-
-        // get the latest from disk
-        if (!Load())
+        try
         {
-            return false;
+            App.GetService<ILoggingService>().LogInfo($"Enter. Id: {hostEntryId}");
+
+            if (m_config == null) return false;
+            if (string.IsNullOrEmpty(hostEntryId)) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                return false;
+            }
+
+            var transportObject = FindExistingTransportSection(m_config, MidiNetworkTransportManager.TransportId);
+            if (transportObject == null) return false;
+
+            var createObject = FindExistingTransportCreateObject(transportObject);
+            if (createObject == null) return false;
+
+            var hostsObject = createObject.GetNamedObject(MidiConfigConstants.JsonKeys.NetworkHosts);
+            if (hostsObject == null) return false;
+
+            if (hostsObject.ContainsKey(hostEntryId))
+            {
+                hostsObject.Remove(hostEntryId);
+
+                App.GetService<ILoggingService>().LogInfo($"Saving. Id: {hostEntryId}");
+                return Save();
+            }
+            else
+            {
+                return false;
+            }
         }
-
-        var transportObject = FindExistingTransportSection(m_config, MidiNetworkTransportManager.TransportId);
-        if (transportObject == null) return false;
-
-        var createObject = FindExistingTransportCreateObject(transportObject);
-        if (createObject == null) return false;
-
-        var hostsObject = createObject.GetNamedObject(MidiConfigConstants.JsonKeys.NetworkHosts);
-        if (hostsObject == null) return false;
-
-        if (hostsObject.ContainsKey(hostEntryId))
+        catch (Exception ex)
         {
-            hostsObject.Remove(hostEntryId);
-            
-            return Save();
-        }
-        else
-        {
+            App.GetService<ILoggingService>().LogError($"Exception removing network host. Id: {hostEntryId}", ex);
+
             return false;
         }
 
@@ -648,107 +830,132 @@ public class MidiConfigFile : IMidiConfigFile
 
     public bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientConnectConfig creationConfig)
     {
-        if (m_config == null) return false;
-        if (creationConfig == null) return false;
-
-        // get the latest from disk
-        if (!Load())
+        try
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter. Id: '{creationConfig.Id}'");
+
+            if (m_config == null) return false;
+            if (creationConfig == null) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                return false;
+            }
+
+            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+            {
+                // write the property
+
+                App.GetService<ILoggingService>().LogInfo($"Saving. Id: '{creationConfig.Id}'");
+                return Save();
+            }
+
+            App.GetService<ILoggingService>().LogError("Unable to store network client in config file.");
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception storing network client. Id: {creationConfig.Id}", ex);
+
             return false;
         }
 
-        if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
-        {
-            // write the property
-
-            return Save();
-        }
-
-        return false;
     }
 
 
     public bool StoreEndpointCustomization(Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig updateConfig)
     {
-        if (m_config == null) return false;
-        if (updateConfig == null) return false;
-
-        // get the latest from disk
-        if (!Load())
+        try
         {
+            if (m_config == null) return false;
+            if (updateConfig == null) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                return false;
+            }
+
+            var existingTransportSettings = FindOrCreateTransportSection(m_config, updateConfig.TransportId);
+            if (existingTransportSettings == null) return false;
+
+            var existingUpdateArray = FindOrCreateTransportUpdateArray(existingTransportSettings);
+            if (existingUpdateArray == null) return false;
+
+            // now, look to see if there are any matching objects in here already
+
+            foreach (var existingUpdate in existingUpdateArray)
+            {
+                var existingUpdateObject = existingUpdate.GetObject();
+                if (existingUpdateObject == null) continue;
+
+                if (existingUpdateObject.ContainsKey(MidiConfigConstants.JsonKeys.Match))
+                {
+                    var existingMatchJson = existingUpdateObject.GetNamedObject(MidiConfigConstants.JsonKeys.Match);
+
+                    var existingMatchObject = Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria.FromJson(existingMatchJson.Stringify());
+
+                    if (updateConfig.MatchCriteria.Matches(existingMatchObject))
+                    {
+                        System.Diagnostics.Debug.WriteLine("We match");
+
+                        // this object has the full structure including endpointTransportPluginSettings and the transportId
+                        var newTransportSection = FindExistingTransportSection(updateConfig.GetConfigJson(), updateConfig.TransportId);
+
+                        if (newTransportSection != null)
+                        {
+                            var newConfigUpdateArray = FindExistingUpdateArray(newTransportSection);
+
+                            if (newConfigUpdateArray != null)
+                            {
+                                var newConfigObject = newConfigUpdateArray.First().GetObject();
+
+                                if (newConfigObject != null)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("Adding new config object to array");
+
+                                    // remove this update entry (match and custom props) in the config
+                                    existingUpdateArray.Remove(existingUpdate);
+
+                                    existingUpdateArray.Add(newConfigObject);
+
+                                    return Save();
+                                }
+                            }
+                        }
+
+                        // matched but we fell through due to other issues. Stop processing
+                        return false;
+                    }
+                }
+            }
+
+            // no matches found, so add as new
+
+            var newTransportObject = FindExistingTransportSection(updateConfig.GetConfigJson(), updateConfig.TransportId);
+            if (newTransportObject == null) return false;
+
+            var newUpdateArray = FindExistingTransportUpdateArray(newTransportObject);
+            if (newUpdateArray == null) return false;
+
+            var obj = newUpdateArray.First();
+            if (obj == null) return false;
+
+            existingUpdateArray.Add(obj);
+
+            return Save();
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception storing endpoint customization. Transport Id: {updateConfig.TransportId}", ex);
+
             return false;
         }
 
-        var existingTransportSettings = FindOrCreateTransportSection(m_config, updateConfig.TransportId);
-        if (existingTransportSettings == null) return false;
-
-        var existingUpdateArray = FindOrCreateTransportUpdateArray(existingTransportSettings);
-        if (existingUpdateArray == null) return false;
-
-        // now, look to see if there are any matching objects in here already
-
-        foreach (var existingUpdate in existingUpdateArray)
-        {
-            var existingUpdateObject = existingUpdate.GetObject();
-            if (existingUpdateObject == null) continue;
-
-            if (existingUpdateObject.ContainsKey(MidiConfigConstants.JsonKeys.Match))
-            {
-                var existingMatchJson = existingUpdateObject.GetNamedObject(MidiConfigConstants.JsonKeys.Match);
-
-                var existingMatchObject = Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria.FromJson(existingMatchJson.Stringify());
-
-                if (updateConfig.MatchCriteria.Matches(existingMatchObject))
-                {
-                    System.Diagnostics.Debug.WriteLine("We match");
-
-                    // this object has the full structure including endpointTransportPluginSettings and the transportId
-                    var newTransportSection = FindExistingTransportSection(updateConfig.GetConfigJson(), updateConfig.TransportId);
-
-                    if (newTransportSection != null)
-                    {
-                        var newConfigUpdateArray = FindExistingUpdateArray(newTransportSection);
-
-                        if (newConfigUpdateArray != null)
-                        {
-                            var newConfigObject = newConfigUpdateArray.First().GetObject();
-
-                            if (newConfigObject != null)
-                            {
-                                System.Diagnostics.Debug.WriteLine("Adding new config object to array");
-
-                                // remove this update entry (match and custom props) in the config
-                                existingUpdateArray.Remove(existingUpdate);
-
-                                existingUpdateArray.Add(newConfigObject);
-
-                                return Save();
-                            }
-                        }
-                    }
-
-                    // matched but we fell through due to other issues. Stop processing
-                    return false;
-                }
-            }
-        }
-
-        // no matches found, so add as new
-
-        var newTransportObject = FindExistingTransportSection(updateConfig.GetConfigJson(), updateConfig.TransportId);
-        if (newTransportObject == null) return false;
-
-        var newUpdateArray = FindExistingTransportUpdateArray(newTransportObject);
-        if (newUpdateArray == null) return false;
-
-        var obj = newUpdateArray.First();
-        if (obj == null) return false;
-
-        existingUpdateArray.Add(obj);
-
-        return Save();
     }
-
 
 }
 
@@ -944,6 +1151,7 @@ class MidiConfigFileService : IMidiConfigFileService
             if (ConfigFileExists(configLocalFileName))
             {
                 // TODO: Back up the old one and overwrite this one?
+                App.GetService<ILoggingService>().LogError($"Config file '{configLocalFileName}' already exists");
 
                 return false;
             }
@@ -964,6 +1172,7 @@ class MidiConfigFileService : IMidiConfigFileService
 
             if (Path.Exists(filePath))
             {
+                App.GetService<ILoggingService>().LogError($"Config file '{filePath}' already exists");
                 return false;
             }
 
@@ -982,6 +1191,8 @@ class MidiConfigFileService : IMidiConfigFileService
             {
                 ActiveConfigFileChanged(this, new EventArgs());
             }
+
+            App.GetService<ILoggingService>().LogInfo($"Config file '{config.FileName}' created");
 
             return true;
         }

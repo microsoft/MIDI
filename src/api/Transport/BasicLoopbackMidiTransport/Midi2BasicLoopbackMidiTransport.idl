@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "unknwn.idl";
+
+import "WindowsMidiServices.idl";
+
+
+[
+    uuid(934b1877-4837-426c-acf8-6e9196604dbe),
+    version(1.0),
+]
+library Midi2BasicLoopbackMidiTransportLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(10088473-9478-4e62-850b-3d2315e135b8), version(1.0)]
+    coclass Midi2BasicLoopbackMidiTransport
+    {
+        [default] interface IMidiTransport;
+    }
+};
+

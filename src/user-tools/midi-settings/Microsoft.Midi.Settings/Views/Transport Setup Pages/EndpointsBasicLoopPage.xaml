@@ -53,41 +53,87 @@
                             <controls:SettingsCard Margin="3" CornerRadius="8">
                                 <controls:SettingsCard.Header>
                                     <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
+                                        <Grid HorizontalAlignment="Left"
+                                              VerticalAlignment="Top"
+                                              Margin="-6"
+                                              Visibility="{x:Bind Loop.IsMuted, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-                                        <ImageIcon Grid.Column="0" 
+                                            <Ellipse Width="20" Height="20"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"
+                                                     Fill="{StaticResource SystemFillColorCriticalBackgroundBrush}" />
+                                            
+                                            <FontIcon Glyph="&#xE74F;"
+                                                      FontSize="14"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      />
+                                        </Grid>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <ImageIcon Grid.Column="0" 
                                                Source="{x:Bind Loop.Image, Mode=OneWay}" 
                                                Width="60" Height="60"
                                                Margin="8"/>
 
-                                        <StackPanel Orientation="Vertical"
+                                            <StackPanel Orientation="Vertical"
                                                     VerticalAlignment="Center"
                                                     Grid.Column="1">
-                                            <TextBlock Text="{x:Bind Loop.Name}" 
+                                                <TextBlock Text="{x:Bind Loop.Name}" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                        </StackPanel>
+                                                <TextBlock Text="{x:Bind Loop.Description}" 
+                                                       Style="{StaticResource SmallPlainPropertyValue}"/>
+                                            </StackPanel>
 
+
+
+                                        </Grid>
                                     </Grid>
                                     
                                     
                                 </controls:SettingsCard.Header>
                                 <controls:SettingsCard.Content>
-                                    <StackPanel Orientation="Horizontal"
-                                                VerticalAlignment="Center">
-                                        <StackPanel Orientation="Vertical"
-                                                    VerticalAlignment="Center">
-                                            <TextBlock Text="{x:Bind Loop.Id}" 
-                                                       Style="{StaticResource SmallPlainPropertyValue}"/>
+                                    <Grid HorizontalAlignment="Stretch">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" 
+                                                   Text="{x:Bind Loop.Id}" 
+                                                   Style="{StaticResource SmallPlainPropertyValue}"/>
+
+                                        <StackPanel Grid.Row="1" 
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Right">
+
+                                            <Button Visibility="{x:Bind Loop.IsMuted, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
+                                                    Margin="8,8,8,8"
+                                                    Command="{x:Bind MuteCommand}">
+                                                <FontIcon Glyph="&#xE74F;"/>
+                                            </Button>
+
+                                            <Button Visibility="{x:Bind Loop.IsMuted, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Margin="8,8,8,8"
+                                                    Command="{x:Bind UnmuteCommand}">
+                                                <FontIcon Glyph="&#xE767;"/>
+
+                                            </Button>
+
+                                            <Button Margin="32,8,8,8"
+                                                    Command="{x:Bind RemoveCommand}">
+                                                <FontIcon Glyph="&#xE74D;"/>
+                                            </Button>
                                         </StackPanel>
 
-                                        <Button Content="Remove" 
-                                                Margin="16"
-                                                Command="{x:Bind RemoveCommand}"
-                                                />
-                                    </StackPanel>
+
+                                    </Grid>
+
                                 </controls:SettingsCard.Content>
                                
                             </controls:SettingsCard>

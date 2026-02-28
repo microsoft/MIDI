@@ -96,6 +96,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         winrt::hstring ToString();
 
+
         bool UpdateFromDeviceInformation(
             _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept;
 
@@ -132,6 +133,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             { winrt::multi_threaded_vector<midi2::MidiGroupTerminalBlock>() };
 
         void ReadGroupTerminalBlocks();
+
+
+    public:
+        bool IsMuted() const noexcept { return internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_IsMuted, false); }
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation

@@ -1,0 +1,108 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util='http://wixtoolset.org/schemas/v4/wxs/util'>
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+
+    <Package  
+          Name="Microsoft Windows MIDI Services Basic Loopback $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="1.0.15.0"
+          UpgradeCode="10088473-9478-4e62-850b-3d2315e135b8"
+          Scope="perMachine"
+          Compressed="true"
+          
+          >
+       
+        <MediaTemplate EmbedCab="yes" />
+
+        
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+            </Directory>
+        </StandardDirectory>
+        
+        <!-- Transport and other Service Plugins -->
+        <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
+    
+        <Component Id="WindowsServicePlugins"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="934b1877-4837-426c-acf8-6e9196604dbe"  >
+
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BasicLoopbackMidiTransport.dll" SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BasicLoopbackMidiTransport.pdb" />
+        </Component>
+        
+
+        <Component Id="ConfigurationRegistryEntries"
+                Bitness="always64"
+                Directory="SERVICE_INSTALLFOLDER"
+                Guid="f551be12-739b-4d55-bfe8-3d7c901cc30e"
+                NeverOverwrite="false">
+                   
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services">
+
+                <RegistryKey Key="Endpoint Processing Plugins">
+                    <!-- TODO: Any processing plugins -->
+                </RegistryKey>
+
+                <RegistryKey Key="Transport Plugins">
+                  
+                  <!-- Permissions users: Everyone, Administrators, LocalSystem, LocalService, NetworkService, AuthenticatedUser, Guests, CREATOR OWNER, INTERACTIVE, and Users -->
+                  
+                    <RegistryKey Key="Midi2BasicLoopbackMidiTransport">
+                        <RegistryValue Type="string" Name="CLSID" Value="{10088473-9478-4E62-850B-3D2315E135B8}">
+                          <util:PermissionEx Read="yes" User="Everyone"/>
+                          <util:PermissionEx GenericAll="yes" User="AuthenticatedUser"/>
+                        </RegistryValue>
+                        <RegistryValue Type="integer" Name="Enabled" Value="1">
+                          <util:PermissionEx Read="yes" User="Everyone"/>
+                          <util:PermissionEx GenericAll="yes" User="AuthenticatedUser"/>
+                        </RegistryValue>
+                    </RegistryKey>
+                    
+
+                </RegistryKey>
+            </RegistryKey>
+        </Component>
+
+      <Component Id="RestartService"
+                  Bitness="always64"
+                  Directory="SERVICE_INSTALLFOLDER"
+                  Guid="CECA5130-47A4-4AEF-A086-24323969F1F1">
+
+        <ServiceControl Id="midisrv" Name="midisrv"
+                        Start="both" 
+                        Stop="both"/>
+      
+      </Component>
+
+
+      <Feature Id="WindowsMIDIServices">
+        <ComponentRef Id="WindowsServicePlugins"/>
+        <ComponentRef Id="ConfigurationRegistryEntries"/>
+        <ComponentRef Id="RestartService"/>
+      </Feature>
+
+      
+      <Binary Id="CustomActionBinary"
+              SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+      <CustomAction Id="Action_TakeRegistryOwnership"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="TakeRegistryOwnership"
+                    Return="check"/>
+
+      <InstallExecuteSequence>
+        <Custom Action="Action_TakeRegistryOwnership"
+                Before="CreateFolders"
+                Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+      </InstallExecuteSequence>      
+      
+    </Package>
+</Wix>
