@@ -22,8 +22,11 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    wil::com_ptr_nothrow <IMidiCallback> m_callback{ nullptr };
+//    wil::com_ptr_nothrow <IMidiCallback> m_callback{ nullptr };
     LONGLONG m_callbackContext{};
+
+    std::shared_ptr<MidiBasicLoopbackDevice> m_device;
+
 
     std::wstring m_endpointId{};
 };

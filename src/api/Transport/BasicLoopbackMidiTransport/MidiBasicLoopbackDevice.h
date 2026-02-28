@@ -12,10 +12,13 @@
 // represents a loopback device. The device has exactly two
 // endpoints which are cross-wired to each other
 
+#pragma push_macro("SendMessage")
+#undef SendMessage
+
 class MidiBasicLoopbackDevice
 {
 public:
-    MidiBasicLoopbackDeviceDefinition Definition;
+    std::shared_ptr<MidiBasicLoopbackDeviceDefinition> Definition;
 
 //    bool IsFromConfigurationFile{ true };
 
@@ -25,6 +28,8 @@ public:
         {
             m_callback = nullptr;
         }
+
+        Definition.reset();
 
     }
 
@@ -38,13 +43,13 @@ public:
         m_callback = callback;
     }
 
-    HRESULT SendMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
+    HRESULT SendMessage(_In_ MessageOptionFlags optionFlags, _In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
-        if (Definition.IsMuted) return S_OK;
+        if (Definition->IsMuted) return S_OK;
 
         if (m_callback != nullptr)
         {
-            return m_callback->Callback(MessageOptionFlags_None, message, size, position, context);
+            return m_callback->Callback(optionFlags, message, size, position, context);
         }
 
         return S_OK;
@@ -63,3 +68,5 @@ private:
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
 
 };
+
+#pragma pop_macro("SendMessage")

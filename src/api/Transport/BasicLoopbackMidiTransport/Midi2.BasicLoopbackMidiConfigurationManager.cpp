@@ -43,17 +43,30 @@ CMidi2BasicLoopbackMidiConfigurationManager::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
-    std::wstring const& associationId,
+    winrt::guid const& associationId,
     bool const isMuted)
 {
+    TraceLoggingWrite(
+        MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"), 
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(associationId, "association id"),
+        TraceLoggingBool(isMuted, "isMuted")
+    );
+
     RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointTable());
 
+    // get this into the normal string format.
     auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationId);
     RETURN_HR_IF_NULL(E_NOTFOUND, device);
 
+    device->Definition->IsMuted = isMuted;
+
     RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
 
-    device->Definition.IsMuted = isMuted;
     RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->UpdateEndpointMutedStateProperty(device->Definition));
 
     return S_OK;
@@ -99,7 +112,9 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
         if (auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID); 
             arg != commandHelper.Arguments()->end())
         {
-            auto hr = ExecuteCommandChangeMutedState(arg->second, mute);
+            auto associationId = internal::StringToGuid(arg->second);
+
+            auto hr = ExecuteCommandChangeMutedState(associationId, mute);
 
             if (hr == E_NOTFOUND)
             {
@@ -212,7 +227,8 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                
                 if (associationObj)
                 {
-                    definition->AssociationId = associationKey;
+                    auto associationIdGuid = internal::StringToGuid(associationKey.c_str());
+                    definition->AssociationId = associationIdGuid;
 
                     auto endpointObject = associationObj.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY, nullptr);
 
@@ -417,7 +433,9 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                 // each entry is an association id
 
                 auto associationId = o.Current().GetString();
-                auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationId.c_str());
+                auto associationIdGuid = internal::StringToGuid(associationId.c_str());
+
+                auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationIdGuid);
 
                 //auto uniqueId = device->Definition.EndpointUniqueIdentifier;
 
@@ -428,7 +446,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                 if (SUCCEEDED(removalHr))
                 {
 
-                    TransportState::Current().GetEndpointTable()->RemoveDevice(associationId.c_str());
+                    TransportState::Current().GetEndpointTable()->RemoveDevice(associationIdGuid);
 
                     auto removeSuccessVal = json::JsonValue::CreateBooleanValue(true);
                     responseObject.SetNamedValue(

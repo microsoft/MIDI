@@ -157,8 +157,10 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateParentDevice()
 _Use_decl_annotations_
 HRESULT
 CMidi2BasicLoopbackMidiEndpointManager::UpdateEndpointMutedStateProperty(
-    _In_ MidiBasicLoopbackDeviceDefinition const& definition)
+    _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition)
 {
+    RETURN_HR_IF_NULL(E_INVALIDARG, definition);
+
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -166,19 +168,17 @@ CMidi2BasicLoopbackMidiEndpointManager::UpdateEndpointMutedStateProperty(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(definition.CreatedEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingBool(definition.IsMuted, "is muted")
+        TraceLoggingWideString(definition->CreatedEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(definition->IsMuted, "is muted")
     );
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
-    definition.CreatedEndpointInterfaceId;
-
     std::vector<DEVPROPERTY> interfaceDevProperties{};
 
     // see if this is going to start off as muted
-    if (definition.IsMuted)
+    if (definition->IsMuted)
     {
         interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_IsMuted, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropTrue });
@@ -190,7 +190,7 @@ CMidi2BasicLoopbackMidiEndpointManager::UpdateEndpointMutedStateProperty(
     }
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
-        definition.CreatedEndpointInterfaceId.c_str(),
+        definition->CreatedEndpointInterfaceId.c_str(),
         static_cast<ULONG>(interfaceDevProperties.size()),
         interfaceDevProperties.data()
         ));
@@ -202,8 +202,8 @@ CMidi2BasicLoopbackMidiEndpointManager::UpdateEndpointMutedStateProperty(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(definition.CreatedEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingBool(definition.IsMuted, "is muted")
+        TraceLoggingWideString(definition->CreatedEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(definition->IsMuted, "is muted")
     );
 
     return S_OK;
@@ -213,8 +213,10 @@ CMidi2BasicLoopbackMidiEndpointManager::UpdateEndpointMutedStateProperty(
 _Use_decl_annotations_
 HRESULT
 CMidi2BasicLoopbackMidiEndpointManager::DeleteEndpoint(
-    _In_ MidiBasicLoopbackDeviceDefinition const& definition)
+    _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition> const definition)
 {
+    RETURN_HR_IF_NULL(E_INVALIDARG, definition);
+
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -223,7 +225,7 @@ CMidi2BasicLoopbackMidiEndpointManager::DeleteEndpoint(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(definition.CreatedShortClientInstanceId.c_str()));
+    RETURN_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(definition->CreatedShortClientInstanceId.c_str()));
 
     return S_OK;
 }
@@ -252,11 +254,9 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingGuid(definition->AssociationId, "association id"),
         TraceLoggingWideString(definition->InstanceIdPrefix.c_str(), "prefix"),
-        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
-        TraceLoggingWideString(definition->EndpointName.c_str(), "name"),
-        TraceLoggingWideString(definition->EndpointDescription.c_str(), "description")
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier")
         );
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
@@ -284,17 +284,17 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Adding endpoint properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingGuid(definition->AssociationId, "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
-        TraceLoggingWideString(friendlyName.c_str(), "friendlyName"),
-        TraceLoggingWideString(transportCode.c_str(), "transport code"),
-        TraceLoggingWideString(endpointName.c_str(), "endpointName"),
-        TraceLoggingWideString(endpointDescription.c_str(), "endpointDescription")
+        TraceLoggingWideString(transportCode.c_str(), "transport code")
     );
+
+    std::wstring associationIdString = internal::GuidToString(definition->AssociationId);
 
     // we keep this to keep the logical structure the same as the MIDI 2.0 loopback endpoints
     interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (definition->AssociationId.length() + 1)), (PVOID)definition->AssociationId.c_str() });
+        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (associationIdString.length() + 1)), (PVOID)associationIdString.c_str() });
+
 
     // see if this is going to start off as muted
     if (definition->IsMuted)
@@ -332,7 +332,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Activating endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingGuid(definition->AssociationId, "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
         TraceLoggingWideString(instanceId.c_str(), "instance id")
     );
@@ -352,7 +352,6 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
 
     UINT32 capabilities {0};
     capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
-    capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
     capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
     capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
     commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
@@ -368,7 +367,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     gtb1.Number = 1;             // gtb indexes start at 1
     gtb1.GroupCount = 1;         // todo: we could get this from properties
     gtb1.FirstGroupIndex = 0;    // group indexes start at 0
-    gtb1.Protocol = 0x11;        // 0x11 = MIDI 2.0
+    gtb1.Protocol = 0x01;        // 0x01 = MIDI 1.0
     gtb1.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // MIDI Out from user's perspective
     gtb1.Name = friendlyName; //+ L" Out";           // todo: get this from properties so folks can control the port name
     blocks.push_back(gtb1);
@@ -377,7 +376,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     gtb2.Number = 1;             // gtb indexes start at 1
     gtb2.GroupCount = 1;         // todo: we could get this from properties
     gtb2.FirstGroupIndex = 0;    // group indexes start at 0
-    gtb2.Protocol = 0x11;        // 0x11 = MIDI 2.0
+    gtb2.Protocol = 0x01;        // 0x01 = MIDI 1.0
     gtb2.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;  // MIDI In from user's perspective
     gtb2.Name = friendlyName; // + L" In";           // todo: get this from properties so folks can control the port name
     blocks.push_back(gtb2);
@@ -422,7 +421,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Endpoint activated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingGuid(definition->AssociationId, "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
         TraceLoggingWideString(newDeviceInterfaceId.get(), "new device interface id")
     );
@@ -432,9 +431,11 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     definition->CreatedShortClientInstanceId = instanceId;
     definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
 
-    //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
-    //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
+    // store for tracking
+    auto device = std::make_shared<MidiBasicLoopbackDevice>();
+    device->Definition = definition;
 
+    TransportState::Current().GetEndpointTable()->SetDevice(definition->AssociationId, device);
 
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -443,7 +444,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Done", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingGuid(definition->AssociationId, "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier")
     );
 

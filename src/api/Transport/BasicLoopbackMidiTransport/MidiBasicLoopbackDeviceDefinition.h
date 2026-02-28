@@ -14,7 +14,7 @@
 
 struct MidiBasicLoopbackDeviceDefinition
 {
-    std::wstring AssociationId{};
+    GUID AssociationId{};
 
     std::wstring EndpointName{};
     std::wstring EndpointDescription{};

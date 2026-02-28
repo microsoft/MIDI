@@ -35,5 +35,9 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback
         static Guid GetAssociationId(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation basicLoopbackEndpoint);
 
         static Boolean DoesLoopbackExist(String uniqueIdentifier);
+
+        static Boolean MuteLoopback(Guid associationId);
+        static Boolean UnmuteLoopback(Guid associationId);
+
     }
 }

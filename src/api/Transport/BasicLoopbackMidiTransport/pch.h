@@ -102,11 +102,12 @@ class CMidi2BasicLoopbackMidiEndpointManager;
 class CMidi2BasicLoopbackMidiBidi;
 class TransportState;
 
+#include "Midi2.BasicLoopbackMidiTransport.h"
+
 #include "MidiBasicLoopbackDeviceDefinition.h"
 #include "MidiBasicLoopbackDevice.h"
 #include "MidiBasicLoopbackDeviceTable.h"
 
-#include "Midi2.BasicLoopbackMidiTransport.h"
 #include "Midi2.BasicLoopbackMidiBidi.h"
 #include "Midi2.BasicLoopbackMidiEndpointManager.h"
 #include "Midi2.BasicLoopbackMidiConfigurationManager.h"

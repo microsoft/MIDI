@@ -369,6 +369,7 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MidiBasicLoopbackDeviceTable.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.BasicLoopbackMidiTransport.cpp" />

@@ -50,11 +50,11 @@ class Build : NukeBuild
 
     MidiBuildType BuildType => MidiBuildType.Preview; 
     
-    const UInt16 BuildVersionMajor = 0;
+    const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 15;
+    const UInt16 BuildVersionPatch = 0;
 
-    const UInt16 BuildVersionPreviewNumber = 15;
+    const UInt16 BuildVersionPreviewNumber = 1;
     string VersionName => "Plugin Preview " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------

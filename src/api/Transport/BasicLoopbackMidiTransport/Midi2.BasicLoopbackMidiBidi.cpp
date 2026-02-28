@@ -48,7 +48,11 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-        m_callback = Callback;
+        m_device = TransportState::Current().GetEndpointTable()->GetDeviceById(endpointId);
+        RETURN_HR_IF_NULL(E_INVALIDARG, m_device);
+
+        m_device->RegisterEndpoint(Callback);
+
     }
     else
     {
@@ -92,11 +96,13 @@ CMidi2BasicLoopbackMidiBidi::Shutdown()
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-    m_callback = nullptr;
+    m_device.reset();
 
     return S_OK;
 }
 
+#pragma push_macro("SendMessage")
+#undef SendMessage
 _Use_decl_annotations_
 HRESULT
 CMidi2BasicLoopbackMidiBidi::SendMidiMessage(
@@ -106,6 +112,7 @@ CMidi2BasicLoopbackMidiBidi::SendMidiMessage(
     LONGLONG Position
 )
 {
+
     //TraceLoggingWrite(
     //    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
     //    MIDI_TRACE_EVENT_INFO,
@@ -118,12 +125,13 @@ CMidi2BasicLoopbackMidiBidi::SendMidiMessage(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_callback);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_device);
 
-    RETURN_IF_FAILED(m_callback->Callback(optionFlags, Message, Size, Position, m_callbackContext));
+    RETURN_IF_FAILED(m_device->SendMessage(optionFlags, Message, Size, Position, m_callbackContext));
 
     return S_OK;
 }
+#pragma pop_macro("SendMessage")
 
 _Use_decl_annotations_
 HRESULT
@@ -135,6 +143,7 @@ CMidi2BasicLoopbackMidiBidi::Callback(
     LONGLONG /*Context*/
 )
 {
+
     //TraceLoggingWrite(
     //    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
     //    MIDI_TRACE_EVENT_INFO,

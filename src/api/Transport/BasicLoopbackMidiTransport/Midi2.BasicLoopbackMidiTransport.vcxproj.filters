@@ -39,6 +39,9 @@
     <ClCompile Include="Midi2BasicLoopbackMidiPluginMetadataProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackDeviceTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2BasicLoopbackMidiTransport.idl">

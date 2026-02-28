@@ -52,7 +52,7 @@
             <EventProviderId Value="EventProvider_NetworkMidiTransport"/>
             <EventProviderId Value="EventProvider_BluetoothMidiTransport"/>
             <EventProviderId Value="EventProvider_LoopbackMidiTransport"/>
-            <EventProviderId Value="EventProvider_SimpleLoopbackMidiTransport"/>
+            <EventProviderId Value="EventProvider_BasicLoopbackMidiTransport"/>
             <EventProviderId Value="EventProvider_WdmAud2"/>
 
             <EventProviderId Value="EventProvider_SDK"/>

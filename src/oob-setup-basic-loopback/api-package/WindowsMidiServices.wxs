@@ -68,10 +68,22 @@
             </RegistryKey>
         </Component>
 
+      <Component Id="RestartService"
+                  Bitness="always64"
+                  Directory="SERVICE_INSTALLFOLDER"
+                  Guid="CECA5130-47A4-4AEF-A086-24323969F1F1">
+
+        <ServiceControl Id="midisrv" Name="midisrv"
+                        Start="both" 
+                        Stop="both"/>
+      
+      </Component>
+
 
       <Feature Id="WindowsMIDIServices">
         <ComponentRef Id="WindowsServicePlugins"/>
         <ComponentRef Id="ConfigurationRegistryEntries"/>
+        <ComponentRef Id="RestartService"/>
       </Feature>
 
       

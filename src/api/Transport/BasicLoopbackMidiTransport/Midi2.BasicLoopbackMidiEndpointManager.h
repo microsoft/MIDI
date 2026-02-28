@@ -29,11 +29,11 @@ public:
     );
 
     HRESULT DeleteEndpoint(
-        _In_ MidiBasicLoopbackDeviceDefinition const& definition
+        _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition>
     );
 
     HRESULT UpdateEndpointMutedStateProperty(
-        _In_ MidiBasicLoopbackDeviceDefinition const& definition
+        _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition>
     );
 
     bool IsInitialized() { return m_initialized; }
@@ -45,7 +45,6 @@ private:
 
     void CleanupDeviceDefinition(_In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition)
     {
-        definition->AssociationId = internal::ToLowerTrimmedWStringCopy(definition->AssociationId);
         internal::InPlaceTrim(definition->EndpointUniqueIdentifier);
         internal::InPlaceTrim(definition->InstanceIdPrefix);
         internal::InPlaceTrim(definition->EndpointName);

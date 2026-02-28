@@ -232,6 +232,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_DriverDeviceInterface));
 
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_IsMuted));
+        
+
         //AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_KsAgg));
 
         m_initialized = true;

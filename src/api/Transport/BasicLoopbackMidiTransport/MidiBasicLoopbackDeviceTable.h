@@ -13,58 +13,19 @@
 class MidiBasicLoopbackDeviceTable
 {
 private:
-    std::map<std::wstring, MidiBasicLoopbackDevice> m_devices{};
+    // unline GUID, winrt::guid has built-in comparison so it can be used as a key in std::map
+    std::map<winrt::guid, std::shared_ptr<MidiBasicLoopbackDevice>> m_devices;
 
 
 public:
 
-    MidiBasicLoopbackDevice* GetDevice(std::wstring associationId)
-    {
-        auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
-
-        if (m_devices.find(cleanId) != m_devices.end())
-        {
-            return &m_devices[cleanId];
-        }
-        else
-        {
-            return nullptr;
-        }
-    }
-
-    void SetDevice(std::wstring associationId, MidiBasicLoopbackDevice device)
-    {
-        auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
-
-        m_devices[cleanId] = device;
-    }
-
-    void RemoveDevice(std::wstring associationId)
-    {
-        auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
-
-        if (auto device = m_devices.find(cleanId); device != m_devices.end())
-        {
-            device->second.Shutdown();
-
-            m_devices.erase(cleanId);
-        }
-    }
+    std::shared_ptr<MidiBasicLoopbackDevice> GetDevice(_In_ winrt::guid const& associationId);
+    std::shared_ptr<MidiBasicLoopbackDevice> GetDeviceById(_In_ std::wstring const& endpointDeviceId);
 
 
-    bool IsUniqueIdentifierInUseForLoopback(std::wstring uniqueIdentifier)
-    {
-        auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
+    void SetDevice(_In_ winrt::guid const& associationId, _In_ std::shared_ptr<MidiBasicLoopbackDevice> device);
+    void RemoveDevice(_In_ winrt::guid const& associationId);
 
-        for (auto const& [key, device] : m_devices)
-        {
-            if (cleanId == internal::ToLowerTrimmedWStringCopy(device.Definition.EndpointUniqueIdentifier))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    bool IsUniqueIdentifierInUseForLoopback(_In_ std::wstring const& uniqueIdentifier);
 
 };
