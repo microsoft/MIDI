@@ -2213,6 +2213,9 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         return S_OK;
     }
 
+    // put the thread worker back to sleep
+    m_endpointCreationThreadWakeup.ResetEvent();
+
     // We have MIDI 1.0 pins to process, so we'll need to find or create a parent device
     // and also find or create an endpoint under that parent, which has sufficient room
     // for these pins.
@@ -2268,10 +2271,13 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
                 // check the latest endpoint first
                 for (auto r = foundEndpoints.rbegin(); r != foundEndpoints.rend() && !pinList.empty(); ++r)
                 {
-                    bool tryNextEndpoint { false };
+                    bool tryNextEndpoint{ false };
+
+                    existingPendingEndpointDefinition = *r;
 
                     while (!pinList.empty() && !tryNextEndpoint)
                     {
+
                         auto pin = *pinList.begin();
                         bool pinAdded = AddPinToEndpoint(existingPendingEndpointDefinition, pin);
 
