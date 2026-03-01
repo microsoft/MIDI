@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+    <String Id="InstallHeader"
+            Value="Service and Plugins Installer"/>
+    <String Id="InstallMessageOptions" 
+            Value="Setup will install this technical preview of the Windows MIDI Services Service and plugins. This will replace the version that came pre-installed, and is a non-reversible action." />
+            
+</WixLocalization>
