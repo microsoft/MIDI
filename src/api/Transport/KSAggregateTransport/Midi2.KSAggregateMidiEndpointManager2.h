@@ -197,8 +197,8 @@ private:
     //    _In_ uint8_t& groupIndex);
 
     HRESULT UpdateNewPinDefinitions(
-        _In_ std::wstring filterDeviceid,
-        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition);
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition,
+        _In_ std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDevice);
 
     HRESULT BuildPinsAndGroupTerminalBlocksPropertyData(
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition,
@@ -219,6 +219,9 @@ private:
         _In_ std::shared_ptr<KsAggregateEndpointDefinition2> masterEndpointDefinition);
 
 
+    wil::unique_event_nothrow m_EnumerationCompleted;
+    wil::unique_event_nothrow m_initialEndpointCreationCompleted;
+
     wil::unique_event_nothrow m_endpointCreationThreadWakeup;
     std::jthread m_endpointCreationThread;
     void EndpointCreationThreadWorker(_In_ std::stop_token token);
@@ -230,7 +233,5 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Updated_revoker m_DeviceUpdated;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Stopped_revoker m_DeviceStopped;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
-    wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
-
 
 };
