@@ -626,8 +626,6 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceCreateMidiUmpEndpoint(
         // return new device interface id
         endpointDefinition->EndpointDeviceId = internal::NormalizeEndpointInterfaceIdWStringCopy(std::wstring{ newDeviceInterfaceId.get() });
 
-        auto lock = m_activatedEndpointDefinitionsLock.lock();
-
         // Add to internal endpoint manager
         m_activatedEndpointDefinitions.insert_or_assign(
             internal::NormalizeDeviceInstanceIdWStringCopy(parentDevice->DeviceInstanceId),
@@ -789,8 +787,6 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceUpdateExistingMidiUmpEndpointWithFi
             TraceLoggingWideString(L"Aggregate UMP endpoint updated with new filter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(endpointDefinition->EndpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
-
-        auto lock = m_activatedEndpointDefinitionsLock.lock();
 
         // Add to internal endpoint manager
         m_activatedEndpointDefinitions.insert_or_assign(
@@ -1517,7 +1513,6 @@ CMidi2KSAggregateMidiEndpointManager2::CreatePendingEndpointDefinitionForFilterD
 
     std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDeviceDefinition{ nullptr };
 
-    // this function locks the parent device list for the duration of the call
     RETURN_IF_FAILED(FindOrCreateParentDeviceDefinitionForFilterDevice(
         filterDevice,
         parentDeviceDefinition
@@ -1534,9 +1529,9 @@ CMidi2KSAggregateMidiEndpointManager2::CreatePendingEndpointDefinitionForFilterD
     // that. We need this to be deterministic and not just a random GUID/number, so that device ids have a 
     // chance to match up when next enumerated after a restart or connect/disconnect.
 
-    auto parentLock = m_allParentDeviceDefinitionsLock.lock();
-    auto pendingEndpointsLock = m_pendingEndpointDefinitionsLock.lock();
-    auto activatedEndpointsLock = m_activatedEndpointDefinitionsLock.lock();
+    //auto parentLock = m_allParentDeviceDefinitionsLock.lock();
+    //auto pendingEndpointsLock = m_pendingEndpointDefinitionsLock.lock();
+    //auto activatedEndpointsLock = m_activatedEndpointDefinitionsLock.lock();
 
 
     uint32_t endpointIndexForThisParent{ 0 };
@@ -1614,7 +1609,7 @@ CMidi2KSAggregateMidiEndpointManager2::CreatePendingEndpointDefinitionForFilterD
 //    }
 //}
 
-#define MAX_THREAD_WORKER_WAIT_TIME_MS 20000
+#define MAX_THREAD_WORKER_WAIT_TIME_MS 1000
 
 _Use_decl_annotations_
 void CMidi2KSAggregateMidiEndpointManager2::EndpointCreationThreadWorker(
@@ -2173,6 +2168,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
 
 
+
     // 1. Get the list of pins that are the right category for us to try to activate
     // 2. Loop through and build final list of all MIDI 1.0 source and destination pins
     // 3. Do we already have an activated endpoint for this device?
@@ -2212,6 +2208,11 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
         return S_OK;
     }
+
+    // we lock up front to help ensure we're processing these serially
+    auto activatedLock = m_activatedEndpointDefinitionsLock.lock();
+    auto pendingLock = m_pendingEndpointDefinitionsLock.lock();
+
 
     // put the thread worker back to sleep
     m_endpointCreationThreadWakeup.ResetEvent();
