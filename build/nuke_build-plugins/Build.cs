@@ -127,7 +127,7 @@ class Build : NukeBuild
 
     AbsolutePath NetworkMidiSetupSolutionFolder => SourceRootFolder / "oob-setup-network";
     AbsolutePath VirtualPatchBaySetupSolutionFolder => SourceRootFolder / "oob-setup-virtual-patch-bay";
-    AbsolutePath SimpleLoopbackSetupSolutionFolder => SourceRootFolder / "oob-setup-simple-loopback";
+    AbsolutePath BasicLoopbackSetupSolutionFolder => SourceRootFolder / "oob-setup-basic-loopback";
 
 
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
@@ -439,8 +439,8 @@ class Build : NukeBuild
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualPatchBayTransport.dll");
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualPatchBayTransport.pdb");
 
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SimpleLoopbackMidiTransport.dll");
-                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SimpleLoopbackMidiTransport.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BasicLoopbackMidiTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BasicLoopbackMidiTransport.pdb");
 
                 foreach (var file in stagingFiles)
                 {
@@ -783,7 +783,7 @@ preview
             }
         });
 
-    Target T_BuildSimpleLoopbackPluginInstaller => _ => _
+    Target T_BuildBasicLoopbackPluginInstaller => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildInDevelopmentServicePlugins)
         .Executes(() =>
@@ -795,7 +795,7 @@ preview
 
                 //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
 
-                string solutionDir = SimpleLoopbackSetupSolutionFolder.ToString() + @"\";
+                string solutionDir = BasicLoopbackSetupSolutionFolder.ToString() + @"\";
 
                 var msbuildProperties = new Dictionary<string, object>();
                 msbuildProperties.Add("Platform", platform);
@@ -811,7 +811,7 @@ preview
                 );
 
                 var output = MSBuildTasks.MSBuild(_ => _
-                    .SetTargetPath(SimpleLoopbackSetupSolutionFolder / "midi-services-simple-loopback-setup.sln")
+                    .SetTargetPath(BasicLoopbackSetupSolutionFolder / "midi-services-basic-loopback-setup.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
@@ -823,10 +823,10 @@ preview
                     .EnableNodeReuse()
                 );
 
-                string newInstallerName = $"Windows MIDI Services (Simple Loopback Preview) {BuildVersionFullString}-{platform.ToLower()}.exe";
+                string newInstallerName = $"Windows MIDI Services (Basic MIDI 1.0 Loopback Preview) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
 
-                var setupFile = SimpleLoopbackSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSimpleLoopbackSetup.exe";
+                var setupFile = BasicLoopbackSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesBasicLoopbackSetup.exe";
                 setupFile.Copy(ThisReleaseFolder / newInstallerName);
 
                 BuiltSimpleLoopbackInstallers[platform.ToLower()] = newInstallerName;
@@ -950,7 +950,7 @@ preview
         .DependsOn(T_BuildInDevelopmentServicePlugins)
         .DependsOn(T_BuildNetworkMidiInstaller)
         .DependsOn(T_BuildVirtualPatchBayPluginInstaller)
-        .DependsOn(T_BuildSimpleLoopbackPluginInstaller)
+        .DependsOn(T_BuildBasicLoopbackPluginInstaller)
         .Executes(() =>
         {
 

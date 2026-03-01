@@ -31,9 +31,12 @@ public interface IMidiConfigFile
 
     bool StoreBasicLoopbackEndpoint(Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointCreationConfig creationConfig);
     bool RemoveBasicLoopbackEndpoint(Guid associationId);
+    bool StoreBasicLoopbackMutedProperty(Guid associationId, bool isMuted);
+
 
     bool StoreNetworkHost(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkHostCreationConfig creationConfig);
     bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientConnectConfig creationConfig);
+
 
 
     bool RemoveNetworkHost(string hostEntryId);

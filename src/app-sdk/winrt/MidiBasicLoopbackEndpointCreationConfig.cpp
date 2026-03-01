@@ -66,6 +66,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
             json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definition.UniqueId).c_str()));
 
+        endpointDeviceObject.SetNamedValue(
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
+            json::JsonValue::CreateBooleanValue(m_definition.IsMuted));
+
         // create the association object (this is here just to keep the structure apx the same as the main loopback types, for simplicity
 
         endpointAssociationObject.SetNamedValue(

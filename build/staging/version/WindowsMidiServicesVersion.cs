@@ -16,7 +16,7 @@ namespace Microsoft.Windows.Devices.Midi2.Common
 		public const ushort VersionMinor = 0;
 		public const ushort VersionPatch = 15;
 		public const ushort VersionBuildNumber = 0;
-		public const string Preview = "rc.3.0.0";
+		public const string Preview = "rc.3.3";
 		public const string AssemblyFullVersion = "1.0.15.0";
 		public const string FileFullVersion = "1.0.15.0";
 	}
