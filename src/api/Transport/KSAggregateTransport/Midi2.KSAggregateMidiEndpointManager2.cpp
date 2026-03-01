@@ -2302,77 +2302,97 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
                             pinList.erase(pinList.begin());
 
                             existingPendingEndpointUpdated = true;
-
-                            // TODO: inefficient to call this on each iteration
-                            RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingPendingEndpointDefinition));
                         }
                         else
                         {
                             tryNextEndpoint = true;
                         }
-
                     }
+
+                    if (existingPendingEndpointUpdated)
+                    {
+                        RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingPendingEndpointDefinition));
+                    }
+
                 }
             }
 
         }
-        //else if (ActiveKSAEndpointForDeviceExists(parentInstanceId.c_str()))
-        //{
-        //    std::shared_ptr<KsAggregateEndpointDefinition2> existingActivatedEndpointDefinition{ nullptr };
+        else if (ActiveKSAEndpointForDeviceExists(parentInstanceId.c_str()))
+        {
+            std::shared_ptr<KsAggregateEndpointDefinition2> existingActivatedEndpointDefinition{ nullptr };
 
-        //    // check to see if we already have any activated endpoints for this device
+            // check to see if we already have any activated endpoints for this device
 
-        //    TraceLoggingWrite(
-        //        MidiKSAggregateTransportTelemetryProvider::Provider(),
-        //        MIDI_TRACE_EVENT_VERBOSE,
-        //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        //        TraceLoggingPointer(this, "this"),
-        //        TraceLoggingWideString(L"KSA endpoint for this filter already activated. Updating it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        //        TraceLoggingWideString(filterDevice.Id().c_str(), "filter device id"),
-        //        TraceLoggingWideString(parentInstanceId.c_str(), "parent instance id")
-        //    );
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"KSA endpoint for this filter already activated. Updating it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(filterDevice.Id().c_str(), "filter device id"),
+                TraceLoggingWideString(parentInstanceId.c_str(), "parent instance id")
+            );
 
-        //    foundEndpoints.clear();
+            foundEndpoints.clear();
 
-        //    if (SUCCEEDED(FindAllActivatedEndpointDefinitionsForParentDevice(parentInstanceId.c_str(), foundEndpoints)))
-        //    {
-        //        // find an endpoint with room for another interface with pins.
-        //        // We're going by the pin counts returned when we enumerated 
-        //        // all pins for this interface
+            if (SUCCEEDED(FindAllActivatedEndpointDefinitionsForParentDevice(parentInstanceId.c_str(), foundEndpoints)))
+            {
+                // find an endpoint with room for another interface with pins.
+                // We're going by the pin counts returned when we enumerated 
+                // all pins for this interface
 
-        //        // check the latest endpoint first
-        //        for (auto r = foundEndpoints.rbegin(); r != foundEndpoints.rend(); ++r)
-        //        {
-        //            //if (EndpointHasRoomForMoreNewPins(*r, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins))
-        //            //{
-        //            //    existingActivatedEndpointDefinition = *r;
-        //            //    break;
-        //            //}
-        //        }
+                // check the latest endpoint first
+                for (auto r = foundEndpoints.rbegin(); r != foundEndpoints.rend() && !pinList.empty(); ++r)
+                {
+                    bool activatedEndpointUpdated{ false };
+                    bool tryNextEndpoint{ false };
 
-        //    }
+                    existingActivatedEndpointDefinition = *r;
 
-        //    // if this check fails, we fall through to creating a new endpoint definition
-        //    if (existingActivatedEndpointDefinition != nullptr)
-        //    {
-        //        //// first MIDI 1 pin we're processing for this interface
-        //        //RETURN_IF_FAILED(FindActivatedEndpointDefinitionForFilterDevice(parentInstanceId.c_str(), existingActivatedEndpointDefinition));
-        //        //RETURN_HR_IF_NULL(E_POINTER, existingActivatedEndpointDefinition);
+                    while (!pinList.empty() && !tryNextEndpoint)
+                    {
 
-        //        // add our new pins into the existing endpoint definition
-        //        existingActivatedEndpointDefinition->MidiPins.insert(existingActivatedEndpointDefinition->MidiPins.end(), pinList.begin(), pinList.end());
-        //        RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingActivatedEndpointDefinition));
+                        auto pin = *pinList.begin();
+                        bool pinAdded = AddPinToEndpoint(existingActivatedEndpointDefinition, pin);
 
-        //        RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(existingActivatedEndpointDefinition));
+                        // we'll break on any pin add failure, even though this could
+                        // mean that an imbalance in in/out pins
 
-        //        continue;
-        //    }
-        //    else
-        //    {
-        //        // fall through to creating a new endpoint
-        //    }
-        //}
+                        if (pinAdded)
+                        {
+                            TraceLoggingWrite(
+                                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Added pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(filterDevice.Id().c_str(), "filter device id"),
+                                TraceLoggingUInt32(pin->PinNumber, "pin number")
+                            );
+
+                            foundExistingEndpoint = true;
+
+                            pinList.erase(pinList.begin());
+
+                            activatedEndpointUpdated = true;
+                        }
+                        else
+                        {
+                            tryNextEndpoint = true;
+                        }
+                    }
+
+                    if (activatedEndpointUpdated && existingActivatedEndpointDefinition != nullptr)
+                    {
+                        RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingActivatedEndpointDefinition));
+                        RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(existingActivatedEndpointDefinition));
+                    }
+                }
+            }
+        }
         else
         {
             TraceLoggingWrite(
