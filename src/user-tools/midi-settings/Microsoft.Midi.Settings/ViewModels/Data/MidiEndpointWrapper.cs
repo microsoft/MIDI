@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+﻿﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -42,102 +42,102 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         [ObservableProperty]
-        private bool hasManufacturerName;
+        public partial bool HasManufacturerName { get; set; }
 
         [ObservableProperty]
-        private string name;
+        public partial string Name { get; set; }
 
         [ObservableProperty]
-        private string description;
-
-
-        [ObservableProperty]
-        private string id;
-
-        [ObservableProperty]
-        private string uniqueIdentifier;
-
-        [ObservableProperty]
-        private bool hasUniqueIdentifier;
-
-        [ObservableProperty]
-        private bool isMultiClient;
-
-        [ObservableProperty]
-        private bool isNativeUmp;
-
-        [ObservableProperty]
-        private bool supportsMidi2;
-
-        [ObservableProperty]
-        private ImageSource image;
-
-        [ObservableProperty]
-        private bool hasUsbVidPid;
-
-        [ObservableProperty]
-        private string usbVendorIdFormatted;
-
-        [ObservableProperty]
-        private string usbProductIdFormatted;
+        public partial string Description { get; set; }
 
 
         [ObservableProperty]
-        private bool hasSingleInputPort;
+        public partial string Id { get; set; }
 
         [ObservableProperty]
-        private bool hasSingleOutputPort;
+        public partial string UniqueIdentifier { get; set; }
 
         [ObservableProperty]
-        private string singleInputPortName;
+        public partial bool HasUniqueIdentifier { get; set; }
 
         [ObservableProperty]
-        private string singleOutputPortName;
+        public partial bool IsMultiClient { get; set; }
+
+        [ObservableProperty]
+        public partial bool IsNativeUmp { get; set; }
+
+        [ObservableProperty]
+        public partial bool SupportsMidi2 { get; set; }
+
+        [ObservableProperty]
+        public partial ImageSource Image { get; set; }
+
+        [ObservableProperty]
+        public partial bool HasUsbVidPid { get; set; }
+
+        [ObservableProperty]
+        public partial string UsbVendorIdFormatted { get; set; }
+
+        [ObservableProperty]
+        public partial string UsbProductIdFormatted { get; set; }
 
 
         [ObservableProperty]
-        private int countMidi1InputPorts;
+        public partial bool HasSingleInputPort { get; set; }
 
         [ObservableProperty]
-        private int countMidi1OutputPorts;
+        public partial bool HasSingleOutputPort { get; set; }
 
         [ObservableProperty]
-        private MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
+        public partial string SingleInputPortName { get; set; }
 
         [ObservableProperty]
-        private MidiEndpointUserSuppliedInfo userSuppliedInfo;
+        public partial string SingleOutputPortName { get; set; }
+
 
         [ObservableProperty]
-        private MidiDeclaredDeviceIdentity deviceIdentity;
+        public partial int CountMidi1InputPorts { get; set; }
 
         [ObservableProperty]
-        private MidiDeclaredStreamConfiguration streamConfiguration;
+        public partial int CountMidi1OutputPorts { get; set; }
 
         [ObservableProperty]
-        private MidiDeclaredEndpointInfo endpointInfo;
+        public partial MidiEndpointTransportSuppliedInfo TransportSuppliedInfo { get; set; }
+
+        [ObservableProperty]
+        public partial MidiEndpointUserSuppliedInfo UserSuppliedInfo { get; set; }
+
+        [ObservableProperty]
+        public partial MidiDeclaredDeviceIdentity DeviceIdentity { get; set; }
+
+        [ObservableProperty]
+        public partial MidiDeclaredStreamConfiguration StreamConfiguration { get; set; }
+
+        [ObservableProperty]
+        public partial MidiDeclaredEndpointInfo EndpointInfo { get; set; }
 
         public ObservableCollection<MidiFunctionBlock> FunctionBlocks = [];
         public ObservableCollection<MidiGroupTerminalBlock> GroupTerminalBlocks = [];
 
         [ObservableProperty]
-        private bool hasFunctionBlocks;
+        public partial bool HasFunctionBlocks { get; set; }
 
         [ObservableProperty]
-        private bool hasGroupTerminalBlocks;
-
-
-        [ObservableProperty]
-        private DeviceInformation? parentDeviceInformation;
-
-        [ObservableProperty]
-        private bool hasParent;
+        public partial bool HasGroupTerminalBlocks { get; set; }
 
 
         [ObservableProperty]
-        private bool canMonitor;
+        public partial DeviceInformation? ParentDeviceInformation { get; set; }
 
         [ObservableProperty]
-        private MidiEndpointDeviceInformation deviceInformation;
+        public partial bool HasParent { get; set; }
+
+
+        [ObservableProperty]
+        public partial bool CanMonitor { get; set; }
+
+        [ObservableProperty]
+        public partial MidiEndpointDeviceInformation DeviceInformation { get; set; }
 
         public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1InputPorts { get; private set; } = [];
         public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1OutputPorts { get; private set; } = [];

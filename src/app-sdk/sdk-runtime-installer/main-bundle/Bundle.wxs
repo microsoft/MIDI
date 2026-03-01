@@ -1,4 +1,4 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
      xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
@@ -75,14 +75,15 @@
 
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
 
-            <!-- Removed DetectCondition="VCRuntimeInstalled" because the redist does its own checking -->
+            <!-- The redist does its own checking, so we use DetectCondition="1" to avoid warning WIX1161 -->
             <ExePackage
                 Vital="false"
                 Permanent="true"
                 DisplayName="Microsoft Visual C++ Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
                 Compressed="yes"
-                InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
+                InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt"
+                DetectCondition="1"
                 />
 
           <!-- Windows App Runtime Install -->
@@ -93,6 +94,7 @@
               DisplayName="Microsoft Windows App Runtime"
               SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\WindowsAppRuntimeInstall-$(var.Platform).exe"
               Compressed="yes"
+              DetectCondition="1"
              />
 
           <!-- arm64 install requires both the .NET 8 Arm64 and x64 versions -->

@@ -83,8 +83,8 @@ First, install the latest Windows SDK. You can get the SDK from the [Windows Dev
 
 The SDK install includes a version  of the `cppwinrt.exe` tool. However, the latest version of this tool is [available via NuGet](https://www.nuget.org/packages/Microsoft.Windows.CppWinRT/), and is preferable to the older versions shipping in the Windows SDK. You can end up with version mismatches if you use an older version.
 
-Normally, all SDK header files, on my PC with the 10.0.22621.0 version of the SDK installed, are located here
-`C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\cppwinrt\winrt`
+Normally, all SDK header files, on my PC with the net10.0-windows version of the SDK installed, are located here
+`C:\Program Files (x86)\Windows Kits\10\Include\net10.0-windows\cppwinrt\winrt`
 
 ### Generating the Projection Headers
 

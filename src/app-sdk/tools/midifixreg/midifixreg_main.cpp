@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation and Contributors.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of the Windows MIDI Services App SDK and should be used
@@ -40,6 +40,15 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "color.hpp"
 #pragma warning(pop)
 
+// Helper function to convert wstring to string
+inline std::string WStringToString(const std::wstring& wstr)
+{
+    if (wstr.empty()) return std::string();
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+    std::string str(size_needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &str[0], size_needed, nullptr, nullptr);
+    return str;
+}
 
 #define LINE_LENGTH 80
 
@@ -297,7 +306,7 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
             WriteImportant("Proposed changes:");
             for (auto const& valueNameW : valuesToDelete)
             {
-                std::string valueName(valueNameW.begin(), valueNameW.end());
+                std::string valueName = WStringToString(valueNameW);
                 WriteImportant("- Delete registry value '" + valueName + "'");
             }
 
@@ -324,7 +333,7 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
 
                 for (auto const& valueNameW : valuesToDelete)
                 {
-                    std::string valueName(valueNameW.begin(), valueNameW.end());
+                    std::string valueName = WStringToString(valueNameW);
 
                     auto ret = RegDeleteValue(keyForDelete.get(), valueNameW.c_str());
 

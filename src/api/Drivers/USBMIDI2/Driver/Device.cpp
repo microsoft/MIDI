@@ -1302,6 +1302,20 @@ Return Value:
     midi2_desc_group_terminal_block_header_t    gtbHeader;
     USHORT                                      numChars = 0;
     WDF_REQUEST_SEND_OPTIONS                    reqOptions;
+    // Variables moved to top to avoid goto skipping initialization
+    USHORT                                      interfaceNumber;
+    UINT                                        numTerminalBlocks;
+    midi2_cs_interface_desc_group_terminal_blocks* pUSBGTBs;
+    size_t                                      numInIDs;
+    size_t                                      numOutIDs;
+    PUCHAR                                      inIDs;
+    PUCHAR                                      outIDs;
+    UINT                                        grpTermBlockStructureSize;
+    USHORT                                      grpTermBlockStringSizes[255];
+    bool                                        isInIndex;
+    UINT                                        numCapturedGTBs;
+    PKSMULTIPLE_ITEM                            pMultiHeader;
+    PUCHAR                                      pGTBPropertyBuffer;
 
     if (!Device)
     {
@@ -1341,7 +1355,7 @@ Return Value:
     WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&memoryDescriptor, (PVOID)&gtbHeader, sizeof(gtbHeader));
 
     // Need interface number for setup packet
-    USHORT interfaceNumber = (USHORT)WdfUsbInterfaceGetInterfaceNumber(devCtx->UsbMIDIStreamingInterface);
+    interfaceNumber = (USHORT)WdfUsbInterfaceGetInterfaceNumber(devCtx->UsbMIDIStreamingInterface);
 
     // Initialize setup packet
     WDF_USB_CONTROL_SETUP_PACKET_INIT(
@@ -1428,7 +1442,7 @@ Return Value:
     }
 
     // Determine number of GTBs in descriptor
-    UINT numTerminalBlocks = (numBytesTransferred - (UINT)sizeof(midi2_desc_group_terminal_block_header_t))
+    numTerminalBlocks = (numBytesTransferred - (UINT)sizeof(midi2_desc_group_terminal_block_header_t))
         / (UINT)sizeof(midi2_desc_group_terminal_block_t);
 
     // Simple checks for valid data
@@ -1442,14 +1456,14 @@ Return Value:
     }
 
     // Map GTBs from USB
-    midi2_cs_interface_desc_group_terminal_blocks* pUSBGTBs =
+    pUSBGTBs =
         (midi2_cs_interface_desc_group_terminal_blocks *)gtbMemoryPtr;
 
     // Get GTB ID Indexes
-    size_t numInIDs = 0;
-    size_t numOutIDs = 0;
-    PUCHAR inIDs = NULL;
-    PUCHAR outIDs = NULL;
+    numInIDs = 0;
+    numOutIDs = 0;
+    inIDs = NULL;
+    outIDs = NULL;
 
     if (devCtx->DeviceInGTBIDs)
     {
@@ -1461,10 +1475,9 @@ Return Value:
     }
 
     // Determine the size of GTB Structure
-    UINT grpTermBlockStructureSize = sizeof(KSMULTIPLE_ITEM);
-    USHORT grpTermBlockStringSizes[255];
-    bool isInIndex;
-    UINT numCapturedGTBs = 0;
+    grpTermBlockStructureSize = sizeof(KSMULTIPLE_ITEM);
+    isInIndex = false;
+    numCapturedGTBs = 0;
 
     for (UINT termBlockCount = 0; termBlockCount < numTerminalBlocks; termBlockCount++)
     {
@@ -1532,7 +1545,6 @@ Return Value:
     }
 
     // Create memory to store GTB Parameters
-    PUCHAR pGTBPropertyBuffer;
     WDF_OBJECT_ATTRIBUTES_INIT(&gtbMemoryAttributes);
     gtbMemoryAttributes.ParentObject = devCtx->UsbDevice;
     status = WdfMemoryCreate(
@@ -1550,7 +1562,7 @@ Return Value:
     }
 
     // Place KSMULTIPLE_ITEM Strucutre
-    PKSMULTIPLE_ITEM pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
+    pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
     pMultiHeader->Size = grpTermBlockStructureSize;
     pMultiHeader->Count = numCapturedGTBs;
     pGTBPropertyBuffer += sizeof(KSMULTIPLE_ITEM);
@@ -1667,6 +1679,16 @@ Return Value:
     UINT8                           numGrpTermBlocks = 0;
     USHORT                          numChars = 0;
     WDF_REQUEST_SEND_OPTIONS        reqOptions;
+    // Variables moved to top to avoid goto skipping initialization
+    PUSB_INTERFACE_DESCRIPTOR       pInterfaceDescriptor;
+    PUSB_INTERFACE_DESCRIPTOR       pInterfaceDescriptorNext;
+    UINT                            grpTermBlockStructureSize;
+    PUSB_COMMON_DESCRIPTOR          pNextDescriptor;
+    midi_desc_header_common_t*      pCommonHdr;
+    midi_desc_in_jack_t*            pInJack;
+    midi_desc_out_jack_t*           pOutJack;
+    PUCHAR                          pGTBPropertyBuffer;
+    PKSMULTIPLE_ITEM                pMultiHeader;
 
     ASSERT(Device);
     pDevCtx = GetDeviceContext(Device);
@@ -1690,7 +1712,7 @@ Return Value:
     }
 
     // Find the relevant interface
-    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
+    pInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
         pConfigurationDescriptor,        // Descriptor Buffer
         pConfigurationDescriptor,        // Start Position
         pDevCtx->UsbMIDIInterfaceNumber, // Interface Number
@@ -1710,7 +1732,7 @@ Return Value:
     pCurrent = (PUCHAR)pInterfaceDescriptor + sizeof(USB_INTERFACE_DESCRIPTOR);
 
     // Find the end of this interface by looking for end or next interface
-    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptorNext = USBD_ParseConfigurationDescriptorEx(
+    pInterfaceDescriptorNext = USBD_ParseConfigurationDescriptorEx(
         pConfigurationDescriptor,
         (PVOID)pCurrent,
         -1,         // looking for the next interface whatever it is
@@ -1739,10 +1761,9 @@ Return Value:
     // representation for this device.
     
     // Setup to determine the size of GTB Structure
-    UINT grpTermBlockStructureSize = sizeof(KSMULTIPLE_ITEM);
+    grpTermBlockStructureSize = sizeof(KSMULTIPLE_ITEM);
 
     // Walk through looking for Jack Descriptors
-    PUSB_COMMON_DESCRIPTOR pNextDescriptor;
     while (nullptr != (pNextDescriptor = USBD_ParseDescriptors(
         (PVOID)pConfigurationDescriptor,
         (ULONG) configDescSize,
@@ -1760,9 +1781,9 @@ Return Value:
         pCurrent = (PUCHAR)pNextDescriptor + pNextDescriptor->bLength;
 
         // Check the subtype and process accordingly
-        midi_desc_header_common_t* pCommonHdr = (midi_desc_header_common_t*)pNextDescriptor;
-        midi_desc_in_jack_t* pInJack = NULL;
-        midi_desc_out_jack_t* pOutJack = NULL;
+        pCommonHdr = (midi_desc_header_common_t*)pNextDescriptor;
+        pInJack = NULL;
+        pOutJack = NULL;
 
 
         switch (pCommonHdr->bDescriptorSubType)
@@ -1878,7 +1899,6 @@ Return Value:
     }
 
     // Create memory to store GTB Parameters
-    PUCHAR pGTBPropertyBuffer;
     WDF_OBJECT_ATTRIBUTES_INIT(&gtbMemoryAttributes);
     gtbMemoryAttributes.ParentObject = pDevCtx->UsbDevice;
     status = WdfMemoryCreate(
@@ -1899,7 +1919,7 @@ Return Value:
     RtlZeroMemory(pGTBPropertyBuffer, grpTermBlockStructureSize);
 
     // Place KSMULTIPLE_ITEM Strucutre
-    PKSMULTIPLE_ITEM pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
+    pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
     pMultiHeader->Size = grpTermBlockStructureSize;
     pMultiHeader->Count = numGrpTermBlocks;
     pGTBPropertyBuffer += sizeof(KSMULTIPLE_ITEM);
@@ -1983,6 +2003,10 @@ Return Value:
     WDF_OBJECT_ATTRIBUTES deviceConfigAttrib;
     bool isInEndpoint = false;
     PUSB_ENDPOINT_DESCRIPTOR pEndpointDescriptor = NULL;
+    // Variables moved to top to avoid goto skipping initialization
+    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor;
+    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptorNext;
+    PUSB_COMMON_DESCRIPTOR pNextDescriptor;
 
     ASSERT(Device);
     pDevCtx = GetDeviceContext(Device);
@@ -2006,7 +2030,7 @@ Return Value:
     }
  
     // Find the relevant interface
-    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
+    pInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
         pConfigurationDescriptor,        // Descriptor Buffer
         pConfigurationDescriptor,        // Start Position
         pDevCtx->UsbMIDIInterfaceNumber, // Interface Number
@@ -2025,7 +2049,7 @@ Return Value:
     pCurrent = (PUCHAR)pInterfaceDescriptor + sizeof(USB_INTERFACE_DESCRIPTOR);
 
     // Find the end of this interface by looking for end or next interface
-    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptorNext = USBD_ParseConfigurationDescriptorEx(
+    pInterfaceDescriptorNext = USBD_ParseConfigurationDescriptorEx(
         pConfigurationDescriptor,
         (PVOID)pCurrent,
         -1,         // looking for the next interface whatever it is
@@ -2048,7 +2072,6 @@ Return Value:
     // Now we know the bounds of the descriptor, look for endpoints to determine GTB ID Indexes.
     // Walk through finding Class-Specific MIDI Streaming Data Endpoint Descriptors
     // Walk through looking for Jack Descriptors
-    PUSB_COMMON_DESCRIPTOR pNextDescriptor;
     while (nullptr != (pNextDescriptor = USBD_ParseDescriptors(
         (PVOID)pConfigurationDescriptor,
         (ULONG)configDescSize,

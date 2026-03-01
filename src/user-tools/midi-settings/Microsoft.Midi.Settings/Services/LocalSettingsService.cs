@@ -25,7 +25,7 @@ public class LocalSettingsService : ILocalSettingsService
 
     //private IDictionary<string, object> _settings;
 
-    private global::Windows.Data.Json.JsonObject _settings;
+    private global::Windows.Data.Json.JsonObject _settings = global::Windows.Data.Json.JsonObject.Parse("{}");
 
     private bool _isInitialized;
 

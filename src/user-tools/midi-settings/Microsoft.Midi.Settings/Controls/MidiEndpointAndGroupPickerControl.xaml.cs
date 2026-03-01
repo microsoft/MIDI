@@ -1,4 +1,3 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,6 +10,7 @@ using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -66,12 +66,25 @@ namespace Microsoft.Midi.Settings.Controls
         }
     }
 
-    [ObservableObject]
-    public sealed partial class MidiEndpointAndGroupPickerControl : UserControl
+    public sealed partial class MidiEndpointAndGroupPickerControl : UserControl, INotifyPropertyChanged
     {
-        [ObservableProperty]
-        private ObservableCollection<MidiEndpointWrapper> endpoints = [];
+        public event PropertyChangedEventHandler? PropertyChanged;
 
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private ObservableCollection<MidiEndpointWrapper> _endpoints = [];
+        public ObservableCollection<MidiEndpointWrapper> Endpoints
+        {
+            get => _endpoints;
+            set
+            {
+                _endpoints = value;
+                OnPropertyChanged(nameof(Endpoints));
+            }
+        }
 
         public static readonly DependencyProperty SelectedEndpointProperty = DependencyProperty.Register(
             "SelectedEndpoint",
@@ -108,22 +121,39 @@ namespace Microsoft.Midi.Settings.Controls
         private static void OnSelectedGroupChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
 
-            
+
         }
 
-        [ObservableProperty]
-        private bool showMessageDestinationGroups;
+        public static readonly DependencyProperty ShowMessageDestinationGroupsProperty = DependencyProperty.Register(
+            "ShowMessageDestinationGroups",
+            typeof(bool),
+            typeof(MidiEndpointAndGroupPickerControl),
+            new PropertyMetadata(true)
+            );
 
-        [ObservableProperty]
-        private bool showMessageSourceGroups;
+        public bool ShowMessageDestinationGroups
+        {
+            get { return (bool)GetValue(ShowMessageDestinationGroupsProperty); }
+            set { SetValue(ShowMessageDestinationGroupsProperty, value); }
+        }
+
+        public static readonly DependencyProperty ShowMessageSourceGroupsProperty = DependencyProperty.Register(
+            "ShowMessageSourceGroups",
+            typeof(bool),
+            typeof(MidiEndpointAndGroupPickerControl),
+            new PropertyMetadata(true)
+            );
+
+        public bool ShowMessageSourceGroups
+        {
+            get { return (bool)GetValue(ShowMessageSourceGroupsProperty); }
+            set { SetValue(ShowMessageSourceGroupsProperty, value); }
+        }
 
         public ObservableCollection<MidiGroupForDisplay> Groups { get; } = [];
 
         public MidiEndpointAndGroupPickerControl()
         {
-            showMessageDestinationGroups = true;
-            showMessageSourceGroups = true;
-
             this.InitializeComponent();
         }
 

@@ -101,9 +101,10 @@ CreateFilterFactory(
 
     PKSFILTERFACTORY pKsFilterFactory = nullptr;
 
+    // Use const_cast to cast away const from string literal for PWSTR parameter
     NT_RETURN_IF_NTSTATUS_FAILED(KsCreateFilterFactory( device->FunctionalDeviceObject,
                                       &g_MidiFilterDescriptor,
-                                      L"MinMidi",
+                                      const_cast<PWSTR>(L"MinMidi"),
                                       nullptr,
                                       KSCREATE_ITEM_FREEONSTOP,
                                       nullptr, // Sleep Callback

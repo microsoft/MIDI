@@ -11,17 +11,17 @@ namespace Microsoft.Midi.Settings.Contracts.Services;
 public class MidiSettingsSearchResult
 {
     // TODO: might want to change this to a path to an image
-    public string Glyph;
+    public string Glyph = string.Empty;
 
-    public string DisplayText;
+    public string DisplayText = string.Empty;
 
-    public string DisplayDescription;
+    public string DisplayDescription = string.Empty;
 
-    public string ResultType;
+    public string ResultType = string.Empty;
 
     public List<string> Keywords = [];
 
-    public string DestinationKey;
+    public string DestinationKey = string.Empty;
 
     public object? Parameter = null;
 

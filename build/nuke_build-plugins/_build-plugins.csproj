@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace></RootNamespace>
     <NoWarn>CS0649;CS0169;CA1050;CA1822;CA2211;IDE1006</NoWarn>
+    <Nullable>enable</Nullable>
     <NukeRootDirectory>..</NukeRootDirectory>
     <NukeScriptDirectory></NukeScriptDirectory>
     <NukeTelemetryVersion>1</NukeTelemetryVersion>
@@ -24,5 +25,4 @@
     <PackageReference Include="Nuke.Common" Version="10.0.0" />
     <PackageReference Include="Nuke.GitHub" Version="7.0.0" />
   </ItemGroup>
-
 </Project>

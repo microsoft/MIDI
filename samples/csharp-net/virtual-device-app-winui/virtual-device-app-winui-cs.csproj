@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Label="Globals">
     <WebView2EnableCsWinRTProjection>False</WebView2EnableCsWinRTProjection>
     <WebView2WinRTWrapSystemTypes>False</WebView2WinRTWrapSystemTypes>
@@ -28,6 +28,14 @@
       <PublishTrimmed>False</PublishTrimmed>
       <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
       <RunAnalyzersDuringLiveAnalysis>True</RunAnalyzersDuringLiveAnalysis>
+      
+      <!-- Auto-generate binding redirects to resolve assembly version conflicts -->
+      <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+      <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+      
+      <!-- Suppress MSB3277: Assembly version conflict warning between WindowsBase 4.0.0.0 and 5.0.0.0 -->
+      <!-- This is expected when using WebView2 in WinUI 3 apps targeting .NET 10 -->
+      <NoWarn>$(NoWarn);MSB3277</NoWarn>
   </PropertyGroup>
     
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -58,6 +66,7 @@
     <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6584" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3848-prerelease" />
     <PackageReference Include="WinUIEx" Version="2.8.0" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>

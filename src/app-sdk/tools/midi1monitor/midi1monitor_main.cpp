@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation and Contributors.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of the Windows MIDI Services App SDK and should be used
@@ -376,7 +376,7 @@ void MessageDisplayWorker(std::stop_token token)
 void EnqueueMidiDataMessage(
     uint64_t windowsMidiServicesTimestamp,
     DWORD dwParam1,
-    DWORD dwParam2,
+    DWORD /*dwParam2*/,
     bool isError)
 {
     byte status = static_cast<byte>(dwParam1 & 0x000000FF);
@@ -398,7 +398,7 @@ void EnqueueMidiDataMessage(
 void EnqueueMidiLongDataMessage(
     uint64_t windowsMidiServicesTimestamp,
     LPMIDIHDR header,
-    DWORD dwParam2,
+    DWORD /*dwParam2*/,
     bool isError)
 {
     ReceivedMidiMessage msg{};

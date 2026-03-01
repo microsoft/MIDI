@@ -25,6 +25,7 @@ using static Nuke.Common.IO.PathConstruction;
 
 class Build : NukeBuild
 {
+
     /// Support plugins are available for:
     ///   - JetBrains ReSharper        https://nuke.build/resharper
     ///   - JetBrains Rider            https://nuke.build/rider
@@ -50,28 +51,32 @@ class Build : NukeBuild
     // Version information to change 
     // --------------------------------------------------------------------------------------
 
-    MidiBuildType BuildType => MidiBuildType.Preview; 
+    MidiBuildType BuildType = MidiBuildType.Preview;  // 从 Service_BuildNumber.txt 读取，默认为 Preview
     
-    const UInt16 BuildVersionMajor = 1;
-    const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 15;
-
-    UInt16 BuildVersionPreviewNumber = 14; // 从版本文件中读取，默认值为 14
-    string VersionName => "Service Preview " + BuildVersionPreviewNumber;
+    UInt16 BuildVersionMajor;             // 从 Service_BuildNumber.txt 读取
+    UInt16 BuildVersionMinor;             // 从 Service_BuildNumber.txt 读取
+    UInt16 BuildVersionPatch;             // 从 Service_BuildNumber.txt 读取
+    UInt16 BuildVersionPreviewNumber;     // 从 Service_BuildNumber.txt 读取
+    UInt16 BuildVersionPreviewMinorNumber; // 从 Service_BuildNumber.txt 读取
+    UInt16 BuildVersionPreviewBuildNumber; // 从 Service_BuildNumber.txt 读取
+    bool BuildVersionPreviewHasMinorNumber; // 用户是否设置了 Minor 版本号（区分 14.0 和 14.0.0 格式）
+    string VersionName => BuildType == MidiBuildType.Stable 
+        ? "Service " + BuildMajorMinorPatch 
+        : BuildType == MidiBuildType.RC 
+            ? "Service Release Candidate " + BuildVersionPreviewNumber 
+            : "Service Preview " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
 
-    UInt16 BuildVersionBuildNumber = 0; // 从版本文件中读取
+    string BuildMajorMinorPatch => BuildVersionMajor.ToString() + "." + BuildVersionMinor.ToString() + "." + BuildVersionPatch.ToString();
 
-    readonly string BuildMajorMinorPatch = BuildVersionMajor.ToString() + "." + BuildVersionMinor.ToString() + "." + BuildVersionPatch.ToString();
-
-    string BuildVersionPreviewString;
-    string BuildVersionFullString = "";
-    string BuildVersionAssemblyFullString = "";
-    string BuildVersionFileFullString = "";
+    string BuildVersionPreviewString = string.Empty;
+    string BuildVersionFullString = string.Empty;
+    string BuildVersionAssemblyFullString = string.Empty;
+    string BuildVersionFileFullString = string.Empty;
 
     string NugetPackageId => "Microsoft.Windows.Devices.Midi2";
-    string NugetPackageVersion;
+    string NugetPackageVersion = string.Empty;
 
 
     DateTime BuildDate;
@@ -81,25 +86,19 @@ class Build : NukeBuild
     // which makes a mess. So release-only.
     //readonly string ServiceBuildConfiguration = Configuration.Debug;
     readonly string ServiceBuildConfiguration = Configuration.Release;
-
-
-
-
+    
     //string SetupBundleFullVersionString => BuildMajorMinorRevision + "-" + NuGetVersionName + "." + BuildDateNumber + "-" + BuildTimeNumber;
 
-
-    AbsolutePath _thisReleaseFolder;
-
-
+    AbsolutePath _thisReleaseFolder = null!;
+    
     //string[] AppSdkAssemblies => new string[] {
     //    "Microsoft.Windows.Devices.Midi2",
     //    "Microsoft.Windows.Devices.Midi2.Initialization"
     //};
-
-
+    
     // ===========================================================
     // directories
-
+    
     AbsolutePath BuildRootFolder => NukeBuild.RootDirectory / "build";
 
     AbsolutePath ElectronProjectionRootFolder => BuildRootFolder / "electron-projection";
@@ -107,32 +106,26 @@ class Build : NukeBuild
     AbsolutePath StagingRootFolder => BuildRootFolder / "staging";
     AbsolutePath AppSdkStagingFolder => StagingRootFolder / "app-sdk";
     AbsolutePath ApiStagingFolder => StagingRootFolder / "api";
-
-
+    
     AbsolutePath ReleaseRootFolder => BuildRootFolder / "release";
     AbsolutePath AppSdkNugetOutputFolder => ReleaseRootFolder / "nuget";
-
+    
     AbsolutePath ThisReleaseFolder => _thisReleaseFolder;
-
-
+    
     AbsolutePath SourceRootFolder => NukeBuild.RootDirectory / "src";
     AbsolutePath ApiSolutionFolder => SourceRootFolder / "api";
-
-
+    
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
-
+    
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
-
-
-
+    
     AbsolutePath SetupBundleInfoIncludeFile => StagingRootFolder / "version" / "BundleInfo.wxi"; // TODO Need to change path of this
     AbsolutePath BuildVersionFile => StagingRootFolder / "version" / "Service_BuildNumber.txt";
-
+    
     AbsolutePath SdkVersionFilesFolder => StagingRootFolder / "version";
     AbsolutePath SdkVersionHeaderFile => SdkVersionFilesFolder / "WindowsMidiServicesSdkRuntimeVersion.h";
     AbsolutePath NuGetVersionHeaderFile => SdkVersionFilesFolder / "WindowsMidiServicesVersion.h";
     AbsolutePath CommonVersionCSharpFile => SdkVersionFilesFolder / "WindowsMidiServicesVersion.cs";
-
     
     string[] SdkPlatformsIncludingAnyCpu => new string[] { "x64", "Arm64EC", "AnyCPU" };
     string[] SdkPlatforms => new string[] { "x64", "Arm64EC" };
@@ -147,12 +140,12 @@ class Build : NukeBuild
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
-    string MSBuildPath;
+    string MSBuildPath = string.Empty;
 
     void SetMSBuildVersion()
     {
         // 首先使用 vswhere 检测 VS 实例（支持所有版本，包括最新的 VS 2026+）
-        string vswhereMsBuildPath = GetMSBuildPathFromVsWhere();
+        string? vswhereMsBuildPath = GetMSBuildPathFromVsWhere();
         if (!string.IsNullOrEmpty(vswhereMsBuildPath))
         {
             Console.WriteLine($"Using VS from vswhere: {vswhereMsBuildPath}");
@@ -196,7 +189,7 @@ class Build : NukeBuild
         MSBuildTasks.MSBuildPath = MSBuildPath;
     }
 
-    string GetMSBuildPathFromVsWhere()
+    string? GetMSBuildPathFromVsWhere()
     {
         try
         {
@@ -259,7 +252,7 @@ class Build : NukeBuild
             return null;
         }
     }
-
+    
     Target T_Prerequisites => _ => _
         .Executes(() =>
         {
@@ -277,6 +270,9 @@ class Build : NukeBuild
                 Environment.SetEnvironmentVariable("MIDI_REPO_ROOT", NukeBuild.RootDirectory);
             }
 
+            // Setup vcpkg: Check environment variable, vcpkg existence, and VS integration
+            SetupVcpkg();
+
             // this updates the build number and writes hte new value to the file
             IncrementBuildNumber();
 
@@ -287,20 +283,40 @@ class Build : NukeBuild
             }
             else if (BuildType == MidiBuildType.RC)
             {
-                BuildVersionPreviewString = "rc." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
+                // 兼容两种格式：
+                // - 14.0 格式 -> rc.14.0 (用户没有设置 Minor)
+                // - 14.0.0 格式 -> rc.14.0.0 (用户设置了 Minor，即使为 0 也要显示)
+                if (BuildVersionPreviewHasMinorNumber)
+                {
+                    BuildVersionPreviewString = "rc." + BuildVersionPreviewNumber + "." + BuildVersionPreviewMinorNumber + "." + BuildVersionPreviewBuildNumber;
+                }
+                else
+                {
+                    BuildVersionPreviewString = "rc." + BuildVersionPreviewNumber + "." + BuildVersionPreviewBuildNumber;
+                }
                 NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
             }
             else if (BuildType == MidiBuildType.Preview)
             {
-                BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
+                // 兼容两种格式：
+                // - 14.0 格式 -> preview.14.0 (用户没有设置 Minor)
+                // - 14.0.0 格式 -> preview.14.0.0 (用户设置了 Minor，即使为 0 也要显示)
+                if (BuildVersionPreviewHasMinorNumber)
+                {
+                    BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + BuildVersionPreviewMinorNumber + "." + BuildVersionPreviewBuildNumber;
+                }
+                else
+                {
+                    BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + BuildVersionPreviewBuildNumber;
+                }
                 NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
             }
 
             // they are the same, for our use here.
             BuildVersionFullString = NugetPackageVersion;
 
-            BuildVersionAssemblyFullString = BuildMajorMinorPatch + "." + BuildVersionBuildNumber;
-            BuildVersionFileFullString = BuildMajorMinorPatch + "." + BuildVersionBuildNumber;
+            BuildVersionAssemblyFullString = BuildMajorMinorPatch + "." + BuildVersionPreviewBuildNumber;
+            BuildVersionFileFullString = BuildMajorMinorPatch + "." + BuildVersionPreviewBuildNumber;
 
             _thisReleaseFolder = $"{ReleaseRootFolder / VersionName} ({DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")})";
 
@@ -339,7 +355,7 @@ class Build : NukeBuild
             msbuildProperties.Add("MidiBuildVersionMajor", BuildVersionMajor);
             msbuildProperties.Add("MidiBuildVersionMinor", BuildVersionMinor);
             msbuildProperties.Add("MidiBuildVersionPatch", BuildVersionPatch);
-            msbuildProperties.Add("MidiBuildVersionBuildNumber", BuildVersionBuildNumber);
+            msbuildProperties.Add("MidiBuildVersionBuildNumber", BuildVersionPreviewBuildNumber);
             msbuildProperties.Add("MidiBuildVersionPreviewString", $"{BuildVersionPreviewString}");
 
             msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version").ToString());
@@ -373,10 +389,19 @@ class Build : NukeBuild
         platforms.AddRange(ServiceAndApiPlatformsAll);
         platforms.Add("Win32");
 
+        // Restore NuGet packages before building
+        string solutionDir = ApiSolutionFolder.ToString() + @"\";
+        Console.Out.WriteLine($"----------------------------------------------------------------------");
+        Console.Out.WriteLine($"Restoring NuGet packages for: {solutionDir}");
+        
+        NuGetTasks.NuGetRestore(_ => _
+            .SetProcessWorkingDirectory(solutionDir)
+            .SetTargetPath(ApiSolutionFolder / "midi2.sln")
+            .SetSource(@"https://api.nuget.org/v3/index.json")
+        );
+
         foreach (var platform in platforms)
         {
-            string solutionDir = ApiSolutionFolder.ToString() + @"\";
-
             Console.Out.WriteLine($"----------------------------------------------------------------------");
             Console.Out.WriteLine($"SolutionDir: {solutionDir}");
             Console.Out.WriteLine($"Platform:    {platform}");
@@ -503,9 +528,7 @@ class Build : NukeBuild
             // transport-specific include file
             referenceFiles.Add(networkTransportFolder / "network_json_defs.h");
             //referenceFiles.Add(ble1TransportFolder / "ble1_json_defs.h");
-
-
-
+            
             // this is the only one that needs Arm64X
             referenceFiles.Add(intermediateFolder / "Midi2.MidiSrvTransport" / sourcePlatform / Configuration.Release / "Midi2MidiSrvTransport.h");
 
@@ -514,14 +537,9 @@ class Build : NukeBuild
             {
                 file.CopyToDirectory(ApiReferenceFolder / platform, ExistsPolicy.FileOverwrite);
             }
-
-
         }
-
     });
-
-
-
+    
     // 默认版本配置内容
     const string DefaultVersionFileContent = @"# Windows MIDI Services Service Version Configuration File
 # Windows MIDI Services Service 版本配置文件
@@ -530,10 +548,12 @@ class Build : NukeBuild
 #
 # Format:
 # 格式说明：
-# Line 1: Major.Minor.Patch (e.g.: 1.0.15) [Required]
-# 第1行：主版本号.次版本号.补丁版本号（例如：1.0.15）[必需]
-# Line 2: Preview.Minor.Build (e.g.: 14.0.0 or 14.0) [Optional]
-# 第2行：预览版本号.次版本号.构建号（例如：14.0.0 或 14.0）[可选]
+# Line 1: Build Type (preview, rc, stable) [Required]
+# 第1行：构建类型（preview、rc、stable）[必需]
+# Line 2: Major.Minor.Patch (e.g.: 1.0.15) [Required]
+# 第2行：主版本号.次版本号.补丁版本号（例如：1.0.15）[必需]
+# Line 3: Preview.Minor.Build (e.g.: 14.0.0 or 14.0) [Optional]
+# 第3行：预览版本号.次版本号.构建号（例如：14.0.0 或 14.0）[可选]
 #
 # Note:
 # 注意：
@@ -541,8 +561,9 @@ class Build : NukeBuild
 # 以 # 开头的行被视为注释，会被忽略
 #
 # Example:
-# 示例：1.0.15-preview.14.0.0
+# 示例：preview 1.0.15 14.0.0 -> 1.0.15-preview.14.0.0
 
+preview
 1.0.15
 14.0.0
 ";
@@ -551,8 +572,9 @@ class Build : NukeBuild
     {
         // 从版本文件中读取版本信息
         // 文件格式：
-        // 第1行：主版本号.次版本号.补丁版本号 (必需，例如: 1.0.15)
-        // 第2行：预览版本号.次版本号.构建号 (可选，支持 14.0.0 或 14.0 格式，默认为 14.0.0)
+        // 第1行：构建类型 (preview, rc, stable) [必需]
+        // 第2行：主版本号.次版本号.补丁版本号 (必需，例如: 1.0.15)
+        // 第3行：预览版本号.次版本号.构建号 (可选，支持 14.0.0 或 14.0 格式，默认为 14.0.0)
         // 以 # 开头的行被视为注释，会被忽略
         
         // 如果版本文件不存在，创建默认版本文件
@@ -585,27 +607,53 @@ class Build : NukeBuild
                     .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("#"))
                     .ToArray();
                 
-                // 只需要第1行存在即可
-                if (validLines.Length >= 1)
+                // 需要至少第1行和第2行
+                if (validLines.Length >= 2)
                 {
                     bool hasError = false;
                     
-                    // 验证第1行版本号格式 (Major.Minor.Patch)
-                    var versionParts = validLines[0].Trim().Split('.');
-                    if (versionParts.Length != 3 || 
-                        !ushort.TryParse(versionParts[0], out _) ||
-                        !ushort.TryParse(versionParts[1], out _) ||
-                        !ushort.TryParse(versionParts[2], out _))
+                    // 读取第1行：构建类型 (preview, rc, stable)
+                    var buildTypeString = validLines[0].Trim().ToLower();
+                    switch (buildTypeString)
                     {
-                        Log.Error($"Invalid version format in line 1: '{validLines[0]}'");
+                        case "preview":
+                            BuildType = MidiBuildType.Preview;
+                            break;
+                        case "rc":
+                            BuildType = MidiBuildType.RC;
+                            break;
+                        case "stable":
+                            BuildType = MidiBuildType.Stable;
+                            break;
+                        default:
+                            Log.Error($"Invalid build type in line 1: '{validLines[0]}'");
+                            Log.Error("Expected: preview, rc, or stable / 期望：preview、rc 或 stable");
+                            hasError = true;
+                            break;
+                    }
+                    
+                    // 读取第2行版本号 (Major.Minor.Patch)
+                    var versionParts = validLines[1].Trim().Split('.');
+                    if (versionParts.Length == 3 &&
+                        ushort.TryParse(versionParts[0], out ushort major) &&
+                        ushort.TryParse(versionParts[1], out ushort minor) &&
+                        ushort.TryParse(versionParts[2], out ushort patch))
+                    {
+                        BuildVersionMajor = major;
+                        BuildVersionMinor = minor;
+                        BuildVersionPatch = patch;
+                    }
+                    else
+                    {
+                        Log.Error($"Invalid version format in line 2: '{validLines[1]}'");
                         Log.Error("Expected format: Major.Minor.Patch (e.g. 1.0.15) / 期望格式: 主版本.次版本.补丁 (例如 1.0.15)");
                         hasError = true;
                     }
                     
-                    // 第2行是可选的，格式为 Preview.Minor.Build 或 Preview.Build
-                    if (validLines.Length >= 2)
+                    // 第3行是可选的，格式为 Preview.Minor.Build 或 Preview.Build
+                    if (validLines.Length >= 3)
                     {
-                        var previewBuildParts = validLines[1].Trim().Split('.');
+                        var previewBuildParts = validLines[2].Trim().Split('.');
                         
                         // 读取预览版本号（第1部分）
                         if (previewBuildParts.Length >= 1 && ushort.TryParse(previewBuildParts[0].Trim(), out ushort previewNumber))
@@ -614,45 +662,82 @@ class Build : NukeBuild
                         }
                         else
                         {
-                            Log.Error($"Invalid preview number in line 2: '{validLines[1]}'");
+                            Log.Error($"Invalid preview number in line 3: '{validLines[2]}'");
                             Log.Error("Expected format: Preview.Minor.Build (e.g. 14.0.0 or 14.0) / 期望格式: 预览版本.次版本.构建号 (例如 14.0.0 或 14.0)");
                             hasError = true;
                         }
                         
-                        // 读取构建号（最后一部分）
-                        if (previewBuildParts.Length >= 2)
+                        // 读取次版本号和构建号
+                        // 支持 Preview.Minor.Build (14.0.0) 或 Preview.Build (14.0) 格式
+                        if (previewBuildParts.Length >= 3)
                         {
-                            // 支持 Preview.Minor.Build (14.0.0) 或 Preview.Build (14.0) 格式
-                            int lastIndex = previewBuildParts.Length - 1;
-                            if (ushort.TryParse(previewBuildParts[lastIndex].Trim(), out ushort buildNumber))
+                            // 14.0.0 格式: Preview=14, Minor=0, Build=0
+                            BuildVersionPreviewHasMinorNumber = true;
+                            if (ushort.TryParse(previewBuildParts[1].Trim(), out ushort previewMinor))
                             {
-                                BuildVersionBuildNumber = buildNumber;
+                                BuildVersionPreviewMinorNumber = previewMinor;
                             }
                             else
                             {
-                                BuildVersionBuildNumber = 0;
+                                BuildVersionPreviewMinorNumber = 0;
+                            }
+                            if (ushort.TryParse(previewBuildParts[2].Trim(), out ushort buildNumber))
+                            {
+                                BuildVersionPreviewBuildNumber = buildNumber;
+                            }
+                            else
+                            {
+                                BuildVersionPreviewBuildNumber = 0;
+                            }
+                        }
+                        else if (previewBuildParts.Length == 2)
+                        {
+                            // 14.0 格式: Preview=14, Build=0 (不设置 Minor)
+                            BuildVersionPreviewHasMinorNumber = false;
+                            BuildVersionPreviewMinorNumber = 0;
+                            if (ushort.TryParse(previewBuildParts[1].Trim(), out ushort buildNumber))
+                            {
+                                BuildVersionPreviewBuildNumber = buildNumber;
+                            }
+                            else
+                            {
+                                BuildVersionPreviewBuildNumber = 0;
                             }
                         }
                         else
                         {
-                            BuildVersionBuildNumber = 0;
+                            BuildVersionPreviewHasMinorNumber = false;
+                            BuildVersionPreviewMinorNumber = 0;
+                            BuildVersionPreviewBuildNumber = 0;
                         }
                     }
                     
                     if (hasError)
                     {
                         Log.Error("Version file format error. Using default values / 版本文件格式错误。使用默认值");
-                        Log.Error($"Default: Preview={BuildVersionPreviewNumber}, Build={BuildVersionBuildNumber}");
+                        Log.Error($"Default: Type={BuildType}, Version={BuildMajorMinorPatch}, Preview={BuildVersionPreviewNumber}, Build={BuildVersionPreviewBuildNumber}");
                     }
                     else
                     {
-                        Log.Information($"Version loaded: {validLines[0]}-preview.{BuildVersionPreviewNumber}.{BuildVersionBuildNumber}");
+                        string buildTypeLabel = BuildType == MidiBuildType.Stable ? "" : BuildType == MidiBuildType.RC ? "-rc" : "-preview";
+                        if (BuildType == MidiBuildType.Stable)
+                        {
+                            Log.Information($"Version loaded: {BuildMajorMinorPatch} (stable)");
+                        }
+                        else if (BuildVersionPreviewHasMinorNumber)
+                        {
+                            Log.Information($"Version loaded: {BuildMajorMinorPatch}{buildTypeLabel}.{BuildVersionPreviewNumber}.{BuildVersionPreviewMinorNumber}.{BuildVersionPreviewBuildNumber}");
+                        }
+                        else
+                        {
+                            Log.Information($"Version loaded: {BuildMajorMinorPatch}{buildTypeLabel}.{BuildVersionPreviewNumber}.{BuildVersionPreviewBuildNumber}");
+                        }
                     }
                 }
                 else
                 {
-                    Log.Error($"Version file has insufficient lines: {validLines.Length} (expected at least 3)");
-                    Log.Error("Please check the file format / 请检查文件格式");
+                    Log.Error("Version file has insufficient lines (at least 2 lines required: build type and version)");
+                    Log.Error("版本文件行数不足（至少需要2行：构建类型和版本号）");
                 }
             }
             else
@@ -667,8 +752,7 @@ class Build : NukeBuild
             Log.Error("Using default values / 使用默认值");
         }
     }
-
-
+    
     void UpdateSetupBundleInfoIncludeFile(string platform)
     {
         //string versionString = $"{SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
@@ -682,7 +766,7 @@ class Build : NukeBuild
             writer.WriteLine("</Include>");
         }
     }
-
+    
     Target T_BuildServiceAndPluginsInstaller => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildServiceAndPlugins)
@@ -724,14 +808,12 @@ class Build : NukeBuild
                     .SetTargets("Clean", "Rebuild")
                     .EnableNodeReuse()
                 );
-
-
+                
                 // todo: it would be better to see if any of the sdk files have changed and only
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
 
                 string installerType = ServiceBuildConfiguration == Configuration.Debug ? "DEBUG" : "";
-
-
+                
                 string newInstallerName = $"Windows MIDI Services ({installerType}In-Box Service) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
                 var setupFile = InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe";
@@ -740,7 +822,7 @@ class Build : NukeBuild
                 BuiltInBoxInstallers[platform.ToLower()] = newInstallerName;
             }
         });
-
+        
     Target T_ZipServicePdbs => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildServiceAndPlugins)
@@ -755,9 +837,7 @@ class Build : NukeBuild
                 filter: x =>
                     x.HasExtension("pdb")
                 );
-            
         }
-
     });
 
     Target T_ZipPowershellDevUtilities => _ => _
@@ -827,8 +907,7 @@ class Build : NukeBuild
             x86.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-x86-win32.zip");
 
         });
-
-
+        
     Target BuildAndPublishAll => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_CreateVersionIncludes)
@@ -852,8 +931,212 @@ class Build : NukeBuild
             {
                 Console.WriteLine("No in-box installers built.");
             }
-
         });
-
-
+        
+    void SetupVcpkg()
+    {
+        Log.Information("Setting up vcpkg...");
+        
+        // Step 1: Check VCPKG_ROOT and VS Integration
+        var vcpkgRootFromEnv = Environment.GetEnvironmentVariable("VCPKG_ROOT");
+        var defaultVcpkgPath = NukeBuild.RootDirectory / "build" / "vcpkg";
+        
+        // Check VS integration status
+        var userPropsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "vcpkg", "vcpkg.user.props");
+        
+        bool vsIntegrationExists = File.Exists(userPropsPath);
+        string? vsIntegrationPath = null;
+        
+        if (vsIntegrationExists)
+        {
+            try
+            {
+                var propsContent = File.ReadAllText(userPropsPath);
+                // Extract path from: Project="...\vcpkg.props"
+                var match = System.Text.RegularExpressions.Regex.Match(propsContent, 
+                    @"Project=""([^""]+\\scripts\\buildsystems\\msbuild\\vcpkg\.props)""");
+                if (match.Success)
+                {
+                    vsIntegrationPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(match.Groups[1].Value)));
+                    Log.Information("VS Integration found at: {VsIntegrationPath}", vsIntegrationPath);
+                }
+            }
+            catch { }
+        }
+        
+        // Step 2: Determine which vcpkg to use
+        string? vcpkgRoot = null;
+        
+        if (!string.IsNullOrWhiteSpace(vcpkgRootFromEnv))
+        {
+            // VCPKG_ROOT is set, use it
+            vcpkgRoot = vcpkgRootFromEnv;
+            Log.Information("Using VCPKG_ROOT: {VcpkgRoot}", vcpkgRoot);
+        }
+        else if (!string.IsNullOrWhiteSpace(vsIntegrationPath))
+        {
+            // No VCPKG_ROOT but VS integration exists, use integrated path
+            vcpkgRoot = vsIntegrationPath;
+            Log.Information("Using VS integrated vcpkg: {VcpkgRoot}", vcpkgRoot);
+        }
+        else
+        {
+            // Neither exists, use default path
+            vcpkgRoot = defaultVcpkgPath;
+            Log.Information("Using default vcpkg path: {VcpkgRoot}", vcpkgRoot);
+        }
+        
+        // Step 3: Check if vcpkg exists, clone if needed
+        var vcpkgExe = Path.Combine(vcpkgRoot, "vcpkg.exe");
+        bool vcpkgExists = File.Exists(vcpkgExe);
+        
+        if (!vcpkgExists)
+        {
+            Log.Warning("vcpkg not found at: {VcpkgRoot}", vcpkgRoot);
+            Log.Information("Cloning vcpkg repository...");
+            
+            // Clone to default location
+            var buildDir = NukeBuild.RootDirectory / "build";
+            buildDir.CreateDirectory();
+            
+            var cloneProcess = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "clone https://github.com/Microsoft/vcpkg.git",
+                    WorkingDirectory = buildDir.ToString(),
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            
+            cloneProcess.Start();
+            string cloneOutput = cloneProcess.StandardOutput.ReadToEnd();
+            string cloneError = cloneProcess.StandardError.ReadToEnd();
+            cloneProcess.WaitForExit();
+            
+            if (cloneProcess.ExitCode != 0)
+            {
+                Log.Warning("Failed to clone vcpkg. Exit code: {ExitCode}", cloneProcess.ExitCode);
+                Log.Warning("Error: {Error}", cloneError);
+                return;
+            }
+            
+            Log.Information("vcpkg cloned successfully. Bootstrapping...");
+            
+            // Run bootstrap
+            var bootstrapProcess = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = "/c bootstrap-vcpkg.bat",
+                    WorkingDirectory = defaultVcpkgPath.ToString(),
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            
+            bootstrapProcess.Start();
+            string bootstrapOutput = bootstrapProcess.StandardOutput.ReadToEnd();
+            string bootstrapError = bootstrapProcess.StandardError.ReadToEnd();
+            bootstrapProcess.WaitForExit();
+            
+            if (bootstrapProcess.ExitCode != 0)
+            {
+                Log.Warning("vcpkg bootstrap failed. Exit code: {ExitCode}", bootstrapProcess.ExitCode);
+                Log.Warning("Error: {Error}", bootstrapError);
+                return;
+            }
+            
+            // Use the newly cloned vcpkg
+            vcpkgRoot = defaultVcpkgPath;
+            vcpkgExe = Path.Combine(vcpkgRoot, "vcpkg.exe");
+            Log.Information("vcpkg initialized at: {VcpkgRoot}", vcpkgRoot);
+        }
+        else
+        {
+            Log.Information("vcpkg found at: {VcpkgRoot}", vcpkgRoot);
+        }
+        
+        // Step 4: Set VCPKG_ROOT environment variable
+        Environment.SetEnvironmentVariable("VCPKG_ROOT", vcpkgRoot);
+        Log.Information("VCPKG_ROOT set to: {VcpkgRoot}", vcpkgRoot);
+        
+        // Step 5: Check and apply Visual Studio integration
+        Log.Information("Checking Visual Studio integration...");
+        
+        bool needsIntegration = false;
+        
+        if (!File.Exists(userPropsPath))
+        {
+            needsIntegration = true;
+            Log.Warning("Visual Studio integration not found.");
+        }
+        else
+        {
+            try
+            {
+                var propsContent = File.ReadAllText(userPropsPath);
+                var expectedPath = Path.Combine(vcpkgRoot, "scripts", "buildsystems", "msbuild", "vcpkg.props");
+                
+                if (!propsContent.Contains(expectedPath))
+                {
+                    needsIntegration = true;
+                    Log.Warning("Visual Studio integration points to different location.");
+                }
+            }
+            catch
+            {
+                needsIntegration = true;
+            }
+        }
+        
+        if (needsIntegration)
+        {
+            Log.Information("Applying Visual Studio integration...");
+            
+            var integrateProcess = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = vcpkgExe,
+                    Arguments = "integrate install",
+                    WorkingDirectory = vcpkgRoot,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            
+            integrateProcess.Start();
+            string output = integrateProcess.StandardOutput.ReadToEnd();
+            string error = integrateProcess.StandardError.ReadToEnd();
+            integrateProcess.WaitForExit();
+            
+            if (integrateProcess.ExitCode == 0)
+            {
+                Log.Information("Visual Studio integration applied successfully.");
+            }
+            else
+            {
+                Log.Warning("Integration failed. Exit code: {ExitCode}", integrateProcess.ExitCode);
+                Log.Warning("Error: {Error}", error);
+            }
+        }
+        else
+        {
+            Log.Information("Visual Studio integration is up to date.");
+        }
+        
+        Log.Information("vcpkg setup complete.");
+    }
 }

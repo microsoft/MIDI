@@ -616,6 +616,13 @@ EvtMidi2GroupTerminalBlocksCallback(
     ACX_REQUEST_PARAMETERS      params;
     ULONG_PTR                   outDataCb = 0;
     ULONG                       minValueSize;
+    // Variables moved to top to avoid goto skipping initialization
+    ACXSTREAM                   stream;
+    WDFDEVICE                   device;
+    PDEVICE_CONTEXT             pDevCtx;
+    ULONG                       valueCb;
+    PUCHAR                      pGrpTermBlk;
+    size_t                      grpTermBlkSize;
 
     PAGED_CODE();
 
@@ -627,27 +634,27 @@ EvtMidi2GroupTerminalBlocksCallback(
         status = STATUS_INVALID_PARAMETER;
         goto exit;
     }
-    ACXSTREAM stream = (ACXSTREAM)Object;
-    WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
-    if (!devCtx)
+    stream = (ACXSTREAM)Object;
+    device = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
+    if (!device)
     {
         status = STATUS_INVALID_PARAMETER;
         goto exit;
     }
-    PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+    pDevCtx = GetDeviceContext(device);
 
     // Determine if need to fetch GTB from Device
     if (!pDevCtx->DeviceGTBMemory)
     {
-        status = USBMIDI2DriverGetGTB(devCtx);
+        status = USBMIDI2DriverGetGTB(device);
     }
 
     // The size of the buffer provided by the caller
-    ULONG valueCb = params.Parameters.Property.ValueCb;
+    valueCb = params.Parameters.Property.ValueCb;
 
     // terminal block data.
-    PUCHAR pGrpTermBlk = NULL;
-    size_t grpTermBlkSize = 0;
+    pGrpTermBlk = NULL;
+    grpTermBlkSize = 0;
 
     if (pDevCtx->DeviceGTBMemory)
     {

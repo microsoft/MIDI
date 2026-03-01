@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -80,19 +80,19 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
         [ObservableProperty]
-        public bool useNewStyleWinMMPortNames;
+        public partial bool UseNewStyleWinMMPortNames { get; set; }
 
         [ObservableProperty]
-        public bool createConfigurationFile;
+        public partial bool CreateConfigurationFile { get; set; }
 
         [ObservableProperty]
-        public bool createDefaultLoopbackEndpoints;
+        public partial bool CreateDefaultLoopbackEndpoints { get; set; }
 
         [ObservableProperty]
-        public bool setServiceToAutoStart;
+        public partial bool SetServiceToAutoStart { get; set; }
 
         [ObservableProperty]
-        public string errorMessage;
+        public partial string ErrorMessage { get; set; }
 
         public bool CanPersistChanges
         {

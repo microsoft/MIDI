@@ -12,9 +12,9 @@ namespace Microsoft.Midi.Settings.Contracts.Services;
 
 public class MidiConfigFileHeader
 {
-    public string Comment { get; set; }
-    public string Name { get; set; }
-    public string Product { get; set; }
+    public string Comment { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Product { get; set; } = string.Empty;
     public double FileVersion { get; set; }
 }
 

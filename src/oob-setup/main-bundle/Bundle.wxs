@@ -33,6 +33,15 @@
         <bal:Condition Message="Developer mode in Windows Settings must be enabled to install this Windows MIDI Services preview package."
                        Condition="DevModeEnabled=1" />
 
+        <!-- Detect if VC++ Runtime is already installed -->
+        <util:RegistrySearch
+            Id="VCRedistInstalled"
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+            Value="Installed"
+            Variable="VCRedistInstalled"
+            Result="value"/>
+
         <BootstrapperApplication>
             <bal:WixStandardBootstrapperApplication LicenseUrl=""
                                                     SuppressOptionsUI="true"
@@ -56,13 +65,14 @@
         <PackageGroup Id="Prerequisites">
 
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
-            <ExePackage 
+            <ExePackage
                 Vital="false"
                 DisplayName="Microsoft Visual C++ Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
                 Compressed="yes"
-                InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
+                InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt"
                 Permanent="true"
+                DetectCondition="VCRedistInstalled"
                 >
             </ExePackage>
 

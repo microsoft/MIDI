@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -29,25 +29,25 @@ namespace Microsoft.Midi.Settings.ViewModels
         public MidiNetworkAdvertisedHost? AdvertisedHost { get; internal set; }
 
         [ObservableProperty]
-        private string? configEntryId;
+        public partial string? ConfigEntryId { get; set; }
 
         [ObservableProperty]
-        private string? name;
+        public partial string? Name { get; set; }
 
         [ObservableProperty]
-        private bool isConnected;
+        public partial bool IsConnected { get; set; }
 
         [ObservableProperty]
-        private bool isDirectConnect;
+        public partial bool IsDirectConnect { get; set; }
 
         [ObservableProperty]
-        private string? remoteAddress;
+        public partial string? RemoteAddress { get; set; }
 
         [ObservableProperty]
-        private string? remotePort;
+        public partial string? RemotePort { get; set; }
 
         [ObservableProperty]
-        private string stringifiedIpAddresses;
+        public partial string StringifiedIpAddresses { get; set; }
 
 
         public ICommand ConnectCommand { get; private set; }
@@ -56,6 +56,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         public MidiNetworkRemoteHostEntry()
         {
             ConfigEntryId = Guid.NewGuid().ToString("B");
+            StringifiedIpAddresses = string.Empty;
 
             ConnectCommand = new RelayCommand(() =>
             {
@@ -134,65 +135,65 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ObservableCollection<MidiNetworkRemoteHostEntry> RemoteHostEntries = [];
 
         [ObservableProperty]
-        private AdvancedCollectionView remoteHostEntriesSorted;
+        public partial AdvancedCollectionView RemoteHostEntriesSorted { get; set; }
 
         public ObservableCollection<MidiNetworkRemoteHostEntry> LocalHostEntries = [];
 
         [ObservableProperty]
-        private AdvancedCollectionView localHostEntriesSorted;
+        public partial AdvancedCollectionView LocalHostEntriesSorted { get; set; }
 
 
         public DispatcherQueue? DispatcherQueue { get; set; }
 
         [ObservableProperty]
-        public string transportDescription;
+        public partial string TransportDescription { get; set; }
 
 
 
 
         [ObservableProperty]
-        private string newHostEndpointName;
+        public partial string NewHostEndpointName { get; set; }
 
         [ObservableProperty]
-        private string newHostServiceInstanceName;
+        public partial string NewHostServiceInstanceName { get; set; }
 
         [ObservableProperty]
-        private string newHostProductInstanceId;
+        public partial string NewHostProductInstanceId { get; set; }
 
         [ObservableProperty]
-        private bool newHostEnableAdvertising;
+        public partial bool NewHostEnableAdvertising { get; set; }
 
         [ObservableProperty]
-        private bool newHostEnableMidi1Ports;
+        public partial bool NewHostEnableMidi1Ports { get; set; }
 
         [ObservableProperty]
-        private bool newHostUseAutomaticPortNumber;
+        public partial bool NewHostUseAutomaticPortNumber { get; set; }
 
         [ObservableProperty]
-        private string newHostPortNumber;
+        public partial string NewHostPortNumber { get; set; }
 
 
 
         [ObservableProperty]
-        private string newClientIdentifier;
+        public partial string NewClientIdentifier { get; set; }
 
         [ObservableProperty]
-        private string newClientDeviceId;
+        public partial string NewClientDeviceId { get; set; }
 
         [ObservableProperty]
-        private string newClientHostNameOrIP;
+        public partial string NewClientHostNameOrIP { get; set; }
 
         [ObservableProperty]
-        private string newClientPortNumber;
+        public partial string NewClientPortNumber { get; set; }
 
         [ObservableProperty]
-        private bool newClientEnableMidi1Ports;
+        public partial bool NewClientEnableMidi1Ports { get; set; }
 
         [ObservableProperty]
-        private string newClientComment;
+        public partial string NewClientComment { get; set; }
 
         [ObservableProperty]
-        private string newClientEndpointName;
+        public partial string NewClientEndpointName { get; set; }
 
 
         public ObservableCollection<MidiNetworkConfiguredHostWrapper> ConfiguredHosts { get; } = [];
@@ -207,11 +208,11 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (transportInfoService != null)
             {
-                transportDescription = transportInfoService.GetTransportForCode("NET2UDP").Description;
+                TransportDescription = transportInfoService.GetTransportForCode("NET2UDP").Description;
             }
             else
             {
-                transportDescription = string.Empty;
+                TransportDescription = string.Empty;
             }
 
             InitializeNewHostSettings();
@@ -301,6 +302,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             NewHostServiceInstanceName = defaultServiceName;
             NewHostEndpointName = defaultEndpointName;
             NewHostProductInstanceId = defaultProductInstanceId;
+            NewHostPortNumber = string.Empty;
 
             // TODO: Additional properties once we have them enabled
         }
@@ -349,6 +351,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             NewClientIdentifier = Guid.NewGuid().ToString();
             NewClientPortNumber = string.Empty;
             NewClientEnableMidi1Ports = true;
+            NewClientComment = string.Empty;
+            NewClientEndpointName = string.Empty;
         }
 
         public bool CreateClientDirect()

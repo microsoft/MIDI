@@ -2,11 +2,12 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
 	    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
-        <TargetPlatformVersion>10.0.26100.0</TargetPlatformVersion>
+        <TargetPlatformVersion>$(LatestTargetPlatformVersion)</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.26100.0</TargetPlatformMinVersion>
-        <WindowsSDKPackageVersion>10.0.26100.57</WindowsSDKPackageVersion>
+        <!-- <WindowsSDKPackageVersion>10.0.26100.57</WindowsSDKPackageVersion> -->
 
         <Nullable>enable</Nullable>
+        <LangVersion>preview</LangVersion>
         <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
         
         <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
@@ -50,7 +51,7 @@
       <!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>-->
 	
 	    <!--<WindowsSdkPackageVersion>10.0.20348.28</WindowsSdkPackageVersion>-->
-	    <!--<WindowsSdkPackageVersion>10.0.22621.29</WindowsSdkPackageVersion>-->
+	    <!--<WindowsSdkPackageVersion>10.0.26100.29</WindowsSdkPackageVersion>-->
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -64,7 +65,12 @@
 
 
   <PropertyGroup>
-    <NoWarn>$(NoWarn);MVVMTK0050;MVVMTK0045;CS8618;CS8305</NoWarn>
+    <!-- CS8305: API 仅用于评估，是预览版功能 -->
+    <!-- CS8618: 可空引用类型 - 构造函数中未初始化的非空字段 -->
+    <!-- CS8012: 引用程序集面向的是另一个处理器（ARM64/x64 混合构建时的警告） -->
+    <!-- MVVMTK0045: [ObservableProperty] 字段不是 AOT 兼容的，建议使用 partial 属性 -->
+    <!-- MVVMTK0050: [ObservableObject] 属性不是 AOT 兼容的，建议继承 ObservableObject -->
+    <NoWarn>$(NoWarn);CS8305;CS8618;CS8012;MVVMTK0045;MVVMTK0050</NoWarn>
   </PropertyGroup>
 
 
