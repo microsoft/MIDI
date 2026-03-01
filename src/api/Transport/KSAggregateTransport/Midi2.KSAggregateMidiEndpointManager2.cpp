@@ -643,7 +643,7 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceCreateMidiUmpEndpoint(
 
         // Add to internal endpoint manager
         m_activatedEndpointDefinitions.insert_or_assign(
-            internal::NormalizeDeviceInstanceIdWStringCopy(parentDevice->DeviceInstanceId),
+            internal::NormalizeDeviceInstanceIdWStringCopy(endpointDefinition->EndpointDeviceInstanceId),
             endpointDefinition);
 
         return swdCreationResult;
@@ -811,7 +811,7 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceUpdateExistingMidiUmpEndpointWithFi
 
         // Add to internal endpoint manager
         m_activatedEndpointDefinitions.insert_or_assign(
-            internal::NormalizeDeviceInstanceIdWStringCopy(parentDevice->DeviceInstanceId),
+            internal::NormalizeDeviceInstanceIdWStringCopy(endpointDefinition->EndpointDeviceInstanceId),
             endpointDefinition);
 
     }
@@ -2359,15 +2359,6 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     // You can open filters multiple times, but you cannot have a pin open in more than one place
     // KS devices cannot add new pins on an existing filter
 
-
-
-    // TODO: Should just get that list of pins back, and even if it's > 32, just break it up into separate 
-    // endpoints of pins (16 in, 16 out, max). May need a "distribute pins" type of function
-    // to return a vector of vectors of pins
-    // Can change the GetMidi1FilterPins to return a vector of KsAggregateEndpointMidiPinList entries, 
-    // each of which has a list of in pins and out pins or whatever ends up convenient
-    //
-
     bool newPendingEndpointsCreated { false };
     bool existingPendingEndpointUpdated{ false };
     
@@ -2542,10 +2533,9 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
             );
 
             // ===================================================================
-            // Create a new endpoint
+            // Create new pending endpoint
 
             std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition{ nullptr };
-
 
             RETURN_IF_FAILED(CreatePendingEndpointDefinitionForFilterDevice(filterDevice, endpointDefinition));
             RETURN_HR_IF_NULL(E_POINTER, endpointDefinition);
@@ -2659,6 +2649,16 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved(
     // remove endpoints which no longer have any pins
     for (auto const& ep : endpointsToRemove)
     {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Removing endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(ep->EndpointDeviceInstanceId.c_str(), "endpoint device instance id")
+        );
+
         auto hr = m_midiDeviceManager->DeactivateEndpoint(ep->EndpointDeviceInstanceId.c_str());
 
         if (SUCCEEDED(hr))
@@ -2675,7 +2675,17 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved(
     // update existing definitions
     for (auto const& ep : endpointsToUpdate)
     {
-        RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(ep));
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Updating endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(ep->EndpointDeviceInstanceId.c_str(), "endpoint device instance id")
+        );
+
+        LOG_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(ep));
     }
 
     return S_OK;
