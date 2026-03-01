@@ -2589,7 +2589,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved(
     DeviceWatcher watcher,
-    DeviceInformationUpdate /* deviceInterfaceUpdate */
+    DeviceInformationUpdate deviceInterfaceUpdate
 )
 {
     UNREFERENCED_PARAMETER(watcher);
@@ -2598,96 +2598,85 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved(
     // Logic needs to be rewritten to remove pins from potentially multiple endpoints
 
 
-    //TraceLoggingWrite(
-    //    MidiKSAggregateTransportTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-    //    TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "removed interface")
-    //);
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "removed interface")
+    );
 
-    //std::wstring removedFilterDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(deviceInterfaceUpdate.Id().c_str()) };
+    std::wstring removedFilterDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(deviceInterfaceUpdate.Id().c_str()) };
 
-    //// find an active device with this filter
+    auto activatedLock = m_activatedEndpointDefinitionsLock.lock();
 
-    //std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition{ nullptr };
-
-    //for (auto& endpointListIterator : m_activatedEndpointDefinitions)
-    //{
-    //    // check pins for this filter
-    //    for (auto& pin: endpointListIterator.second->MidiPins)
-    //    {
-    //        if (internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId)
-    //        {
-    //            endpointDefinition = endpointListIterator.second;
-    //            break;
-    //        }
-    //    }
-
-    //}
-
-    //if (endpointDefinition != nullptr)
-    //{
-    //    bool done { false };
-
-    //    while (!done)
-    //    {
-    //        auto pins = endpointDefinition->GetAllPins();
-
-    //        auto foundIt = std::find_if(pins.begin(), pins.end(),
-    //            [&removedFilterDeviceId](std::shared_ptr<KsAggregateEndpointMidiPinDefinition2> pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
-    //        );
-
-    //        if (foundIt != endpointDefinition->MidiPins.end())
-    //        {
-    //            // erase the pin definition with this 
-    //            endpointDefinition->MidiPins.erase(foundIt);
-    //        }
-    //        else
-    //        {
-    //            // we've removed all the pins for this interface
-    //            done = true;
-    //        }
-    //    }
-
-    //    if (endpointDefinition->MidiPins.size() > 0)
-    //    {
-    //        // we've removed all the pins for this interface, but there are still
-    //        // pins left, so now it's time to update the endpoint
+    // remove all pins for this filter
 
 
-    //        // TODO: Need to cache the name from the driver/registry so we don't have to do a lookup here.
+    std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> endpointsToUpdate;
+    std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> endpointsToRemove;
 
-    //        std::shared_ptr<KsAggregateParentDeviceDefinition2> parentDeviceDefinition{ nullptr };
+    // TODO: This should also remove from pending endpoints if someone adds and removes immediately
 
-    //        if (SUCCEEDED(FindExistingParentDeviceDefinitionForEndpoint(endpointDefinition, parentDeviceDefinition)))
-    //        {
-    //            RETURN_HR_IF_NULL(E_UNEXPECTED, parentDeviceDefinition);
 
-    //            // update remaining pins in existing endpoint definition
-    //            RETURN_IF_FAILED(UpdateNewPinDefinitions(removedFilterDeviceId, endpointDefinition));
-    //            RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(endpointDefinition));
-    //        }
-    //        else
-    //        {
-    //            RETURN_IF_FAILED(E_NOTFOUND);
-    //        }
-    //    }
-    //    else
-    //    {
-    //        auto lock = m_activatedEndpointDefinitionsLock.lock();
+    std::shared_ptr<KsAggregateEndpointDefinition2> endpointDefinition{ nullptr };
 
-    //        // notify the device manager using the InstanceId for this midi device
-    //        RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(
-    //            internal::NormalizeDeviceInstanceIdWStringCopy(endpointDefinition->EndpointDeviceInstanceId).c_str()));
+    for (auto& endpointListIterator : m_activatedEndpointDefinitions)
+    {
+        auto ep = endpointListIterator.second;
 
-    //        // remove the endpoint from the list
+        size_t sourcePinOriginalCount{ ep->MidiSourcePins.size() };
+        size_t destinationPinOriginalCount{ ep->MidiDestinationPins.size() };
 
-    //        m_activatedEndpointDefinitions.erase(internal::NormalizeDeviceInstanceIdWStringCopy(endpointDefinition->ParentDeviceInstanceId));
-    //    }
-    //}
+        ep->MidiSourcePins.erase(std::remove_if(
+            ep->MidiSourcePins.begin(), 
+            ep->MidiSourcePins.end(), 
+            [removedFilterDeviceId](const auto& pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
+        ), ep->MidiSourcePins.end());
+
+
+        ep->MidiDestinationPins.erase(std::remove_if(
+            ep->MidiDestinationPins.begin(),
+            ep->MidiDestinationPins.end(),
+            [removedFilterDeviceId](const auto& pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
+        ), ep->MidiDestinationPins.end());
+
+
+        // Add to update or removal list based on how many pins are left
+        if (ep->MidiSourcePins.empty() && ep->MidiDestinationPins.empty())
+        {
+            endpointsToRemove.push_back(ep);
+        }
+        else if (ep->MidiSourcePins.size() != sourcePinOriginalCount ||
+            ep->MidiDestinationPins.size() != destinationPinOriginalCount)
+        {
+            endpointsToUpdate.push_back(ep);
+        }
+    }
+
+    // remove endpoints which no longer have any pins
+    for (auto const& ep : endpointsToRemove)
+    {
+        auto hr = m_midiDeviceManager->DeactivateEndpoint(ep->EndpointDeviceInstanceId.c_str());
+
+        if (SUCCEEDED(hr))
+        {
+            m_activatedEndpointDefinitions.erase(ep->EndpointDeviceInstanceId);
+        }
+        else
+        {
+            LOG_IF_FAILED(hr);
+        }
+
+    }
+
+    // update existing definitions
+    for (auto const& ep : endpointsToUpdate)
+    {
+        RETURN_IF_FAILED(DeviceUpdateExistingMidiUmpEndpointWithFilterChanges(ep));
+    }
 
     return S_OK;
 }

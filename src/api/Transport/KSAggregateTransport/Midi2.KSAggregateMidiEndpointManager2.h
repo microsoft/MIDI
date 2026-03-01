@@ -14,7 +14,7 @@
 
 using namespace winrt::Windows::Devices::Enumeration;
 
-#define DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS           250
+#define DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS           300 //250 is the minimum for some of my 16 port USB devices
 #define KSA_INTERFACE_ENUM_TIMEOUT_MS_MINIMUM_VALUE     20
 #define KSA_INTERFACE_ENUM_TIMEOUT_MS_MAXIMUM_VALUE     2500
 #define KSA_INTERFACE_ENUM_TIMEOUT_REG_VALUE            L"KsaInterfaceEnumTimeoutMS"
