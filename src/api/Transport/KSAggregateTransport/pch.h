@@ -73,6 +73,7 @@
 #include "WindowsMidiServices_i.c"
 #include "midi_utils.h"
 
+#include "midi_timestamp.h"
 
 #undef GetObject
 #include <winrt/Windows.Data.Json.h>

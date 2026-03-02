@@ -22,49 +22,49 @@ using namespace winrt::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-_Use_decl_annotations_
-void KsAggregateEndpointDefinition2::RemoveAllPinsForFilter(std::wstring const& filterId)
-{
-    auto removedFilterDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(filterId);
-    bool done = false;
-    while (!done)
-    {
-        auto foundIt = std::find_if(MidiSourcePins.begin(), MidiSourcePins.end(),
-            [&removedFilterDeviceId](std::shared_ptr<KsAggregateEndpointMidiPinDefinition2> pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
-        );
-
-        if (foundIt != MidiSourcePins.end())
-        {
-            // erase the pin definition with this 
-            MidiSourcePins.erase(foundIt);
-        }
-        else
-        {
-            // we've removed all the pins for this interface
-            done = true;
-        }
-    }
-
-    done = false;
-    while (!done)
-    {
-        auto foundIt = std::find_if(MidiDestinationPins.begin(), MidiDestinationPins.end(),
-            [&removedFilterDeviceId](std::shared_ptr<KsAggregateEndpointMidiPinDefinition2> pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
-        );
-
-        if (foundIt != MidiDestinationPins.end())
-        {
-            // erase the pin definition with this 
-            MidiDestinationPins.erase(foundIt);
-        }
-        else
-        {
-            // we've removed all the pins for this interface
-            done = true;
-        }
-    }
-
-}
+//_Use_decl_annotations_
+//void KsAggregateEndpointDefinition2::RemoveAllPinsForFilter(std::wstring const& filterId)
+//{
+//    auto removedFilterDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(filterId);
+//    bool done = false;
+//    while (!done)
+//    {
+//        auto foundIt = std::find_if(MidiSourcePins.begin(), MidiSourcePins.end(),
+//            [&removedFilterDeviceId](std::shared_ptr<KsAggregateEndpointMidiPinDefinition2> pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
+//        );
+//
+//        if (foundIt != MidiSourcePins.end())
+//        {
+//            // erase the pin definition with this 
+//            MidiSourcePins.erase(foundIt);
+//        }
+//        else
+//        {
+//            // we've removed all the pins for this interface
+//            done = true;
+//        }
+//    }
+//
+//    done = false;
+//    while (!done)
+//    {
+//        auto foundIt = std::find_if(MidiDestinationPins.begin(), MidiDestinationPins.end(),
+//            [&removedFilterDeviceId](std::shared_ptr<KsAggregateEndpointMidiPinDefinition2> pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
+//        );
+//
+//        if (foundIt != MidiDestinationPins.end())
+//        {
+//            // erase the pin definition with this 
+//            MidiDestinationPins.erase(foundIt);
+//        }
+//        else
+//        {
+//            // we've removed all the pins for this interface
+//            done = true;
+//        }
+//    }
+//
+//}
 
 
 
@@ -94,20 +94,29 @@ CMidi2KSAggregateMidiEndpointManager2::Initialize(
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
-    // needed for internal consumption. Gary to replace this with feature enablement check
-    // defined in pch.h
-    DWORD individualInterfaceEnumTimeoutMS{ DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS };
-    if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, KSA_INTERFACE_ENUM_TIMEOUT_REG_VALUE, &individualInterfaceEnumTimeoutMS)))
+    if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, KSA_INTERFACE_ENUM_TIMEOUT_REG_VALUE, &m_individualInterfaceEnumTimeoutMilliseconds)))
     {
-        individualInterfaceEnumTimeoutMS = max(individualInterfaceEnumTimeoutMS, KSA_INTERFACE_ENUM_TIMEOUT_MS_MINIMUM_VALUE);
-        individualInterfaceEnumTimeoutMS = min(individualInterfaceEnumTimeoutMS, KSA_INTERFACE_ENUM_TIMEOUT_MS_MAXIMUM_VALUE);
-
-        m_individualInterfaceEnumTimeoutMS = individualInterfaceEnumTimeoutMS;
+        m_individualInterfaceEnumTimeoutMilliseconds = max(m_individualInterfaceEnumTimeoutMilliseconds, KSA_INTERFACE_ENUM_TIMEOUT_MS_MINIMUM_VALUE);
+        m_individualInterfaceEnumTimeoutMilliseconds = min(m_individualInterfaceEnumTimeoutMilliseconds, KSA_INTERFACE_ENUM_TIMEOUT_MS_MAXIMUM_VALUE);
     }
     else
     {
-        m_individualInterfaceEnumTimeoutMS = DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS;
+        m_individualInterfaceEnumTimeoutMilliseconds = DEFAULT_KSA_INTERFACE_ENUM_TIMEOUT_MS;
     }
+
+    // calculate the timeout in ticks
+    m_individualInterfaceEnumTimeoutTicks = static_cast<uint64_t>(m_individualInterfaceEnumTimeoutMilliseconds * static_cast<double>(internal::GetMidiTimestampFrequency()) / MILLISECONDS_PER_SECOND);
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Calculated max timeout for interfact arrival", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(m_individualInterfaceEnumTimeoutTicks, "in ticks"),
+        TraceLoggingUInt32(m_individualInterfaceEnumTimeoutMilliseconds, "in milliseconds")
+        );
 
 
     // the ksa2603 fix enumerates device interfaces instead of parent devices
@@ -945,8 +954,28 @@ CMidi2KSAggregateMidiEndpointManager2::GetKSDriverSuppliedName(HANDLE hInstantia
             name = nameFromRegistry;
         }
 
+
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Name found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(name.c_str(), "name")
+        );
+
         return S_OK;
     }
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Name not found found (this is common)", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return E_NOTFOUND;
 }
@@ -1632,6 +1661,7 @@ CMidi2KSAggregateMidiEndpointManager2::CreatePendingEndpointDefinitionForFilterD
         TraceLoggingWideString(L"Adding pending aggregate UMP endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    newEndpointDefinition->LastUpdatedTimestamp = internal::GetCurrentMidiTimestamp();
     m_pendingEndpointDefinitions.push_back(newEndpointDefinition);
     endpointDefinition = newEndpointDefinition;
 
@@ -1670,8 +1700,6 @@ CMidi2KSAggregateMidiEndpointManager2::CreatePendingEndpointDefinitionForFilterD
 //    }
 //}
 
-#define MAX_THREAD_WORKER_WAIT_TIME_MS 1000
-
 _Use_decl_annotations_
 void CMidi2KSAggregateMidiEndpointManager2::EndpointCreationThreadWorker(
     std::stop_token token)
@@ -1682,109 +1710,127 @@ void CMidi2KSAggregateMidiEndpointManager2::EndpointCreationThreadWorker(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Worker: Enter.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
 
     while (!token.stop_requested())
     {
-        TraceLoggingWrite(
-            MidiKSAggregateTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_VERBOSE,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"In loop. Waiting to be woken up.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-
-        // wait to be woken up
-        m_endpointCreationThreadWakeup.wait(MAX_THREAD_WORKER_WAIT_TIME_MS);
-
-        if (!token.stop_requested())
+        if (m_pendingEndpointDefinitions.empty())
         {
-            // we sleep for this timeout before we check to see if the thread is signaled.
-            // this gives time for an additional interface notification to cause the event
-            // to be reset
-            Sleep(m_individualInterfaceEnumTimeoutMS);
+            m_endpointCreationThreadWakeup.ResetEvent();
 
-            // if we're still signaled, that means no other pnp notifications came in during the nap, or if they
-            // did, they completed within that nap period
-            if (m_endpointCreationThreadWakeup.is_signaled() && !m_pendingEndpointDefinitions.empty())
+            // we sleep KSA_EMPTY_NEW_ENDPOINT_QUEUE_SLEEP_MS max at a time if initial enumeration 
+            // has completed. The addition of a new endpoint will wake this up but endpoint
+            // creation is something that happens a lot at start and then rarely afterwards, so 
+            // we don't want to chew more CPU than necessary
+            if (m_initialEndpointCreationCompleted && !token.stop_requested())
             {
-                m_endpointCreationThreadWakeup.ResetEvent();    // it's a manual reset event
-
                 TraceLoggingWrite(
                     MidiKSAggregateTransportTelemetryProvider::Provider(),
                     MIDI_TRACE_EVENT_VERBOSE,
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Thread was signaled and pending definition count > 0. About to acquire lock.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Worker: Initial endpoint creation completed. Taking a nap", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
+                m_endpointCreationThreadWakeup.wait(KSA_EMPTY_PENDING_ENDPOINT_QUEUE_WAIT_MS);
+            }
+        }
+        else  // queue is not empty
+        {
+            uint32_t countEndpointsCreated{ 0 };
 
-                // lock the definitions so we can process them
-                // the OnDeviceInterfaceAdded method also attempts this lock
-                // so this would prevent new interfaces from coming in
-                // until we're done with the pending ones.
-                auto lock = m_pendingEndpointDefinitionsLock.lock();
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Worker: Processing queue", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
 
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_VERBOSE,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Lock acquired. Processing pending endpoint definitions.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
+            // the wakeup happens right after changes are made to
+            // an endpoint. If we don't wait this long, nothing will be ready
+            if (m_endpointCreationThreadWakeup.is_signaled() && !token.stop_requested())
+            {
+                Sleep(m_individualInterfaceEnumTimeoutMilliseconds);
+                m_endpointCreationThreadWakeup.ResetEvent();
+            }
 
-                while (m_pendingEndpointDefinitions.size() > 0)
+
+            // see if there are any endpoints that are ready to be created
+
+            {
+                auto epIterator = m_pendingEndpointDefinitions.begin();
+                while (epIterator != m_pendingEndpointDefinitions.end() && !token.stop_requested())
                 {
-                    // effectively a queue, but because we have to iterate and search 
-                    // this in other functions, a vector is more appropriate
-                    auto ep = m_pendingEndpointDefinitions[0];
+                    // create any endpoints which haven't been updated in the allowable window
+                    // we use the MIDI timestamp as a convenient QPC stand-in here.
+                    if (!(*epIterator)->LockedForUpdating && internal::GetCurrentMidiTimestamp() - (*epIterator)->LastUpdatedTimestamp >= m_individualInterfaceEnumTimeoutTicks)
+                    {
+                        TraceLoggingWrite(
+                            MidiKSAggregateTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Worker: Endpoint ready to be created. Acquiring lock", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                        );
 
+                        auto lock = m_pendingEndpointDefinitionsLock.lock();
+
+                        // create the endpoint
+                        LOG_IF_FAILED(DeviceCreateMidiUmpEndpoint(*epIterator));
+                        countEndpointsCreated++;
+
+                        epIterator = m_pendingEndpointDefinitions.erase(epIterator);
+
+                        TraceLoggingWrite(
+                            MidiKSAggregateTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Worker: Endpoint created", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                        );
+                    }
+                    else
+                    {
+                        ++epIterator;
+                    }
+                }
+
+                if (countEndpointsCreated == 0)
+                {
                     TraceLoggingWrite(
                         MidiKSAggregateTransportTelemetryProvider::Provider(),
                         MIDI_TRACE_EVENT_VERBOSE,
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Processing pending endpoint definition.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(ep->EndpointDeviceInstanceId.c_str(), "device instance id"),
-                        TraceLoggingWideString(ep->EndpointName.c_str(), "name")
-                        );
-
-                    m_pendingEndpointDefinitions.erase(m_pendingEndpointDefinitions.begin());
-
-                    // create the endpoint
-                    LOG_IF_FAILED(DeviceCreateMidiUmpEndpoint(ep));
+                        TraceLoggingWideString(L"Worker: No endpoints created", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
                 }
 
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_VERBOSE,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"EndpointCreationWorker: Processed all pending endpoint definitions.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
             }
+        }
 
-            // no pending endpoints. If initial enumeration has completed, 
-            // signal that we're done as well
-            if (m_EnumerationCompleted.is_signaled() && m_pendingEndpointDefinitions.empty())
-            {
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_VERBOSE,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Initial enumeration and endpoint creation complete.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
+        // no pending endpoints. If initial enumeration has completed, 
+        // signal that we're done as well
+        if (m_EnumerationCompleted.is_signaled() && m_pendingEndpointDefinitions.empty())
+        {
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Worker: Initial enumeration and endpoint creation complete. Signaling end of initial endpoint creation.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
 
-                m_initialEndpointCreationCompleted.SetEvent();
-            }
+            m_initialEndpointCreationCompleted.SetEvent();
         }
     }
 
@@ -1794,7 +1840,7 @@ void CMidi2KSAggregateMidiEndpointManager2::EndpointCreationThreadWorker(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Worker: Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
 
@@ -1855,6 +1901,16 @@ CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
     uint32_t& countMidiDestinationPinsAdded
     )
 {
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(filterDevice.Id().c_str(), "filter device id")
+    );
+
     // Wrapper opens the handle internally.
     KsHandleWrapper deviceHandleWrapper(filterDevice.Id().c_str());
     RETURN_IF_FAILED(deviceHandleWrapper.Open());
@@ -1991,8 +2047,10 @@ CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"MIDI 1.0 pins enumerated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Completed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(filterDevice.Id().c_str(), "filter device id"),
+        TraceLoggingUInt32(countMidiDestinationPinsAdded, "count destination pins added"),
+        TraceLoggingUInt32(countMidiSourcePinsAdded, "count source pins added"),
         TraceLoggingUInt32(static_cast<uint32_t>(pinListToAddTo.size()), "Total size of pin list including new pins.")
     );
 
@@ -2285,20 +2343,6 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         TraceLoggingWideString(filterDevice.Id().c_str(), "added interface")
     );
 
-
-
-
-    // 1. Get the list of pins that are the right category for us to try to activate
-    // 2. Loop through and build final list of all MIDI 1.0 source and destination pins
-    // 3. Do we already have an activated endpoint for this device?
-    //    3.1 If we do, then see if it has room for these pins.
-    //        3.1.1 If it has room, then add these pins to the endpoint
-    //        3.1.2 If it doesn't have room, then build a new endpoint for this device
-    //              and add that endpoint to the pending endpoints list
-    //    3.2 If we do not have an activated endpoint, see if we have a pending endpoint
-    //    
-
-
     std::wstring transportCode(TRANSPORT_CODE);
 
     // Wrapper opens the handle internally.
@@ -2313,7 +2357,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     uint32_t countEnumeratedMidiDestinationPins{ 0 };
     RETURN_IF_FAILED(GetMidi1FilterPins(filterDevice, pinList, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins));
 
-    if (pinList.size() == 0)
+    if (pinList.empty())
     {
         TraceLoggingWrite(
             MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -2328,13 +2372,8 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         return S_OK;
     }
 
-    // we lock up front to help ensure we're processing these serially
-    auto activatedLock = m_activatedEndpointDefinitionsLock.lock();
-    auto pendingLock = m_pendingEndpointDefinitionsLock.lock();
-
-
     // put the thread worker back to sleep
-    m_endpointCreationThreadWakeup.ResetEvent();
+//    m_endpointCreationThreadWakeup.ResetEvent();
 
     // We have MIDI 1.0 pins to process, so we'll need to find or create a parent device
     // and also find or create an endpoint under that parent, which has sufficient room
@@ -2353,6 +2392,9 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         parentDeviceDefinition
     ));
 
+    // we lock up front to help ensure we're processing these serially
+    auto activatedLock = m_activatedEndpointDefinitionsLock.lock();
+    auto pendingLock = m_pendingEndpointDefinitionsLock.lock();
 
     // A single endpoint can have multiple filters
     // A single filter can be in multiple endpoints
@@ -2386,9 +2428,10 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
                     existingPendingEndpointDefinition = *r;
 
+                    existingPendingEndpointDefinition->LockedForUpdating = true;
+
                     while (!pinList.empty() && !tryNextEndpoint)
                     {
-
                         auto pin = *pinList.begin();
                         bool pinAdded = AddPinToEndpoint(existingPendingEndpointDefinition, pin);
 
@@ -2397,6 +2440,8 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
                         if (pinAdded)
                         {
+                            existingPendingEndpointDefinition->LastUpdatedTimestamp = internal::GetCurrentMidiTimestamp();
+
                             TraceLoggingWrite(
                                 MidiKSAggregateTransportTelemetryProvider::Provider(),
                                 MIDI_TRACE_EVENT_INFO,
@@ -2420,11 +2465,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
                         }
                     }
 
-                    //if (existingPendingEndpointUpdated)
-                    //{
-                    //    RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), existingPendingEndpointDefinition, parentDeviceDefinition));
-                    //}
-
+                    existingPendingEndpointDefinition->LockedForUpdating = false;
                 }
             }
 
@@ -2540,6 +2581,9 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
             RETURN_IF_FAILED(CreatePendingEndpointDefinitionForFilterDevice(filterDevice, endpointDefinition));
             RETURN_HR_IF_NULL(E_POINTER, endpointDefinition);
 
+
+            endpointDefinition->LockedForUpdating = true;
+
             // add our new pins
             bool endpointFull{ false };
             while (!pinList.empty() && !endpointFull)
@@ -2552,6 +2596,8 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
 
                 if (pinAdded)
                 {
+                    endpointDefinition->LastUpdatedTimestamp = internal::GetCurrentMidiTimestamp();
+
                     pinList.erase(pinList.begin());
                 }
                 else
@@ -2560,11 +2606,14 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
                 }
             }
 
+            endpointDefinition->LockedForUpdating = false;
+
     //        RETURN_IF_FAILED(UpdateNewPinDefinitions(filterDevice.Id().c_str(), endpointDefinition, parentDeviceDefinition));
 
             newPendingEndpointsCreated = true;
         }
     }
+
 
     if (newPendingEndpointsCreated || existingPendingEndpointUpdated)
     {
@@ -2795,6 +2844,8 @@ CMidi2KSAggregateMidiEndpointManager2::Shutdown()
     m_DeviceEnumerationCompleted.revoke();
     m_watcher.Stop();
 
+    auto pendingLock = m_pendingEndpointDefinitionsLock.lock();
+    m_pendingEndpointDefinitions.clear();
 
     m_endpointCreationThread.request_stop();
     m_EnumerationCompleted.SetEvent();
