@@ -84,6 +84,56 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Windows.System.Power.Projection.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Windows.System.Projection.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Windows.Widgets.Projection.dll" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\App.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MainWindow.xbf" /> 
+    </Component>
+    <Component Id="ControlsXBF" Bitness="always64" Directory="SETTINGSAPP_CONTROLS_FOLDER" Guid ="11c285bc-ee74-46d0-bdf2-0031a584e8f8">
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Controls\MidiEndpointAndGroupPickerControl.xbf" /> 
+    </Component>
+    <Component Id="StylesXBF" Bitness="always64" Directory="SETTINGSAPP_STYLES_FOLDER" Guid ="50dfb652-ca6a-4c5d-827d-212d7904000e">
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Styles\DefaultFont.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Styles\FontSizes.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Styles\MessageTemplates.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Styles\MidiStyles.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Styles\TextBlock.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Styles\Thickness.xbf" /> 
+    </Component>
+    <Component Id="ThemesXBF" Bitness="always64" Directory="SETTINGSAPP_THEMES_FOLDER" Guid ="47f1c6b9-4dca-40ac-8fe8-57d02336ea6d">
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Themes\Generic.xbf" /> 
+    </Component>
+    <Component Id="ViewsCorePagesXBF" Bitness="always64" Directory="SETTINGSAPP_VIEWS_CORE_PAGES_FOLDER" Guid ="78e8fba4-5e7b-45c6-a353-302bb4cfc923">
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\ConfigurationsPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\FirstRunExperiencePage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\ForDevelopersPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\GlobalMidiSettingsPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\HomePage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\ManagementSessionsPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\MidiServiceInitializationProgressWindow.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\PluginsProcessingPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\PluginsTransportPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\SettingsPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\ShellPage.xbf" /> 
+    </Component>
+    <Component Id="ViewsEndpointManagementPagesXBF" Bitness="always64" Directory="SETTINGSAPP_VIEWS_ENDPOINT_MANAGEMENT_PAGES_FOLDER" Guid ="ca35002b-b144-4d55-b28c-0a90685f9340">
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Endpoint Management Pages\DeviceDetailPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Endpoint Management Pages\EndpointsAllPage.xbf" /> 
+    </Component>
+    <Component Id="ViewsToolsPagesXBF" Bitness="always64" Directory="SETTINGSAPP_VIEWS_TOOLS_PAGES_FOLDER" Guid ="f83a3ae0-b76c-4437-a4d5-443d25c9ea65">
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\AdvancedUsbSettingsPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\LivePerformanceSettingsPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsConsolePage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsMonitorPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsSysExPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsTestPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\TroubleshootingPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\WindowsSettingsPage.xbf" /> 
+    </Component>
+    <Component Id="ViewsTransportSetupPagesXBF" Bitness="always64" Directory="SETTINGSAPP_VIEWS_TRANSPORT_SETUP_PAGES_FOLDER" Guid ="8ab2aeab-88b5-4075-816f-50a32ce18eef">
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Transport Setup Pages\EndpointsBasicLoopPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Transport Setup Pages\EndpointsBle10Page.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Transport Setup Pages\EndpointsLoopPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Transport Setup Pages\MidiVirtualPatchBaySetupPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Transport Setup Pages\NetworkMidi2SetupPage.xbf" /> 
     </Component>
   </Fragment>
 </Wix>
