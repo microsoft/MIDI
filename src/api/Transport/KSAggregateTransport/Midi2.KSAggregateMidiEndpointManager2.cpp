@@ -22,56 +22,7 @@ using namespace winrt::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-//_Use_decl_annotations_
-//void KsAggregateEndpointDefinition2::RemoveAllPinsForFilter(std::wstring const& filterId)
-//{
-//    auto removedFilterDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(filterId);
-//    bool done = false;
-//    while (!done)
-//    {
-//        auto foundIt = std::find_if(MidiSourcePins.begin(), MidiSourcePins.end(),
-//            [&removedFilterDeviceId](std::shared_ptr<KsAggregateEndpointMidiPinDefinition2> pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
-//        );
-//
-//        if (foundIt != MidiSourcePins.end())
-//        {
-//            // erase the pin definition with this 
-//            MidiSourcePins.erase(foundIt);
-//        }
-//        else
-//        {
-//            // we've removed all the pins for this interface
-//            done = true;
-//        }
-//    }
-//
-//    done = false;
-//    while (!done)
-//    {
-//        auto foundIt = std::find_if(MidiDestinationPins.begin(), MidiDestinationPins.end(),
-//            [&removedFilterDeviceId](std::shared_ptr<KsAggregateEndpointMidiPinDefinition2> pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == removedFilterDeviceId; }
-//        );
-//
-//        if (foundIt != MidiDestinationPins.end())
-//        {
-//            // erase the pin definition with this 
-//            MidiDestinationPins.erase(foundIt);
-//        }
-//        else
-//        {
-//            // we've removed all the pins for this interface
-//            done = true;
-//        }
-//    }
-//
-//}
-
-
-
-
-
-
-#define INITIAL_ENUMERATION_TIMEOUT_MS 15000
+#define INITIAL_ENUMERATION_TIMEOUT_MS 40000        // on my PC, with 70+ inputs and outputs this can take 30 seconds. 
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager2::Initialize(
