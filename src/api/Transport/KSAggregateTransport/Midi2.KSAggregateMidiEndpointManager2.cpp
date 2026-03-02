@@ -2343,18 +2343,20 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
         parentDeviceDefinition
     ));
 
+    bool newPendingEndpointsCreated{ false };
+    bool existingPendingEndpointUpdated{ false };
+
+
+    {
     // we lock up front to help ensure we're processing these serially
-    auto activatedLock = m_activatedEndpointDefinitionsLock.lock();
     auto pendingLock = m_pendingEndpointDefinitionsLock.lock();
+    auto activatedLock = m_activatedEndpointDefinitionsLock.lock();
 
     // A single endpoint can have multiple filters
     // A single filter can be in multiple endpoints
     // You can open filters multiple times, but you cannot have a pin open in more than one place
     // KS devices cannot add new pins on an existing filter
 
-    bool newPendingEndpointsCreated { false };
-    bool existingPendingEndpointUpdated{ false };
-    
     while (!pinList.empty())
     {
         bool foundExistingEndpoint{ false };
@@ -2564,7 +2566,7 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
             newPendingEndpointsCreated = true;
         }
     }
-
+    }   // release the locks
 
     if (newPendingEndpointsCreated || existingPendingEndpointUpdated)
     {
