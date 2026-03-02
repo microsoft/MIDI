@@ -771,7 +771,10 @@ class Build : NukeBuild
                 paths.Add(settingsOutputFolder / "System.Management.dll");
                 paths.Add(settingsOutputFolder / "System.ServiceProcess.ServiceController.dll");
 
-             //   paths.Add(settingsOutputFolder / "System.Text.Json.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Graphics.Imaging.Projection.dll");
+                
+
+                //   paths.Add(settingsOutputFolder / "System.Text.Json.dll");
 
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.dll");
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.Projection.dll");
