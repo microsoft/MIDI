@@ -125,20 +125,26 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             configUpdate.MatchCriteria.EndpointDeviceId = EndpointWrapper.DeviceInformation.EndpointDeviceId;
             configUpdate.MatchCriteria.DeviceInstanceId = EndpointWrapper.DeviceInformation.DeviceInstanceId;
-            configUpdate.MatchCriteria.UsbVendorId = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().VendorId;
-            configUpdate.MatchCriteria.UsbProductId = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().ProductId;
-            configUpdate.MatchCriteria.UsbSerialNumber = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().SerialNumber;
+            //configUpdate.MatchCriteria.UsbVendorId = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().VendorId;
+            //configUpdate.MatchCriteria.UsbProductId = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().ProductId;
+            //configUpdate.MatchCriteria.UsbSerialNumber = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().SerialNumber;
 
             configUpdate.Midi1PortNamingApproach = Midi1PortNaming;
 
             foreach (var port in Midi1SourcePorts)
             {
-                configUpdate.AddMidi1SourcePortCustomName(port.Group, port.NewCustomName.Trim());
+                if (!string.IsNullOrWhiteSpace(port.NewCustomName))
+                {
+                    configUpdate.AddMidi1SourcePortCustomName(port.Group, port.NewCustomName.Trim());
+                }
             }
 
             foreach (var port in Midi1DestinationPorts)
             {
-                configUpdate.AddMidi1DestinationPortCustomName(port.Group, port.NewCustomName.Trim());
+                if (!string.IsNullOrWhiteSpace(port.NewCustomName))
+                {
+                    configUpdate.AddMidi1DestinationPortCustomName(port.Group, port.NewCustomName.Trim());
+                }
             }
 
             return configUpdate;

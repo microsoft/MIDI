@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -27,6 +28,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class DeviceDetailViewModel : ObservableRecipient, INavigationAware
     {
+
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern int MessageBox(
+            IntPtr hWnd,
+            string lpText,
+            string lpCaption,
+            int uType);
+
         public ICommand CopyEndpointDeviceIdCommand
         {
             get; private set;
@@ -70,13 +79,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             _configFileService = configFileService;
 
 
-            System.Diagnostics.Debug.WriteLine("Start clearing properties");
-
-
             this.ShowMidi2Properties = false;
             this.ShowGroupTerminalBlocks = false;
-
-            System.Diagnostics.Debug.WriteLine("Finished clearing properties");
 
             CopyEndpointDeviceIdCommand = new RelayCommand(
             () =>
@@ -112,7 +116,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
                             // success
-                            // todo: update the properties again
+                            // update the properties again
+                            RefreshVM();
                         }
                         else
                         {
@@ -120,13 +125,26 @@ namespace Microsoft.Midi.Settings.ViewModels
                             //System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
                             // todo: show error
-                            System.Diagnostics.Debug.WriteLine("Could not save to config file.");
+                            App.GetService<ILoggingService>().LogError($"Could not save to config file");
+
+                            MessageBox(
+                                (IntPtr)0,
+                                "Could not save to config file",
+                                "Unable to save customization",
+                                0);
+
                         }
                     }
                     else
                     {
+                        MessageBox(
+                            (IntPtr)0,
+                            "Could not save customization. No current configuration file.",
+                            "Unable to save customization",
+                            0);
+
                         // could not save. No current config.
-                        System.Diagnostics.Debug.WriteLine("Could not save. No current config.");
+                        App.GetService<ILoggingService>().LogError($"Could not save to config file. No current config file.");
                     }
                 }
                 else
