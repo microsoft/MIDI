@@ -10,6 +10,7 @@ using Microsoft.Midi.Settings.Activation;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Runtime.InteropServices;
@@ -59,29 +60,26 @@ public class ActivationService : IActivationService
         else
         {
             provided = true;
-
-            // TODO: This code needs to know the size of the monitor, and 
-            // these numbers are arbitrary
-            if (extents.Width < 1200)
-            {
-                extents.Width = 1200;
-            }
-
-            if (extents.Height < 700)
-            {
-                extents.Height = 700;
-            }
         }
 
         // arbitrary minimum size to ensure we're not just a floating title bar
-        if (extents.Width < 600 || extents.Height < 400)
+        if (extents.Width < 200 || extents.Height < 200)
         {
-            extents.Width = 600;
-            extents.Height = 400;
+            extents.Width = 200;
+            extents.Height = 200;
         }
 
+        if (extents.Left < 0)
+        {
+            extents.Left = 0;
+        }
 
-        App.MainWindow.AppWindow.Resize(new global::Windows.Graphics.SizeInt32(extents.Width, extents.Height));
+        if (extents.Top < 0)
+        {
+            extents.Top = 0;
+        }
+
+        //App.MainWindow.AppWindow.Resize(new global::Windows.Graphics.SizeInt32(extents.Width, extents.Height));
 
 
         // TODO: Need to check to see if we're off-screen
@@ -95,7 +93,14 @@ public class ActivationService : IActivationService
         }
         else
         {
-            App.MainWindow.AppWindow.Move(new global::Windows.Graphics.PointInt32(extents.Left, extents.Top));
+
+            var position = new global::Windows.Graphics.PointInt32(extents.Left, extents.Top);
+            var size = new global::Windows.Graphics.SizeInt32(extents.Width, extents.Height);
+
+            App.MainWindow.AppWindow.Move(position);
+            App.MainWindow.AppWindow.Resize(size);
+
+            App.MainWindow.AppWindow.MoveInZOrderAtTop();
         }
 
         App.GetService<ILoggingService>().LogInfo("Exit");
