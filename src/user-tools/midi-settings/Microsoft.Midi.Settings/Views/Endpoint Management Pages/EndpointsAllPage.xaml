@@ -90,8 +90,9 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Page Title -->
+        <!-- Page Title - 暂时隐藏，资源未定义
         <TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,0" />
+        -->
 
         <!-- View type, Sort, and Filter -->
 
