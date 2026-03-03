@@ -651,13 +651,23 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceUpdateExistingMidiUmpEndpointWithFi
     );
 
     // we require at least one valid pin
-    RETURN_HR_IF(E_INVALIDARG, endpointDefinition->GetAllPins().size() < 1);
+    RETURN_HR_IF(E_INVALIDARG, endpointDefinition->MidiDestinationPins.empty() && endpointDefinition->MidiSourcePins.empty());
 
     std::vector<DEVPROPERTY> interfaceDevProperties{ };
 
     std::vector<std::byte> pinMapPropertyData;
     std::vector<internal::GroupTerminalBlockInternal> groupTerminalBlocks{ };
     std::vector<std::byte> nameTablePropertyData;
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"About to build pins and GTB property data", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDefinition->EndpointName.c_str(), "name")
+    );
 
     // update the pin map to have all the existing pins
     // plus the new pins. Update Group Terminal Blocks at the same time.
@@ -676,6 +686,16 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceUpdateExistingMidiUmpEndpointWithFi
     // Write Group Terminal Block Property
     // =====================================================
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"About to write group terminal blocks", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDefinition->EndpointName.c_str(), "name")
+    );
+
     std::vector<std::byte> groupTerminalBlockData;
 
     if (internal::WriteGroupTerminalBlocksToPropertyDataPointer(groupTerminalBlocks, groupTerminalBlockData))
@@ -688,6 +708,15 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceUpdateExistingMidiUmpEndpointWithFi
         // write empty data
     }
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"About to fold in custom properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDefinition->EndpointName.c_str(), "name")
+    );
 
     // Fold in custom properties, including MIDI 1 port names and naming approach
     // ===============================================================================
@@ -742,12 +771,33 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceUpdateExistingMidiUmpEndpointWithFi
     // store the property data for the name table
     endpointDefinition->EndpointNameTable.WriteProperties(interfaceDevProperties);
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"About to update name table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDefinition->EndpointName.c_str(), "name")
+    );
+
 
     // Write Name table property, folding in the custom names we discovered earlier
     // ===============================================================================================
     RETURN_IF_FAILED(UpdateNameTableWithCustomProperties(endpointDefinition, customProperties));
     endpointDefinition->EndpointNameTable.WriteProperties(interfaceDevProperties);
 
+
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"About to update endpoint properties in the MIDI Device Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDefinition->EndpointName.c_str(), "name")
+    );
     HRESULT updateResult{};
 
     LOG_IF_FAILED(updateResult = m_midiDeviceManager->UpdateEndpointProperties(
