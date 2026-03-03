@@ -92,7 +92,7 @@
                     Height="48"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
-                    Visibility="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Visibility="Collapsed"
                     Click="TitleBar_BackButtonClick">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE72B;" />
             </Button>
@@ -107,7 +107,7 @@
 
             <!-- Title -->
             <TextBlock Grid.Column="2"
-                       Text="MIDI Settings"
+                       x:Name="AppTitleBarText"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Left"
                        Margin="8,0,0,0"
@@ -178,8 +178,7 @@
                     </DataTemplate>
                 </AutoSuggestBox.ItemTemplate>
             </AutoSuggestBox>
-
-            <!-- Footer Indicators -->
+            
             <StackPanel Grid.Column="3"
                         Orientation="Horizontal"
                         IsHitTestVisible="False"
@@ -257,10 +256,11 @@
                         IsPaneToggleButtonVisible="False"
                         IsBackButtonVisible="Collapsed"
                         SelectedItem="{x:Bind ViewModel.Selected, Mode=OneWay}"
-                        IsSettingsVisible="True"
+                        IsSettingsVisible="False"
                         ExpandedModeThresholdWidth="1280"
                         IsTitleBarAutoPaddingEnabled="False"
                         DisplayModeChanged="NavigationViewControl_DisplayModeChanged"
+                        PaneDisplayMode="Left"
                         >
             <!-- <Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}"> -->
 
@@ -270,6 +270,16 @@
                 <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
                 <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
             </NavigationView.Resources>
+            
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="Settings"
+                                    Margin="0,0,0,6"
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SettingsViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
 
             <NavigationView.PaneHeader>
                 <Grid Margin="16,12,4,30"

@@ -43,3 +43,20 @@ These are generally written in .NET (7 or 8) and provide end-user functionality 
 - **Executable / 可执行文件**: `MidiSettings.exe`
 - **Output Directory / 输出目录**: `Microsoft.Midi.Settings/bin/x64/Release/net10.0-windows10.0.26100.0/`
 - **Status / 状态**: Build successful with 0 warnings / 构建成功，0 个警告
+
+---
+
+## Changes / 更改
+
+### UI Changes / UI 更改
+
+#### Settings Button in NavigationView / 导航视图中的设置按钮
+- **Description / 描述**: Moved the Settings button from `PaneFooter` to `FooterMenuItems` for better navigation support and added bottom margin / 将设置按钮从 `PaneFooter` 移到 `FooterMenuItems` 以获得更好的导航支持，并添加底部边距
+- **Files Modified / 修改的文件**:
+  - `Microsoft.Midi.Settings/Views/Core Pages/ShellPage.xaml`
+  - `Microsoft.Midi.Settings/Strings/en-us/Resources.resw`
+
+#### Back Button Visibility / 返回按钮可见性
+- **Description / 描述**: Set `NavigationView.IsBackButtonVisible="Collapsed"` and set the custom BackButton `Visibility="Collapsed"` to completely hide the back button / 设置 `NavigationView.IsBackButtonVisible="Collapsed"` 并将自定义 BackButton 的 `Visibility="Collapsed"` 以彻底隐藏返回按钮
+- **Files Modified / 修改的文件**:
+  - `Microsoft.Midi.Settings/Views/Core Pages/ShellPage.xaml`
