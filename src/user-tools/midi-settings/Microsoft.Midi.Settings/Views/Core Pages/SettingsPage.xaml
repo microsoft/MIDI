@@ -24,7 +24,8 @@
         <ScrollViewer Background="Transparent">
             <StackPanel x:Name="ContentArea"
                         Grid.Column="0"
-                        Spacing="4">
+                        Spacing="4"
+                        Margin="0,0,0,24">
                 <controls:SettingsExpander x:Name="AppThemeSettingsExpander"
                                    x:Uid="Settings_AppThemeExpander">
                     <controls:SettingsExpander.HeaderIcon>

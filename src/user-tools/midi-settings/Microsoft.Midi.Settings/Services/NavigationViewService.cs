@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -24,7 +24,7 @@ public class NavigationViewService : INavigationViewService
 
     public IList<object>? MenuItems => _navigationView?.MenuItems;
 
-    public object? SettingsItem => _navigationView?.SettingsItem;
+    public object? SettingsItem => _navigationView?.SettingsItem ?? GetSettingsItemFromFooter();
 
     public NavigationViewService(INavigationService navigationService, IPageService pageService)
     {
@@ -94,6 +94,22 @@ public class NavigationViewService : INavigationViewService
             }
         }
 
+        return null;
+    }
+
+    private NavigationViewItem? GetSettingsItemFromFooter()
+    {
+        if (_navigationView?.FooterMenuItems != null)
+        {
+            foreach (var item in _navigationView.FooterMenuItems.OfType<NavigationViewItem>())
+            {
+                if (item.GetValue(NavigationHelper.NavigateToProperty) is string pageKey &&
+                    pageKey.Contains("SettingsViewModel"))
+                {
+                    return item;
+                }
+            }
+        }
         return null;
     }
 

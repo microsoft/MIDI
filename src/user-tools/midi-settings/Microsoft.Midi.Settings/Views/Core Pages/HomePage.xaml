@@ -8,6 +8,7 @@
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
+    xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -16,6 +17,7 @@
     <Page.Resources>
         <ResourceDictionary>
             <helpers:BooleanToInverseVisibilityConverter x:Key="BooleanToInverseVisibilityConverter" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         </ResourceDictionary>
     </Page.Resources>
 
@@ -44,7 +46,8 @@
 
                             <InfoBar Margin="0,0,15,15"
                                  CornerRadius="8"
-                                 IsOpen="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                                 IsOpen="True"
+                                 Visibility="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
                                  Title="Service is Unavailable"
                                  Message="The Windows MIDI Service was not able to be started. Most options will not be available."
                                  Severity="Error"
@@ -56,7 +59,8 @@
 
                             <InfoBar Margin="0,0,15,15"
                                      CornerRadius="8"
-                                     IsOpen="{x:Bind ViewModel.IsFirstRunSetupComplete, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                                     IsOpen="True"
+                                     Visibility="{x:Bind ViewModel.IsFirstRunSetupComplete, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
                                      Title="Finish MIDI setup and customization on this PC"
                                      Message="Create the required configuration file and then customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
                                      Severity="Warning"
@@ -72,7 +76,8 @@
 
                             <InfoBar Margin="0,0,15,15"
                                      CornerRadius="8"
-                                     IsOpen="{x:Bind ViewModel.IsNewerSdkRuntimeDownloadAvailable, Mode=OneWay}"
+                                     IsOpen="True"
+                                     Visibility="{x:Bind ViewModel.IsNewerSdkRuntimeDownloadAvailable, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                      Title="New Windows MIDI Services Runtime Available"
                                      Severity="Informational"
                                      >

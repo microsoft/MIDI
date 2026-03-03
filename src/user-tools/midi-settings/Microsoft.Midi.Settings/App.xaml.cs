@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -286,6 +286,40 @@ public partial class App : Application
                 App.GetService<ILoggingService>().LogError("Unable to startup app. Exiting.");
                 Exit();
             }
+
+            // 在后台预加载搜索数据，确保用户进入搜索框时光标能立即闪烁
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    App.GetService<IMidiSettingsSearchService>().Refresh();
+                    App.GetService<ILoggingService>().LogInfo("Search data preloaded successfully.");
+                }
+                catch (Exception ex)
+                {
+                    App.GetService<ILoggingService>().LogError("Error preloading search data", ex);
+                }
+            });
+
+            // 在后台异步检查 SDK 更新，避免在 HOME 页面导航时阻塞 UI
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var updateService = App.GetService<IMidiUpdateService>();
+                    var homeViewModel = App.GetService<HomeViewModel>();
+
+                    if (updateService.GetAutoCheckForUpdatesEnabled())
+                    {
+                        await homeViewModel.CheckForSdkUpdatesAsync();
+                        App.GetService<ILoggingService>().LogInfo("SDK update check completed.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    App.GetService<ILoggingService>().LogError("Error checking for SDK updates during startup", ex);
+                }
+            });
         }
         catch (Exception ex)
         {
