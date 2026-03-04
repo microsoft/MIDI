@@ -157,6 +157,17 @@ private:
         _Inout_ std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>>& endpointDefinitions);
 
 
+    bool ActivatedEndpointContainsPinsForFilter(
+        _In_ std::wstring filterDeviceId,
+        _In_ std::shared_ptr<KsAggregateEndpointDefinition2> endpoint);
+
+
+    HRESULT FindParentDeviceForActivatedFilter(
+        _In_ std::wstring filterDeviceId,
+        _Inout_ std::shared_ptr<KsAggregateParentDeviceDefinition2>& parent);
+
+
+
     HRESULT FindPendingEndpointDefinitionForParentDevice(
         _In_ std::wstring parentDeviceInstanceId,
         _Inout_ std::shared_ptr<KsAggregateEndpointDefinition2>&);

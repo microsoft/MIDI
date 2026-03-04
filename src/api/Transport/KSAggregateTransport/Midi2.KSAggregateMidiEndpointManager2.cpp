@@ -2627,6 +2627,59 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+bool
+CMidi2KSAggregateMidiEndpointManager2::ActivatedEndpointContainsPinsForFilter(
+    std::wstring filterDeviceId,
+    std::shared_ptr<KsAggregateEndpointDefinition2> endpoint
+)
+{
+    auto cleanedFilterDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(filterDeviceId);
+
+    auto sourcesIt = std::find_if(endpoint->MidiSourcePins.begin(), endpoint->MidiSourcePins.end(), [&cleanedFilterDeviceId](auto const pin){ return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == cleanedFilterDeviceId; });
+    if (sourcesIt != endpoint->MidiSourcePins.end()) return true;
+
+    auto destinationsIt = std::find_if(endpoint->MidiDestinationPins.begin(), endpoint->MidiDestinationPins.end(), [&cleanedFilterDeviceId](auto const pin) { return internal::NormalizeDeviceInstanceIdWStringCopy(pin->FilterDeviceId) == cleanedFilterDeviceId; });
+    if (destinationsIt != endpoint->MidiDestinationPins.end()) return true;
+
+    return false;
+}
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiEndpointManager2::FindParentDeviceForActivatedFilter(
+    std::wstring filterDeviceId,
+    std::shared_ptr<KsAggregateParentDeviceDefinition2>& parent
+)
+{
+    for (auto& epIt : m_activatedEndpointDefinitions)
+    {
+        auto endpoint = epIt.second;
+
+        if (ActivatedEndpointContainsPinsForFilter(filterDeviceId, endpoint))
+        {
+            auto parentIterator = m_allParentDeviceDefinitions.find(endpoint->ParentDeviceInstanceId);
+
+            if (parentIterator != m_allParentDeviceDefinitions.end())
+            {
+                parent = parentIterator->second;
+                return S_OK;
+            }
+            else
+            {
+                return E_NOTFOUND;
+            }
+        }
+    }
+
+    return E_NOTFOUND;
+}
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved(
@@ -2656,6 +2709,120 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved(
 
     // remove all pins for this filter
 
+    // get the parent device and see if it's still present. If not, then skip all the filter work and just remove the device
+
+    std::shared_ptr<KsAggregateParentDeviceDefinition2> parent;
+    if (SUCCEEDED(FindParentDeviceForActivatedFilter(deviceInterfaceUpdate.Id().c_str(), parent)))
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Found parent device in internal collection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "removed interface")
+        );
+
+        const winrt::hstring devicePresentProperty = L"System.Devices.Present";
+
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+        additionalProperties.Append(devicePresentProperty);
+
+        // look up the parent device and see if it's still present. If not, remove all endpoints and pins for this parent
+        // this prevents MIDI 1 port churn when removing interfaces one at a time.
+        auto parentDevice = DeviceInformation::CreateFromIdAsync(
+            parent->DeviceInstanceId.c_str(), 
+            additionalProperties,
+            DeviceInformationKind::Device
+        ).get();
+
+        if (parentDevice == nullptr || !internal::SafeGetSwdPropertyFromDeviceInformation<bool>(devicePresentProperty, parentDevice, false))
+        {
+            // device does not appear to be present. Remove all instances
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Parent device does not appear to be present. Removing parent.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "removed interface")
+            );
+
+            // remove the parent device
+            {
+                auto parentLock = m_allParentDeviceDefinitionsLock.lock();
+                m_allParentDeviceDefinitions.erase(parent->DeviceInstanceId);
+            }
+
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Parent device does not appear to be present. Removing and deactivating all endpoints.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceInterfaceUpdate.Id().c_str(), "removed interface")
+            );
+
+
+            // lock endpoints
+            // get all endpoints for the parent id
+            // deactivate the endpoints via device manager
+            // remove endpoints from list
+            // unlock endpoints
+
+            {
+                auto endpointsLock = m_activatedEndpointDefinitionsLock.lock();
+
+                auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(parent->DeviceInstanceId);
+
+                auto iter = m_activatedEndpointDefinitions.begin();
+                while (iter != m_activatedEndpointDefinitions.end())
+                {
+                    auto ep = iter->second;
+
+                    if (internal::NormalizeDeviceInstanceIdWStringCopy(ep->ParentDeviceInstanceId) == cleanParentDeviceInstanceId)
+                    {
+                        // if this causes the lock to be held for too long, we'll want to build a removal
+                        // list, unlock when it's built, and then call this
+                        auto hr = m_midiDeviceManager->RemoveEndpoint(ep->EndpointDeviceInstanceId.c_str());
+
+                        if (SUCCEEDED(hr))
+                        {
+                            iter = m_activatedEndpointDefinitions.erase(iter);
+                        }
+                        else
+                        {
+                            LOG_IF_FAILED(hr);
+                            TraceLoggingWrite(
+                                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unable to remove endpoint (using parent disconnect detection).", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(ep->EndpointDeviceInstanceId.c_str(), "endpoint"),
+                                TraceLoggingHResult(hr, "hresult")
+                            );
+
+                            ++iter;
+                        }
+                    }
+                    else
+                    {
+                        ++iter;
+                    }
+                }
+            }
+
+            return S_OK;
+        }
+    }
+
+    // if we get to this point, then the parent device was not actually deactivated/removed, and we're removing individual filters.
+    // this requires that by the time the filter removal notification comes in, the device is already considered "not present".
 
     std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> endpointsToUpdate;
     std::vector<std::shared_ptr<KsAggregateEndpointDefinition2>> endpointsToRemove;
@@ -2720,6 +2887,17 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved(
         else
         {
             LOG_IF_FAILED(hr);
+
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unable to remove endpoint (using list processing).", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(ep->EndpointDeviceInstanceId.c_str(), "endpoint"),
+                TraceLoggingHResult(hr, "hresult")
+            );
         }
 
     }
