@@ -26,40 +26,40 @@ public:
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
     END_TEST_CLASS()
 
-        //TEST_CLASS_SETUP(ClassSetup);
-        //TEST_CLASS_CLEANUP(ClassCleanup);
+    TEST_CLASS_SETUP(ClassSetup);
+    //TEST_CLASS_CLEANUP(ClassCleanup);
 
-        //TEST_METHOD_SETUP(TestSetup);
-        //TEST_METHOD_CLEANUP(TestCleanup);
+    //TEST_METHOD_SETUP(TestSetup);
+    //TEST_METHOD_CLEANUP(TestCleanup);
 
-        //TEST_METHOD(TestGetPreferredName);
+    //TEST_METHOD(TestGetPreferredName);
 
-        //TEST_METHOD(TestGetSourceEntry);
-        //TEST_METHOD(TestGetDestinationEntry);
+    //TEST_METHOD(TestGetSourceEntry);
+    //TEST_METHOD(TestGetDestinationEntry);
 
-        //TEST_METHOD(TestUpdateSourceEntryCustomName);
-        //TEST_METHOD(TestUpdateDestinationEntryCustomName);
-
-
-        //TEST_METHOD(TestGetSourceEntryCustomName);
-        //TEST_METHOD(TestGetDestinationEntryCustomName);
+    //TEST_METHOD(TestUpdateSourceEntryCustomName);
+    //TEST_METHOD(TestUpdateDestinationEntryCustomName);
 
 
-        //TEST_METHOD(TestPopulateAllEntriesForNativeUmpDevice);
-        //TEST_METHOD(TestPopulateAllEntriesForMidi1DeviceUsingUmpDriver);
+    //TEST_METHOD(TestGetSourceEntryCustomName);
+    //TEST_METHOD(TestGetDestinationEntryCustomName);
 
-        TEST_METHOD(TestStringEndsWithSpecifiedNumber);
 
-        TEST_METHOD(TestPopulateEntryForNativeUmpDevice);
-        TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingUmpDriver);
-        TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingMidi1Driver);
+    //TEST_METHOD(TestPopulateAllEntriesForNativeUmpDevice);
+    //TEST_METHOD(TestPopulateAllEntriesForMidi1DeviceUsingUmpDriver);
 
-        TEST_METHOD(TestValidateMidi1DriverAndMidi2DriverCreateCompatibleLegacyNames);
+    TEST_METHOD(TestStringEndsWithSpecifiedNumber);
 
-        TEST_METHOD(TestGitHubIssue652);
-        TEST_METHOD(TestGitHubIssue616);
+    TEST_METHOD(TestPopulateEntryForNativeUmpDevice);
+    TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingUmpDriver);
+    TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingMidi1Driver);
 
-        // TODO: Need to test reading/writing from property vectors
+    TEST_METHOD(TestValidateMidi1DriverAndMidi2DriverCreateCompatibleLegacyNames);
+
+    TEST_METHOD(TestGitHubIssue652);
+    TEST_METHOD(TestGitHubIssue616);
+
+    // TODO: Need to test reading/writing from property vectors
 
 
 private:

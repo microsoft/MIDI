@@ -9,6 +9,8 @@
 #include "stdafx.h"
 #include "midisrvrpc.h"
 
+#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
+
 RPC_STATUS RPC_ENTRY MidiSrvRpcIfCallback(
     RPC_IF_HANDLE,
     void* Context
@@ -238,6 +240,15 @@ CMidiSrv::Shutdown()
     {
         RETURN_IF_FAILED(m_ConfigurationManager->Shutdown());
         m_ConfigurationManager.reset();
+    }
+
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    {
+        if (m_EndpointProtocolManager)
+        {
+            RETURN_IF_FAILED(m_EndpointProtocolManager->Shutdown());
+            m_EndpointProtocolManager.reset();
+        }
     }
 
     if (m_SessionTracker)

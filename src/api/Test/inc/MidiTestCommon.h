@@ -46,6 +46,14 @@ extern UMP128 g_MidiTestData_128;
 extern MIDI_MESSAGE g_MidiTestMessage;
 
 void PrintMidiMessage(_In_ PVOID, _In_ UINT32, _In_ UINT32, _In_ LONGLONG);
+void PrintStagingStates();
+
+HRESULT StartMIDIService();
+HRESULT StopMIDIService();
+HRESULT SetMidiDiscovery(bool requestedState);
+
+HRESULT GetInstanceIdFromFilterName(_In_ PCWSTR filterName, _Out_ std::wstring& instanceIdOut);
+bool SetDeviceEnabled(_In_ PCWSTR deviceInstanceId, _In_ bool enable);
 
 #ifndef LOG_OUTPUT
 #define LOG_OUTPUT(fmt, ...)  WEX::Logging::Log::Comment(WEX::Common::String().Format(fmt, __VA_ARGS__))
