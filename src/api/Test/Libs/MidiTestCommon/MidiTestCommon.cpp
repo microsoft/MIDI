@@ -2,6 +2,10 @@
 
 #include <windows.h>
 
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
+
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil/resource.h>

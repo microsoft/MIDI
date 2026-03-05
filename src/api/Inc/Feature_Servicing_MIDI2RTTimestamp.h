@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_USBMIDI2Spinlock
+class Feature_Servicing_MIDI2RTTimestamp
 {
 public:
     static bool IsEnabled()
@@ -16,16 +16,3 @@ public:
         return true;
     }
 };
-
-inline bool Feature_Servicing_USBMIDI2Spinlock_IsEnabled()
-{
-    return true;
-}
-
-inline void wil_InitializeFeatureStaging()
-{
-}
-
-inline void wil_UninitializeFeatureStaging()
-{
-}
