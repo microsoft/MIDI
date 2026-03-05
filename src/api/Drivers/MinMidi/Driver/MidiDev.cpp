@@ -7,7 +7,6 @@
 static const
 WCHAR * g_ReferenceStrings[MAX_FILTERFACTORIES] =
 {
-    L"minmidi",
     L"minmidi1",
     L"minmidi2",
     L"minmidi3",
@@ -26,13 +25,13 @@ WCHAR * g_ReferenceStrings[MAX_FILTERFACTORIES] =
     L"minmidi16",
     L"minmidi17",
     L"minmidi18",
-    L"minmidi19"
+    L"minmidi19",
+    L"minmidi20"
 };
 
 static const
 WCHAR * g_ReferenceStringsU[MAX_FILTERFACTORIES] =
 {
-    L"minmidiu",
     L"minmidiu1",
     L"minmidiu2",
     L"minmidiu3",
@@ -51,7 +50,8 @@ WCHAR * g_ReferenceStringsU[MAX_FILTERFACTORIES] =
     L"minmidiu16",
     L"minmidiu17",
     L"minmidiu18",
-    L"minmidiu19"
+    L"minmidiu19",
+    L"minmidiu20"
 };
 
 static const
