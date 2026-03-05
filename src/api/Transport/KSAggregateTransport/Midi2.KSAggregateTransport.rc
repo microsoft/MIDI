@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,15,0
- PRODUCTVERSION 1,0,15,0
+ FILEVERSION 1,0,16,1
+ PRODUCTVERSION 1,0,16,1
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -71,12 +71,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Microsoft Corporation"
             VALUE "FileDescription", "Windows MIDI Services KSA Transport Plugin"
-            VALUE "FileVersion", "1.0.15.0"
+            VALUE "FileVersion", "1.0.16.1"
+            VALUE "ProductVersion", "1.0.16.1"
             VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation. All rights reserved."
             VALUE "InternalName", "Midi2.KSAggregateTransport.dll"
             VALUE "OriginalFilename", "Midi2.KSAggregateTransport.dll"
             VALUE "ProductName", "Microsoft Windows MIDI Services"
-            VALUE "ProductVersion", "1.0.15.0"
             VALUE "OLESelfRegister", ""
         END
     END

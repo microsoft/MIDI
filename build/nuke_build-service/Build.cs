@@ -119,6 +119,8 @@ class Build : NukeBuild
 
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
 
+    AbsolutePath KsaPreviewComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup-ksa-preview-only";
+
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
 
 
@@ -142,6 +144,7 @@ class Build : NukeBuild
     string[] InstallerPlatforms => new string[] { "x64", "Arm64" };
 
     Dictionary<string, string> BuiltInBoxInstallers = new Dictionary<string, string>();
+    Dictionary<string, string> BuiltPreviewInstallers = new Dictionary<string, string>();
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
@@ -541,6 +544,62 @@ class Build : NukeBuild
             }
         });
 
+    Target T_BuildKsaPreviewPluginInstaller => _ => _
+        .DependsOn(T_Prerequisites)
+        .DependsOn(T_BuildServiceAndPlugins)
+        .DependsOn(T_BuildServiceAndPluginsInstaller)
+        .Executes(() =>
+        {
+            // we build for Arm64 and x64. No EC required here
+            foreach (var platform in InstallerPlatforms)
+            {
+                string solutionDir = KsaPreviewComponentsSetupSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                Console.Out.WriteLine($"Platform:    {platform}");
+
+                NuGetTasks.NuGetRestore(_ => _
+                    .SetProcessWorkingDirectory(solutionDir)
+                    .SetSource(@"https://api.nuget.org/v3/index.json")
+                    .SetSolutionDirectory(solutionDir)
+                //.SetConfigFile(packagesConfigFullPath)
+                );
+
+                var output = MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(KsaPreviewComponentsSetupSolutionFolder / "midi-services-ksa-preview-setup.sln")
+                    .SetMaxCpuCount(null)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    .SetVerbosity(BuildVerbosity)
+                    .SetTargets("Clean", "Rebuild")
+                    .EnableNodeReuse()
+                );
+
+
+                // todo: it would be better to see if any of the sdk files have changed and only
+                // do this copy if a new setup file was created. Maybe do a before/after date/time check?
+
+                string installerType = ServiceBuildConfiguration == Configuration.Debug ? "DEBUG" : "";
+
+
+                string newInstallerName = $"Windows MIDI Services ({installerType}KSA Transport Preview) {BuildVersionFullString}-{platform.ToLower()}.exe";
+
+                var setupFile = KsaPreviewComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesKSATransportPreviewSetup.exe";
+                setupFile.Copy(ThisReleaseFolder / newInstallerName, ExistsPolicy.FileOverwrite);
+
+                BuiltPreviewInstallers[platform.ToLower()] = newInstallerName;
+            }
+        });
+
+
     Target T_ZipServicePdbs => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildServiceAndPlugins)
@@ -634,6 +693,7 @@ class Build : NukeBuild
         .DependsOn(T_CreateVersionIncludes)
         .DependsOn(T_BuildServiceAndPlugins)
         .DependsOn(T_BuildServiceAndPluginsInstaller)
+        .DependsOn(T_BuildKsaPreviewPluginInstaller)
         .DependsOn(T_ZipWdmaud2)
         .DependsOn(T_ZipPowershellDevUtilities)
         .DependsOn(T_ZipServicePdbs)
@@ -652,6 +712,22 @@ class Build : NukeBuild
             {
                 Console.WriteLine("No in-box installers built.");
             }
+
+            if (BuiltPreviewInstallers.Count > 0)
+            {
+                Console.WriteLine("\nBuilt preview installers:");
+
+                foreach (var item in BuiltPreviewInstallers)
+                {
+                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No preview installers built.");
+            }
+
+            
 
         });
 

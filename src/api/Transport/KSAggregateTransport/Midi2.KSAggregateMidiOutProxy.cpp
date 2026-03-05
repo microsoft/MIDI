@@ -29,6 +29,7 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingUInt32(pinId, "Pin id"),
         TraceLoggingUInt8(groupIndex, "Group index")
@@ -96,6 +97,18 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
 
     // the transform sends the results back here through the IMidiCallback interface so we can then send to the associated KS device
     RETURN_IF_FAILED(m_ump2BSTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, this, m_context, nullptr));
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt32(pinId, "Pin id"),
+        TraceLoggingUInt8(groupIndex, "Group index")
+    );
 
     return S_OK;
 }
@@ -210,17 +223,47 @@ CMidi2KSAggregateMidiOutProxy::Shutdown()
         TraceLoggingUInt64(m_countMidiMessageSent, "Count messages forwarded")
     );
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_METRICS,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Shutting down UMP to BS transform", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
     if (m_ump2BSTransform)
     {
         m_ump2BSTransform->Shutdown();
         m_ump2BSTransform.reset();
     }
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_METRICS,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Shutting down KsMidiOutDevice", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
     if (m_device)
     {
         m_device->Shutdown();
         m_device.reset();
     }
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_METRICS,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Shutdown success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
 
     return S_OK;
 }
