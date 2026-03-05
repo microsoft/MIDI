@@ -14,10 +14,10 @@ void PrintUsage()
 {
     std::wcout <<
         L"Usage:\n"
-        L"  MinMidiControl.exe /AddPort <UMP | ByteStream>\n"
-        L"  MinMidiControl.exe /RemovePort <UMP | ByteStream>\n";
-        L"  MinMidiControl.exe /EnableSRSim\n";
-        L"  MinMidiControl.exe /DisableSRSim\n";
+        L"  MinMidiCtrl.exe /AddPort <UMP | ByteStream>\n"
+        L"  MinMidiCtrl.exe /RemovePort <UMP | ByteStream>\n";
+        L"  MinMidiCtrl.exe /EnableSRSim\n";
+        L"  MinMidiCtrl.exe /DisableSRSim\n";
 }
 
 Command ParseCommand(int argc, WCHAR** argv, MidiDataFormats &formats)

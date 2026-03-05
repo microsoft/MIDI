@@ -22,7 +22,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{aea9e2cb-59d1-4231-bb78-60d21b19c951}</ProjectGuid>
-    <RootNamespace>MinMidiControl</RootNamespace>
+    <RootNamespace>MinMidiCtrl</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -124,7 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MinMidiControl.cpp" />
+    <ClCompile Include="MinMidiCtrl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
