@@ -42,6 +42,10 @@ public sealed partial class MainWindow// : WinUIEx.WindowEx
     private const uint SWP_SHOWWINDOW = 0x0040;
 
     private const int WM_GETMINMAXINFO = 0x0024;
+    private const int WM_XBUTTONDOWN = 0x020B;
+    private const int WM_XBUTTONUP = 0x020C;
+    private const int XBUTTON1 = 0x0001;  // Back button
+    private const int XBUTTON2 = 0x0002;  // Forward button
 
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT
@@ -86,7 +90,7 @@ public sealed partial class MainWindow// : WinUIEx.WindowEx
         Content = null;
         Title = "AppDisplayName".GetLocalized();
 
-        // 设置窗口最小尺寸
+        // Set window minimum size
         this.Activated += MainWindow_Activated;
 
         //Content = new Microsoft.UI.Xaml.Controls.Grid(); // workaround for WinAppSDK bug http://task.ms/43347736
@@ -125,6 +129,38 @@ public sealed partial class MainWindow// : WinUIEx.WindowEx
             mmi.ptMinTrackSize.y = MinWindowHeight;
             Marshal.StructureToPtr(mmi, lParam, false);
             return IntPtr.Zero;
+        }
+        else if (uMsg == WM_XBUTTONDOWN)
+        {
+            // Handle mouse side buttons
+            int button = (int)((wParam.ToInt64() >> 16) & 0xFFFF);
+
+            if (button == XBUTTON1)
+            {
+                // Back button - execute navigation on UI thread
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    var navigationService = App.GetService<INavigationService>();
+                    if (navigationService.CanGoBack)
+                    {
+                        navigationService.GoBack();
+                    }
+                });
+                return (IntPtr)1;  // Return non-zero to indicate message was handled
+            }
+            else if (button == XBUTTON2)
+            {
+                // Forward button - execute navigation on UI thread
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    var navigationService = App.GetService<INavigationService>();
+                    if (navigationService.CanGoForward)
+                    {
+                        navigationService.GoForward();
+                    }
+                });
+                return (IntPtr)1;  // Return non-zero to indicate message was handled
+            }
         }
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }

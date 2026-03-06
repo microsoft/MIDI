@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="Microsoft.Midi.Settings.Views.ShellPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -221,7 +221,7 @@
                                                                MaxWidth="350"
                                                                TextTrimming="CharacterEllipsis"/>
 
-                                                    <!-- ResultType 暂时隐藏
+                                                    <!-- ResultType temporarily hidden
                                                     <TextBlock Margin="4,0,0,0"
                                                                Text="("/>
 
@@ -361,7 +361,7 @@
             <NavigationView.Resources>
                 <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
                 <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
-                <!-- 移除 NavigationView 内容区域的默认顶部边距，统一两种模式的边距 -->
+                <!-- Remove default top margin from NavigationView content area to unify margins in both modes -->
                 <Thickness x:Key="NavigationViewContentMargin">0,0,0,0</Thickness>
                 <Thickness x:Key="NavigationViewContentGridMargin">0,0,0,0</Thickness>
             </NavigationView.Resources>

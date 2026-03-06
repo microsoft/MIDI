@@ -229,10 +229,13 @@
                             </Border>-->
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                       Padding="20,0,16,0"
                                                        Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                        Command="{x:Bind ViewModel.CommonTaskCreateLoopbackEndpointsCommand}">
                                         <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_CreateLoopbackEndpoints" TextWrapping="WrapWholeWords" />
+                                            <Grid>
+                                                <TextBlock x:Uid="CommonTasks_CreateLoopbackEndpoints" TextWrapping="WrapWholeWords" Margin="0,12,0,12" />
+                                            </Grid>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
                                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8ee;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -240,10 +243,13 @@
                                     </controls:SettingsCard>
 
                                     <controls:SettingsCard IsClickEnabled="True" 
+                                                           Padding="20,0,16,0"
                                                            Command="{x:Bind ViewModel.CommonTaskSetUpNetworkMidi2Command}"
                                                            Visibility="{x:Bind ViewModel.IsNetworkMidi2Available, Mode=OneWay,Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_SetUpNetworkMidi2" TextWrapping="WrapWholeWords" />
+                                            <Grid>
+                                                <TextBlock x:Uid="CommonTasks_SetUpNetworkMidi2" TextWrapping="WrapWholeWords" Margin="0,12,0,12" />
+                                            </Grid>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
                                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xee77;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -270,9 +276,12 @@
                                     
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                           Padding="20,0,16,0"
                                                            Command="{x:Bind ViewModel.CommonTaskSetServiceAutoStartCommand}">
                                         <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_SetServiceAutoStart" TextWrapping="WrapWholeWords" />
+                                            <Grid>
+                                                <TextBlock x:Uid="CommonTasks_SetServiceAutoStart" TextWrapping="WrapWholeWords" Margin="0,12,0,12" />
+                                            </Grid>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
                                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef31;" 
@@ -283,7 +292,7 @@
                                     <!--<controls:SettingsCard IsClickEnabled="True" IsEnabled="False"
                                                            Command="{x:Bind ViewModel.CommonTaskAssignMidi1DeviceToNewDriverCommand}">
                                         <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_AssignMidi1DeviceToNewDriver" TextWrapping="WrapWholeWords" />
+                                            <TextBlock x:Uid="CommonTasks_AssignMidi1DeviceToNewDriver" TextWrapping="WrapWholeWords" TextTrimming="CharacterEllipsis" />
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
                                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb9d;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -292,9 +301,12 @@
 
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                       Padding="20,0,16,0"
                                                        Command="{x:Bind ViewModel.CommonTaskOpenMidiConsoleCommand}">
                                         <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_OpenConsole" TextWrapping="WrapWholeWords" />
+                                            <Grid>
+                                                <TextBlock x:Uid="CommonTasks_OpenConsole" TextWrapping="WrapWholeWords" Margin="0,12,0,12" />
+                                            </Grid>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
                                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -302,9 +314,12 @@
                                     </controls:SettingsCard>
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                       Padding="20,0,16,0"
                                                        Command="{x:Bind ViewModel.CommonTaskMidiDiagCommand}">
                                         <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_CaptureMidiDiag" TextWrapping="WrapWholeWords" />
+                                            <Grid>
+                                                <TextBlock x:Uid="CommonTasks_CaptureMidiDiag" TextWrapping="WrapWholeWords" Margin="0,12,0,12" />
+                                            </Grid>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
                                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe792;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -479,9 +494,10 @@
 
                                 <controls:SettingsExpander.Items>
 
-                                    <controls:SettingsCard IsClickEnabled="False">
+                                    <controls:SettingsCard IsClickEnabled="False"
+                                                           Padding="25,0,0,0">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://aka.ms/midi">
+                                            <HyperlinkButton NavigateUri="https://aka.ms/midi" Margin="0,12,0,12">
                                                 <HyperlinkButton.Content>
                                                     <TextBlock Text="Windows MIDI Services documentation" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
@@ -494,9 +510,10 @@
 
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="False">
+                                    <controls:SettingsCard IsClickEnabled="False"
+                                                           Padding="25,0,0,0">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://aka.ms/mididiscord">
+                                            <HyperlinkButton NavigateUri="https://aka.ms/mididiscord" Margin="0,12,0,12">
                                                 <HyperlinkButton.Content>
                                                     <TextBlock Text="Discord Server for questions, discussions and non-developer bug reports" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
@@ -510,9 +527,10 @@
 
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="False">
+                                    <controls:SettingsCard IsClickEnabled="False"
+                                                           Padding="25,0,0,0">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://aka.ms/midirepo">
+                                            <HyperlinkButton NavigateUri="https://aka.ms/midirepo" Margin="0,12,0,12">
                                                 <HyperlinkButton.Content>
                                                     <TextBlock Text="GitHub Repo with source for Windows MIDI Services" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
@@ -525,9 +543,10 @@
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="False">
+                                    <controls:SettingsCard IsClickEnabled="False"
+                                                           Padding="25,0,0,0">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://aka.ms/midirepoissues">
+                                            <HyperlinkButton NavigateUri="https://aka.ms/midirepoissues" Margin="0,12,0,12">
                                                 <HyperlinkButton.Content>
                                                     <TextBlock Text="GitHub Repo issues list for known issues and reporting new ones" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
@@ -555,9 +574,10 @@
 
                                 <controls:SettingsExpander.Items>
 
-                                    <controls:SettingsCard IsClickEnabled="False">
+                                    <controls:SettingsCard IsClickEnabled="False"
+                                                           Padding="25,0,0,0">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://aka.ms/getpowertoys/">
+                                            <HyperlinkButton NavigateUri="https://aka.ms/getpowertoys/" Margin="0,12,0,12">
                                                 <HyperlinkButton.Content>
                                                     <TextBlock Text="Windows PowerToys (file management, crop and lock, and more)" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
@@ -570,9 +590,10 @@
 
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="False">
+                                    <controls:SettingsCard IsClickEnabled="False"
+                                                           Padding="25,0,0,0">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://github.com/PowerShell/PowerShell/releases/tag/v7.6.0-preview.6">
+                                            <HyperlinkButton NavigateUri="https://github.com/PowerShell/PowerShell/releases/tag/v7.6.0-preview.6" Margin="0,12,0,12">
                                                 <HyperlinkButton.Content>
                                                     <TextBlock Text="PowerShell 7.6 (useful for MIDI scripting and more)" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>

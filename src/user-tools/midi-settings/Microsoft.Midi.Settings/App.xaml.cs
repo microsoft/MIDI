@@ -287,7 +287,7 @@ public partial class App : Application
                 Exit();
             }
 
-            // 在后台预加载搜索数据，确保用户进入搜索框时光标能立即闪烁
+            // Preload search data in background to ensure cursor can blink immediately when user enters search box
             _ = Task.Run(() =>
             {
                 try
@@ -301,7 +301,7 @@ public partial class App : Application
                 }
             });
 
-            // 在后台异步检查 SDK 更新，避免在 HOME 页面导航时阻塞 UI
+            // Check for SDK updates asynchronously in background to avoid blocking UI during HOME page navigation
             _ = Task.Run(async () =>
             {
                 try

@@ -1,4 +1,4 @@
-﻿<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
 <!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
 
 <Page
@@ -16,13 +16,18 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <helpers:BooleanToInverseVisibilityConverter x:Key="BooleanToInverseVisibilityConverter" />
+    </Page.Resources>
+
     <Grid x:Name="ContentArea">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 页面描述文本，暂时隐藏
+        <!-- Page description text, temporarily hidden
         <TextBlock Grid.Row="0" x:Uid="ManagementSessionsPage_Description" Margin="0,0,0,8" />
         -->
 
@@ -32,13 +37,10 @@
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Sessions, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="local:MidiServiceSessionInformationWrapper">
-
-                            <controls:SettingsExpander ItemsSource="{x:Bind SessionConnections, Mode=OneTime}"
-                                                       CornerRadius="8"
+                            <controls:SettingsExpander CornerRadius="8"
                                                        IsExpanded="True"
                                                        Margin="3">
                                 <controls:SettingsExpander.Header>
-
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -60,41 +62,50 @@
                                             <TextBlock Text="{x:Bind SessionInfo.ProcessId}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                         </StackPanel>
                                     </Grid>
-
                                 </controls:SettingsExpander.Header>
 
-                                <controls:SettingsExpander.ItemTemplate>
-                                    <DataTemplate x:DataType="local:MidiServiceSessionConnectionInfoWrapper">
-                                        <controls:SettingsCard IsClickEnabled="False">
-                                            <controls:SettingsCard.Header>
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
-                                                    </Grid.RowDefinitions>
-                                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Endpoint Name" Style="{StaticResource SmallPropertyLabel}" />
-                                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind EndpointName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                <controls:SettingsExpander.Items>
+                                    <!-- Show connection list when there are connections -->
+                                    <controls:SettingsCard IsClickEnabled="False"
+                                                           Visibility="{x:Bind HasConnections, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                        <controls:SettingsCard.Header>
+                                            <ItemsControl ItemsSource="{x:Bind SessionConnections, Mode=OneTime}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="local:MidiServiceSessionConnectionInfoWrapper">
+                                                        <Grid Margin="0,4">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto" />
+                                                                <RowDefinition Height="Auto" />
+                                                                <RowDefinition Height="Auto" />
+                                                            </Grid.RowDefinitions>
+                                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Endpoint Name" Style="{StaticResource SmallPropertyLabel}" />
+                                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind EndpointName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Endpoint Id" Style="{StaticResource SmallPropertyLabel}" />
-                                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ConnectionInfo.EndpointDeviceId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                                    
-                                                    <!-- <TextBlock Text="{x:Bind EarliestConnectionTime}" Style="{StaticResource SmallPlainPropertyValue}"/> -->
+                                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Endpoint Id" Style="{StaticResource SmallPropertyLabel}" />
+                                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ConnectionInfo.EndpointDeviceId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Count of Open Connections" Style="{StaticResource SmallPropertyLabel}" />
-                                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ConnectionInfo.InstanceCount}" Style="{StaticResource SmallPlainPropertyValue}"/>
-                                                </Grid>
-                                            </controls:SettingsCard.Header>
-                                        </controls:SettingsCard>
-                                    </DataTemplate>
-                                </controls:SettingsExpander.ItemTemplate>
+                                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Count of Open Connections" Style="{StaticResource SmallPropertyLabel}" />
+                                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ConnectionInfo.InstanceCount}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </controls:SettingsCard.Header>
+                                    </controls:SettingsCard>
 
+                                    <!-- Show hint when there are no connections -->
+                                    <controls:SettingsCard IsClickEnabled="False"
+                                                           Visibility="{x:Bind HasConnections, Converter={StaticResource BooleanToInverseVisibilityConverter}, Mode=OneWay}">
+                                        <controls:SettingsCard.Header>
+                                            <TextBlock Text="No active connections" Style="{StaticResource SmallPlainPropertyValue}" />
+                                        </controls:SettingsCard.Header>
+                                    </controls:SettingsCard>
+                                </controls:SettingsExpander.Items>
                             </controls:SettingsExpander>
-
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

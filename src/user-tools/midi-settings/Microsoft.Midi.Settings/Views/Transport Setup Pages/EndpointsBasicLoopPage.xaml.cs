@@ -89,8 +89,8 @@ namespace Microsoft.Midi.Settings.Views
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            // 删除命令执行后，延迟设置焦点到 "Create New Basic Loopback Endpoint" 按钮
-            // 避免焦点丢失到搜索框
+            // After delete command executes, defer setting focus to "Create New Basic Loopback Endpoint" button
+            // to avoid focus being lost to the search box
             DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
             {
                 CreateNewLoopback?.Focus(FocusState.Programmatic);

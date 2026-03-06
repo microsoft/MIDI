@@ -92,23 +92,36 @@
                     </controls:SettingsExpander.HeaderIcon>
 
                     <controls:SettingsExpander.Items>
-                        <controls:SettingsCard >
-                            <ToggleSwitch x:Uid="ForDevelopers_DiscoveryToggle" IsOn="{x:Bind ViewModel.EnableDiscoveryAndProtocolNegotiation, Mode=TwoWay}" />
+                        <controls:SettingsCard x:Uid="ForDevelopers_DiscoveryToggleCard">
+                            <ToggleSwitch IsOn="{x:Bind ViewModel.EnableDiscoveryAndProtocolNegotiation, Mode=TwoWay}" />
                         </controls:SettingsCard>
-                        <controls:SettingsCard >
-                            <StackPanel Orientation="Horizontal">
-                                <Slider x:Uid="ForDevelopers_DiscoveryTimeoutSlider" 
-                                        Margin="5"
-                                        Value="{x:Bind ViewModel.DiscoveryTimeout, Mode=TwoWay}" 
-                                        Minimum="{x:Bind ViewModel.DiscoveryTimeoutMinimum, Mode=OneTime}"
-                                        Maximum="{x:Bind ViewModel.DiscoveryTimeoutMaximum, Mode=OneTime}"
-                                        TickFrequency="2000"
-                                        StepFrequency="500"/>
-                                <Button Margin="20,5,5,5"
-                                        x:Uid="ForDevelopers_CommitDiscoveryTimeoutButton"
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+                <controls:SettingsExpander CornerRadius="9"
+                    x:Uid="ForDevelopers_DiscoveryTimeout"
+                    IsExpanded="True">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xe916;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
+
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <NumberBox Width="150"
+                                           HorizontalAlignment="Left"
+                                           Value="{x:Bind ViewModel.DiscoveryTimeout, Mode=TwoWay}"
+                                           Minimum="{x:Bind ViewModel.DiscoveryTimeoutMinimum, Mode=OneTime}"
+                                           Maximum="{x:Bind ViewModel.DiscoveryTimeoutMaximum, Mode=OneTime}"
+                                           SpinButtonPlacementMode="Inline"
+                                           SmallChange="500"
+                                           LargeChange="2000" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.Content>
+                                <Button x:Uid="ForDevelopers_CommitDiscoveryTimeoutButton"
                                         IsEnabled="{x:Bind ViewModel.DiscoveryTimeoutHasChanged, Mode=OneWay}"
                                         Command="{x:Bind ViewModel.CommitDiscoveryTimeoutCommand}" />
-                            </StackPanel>
+                            </controls:SettingsCard.Content>
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>

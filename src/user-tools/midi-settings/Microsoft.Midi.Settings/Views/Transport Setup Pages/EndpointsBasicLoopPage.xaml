@@ -18,7 +18,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 页面描述文本，暂时隐藏，资源未定义
+        <!-- Page description text, temporarily hidden, resource not defined
         <TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,8" />
         -->
 

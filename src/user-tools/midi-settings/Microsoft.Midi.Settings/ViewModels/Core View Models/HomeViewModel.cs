@@ -389,7 +389,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            // 系统计时器信息获取是轻量级本地操作，不需要异步处理
+            // System timer info retrieval is a lightweight local operation, no need for async processing
             try
             {
                 var timerInfo = MidiClock.GetCurrentSystemTimerInfo();

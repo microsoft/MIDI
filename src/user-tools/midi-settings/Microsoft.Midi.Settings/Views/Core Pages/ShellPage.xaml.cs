@@ -10,6 +10,7 @@ using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.ViewModels;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -48,7 +49,7 @@ public sealed partial class ShellPage : Page
         App.MainWindow.Activated += MainWindow_Activated;
         //        AppTitleBarText.Text = "AppDisplayName".GetLocalized();
 
-        // 监听窗口大小变化
+        // Listen for window size changes
         App.MainWindow.SizeChanged += MainWindow_SizeChanged;
     }
 
@@ -57,18 +58,30 @@ public sealed partial class ShellPage : Page
         //    TitleBarHelper.UpdateTitleBar(RequestedTheme);
 
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.Left, VirtualKeyModifiers.Menu));
+        KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.Right, VirtualKeyModifiers.Menu));
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.GoBack));
+        KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.GoForward));
+
+        // Listen for mouse side buttons (back/forward) - subscribe in OnLoaded to ensure Content is loaded
+        if (App.MainWindow.Content != null)
+        {
+            App.MainWindow.Content.PointerPressed += Content_PointerPressed;
+            App.MainWindow.Content.PointerReleased += Content_PointerReleased;
+        }
+
+        // Also listen for mouse side buttons at page level
+        this.PointerPressed += ShellPage_PointerPressed;
 
         // prime the endpoint data
         App.GetService<IMidiEndpointEnumerationService>().GetEndpoints();
 
-        // 初始化搜索框视觉状态
+        // Initialize search box visual state
         UpdateSearchBoxVisualState();
 
-        // 设置拖拽区域（排除搜索框区域）
+        // Set drag regions (excluding search box area)
         SetDragRegions();
 
-        // 将焦点设置到导航菜单的 Home 项，避免搜索框默认获得焦点
+        // Set focus to the Home item in navigation menu to avoid search box getting default focus
         if (NavigationViewControl.MenuItems.Count > 0)
         {
             var homeItem = NavigationViewControl.MenuItems[0] as NavigationViewItem;
@@ -91,7 +104,7 @@ public sealed partial class ShellPage : Page
     {
         UpdateSearchBoxVisualState();
         
-        // 延迟更新拖拽区域，确保布局已完成
+        // Defer drag region update to ensure layout is complete
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
         {
             SetDragRegions();
@@ -104,52 +117,81 @@ public sealed partial class ShellPage : Page
 
         var titleBar = App.MainWindow.AppWindow.TitleBar;
         var scale = App.MainWindow.Content?.XamlRoot?.RasterizationScale ?? 1.0;
-
-        // 获取搜索框实际区域在窗口中的位置（使用 SearchBox 而不是 SearchBoxContainer）
-        var searchBoxRect = SearchBox.TransformToVisual(null).TransformBounds(
-            new Rect(0, 0, SearchBox.ActualWidth, SearchBox.ActualHeight));
-
-        // 转换为整数坐标
-        int searchLeft = (int)(searchBoxRect.Left * scale);
-        int searchRight = (int)(searchBoxRect.Right * scale);
         int windowWidth = (int)(App.MainWindow.Bounds.Width * scale);
+        int titleBarHeight = (int)(48 * scale);
 
-        // 设置两个拖拽矩形：左侧（图标+标题）和右侧（搜索框右边缘到窗口右边缘）
-        var dragRects = new RectInt32[]
+        // Check current mode
+        bool isCompactMode = SearchBox.Visibility != Visibility.Visible;
+
+        if (isCompactMode)
         {
-            // 左侧区域：从窗口左边缘到搜索框左边缘
-            new RectInt32(0, 0, searchLeft, (int)(48 * scale)),
-            // 右侧区域：从搜索框右边缘到窗口右边缘
-            new RectInt32(searchRight, 0, windowWidth - searchRight, (int)(48 * scale))
-        };
+            // Compact mode: search box is hidden, calculate drag regions using search icon button and menu button positions
+            var searchIconButtonRect = SearchIconButton.TransformToVisual(null).TransformBounds(
+                new Rect(0, 0, SearchIconButton.ActualWidth, SearchIconButton.ActualHeight));
+            var menuButtonRect = MenuToggleButton.TransformToVisual(null).TransformBounds(
+                new Rect(0, 0, MenuToggleButton.ActualWidth, MenuToggleButton.ActualHeight));
 
-        titleBar.SetDragRectangles(dragRects);
+            int searchIconButtonLeft = (int)(searchIconButtonRect.Left * scale);
+            int menuButtonRight = (int)(menuButtonRect.Right * scale);
+
+            // Compact mode: left draggable area (icon+title), middle non-draggable area (search icon button+menu button), right draggable area
+            var dragRects = new RectInt32[]
+            {
+                // Left area: from window left edge to search button left edge
+                new RectInt32(0, 0, searchIconButtonLeft, titleBarHeight),
+                // Right area: from menu button right edge to window right edge
+                new RectInt32(menuButtonRight, 0, windowWidth - menuButtonRight, titleBarHeight)
+            };
+
+            titleBar.SetDragRectangles(dragRects);
+        }
+        else
+        {
+            // Normal mode: search box is visible, calculate drag regions using search box position
+            var searchBoxRect = SearchBox.TransformToVisual(null).TransformBounds(
+                new Rect(0, 0, SearchBox.ActualWidth, SearchBox.ActualHeight));
+
+            // Convert to integer coordinates
+            int searchLeft = (int)(searchBoxRect.Left * scale);
+            int searchRight = (int)(searchBoxRect.Right * scale);
+
+            // Set two drag rectangles: left (icon+title) and right (from search box right edge to window right edge)
+            var dragRects = new RectInt32[]
+            {
+                // Left area: from window left edge to search box left edge
+                new RectInt32(0, 0, searchLeft, titleBarHeight),
+                // Right area: from search box right edge to window right edge
+                new RectInt32(searchRight, 0, windowWidth - searchRight, titleBarHeight)
+            };
+
+            titleBar.SetDragRectangles(dragRects);
+        }
     }
 
     private void UpdateSearchBoxVisualState()
     {
         double windowWidth = App.MainWindow.Bounds.Width;
         double titleWidth = AppTitleBarText.ActualWidth;
-        double iconWidth = 48; // 图标列宽度
-        double titleMargin = 16; // 标题右边距 8+8
-        double searchBoxMargin = 4; // 搜索框边距
-        double indicatorAreaWidth = 150; // 右侧指示器区域预留宽度
+        double iconWidth = 48; // Icon column width
+        double titleMargin = 16; // Title right margin 8+8
+        double searchBoxMargin = 4; // Search box margin
+        double indicatorAreaWidth = 150; // Right indicator area reserved width
 
-        // 计算标题区域总宽度（图标 + 标题文字 + 边距）
+        // Calculate total title area width (icon + title text + margins)
         double titleAreaWidth = iconWidth + titleWidth + titleMargin;
 
-        // 计算搜索框可用的最大宽度
+        // Calculate maximum available width for search box
         double availableWidthForSearch = windowWidth - titleAreaWidth - indicatorAreaWidth - searchBoxMargin * 2;
 
-        // 窗口宽度阈值
+        // Window width threshold
         const double WindowThreshold = 1124;
-        // 搜索框宽度阈值（小于此值时切换为图标模式）
+        // Search box width threshold (switch to icon mode when below this value)
         const double SearchBoxCollapseThreshold = 650;
 
-        // 当窗口宽度小于等于阈值时，进入紧凑模式
+        // Enter compact mode when window width is less than or equal to threshold
         if (windowWidth <= WindowThreshold)
         {
-            // 紧凑模式：隐藏指示器区域，显示菜单图标按钮和搜索图标按钮
+            // Compact mode: hide indicator area, show menu icon button and search icon button
             RightTitleBarDragRegion.Visibility = Visibility.Collapsed;
             MenuToggleButton.Visibility = Visibility.Visible;
             SearchBox.Visibility = Visibility.Collapsed;
@@ -157,23 +199,23 @@ public sealed partial class ShellPage : Page
         }
         else
         {
-            // 正常模式：显示指示器区域，隐藏菜单图标按钮
+            // Normal mode: show indicator area, hide menu icon button
             RightTitleBarDragRegion.Visibility = Visibility.Visible;
             MenuToggleButton.Visibility = Visibility.Collapsed;
 
-            // 计算搜索框可用宽度（含指示器区域）
+            // Calculate available width for search box (including indicator area)
             availableWidthForSearch = windowWidth - titleAreaWidth - indicatorAreaWidth - searchBoxMargin * 2;
 
-            // 判断搜索框模式
+            // Determine search box mode
             if (availableWidthForSearch < SearchBoxCollapseThreshold)
             {
-                // 可用空间不足：显示搜索图标按钮
+                // Insufficient space available: show search icon button
                 SearchBox.Visibility = Visibility.Collapsed;
                 SearchIconButton.Visibility = Visibility.Visible;
             }
             else
             {
-                // 可用空间充足：显示完整搜索框
+                // Sufficient space available: show full search box
                 SearchBox.Visibility = Visibility.Visible;
                 SearchIconButton.Visibility = Visibility.Collapsed;
                 SearchBox.MaxWidth = Math.Min(700, Math.Max(400, availableWidthForSearch));
@@ -183,7 +225,7 @@ public sealed partial class ShellPage : Page
 
     private void MenuToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        // 切换导航菜单的展开/折叠状态
+        // Toggle navigation menu expand/collapse state
         NavigationViewControl.IsPaneOpen = !NavigationViewControl.IsPaneOpen;
     }
 
@@ -204,8 +246,17 @@ public sealed partial class ShellPage : Page
     private static void OnKeyboardAcceleratorInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         var navigationService = App.GetService<INavigationService>();
+        bool result = false;
 
-        var result = navigationService.GoBack();
+        // Determine whether to go back or forward based on key pressed
+        if (sender.Key == VirtualKey.Left || sender.Key == VirtualKey.GoBack)
+        {
+            result = navigationService.GoBack();
+        }
+        else if (sender.Key == VirtualKey.Right || sender.Key == VirtualKey.GoForward)
+        {
+            result = navigationService.GoForward();
+        }
 
         args.Handled = result;
     }
@@ -250,8 +301,8 @@ public sealed partial class ShellPage : Page
     {
         System.Diagnostics.Debug.WriteLine("AutoSuggestBox_GotFocus: Enter");
 
-        // 当搜索框获得焦点时，如果有文字，显示搜索列表
-        // 搜索数据已在应用启动时预加载，无需等待
+        // When search box gets focus, if there is text, show search results list
+        // Search data was preloaded at app startup, no waiting needed
         if (sender is AutoSuggestBox autoSuggestBox && !string.IsNullOrWhiteSpace(autoSuggestBox.Text))
         {
             var results = ViewModel.GetSearchResults(autoSuggestBox.Text.ToLower().Trim());
@@ -270,12 +321,56 @@ public sealed partial class ShellPage : Page
 
     private void SearchIconButton_Click(object sender, RoutedEventArgs e)
     {
-        // 当点击搜索图标按钮时，刷新搜索数据
+        // Refresh search data when search icon button is clicked
         ViewModel.RefreshSearchData();
     }
 
+    private void ShellPage_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        HandlePointerPressed(e);
+    }
 
+    private void Content_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        HandlePointerPressed(e);
+    }
 
+    private void HandlePointerPressed(PointerRoutedEventArgs e)
+    {
+        var pointer = e.GetCurrentPoint(this);
+
+        // Detect mouse side button press
+        if (pointer.PointerDeviceType == PointerDeviceType.Mouse)
+        {
+            var properties = pointer.Properties;
+
+            // XButton1 = Back button
+            if (properties.IsXButton1Pressed)
+            {
+                var navigationService = App.GetService<INavigationService>();
+                if (navigationService.CanGoBack)
+                {
+                    navigationService.GoBack();
+                    e.Handled = true;
+                }
+            }
+            // XButton2 = Forward button
+            else if (properties.IsXButton2Pressed)
+            {
+                var navigationService = App.GetService<INavigationService>();
+                if (navigationService.CanGoForward)
+                {
+                    navigationService.GoForward();
+                    e.Handled = true;
+                }
+            }
+        }
+    }
+
+    private void Content_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        // Mouse side buttons are handled in PointerPressed, no additional action needed here
+    }
 
     private void KeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
