@@ -109,20 +109,17 @@ CMidi2KSAggregateMidiEndpointManager2::Initialize(
     m_EnumerationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
     m_initialEndpointCreationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
 
-    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    if (!m_pendingEndpointDefinitions.empty())
     {
-        if (!m_pendingEndpointDefinitions.empty())
-        {
-            TraceLoggingWrite(
-                MidiKSAggregateTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Enumeration completed or timed out with endpoint definitions left pending.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingUInt32(static_cast<uint32_t>(m_pendingEndpointDefinitions.size()), "count pending definitions")
-            );
-        }
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enumeration completed or timed out with endpoint definitions left pending.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(m_pendingEndpointDefinitions.size()), "count pending definitions")
+        );
     }
 
     return S_OK;
@@ -927,17 +924,10 @@ CMidi2KSAggregateMidiEndpointManager2::GetKSDriverSuppliedName(HANDLE hInstantia
         &countBytesReturned
     );
 
-    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    // changed to not log the failure here. Failures are expected for many devices, and it's adding noise to error logs
+    if (FAILED(hrComponent))
     {
-        // changed to not log the failure here. Failures are expected for many devices, and it's adding noise to error logs
-        if (FAILED(hrComponent))
-        {
-            return hrComponent;
-        }
-    }
-    else
-    {
-        RETURN_IF_FAILED(hrComponent);
+        return hrComponent;
     }
 
     componentId.Name;   // this is the GUID which points to the registry location with the driver-supplied name
