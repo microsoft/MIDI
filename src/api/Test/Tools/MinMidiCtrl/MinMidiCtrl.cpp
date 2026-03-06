@@ -15,8 +15,8 @@ void PrintUsage()
     std::wcout <<
         L"Usage:\n"
         L"  MinMidiCtrl.exe /AddPort <UMP | ByteStream>\n"
-        L"  MinMidiCtrl.exe /RemovePort <UMP | ByteStream>\n";
-        L"  MinMidiCtrl.exe /EnableSRSim\n";
+        L"  MinMidiCtrl.exe /RemovePort <UMP | ByteStream>\n"
+        L"  MinMidiCtrl.exe /EnableSRSim\n"
         L"  MinMidiCtrl.exe /DisableSRSim\n";
 }
 

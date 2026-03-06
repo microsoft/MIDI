@@ -79,6 +79,9 @@ MidiFilter::Create(
 {
     PAGED_CODE();
 
+    KsFilterAcquireControl(filter);
+    auto releaseDeviceOnExit = wil::scope_exit([filter]() { KsFilterReleaseControl(filter); });
+
     // Filter instance information is passed through the factory context, stored
     // on the device
     PKSFILTERFACTORY filterFactory = KsFilterGetParentFilterFactory(filter);
@@ -102,14 +105,35 @@ _Use_decl_annotations_
 NTSTATUS
 MidiFilter::Close(
     PKSFILTER filter,
-    PIRP /* Irp */
+    PIRP irp
 )
 {
     PAGED_CODE();
 
+    KsFilterAcquireControl(filter);
+    auto releaseDeviceOnExit = wil::scope_exit([filter]() { KsFilterReleaseControl(filter); });
+
     MidiFilter * midiFilter = (MidiFilter *)filter->Context;
     if (midiFilter)
     {
+        for (UINT i = 0; i < filter->Descriptor->PinDescriptorsCount; i++)
+        {
+            PKSPIN pin = (PKSPIN) KsFilterGetFirstChildPin(filter, i);
+            while (pin)
+            {
+                PKSPIN nextPin = KsPinGetNextSiblingPin(pin);
+            
+                // Get the MidiFilter context and clean it up
+                MidiPin* midiPin = (MidiPin*)pin->Context;
+                if (midiPin)
+                {
+                    midiPin->Close(pin, irp);
+                }
+
+                pin = nextPin;
+            }
+        }
+
         delete midiFilter;
         filter->Context = nullptr;
     }

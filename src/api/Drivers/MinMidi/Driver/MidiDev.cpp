@@ -106,6 +106,9 @@ AddPortHandler
     PIO_STACK_LOCATION irpSp = IoGetCurrentIrpStackLocation(irp);
     PKSDEVICE ksDevice = KsGetDeviceForDeviceObject(irpSp->DeviceObject);
 
+    KsAcquireDevice(ksDevice);
+    auto releaseDeviceOnExit = wil::scope_exit([ksDevice]() { KsReleaseDevice(ksDevice); });
+
     MidiDevice *This = (MidiDevice *) ksDevice->Context;
     MidiDataFormats format = (MidiDataFormats) *buffer;
     NT_RETURN_IF_NTSTATUS_FAILED(This->AddPort(ksDevice, format));
@@ -123,6 +126,9 @@ RemovePortHandler
 {
     PIO_STACK_LOCATION irpSp = IoGetCurrentIrpStackLocation(irp);
     PKSDEVICE ksDevice = KsGetDeviceForDeviceObject(irpSp->DeviceObject);
+
+    KsAcquireDevice(ksDevice);
+    auto releaseDeviceOnExit = wil::scope_exit([ksDevice]() { KsReleaseDevice(ksDevice); });
 
     MidiDevice *This = (MidiDevice *) ksDevice->Context;
     MidiDataFormats format = (MidiDataFormats) *buffer;
@@ -362,6 +368,9 @@ MidiDevice::Create(
 {
     PAGED_CODE ();
 
+    KsAcquireDevice(device);
+    auto releaseDeviceOnExit = wil::scope_exit([device]() { KsReleaseDevice(device); });
+
     MidiDevice *midiDevice = new (POOL_FLAG_NON_PAGED) MidiDevice(device);
 
     NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, !midiDevice);
@@ -378,8 +387,6 @@ MidiDevice::AddPort
     MidiDataFormats formats
 )
 {
-    PUNICODE_STRING symbolicLink {nullptr};
-
     // Format should be either ByteStream or UMP
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, ((formats & MidiDataFormats_ByteStream) != MidiDataFormats_ByteStream) && 
                                                       ((formats & MidiDataFormats_UMP) != MidiDataFormats_UMP));
@@ -387,24 +394,35 @@ MidiDevice::AddPort
     if (formats & MidiDataFormats_UMP)
     {
         NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, m_NumUMPFilterInstancesUsed >= MAX_FILTERFACTORIES);
-        m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterDescriptor = g_MidiFilterDescriptorUMP;
-        m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].ReferenceString = g_ReferenceStringsU[m_NumUMPFilterInstancesUsed];
-        NT_RETURN_IF_NTSTATUS_FAILED(CreateFilterFactory(device, &m_UMPFilterInstance[m_NumUMPFilterInstancesUsed]));
-        symbolicLink = KsFilterFactoryGetSymbolicLink(m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory);
+
+        // If the filter factory for this entry hasn't been created yet, create it now.
+        if (!m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory)
+        {
+            m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterDescriptor = g_MidiFilterDescriptorUMP;
+            m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].ReferenceString = g_ReferenceStringsU[m_NumUMPFilterInstancesUsed];
+            NT_RETURN_IF_NTSTATUS_FAILED(CreateFilterFactory(device, &m_UMPFilterInstance[m_NumUMPFilterInstancesUsed]));
+        }
+
+        // set it active
+        KsFilterFactorySetDeviceClassesState(m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory, TRUE);
         m_NumUMPFilterInstancesUsed++;
     }
     else if (formats & MidiDataFormats_ByteStream)
     {
         NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, m_NumBytestreamFilterInstancesUsed >= MAX_FILTERFACTORIES);
-        m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterDescriptor = g_MidiFilterDescriptorBytestream;
-        m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].ReferenceString = g_ReferenceStrings[m_NumBytestreamFilterInstancesUsed];
-        NT_RETURN_IF_NTSTATUS_FAILED(CreateFilterFactory(device, &m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed]));
-        symbolicLink = KsFilterFactoryGetSymbolicLink(m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory);
+
+        // If the filter factory for this entry hasn't been created yet, create it now.
+        if (!m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory)
+        {
+            m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterDescriptor = g_MidiFilterDescriptorBytestream;
+            m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].ReferenceString = g_ReferenceStrings[m_NumBytestreamFilterInstancesUsed];
+            NT_RETURN_IF_NTSTATUS_FAILED(CreateFilterFactory(device, &m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed]));
+        }
+
+        // set it active
+        KsFilterFactorySetDeviceClassesState(m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory, TRUE);
         m_NumBytestreamFilterInstancesUsed++;
     }
-
-    // Start the factory
-    NT_RETURN_IF_NTSTATUS_FAILED(IoSetDeviceInterfaceState(symbolicLink, TRUE));
 
     return STATUS_SUCCESS;
 }
@@ -421,51 +439,21 @@ MidiDevice::RemovePort
     if (formats & MidiDataFormats_UMP)
     {
         NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, m_NumUMPFilterInstancesUsed == 0);
-
         m_NumUMPFilterInstancesUsed--;
-        auto cleanup = wil::scope_exit([&]() {
-                memset(&(m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterDescriptor), 0, sizeof(m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterDescriptor));
-                m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].ReferenceString = nullptr;
-                m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].MidiInPin = nullptr;
-                m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].MidiOutPin = nullptr;
-
-                if (m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory)
-                {
-                    KsDeleteFilterFactory(m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory);
-                }
-                m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory = nullptr;
-            });
-
         if (m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory)
         {
-            // Stop the interface
-            PUNICODE_STRING symbolicLink = KsFilterFactoryGetSymbolicLink(m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory);
-            NT_RETURN_IF_NTSTATUS_FAILED(IoSetDeviceInterfaceState(symbolicLink, FALSE));
+            // Stop the interface but don't delete it. It'll be deleted when all of the handles are closed.
+            KsFilterFactorySetDeviceClassesState(m_UMPFilterInstance[m_NumUMPFilterInstancesUsed].FilterFactory, FALSE);
         }
     }
     else if (formats & MidiDataFormats_ByteStream)
     {
         NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, m_NumBytestreamFilterInstancesUsed == 0);
-
         m_NumBytestreamFilterInstancesUsed--;
-        auto cleanup = wil::scope_exit([&]() {
-                memset(&(m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterDescriptor), 0, sizeof(m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterDescriptor));
-                m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].ReferenceString = nullptr;
-                m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].MidiInPin = nullptr;
-                m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].MidiOutPin = nullptr;
-        
-                if (m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory)
-                {
-                    KsDeleteFilterFactory(m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory);
-                }
-                m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory = nullptr;
-            });
-        
         if (m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory)
         {
-            // Stop the interface
-            PUNICODE_STRING symbolicLink = KsFilterFactoryGetSymbolicLink(m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory);
-            NT_RETURN_IF_NTSTATUS_FAILED(IoSetDeviceInterfaceState(symbolicLink, FALSE));
+            // Stop the interface but don't delete it. It'll be deleted when all of the handles are closed.
+            KsFilterFactorySetDeviceClassesState(m_BytestreamFilterInstance[m_NumBytestreamFilterInstancesUsed].FilterFactory, FALSE);
         }
     }
 
@@ -485,6 +473,9 @@ MidiDevice::Start(
     UNICODE_STRING symbolicLinkName;
     MidiDevice *This = (MidiDevice *) device->Context;
 
+    KsAcquireDevice(device);
+    auto releaseDeviceOnExit = wil::scope_exit([device]() { KsReleaseDevice(device); });
+
     // Activate the MinMidiControl interface, used for adding and removing ports/filter factories.
     // KSPROPSETID_MinMidiControl is also the interface class guid, for easy identification.
     NT_RETURN_IF_NTSTATUS_FAILED(IoRegisterDeviceInterface(device->PhysicalDeviceObject, &KSPROPSETID_MinMidiControl, (PUNICODE_STRING)&MinMidiControlReferenceString, &symbolicLinkName));
@@ -493,9 +484,7 @@ MidiDevice::Start(
         });
 
     NT_RETURN_IF_NTSTATUS_FAILED(IoSetDeviceInterfaceState(&symbolicLinkName, TRUE));
-
     NT_RETURN_IF_NTSTATUS_FAILED(This->AddPort(device, MidiDataFormats_UMP));
-
     NT_RETURN_IF_NTSTATUS_FAILED(This->AddPort(device, MidiDataFormats_ByteStream));
 
     return STATUS_SUCCESS;
@@ -504,11 +493,31 @@ MidiDevice::Start(
 _Use_decl_annotations_
 void 
 MidiDevice::Stop(
-    PKSDEVICE /* device */,
+    PKSDEVICE device,
     PIRP /* irp */
 )
 {
     PAGED_CODE ();
+
+    KsAcquireDevice(device);
+    auto releaseDeviceOnExit = wil::scope_exit([device]() { KsReleaseDevice(device); });
+
+    MidiDevice * midiDevice = (MidiDevice *)device->Context;
+
+    for (UINT i = 0; i < MAX_FILTERFACTORIES; i++)
+    {
+        if (midiDevice->m_UMPFilterInstance[i].FilterFactory)
+        {
+            // Stop the interface but don't delete it. It'll be deleted when all of the handles are closed.
+            KsFilterFactorySetDeviceClassesState(midiDevice->m_UMPFilterInstance[i].FilterFactory, FALSE);
+        }
+
+        if (midiDevice->m_BytestreamFilterInstance[i].FilterFactory)
+        {
+            // Stop the interface but don't delete it. It'll be deleted when all of the handles are closed.
+            KsFilterFactorySetDeviceClassesState(midiDevice->m_BytestreamFilterInstance[i].FilterFactory, FALSE);
+        }
+    }
 }
 
 _Use_decl_annotations_
@@ -520,11 +529,53 @@ MidiDevice::Remove(
 {
     PAGED_CODE ();
 
+    KsAcquireDevice(device);
+    auto releaseDeviceOnExit = wil::scope_exit([device]() { KsReleaseDevice(device); });
+
     MidiDevice::Stop(device, irp);
 
     MidiDevice * midiDevice = (MidiDevice *)device->Context;
     if (midiDevice)
     {
+        for (UINT i = 0; i < MAX_FILTERFACTORIES; i++)
+        {
+            if (midiDevice->m_UMPFilterInstance[i].FilterFactory)
+            {
+                PKSFILTER filter = KsFilterFactoryGetFirstChildFilter(midiDevice->m_UMPFilterInstance[i].FilterFactory);
+                while (filter)
+                {
+                    PKSFILTER nextFilter = KsFilterGetNextSiblingFilter(filter);
+
+                    // Get the MidiFilter context and clean it up
+                    MidiFilter* midiFilter = (MidiFilter*)filter->Context;
+                    if (midiFilter)
+                    {
+                        midiFilter->Close(filter, irp);
+                    }
+
+                    filter = nextFilter;
+                }
+            }
+
+            if (midiDevice->m_BytestreamFilterInstance[i].FilterFactory)
+            {
+                PKSFILTER filter = KsFilterFactoryGetFirstChildFilter(midiDevice->m_BytestreamFilterInstance[i].FilterFactory);
+                while (filter)
+                {
+                    PKSFILTER nextFilter = KsFilterGetNextSiblingFilter(filter);
+                    
+                    // Get the MidiFilter context and clean it up
+                    MidiFilter* midiFilter = (MidiFilter*)filter->Context;
+                    if (midiFilter)
+                    {
+                        midiFilter->Close(filter, irp);
+                    }
+
+                    filter = nextFilter;
+                }
+            }
+        }
+
         delete midiDevice;
         device->Context = nullptr;
     }
@@ -538,9 +589,5 @@ MidiDevice::SurpriseRemoval(
 )
 {
     PAGED_CODE ();
-
-    KsAcquireDevice(device);
-    auto releaseDeviceOnExit = wil::scope_exit([device]() { KsReleaseDevice(device); });
-
-    MidiDevice::Stop(device, irp);
+    MidiDevice::Remove(device, irp);
 }

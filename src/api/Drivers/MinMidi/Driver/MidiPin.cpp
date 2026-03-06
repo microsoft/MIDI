@@ -389,6 +389,9 @@ MidiPin::Create(
 {
     PAGED_CODE();
 
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
+
     PKSFILTER ksFilter = KsPinGetParentFilter(pin);
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, !ksFilter);
 
@@ -506,6 +509,9 @@ MidiPin::Close(
 )
 {
     PAGED_CODE();
+
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
 
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, pin == nullptr);
     MidiPin * This = (MidiPin *)pin->Context;
@@ -956,6 +962,9 @@ MidiPin::SetDeviceState(
 {        
     PAGED_CODE();
 
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
+
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, pin == nullptr);
     MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, This == nullptr);
@@ -1404,6 +1413,9 @@ MidiPin::GetLoopedStreamingBuffer
     PKSPIN pin = KsGetPinFromIrp(Irp);
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == pin);
 
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
+
     MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == This);
 
@@ -1514,6 +1526,9 @@ MidiPin::GetLoopedStreamingRegisters
     PKSPIN pin = KsGetPinFromIrp(irp);
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == pin);
 
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
+
     MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == This);
 
@@ -1592,6 +1607,9 @@ MidiPin::SetLoopedStreamingNotificationEvent
 
     PKSPIN pin = KsGetPinFromIrp(irp);
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == pin);
+
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
 
     MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == This);

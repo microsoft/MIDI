@@ -13,7 +13,7 @@ typedef struct _FILTER_INSTANCE
     wil::fast_mutex_with_critical_region MidiPinLock;
     MidiPin *MidiInPin {nullptr};
     MidiPin *MidiOutPin {nullptr};
-    PKSFILTERFACTORY FilterFactory;
+    PKSFILTERFACTORY FilterFactory {nullptr};
 } FILTER_INSTANCE, *PFILTER_INSTANCE;
 
 class MidiPin;
