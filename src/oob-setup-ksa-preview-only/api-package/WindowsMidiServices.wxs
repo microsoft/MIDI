@@ -1,0 +1,74 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+
+    <Package  
+          Name="Microsoft Windows MIDI Services (Preview Service) $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="1.0.16.2"
+          UpgradeCode="20ba8d89-7b3b-4c7d-bc94-989a5f22e703"
+          Scope="perMachine"
+          Compressed="true">
+       
+        <MediaTemplate EmbedCab="yes" />
+
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="API_INSTALLFOLDER" Name="API" />
+            </Directory>
+        </StandardDirectory>
+        
+        <!-- Install Windows Service -->
+     
+        <!-- Transport and other Service Plugins -->
+        <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
+    
+        <Component Id="WindowsServicePlugins"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="d461fdeb-9170-436d-89e7-b63bdcf48b6f"  >
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateTransport.dll" SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateTransport.pdb"/>
+
+        </Component>
+      
+      <Component Id="RestartService"
+                  Bitness="always64"
+                  Directory="SERVICE_INSTALLFOLDER"
+                  Guid="a985a8fd-8494-411d-b287-5e334df57514">
+
+        <ServiceControl Id="midisrv" Name="midisrv"
+                        Start="both"
+                        Stop="both"/>
+
+      </Component>
+
+        <!-- Feature: MIDI Service and plugins -->
+      <Feature Id="WindowsMIDIServices">
+        <ComponentRef Id="WindowsServicePlugins"/>
+        <ComponentRef Id="RestartService"/>
+      </Feature>
+
+
+      <Binary Id="CustomActionBinary"
+              SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+      <CustomAction Id="Action_TakeRegistryOwnership"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="TakeRegistryOwnership"
+                    Return="check"/>
+
+      <InstallExecuteSequence>
+        <Custom Action="Action_TakeRegistryOwnership"
+                Before="CreateFolders"
+                Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+      </InstallExecuteSequence>
+
+
+    </Package>
+</Wix>
