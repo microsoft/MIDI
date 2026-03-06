@@ -77,10 +77,14 @@ public:
 
     TEST_METHOD(MultiThreadedMidiSendTest);
 
+    TEST_METHOD(TestKSAPortEnumeration);
+
 private:
     void TestMidiSrvMultiClient(_In_ MidiDataFormats, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiSrvMultiClientBidi(_In_ MidiDataFormats, _In_ MidiDataFormats);
 
+    void GetKSAMinMidiEndpoints    (std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices,   std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices);
+    HRESULT WaitForDeviceCount(std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices, std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices, UINT expectedInCount, UINT expectedOutCount);
 };
 
 
