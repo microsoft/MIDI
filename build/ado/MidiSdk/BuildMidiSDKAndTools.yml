@@ -1,0 +1,311 @@
+#################################################################################
+#                               OneBranch Pipelines                             #
+# Documentation:  https://aka.ms/obpipelines                                    #
+# Yaml Schema:    https://aka.ms/obpipelines/yaml/schema                        #
+# Retail Tasks:   https://aka.ms/obpipelines/tasks                              #
+# Support:        https://aka.ms/onebranchsup                                   #
+#################################################################################
+
+
+trigger: none  # https://aka.ms/obpipelines/triggers
+
+# global parameteres are configured here and show up in AzDO UI in build queue time. Required for MSBuild and .NET.
+# learn more at https://aka.ms/obpipelines/parameters
+# parameters:
+# - name: 'debug'
+#  displayName: 'Enable debug output'
+#  type: boolean
+#  default: false
+
+parameters:
+- name: 'debug'
+  displayName: 'Enable debug output'
+  type: boolean
+  default: true
+
+# TODO: This is using the structure from the GitHub build. May be able to simplify this.
+# See https://aka.ms/obpipelines/versioning
+# and https://learn.microsoft.com/en-us/azure/devops/pipelines/process/run-number?view=azure-devops&tabs=yaml
+# Keep in mind that all numbers in the SDK are uint16_t to comply with file versioning requirements
+- name: 'MidiBuildType'
+  displayName: 'Preview or Stable'
+  type: string
+  default: 'Preview'
+
+- name: 'MidiBuildSource'
+  displayName: 'Source'
+  type: string
+  default: 'Official'
+
+- name: 'MidiVersionName'
+  displayName: 'Version Name'
+  type: string
+  default: 'RC 2'
+
+- name: 'MidiBuildVersionMajor'
+  displayName: 'Version Major'
+  type: number
+  default: 1
+
+- name: 'MidiBuildVersionMinor'
+  displayName: 'Version Minor'
+  type: number
+  default: 1
+
+- name: 'MidiBuildVersionPatch'
+  displayName: 'Version Patch'
+  type: number
+  default: 0
+
+- name: 'MidiBuildVersionBuildSeed'
+  displayName: 'Version Build Seed'
+  type: number
+  default: 100
+
+- name: 'MidiBuildVersionPreviewString'
+  displayName: 'Preview / RC string (preview.1, rc.1, etc.). Blank for a release.'
+  type: string
+  default: 'rc.2'
+
+variables:
+  CDP_DEFINITION_BUILD_COUNT: $[counter('', ${{ parameters.MidiBuildVersionBuildSeed }})]  # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
+  MidiBuildVersionBuildNumber: $[counter(${{ parameters.MidiBuildVersionMinor }}, ${{ parameters.MidiBuildVersionBuildSeed }})]
+  MidiBuildFullVersionString: '$(MidiBuildVersionMajor).$(MidiBuildVersionMinor).$(MidiBuildVersionPatch)'
+
+  # todo: need to remove the trailing dot if this is a preview
+  MidiBuildNuGetPackageVersionString: ${{ parameters.MidiBuildVersionMajor }}.${{ parameters.MidiBuildVersionMinor }}.${{ parameters.MidiBuildVersionPatch }}-${{ parameters.MidiBuildVersionPreviewString }}.$(MidiBuildVersionBuildNumber)
+
+  # Docker image which is used to build the project. More options and info at https://aka.ms/obpipelines/containers
+  WindowsContainerImage: 'onebranch.azurecr.io/windows/ltsc2022/vse2022:latest'
+  # LinuxContainerImage: 'mcr.microsoft.com/onebranch/azurelinux/build:3.0'
+
+  ### Specify other global variables in this section! ###
+  # https://aka.ms/obpipelines/variables
+
+name: ${{ parameters.MidiBuildVersionMajor }}.${{ parameters.MidiBuildVersionMinor }}.${{ parameters.MidiBuildVersionPatch }}-${{ parameters.MidiBuildVersionPreviewString }}.$(MidiBuildVersionBuildNumber)
+
+
+
+
+
+# TODO: Need to update this to VS2026 version of msbuild
+# TODO: Need to use .NET 10 SDK for .NET components
+
+
+
+
+
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: OneBranch.Pipelines/GovernedTemplates
+    ref: refs/heads/main
+
+extends:
+  template: v2/OneBranch.NonOfficial.CrossPlat.yml@templates  # https://aka.ms/obpipelines/templates
+  parameters:
+    featureFlags:
+      WindowsHostVersion:
+        Version: 2026
+    cloudvault:  # https://aka.ms/obpipelines/cloudvault
+      enabled: false
+      ### Linux Pipelines can uncomment the following to run CloudVault update as a seperate stage. ###
+      # runmode: stage
+      # dependsOn: linux_build
+      # artifacts:
+      #  - drop_linux_stage_linux_job
+    globalSdl:  # https://aka.ms/obpipelines/sdl
+      tsa:
+        enabled: false  # onebranch publish all SDL results to TSA. If TSA is disabled all SDL tools will forced into 'break' build mode.
+      # credscan:
+        # suppressionsFile: $(Build.SourcesDirectory)\.config\CredScanSuppressions.json
+      binskim:
+        break: true  # always break the build on binskim issues in addition to TSA upload
+      policheck:
+        break: true  # always break the build on policheck issues. You can disable it by setting to 'false'
+      # suppression:
+      #   suppressionFile: $(Build.SourcesDirectory)\.gdn\global.gdnsuppress
+
+    stages:
+    # The file contains an example HelloWorld script. For more info and examples, see the links below
+    # https://aka.ms/obpipelines/containerbuildexamples
+    # https://aka.ms/obpipelines/containerprojectypes
+
+    # VSBuild@1
+
+
+    - stage: createVersionIncludes
+      displayName: Create version include files
+      jobs:
+      - job: createVersionIncludes
+        pool:
+          type: windows  # "linux" can be used if performing a linux-based container build
+        variables:
+          ob_outputDirectory: '$(Build.SourcesDirectory)\build\staging'  # this directory is uploaded to pipeline artifacts and cloudvault. More info at https://aka.ms/obpipelines/artifacts
+          versionOutputFolder: '$(Build.SourcesDirectory)\build\staging\version'
+        steps:
+        - task: MSBuild@1
+          inputs:
+            solution: '$(Build.SourcesDirectory)\src\build-gen-version-includes\gen-version-includes.sln'
+            msbuildArguments: "/t:TransformAll \
+              -p:\
+              MidiBuildType='$(parameters.MidiBuildType)';\
+              MidiBuildSource='$(parameters.MidiBuildSource)';\
+              MidiVersionName='$(parameters.MidiVersionName);\
+              MidiBuildVersionMajor=$(parameters.MidiBuildVersionMajor);\
+              MidiBuildVersionMinor=$(parameters.MidiBuildVersionMinor);\
+              MidiBuildVersionPatch=$(parameters.MidiBuildVersionPatch);\
+              MidiBuildVersionBuildNumber=$(MidiBuildVersionBuildNumber);\
+              MidiBuildVersionPreviewString='$(parameters.MidiBuildVersionPreviewString)';\
+              MidiVersionOutputFolder='$(versionOutputFolder)'"
+
+# TODO: Need to cover both Arm64X and x64
+
+    - stage: buildWinRTSdk
+      displayName: Build WinRT SDK
+      dependsOn: createVersionIncludes 
+      jobs:
+      - job: buildSdk_x64
+        pool:
+          type: windows
+        variables:
+          ob_outputDirectory: '$(Build.SourcesDirectory)\build\staging'  # this directory is uploaded to pipeline artifacts and cloudvault. More info at https://aka.ms/obpipelines/artifacts
+        steps:
+        - task: NuGetToolInstaller@0
+          displayName: 'Install NuGet'
+          inputs:
+            checkLatest: true
+        - task: NuGetAuthenticate@1
+          displayName: 'Authenticate NuGet'
+        - task: NuGetCommand@2
+          displayName: 'NuGet restore $(Build.SourcesDirectory)\src\app-sdk\app-sdk.sln'
+          inputs:
+            command: restore
+            restoreSolution: '$(Build.SourcesDirectory)\src\app-sdk\app-sdk.sln'
+            feedsToUse: config
+            #includeNuGetOrg: true
+        - task: MSBuild@1
+          displayName: 'Build SDK Runtime'
+          inputs:
+            solution: '$(Build.SourcesDirectory)\src\app-sdk\app-sdk.sln'
+        - task: NuGetCommand@2
+          displayName: 'NuGet Pack SDK'
+          inputs:
+            command: pack
+            version: 
+
+
+    # Sign the nupkg
+    - stage: signSdkNuGetPackage
+      displayName: Sign NuGet Package
+      dependsOn: buildWinRTSdk 
+
+    # This step is needed so the tools have something to build against
+    - stage: publishSdkNuGetPackageInternally
+      displayName: Publish NuGet Package
+      dependsOn: signSdkNuGetPackage 
+
+      # TODO: Need to locally publish the NuGet package and add the 
+      # location as a package source for these projects also need to 
+      # update all projects to use this package. The C++ apps require 
+      # project file manipulation to enable this.
+
+    # Build the .NET Console app
+    - stage: buildMidiConsoleApp
+      displayName: Build MIDI Console
+      dependsOn: publishSdkNuGetPackageInternally 
+      
+    # Build the .NET Settings app
+    - stage: buildMidiSettingsApp
+      displayName: Build MIDI Settings App
+      dependsOn: publishSdkNuGetPackageInternally 
+
+    # Build the additional C++ command-line tools
+    - stage: buildAdditionalTools
+      displayName: Build Additional Tools
+      dependsOn: publishSdkNuGetPackageInternally 
+
+    # Build the .NET PowerShell projection
+    - stage: buildPowerShellProjection
+      displayName: Build PowerShell Projection
+      dependsOn: publishSdkNuGetPackageInternally 
+
+    # Sign all of the tools, projections, and the SDK Runtime DLL
+    - stage: signSdkRuntimeComponents
+      displayName: Sign SDK Components not including installers
+      dependsOn: 
+      - buildMidiConsoleApp
+      - buildMidiSettingsApp
+      - buildAdditionalTools
+      - buildPowerShellProjection
+
+
+
+    - stage: buildSdkRuntimeInstallers
+      displayName: Build Installers
+      dependsOn: 
+      - signSdkRuntimeComponents
+
+      # Needs to build for both Arm64 and x64
+
+
+    - stage: signSdkRuntimeInstallers
+      displayName: Sign SDK Runtime installers
+      dependsOn: 
+      - buildSdkRuntimeInstallers
+
+    - stage: publishSdkNuGetPackagePublic
+      displayName: Publish SDK NuGet Package on NuGet.org
+      dependsOn: 
+      - publishSdkNuGetPackageInternally
+
+
+
+       # - task: MSBuild@1
+       #   inputs:
+       #     solution: '$(Build.SourcesDirectory)\src\app-sdk\app-sdk.sln'
+
+
+        # VSTest@3 should be used for Code Coverage in C* language builds. With VSTest, you dont need publish test results and codecoverage steps!
+        # - task: VSTest@3
+        #   inputs:
+        #     testSelector: 'testAssemblies'
+        #     testAssemblyVer2: |
+        #       **\*test*.dll
+        #       !**\*TestAdapter.dll
+        #       !**\obj\**
+        #     searchFolder: '$(Build.SourcesDirectory)\out' ## or use '$(Agent.BuildDirectory)'
+        #     ##testFiltercriteria: 'TestCategory=UnitTests'   ## update
+        #     resultsFolder: '$(Build.SourcesDirectory)\out\logs\TestResults'
+        #     runInParallel: true ## this setting helps to speed up test case execution but if youhave depdencies between tests you change or remove this but having it enabled is always recommended
+        #     codeCoverageEnabled: true
+        #     testRunTitle: 'release_x64' ## Update this for a custom readable way of taggin your test run when you query in ADO test runs view
+        #     platform: 'x64' ## you can modify this as needed
+        #     configuration: 'release'
+        #     publishRunAttachments: false
+        #     failOnMinTestsNotRun: true
+        #     rerunFailedTests: true
+        #     rerunFailedThreshold: '70'
+
+# For info and instructions on CloudTest, see https://aka.ms/obpipelines/cloudtest
+# uncomment this section and edit parameters to enable CloudTest
+#     - stage: cloudtest
+#       dependsOn: build_stage
+#       jobs:
+#       - job: cloudtestjob
+#         pool:
+#           type: cloudtestagentless
+#         continueOnError: true
+#         steps:
+#         - task: CloudTestServerBuildTask@1
+#           displayName: 'CloudTest'
+#           inputs:
+#             connectedServiceName: 'CloudTest-prod'
+#             cloudTestTenant: 'onebranchtest'
+#             testMapLocation: '[BuildRoot]\ClassLibrary.UnitTest\TestMapCdp.xml'
+#             pipelineArtifactName: 'drop_build_main'
+#             pipelineArtifactBuildUrl: '$(System.TaskDefinitionsUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
+#             parserProperties: 'worker:VsTestVersion=V150;CodeCoverageType=Dynamic;worker:TestVar=$(RUN_PIPELINE_VARIABLE)'
+#             cacheEnabled: false
+#             scheduleBuildRequesterAlias: 'azbldrun'
