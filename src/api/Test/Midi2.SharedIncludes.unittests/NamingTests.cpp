@@ -743,3 +743,13 @@ void NamingTests::TestGitHubIssue616()
         VERIFY_ARE_EQUAL(entry->NewStyleName, expectedDestinationNewStyleNames[groupIndex]);
     }
 }
+
+bool NamingTests::ClassSetup()
+{
+    PrintStagingStates();
+
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    return true;
+}
+

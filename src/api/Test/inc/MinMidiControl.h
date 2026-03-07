@@ -1,0 +1,17 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+
+#pragma once
+
+#define STATIC_KSPROPSETID_MinMidiControl\
+            0xfe0d0e1f, 0x6c68, 0x4397, 0x8d, 0xc6, 0xa6, 0xa8, 0xdf, 0xee, 0x70, 0xa5
+        DEFINE_GUIDSTRUCT("FE0D0E1F-6C68-4397-8DC6-A6A8DFEE70A5", KSPROPSETID_MinMidiControl);
+#define KSPROPSETID_MinMidiControl DEFINE_GUIDNAMED(KSPROPSETID_MinMidiControl)
+
+typedef enum {
+    KSPROPERTY_MINMIDICONTROL_ADDPORT,
+    KSPROPERTY_MINMIDICONTROL_REMOVEPORT,
+    KSPROPERTY_MINMIDICONTROL_SURPRISEREMOVESIMULATION,
+} KSPROPERTY_MINMIDICONTROL;
+
+HRESULT SendDriverCommand(_In_ KSPROPERTY_MINMIDICONTROL operation, _In_ DWORD data);
+

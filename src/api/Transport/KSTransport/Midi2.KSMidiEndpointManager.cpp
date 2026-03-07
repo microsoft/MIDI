@@ -11,6 +11,7 @@
 #include "midi2.kstransport.h"
 
 #include "Feature_Servicing_MIDI2FilterCreations.h"
+#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -945,9 +946,6 @@ winrt::hstring CMidi2KSMidiEndpointManager::FindMatchingInstantiatedEndpoint(Win
 
 }
 
-
-
-
 HRESULT
 CMidi2KSMidiEndpointManager::Shutdown()
 {
@@ -961,7 +959,10 @@ CMidi2KSMidiEndpointManager::Shutdown()
 
     TransportState::Current().Shutdown();
 
-    m_AvailableMidiPins.clear();
+    if (!Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    {
+        m_AvailableMidiPins.clear();
+    }
 
     m_Watcher.Stop();
     m_EnumerationCompleted.wait(500);
@@ -973,6 +974,14 @@ CMidi2KSMidiEndpointManager::Shutdown()
 
     m_midiDeviceManager.reset();
     m_midiProtocolManager.reset();
+
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    {
+        // Clear pin information after enumeration is shut down
+        // to prevent it from being cleared while in use by the
+        // watcher.
+        m_AvailableMidiPins.clear();
+    }
 
     return S_OK;
 }

@@ -1061,6 +1061,11 @@ void Midi2DriverTests::TestSetState()
 bool Midi2DriverTests::TestSetup()
 {
     m_MidiInCallback = nullptr;
+
+    // Stop midisrv if it's running, to ensure it doesn't conflict with
+    // this test running.
+    StopMIDIService();
+
     return true;
 }
 
@@ -1071,6 +1076,8 @@ bool Midi2DriverTests::TestCleanup()
 
 bool Midi2DriverTests::ClassSetup()
 {
+    PrintStagingStates();
+
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
     return true;
 }

@@ -26,10 +26,11 @@ public:
 
     BEGIN_TEST_CLASS(UmpIteratorTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        END_TEST_CLASS()
+    END_TEST_CLASS()
 
+    TEST_CLASS_SETUP(ClassSetup);
         
-        TEST_METHOD(TestBasicIteration);
+    TEST_METHOD(TestBasicIteration);
     TEST_METHOD(TestMixedIteration);
     TEST_METHOD(TestIncompleteBuffer);
     TEST_METHOD(TestValidateIncompleteBufferHasCompleteUmps);

@@ -133,6 +133,8 @@ KSMidiDeviceEnum::EnumerateFilters()
             // for render (MIDIOut) we need  KSPIN_DATAFLOW_IN
             if (KSPIN_DATAFLOW_IN == dataFlow)
             {
+                RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), m_AvailableMidiOutPinCount >= MAX_PINS);
+
                 m_AvailableMidiOutPins[m_AvailableMidiOutPinCount].FilterName =
                     wil::make_cotaskmem_string_nothrow(deviceId);
                 m_AvailableMidiOutPins[m_AvailableMidiOutPinCount].PinId = i;
@@ -141,6 +143,8 @@ KSMidiDeviceEnum::EnumerateFilters()
             }
             else if (KSPIN_DATAFLOW_OUT == dataFlow)
             {
+                RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), m_AvailableMidiInPinCount >= MAX_PINS);
+
                 m_AvailableMidiInPins[m_AvailableMidiInPinCount].FilterName =
                     wil::make_cotaskmem_string_nothrow(deviceId);
                 m_AvailableMidiInPins[m_AvailableMidiInPinCount].PinId = i;

@@ -11,6 +11,7 @@
 #include "midi2.LoopbackMidiTransport.h"
 
 #include "MidiEndpointNameTable.h"
+#include "Feature_Servicing_MIDI2ContainerIds.h"
 
 using namespace wil;
 using namespace Microsoft::WRL;
@@ -44,7 +45,13 @@ CMidi2LoopbackMidiEndpointManager::Initialize(
 
 
     m_TransportTransportId = TransportLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
-    m_ContainerId = m_TransportTransportId;           // we use the transport ID as the container ID for convenience
+    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+    {
+    }
+    else
+    {
+        m_ContainerId = m_TransportTransportId;           // we use the transport ID as the container ID for convenience
+    }
 
     RETURN_IF_FAILED(CreateParentDevice());
 
@@ -126,7 +133,13 @@ CMidi2LoopbackMidiEndpointManager::CreateParentDevice()
     createInfo.pszInstanceId = parentDeviceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
-    createInfo.pContainerId = &m_ContainerId;
+    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+    {
+    }
+    else
+    {
+        createInfo.pContainerId = &m_ContainerId;
+    }
 
     wil::unique_cotaskmem_string newDeviceId;
 

@@ -25,4 +25,12 @@ void VersionResourceHelperTests::TestGetCompanyName()
     VERIFY_ARE_EQUAL(L"Microsoft Corporation", name);
 }
 
+bool VersionResourceHelperTests::ClassSetup()
+{
+    PrintStagingStates();
+
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    return true;
+}
 

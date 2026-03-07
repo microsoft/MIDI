@@ -502,3 +502,13 @@ void LibMidi2Tests::TestSelectedChannelMessagesToBytes()
     InternalTranslateUmpWordsToMidi1Bytes(input, expectedOutput);
 
 }
+
+bool LibMidi2Tests::ClassSetup()
+{
+    PrintStagingStates();
+
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    return true;
+}
+

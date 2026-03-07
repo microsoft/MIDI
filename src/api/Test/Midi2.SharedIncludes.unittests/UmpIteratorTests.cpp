@@ -358,3 +358,12 @@ void UmpIteratorTests::TestGetMessageWordsByIndex()
         }
     }
 }
+bool UmpIteratorTests::ClassSetup()
+{
+    PrintStagingStates();
+
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    return true;
+}
+
