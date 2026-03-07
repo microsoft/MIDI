@@ -463,7 +463,7 @@
     <value>Discovery Timeout</value>
   </data>
   <data name="ForDevelopers_DiscoveryTimeout.Description" xml:space="preserve">
-    <value>The time in milliseconds to wait for device discovery responses.</value>
+    <value>The time in milliseconds to wait for device discovery responses. Unit: ms. (df: 10000)</value>
   </data>
   <data name="ForDevelopers_CommitDiscoveryTimeoutButton.Content" xml:space="preserve">
     <value>Save to Registry</value>

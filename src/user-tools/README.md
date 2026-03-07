@@ -229,3 +229,45 @@ This branch focuses on **navigation improvements** and **page layout optimizatio
 - **Description**: Updated midi-console project configuration
 - **Files Modified**:
   - `midi-console/Midi/Midi.csproj`
+
+---
+
+## Recent Changes (`fix-mouse-side-button-navigation` branch)
+
+### Bug Fixes
+
+#### Mouse Side Button Navigation in Settings Pages
+- **Issue**: Mouse side buttons (XButton1/XButton2) for back/forward navigation were not working in SettingsPage and GlobalMidiSettingsPage
+- **Root Cause**: ScrollViewer controls in these pages were intercepting pointer events, preventing them from bubbling up to ShellPage's PointerPressed handler
+- **Solution**: ~~Added PointerPressed event handlers to ScrollViewer controls in affected pages to handle mouse side button navigation locally~~ Removed duplicate mouse side button handlers from individual pages. The MainWindow.xaml.cs already handles WM_XBUTTONDOWN messages globally for all pages. Having duplicate handlers in both XAML PointerPressed events and Windows message handling caused navigation to trigger twice.
+- **Files Modified**:
+  - `Microsoft.Midi.Settings/Views/Core Pages/SettingsPage.xaml` (reverted)
+  - `Microsoft.Midi.Settings/Views/Core Pages/SettingsPage.xaml.cs` (reverted)
+  - `Microsoft.Midi.Settings/Views/Core Pages/GlobalMidiSettingsPage.xaml` (reverted)
+  - `Microsoft.Midi.Settings/Views/Core Pages/GlobalMidiSettingsPage.xaml.cs` (reverted)
+
+#### Fixed Double Navigation on Mouse Side Button
+- **Issue**: When pressing mouse side button to go back from Settings page, it would navigate back twice (e.g., Settings → Devices → Home instead of Settings → Devices)
+- **Root Cause**: Mouse side button events were being handled multiple times:
+  1. Page-level PointerPressed event handlers (in SettingsPage/GlobalMidiSettingsPage)
+  2. ShellPage-level PointerPressed event handlers
+  3. MainWindow-level WM_XBUTTONDOWN Windows message handling
+- **Solution**: Removed page-level handlers, kept only MainWindow.xaml.cs global handler which uses Windows message subclassing to capture XBUTTON1/XBUTTON2
+- **Files Modified**:
+  - `Microsoft.Midi.Settings/Views/Core Pages/SettingsPage.xaml`
+  - `Microsoft.Midi.Settings/Views/Core Pages/SettingsPage.xaml.cs`
+  - `Microsoft.Midi.Settings/Views/Core Pages/GlobalMidiSettingsPage.xaml`
+  - `Microsoft.Midi.Settings/Views/Core Pages/GlobalMidiSettingsPage.xaml.cs`
+
+#### Menu Navigation Stack Behavior
+- **Description**: Changed menu navigation to clear navigation history when switching between main sections
+- **Behavior**:
+  - **Menu clicks**: Navigation stack is cleared (`clearNavigation: true`), so pressing back won't return to previous menu section
+  - **Content navigation**: Normal stack behavior, back/forward works within content pages
+- **Example**: 
+  - Click "Devices" menu → navigate to Devices page (stack cleared)
+  - Click a device → navigate to Device Detail (stack: [Devices])
+  - Press back → return to Devices (stack: [])
+  - Press back again → won't go to previous menu (e.g., Home) because stack is empty
+- **Files Modified**:
+  - `Microsoft.Midi.Settings/Services/NavigationViewService.cs`

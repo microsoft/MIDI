@@ -108,7 +108,7 @@
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
-                                <NumberBox Width="150"
+                                <NumberBox Width="200"
                                            HorizontalAlignment="Left"
                                            Value="{x:Bind ViewModel.DiscoveryTimeout, Mode=TwoWay}"
                                            Minimum="{x:Bind ViewModel.DiscoveryTimeoutMinimum, Mode=OneTime}"

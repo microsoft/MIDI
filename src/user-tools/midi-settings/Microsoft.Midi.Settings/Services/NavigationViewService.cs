@@ -65,7 +65,8 @@ public class NavigationViewService : INavigationViewService
     {
         if (args.IsSettingsInvoked)
         {
-            _navigationService.NavigateTo(typeof(SettingsViewModel).FullName!);
+            // Menu navigation: clear navigation stack so back button won't return to previous menu page
+            _navigationService.NavigateTo(typeof(SettingsViewModel).FullName!, null, clearNavigation: true);
         }
         else
         {
@@ -73,7 +74,8 @@ public class NavigationViewService : INavigationViewService
 
             if (selectedItem?.GetValue(NavigationHelper.NavigateToProperty) is string pageKey)
             {
-                _navigationService.NavigateTo(pageKey);
+                // Menu navigation: clear navigation stack so back button won't return to previous menu page
+                _navigationService.NavigateTo(pageKey, null, clearNavigation: true);
             }
         }
     }
