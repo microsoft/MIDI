@@ -15,13 +15,14 @@
 
     <Grid x:Name="ContentArea">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <!-- Page description text, temporarily hidden, resource not defined
         <TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,8" />
+        -->
 
-        <ScrollViewer Grid.Row="1">
+        <ScrollViewer Grid.Row="0">
             <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
 
                 <!-- Transport -->
@@ -126,7 +127,8 @@
                                             </Button>
 
                                             <Button Margin="8,8,8,8"
-                                                    Command="{x:Bind RemoveCommand}">
+                                                    Command="{x:Bind RemoveCommand}"
+                                                    Click="DeleteButton_Click">
                                                 <FontIcon Glyph="&#xE74D;"/>
                                             </Button>
                                         </StackPanel>

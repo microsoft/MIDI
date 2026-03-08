@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -20,6 +20,11 @@ public interface INavigationService
         get;
     }
 
+    bool CanGoForward
+    {
+        get;
+    }
+
     Frame? Frame
     {
         get; set;
@@ -28,6 +33,8 @@ public interface INavigationService
     bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false);
 
     bool GoBack();
+
+    bool GoForward();
 
     void SetListDataItemForNextConnectedAnimation(object item);
 }

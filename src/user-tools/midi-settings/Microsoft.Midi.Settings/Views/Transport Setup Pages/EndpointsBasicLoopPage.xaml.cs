@@ -85,7 +85,16 @@ namespace Microsoft.Midi.Settings.Views
 
                 m_showCreateDialog = false;
             }
+        }
 
+        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            // After delete command executes, defer setting focus to "Create New Basic Loopback Endpoint" button
+            // to avoid focus being lost to the search box
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+            {
+                CreateNewLoopback?.Focus(FocusState.Programmatic);
+            });
         }
 
         private async void CreateNewLoopback_Click(object sender, RoutedEventArgs e)

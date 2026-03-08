@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -192,37 +192,39 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
 
-        public void CheckForSdkUpdates()
+        public async Task CheckForSdkUpdatesAsync()
         {
             try
             {
-
-                IsNewerSdkRuntimeDownloadAvailable = false;
-                _newRelease = null;
-
-                // TODO: This needs to check the correct channel
-                var newRelease = _updateService.CheckForUpdates();
-                var installedVersion = _sdkService.InstalledVersion;
-
-                if (newRelease == null || installedVersion == null) return;
-
-                MidiSdkCurrentReleaseVersionString = installedVersion.ToString();
-
-                if (newRelease.Version.IsGreaterThan(installedVersion))
-                {
-                    _newRelease = newRelease;
-
-                    MidiSdkDownloadUri = newRelease.DirectDownloadUriForCurrentRuntimeArchitecture;
-                    MidiSdkReleaseNotesUri = newRelease.ReleaseNotesUri;
-                    MidiSdkNewReleaseDateString = newRelease.BuildDate.ToString("MMMM dd, yyyy");
-                    MidiSdkNewReleaseVersionString = newRelease.Version.ToString();
-
-                    IsNewerSdkRuntimeDownloadAvailable = true;
-                }
-                else
+                await Task.Run(() =>
                 {
                     IsNewerSdkRuntimeDownloadAvailable = false;
-                }
+                    _newRelease = null;
+
+                    // TODO: This needs to check the correct channel
+                    var newRelease = _updateService.CheckForUpdates();
+                    var installedVersion = _sdkService.InstalledVersion;
+
+                    if (newRelease == null || installedVersion == null) return;
+
+                    MidiSdkCurrentReleaseVersionString = installedVersion.ToString();
+
+                    if (newRelease.Version.IsGreaterThan(installedVersion))
+                    {
+                        _newRelease = newRelease;
+
+                        MidiSdkDownloadUri = newRelease.DirectDownloadUriForCurrentRuntimeArchitecture;
+                        MidiSdkReleaseNotesUri = newRelease.ReleaseNotesUri;
+                        MidiSdkNewReleaseDateString = newRelease.BuildDate.ToString("MMMM dd, yyyy");
+                        MidiSdkNewReleaseVersionString = newRelease.Version.ToString();
+
+                        IsNewerSdkRuntimeDownloadAvailable = true;
+                    }
+                    else
+                    {
+                        IsNewerSdkRuntimeDownloadAvailable = false;
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -233,7 +235,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                 System.Diagnostics.Debug.WriteLine(ex);
                 IsNewerSdkRuntimeDownloadAvailable = false;
             }
-
         }
 
 
@@ -371,11 +372,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
 
-            if (_updateService.GetAutoCheckForUpdatesEnabled())
-            {
-                CheckForSdkUpdates();
-            }
-
             IsNetworkMidi2Available = _transportInfoService.IsTransportAvailable("NET2UDP");
 
             //LaunchNewSdkVersionUpdateCommand = new RelayCommand(
@@ -393,23 +389,31 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            var timerInfo = MidiClock.GetCurrentSystemTimerInfo();
-
-            if (timerInfo.CurrentIntervalTicks > 0)
+            // System timer info retrieval is a lightweight local operation, no need for async processing
+            try
             {
-                SystemTimerCurrentResolutionFormattedMilliseconds = MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.CurrentIntervalTicks).ToString("N3") + " ms";
-                SystemTimerMaxResolutionFormattedMilliseconds = MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MaximumIntervalTicks).ToString("N3") + " ms";
-                SystemTimerMinResolutionFormattedMilliseconds = MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MinimumIntervalTicks).ToString("N3") + " ms";
+                var timerInfo = MidiClock.GetCurrentSystemTimerInfo();
+
+                if (timerInfo.CurrentIntervalTicks > 0)
+                {
+                    SystemTimerCurrentResolutionFormattedMilliseconds = MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.CurrentIntervalTicks).ToString("N3") + " ms";
+                    SystemTimerMaxResolutionFormattedMilliseconds = MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MaximumIntervalTicks).ToString("N3") + " ms";
+                    SystemTimerMinResolutionFormattedMilliseconds = MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MinimumIntervalTicks).ToString("N3") + " ms";
+                }
+                else
+                {
+                    SystemTimerCurrentResolutionFormattedMilliseconds = "error";
+                    SystemTimerMaxResolutionFormattedMilliseconds = "error";
+                    SystemTimerMinResolutionFormattedMilliseconds = "error";
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // failed to get timer info
-
+                App.GetService<ILoggingService>().LogError("Error getting system timer info", ex);
                 SystemTimerCurrentResolutionFormattedMilliseconds = "error";
                 SystemTimerMaxResolutionFormattedMilliseconds = "error";
                 SystemTimerMinResolutionFormattedMilliseconds = "error";
             }
-
         }
 
 
