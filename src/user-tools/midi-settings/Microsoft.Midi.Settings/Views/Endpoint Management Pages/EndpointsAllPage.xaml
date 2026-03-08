@@ -65,15 +65,15 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                    
-                    <TextBlock Grid.Column="0" 
-                               Text="{x:Bind PortNumber, Mode=OneWay}" 
-                               TextAlignment="Left" 
+                    <TextBlock Grid.Column="0"
+                               Text="{x:Bind PortNumber, Mode=OneTime}"
+                               TextAlignment="Left"
                                Foreground="{StaticResource TextFillColorDisabledBrush}"
                                VerticalAlignment="Center"
                                HorizontalAlignment="Left"/>
 
-                    <TextBlock Grid.Column="1" 
-                               Text="{x:Bind PortName, Mode=OneWay}" 
+                    <TextBlock Grid.Column="1"
+                               Text="{x:Bind PortName, Mode=OneTime}"
                                Foreground="{StaticResource SystemFillColorAttentionBrush}"
                                />
                 </Grid>
@@ -90,8 +90,9 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Page Title -->
+        <!-- Page Title - temporarily hidden, resource not defined
         <TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,0" />
+        -->
 
         <!-- View type, Sort, and Filter -->
 

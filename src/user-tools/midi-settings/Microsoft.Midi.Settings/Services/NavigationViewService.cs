@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -24,7 +24,7 @@ public class NavigationViewService : INavigationViewService
 
     public IList<object>? MenuItems => _navigationView?.MenuItems;
 
-    public object? SettingsItem => _navigationView?.SettingsItem;
+    public object? SettingsItem => _navigationView?.SettingsItem ?? GetSettingsItemFromFooter();
 
     public NavigationViewService(INavigationService navigationService, IPageService pageService)
     {
@@ -65,7 +65,8 @@ public class NavigationViewService : INavigationViewService
     {
         if (args.IsSettingsInvoked)
         {
-            _navigationService.NavigateTo(typeof(SettingsViewModel).FullName!);
+            // Menu navigation: clear navigation stack so back button won't return to previous menu page
+            _navigationService.NavigateTo(typeof(SettingsViewModel).FullName!, null, clearNavigation: true);
         }
         else
         {
@@ -73,7 +74,8 @@ public class NavigationViewService : INavigationViewService
 
             if (selectedItem?.GetValue(NavigationHelper.NavigateToProperty) is string pageKey)
             {
-                _navigationService.NavigateTo(pageKey);
+                // Menu navigation: clear navigation stack so back button won't return to previous menu page
+                _navigationService.NavigateTo(pageKey, null, clearNavigation: true);
             }
         }
     }
@@ -94,6 +96,22 @@ public class NavigationViewService : INavigationViewService
             }
         }
 
+        return null;
+    }
+
+    private NavigationViewItem? GetSettingsItemFromFooter()
+    {
+        if (_navigationView?.FooterMenuItems != null)
+        {
+            foreach (var item in _navigationView.FooterMenuItems.OfType<NavigationViewItem>())
+            {
+                if (item.GetValue(NavigationHelper.NavigateToProperty) is string pageKey &&
+                    pageKey.Contains("SettingsViewModel"))
+                {
+                    return item;
+                }
+            }
+        }
         return null;
     }
 

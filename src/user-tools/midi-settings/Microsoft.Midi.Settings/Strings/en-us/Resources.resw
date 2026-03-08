@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -288,6 +288,9 @@
   <data name="Shell_Home.Content" xml:space="preserve">
     <value>Home</value>
   </data>
+  <data name="Shell_Settings.Content" xml:space="preserve">
+    <value>Settings</value>
+  </data>
   <data name="Shell_Routes.Content" xml:space="preserve">
     <value>Routing</value>
   </data>
@@ -420,14 +423,11 @@
   <data name="ForDevelopers_EnableMmcssToggle.OffContent" xml:space="preserve">
     <value>Windows MIDI Services will not use MMCSS threads in the client process. This is the recommended choice.</value>
   </data>
-  <data name="ForDevelopers_DiscoveryToggle.OffContent" xml:space="preserve">
-    <value>Service-based MIDI 2.0 discovery and protocol negotiation is currently disabled.</value>
+  <data name="ForDevelopers_DiscoveryToggleCard.Header" xml:space="preserve">
+    <value>Service-based MIDI 2.0 discovery and protocol negotiation. This is the recommended choice.</value>
   </data>
   <data name="ForDevelopers_EnableMmcssToggle.OnContent" xml:space="preserve">
     <value>Windows MIDI Services will use MMCSS threads in the client process. This may cause some applications to malfunction.</value>
-  </data>
-  <data name="ForDevelopers_DiscoveryToggle.OnContent" xml:space="preserve">
-    <value>Service-based MIDI 2.0 discovery and protocol negotiation is currently enabled. This is the recommended choice.</value>
   </data>
   <data name="ForDevelopers_ServiceRestartRequired.Message" xml:space="preserve">
     <value>The Windows MIDI Service (midisrv.exe) must be restarted for changes to take effect.</value>
@@ -459,8 +459,11 @@
   <data name="HyperlinkButton_MidiSpecifications.Content" xml:space="preserve">
     <value>MIDI 1.0 and 2.0 Specifications at the MIDI Association</value>
   </data>
-  <data name="ForDevelopers_DiscoveryTimeoutSlider.Header" xml:space="preserve">
-    <value>Discovery Timeout (milliseconds)</value>
+  <data name="ForDevelopers_DiscoveryTimeout.Header" xml:space="preserve">
+    <value>Discovery Timeout</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryTimeout.Description" xml:space="preserve">
+    <value>The time in milliseconds to wait for device discovery responses. Unit: ms. (df: 10000)</value>
   </data>
   <data name="ForDevelopers_CommitDiscoveryTimeoutButton.Content" xml:space="preserve">
     <value>Save to Registry</value>
