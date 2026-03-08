@@ -41,19 +41,16 @@
                            
                             <controls:SettingsCard IsClickEnabled="False" Margin="4">
                                 <controls:SettingsCard.Header>
-                                    <Grid Grid.Column="0" Margin="0,0,21,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
+                                    <Grid Margin="0,0,21,0" MaxWidth="400">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
-                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="{x:Bind Name}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="1" Text="{x:Bind Description}" Style="{StaticResource SmallPlainPropertyValueWithWrap}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="{x:Bind Author}"  Style="{StaticResource SmallPlainPropertyValue}" />
+                                        <TextBlock Grid.Row="0" Text="{x:Bind Name}" Style="{StaticResource SmallEmphasizedPropertyValue}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Row="1" Text="{x:Bind Description}" Style="{StaticResource SmallPlainPropertyValueWithWrap}" TextWrapping="Wrap" MaxLines="2" />
+                                        <TextBlock Grid.Row="2" Text="{x:Bind Author}" Style="{StaticResource SmallPlainPropertyValue}" TextTrimming="CharacterEllipsis" />
 
                                     </Grid>
                                 </controls:SettingsCard.Header>

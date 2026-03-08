@@ -17,14 +17,14 @@
 
     <Page.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converters:StringVisibilityConverter x:Key="StringVisibilityConverter" />
 
         <x:Double x:Key="NavigationViewItemOnLeftIconBoxHeight">26</x:Double>
         <Thickness x:Key="NavigationViewItemOnLeftIconBoxMargin">8,0,0,0</Thickness>
         <Thickness x:Key="NavigationViewItemContentPresenterMargin">8,0,0,0</Thickness>
         <Thickness x:Key="NavigationViewItemButtonMargin">12,2,4,2</Thickness>
-        <x:Double x:Key="NavigationViewCompactPaneLength">60</x:Double>
 
-        <Thickness x:Key="NavigationFrameContentMargin">40,0,40,0</Thickness>
+        <Thickness x:Key="NavigationFrameContentMargin">40,24,40,0</Thickness>
         <Thickness x:Key="NavigationViewHeaderMargin">40,0,40,20</Thickness>
 
         <Style x:Key="NavigationViewItemPreviewTagContainer"  TargetType="Grid">
@@ -74,149 +74,258 @@
 
         <Grid x:Name="AppTitleBar"
               Grid.Row="0"
-              VerticalAlignment="Top">
+              VerticalAlignment="Top"
+              Height="48"
+              Background="{StaticResource LayerFillColorDefaultBrush}">
 
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-            <controls:TitleBar x:Name="AppTitleBarControl" 
-                               Title="MIDI Settings"
-                               AutoConfigureCustomTitleBar="False"
-                               DisplayMode="Tall"
-                               IsPaneButtonVisible="False"
-                               BackButtonClick="TitleBar_BackButtonClick"
-                               IsBackButtonVisible="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
-                               >
-                <controls:TitleBar.Icon>
-                    <ImageIcon Source="/Assets/AppIcon.ico" />
-                </controls:TitleBar.Icon>
+            <!-- Icon -->
+            <ImageIcon Grid.Column="0"
+                       Source="/Assets/AppIcon.ico"
+                       Width="24"
+                       Height="24"
+                       Margin="12,0,8,0"
+                       VerticalAlignment="Center" />
 
-                
-                <controls:TitleBar.Content>
-                    <AutoSuggestBox x:Name="SearchBox" 
-                                    PlaceholderText=" Find a setting, endpoint, or port" 
-                                    Canvas.ZIndex="100"
-                                    QueryIcon="Find"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Width="300"
-                                    MinWidth="300"
-                                    MaxWidth="700"
-                                    AutoMaximizeSuggestionArea="True"
-                                    Margin="4"
-                                    GotFocus="AutoSuggestBox_GotFocus"
-                                    LostFocus="AutoSuggestBox_LostFocus"
-                                    TextChanged="SettingsSearchBox_TextChanged"
-                                    SuggestionChosen="AutoSuggestBox_SuggestionChosen"
-                                    QuerySubmitted="SettingsSearchBox_QuerySubmitted">
-                        <AutoSuggestBox.ItemTemplate>
-                            <DataTemplate x:DataType="serviceContracts:MidiSettingsSearchResult">
-                                <Grid Margin="4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
+            <!-- Title Text -->
+            <TextBlock x:Name="AppTitleBarText"
+                       Grid.Column="1"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left"
+                       Margin="8,0,8,0"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+                       
+            <!-- Search Box (Non-draggable area) -->
+            <Grid x:Name="SearchBoxContainer"
+                  Grid.Column="2"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Center">
+                <AutoSuggestBox x:Name="SearchBox"
+                                PlaceholderText="Find a setting, endpoint, or port"
+                                Canvas.ZIndex="100"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                Height="36"
+                                MinWidth="200"
+                                MaxWidth="700"
+                                AutoMaximizeSuggestionArea="True"
+                                Margin="8,0,8,0"
+                                GotFocus="AutoSuggestBox_GotFocus"
+                                LostFocus="AutoSuggestBox_LostFocus"
+                                TextChanged="SettingsSearchBox_TextChanged"
+                                SuggestionChosen="AutoSuggestBox_SuggestionChosen"
+                                QuerySubmitted="SettingsSearchBox_QuerySubmitted">
+                    <AutoSuggestBox.ItemTemplate>
+                        <DataTemplate x:DataType="serviceContracts:MidiSettingsSearchResult">
+                            <Grid Margin="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                                    <FontIcon Grid.Column="0" 
-                                              VerticalAlignment="Center"
-                                              Glyph="{x:Bind Glyph}"
-                                              Style="{StaticResource NavigationMenuIconStyles}"
-                                              Margin="4,0,8,0"/>
+                                <FontIcon Grid.Column="0" 
+                                          VerticalAlignment="Center"
+                                          Glyph="{x:Bind Glyph}"
+                                          Style="{StaticResource NavigationMenuIconStyles}"
+                                          Margin="4,0,8,0"/>
 
-                                    <StackPanel Grid.Column="1"
-                                                Orientation="Vertical">
+                                <StackPanel Grid.Column="1"
+                                            Orientation="Vertical">
 
-                                        <StackPanel Orientation="Horizontal"
-                                                    Margin="8,4,4,0">
-                                            <TextBlock Margin="0,0,4,0"
-                                                       Text="{x:Bind DisplayText}"/>
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="8,4,4,0">
+                                        <TextBlock Margin="0,0,4,0"
+                                                   Text="{x:Bind DisplayText}"/>
 
-                                            <TextBlock Margin="4,0,0,0"
-                                                       Text="("/>
+                                        <TextBlock Margin="4,0,0,0"
+                                                   Text="("/>
 
-                                            <TextBlock Margin="0,0,0,0"
-                                                       Text="{x:Bind ResultType}"
-                                                       Foreground="{StaticResource TextFillColorTertiary}"/>
+                                        <TextBlock Margin="0,0,0,0"
+                                                   Text="{x:Bind ResultType}"
+                                                   Foreground="{StaticResource TextFillColorTertiary}"/>
 
-                                            <TextBlock Margin="0,0,8,0"
-                                                       Text=")"/>
-
-                                        </StackPanel>
-
-                                        <TextBlock Margin="8,4,0,8" 
-                                                   Text="{x:Bind DisplayDescription}"
-                                                   TextWrapping="WrapWholeWords"
-                                                   FontSize="{StaticResource SmallFontSize}"
-                                                   Foreground="{StaticResource TextFillColorTertiary}" />
+                                        <TextBlock Margin="0,0,8,0"
+                                                   Text=")"/>
 
                                     </StackPanel>
-                                    
 
-                                </Grid>
-                            </DataTemplate>
-                        </AutoSuggestBox.ItemTemplate>
-                    </AutoSuggestBox>
-                                    
-                </controls:TitleBar.Content>
+                                    <TextBlock Margin="8,4,0,8" 
+                                               Text="{x:Bind DisplayDescription}"
+                                               TextWrapping="WrapWholeWords"
+                                               FontSize="{StaticResource SmallFontSize}"
+                                               Foreground="{StaticResource TextFillColorTertiary}" />
+
+                                </StackPanel>
+                                
+
+                            </Grid>
+                        </DataTemplate>
+                    </AutoSuggestBox.ItemTemplate>
+                </AutoSuggestBox>
+            </Grid>
+
+            <!-- Search and Menu Container -->
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center">
+                        
+                <!-- Search Icon Button (Compact Mode) -->
+                <Button x:Name="SearchIconButton"
+                        Canvas.ZIndex="200"
+                        Width="38"
+                         Height="36"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
+                          Margin="8,0,0,0"
+                          Padding="0"
+                          Visibility="Collapsed"
+                          Click="SearchIconButton_Click">
+                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE721;" FontSize="20" />
+                    <Button.Flyout>
+                        <Flyout Placement="Bottom">
+                            <AutoSuggestBox x:Name="CompactSearchBox"
+                                            Width="400"
+                                            PlaceholderText=" Find a setting, endpoint, or port"
+                                            QueryIcon="Find"
+                                            TextChanged="SettingsSearchBox_TextChanged"
+                                            SuggestionChosen="AutoSuggestBox_SuggestionChosen"
+                                            QuerySubmitted="SettingsSearchBox_QuerySubmitted">
+                                <AutoSuggestBox.ItemTemplate>
+                                    <DataTemplate x:DataType="serviceContracts:MidiSettingsSearchResult">
+                                        <Grid Margin="4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <FontIcon Grid.Column="0"
+                                                      VerticalAlignment="Center"
+                                                      Glyph="{x:Bind Glyph}"
+                                                      Style="{StaticResource NavigationMenuIconStyles}"
+                                                      Margin="4,0,8,0"/>
+
+                                            <StackPanel Grid.Column="1"
+                                                        Orientation="Vertical">
+
+                                                <StackPanel Orientation="Horizontal"
+                                                            Margin="8,4,4,0">
+                                                    <TextBlock Margin="0,0,4,0"
+                                                               Text="{x:Bind DisplayText}"
+                                                               MaxWidth="350"
+                                                               TextTrimming="CharacterEllipsis"/>
+
+                                                    <!-- ResultType 暂时隐藏
+                                                    <TextBlock Margin="4,0,0,0"
+                                                               Text="("/>
+
+                                                    <TextBlock Margin="0,0,0,0"
+                                                               Text="{x:Bind ResultType}"
+                                                               Foreground="{StaticResource TextFillColorTertiary}"
+                                                               MaxWidth="50"
+                                                               TextTrimming="CharacterEllipsis"/>
+
+                                                    <TextBlock Margin="0,0,8,0"
+                                                               Text=")"/>
+                                                    -->
+
+                                                </StackPanel>
+
+                                                <TextBlock Margin="8,4,0,8"
+                                                           Text="{x:Bind DisplayDescription}"
+                                                           TextWrapping="Wrap"
+                                                           MaxLines="2"
+                                                           FontSize="{StaticResource SmallFontSize}"
+                                                           Foreground="{StaticResource TextFillColorTertiary}" />
+
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </AutoSuggestBox.ItemTemplate>
+                            </AutoSuggestBox>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+
+                <!-- Menu Toggle Button -->
+                <Button x:Name="MenuToggleButton"
+                        Width="38"
+                         Height="36"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Margin="4,0,4,0"
+                          Padding="0"
+                          Click="MenuToggleButton_Click">
+                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE700;" FontSize="18" />
+                </Button>
+            </StackPanel>
+
+            <!-- Right Indicators -->
+            <Grid x:Name="RightTitleBarDragRegion"
+                  Grid.Column="3"
+                  VerticalAlignment="Stretch"
+                  HorizontalAlignment="Stretch"
+                  Margin="0,0,150,0">
+                <StackPanel Orientation="Horizontal"
+                            IsHitTestVisible="False"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+
+                    <Grid Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
+                          IsHitTestVisible="False"
+                          Padding="10,3,10,3"
+                          Margin="5,0,5,0"
+                          CornerRadius="4"
+                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
+
+                        <TextBlock x:Name="ServiceUnavailableIndicator"
+                                   x:Uid="ShellPage_ServiceUnavailableIndicator"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="NoWrap"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{StaticResource TextFillColorPrimary}"
+                               />
+                    </Grid>
 
 
-                <controls:TitleBar.Footer>
-                    <StackPanel Orientation="Horizontal"
-                                IsHitTestVisible="False"
-                                VerticalAlignment="Top"
-                                Margin="0,0,150,0"
-                                    >
+                    <Grid Background="{StaticResource SystemFillColorCautionBackgroundBrush}"
+                          IsHitTestVisible="False"
+                          Padding="10,3,10,3"
+                          Margin="5,0,5,0"
+                          CornerRadius="4"
+                          Visibility="{x:Bind ViewModel.IsRunningAsAdministrator, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-                        <Grid Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
-                              IsHitTestVisible="False"
-                              Padding="10,3,10,3"
-                              Margin="5,0,5,0"
-                              CornerRadius="4"
-                              Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
+                        <TextBlock x:Name="AdminModeIndicator"
+                                   x:Uid="ShellPage_AdministratorIndicator"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="NoWrap"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{StaticResource TextFillColorPrimary}"
+                               />
+                    </Grid>
 
-                            <TextBlock x:Name="ServiceUnavailableIndicator"
-                                       x:Uid="ShellPage_ServiceUnavailableIndicator"
-                                       VerticalAlignment="Center"
-                                       TextWrapping="NoWrap"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{StaticResource TextFillColorPrimary}"
-                                   />
-                        </Grid>
-
-
-                        <Grid Background="{StaticResource SystemFillColorCautionBackgroundBrush}"
-                              IsHitTestVisible="False"
-                              Padding="10,3,10,3"
-                              Margin="5,0,5,0"
-                              CornerRadius="4"
-                              Visibility="{x:Bind ViewModel.IsRunningAsAdministrator, Converter={StaticResource BooleanToVisibilityConverter}}">
-
-                            <TextBlock x:Name="AdminModeIndicator"
-                                       x:Uid="ShellPage_AdministratorIndicator"
-                                       VerticalAlignment="Center"
-                                       TextWrapping="NoWrap"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{StaticResource TextFillColorPrimary}"
-                                   />
-                        </Grid>
-
-                        <Grid Background="{StaticResource SmokeFillColorDefaultBrush}"
-                              IsHitTestVisible="False"
-                              Padding="10,3,10,3"
-                              Margin="5,0,5,0"
-                              CornerRadius="4"
-                              Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <TextBlock x:Name="DeveloperModeIndicator"
-                                       x:Uid="ShellPage_DeveloperModeIndicator"
-                                       VerticalAlignment="Center"
-                                       TextWrapping="NoWrap"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{StaticResource TextFillColorPrimary}"
-                                   />
-                        </Grid>
-
-                    </StackPanel>
-                </controls:TitleBar.Footer>
-
-            </controls:TitleBar>
+                    <Grid Background="{StaticResource SmokeFillColorDefaultBrush}"
+                          IsHitTestVisible="False"
+                          Padding="10,3,10,3"
+                          Margin="5,0,5,0"
+                          CornerRadius="4"
+                          Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock x:Name="DeveloperModeIndicator"
+                                   x:Uid="ShellPage_DeveloperModeIndicator"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="NoWrap"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{StaticResource TextFillColorPrimary}"
+                               />
+                    </Grid>
+                </StackPanel>
+            </Grid>
             
         </Grid>
 
@@ -239,10 +348,11 @@
                         IsPaneToggleButtonVisible="False"
                         IsBackButtonVisible="Collapsed"
                         SelectedItem="{x:Bind ViewModel.Selected, Mode=OneWay}"
-                        IsSettingsVisible="True"
-                        ExpandedModeThresholdWidth="1280"
+                        IsSettingsVisible="False"
+                        ExpandedModeThresholdWidth="1124"
+                        CompactModeThresholdWidth="1124"
                         IsTitleBarAutoPaddingEnabled="False"
-                        DisplayModeChanged="NavigationViewControl_DisplayModeChanged"
+                        PaneDisplayMode="Auto"
                         >
             <!-- <Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}"> -->
 
@@ -251,7 +361,20 @@
             <NavigationView.Resources>
                 <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
                 <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
+                <!-- 移除 NavigationView 内容区域的默认顶部边距，统一两种模式的边距 -->
+                <Thickness x:Key="NavigationViewContentMargin">0,0,0,0</Thickness>
+                <Thickness x:Key="NavigationViewContentGridMargin">0,0,0,0</Thickness>
             </NavigationView.Resources>
+            
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="Settings"
+                                    Margin="0,0,0,6"
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SettingsViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
 
             <NavigationView.PaneHeader>
                 <Grid Margin="16,12,4,30"

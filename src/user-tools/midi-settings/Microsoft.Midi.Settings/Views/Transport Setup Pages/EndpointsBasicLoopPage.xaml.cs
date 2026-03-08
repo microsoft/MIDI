@@ -85,7 +85,16 @@ namespace Microsoft.Midi.Settings.Views
 
                 m_showCreateDialog = false;
             }
+        }
 
+        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 删除命令执行后，延迟设置焦点到 "Create New Basic Loopback Endpoint" 按钮
+            // 避免焦点丢失到搜索框
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+            {
+                CreateNewLoopback?.Focus(FocusState.Programmatic);
+            });
         }
 
         private async void CreateNewLoopback_Click(object sender, RoutedEventArgs e)
