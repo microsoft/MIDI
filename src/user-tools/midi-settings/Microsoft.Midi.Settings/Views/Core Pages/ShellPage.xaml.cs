@@ -33,7 +33,7 @@ public sealed partial class ShellPage : Page
         ViewModel = viewModel;
         InitializeComponent();
 
-        AppTitleBarControl.Title = App.MainWindow.Title;
+        // TitleBar control removed - title is now set directly in XAML
 
         ViewModel.NavigationService.Frame = NavigationFrame;
         ViewModel.NavigationViewService.Initialize(NavigationViewControl);
