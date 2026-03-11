@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of Windows MIDI Services and should be used
@@ -33,7 +33,8 @@ public sealed partial class ShellPage : Page
         ViewModel = viewModel;
         InitializeComponent();
 
-        AppTitleBarControl.Title = App.MainWindow.Title;
+        // TitleBar control removed - title is now set directly in XAML
+        AppTitleBarText.Text = "AppDisplayName".GetLocalized();
 
         ViewModel.NavigationService.Frame = NavigationFrame;
         ViewModel.NavigationViewService.Initialize(NavigationViewControl);

@@ -288,6 +288,9 @@
   <data name="Shell_Home.Content" xml:space="preserve">
     <value>Home</value>
   </data>
+  <data name="Shell_Settings.Content" xml:space="preserve">
+    <value>Settings</value>
+  </data>
   <data name="Shell_Routes.Content" xml:space="preserve">
     <value>Routing</value>
   </data>
