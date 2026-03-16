@@ -27,7 +27,7 @@
 //  -1  = COM initialization failed
 //   1  = Feature not enabled in registry (CFR not rolled out to this PC)
 //   2  = COM interfaces not registered (bits not installed)
-//   3  = Service not available (disabled, missing, or not startable)
+//   3  = Service not available (access denied, disabled, missing, or not startable)
 
 #include "pch.h"
 
@@ -112,12 +112,19 @@ bool CheckMidiServiceComRegistration()
 // the midicheckservice tool which calls MidiSrvVerifyConnectivity().
 // ============================================================================
 
-bool CheckMidiServiceAvailable()
+// Returns:
+//   0 = service is available and not disabled
+//   1 = access denied opening Service Control Manager
+//   2 = service not found (midisrv not registered)
+//   3 = access denied opening midisrv service
+//   4 = service is disabled
+//  -1 = other error (config query failed, allocation failed)
+int CheckMidiServiceAvailable()
 {
     SC_HANDLE hSCManager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
     if (!hSCManager)
     {
-        return false;
+        return (GetLastError() == ERROR_ACCESS_DENIED) ? 1 : -1;
     }
 
     auto closeSCM = wil::scope_exit([&] { CloseServiceHandle(hSCManager); });
@@ -125,7 +132,10 @@ bool CheckMidiServiceAvailable()
     SC_HANDLE hService = OpenServiceW(hSCManager, L"midisrv", SERVICE_QUERY_STATUS | SERVICE_QUERY_CONFIG);
     if (!hService)
     {
-        return false;
+        DWORD err = GetLastError();
+        if (err == ERROR_ACCESS_DENIED) return 3;
+        if (err == ERROR_SERVICE_DOES_NOT_EXIST) return 2;
+        return -1;
     }
 
     auto closeSvc = wil::scope_exit([&] { CloseServiceHandle(hService); });
@@ -136,29 +146,29 @@ bool CheckMidiServiceAvailable()
 
     if (GetLastError() != ERROR_INSUFFICIENT_BUFFER || bytesNeeded == 0)
     {
-        return false;
+        return -1;
     }
 
     LPQUERY_SERVICE_CONFIGW config = static_cast<LPQUERY_SERVICE_CONFIGW>(LocalAlloc(LPTR, bytesNeeded));
     if (!config)
     {
-        return false;
+        return -1;
     }
 
     auto freeConfig = wil::scope_exit([&] { LocalFree(config); });
 
     if (!QueryServiceConfigW(hService, config, bytesNeeded, &bytesNeeded))
     {
-        return false;
+        return -1;
     }
 
     // A disabled service cannot be started — this is the key check for CFR
     if (config->dwStartType == SERVICE_DISABLED)
     {
-        return false;
+        return 4;
     }
 
-    return true;
+    return 0;
 }
 
 
@@ -235,15 +245,23 @@ int __cdecl main()
     // ---- Check 3: Service availability ----
     std::cout << "[3/4] Checking MIDI Service (midisrv.exe) availability... ";
 
-    bool serviceOk = CheckMidiServiceAvailable();
-    std::cout << (serviceOk ? "AVAILABLE" : "NOT AVAILABLE") << std::endl;
+    int serviceResult = CheckMidiServiceAvailable();
+    std::cout << (serviceResult == 0 ? "AVAILABLE" : "NOT AVAILABLE") << std::endl;
 
-    if (!serviceOk)
+    if (serviceResult != 0)
     {
         std::cout << std::endl;
-        std::cout << "RESULT: MIDI Service is not available." << std::endl;
-        std::cout << "The service may be disabled or the installation may be broken." << std::endl;
-        std::cout << "Try running 'midifixreg' from an Administrator command prompt and reboot." << std::endl;
+        if (serviceResult == 1 || serviceResult == 3)
+        {
+            std::cout << "RESULT: Access denied querying the MIDI Service." << std::endl;
+            std::cout << "Try running this tool as Administrator." << std::endl;
+        }
+        else
+        {
+            std::cout << "RESULT: MIDI Service is not available." << std::endl;
+            std::cout << "The service may be disabled or not yet enabled via Controlled Feature Rollout." << std::endl;
+            std::cout << "Try running 'midifixreg' from an Administrator command prompt and reboot." << std::endl;
+        }
         return 3;
     }
 
