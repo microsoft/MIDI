@@ -236,7 +236,9 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 )))
                 {
                     if (minRequiredVersionMajor > installedVersionMajor) return false;
+                    if (minRequiredVersionMajor < installedVersionMajor) return true;
                     if (minRequiredVersionMinor > installedVersionMinor) return false;
+                    if (minRequiredVersionMinor < installedVersionMinor) return true;
                     if (minRequiredVersionPatch > installedVersionPatch) return false;
 
                     return true;
