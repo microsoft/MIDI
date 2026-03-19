@@ -107,7 +107,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvtransport\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;avrt.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -118,7 +118,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvtransport\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;avrt.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -133,7 +133,7 @@
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvtransport\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -144,7 +144,7 @@
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvtransport\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MaxSpeed</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>

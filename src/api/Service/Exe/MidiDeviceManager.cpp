@@ -17,13 +17,18 @@
 #include "midi_ksa_pin_map_property.h"
 
 #include "Feature_Servicing_MIDI2DeviceRemoval.h"
+#include "Feature_Servicing_MIDI2ContainerIds.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
 const WCHAR driver32Path[]    = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
 const WCHAR midisrvTransferComplete[] =  L"MidisrvTransferComplete";
 
-const WCHAR szzMidiDeviceHardwareId[] =  L"MIDISRV\\MidiEndpoints" L"\0";
+const WCHAR szzMidiDeviceHardwareIdClass[] =  L"MIDISRV\\MidiEndpoints" L"\0";
+
+// remove with Feature_Servicing_MIDI2ContainerIds
+const WCHAR szzMidiDeviceHardwareId[] =  L"MIDISRV\\MidiEndpointsNonclass" L"\0";
+
 const WCHAR szzMidiDeviceCompatibleId[] =  L"GenericMidiEndpoint" L"\0";
 
 // a cap to ensure we don't have runaway port numbers
@@ -689,6 +694,11 @@ CMidiDeviceManager::ActivateVirtualParentDevice
     devProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue });
 
+    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+    {
+        devProperties.push_back(DEVPROPERTY{ {DEVPKEY_Device_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(pcreateinfo->pszDeviceDescription) + 1)), (PVOID)(pcreateinfo->pszDeviceDescription) });
+    }
 
     RETURN_IF_FAILED(SwDeviceCreate(
         MIDI_DEVICE_ENUMERATOR,                 
@@ -1268,6 +1278,7 @@ CMidiDeviceManager::ActivateEndpointInternal
     RETURN_IF_NULL_ALLOC(midiPort);
 
     std::vector<DEVPROPERTY> interfaceProperties{};
+    std::vector<DEVPROPERTY> devProperties{};
 
     // copy the incoming array into a vector so that we can add additional items.
     if (interfaceDevProperties != nullptr && intPropertyCount > 0)
@@ -1293,6 +1304,20 @@ CMidiDeviceManager::ActivateEndpointInternal
         interfaceProperties.push_back({ {PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
     }
 
+    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+    {
+        // copy the incoming array into a vector so that we can add additional items.
+        if (deviceDevProperties != nullptr && devPropertyCount > 0)
+        {
+            std::vector<DEVPROPERTY> existingDeviceProperties(deviceDevProperties, deviceDevProperties + devPropertyCount);
+        
+            // copy 'em over
+            devProperties = existingDeviceProperties;
+        }
+
+        devProperties.push_back(DEVPROPERTY{ {DEVPKEY_Device_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(internalCreateInfo.pszDeviceDescription) + 1)), (PVOID)(internalCreateInfo.pszDeviceDescription) });
+    }
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
@@ -1346,7 +1371,15 @@ CMidiDeviceManager::ActivateEndpointInternal
     else
     {
         internalCreateInfo.pszzCompatibleIds = szzMidiDeviceCompatibleId;
-        internalCreateInfo.pszzHardwareIds = szzMidiDeviceHardwareId;
+
+        if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+        {
+            internalCreateInfo.pszzHardwareIds = szzMidiDeviceHardwareIdClass;
+        }
+        else
+        {
+            internalCreateInfo.pszzHardwareIds = szzMidiDeviceHardwareId;
+        }
 
         if (flow == MidiFlowOut)
         {
@@ -1377,16 +1410,32 @@ CMidiDeviceManager::ActivateEndpointInternal
     creationContext.InterfaceDevProperties = interfaceProperties.data();
     creationContext.IntPropertyCount = (ULONG)interfaceProperties.size();
 
-    // create the devnode for the device
-    midiPort->hr = SwDeviceCreate(
-        midiPort->Enumerator.c_str(),
-        parentInstanceId,
-        &internalCreateInfo,
-        devPropertyCount,
-        devPropertyCount == 0 ? (DEVPROPERTY*)nullptr : deviceDevProperties,
-        SwMidiPortCreateCallback,
-        &creationContext,
-        wil::out_param(midiPort->SwDevice));
+    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+    {
+        // create the devnode for the device
+        midiPort->hr = SwDeviceCreate(
+            midiPort->Enumerator.c_str(),
+            parentInstanceId,
+            &internalCreateInfo,
+            (ULONG)devProperties.size(),            // count of properties
+            (DEVPROPERTY*)devProperties.data(),     // pointer to properties
+            SwMidiPortCreateCallback,
+            &creationContext,
+            wil::out_param(midiPort->SwDevice));
+    }
+    else
+    {
+        // create the devnode for the device
+        midiPort->hr = SwDeviceCreate(
+            midiPort->Enumerator.c_str(),
+            parentInstanceId,
+            &internalCreateInfo,
+            devPropertyCount,
+            devPropertyCount == 0 ? (DEVPROPERTY*)nullptr : deviceDevProperties,
+            SwMidiPortCreateCallback,
+            &creationContext,
+            wil::out_param(midiPort->SwDevice));
+    }
 
     if (SUCCEEDED(midiPort->hr))
     {

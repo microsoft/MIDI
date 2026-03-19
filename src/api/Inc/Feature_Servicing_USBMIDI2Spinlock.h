@@ -8,6 +8,15 @@
 
 #pragma once
 
+class Feature_Servicing_USBMIDI2Spinlock
+{
+public:
+    static bool IsEnabled()
+    {
+        return true;
+    }
+};
+
 inline bool Feature_Servicing_USBMIDI2Spinlock_IsEnabled()
 {
     return true;

@@ -374,3 +374,13 @@ void MidiUMPToBSTransformTests::ValidateGithubIssue822()
         InternalTestMessages(input, expectedOutput, expectedGroups);
     }
 }
+
+bool MidiUMPToBSTransformTests::ClassSetup()
+{
+    PrintStagingStates();
+
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    return true;
+}
+

@@ -3,21 +3,6 @@
 #include "MidiPin.h"
 #include "MidiFilter.h"
 
-// The same filter instance may not be used for both midi
-// pin instances, so storing the pins on the filter for the
-// pins to share will not work.
-//
-// To work around this, a global is used for sharing the pin
-// for looping midi out back to midi in
-//
-// Because we are using a global pin instance,
-// InstancesPossible on the in/out pins must not exceed 1 when
-// doing loopback.
-wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
-MidiPin* g_MidiInPin {nullptr};
-UINT g_MidiInPinCount {0};
-UINT g_MidiOutPinCount {0};
-
 // smallest UMP is 4 bytes, smallest bytestream is 1 byte (clock, etc.)
 #define MINIMUM_LOOPED_DATASIZE 1
 
@@ -71,11 +56,17 @@ KSDATARANGE_MUSIC g_MidiStreamDataRangeMIDI[] =
 };
 
 static const
-PKSDATARANGE g_MidiStreamDataRanges[] =
+PKSDATARANGE g_MidiStreamDataRangesUMP[] =
 {
     PKSDATARANGE(&g_MidiStreamDataRangeUMP[0]),
+};
+
+static const
+PKSDATARANGE g_MidiStreamDataRangesBytestream[] =
+{
     PKSDATARANGE(&g_MidiStreamDataRangeMIDI[0])
 };
+
 
 static
 KSDATARANGE g_MidiBridgeDataRange[] =
@@ -214,8 +205,56 @@ DEFINE_KSAUTOMATION_TABLE (g_PinAutomationTable)
     DEFINE_KSAUTOMATION_EVENTS_NULL
 };
 
+// Bridge pin data flow out
+#define DEFINE_KSPIN_MIDIOUTBRIDGE \
+{ \
+    &g_MidiPinDispatch, \
+    0, \
+    { \
+        DEFINE_KSPIN_DEFAULT_INTERFACES, \
+        DEFINE_KSPIN_DEFAULT_MEDIUMS, \
+        SIZEOF_ARRAY(g_MidiBridgeDataRanges), \
+        g_MidiBridgeDataRanges,\
+        KSPIN_DATAFLOW_OUT, \
+        KSPIN_COMMUNICATION_NONE, \
+        &KSCATEGORY_AUDIO, \
+        nullptr, \
+        0 \
+    },\
+    0, \
+    0, \
+    0, \
+    nullptr, \
+    nullptr \
+}
+
+// bridge pin data flow in
+#define DEFINE_KSPIN_MIDIINBRIDGE \
+{ \
+    &g_MidiPinDispatch, \
+    0, \
+    { \
+        DEFINE_KSPIN_DEFAULT_INTERFACES, \
+        DEFINE_KSPIN_DEFAULT_MEDIUMS, \
+        SIZEOF_ARRAY(g_MidiBridgeDataRanges), \
+        g_MidiBridgeDataRanges, \
+        KSPIN_DATAFLOW_IN, \
+        KSPIN_COMMUNICATION_NONE, \
+        &KSCATEGORY_AUDIO, \
+        nullptr, \
+        0 \
+    }, \
+    0, \
+    0, \
+    0, \
+    nullptr, \
+    nullptr \
+}
+
+// Midi filter consisting of a midi in and midi out pins, 
+// supporting only UMP
 const
-KSPIN_DESCRIPTOR_EX g_MidiPinDescriptors[4] =
+KSPIN_DESCRIPTOR_EX g_MidiPinDescriptorsUMP[4] =
 {
     {
         &g_MidiPinDispatch,
@@ -224,8 +263,8 @@ KSPIN_DESCRIPTOR_EX g_MidiPinDescriptors[4] =
             SIZEOF_ARRAY(g_StreamingInterfaces),
             g_StreamingInterfaces,
             DEFINE_KSPIN_DEFAULT_MEDIUMS,
-            SIZEOF_ARRAY(g_MidiStreamDataRanges),
-            g_MidiStreamDataRanges,
+            SIZEOF_ARRAY(g_MidiStreamDataRangesUMP),
+            g_MidiStreamDataRangesUMP,
             KSPIN_DATAFLOW_IN,
             KSPIN_COMMUNICATION_SINK,
             &KSCATEGORY_AUDIO,
@@ -237,27 +276,8 @@ KSPIN_DESCRIPTOR_EX g_MidiPinDescriptors[4] =
         0, // InstancesNecessary
         nullptr, // AllocatorFraming
         nullptr // IntersectHandler
-    },
-    {
-        &g_MidiPinDispatch,
-        0, // AutomationTable
-        {
-            DEFINE_KSPIN_DEFAULT_INTERFACES,
-            DEFINE_KSPIN_DEFAULT_MEDIUMS,
-            SIZEOF_ARRAY(g_MidiBridgeDataRanges),
-            g_MidiBridgeDataRanges,
-            KSPIN_DATAFLOW_OUT,
-            KSPIN_COMMUNICATION_NONE,
-            &KSCATEGORY_AUDIO,
-            nullptr, // Name
-            0 // Reserved
-        },
-        0, // Flags
-        0, // InstancesPossible
-        0, // InstancesNecessary
-        nullptr, // AllocatorFraming
-        nullptr // IntersectHandler
-    },
+    },    
+    DEFINE_KSPIN_MIDIOUTBRIDGE,
     {
         &g_MidiPinDispatch,
         &g_PinAutomationTable, // AutomationTable
@@ -265,8 +285,59 @@ KSPIN_DESCRIPTOR_EX g_MidiPinDescriptors[4] =
             SIZEOF_ARRAY(g_StreamingInterfaces),
             g_StreamingInterfaces,
             DEFINE_KSPIN_DEFAULT_MEDIUMS,
-            SIZEOF_ARRAY(g_MidiStreamDataRanges),
-            g_MidiStreamDataRanges,
+            SIZEOF_ARRAY(g_MidiStreamDataRangesUMP),
+            g_MidiStreamDataRangesUMP,
+            KSPIN_DATAFLOW_OUT,
+            KSPIN_COMMUNICATION_SINK,
+            &KSCATEGORY_AUDIO,
+            &KSAUDFNAME_MIDI, // Localized default midi name
+            0 // Reserved
+        },
+        0, // Flags
+        1, // InstancesPossible, when using the global pin handle for loopback, this must not exceed 1.
+        0, // InstancesNecessary
+        nullptr, // AllocatorFraming
+        nullptr // IntersectHandler
+    },    
+    DEFINE_KSPIN_MIDIINBRIDGE
+};
+
+// Midi filter consisting of a midi in and midi out pins, 
+// supporting only Bytestream
+const
+KSPIN_DESCRIPTOR_EX g_MidiPinDescriptorsBytestream[4] =
+{
+    {
+        &g_MidiPinDispatch,
+        &g_PinAutomationTable, // AutomationTable
+        {
+            SIZEOF_ARRAY(g_StreamingInterfaces),
+            g_StreamingInterfaces,
+            DEFINE_KSPIN_DEFAULT_MEDIUMS,
+            SIZEOF_ARRAY(g_MidiStreamDataRangesBytestream),
+            g_MidiStreamDataRangesBytestream,
+            KSPIN_DATAFLOW_IN,
+            KSPIN_COMMUNICATION_SINK,
+            &KSCATEGORY_AUDIO,
+            &KSAUDFNAME_MIDI, // Localized default midi name
+            0 // Reserved
+        },
+        0, // Flags
+        1, // InstancesPossible, when using the global pin handle for loopback, this must not exceed 1.
+        0, // InstancesNecessary
+        nullptr, // AllocatorFraming
+        nullptr // IntersectHandler
+    },
+    DEFINE_KSPIN_MIDIOUTBRIDGE,
+    {
+        &g_MidiPinDispatch,
+        &g_PinAutomationTable, // AutomationTable
+        {
+            SIZEOF_ARRAY(g_StreamingInterfaces),
+            g_StreamingInterfaces,
+            DEFINE_KSPIN_DEFAULT_MEDIUMS,
+            SIZEOF_ARRAY(g_MidiStreamDataRangesBytestream),
+            g_MidiStreamDataRangesBytestream,
             KSPIN_DATAFLOW_OUT,
             KSPIN_COMMUNICATION_SINK,
             &KSCATEGORY_AUDIO,
@@ -279,43 +350,23 @@ KSPIN_DESCRIPTOR_EX g_MidiPinDescriptors[4] =
         nullptr, // AllocatorFraming
         nullptr // IntersectHandler
     },
-    {
-        &g_MidiPinDispatch,
-        0, // AutomationTable
-        {
-            DEFINE_KSPIN_DEFAULT_INTERFACES,
-            DEFINE_KSPIN_DEFAULT_MEDIUMS,
-            SIZEOF_ARRAY(g_MidiBridgeDataRanges),
-            g_MidiBridgeDataRanges,
-            KSPIN_DATAFLOW_IN,
-            KSPIN_COMMUNICATION_NONE,
-            &KSCATEGORY_AUDIO,
-            nullptr, // Name
-            0 // Reserved
-        },
-        0, // Flags
-        0, // InstancesPossible
-        0, // InstancesNecessary
-        nullptr, // AllocatorFraming
-        nullptr // IntersectHandler
-    }
+    DEFINE_KSPIN_MIDIINBRIDGE
 };
 
 _Use_decl_annotations_
 MidiPin::MidiPin(
-    PKSPIN Pin
-) : m_Pin(Pin)
+    PKSPIN pin,
+    MidiFilter *filter
+) : m_Pin(pin),
+    m_Filter(filter)
 {
     PAGED_CODE();
 
-    PKSFILTER filter = KsPinGetParentFilter(Pin);
-    m_Filter = (MidiFilter *) filter->Context;
-
     // Looped or streaming data transfer
-    m_IsLooped = (Pin->ConnectionInterface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING);
+    m_IsLooped = (pin->ConnectionInterface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING);
 
     // legacy bytestream data, or UMP
-    m_IsByteStream = IsEqualGUID(Pin->ConnectionFormat->SubFormat, KSDATAFORMAT_SUBTYPE_MIDI);
+    m_IsByteStream = IsEqualGUID(pin->ConnectionFormat->SubFormat, KSDATAFORMAT_SUBTYPE_MIDI);
 
     // When used for loopback "standard" streaming,
     // we use a list_entry structure to store the loopback messages
@@ -332,47 +383,60 @@ MidiPin::~MidiPin()
 _Use_decl_annotations_
 NTSTATUS
 MidiPin::Create(
-    PKSPIN Pin,
+    PKSPIN pin,
     PIRP /* Irp */
 )
 {
     PAGED_CODE();
 
-    PKSDATAFORMAT format = Pin->ConnectionFormat;
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
+
+    PKSFILTER ksFilter = KsPinGetParentFilter(pin);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, !ksFilter);
+
+    MidiFilter *filter = (MidiFilter *) ksFilter->Context;
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, !filter);
+
+    PKSDATAFORMAT format = pin->ConnectionFormat;
 
     // Confirm the format matches expectations
     // we only support looped streaming for UMP, but we support both
     // looped and standard streaming for bytestream.
     BOOL formatMatch = (format->FormatSize >= sizeof(KSDATAFORMAT) &&
                         IsEqualGUID(format->MajorFormat, KSDATAFORMAT_TYPE_MUSIC) && 
-                        (((Pin->ConnectionInterface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING) && 
+                        (((pin->ConnectionInterface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING) && 
                         IsEqualGUID(format->SubFormat, KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)) ||
                         IsEqualGUID(format->SubFormat, KSDATAFORMAT_SUBTYPE_MIDI)) &&
                         IsEqualGUID(format->Specifier, KSDATAFORMAT_SPECIFIER_NONE));
     NT_RETURN_NTSTATUS_IF(STATUS_NO_MATCH, !formatMatch);
 
-    if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
+    auto lock = filter->m_FilterInstance->MidiPinLock.acquire();
+
+    // If a pin for this flow has already been created, then we should not create another
+    if (pin->DataFlow == KSPIN_DATAFLOW_IN)
     {
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, g_MidiInPinCount != 0);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, filter->m_FilterInstance->MidiOutPin != nullptr);
     }
     else
     {
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, g_MidiOutPinCount != 0);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, filter->m_FilterInstance->MidiInPin != nullptr);
     }
 
     // Create the pin
-    MidiPin* midiPin = new (POOL_FLAG_NON_PAGED) MidiPin(Pin);
+    MidiPin* midiPin = new (POOL_FLAG_NON_PAGED) MidiPin(pin, filter);
     NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, !midiPin);
 
-    Pin->Context = (PVOID)midiPin;
+    pin->Context = (PVOID)midiPin;
 
-    if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
+    // Set this new pin on the device level filter instance
+    if (pin->DataFlow == KSPIN_DATAFLOW_IN)
     {
-        g_MidiInPinCount=1;
+        filter->m_FilterInstance->MidiOutPin = midiPin;
     }
     else
     {
-        g_MidiOutPinCount=1;
+        filter->m_FilterInstance->MidiInPin = midiPin;
     }
 
     return STATUS_SUCCESS;
@@ -440,29 +504,37 @@ MidiPin::Cleanup()
 _Use_decl_annotations_
 NTSTATUS
 MidiPin::Close(
-    PKSPIN Pin,
+    PKSPIN pin,
     PIRP /* Irp */
 )
 {
     PAGED_CODE();
 
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, Pin == nullptr);
-    MidiPin * This = (MidiPin *)Pin->Context;
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
+
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, pin == nullptr);
+    MidiPin * This = (MidiPin *)pin->Context;
     if (This)
     {
+        {
+            auto lock = This->m_Filter->m_FilterInstance->MidiPinLock.acquire();
+
+            // Remove this pin from the device level filter instance
+            if (pin->DataFlow == KSPIN_DATAFLOW_IN)
+            {
+                This->m_Filter->m_FilterInstance->MidiOutPin = nullptr;
+            }
+            else
+            {
+                This->m_Filter->m_FilterInstance->MidiInPin = nullptr;
+            }
+        }
+
         This->Cleanup();
 
         delete This;
-        Pin->Context = nullptr;
-
-        if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
-        {
-            g_MidiInPinCount=0;
-        }
-        else
-        {
-            g_MidiOutPinCount=0;
-        }
+        pin->Context = nullptr;
     }
 
     return STATUS_SUCCESS;
@@ -471,7 +543,7 @@ MidiPin::Close(
 _Use_decl_annotations_
 NTSTATUS
 MidiPin::Process(
-    PKSPIN Pin
+    PKSPIN pin
 )
 {
     // This function handles both sending and receiving midi messages
@@ -481,21 +553,21 @@ MidiPin::Process(
 
     NTSTATUS status = STATUS_INVALID_DEVICE_REQUEST;
 
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, Pin == nullptr);
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_DEVICE_STATE, Pin->DeviceState != KSSTATE_RUN);
-    MidiPin * This = (MidiPin *)Pin->Context;
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, pin == nullptr);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_DEVICE_STATE, pin->DeviceState != KSSTATE_RUN);
+    MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, This == nullptr);
 
     // This should not be called for a looped pin instance, this used for
     // packet based only
     NT_RETURN_NTSTATUS_IF(STATUS_NOT_IMPLEMENTED, TRUE == This->m_IsLooped);
 
-    if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
+    if (pin->DataFlow == KSPIN_DATAFLOW_IN)
     {
         // application is sending a midi message out, the data is flowing into
         // the driver, this is traditionally called midi out.
     
-        PKSSTREAM_POINTER streamPtr = KsPinGetLeadingEdgeStreamPointer(Pin, KSSTREAM_POINTER_STATE_LOCKED);
+        PKSSTREAM_POINTER streamPtr = KsPinGetLeadingEdgeStreamPointer(pin, KSSTREAM_POINTER_STATE_LOCKED);
         if ( nullptr != streamPtr )
         {
             // confirm there is at least KSMUSICFORMAT worth of data
@@ -517,9 +589,10 @@ MidiPin::Process(
                     // scope ensures that we hold the in pin while adding a loopback message,
                     // but it doesn't need to be held while advancing the pointers.
                     {
-                        auto lock = g_MidiInLock->acquire();
+                        auto lock = This->m_Filter->m_FilterInstance->MidiPinLock.acquire();
                         // if there's a midi in pin to loopback to
-                        if (nullptr != g_MidiInPin)
+                        if (nullptr != This->m_Filter->m_FilterInstance->MidiInPin &&
+                            KSSTATE_RUN == This->m_Filter->m_FilterInstance->MidiInPin->m_DeviceState)
                         {
                             // pointer to the data that follows the music header
                             PUCHAR pData = (PUCHAR)(musicHeader + 1);
@@ -535,10 +608,10 @@ MidiPin::Process(
                                 message->Position = streamPtr->StreamHeader->PresentationTime.Time;
                                 message->BufferIndex = (BYTE *) message->Buffer;
                                 RtlCopyMemory(message->Buffer, pData, musicHeader->ByteCount);
-                                InsertTailList(&g_MidiInPin->m_LoopbackMessageQueue, &message->ListEntry);
+                                InsertTailList(&This->m_Filter->m_FilterInstance->MidiInPin->m_LoopbackMessageQueue, &message->ListEntry);
 
                                 // the kspin that we need to process the loopback on
-                                midiInPin = g_MidiInPin->m_Pin;
+                                midiInPin = This->m_Filter->m_FilterInstance->MidiInPin->m_Pin;
 
                             }
                             else
@@ -578,7 +651,7 @@ MidiPin::Process(
 
         // midi message to be sent to the application, this is traditionally called midi
         // in.
-        PKSSTREAM_POINTER streamPtr = KsPinGetLeadingEdgeStreamPointer(Pin, KSSTREAM_POINTER_STATE_LOCKED);
+        PKSSTREAM_POINTER streamPtr = KsPinGetLeadingEdgeStreamPointer(pin, KSSTREAM_POINTER_STATE_LOCKED);
         while(streamPtr)
         {
             PKSMUSICFORMAT musicHeader = (PKSMUSICFORMAT) streamPtr->OffsetOut.Data;
@@ -588,7 +661,7 @@ MidiPin::Process(
             // only hold the lock while retrieving the item, to limit
             // contention with writing messages to the queue.
             {
-                auto midiInlock = g_MidiInLock->acquire();
+                auto midiInlock = This->m_Filter->m_FilterInstance->MidiPinLock.acquire();
                 if (!IsListEmpty(&This->m_LoopbackMessageQueue))
                 {
                     message = (PLOOPBACK_MESSAGE) RemoveHeadList(&This->m_LoopbackMessageQueue);
@@ -620,13 +693,13 @@ MidiPin::Process(
 
                 if (numBytesToCopy < message->Size)
                 {
-                    auto midiInlock = g_MidiInLock->acquire();
+                    auto midiInlock = This->m_Filter->m_FilterInstance->MidiPinLock.acquire();
 
                     // unable to send the entire message, subtract the portion sent
                     // and put it back on the queue
                     message->Size -= numBytesToCopy;
                     message->BufferIndex += numBytesToCopy;
-                    InsertHeadList(&g_MidiInPin->m_LoopbackMessageQueue, &message->ListEntry);
+                    InsertHeadList(&This->m_Filter->m_FilterInstance->MidiInPin->m_LoopbackMessageQueue, &message->ListEntry);
                 }
                 else
                 {
@@ -642,7 +715,7 @@ MidiPin::Process(
                 KsStreamPointerAdvanceOffsetsAndUnlock(streamPtr, 0, copySizeAligned, TRUE);
 
                 // Get the stream pointer for the next request, if one exists.
-                streamPtr = KsPinGetLeadingEdgeStreamPointer(Pin, KSSTREAM_POINTER_STATE_LOCKED);
+                streamPtr = KsPinGetLeadingEdgeStreamPointer(pin, KSSTREAM_POINTER_STATE_LOCKED);
             }
             else
             {
@@ -700,14 +773,15 @@ MidiPin::HandleIo()
 
                     // In order to loopback data, we have to have a midi in pin.
                     // The job of this lock is to synchronize availability and
-                    // state of g_MidiInPin, so it must be held for the duration of
-                    // use of g_MidiInPin. There should be very little contention,
+                    // state of m_MidiInPin, so it must be held for the duration of
+                    // use of m_MidiInPin. There should be very little contention,
                     // as the only other time this is used is when midi in
                     // transitions between run and paused.
-                    auto lock = g_MidiInLock->acquire();
+                    auto lock = m_Filter->m_FilterInstance->MidiPinLock.acquire();
 
                     // we have a write event, there should be data available to move.
-                    if (nullptr != g_MidiInPin)
+                    if (nullptr != m_Filter->m_FilterInstance->MidiInPin &&
+                        KSSTATE_RUN == m_Filter->m_FilterInstance->MidiInPin->m_DeviceState)
                     {
                         ULONG bytesAvailableToRead = 0;
                         ULONG bytesAvailable = 0;
@@ -769,14 +843,14 @@ MidiPin::HandleIo()
                         }
 
                         // reset the client read event, in case we find out later the buffer is full.
-                        KeResetEvent(g_MidiInPin->m_ReadEvent);
+                        KeResetEvent(m_Filter->m_FilterInstance->MidiInPin->m_ReadEvent);
 
                         // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
                         // and read position is empty. (read position is their last read position, write position is our last written).
                         // retrieve our write position first since we know it won't be changing, and their read position second,
                         // so we can have as much free space as possible.
-                        ULONG midiInWritePosition = (ULONG) InterlockedCompareExchange((LONG *)g_MidiInPin->m_WriteRegister, 0, 0);
-                        ULONG midiInReadPosition = (ULONG) InterlockedCompareExchange((LONG *)g_MidiInPin->m_ReadRegister, 0, 0);
+                        ULONG midiInWritePosition = (ULONG) InterlockedCompareExchange((LONG *)m_Filter->m_FilterInstance->MidiInPin->m_WriteRegister, 0, 0);
+                        ULONG midiInReadPosition = (ULONG) InterlockedCompareExchange((LONG *)m_Filter->m_FilterInstance->MidiInPin->m_ReadRegister, 0, 0);
 
                         // Now we need to calculate the available space, taking into account the looping
                         // buffer.
@@ -785,7 +859,7 @@ MidiPin::HandleIo()
                             // if the read position is less than the write position, then the difference between
                             // the read and write position is the buffer in use, same as above. So, the total
                             // buffer size minus the used buffer gives us the available space.
-                            bytesAvailable = g_MidiInPin->m_BufferSize - (midiInWritePosition - midiInReadPosition);
+                            bytesAvailable = m_Filter->m_FilterInstance->MidiInPin->m_BufferSize - (midiInWritePosition - midiInReadPosition);
                         }
                         else
                         {
@@ -807,7 +881,7 @@ MidiPin::HandleIo()
 
                         if (bytesToCopy > bytesAvailable)
                         {
-                            PVOID midiInWaitObjects[] = { m_ThreadExitEvent.get(), g_MidiInPin->m_ReadEvent };
+                            PVOID midiInWaitObjects[] = { m_ThreadExitEvent.get(), m_Filter->m_FilterInstance->MidiInPin->m_ReadEvent };
 
                             // Wait for either room in the output buffer, or thread exit.
                             status = KeWaitForMultipleObjects(2, midiInWaitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
@@ -820,7 +894,7 @@ MidiPin::HandleIo()
                         }
 
                         // There's enough space available, calculate our write position
-                        PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInPin->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
+                        PVOID startingWriteAddress = (PVOID)(((PBYTE)m_Filter->m_FilterInstance->MidiInPin->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
 
                         // copy the data. This works (reading/writing past the end of the buffer)
                         // because we have mapped the same buffer twice, so reading or writing
@@ -838,7 +912,7 @@ MidiPin::HandleIo()
                         // now calculate the new position that the buffer has been written up to.
                         // this will be the original write position, plus the bytes copied, again modululs
                         // the buffer size to take into account the loop.
-                        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % g_MidiInPin->m_BufferSize;
+                        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % m_Filter->m_FilterInstance->MidiInPin->m_BufferSize;
 
                         // finalize by advancing the registers and setting the write event
 
@@ -850,8 +924,8 @@ MidiPin::HandleIo()
                         KeSetEvent(m_ReadEvent, 0, 0);
 
                         // advance the write position for the loopback and signal that there's data available
-                        InterlockedExchange((LONG *)g_MidiInPin->m_WriteRegister, finalWritePosition);
-                        KeSetEvent(g_MidiInPin->m_WriteEvent, 0, 0);
+                        InterlockedExchange((LONG *)m_Filter->m_FilterInstance->MidiInPin->m_WriteRegister, finalWritePosition);
+                        KeSetEvent(m_Filter->m_FilterInstance->MidiInPin->m_WriteEvent, 0, 0);
                     }
                     else
                     {
@@ -881,21 +955,24 @@ cleanup:
 _Use_decl_annotations_
 NTSTATUS
 MidiPin::SetDeviceState(
-    PKSPIN Pin,
-    KSSTATE NewState,
-    KSSTATE OldState
+    PKSPIN pin,
+    KSSTATE newState,
+    KSSTATE oldState
 )
 {        
     PAGED_CODE();
 
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, Pin == nullptr);
-    MidiPin * This = (MidiPin *)Pin->Context;
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
+
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, pin == nullptr);
+    MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, This == nullptr);
 
-    UNREFERENCED_PARAMETER(OldState);
-    ASSERT(OldState == This->m_DeviceState);
+    UNREFERENCED_PARAMETER(oldState);
+    ASSERT(oldState == This->m_DeviceState);
 
-    switch(NewState)
+    switch(newState)
     {
         case KSSTATE_STOP:
         case KSSTATE_ACQUIRE:
@@ -905,7 +982,7 @@ MidiPin::SetDeviceState(
             if (KSSTATE_RUN == This->m_DeviceState)
             {
                 // transition from run to paused
-                if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
+                if (pin->DataFlow == KSPIN_DATAFLOW_IN)
                 {
                     // Midi out
                     if (This->m_IsLooped)
@@ -921,23 +998,13 @@ MidiPin::SetDeviceState(
                         This->m_WorkerThread = nullptr;
                     }
                 }
-                else
-                {
-                    // If g_MidiInPin is available, the midi out worker thread will loopback.
-                    // If it isn't available, the midi out worker will throw the data away.
-                    // So when we transition midi in from run to paused, acquire the lock that
-                    // protects g_MidiInPin and clear g_MidiInPin to stop the loopback data
-                    // flowing.
-                    auto lock = g_MidiInLock->acquire();
-                    g_MidiInPin = nullptr;
-                }
             }
             break;
         case KSSTATE_RUN:
             if (KSSTATE_PAUSE == This->m_DeviceState)
             {
                 // transition from paused to run
-                if (Pin->DataFlow == KSPIN_DATAFLOW_IN)
+                if (pin->DataFlow == KSPIN_DATAFLOW_IN)
                 {
                     // midi out
                     if (This->m_IsLooped)
@@ -963,23 +1030,16 @@ MidiPin::SetDeviceState(
                         KeSetPriorityThread(This->m_WorkerThread, HIGH_PRIORITY);
                     }
                 }
-                else
-                {
-                    // If g_MidiInPin is available, the midi out worker thread will loopback.
-                    // If it isn't available, the midi out worker will throw the data away.
-                    // So when we transition midi in from paused to run, acquire the lock that
-                    // protects g_MidiInPin and set g_MidiInPin to start the loopback data
-                    // flowing.
-                    auto lock = g_MidiInLock->acquire();
-                    g_MidiInPin = This;
-                }
             }
             break;
         default:
             return STATUS_INVALID_PARAMETER;
     }
 
-    This->m_DeviceState = NewState;
+    {
+        auto lock = This->m_Filter->m_FilterInstance->MidiPinLock.acquire();
+        This->m_DeviceState = newState;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -987,69 +1047,69 @@ MidiPin::SetDeviceState(
 _Use_decl_annotations_
 NTSTATUS
 MidiPin::GetSingleBufferMapping(
-    UINT32 BufferSize,
-    KPROCESSOR_MODE Mode,
-    BOOL LockPages,
-    PSINGLE_BUFFER_MAPPING BaseMapping,
-    PSINGLE_BUFFER_MAPPING Mapping
+    UINT32 bufferSize,
+    KPROCESSOR_MODE mode,
+    BOOL lockPages,
+    PSINGLE_BUFFER_MAPPING baseMapping,
+    PSINGLE_BUFFER_MAPPING mapping
 )
 {
     PAGED_CODE();
 
     // The allocation must not be 0
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, BufferSize == 0);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, bufferSize == 0);
 
     // The allocation must be a multiple of the page size,
     // as entire pages are mapped.
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, (BufferSize % PAGE_SIZE) != 0);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, (bufferSize % PAGE_SIZE) != 0);
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
-            CleanupSingleBufferMapping(Mapping);
+            CleanupSingleBufferMapping(mapping);
         });
 
-    Mapping->m_Mode = Mode;
+    mapping->m_Mode = mode;
 
-    if (BaseMapping)
+    if (baseMapping)
     {
         // We save the buffer address with a flag indicating we don't own it, so it's available
         // for future reference if needed.
-        Mapping->m_BufferAddress = BaseMapping->m_BufferAddress;
-        Mapping->m_OwnsAllocation = FALSE;
+        mapping->m_BufferAddress = baseMapping->m_BufferAddress;
+        mapping->m_OwnsAllocation = FALSE;
 
-        Mapping->m_BufferMdl = IoAllocateMdl(MmGetMdlVirtualAddress(BaseMapping->m_BufferMdl), BufferSize, FALSE, FALSE, NULL);
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->m_BufferMdl);
+        mapping->m_BufferMdl = IoAllocateMdl(MmGetMdlVirtualAddress(baseMapping->m_BufferMdl), bufferSize, FALSE, FALSE, NULL);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->m_BufferMdl);
 
         // build the new mdl using the base mdl as a template
-        IoBuildPartialMdl( BaseMapping->m_BufferMdl, Mapping->m_BufferMdl, MmGetMdlVirtualAddress(BaseMapping->m_BufferMdl), BufferSize );
+        IoBuildPartialMdl( baseMapping->m_BufferMdl, mapping->m_BufferMdl, MmGetMdlVirtualAddress(baseMapping->m_BufferMdl), bufferSize );
     }
     else
     {
         // otherwise, we're creating a whole new double mapping,
         // allocate the buffer we're going to double-map to the user space.
-        Mapping->m_BufferAddress = ExAllocatePool2(POOL_FLAG_NON_PAGED, BufferSize, MINMIDI_POOLTAG);
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->m_BufferAddress);
-        Mapping->m_OwnsAllocation = TRUE;        
+        mapping->m_BufferAddress = ExAllocatePool2(POOL_FLAG_NON_PAGED, bufferSize, MINMIDI_POOLTAG);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->m_BufferAddress);
+        mapping->m_OwnsAllocation = TRUE;        
 
-        Mapping->m_BufferMdl = IoAllocateMdl(Mapping->m_BufferAddress, BufferSize, FALSE, FALSE, NULL);
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->m_BufferMdl);
+        mapping->m_BufferMdl = IoAllocateMdl(mapping->m_BufferAddress, bufferSize, FALSE, FALSE, NULL);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->m_BufferMdl);
 
         // This is the original MDL for this, and will be used as the base mdl for any future mdl's.
         // We are responsible for building the MDL.
-        MmBuildMdlForNonPagedPool(Mapping->m_BufferMdl);
+        MmBuildMdlForNonPagedPool(mapping->m_BufferMdl);
     }
 
-    if (LockPages)
+    if (lockPages)
     {
         __try
         {
             // map the read register to user/kernel space.
-            Mapping->m_BufferClientAddress = MmMapLockedPagesSpecifyCache(Mapping->m_BufferMdl, Mode, MmNonCached, NULL, FALSE, NormalPagePriority | MdlMappingNoExecute);
+            mapping->m_BufferClientAddress = MmMapLockedPagesSpecifyCache(mapping->m_BufferMdl, mode, MmNonCached, NULL, FALSE, NormalPagePriority | MdlMappingNoExecute);
         }
         __except(EXCEPTION_EXECUTE_HANDLER)
         {
-            Mapping->m_BufferClientAddress = NULL;
+            mapping->m_BufferClientAddress = NULL;
         }
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->m_BufferClientAddress);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->m_BufferClientAddress);
     }
 
     // success, so do not perform a failure clean up when the function exits.
@@ -1144,10 +1204,10 @@ MidiPin::CleanupSingleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 MidiPin::GetDoubleBufferMapping(
-    UINT32 BufferSize,
-    KPROCESSOR_MODE Mode,
-    PSINGLE_BUFFER_MAPPING BaseMapping,
-    PDOUBLE_BUFFER_MAPPING Mapping
+    UINT32 bufferSize,
+    KPROCESSOR_MODE mode,
+    PSINGLE_BUFFER_MAPPING baseMapping,
+    PDOUBLE_BUFFER_MAPPING mapping
 )
 {
 
@@ -1165,23 +1225,23 @@ MidiPin::GetDoubleBufferMapping(
             // clean up in the opposite order of creation,
             // since Buffer2 may have MDL's that reference
             // Buffer 1 memory.
-            CleanupSingleBufferMapping(&Mapping->Buffer2);
-            CleanupSingleBufferMapping(&Mapping->Buffer1);
+            CleanupSingleBufferMapping(&mapping->Buffer2);
+            CleanupSingleBufferMapping(&mapping->Buffer1);
         });
 
-    // if we have a "BaseMapping", we need to build Buffer1 using BaseMapping, otherwise BaseMapping will be null
+    // if we have a "baseMapping", we need to build Buffer1 using baseMapping, otherwise baseMapping will be null
     // and we'll build a new mapping. Don't lock it.
-    NT_RETURN_IF_NTSTATUS_FAILED(GetSingleBufferMapping(BufferSize, Mode, FALSE, BaseMapping, &Mapping->Buffer1));
+    NT_RETURN_IF_NTSTATUS_FAILED(GetSingleBufferMapping(bufferSize, mode, FALSE, baseMapping, &mapping->Buffer1));
 
-    // if we have a BaseMapping, we also want to build Buffer2 using that BaseMapping.
-    // If we don't have a BaseMapping, then we want to use Buffer1 as the base mapping.
+    // if we have a baseMapping, we also want to build Buffer2 using that baseMapping.
+    // If we don't have a baseMapping, then we want to use Buffer1 as the base mapping.
     // Don't lock it.
-    NT_RETURN_IF_NTSTATUS_FAILED(GetSingleBufferMapping(BufferSize, Mode, FALSE, BaseMapping?BaseMapping:&Mapping->Buffer1, &Mapping->Buffer2));
+    NT_RETURN_IF_NTSTATUS_FAILED(GetSingleBufferMapping(bufferSize, mode, FALSE, baseMapping?baseMapping:&mapping->Buffer1, &mapping->Buffer2));
 
     // MmMapLockedPagesSpecifyCache is used to map to user mode, and it takes a requested address to use.
     // MmMapLockedPagesSpecifyCache does not respect the requested address for kernel mode, so kernel mode
     // mapping is done differently.
-    if (UserMode == Mode)
+    if (UserMode == mode)
     {
         SINGLE_BUFFER_MAPPING doubleBuffer;
         KIRQL OldIrql;
@@ -1189,7 +1249,7 @@ MidiPin::GetDoubleBufferMapping(
         // Create a full mapping, with an allocation, of a buffer 2x the required buffer size.
         // We aren't going to keep this, this is just to get the memory manager to set aside some space
         // and provide us the virtual address for it. Don't lock it yet.
-        NT_RETURN_IF_NTSTATUS_FAILED(GetSingleBufferMapping(BufferSize * 2, Mode, FALSE, nullptr, &doubleBuffer));
+        NT_RETURN_IF_NTSTATUS_FAILED(GetSingleBufferMapping(bufferSize * 2, mode, FALSE, nullptr, &doubleBuffer));
 
         // A double sized buffer is created to reserve the block of memory
         // needed to map the real buffer back to back. Once we're finished
@@ -1213,14 +1273,14 @@ MidiPin::GetDoubleBufferMapping(
             // retry the mapping up to 8 times, until we have a successful client address for both mappings.
             // When we unmap it's possible that something will come in and use the space that was just unmapped, causing
             // the double mapping to fail.
-            for (int i = 0; i < 8 && ((nullptr == Mapping->Buffer1.m_BufferClientAddress) || (nullptr == Mapping->Buffer2.m_BufferClientAddress)); i++)
+            for (int i = 0; i < 8 && ((nullptr == mapping->Buffer1.m_BufferClientAddress) || (nullptr == mapping->Buffer2.m_BufferClientAddress)); i++)
             {
                 // First lock the double buffer
                 if (nullptr == doubleBuffer.m_BufferClientAddress)
                 {
                     __try
                     {
-                        doubleBuffer.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(doubleBuffer.m_BufferMdl, Mode, MmNonCached, NULL, FALSE, NormalPagePriority | MdlMappingNoExecute);
+                        doubleBuffer.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(doubleBuffer.m_BufferMdl, mode, MmNonCached, NULL, FALSE, NormalPagePriority | MdlMappingNoExecute);
                     }
                     __except (EXCEPTION_EXECUTE_HANDLER)
                     {
@@ -1240,49 +1300,49 @@ MidiPin::GetDoubleBufferMapping(
                 __try
                 {
                     // map the data buffer at the doubleBufferMappedAddress that we just had mapped, and then unmapped.
-                    Mapping->Buffer1.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(Mapping->Buffer1.m_BufferMdl, Mode, MmNonCached, doubleBufferMappedAddress, FALSE, NormalPagePriority | MdlMappingNoExecute);
+                    mapping->Buffer1.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(mapping->Buffer1.m_BufferMdl, mode, MmNonCached, doubleBufferMappedAddress, FALSE, NormalPagePriority | MdlMappingNoExecute);
                 }
                 __except (EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Mapping->Buffer1.m_BufferClientAddress = nullptr;
+                    mapping->Buffer1.m_BufferClientAddress = nullptr;
                 }
 
                 // if we mapped the buffer the first time, map the same buffer a second time
-                if (nullptr != Mapping->Buffer1.m_BufferClientAddress)
+                if (nullptr != mapping->Buffer1.m_BufferClientAddress)
                 {
                     __try
                     {
                         // map the same data buffer a second time, at an address immediately following the first mapping->
-                        Mapping->Buffer2.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(Mapping->Buffer2.m_BufferMdl, Mode, MmNonCached, ((PVOID)(((PBYTE)(Mapping->Buffer1.m_BufferClientAddress)) + BufferSize)), FALSE, NormalPagePriority | MdlMappingNoExecute);
+                        mapping->Buffer2.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(mapping->Buffer2.m_BufferMdl, mode, MmNonCached, ((PVOID)(((PBYTE)(mapping->Buffer1.m_BufferClientAddress)) + bufferSize)), FALSE, NormalPagePriority | MdlMappingNoExecute);
                     }
                     __except (EXCEPTION_EXECUTE_HANDLER)
                     {
-                        Mapping->Buffer2.m_BufferClientAddress = nullptr;
+                        mapping->Buffer2.m_BufferClientAddress = nullptr;
                     }
 
                     // if we failed mapping the second time, we may be trying again,
                     // unmap the first mapping in preparation for the next try
-                    if (nullptr == Mapping->Buffer2.m_BufferClientAddress)
+                    if (nullptr == mapping->Buffer2.m_BufferClientAddress)
                     {
-                        MmUnmapLockedPages(Mapping->Buffer1.m_BufferClientAddress, Mapping->Buffer1.m_BufferMdl);
-                        Mapping->Buffer1.m_BufferClientAddress = nullptr;
+                        MmUnmapLockedPages(mapping->Buffer1.m_BufferClientAddress, mapping->Buffer1.m_BufferMdl);
+                        mapping->Buffer1.m_BufferClientAddress = nullptr;
                     }
 
                     // not back to back, try again
-                    if (Mapping->Buffer2.m_BufferClientAddress != (((PBYTE)(Mapping->Buffer1.m_BufferClientAddress)) + BufferSize))
+                    if (mapping->Buffer2.m_BufferClientAddress != (((PBYTE)(mapping->Buffer1.m_BufferClientAddress)) + bufferSize))
                     {
-                        MmUnmapLockedPages(Mapping->Buffer1.m_BufferClientAddress, Mapping->Buffer1.m_BufferMdl);
-                        Mapping->Buffer1.m_BufferClientAddress = nullptr;
-                        MmUnmapLockedPages(Mapping->Buffer2.m_BufferClientAddress, Mapping->Buffer2.m_BufferMdl);
-                        Mapping->Buffer2.m_BufferClientAddress = nullptr;
+                        MmUnmapLockedPages(mapping->Buffer1.m_BufferClientAddress, mapping->Buffer1.m_BufferMdl);
+                        mapping->Buffer1.m_BufferClientAddress = nullptr;
+                        MmUnmapLockedPages(mapping->Buffer2.m_BufferClientAddress, mapping->Buffer2.m_BufferMdl);
+                        mapping->Buffer2.m_BufferClientAddress = nullptr;
                     }
 
                 }
             }
 
             // if mapping failed, we failed.
-            NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer1.m_BufferClientAddress);
-            NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer2.m_BufferClientAddress);
+            NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->Buffer1.m_BufferClientAddress);
+            NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->Buffer2.m_BufferClientAddress);
         }
     } 
     else
@@ -1290,17 +1350,17 @@ MidiPin::GetDoubleBufferMapping(
         // kernel mode needs to map slightly differently,
         // first, we allocate the mapping address space needed for both buffers,
         // then we map them to the reserved mapping.
-        Mapping->Buffer1.m_MappingAddress = MmAllocateMappingAddressEx(((SIZE_T) BufferSize) * 2, MINMIDI_POOLTAG, MM_MAPPING_ADDRESS_DIVISIBLE);
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer1.m_MappingAddress);
+        mapping->Buffer1.m_MappingAddress = MmAllocateMappingAddressEx(((SIZE_T) bufferSize) * 2, MINMIDI_POOLTAG, MM_MAPPING_ADDRESS_DIVISIBLE);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->Buffer1.m_MappingAddress);
 
-        Mapping->Buffer1.m_BufferClientAddress = MmMapLockedPagesWithReservedMapping(Mapping->Buffer1.m_MappingAddress, MINMIDI_POOLTAG, Mapping->Buffer1.m_BufferMdl, MmNonCached);
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer1.m_BufferClientAddress);
+        mapping->Buffer1.m_BufferClientAddress = MmMapLockedPagesWithReservedMapping(mapping->Buffer1.m_MappingAddress, MINMIDI_POOLTAG, mapping->Buffer1.m_BufferMdl, MmNonCached);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->Buffer1.m_BufferClientAddress);
 
-        Mapping->Buffer2.m_BufferClientAddress = MmMapLockedPagesWithReservedMapping(((PVOID)(((PBYTE)(Mapping->Buffer1.m_MappingAddress))+BufferSize)), MINMIDI_POOLTAG, Mapping->Buffer2.m_BufferMdl, MmNonCached);
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer2.m_BufferClientAddress);
+        mapping->Buffer2.m_BufferClientAddress = MmMapLockedPagesWithReservedMapping(((PVOID)(((PBYTE)(mapping->Buffer1.m_MappingAddress))+bufferSize)), MINMIDI_POOLTAG, mapping->Buffer2.m_BufferMdl, MmNonCached);
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == mapping->Buffer2.m_BufferClientAddress);
 
         // if the mapping isn't back to back, we have a problem.
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, Mapping->Buffer2.m_BufferClientAddress != (((PBYTE)(Mapping->Buffer1.m_BufferClientAddress))+BufferSize));
+        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, mapping->Buffer2.m_BufferClientAddress != (((PBYTE)(mapping->Buffer1.m_BufferClientAddress))+bufferSize));
     }
 
     // success, so do not perform a failure clean up when the function exits.
@@ -1352,6 +1412,9 @@ MidiPin::GetLoopedStreamingBuffer
 
     PKSPIN pin = KsGetPinFromIrp(Irp);
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == pin);
+
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
 
     MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == This);
@@ -1440,9 +1503,9 @@ _Use_decl_annotations_
 NTSTATUS
 MidiPin::GetLoopedStreamingRegisters
 (
-    PIRP                      Irp,
-    PKSPROPERTY               Request,
-    PKSMIDILOOPED_REGISTERS   Buffer
+    PIRP                      irp,
+    PKSPROPERTY               request,
+    PKSMIDILOOPED_REGISTERS   buffer
 )
 {
     // handle incoming property call to retrieve the looped streaming registers.
@@ -1456,12 +1519,15 @@ MidiPin::GetLoopedStreamingRegisters
     BOOL attachedToProcess {FALSE};
     KAPC_STATE apcState {0};
 
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == Irp);
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == Request);
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == Buffer);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == irp);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == request);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == buffer);
 
-    PKSPIN pin = KsGetPinFromIrp(Irp);
+    PKSPIN pin = KsGetPinFromIrp(irp);
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == pin);
+
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
 
     MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == This);
@@ -1474,7 +1540,7 @@ MidiPin::GetLoopedStreamingRegisters
 
     // a different process created the buffer mapping, registers must be created by the
     // same process
-    NT_RETURN_NTSTATUS_IF(STATUS_ALREADY_INITIALIZED, IoGetRequestorProcess(Irp) != This->m_Process);
+    NT_RETURN_NTSTATUS_IF(STATUS_ALREADY_INITIALIZED, IoGetRequestorProcess(irp) != This->m_Process);
 
     // if the current process is not the requesting process,
     // attach to the requesting process
@@ -1509,8 +1575,8 @@ MidiPin::GetLoopedStreamingRegisters
     This->m_ReadRegister = (PULONG) This->m_Registers.m_BufferAddress;
     This->m_WriteRegister = This->m_ReadRegister + 1;
 
-    Buffer->ReadPosition = (PULONG) This->m_Registers.m_BufferClientAddress;
-    Buffer->WritePosition = ((PULONG) This->m_Registers.m_BufferClientAddress) + 1;
+    buffer->ReadPosition = (PULONG) This->m_Registers.m_BufferClientAddress;
+    buffer->WritePosition = ((PULONG) This->m_Registers.m_BufferClientAddress) + 1;
 
     // success, so do not perform a failure clean up when the function exits.
     cleanupOnFailure.release();
@@ -1522,9 +1588,9 @@ _Use_decl_annotations_
 NTSTATUS
 MidiPin::SetLoopedStreamingNotificationEvent
 (
-    PIRP                   Irp,
-    PKSPROPERTY            Request,
-    PKSMIDILOOPED_EVENT2   Buffer
+    PIRP                   irp,
+    PKSPROPERTY            request,
+    PKSMIDILOOPED_EVENT2   buffer
 )
 {
     // handle incoming property call to set the looped streaming events.
@@ -1535,12 +1601,15 @@ MidiPin::SetLoopedStreamingNotificationEvent
 
     PAGED_CODE();
 
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == Irp);
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == Request);
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == Buffer);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == irp);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == request);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == buffer);
 
-    PKSPIN pin = KsGetPinFromIrp(Irp);
+    PKSPIN pin = KsGetPinFromIrp(irp);
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == pin);
+
+    KsPinAcquireControl(pin);
+    auto releaseDeviceOnExit = wil::scope_exit([pin]() { KsPinReleaseControl(pin); });
 
     MidiPin * This = (MidiPin *)pin->Context;
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == This);
@@ -1551,7 +1620,7 @@ MidiPin::SetLoopedStreamingNotificationEvent
 
     // a different process created the buffer mapping, the event must come from the
     // same process
-    NT_RETURN_NTSTATUS_IF(STATUS_ALREADY_INITIALIZED, IoGetRequestorProcess(Irp) != This->m_Process);
+    NT_RETURN_NTSTATUS_IF(STATUS_ALREADY_INITIALIZED, IoGetRequestorProcess(irp) != This->m_Process);
 
     // this is only applicable if this is a looped pin instance.
     NT_RETURN_NTSTATUS_IF(STATUS_NOT_IMPLEMENTED, FALSE == This->m_IsLooped);
@@ -1560,14 +1629,14 @@ MidiPin::SetLoopedStreamingNotificationEvent
     // For midi out will use this event as the signal that midi out data has been written,
     // For midi in this will be the signal that we will set when midi in data has been
     // written.
-    NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(Buffer->WriteEvent,
+    NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(buffer->WriteEvent,
                                               EVENT_MODIFY_STATE,
                                               *ExEventObjectType,
                                               UserMode,
                                               (PVOID*)&This->m_WriteEvent,
                                               NULL));
 
-    NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(Buffer->ReadEvent,
+    NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(buffer->ReadEvent,
                                               EVENT_MODIFY_STATE,
                                               *ExEventObjectType,
                                               UserMode,

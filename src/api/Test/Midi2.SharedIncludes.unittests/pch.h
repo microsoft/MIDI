@@ -42,4 +42,6 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "NamingTests.h"
 
+#include "MidiTestCommon.h"
+
 #endif //PCH_H

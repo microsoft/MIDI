@@ -17,6 +17,8 @@
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 
+#include <Feature_Servicing_MIDI2VirtualPortDriversFix.h>
+
 _Use_decl_annotations_
 HRESULT 
 SyncIoctl
@@ -282,8 +284,18 @@ InstantiateMidiPin(
         GENERIC_WRITE | GENERIC_READ,
         &pinLocal));
 
-    // ERROR_NO_MATCH expected when this pin does not support the requested message type or transport
-    RETURN_IF_FAILED_WITH_EXPECTED(hr, HRESULT_FROM_WIN32(ERROR_NO_MATCH));
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    {
+        // ERROR_NO_MATCH expected when this pin does not support the requested message type or transport
+        // ERROR_GEN_FAILURE is triggered by the midi tests when doing invalidations
+        RETURN_IF_FAILED_WITH_EXPECTED(hr, HRESULT_FROM_WIN32(ERROR_NO_MATCH), 
+            HRESULT_FROM_WIN32(ERROR_GEN_FAILURE));
+    }
+    else
+    {
+        // ERROR_NO_MATCH expected when this pin does not support the requested message type or transport
+        RETURN_IF_FAILED_WITH_EXPECTED(hr, HRESULT_FROM_WIN32(ERROR_NO_MATCH));
+    }
 
     // SUCCESS.
     *pinHandle = pinLocal;
