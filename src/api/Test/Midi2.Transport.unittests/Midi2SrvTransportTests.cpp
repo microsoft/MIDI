@@ -3,6 +3,8 @@
 #include "Midi2TransportTestsBase.h"
 #include "Midi2SrvTransportTests.h"
 
+#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
+
 void MidiSrvTransportTests::TestMidiSrvTransport_UMP()
 {
     TestMidiTransport(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, FALSE);
@@ -1299,77 +1301,79 @@ MidiSrvTransportTests::WaitForDeviceCount
 void
 MidiSrvTransportTests::TestKSAPortEnumeration()
 {
-    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
-
-    wil::com_ptr_nothrow<IMidiTransport> midiTransport;
-    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
-    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
-    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
-    std::wstring minmidiInstanceId;
-
-    VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
-
-    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker));
-    VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
-    VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestKSAPortEnumeration"));
-
-    GetKSAMinMidiEndpoints(midiInDevices, midiOutDevices);
-
-    if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
     {
-        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires MinMidi.");
-        return;
+        WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+        wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
+        std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
+        std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
+        std::wstring minmidiInstanceId;
+
+        VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+
+        VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker));
+        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestKSAPortEnumeration"));
+
+        GetKSAMinMidiEndpoints(midiInDevices, midiOutDevices);
+
+        if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
+        {
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires MinMidi.");
+            return;
+        }
+
+        minmidiInstanceId = midiInDevices[0]->ParentDeviceInstanceId;
+        LOG_OUTPUT(L"Testing %s", minmidiInstanceId.c_str());
+
+        auto cleanup = wil::scope_exit([&]()
+        {
+            // Simulate a surprise removal to restore the driver back to the baseline state in the event this
+            // test fails.
+            SendDriverCommand(KSPROPERTY_MINMIDICONTROL_SURPRISEREMOVESIMULATION, 1);
+            SetDeviceEnabled(minmidiInstanceId.c_str(), false);
+            SetDeviceEnabled(minmidiInstanceId.c_str(), true);
+        });
+
+        // remove all of the endpoints.
+        LOG_OUTPUT(L"Removing all minmidi ports");
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)));
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)));
+
+        // There should be 0
+        LOG_OUTPUT(L"Confirming removed");
+        VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, 0, 0));
+
+        // now enable all available bytestream interfaces on the driver and confirm the ports show up
+        UINT expectedPortcount = 0;
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_ByteStream)))
+        {
+            expectedPortcount++;
+
+            LOG_OUTPUT(L"Enabling port %d", expectedPortcount);
+
+            // A midi in port, a midi out port, and a bidi port are added for the first call, and an in and out
+            // port added from then on up until 16 ports, then for each 17th port an additional bidi is added.
+            UINT expectedCount = expectedPortcount?(expectedPortcount+((INT)((expectedPortcount+15)/16))):0;
+            VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, expectedCount, expectedCount));
+        }
+
+        // disable all the bytestream interfaces and confirm the ports go away
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)))
+        {
+            expectedPortcount--;
+       
+            LOG_OUTPUT(L"Disabling port %d", expectedPortcount);
+            UINT expectedCount = expectedPortcount?(expectedPortcount+((INT)((expectedPortcount+15)/16))):0;
+            VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, expectedCount, expectedCount));
+        }
+
+        // There again should be be 0
+        LOG_OUTPUT(L"Confirming all gone");
+        VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, 0, 0));
     }
-
-    minmidiInstanceId = midiInDevices[0]->ParentDeviceInstanceId;
-    LOG_OUTPUT(L"Testing %s", minmidiInstanceId.c_str());
-
-    auto cleanup = wil::scope_exit([&]()
-    {
-        // Simulate a surprise removal to restore the driver back to the baseline state in the event this
-        // test fails.
-        SendDriverCommand(KSPROPERTY_MINMIDICONTROL_SURPRISEREMOVESIMULATION, 1);
-        SetDeviceEnabled(minmidiInstanceId.c_str(), false);
-        SetDeviceEnabled(minmidiInstanceId.c_str(), true);
-    });
-
-    // remove all of the endpoints.
-    LOG_OUTPUT(L"Removing all minmidi ports");
-    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)));
-    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)));
-
-    // There should be 0
-    LOG_OUTPUT(L"Confirming removed");
-    VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, 0, 0));
-
-    // now enable all available bytestream interfaces on the driver and confirm the ports show up
-    UINT expectedPortcount = 0;
-    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_ByteStream)))
-    {
-        expectedPortcount++;
-
-        LOG_OUTPUT(L"Enabling port %d", expectedPortcount);
-
-        // A midi in port, a midi out port, and a bidi port are added for the first call, and an in and out
-        // port added from then on up until 16 ports, then for each 17th port an additional bidi is added.
-        UINT expectedCount = expectedPortcount?(expectedPortcount+((INT)((expectedPortcount+15)/16))):0;
-        VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, expectedCount, expectedCount));
-    }
-
-    // disable all the bytestream interfaces and confirm the ports go away
-    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)))
-    {
-        expectedPortcount--;
-   
-        LOG_OUTPUT(L"Disabling port %d", expectedPortcount);
-        UINT expectedCount = expectedPortcount?(expectedPortcount+((INT)((expectedPortcount+15)/16))):0;
-        VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, expectedCount, expectedCount));
-    }
-
-    // There again should be be 0
-    LOG_OUTPUT(L"Confirming all gone");
-    VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, 0, 0));
-
 }
 
 bool MidiSrvTransportTests::TestSetup()
