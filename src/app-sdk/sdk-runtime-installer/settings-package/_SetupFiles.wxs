@@ -62,6 +62,7 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.Diagnostics.EventLog.Messages.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.Management.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.ServiceProcess.ServiceController.dll" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Graphics.Imaging.Projection.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Web.WebView2.Core.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Web.WebView2.Core.Projection.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\WebView2Loader.dll" /> 
