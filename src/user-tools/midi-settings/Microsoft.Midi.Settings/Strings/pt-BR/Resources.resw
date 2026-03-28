@@ -1,0 +1,823 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI and Musician Settings PREVIEW</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Aplicativo de gerenciamento, configurações e utilitários para Windows MIDI Services.</value>
+  </data>
+  <data name="Shell_Main.Content" xml:space="preserve">
+    <value>Principal</value>
+  </data>
+  <data name="Shell_ContentGrid.Content" xml:space="preserve">
+    <value>ContentGrid</value>
+  </data>
+  <data name="Shell_PluginsNavHeader.Content" xml:space="preserve">
+    <value>Plugins</value>
+  </data>
+  <data name="Shell_PluginsProcessing.Content" xml:space="preserve">
+    <value>Processamento &amp; Filtragem</value>
+  </data>
+  <data name="Shell_Configurations.Content" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
+  <data name="Shell_SetupNavHeader.Content" xml:space="preserve">
+    <value>Dispositivos &amp; Configurações</value>
+  </data>
+  <data name="Shell_ManagementNavHeader.Content" xml:space="preserve">
+    <value>Gerenciamento</value>
+  </data>
+  <data name="Shell_ToolsMonitor.Content" xml:space="preserve">
+    <value>Monitor de Tráfego</value>
+  </data>
+  <data name="Shell_ManagementSessions.Content" xml:space="preserve">
+    <value>Sessões Ativas</value>
+  </data>
+  <data name="Shell_ToolsNavHeader.Content" xml:space="preserve">
+    <value>Ferramentas</value>
+  </data>
+  <data name="Shell_ToolsSysEx.Text" xml:space="preserve">
+    <value>Transferência SysEx</value>
+  </data>
+  <data name="Shell_ToolsConsole.Content" xml:space="preserve">
+    <value>Console</value>
+  </data>
+  <data name="Shell_ToolsTest.Content" xml:space="preserve">
+    <value>Teste de Dispositivo</value>
+  </data>
+  <data name="Shell_ForDevelopers.Content" xml:space="preserve">
+    <value>Desenvolvedores</value>
+  </data>
+  <data name="Settings_Personalization.Text" xml:space="preserve">
+    <value>Personalização</value>
+  </data>
+  <data name="Settings_AppThemeExpander.Header" xml:space="preserve">
+    <value>Tema do aplicativo</value>
+  </data>
+  <data name="Settings_Theme_Light.Content" xml:space="preserve">
+    <value>Claro</value>
+  </data>
+  <data name="Settings_Theme_Dark.Content" xml:space="preserve">
+    <value>Escuro</value>
+  </data>
+  <data name="Settings_Theme_Default.Content" xml:space="preserve">
+    <value>Usar configuração do sistema</value>
+  </data>
+  <data name="Settings_About.Text" xml:space="preserve">
+    <value>Sobre</value>
+  </data>
+  <data name="SettingsPage_PrivacyTermsLink.Content" xml:space="preserve">
+    <value>Declaração de Privacidade da Microsoft</value>
+  </data>
+  <data name="SettingsPage_PrivacyTermsLink.NavigateUri" xml:space="preserve">
+    <value>https://privacy.microsoft.com/privacystatement</value>
+  </data>
+  <data name="Shell_PluginsTransport.Content" xml:space="preserve">
+    <value>Transportes</value>
+  </data>
+  <data name="Shell_MoreNavHeader.Content" xml:space="preserve">
+    <value>Mais</value>
+  </data>
+  <data name="Shell_Troubleshooting.Text" xml:space="preserve">
+    <value>Solução de Problemas</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeExpander.Description" xml:space="preserve">
+    <value>As opções de desenvolvedor são geralmente destinadas a desenvolvedores e àqueles que trabalham com desenvolvedores para testar componentes em pré-lançamento. Usuários MIDI não desenvolvedores não precisam usar opções de desenvolvedor, pois elas podem afetar negativamente a estabilidade, capacidade ou desempenho do MIDI no seu computador. As opções de desenvolvedor requerem que o PC esteja no Modo de Desenvolvedor nas configurações do Windows.</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeExpander.Header" xml:space="preserve">
+    <value>Opções de desenvolvedor para MIDI</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeLink.Content" xml:space="preserve">
+    <value>Abrir página "Para desenvolvedores" nas Configurações do Windows</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeIsDisabledInfo.Text" xml:space="preserve">
+    <value>O Modo de Desenvolvedor não está habilitado. Habilite o Modo de Desenvolvedor nas Configurações do Windows se você deseja instalar plugins de serviço de terceiros não assinados e em desenvolvimento.</value>
+  </data>
+  <data name="SettingsPage_DiscordLink.Content" xml:space="preserve">
+    <value>Windows MIDI Services no Discord</value>
+  </data>
+  <data name="SettingsPage_DiscordLink.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/mididiscord</value>
+  </data>
+  <data name="SettingsPage_MidiRepoLink.Content" xml:space="preserve">
+    <value>Windows MIDI Services no GitHub</value>
+  </data>
+  <data name="SettingsPage_MidiRepoLink.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midirepo</value>
+  </data>
+  <data name="SettingsPage_SendFeedbackButton.Content" xml:space="preserve">
+    <value>Enviar feedback</value>
+  </data>
+  <data name="Settings_AboutMidiDescription.Header" xml:space="preserve">
+    <value>MIDI® e o logotipo MIDI® são marcas registradas da MIDI® Association. Usadas com permissão. A Microsoft é membro corporativo ativo da MIDI® Association. A AMEI é a parceira japonesa da MIDI® Association e a autora, em parceria com a AmeNote, do driver USB MIDI 2.0 no Windows.</value>
+  </data>
+  <data name="Settings_AppThemeExpander.Description" xml:space="preserve">
+    <value>Selecione qual tema do aplicativo exibir</value>
+  </data>
+  <data name="Settings_ShowDeveloperOptions.Header" xml:space="preserve">
+    <value>Mostrar opções de desenvolvedor para MIDI</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeIsEnabledInfo.Text" xml:space="preserve">
+    <value>O Modo de Desenvolvedor está atualmente habilitado neste PC, permitindo que você instale plugins de serviço de terceiros não assinados e em desenvolvimento. Para desativá-lo, use as Configurações do Windows.</value>
+  </data>
+  <data name="SettingsPage_AboutCard.Description" xml:space="preserve">
+    <value>© 2025 Microsoft. Todos os direitos reservados.</value>
+  </data>
+  <data name="Settings_AboutDescriptionMidiDiscordLinkCard.Description" xml:space="preserve">
+    <value>Para qualquer pessoa que deseje discutir sobre Windows MIDI Services, mantemos um servidor no Discord.</value>
+  </data>
+  <data name="Settings_AboutDescriptionMidiRepoLinkCard.Description" xml:space="preserve">
+    <value>Windows MIDI Services é um projeto de código aberto hospedado no GitHub. Encorajamos relatórios de bugs e pull requests.</value>
+  </data>
+  <data name="Settings_AboutDescriptionPrivacyLinkCard.Description" xml:space="preserve">
+    <value>Sua privacidade é importante.</value>
+  </data>
+  <data name="SettingsPage_AmeiOrgLink.Content" xml:space="preserve">
+    <value>AMEI</value>
+  </data>
+  <data name="SettingsPage_AmeiOrgLink.NavigateUri" xml:space="preserve">
+    <value>https://www.amei.or.jp/</value>
+  </data>
+  <data name="SettingsPage_MidiOrgLink.Content" xml:space="preserve">
+    <value>The MIDI Association</value>
+  </data>
+  <data name="SettingsPage_MidiOrgLink.NavigateUri" xml:space="preserve">
+    <value>https://midi.org</value>
+  </data>
+  <data name="ShellPage_SettingsSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Encontrar uma configuração</value>
+  </data>
+  <data name="Shell_WinRTMidi1ApiDevices.Content" xml:space="preserve">
+    <value>Portas WinRT MIDI 1.0</value>
+  </data>
+  <data name="Shell_Midi1ApiNavHeader.Content" xml:space="preserve">
+    <value>Portas da API MIDI 1.0</value>
+  </data>
+  <data name="Shell_MidiServicesNavHeader.Content" xml:space="preserve">
+    <value>Endpoints UMP do Windows MIDI Services</value>
+  </data>
+  <data name="Midi1DevicesPage_Description.Text" xml:space="preserve">
+    <value>Abaixo está uma lista de todos os dispositivos MIDI vistos pelas APIs legadas MIDI 1.0 e os aplicativos que os utilizam.</value>
+  </data>
+  <data name="AppSessionName" xml:space="preserve">
+    <value>MIDI Settings</value>
+  </data>
+  <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
+    <value>Esta página lista o conjunto completo de plugins de transporte instalados e reconhecidos pelo Windows MIDI Services neste PC. Para informações sobre os dispositivos endpoint enumerados por esses plugins de transporte, consulte a página de Dispositivos.</value>
+  </data>
+  <data name="HomePage_Description.Text" xml:space="preserve">
+    <value>Painel do Windows MIDI Services</value>
+  </data>
+  <data name="Shell_Home.Content" xml:space="preserve">
+    <value>Início</value>
+  </data>
+  <data name="Shell_Routes.Content" xml:space="preserve">
+    <value>Roteamento</value>
+  </data>
+  <data name="Shell_SystemInfo.Content" xml:space="preserve">
+    <value>Informações do Sistema</value>
+  </data>
+  <data name="Shell_WinMMMidi1ApiDevices.Content" xml:space="preserve">
+    <value>Portas WinMM MIDI 1.0</value>
+  </data>
+  <data name="Shell_EndpointsAll.Content" xml:space="preserve">
+    <value>Todos</value>
+  </data>
+  <data name="Shell_EndpointsKS.Content" xml:space="preserve">
+    <value>Drivers UMP MIDI 2.0 (USB)</value>
+  </data>
+  <data name="Shell_EndpointsKsa.Content" xml:space="preserve">
+    <value>Drivers MIDI 1.0 (USB, etc.)</value>
+  </data>
+  <data name="Shell_EndpointsLoop.Content" xml:space="preserve">
+    <value>Endpoints de Loopback MIDI 2.0</value>
+  </data>
+  <data name="Shell_EndpointsApp.Content" xml:space="preserve">
+    <value>Aplicativos de Dispositivo Virtual</value>
+  </data>
+  <data name="Shell_EndpointsBle10.Content" xml:space="preserve">
+    <value>Bluetooth MIDI 1.0 (Preview)</value>
+  </data>
+  <data name="Shell_EndpointsNet2Udp.Text" xml:space="preserve">
+    <value>Network MIDI 2.0</value>
+  </data>
+  <data name="CreateLoopbackEndpointsWindowTitle" xml:space="preserve">
+    <value>Criar Endpoints de Loopback</value>
+  </data>
+  <data name="DeviceDetailPage_ManufacturerLabel.Text" xml:space="preserve">
+    <value>Fabricante</value>
+  </data>
+  <data name="DeviceDetailPage_ProductInstanceId.Text" xml:space="preserve">
+    <value>Id da Instância do Produto</value>
+  </data>
+  <data name="DeviceDetailPage_SerialNumber.Text" xml:space="preserve">
+    <value>Número de Série</value>
+  </data>
+  <data name="DeviceDetailPage_NativeDataFormat.Text" xml:space="preserve">
+    <value>Formato de Dados Nativo</value>
+  </data>
+  <data name="DeviceDetailPage_TransportCode.Text" xml:space="preserve">
+    <value>Código de Transporte</value>
+  </data>
+  <data name="ToolsSysExPageDescription.Text" xml:space="preserve">
+    <value>Envie um arquivo binário System Exclusive (SysEx) de 7 bits (um arquivo SysEx MIDI 1.0 típico) para um endpoint de sua escolha. Dispositivos mais antigos ou dispositivos com buffers de dados muito pequenos podem funcionar melhor se você aumentar o atraso de transferência em 10-50 milissegundos. Isso é especialmente verdadeiro ao enviar grandes bancos de patches ou atualizações de firmware via SysEx.</value>
+  </data>
+  <data name="DeviceDetailPage_PersonalizationExpander.Description" xml:space="preserve">
+    <value>Algumas configurações de dispositivos, como nome e descrição, podem ser personalizadas por você. Os aplicativos podem usar essas informações ao exibir informações do dispositivo.</value>
+  </data>
+  <data name="DeviceDetailPage_TransportExpander.Description" xml:space="preserve">
+    <value>O plugin de transporte do serviço MIDI obtém informações do dispositivo a partir do transporte subjacente (USB, Rede, BLE, etc.)</value>
+  </data>
+  <data name="DeviceDetailPage_TransportExpander.Header" xml:space="preserve">
+    <value>Informações Fornecidas pelo Transporte</value>
+  </data>
+  <data name="DeviceDetailPage_Midi2ProtocolExpander.Header" xml:space="preserve">
+    <value>Informações Descobertas via Protocolo MIDI 2.0</value>
+  </data>
+  <data name="DeviceDetailPage_Midi2ProtocolExpander.Description" xml:space="preserve">
+    <value>O protocolo MIDI 2.0 inclui descoberta de dispositivos. As informações aqui são obtidas dessa fonte.</value>
+  </data>
+  <data name="DeviceDetailPage_FunctionBlocksExpander.Header" xml:space="preserve">
+    <value>Function Blocks</value>
+  </data>
+  <data name="DeviceDetailPage_FunctionBlocksExpander.Description" xml:space="preserve">
+    <value>Para um dispositivo MIDI 2.0, os Function Blocks indicam os grupos ativos e suas direções válidas.</value>
+  </data>
+  <data name="DeviceDetailPage_GroupTerminalBlocksExpander.Header" xml:space="preserve">
+    <value>Group Terminal Blocks</value>
+  </data>
+  <data name="DeviceDetailPage_GroupTerminalBlocksExpander.Description" xml:space="preserve">
+    <value>Para dispositivos USB MIDI 2.0, os Group Terminal Blocks são o recurso alternativo quando nenhum Function Block está disponível. Eles indicam os grupos ativos e sua direção. Para dispositivos MIDI 1.0, geramos Group Terminal Blocks para cada jack MIDI (anteriormente "Porta").</value>
+  </data>
+  <data name="DeviceDetailPage_ParentDeviceExpander.Header" xml:space="preserve">
+    <value>Dispositivo Pai</value>
+  </data>
+  <data name="DeviceDetailPage_ParentDeviceExpander.Description" xml:space="preserve">
+    <value>Dispositivos podem ter mais de um endpoint MIDI. Este é o dispositivo pai deste endpoint.</value>
+  </data>
+  <data name="Shell_EndpointsDiagnostic.Content" xml:space="preserve">
+    <value>Diagnóstico</value>
+  </data>
+  <data name="CommonTasks_SetServiceAutoStart.Text" xml:space="preserve">
+    <value>Definir o serviço MIDI para iniciar automaticamente na inicialização (requer conta de Administrador)</value>
+  </data>
+  <data name="CommonTasks_AssignMidi1DeviceToNewDriver.Text" xml:space="preserve">
+    <value>Definir um dispositivo USB MIDI 1.0 para usar o novo driver rápido UMP MIDI 2.0 (requer conta de Administrador)</value>
+  </data>
+  <data name="CommonTasks_CreateLoopbackEndpoints.Text" xml:space="preserve">
+    <value>Criar um endpoint de loopback para que dois ou mais aplicativos possam se comunicar usando mensagens MIDI</value>
+  </data>
+  <data name="CommonTasks_SendSysExFile.Text" xml:space="preserve">
+    <value>Enviar um arquivo de dados System Exclusive (patches, firmware, etc.) para um endpoint</value>
+  </data>
+  <data name="CommonTasks_CaptureMidiDiag.Text" xml:space="preserve">
+    <value>Capturar informações de diagnóstico MIDI em um arquivo de texto para uso com suporte técnico</value>
+  </data>
+  <data name="CommonTasks_OpenConsole.Text" xml:space="preserve">
+    <value>Abrir o Windows MIDI Services Console</value>
+  </data>
+  <data name="CommonTasks_SetUpNetworkMidi2.Text" xml:space="preserve">
+    <value>Configurar o Network MIDI 2.0 para permitir o envio de mensagens MIDI para outros dispositivos na sua rede local.</value>
+  </data>
+  <data name="CommonTasksGroup_Endpoints.Text" xml:space="preserve">
+    <value>Endpoints</value>
+  </data>
+  <data name="CommonTasksGroup_ServiceAndDrivers.Text" xml:space="preserve">
+    <value>Serviço e Drivers</value>
+  </data>
+  <data name="CommonTasksGroup_Other.Text" xml:space="preserve">
+    <value>Outros</value>
+  </data>
+  <data name="ForDevelopers_Discovery.Header" xml:space="preserve">
+    <value>Descoberta e Negociação de Protocolo</value>
+  </data>
+  <data name="ForDevelopers_Discovery.Description" xml:space="preserve">
+    <value>Normalmente ativado. Por padrão, o serviço MIDI realiza a descoberta e negociação de protocolo MIDI 2.0 para qualquer dispositivo UMP nativo. Se você estiver testando um dispositivo que apresenta problemas quando essas mensagens são enviadas, desabilite o processo aqui. Requer uma reinicialização do serviço MIDI.</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcss.Header" xml:space="preserve">
+    <value>Habilitar MMCSS para a Fila de Mensagens Recebidas</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcss.Description" xml:space="preserve">
+    <value>Normalmente desativado. As threads MMCSS são um recurso limitado no Windows e são frequentemente usadas para threads de processamento de áudio em aplicativos DAW. Se este recurso for habilitado, o Windows MIDI Services usará threads MMCSS para manipular mensagens recebidas. Isso reduz o número de threads MMCSS disponíveis para o processo cliente e pode causar mau funcionamento em aplicativos.</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcssToggle.OffContent" xml:space="preserve">
+    <value>O Windows MIDI Services não usará threads MMCSS no processo cliente. Esta é a opção recomendada.</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryToggle.OffContent" xml:space="preserve">
+    <value>A descoberta e negociação de protocolo MIDI 2.0 baseada no serviço está atualmente desabilitada.</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcssToggle.OnContent" xml:space="preserve">
+    <value>O Windows MIDI Services usará threads MMCSS no processo cliente. Isso pode causar mau funcionamento em alguns aplicativos.</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryToggle.OnContent" xml:space="preserve">
+    <value>A descoberta e negociação de protocolo MIDI 2.0 baseada no serviço está atualmente habilitada. Esta é a opção recomendada.</value>
+  </data>
+  <data name="ForDevelopers_ServiceRestartRequired.Message" xml:space="preserve">
+    <value>O serviço Windows MIDI (midisrv.exe) deve ser reiniciado para que as alterações entrem em vigor.</value>
+  </data>
+  <data name="Button_RestartMidiService.Content" xml:space="preserve">
+    <value>Reiniciar Serviço MIDI</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDocumentation.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midi</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDocumentation.Content" xml:space="preserve">
+    <value>Documentação do Windows MIDI Services</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDiscord.Content" xml:space="preserve">
+    <value>Servidor Discord de Windows MIDI e ASIO</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDiscord.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/mididiscord</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesGitHub.Content" xml:space="preserve">
+    <value>Repositório GitHub do Windows MIDI Services</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesGitHub.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midirepo</value>
+  </data>
+  <data name="HyperlinkButton_MidiSpecifications.NavigateUri" xml:space="preserve">
+    <value>https://midi.org/specs</value>
+  </data>
+  <data name="HyperlinkButton_MidiSpecifications.Content" xml:space="preserve">
+    <value>Especificações MIDI 1.0 e 2.0 na MIDI Association</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryTimeoutSlider.Header" xml:space="preserve">
+    <value>Tempo Limite de Descoberta (milissegundos)</value>
+  </data>
+  <data name="ForDevelopers_CommitDiscoveryTimeoutButton.Content" xml:space="preserve">
+    <value>Salvar no Registro</value>
+  </data>
+  <data name="ForDevelopers_EnableDeveloperInstallationExpander.Header" xml:space="preserve">
+    <value>Habilitar Instalação de Versões de Desenvolvedor</value>
+  </data>
+  <data name="ForDevelopers_EnableDeveloperInstallationExpander.Description" xml:space="preserve">
+    <value>Para instalar previews do serviço ou componentes/plugins do serviço, você deve primeiro assumir a propriedade das entradas do registro que são usadas para o registro de componentes. Se você não fizer isso primeiro, a instalação parecerá funcionar, mas os componentes utilizados não serão os esperados.
+
+Esta etapa requer direitos de Administrador e deve ser repetida após qualquer atualização de versão do Windows (não uma atualização comum, mas uma atualização completa do sistema operacional).</value>
+  </data>
+  <data name="ForDevelopers_PrepareForDeveloperInstallButton.Content" xml:space="preserve">
+    <value>Preparar para Instalação Preview/Desenvolvedor</value>
+  </data>
+  <data name="ForDevelopers_ReplaceWdmaud2DrvButton.Content" xml:space="preserve">
+    <value>Substituir wdmaud2.drv pela Versão de Desenvolvedor</value>
+  </data>
+  <data name="ForDevelopers_RebootRequired.Message" xml:space="preserve">
+    <value>As alterações feitas requerem que você reinicie seu PC antes que possam entrar em vigor.</value>
+  </data>
+  <data name="Button_Reboot.Content" xml:space="preserve">
+    <value>Reiniciar Agora</value>
+  </data>
+  <data name="ShellPage_AdministratorIndicator.Text" xml:space="preserve">
+    <value>Administrador</value>
+  </data>
+  <data name="ShellPage_DeveloperModeIndicator.Text" xml:space="preserve">
+    <value>Modo de Desenvolvedor Habilitado</value>
+  </data>
+  <data name="ShellPage_ServiceUnavailableIndicator.Text" xml:space="preserve">
+    <value>Sem Serviço MIDI</value>
+  </data>
+  <data name="Error_UnableToInitializeMidiRuntime" xml:space="preserve">
+    <value>Não foi possível inicializar o Runtime do Windows MIDI Services. Ele está instalado?</value>
+  </data>
+  <data name="Error_StartupMessageBoxTitle" xml:space="preserve">
+    <value>Erro ao Iniciar o Aplicativo MIDI Settings</value>
+  </data>
+  <data name="Error_ExceptionThrownDuringSdkInitialization" xml:space="preserve">
+    <value>Não foi possível inicializar o Runtime do Windows MIDI Services. Uma exceção foi lançada: </value>
+  </data>
+  <data name="ForDevelopers_Description.Text" xml:space="preserve">
+    <value>Estas configurações são apenas para usuários avançados ou para fins de desenvolvimento e prototipagem. Alterar as configurações aqui pode causar comportamento inesperado ou indesejado em aplicativos e dispositivos que usam Windows MIDI Services. Estas configurações podem ser redefinidas com uma atualização de versão do Windows.</value>
+  </data>
+  <data name="ForDevelopers_InstallPreviewSectionHeader.Text" xml:space="preserve">
+    <value>Instalar Versões de Desenvolvedor / Preview</value>
+  </data>
+  <data name="ForDevelopers_Midi2FeaturesSectionHeader.Text" xml:space="preserve">
+    <value>Recursos do MIDI 2.0</value>
+  </data>
+  <data name="ForDevelopers_RelatedSupportSectionHeader.Text" xml:space="preserve">
+    <value>Suporte Relacionado</value>
+  </data>
+  <data name="ForDevelopers_SystemSettingsSectionHeader" xml:space="preserve">
+    <value>Configurações do Sistema</value>
+  </data>
+  <data name="SettingsPage_SdkChannelExpander.Header" xml:space="preserve">
+    <value>Habilitar Canal Preview do Runtime e Ferramentas do SDK MIDI</value>
+  </data>
+  <data name="SettingsPage_SdkChannelExpander.Description" xml:space="preserve">
+    <value>Habilitar versões preview do runtime do SDK, incluindo recursos instáveis que podem conter bugs. Recomendado apenas para usuários técnicos ou desenvolvedores. Uma vez habilitado, isso só pode ser alterado desinstalando o Runtime e Ferramentas do SDK, removendo o arquivo de configuração do settings e reinstalando o Runtime e Ferramentas do SDK.</value>
+  </data>
+  <data name="FirstRunSetup_Title.Text" xml:space="preserve">
+    <value>Configurar o Windows MIDI Services</value>
+  </data>
+  <data name="FirstRunSetup_ConfigFileDescription.Text" xml:space="preserve">
+    <value>Muitas personalizações MIDI são armazenadas em um arquivo de configuração portátil. Isso inclui propriedades personalizadas de endpoint, como o nome, definições para endpoints de loopback persistentes e suas reconexões de host e cliente do Network MIDI.</value>
+  </data>
+  <data name="FirstRunSetup_CreateDefaultConfigFileSwitch.Header" xml:space="preserve">
+    <value>Criar arquivo de configuração padrão se ele ainda não existir.</value>
+  </data>
+  <data name="FirstRunSetup_DefaultLoopbacksDescription.Text" xml:space="preserve">
+    <value>Alguns aplicativos e utilitários, especialmente aqueles na web, dependem de ter um endpoint de loopback conhecido disponível. Isso requer um arquivo de configuração para armazenar as informações do endpoint de loopback.</value>
+  </data>
+  <data name="FirstRunSetup_CreateDefaultLoopbacksSwitch.Header" xml:space="preserve">
+    <value>Criar endpoints de loopback padrão se eles ainda não existirem.</value>
+  </data>
+  <data name="FirstRunSetup_PortNamesDescription.Text" xml:space="preserve">
+    <value>Aplicativos que usam a API MIDI 1.0 mais antiga (WinMM) usavam nomes de portas como identificador em muitos aplicativos e arquivos. Por padrão, usamos nomes compatíveis com esses nomes mais antigos. No entanto, se você quiser nomes de porta melhores por padrão, selecione a opção abaixo.</value>
+  </data>
+  <data name="FirstRunSetup_UseNewPortNamesSwitch.Header" xml:space="preserve">
+    <value>Usar nomes de porta MIDI 1 no novo estilo.</value>
+  </data>
+  <data name="FirstRunSetup_MidiServiceStartupDescription.Text" xml:space="preserve">
+    <value>Por padrão, o serviço MIDI é configurado para iniciar apenas quando a primeira conexão MIDI é feita por um aplicativo. Isso garante que o tempo de inicialização do Windows não seja impactado para aqueles que não usam MIDI. Mas na primeira vez que uma conexão MIDI é feita, pode levar vários segundos.</value>
+  </data>
+  <data name="FirstRunSetup_MidiServiceStartupDescription2.Text" xml:space="preserve">
+    <value>Se você usa MIDI frequentemente, recomendamos alterar o serviço para iniciar automaticamente com o Windows, para que você nunca precise esperar ao fazer uma conexão. Isso requer permissões de Administrador para configurar.</value>
+  </data>
+  <data name="FirstRunSetup_SetServiceAutoStartSwitch.Header" xml:space="preserve">
+    <value>Definir serviço MIDI para iniciar automaticamente com o Windows</value>
+  </data>
+  <data name="SettingsPage_CheckForUpdatesExpander.Header" xml:space="preserve">
+    <value>Verificar Atualizações do Runtime do SDK MIDI</value>
+  </data>
+  <data name="SettingsPage_CheckForUpdatesExpander.Description" xml:space="preserve">
+    <value>Verificar automaticamente novas versões do Runtime e Ferramentas do SDK MIDI ao iniciar o aplicativo MIDI Settings. </value>
+  </data>
+  <data name="Error_UnableToStartMidiService" xml:space="preserve">
+    <value>Não foi possível iniciar o serviço MIDI. Se isso persistir, por favor encerre o processo midisrv.exe ou reinicie seu PC.</value>
+  </data>
+  <data name="Shell_AllMidiDevices.Content" xml:space="preserve">
+    <value>Dispositivos e Endpoints MIDI</value>
+  </data>
+  <data name="Shell_GlobalMidiSettings.Text" xml:space="preserve">
+    <value>Configurações Globais de MIDI</value>
+  </data>
+  <data name="Shell_ConfigureTransportsNavHeader.Content" xml:space="preserve">
+    <value>Configuração de Transporte</value>
+  </data>
+  <data name="GlobalSettings_DefaultUseClassicMidi1PortNames.Content" xml:space="preserve">
+    <value>Usar nomes compatíveis com versões anteriores das APIs MIDI do Windows e preservar a compatibilidade com projetos MIDI salvos em aplicativos.</value>
+  </data>
+  <data name="GlobalSettings_DefaultUseNewStyleMidi1PortNames.Content" xml:space="preserve">
+    <value>Usar nomes de porta no novo estilo preferidos pelos fabricantes de dispositivos MIDI. (Para dispositivos USB, esses nomes usam o nome iJack quando disponível).</value>
+  </data>
+  <data name="GlobalSettings_DefaultNamingExpander.Header" xml:space="preserve">
+    <value>Nomenclatura Padrão de Portas MIDI 1.0</value>
+  </data>
+  <data name="GlobalSettings_DefaultNamingExpander.Description" xml:space="preserve">
+    <value>A opção escolhida aqui será a abordagem padrão para nomear portas da API MIDI 1.0 usando drivers MIDI 1.0 clássicos integrados ou de fornecedores. A abordagem de nomenclatura padrão pode ser substituída por dispositivo, se desejado.
+
+Se você tem muitos projetos existentes usando seus dispositivos MIDI 1.0 e precisa manter a compatibilidade de nomenclatura para que os dispositivos sejam automaticamente descobertos pelo seu DAW ou outro aplicativo, recomendamos usar os nomes de porta clássicos. Caso contrário, os nomes no novo estilo são geralmente mais informativos.
+
+Esta alteração requer uma reinicialização do serviço MIDI antes de entrar em vigor.</value>
+  </data>
+  <data name="GlobalSettings_SetMidiServiceToAutoStartCard.Header" xml:space="preserve">
+    <value>Definir o serviço Windows MIDI (midisrv.exe) para iniciar automaticamente com o Windows, para reduzir atrasos quando aplicativos chamam APIs MIDI pela primeira vez após uma reinicialização.</value>
+  </data>
+  <data name="GlobalSettings_SetMidiServiceToAutoStartButton.Content" xml:space="preserve">
+    <value>Definir Serviço MIDI para Início Automático</value>
+  </data>
+  <data name="Shell_WindowsSettings.Text" xml:space="preserve">
+    <value>Otimizações para Músicos</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard.Header" xml:space="preserve">
+    <value>Modo de Energia</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard.Description" xml:space="preserve">
+    <value>Ao trabalhar com áudio de baixa latência, definir o modo de energia do Windows para Melhor Desempenho pode ajudar a aumentar a velocidade do processador e reduzir falhas de áudio.</value>
+  </data>
+  <data name="WindowsSettings_PowerModeCard_LaunchButton.Content" xml:space="preserve">
+    <value>Abrir Configurações do Windows</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludeDawProcessButton.Content" xml:space="preserve">
+    <value>Excluir Processo do DAW da Verificação do Defender</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludeDawProjectsFolderButton.Content" xml:space="preserve">
+    <value>Excluir Pasta de Projetos do DAW</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard_ExcludePluginDataFoldersButton.Content" xml:space="preserve">
+    <value>Excluir Pastas de Dados de Plugins</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard.Header" xml:space="preserve">
+    <value>Configurações do Defender</value>
+  </data>
+  <data name="WindowsSettings_DefenderSettingsCard.Description" xml:space="preserve">
+    <value>Você pode excluir processos confiáveis específicos e locais de arquivos da verificação do Windows Defender. Isso acelerará significativamente a leitura/gravação nesses locais, mas você deve ter cuidado para colocar apenas conteúdo e plugins confiáveis lá.</value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard.Header" xml:space="preserve">
+    <value>Atualizações do Windows</value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard.Description" xml:space="preserve">
+    <value>Embora manter-se atualizado seja importante para segurança, recursos e correções de bugs, você pode pausar as atualizações do Windows por um período de tempo enquanto trabalha em um projeto. </value>
+  </data>
+  <data name="WindowsSettings_UpdateSettingsCard_PauseUpdatesButton.Content" xml:space="preserve">
+    <value>Pausar Atualizações por X Dias</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeaturesCard.Header" xml:space="preserve">
+    <value>Recursos Pré-Instalados do Windows</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeaturesCard.Description" xml:space="preserve">
+    <value>Os recursos pré-instalados do Windows são ótimos para muitos usuários, mas às vezes podem interferir no processo criativo. Você pode facilmente removê-los ou desabilitá-los aqui. Uma vez desinstalados, eles não podem ser reinstalados.</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WidgetsCard.Header" xml:space="preserve">
+    <value>Widgets</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WeatherCard.Header" xml:space="preserve">
+    <value>Clima</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_NewsCard.Header" xml:space="preserve">
+    <value>Notícias</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_XboxCard.Header" xml:space="preserve">
+    <value>Aplicativo Xbox</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_GameDvrCard.Header" xml:space="preserve">
+    <value>Game DVR</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_DesktopSpotlightCard.Header" xml:space="preserve">
+    <value>Destaque da Área de Trabalho</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_LockscreenTipsCard.Header" xml:space="preserve">
+    <value>Dicas da Tela de Bloqueio</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_WindowsSuggestionsCard.Header" xml:space="preserve">
+    <value>Sugestões do Windows</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StartMenuWebSearchCard.Header" xml:space="preserve">
+    <value>Pesquisa Web no Menu Iniciar</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_GeoLocationCard.Header" xml:space="preserve">
+    <value>Geolocalização</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_SolitaireAndGamesCard.Header" xml:space="preserve">
+    <value>Paciência e Jogos Casuais</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StartMenuRecommendedAppsCard.Header" xml:space="preserve">
+    <value>Aplicativos Recomendados no Menu Iniciar</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableFeatures_StickyKeysCard.Header" xml:space="preserve">
+    <value>Teclas de Aderência</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableRecoverableFeaturesCard.Header" xml:space="preserve">
+    <value>Recursos Configuráveis do Windows</value>
+  </data>
+  <data name="WindowsSettings_RemoveOrDisableRecoverableFeaturesCard.Description" xml:space="preserve">
+    <value>Estes recursos podem ser facilmente ativados ou desativados, mas estão localizados aqui por conveniência.</value>
+  </data>
+  <data name="Shell_MidiNavHeader.Content" xml:space="preserve">
+    <value>Configuração MIDI</value>
+  </data>
+  <data name="Shell_LivePerformanceMode.Text" xml:space="preserve">
+    <value>Modo de Performance ao Vivo</value>
+  </data>
+  <data name="Shell_AdvancedUsbSettings.Text" xml:space="preserve">
+    <value>Configurações Avançadas de USB</value>
+  </data>
+  <data name="DeviceDetailPage_UsbVidPid.Text" xml:space="preserve">
+    <value>USB VID/PID</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseGlobalDefault" xml:space="preserve">
+    <value>Usar Padrão Global</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseClassicAPICompatible" xml:space="preserve">
+    <value>Usar Compatível com API Clássica</value>
+  </data>
+  <data name="Midi1PortNamingValue_UseNewStyle" xml:space="preserve">
+    <value>Usar Novo Estilo</value>
+  </data>
+  <data name="DeviceDetailPage_Tooltip_ChangeImage.Text" xml:space="preserve">
+    <value>Alterar imagem</value>
+  </data>
+  <data name="DeviceDetailPage_Tooltip_Customize.Text" xml:space="preserve">
+    <value>Renomear endpoint, atualizar descrição e outras propriedades</value>
+  </data>
+  <data name="DeviceDetailPage_Button_Customize.Content" xml:space="preserve">
+    <value>Personalizar</value>
+  </data>
+  <data name="Button_Panic.Content" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+  <data name="Button_Monitor.Content" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
+  <data name="DeviceDetailPage_EndpointDeviceIdLabel.Text" xml:space="preserve">
+    <value>Id do Dispositivo Endpoint:</value>
+  </data>
+  <data name="DeviceDetailPage_Section_AssociatedMidi1Ports.Text" xml:space="preserve">
+    <value>Portas da API MIDI 1.0 Associadas</value>
+  </data>
+  <data name="DeviceDetailPage_HeaderSourceInputPorts.Text" xml:space="preserve">
+    <value>Portas de Origem/Entrada</value>
+  </data>
+  <data name="CommonTextBlockLabel_WinMMPortNumber.Text" xml:space="preserve">
+    <value>Número da Porta WinMM</value>
+  </data>
+  <data name="CommonTextBlockLabel_WinRTPortId.Text" xml:space="preserve">
+    <value>Id da Porta WinRT</value>
+  </data>
+  <data name="CommonTextBlockLabel_MappedGroup.Text" xml:space="preserve">
+    <value>Grupo Mapeado</value>
+  </data>
+  <data name="CommonTextBlockLabel_Flow.Text" xml:space="preserve">
+    <value>Fluxo</value>
+  </data>
+  <data name="DeviceDetailPage_HeaderDestinationOutputPorts.Text" xml:space="preserve">
+    <value>Portas de Destino/Saída</value>
+  </data>
+  <data name="CommonTextBlockLabel_Name.Text" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="CommonTextBlockLabel_Description.Text" xml:space="preserve">
+    <value>Descrição</value>
+  </data>
+  <data name="CommonTextBlockLabel_SerialNumber.Text" xml:space="preserve">
+    <value>Número de Série</value>
+  </data>
+  <data name="CommonTextBlockLabel_TransportId.Text" xml:space="preserve">
+    <value>Id de Transporte</value>
+  </data>
+  <data name="CommonTextBlockLabel_TransportCode.Text" xml:space="preserve">
+    <value>Código de Transporte</value>
+  </data>
+  <data name="CommonTextBlockLabel_SupportsMidi1Protocol.Text" xml:space="preserve">
+    <value>Suporta Protocolo MIDI 1.0</value>
+  </data>
+  <data name="CommonTextBlockLabel_SupportsMidi2Protocol.Text" xml:space="preserve">
+    <value>Suporta Protocolo MIDI 2.0</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredProtocol.Text" xml:space="preserve">
+    <value>Protocolo Configurado</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredSendJR.Text" xml:space="preserve">
+    <value>Configurado para enviar Timestamps de Redução de Jitter</value>
+  </data>
+  <data name="CommonTextBlockLabel_ConfiguredReceiveJR.Text" xml:space="preserve">
+    <value>Configurado para receber Timestamps de Redução de Jitter</value>
+  </data>
+  <data name="SettingsPage_ShowPreviewToolsExpander.Header" xml:space="preserve">
+    <value>Habilitar Ferramentas Preview</value>
+  </data>
+  <data name="SettingsPage_ShowPreviewToolsExpander.Description" xml:space="preserve">
+    <value>Habilitar ferramentas preview como o remetente de mensagens System Exclusive. Essas ferramentas ainda não são estáveis e podem ter bugs ou funcionalidade incompleta. Requer reiniciar este aplicativo para ver as alterações.</value>
+  </data>
+  <data name="EndpointPersonalizationUniqueIdInfoBar.Message" xml:space="preserve">
+    <value>Este dispositivo MIDI não reporta um número de série ou identificador único. Como resultado, as personalizações podem não permanecer aplicadas se você alterar como o dispositivo está conectado a este PC (porta USB diferente, ou hub, por exemplo). Se você tem mais de um desses dispositivos e os conecta em momentos diferentes, o Windows pode não saber a qual deles aplicar a personalização.</value>
+  </data>
+  <data name="EndpointPersonalizationUniqueIdInfoBar.Title" xml:space="preserve">
+    <value>A personalização pode não ser permanente</value>
+  </data>
+  <data name="Error_MidiServicesFeatureNotEnabled" xml:space="preserve">
+    <value>O recurso Windows MIDI Services não parece estar habilitado neste PC. A habilitação para versões compatíveis do Windows virá através do Windows Update.
+
+Se o recurso foi previamente ativado, é possível que um desinstalador de driver ou ferramenta de reordenação de registro tenha quebrado o Windows MIDI Services.
+
+Se esse for o caso, abra um prompt de comando como Administrador, digite midifixreg e siga os passos. Quando concluído, reinicie seu PC.</value>
+  </data>
+  <data name="Error_WindowsMIDIServicesNotEnabledMessageBoxTitle" xml:space="preserve">
+    <value>Windows MIDI Services não está Habilitado</value>
+  </data>
+  <data name="DefaultLoopbackAName" xml:space="preserve">
+    <value>Loopback Padrão de Aplicativo (A)</value>
+  </data>
+  <data name="DefaultLoopbackBName" xml:space="preserve">
+    <value>Loopback Padrão de Aplicativo (B)</value>
+  </data>
+  <data name="DefaultBasicLoopbackName" xml:space="preserve">
+    <value>Loopback Básico Padrão de Aplicativo</value>
+  </data>
+  <data name="DefaultLoopbackADescription" xml:space="preserve">
+    <value>Endpoint de loopback padrão para uso por aplicativos. Este é o lado A do par de loopback.</value>
+  </data>
+  <data name="DefaultLoopbackBDescription" xml:space="preserve">
+    <value>Endpoint de loopback padrão para uso por aplicativos. Este é o lado B do par de loopback.</value>
+  </data>
+  <data name="DefaultBasicLoopbackDescription" xml:space="preserve">
+    <value>Endpoint de loopback básico MIDI 1.0 padrão para uso por aplicativos.</value>
+  </data>
+  <data name="Shell_EndpointsBasicLoop.Content" xml:space="preserve">
+    <value>Endpoints de Loopback MIDI 1.0</value>
+  </data>
+  <data name="Message_SettingsAppWillNowRestart" xml:space="preserve">
+    <value>O aplicativo MIDI Settings será reiniciado agora.</value>
+  </data>
+  <data name="Error_SettingsAppCouldNotAutomaticallyRestart" xml:space="preserve">
+    <value>O aplicativo MIDI Settings não pôde fechar e reiniciar automaticamente. Por favor, feche o aplicativo e reabra-o.</value>
+  </data>
+</root>
