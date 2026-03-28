@@ -1,0 +1,1183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Aplicativo utilitário para interagir com o Windows MIDI Services pela linha de comando. Requer que o Windows MIDI Services esteja instalado e habilitado no PC.</value>
+  </data>
+  <data name="AppShortName" xml:space="preserve">
+    <value>MIDI Console (Preview)</value>
+  </data>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Microsoft Windows MIDI Services Console</value>
+  </data>
+  <data name="CommandEndpointDescription" xml:space="preserve">
+    <value>Realizar operações em um único endpoint, incluindo exibição de detalhes, envio de mensagens, monitoramento e mais. Se você omitir o Instance Id, será solicitado a selecionar de uma lista.</value>
+  </data>
+  <data name="CommandEndpointPropertiesDescription" xml:space="preserve">
+    <value>Listar as propriedades de metadados capturadas pelo sistema para o endpoint especificado</value>
+  </data>
+  <data name="CommandEndpointRequestDescription" xml:space="preserve">
+    <value>Enviar solicitações de dados MIDI 2.0 in-protocol especificados de um endpoint. Use um console ou aplicativo separado para visualizar as respostas.</value>
+  </data>
+  <data name="CommandEndpointRequestEndpointMetadataDescription" xml:space="preserve">
+    <value>Enviar uma mensagem de descoberta de endpoint para o endpoint. Você pode monitorar as mensagens recebidas em outra janela ou observar as alterações de propriedades</value>
+  </data>
+  <data name="CommandEndpointRequestFunctionBlocksDescription" xml:space="preserve">
+    <value>Enviar uma mensagem de solicitação de Function Block para o endpoint. Você pode monitorar as mensagens recebidas ou as propriedades do dispositivo em outra janela</value>
+  </data>
+  <data name="CommandEnumerateActiveSessionsDescription" xml:space="preserve">
+    <value>Listar todas as sessões do Windows MIDI Services atualmente ativas neste PC.</value>
+  </data>
+  <data name="CommandEnumerateDescription" xml:space="preserve">
+    <value>Enumerar (listar) endpoints e transportes</value>
+  </data>
+  <data name="CommandEnumerateEndpointsDescription" xml:space="preserve">
+    <value>Listar endpoints UMP MIDI visíveis para aplicativos compatíveis com o Windows MIDI Services</value>
+  </data>
+  <data name="CommandEnumerateLegacyEndpointsDescription" xml:space="preserve">
+    <value>Listar endpoints MIDI 1.0 conforme vistos em aplicativos que usam APIs MIDI mais antigas</value>
+  </data>
+  <data name="CommandEnumerateTransportPluginsDescription" xml:space="preserve">
+    <value>Listar todos os plugins de transporte MIDI instalados neste PC.</value>
+  </data>
+  <data name="CommandMonitorEndpointDescription" xml:space="preserve">
+    <value>Monitora um endpoint UMP para mensagens recebidas e opcionalmente as exibe conforme chegam.</value>
+  </data>
+  <data name="CommandSendMessageDescription" xml:space="preserve">
+    <value>Enviar uma única mensagem para um endpoint UMP como uma lista de até quatro palavras MIDI de 32 bits</value>
+  </data>
+  <data name="CommandSendMessagesFileDescription" xml:space="preserve">
+    <value>Envia um arquivo de texto com palavras UMP MIDI para o endpoint especificado. Consulte os argumentos e opções para formato e delimitadores.</value>
+  </data>
+  <data name="CommandServiceDescription" xml:space="preserve">
+    <value>Realizar operações no serviço, como verificar se está em execução, fazer ping no loopback padrão de ping, etc. Comandos de gerenciamento de serviço devem ser executados em um console de Administrador.</value>
+  </data>
+  <data name="CommandServicePingDescription" xml:space="preserve">
+    <value>Fazer ping no Serviço MIDI do Windows</value>
+  </data>
+  <data name="CommandServiceRestartDescription" xml:space="preserve">
+    <value>Reiniciar o serviço MIDI. Isso fechará todas as conexões abertas, removerá qualquer configuração não persistente e redefinirá o sistema MIDI. Deve ser executado como Administrador.</value>
+  </data>
+  <data name="CommandServiceStartDescription" xml:space="preserve">
+    <value>Iniciar o Serviço MIDI se ele estiver parado. Deve ser executado como Administrador.</value>
+  </data>
+  <data name="CommandServiceStatusDescription" xml:space="preserve">
+    <value>Verificar se o Serviço do Windows está em execução</value>
+  </data>
+  <data name="CommandServiceStopDescription" xml:space="preserve">
+    <value>Para o Serviço MIDI, liberando todos os recursos em uso, fechando todos os dispositivos e limpando qualquer configuração de tempo de execução. Deve ser executado como Administrador.</value>
+  </data>
+  <data name="CommandTimeDescription" xml:space="preserve">
+    <value>Obter o valor atual do timestamp do relógio MIDI e informações sobre a resolução do relógio.</value>
+  </data>
+  <data name="CommandWatchEndpointsDescription" xml:space="preserve">
+    <value>Observar endpoints para notificações de adição/remoção e alteração de propriedades PnP</value>
+  </data>
+  <data name="CommonStringDirectionSingular" xml:space="preserve">
+    <value>Direção</value>
+  </data>
+  <data name="CommonStringGroupPlural" xml:space="preserve">
+    <value>Grupos</value>
+  </data>
+  <data name="CommonStringGroupSingular" xml:space="preserve">
+    <value>Grupo</value>
+  </data>
+  <data name="CommonStringGroupTerminalBlockSingular" xml:space="preserve">
+    <value>Group Terminal Block</value>
+  </data>
+  <data name="CommonStringIndexPlural" xml:space="preserve">
+    <value>Índices</value>
+  </data>
+  <data name="CommonStringIndexSingular" xml:space="preserve">
+    <value>Índice</value>
+  </data>
+  <data name="CommonStringKBPS" xml:space="preserve">
+    <value>kbps</value>
+  </data>
+  <data name="CommonStringMIDI" xml:space="preserve">
+    <value>MIDI</value>
+  </data>
+  <data name="CommonStringProtocolSingular" xml:space="preserve">
+    <value>Protocolo</value>
+  </data>
+  <data name="CommonTableHeaderIndex" xml:space="preserve">
+    <value>Índice</value>
+  </data>
+  <data name="EndpointDisconnected" xml:space="preserve">
+    <value>Endpoint desconectado</value>
+  </data>
+  <data name="EndpointPickerPleaseSelectEndpoint" xml:space="preserve">
+    <value>Por favor, selecione um endpoint</value>
+  </data>
+  <data name="ErrorEnumEndpointsFailed" xml:space="preserve">
+    <value>Falha ao enumerar endpoints. O serviço MIDI está em execução?</value>
+  </data>
+  <data name="ErrorGeneralFailReasonWinRTActivation" xml:space="preserve">
+    <value>Os tipos WinRT não puderam ser ativados. O Windows MIDI Services está instalado?</value>
+  </data>
+  <data name="ErrorPingTestFailed" xml:space="preserve">
+    <value>Teste de ping falhou</value>
+  </data>
+  <data name="ErrorPingTestFailReasonSummaryNull" xml:space="preserve">
+    <value>O resumo do resultado do ping é nulo</value>
+  </data>
+  <data name="ErrorUnableToCreateEndpointConnection" xml:space="preserve">
+    <value>Não foi possível criar a conexão com o endpoint. O Id do endpoint está correto? O tipo de endpoint está correto?</value>
+  </data>
+  <data name="ErrorUnableToCreateSession" xml:space="preserve">
+    <value>Não foi possível criar a sessão.</value>
+  </data>
+  <data name="ErrorUnableToOpenEndpoint" xml:space="preserve">
+    <value>Não foi possível abrir o endpoint especificado.</value>
+  </data>
+  <data name="ErrorUnableToSendMessage" xml:space="preserve">
+    <value>Não foi possível enviar a mensagem para o endpoint</value>
+  </data>
+  <data name="FunctionBlockNumberInvalid" xml:space="preserve">
+    <value>O número do Function Block é inválido. Por favor, solicite um número entre 0 e 31, inclusive.</value>
+  </data>
+  <data name="FunctionBlockRequestInvalid" xml:space="preserve">
+    <value>A solicitação de Function Block é inválida. Por favor, solicite pelo menos um item de dados.</value>
+  </data>
+  <data name="GenericAverage" xml:space="preserve">
+    <value>Média</value>
+  </data>
+  <data name="GenericClockTicks" xml:space="preserve">
+    <value>tiques de relógio</value>
+  </data>
+  <data name="GenericCount" xml:space="preserve">
+    <value>Contagem</value>
+  </data>
+  <data name="GenericMicroseconds" xml:space="preserve">
+    <value>microssegundos</value>
+  </data>
+  <data name="GenericMilliseconds" xml:space="preserve">
+    <value>milissegundos</value>
+  </data>
+  <data name="GenericResponses" xml:space="preserve">
+    <value>respostas</value>
+  </data>
+  <data name="GenericTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="InteractiveEndpointMenuPleaseSelectOption" xml:space="preserve">
+    <value>Por favor, selecione uma das seguintes opções</value>
+  </data>
+  <data name="MessageValidationErrorInvalidUmp" xml:space="preserve">
+    <value>Os dados não resultam em um UMP válido</value>
+  </data>
+  <data name="MessageValidationErrorTooFewWords" xml:space="preserve">
+    <value>Por favor, forneça pelo menos uma palavra MIDI de 32 bits válida</value>
+  </data>
+  <data name="MessageValidationErrorTooManyWords" xml:space="preserve">
+    <value>Por favor, forneça até quatro palavras MIDI de 32 bits válidas, compondo um único UMP válido.</value>
+  </data>
+  <data name="MonitorEndpointResultTableColumnHeaderTimestamp" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="MonitorEndpointResultTableColumnHeaderWordsReceived" xml:space="preserve">
+    <value>Palavras MIDI Recebidas</value>
+  </data>
+  <data name="MonitorEscapePressedMessage" xml:space="preserve">
+    <value>Tecla Escape pressionada. Monitoramento encerrado.</value>
+  </data>
+  <data name="MonitorMonitoringOnEndpointLabel" xml:space="preserve">
+    <value>Monitorando mensagens recebidas em</value>
+  </data>
+  <data name="MonitorPressEscapeToStopMonitoringMessage" xml:space="preserve">
+    <value>Pressione Escape para parar de monitorar.</value>
+  </data>
+  <data name="MonitorSessionNameSuffix" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
+  <data name="ParameterCaptureMessagesAnnotate" xml:space="preserve">
+    <value>True para anotar as mensagens gravadas no arquivo. Anotações começam com o sinal # e são escritas na linha anterior à linha de dados UMP. A anotação inclui informações de timestamp, bem como o tipo específico de mensagem.</value>
+  </data>
+  <data name="ParameterCaptureMessagesFieldDebugWarnSkippedIncrement" xml:space="preserve">
+    <value>Para fluxos de entrada onde a última palavra é incrementada em um a cada vez (uma abordagem de depuração para desenvolvedores), alertar quando houver lacunas.</value>
+  </data>
+  <data name="ParameterCaptureMessagesFieldDelimiter" xml:space="preserve">
+    <value>Delimitador para separar campos. Os valores válidos incluem:</value>
+  </data>
+  <data name="ParameterCaptureMessagesFieldFormat" xml:space="preserve">
+    <value>Formato para os campos. O prefixo hexadecimal é "0x", o sufixo é "h". Valores decimais não possuem zeros à esquerda. Os valores válidos incluem:</value>
+  </data>
+  <data name="ParameterCaptureMessagesFilter" xml:space="preserve">
+    <value>Filtro para as mensagens. Os valores válidos incluem:</value>
+  </data>
+  <data name="ParameterCaptureMessagesIncludeTimestamps" xml:space="preserve">
+    <value>True para incluir o timestamp como o primeiro campo de cada mensagem.</value>
+  </data>
+  <data name="ParameterCaptureMessagesOutputFile" xml:space="preserve">
+    <value>Capturar mensagens para o arquivo especificado. Se o arquivo existir, o conteúdo será adicionado ao final.</value>
+  </data>
+  <data name="ParameterCommonEndpointIdDescription" xml:space="preserve">
+    <value>Id do Endpoint (também chamado de Device Instance Id) do endpoint conforme usado em Windows.Devices.Enumeration. Isso inclui o GUID da interface MIDI no final da string. Você pode encontrar os Ids dos Endpoints enumerando endpoints por este aplicativo. Se você omitir o Id, nós os reenumeraremos e forneceremos uma lista para você escolher.</value>
+  </data>
+  <data name="ParameterEndpointPropertiesIncludeRaw" xml:space="preserve">
+    <value>Incluir a lista completa de chaves e valores de propriedades brutas do endpoint. Normalmente útil apenas para fins de depuração.</value>
+  </data>
+  <data name="ParameterEndpointPropertiesVerbose" xml:space="preserve">
+    <value>Incluir informações detalhadas adicionais sobre o endpoint.</value>
+  </data>
+  <data name="ParameterEndpointUpdateName" xml:space="preserve">
+    <value>Novo nome do endpoint</value>
+  </data>
+  <data name="ParameterEnumEndpointsDirection" xml:space="preserve">
+    <value>A direção do fluxo de dados dos endpoints a serem listados</value>
+  </data>
+  <data name="ParameterEnumEndpointsIncludeAll" xml:space="preserve">
+    <value>Listar todos os endpoints reconhecidos, incluindo os internos e aqueles aos quais um aplicativo pode não conseguir se conectar diretamente.</value>
+  </data>
+  <data name="ParameterEnumEndpointsIncludeEndpointId" xml:space="preserve">
+    <value>Incluir o Id do Endpoint UMP na saída</value>
+  </data>
+  <data name="ParameterEnumEndpointsIncludeLoopbackEndpoints" xml:space="preserve">
+    <value>Incluir os endpoints de loopback de diagnóstico</value>
+  </data>
+  <data name="ParameterEnumEndpointsVerboseOutput" xml:space="preserve">
+    <value>Incluir mais detalhes para cada endpoint</value>
+  </data>
+  <data name="ParameterEnumLegacyEndpointsDirection" xml:space="preserve">
+    <value>A direção do fluxo de dados dos endpoints a serem listados</value>
+  </data>
+  <data name="ParameterEnumLegacyEndpointsIncludeEndpointId" xml:space="preserve">
+    <value>Incluir o Id do Endpoint MIDI 1.0 (o Port Id) na saída</value>
+  </data>
+  <data name="ParameterListenerMessagesFilter" xml:space="preserve">
+    <value>(ainda não implementado)</value>
+  </data>
+  <data name="ParameterMonitorEndpointAutoReconnect" xml:space="preserve">
+    <value>Continuar monitorando e reconectar automaticamente após desconexão do dispositivo, se o dispositivo ficar disponível novamente (desconectar/reconectar).</value>
+  </data>
+  <data name="ParameterMonitorEndpointDirectionDescription" xml:space="preserve">
+    <value>A direção do endpoint referenciado pelo Id. Se não corresponder ao tipo de endpoint, a conexão falhará.</value>
+  </data>
+  <data name="ParameterMonitorEndpointSingleMessage" xml:space="preserve">
+    <value>Aguardar apenas uma única mensagem recebida</value>
+  </data>
+  <data name="ParameterMonitorEndpointSkipToKeepUp" xml:space="preserve">
+    <value>Se você estiver monitorando entrada muito rápida de um dispositivo, a exibição pode começar a atrasar consideravelmente. Nesse caso, defina como true e as mensagens serão ignoradas (apenas na saída de exibição) para tentar manter a saída de exibição aproximadamente sincronizada com as mensagens recebidas.</value>
+  </data>
+  <data name="ParameterMonitorEndpointVerbose" xml:space="preserve">
+    <value>Fornecer colunas adicionais de informação para cada mensagem</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataAll" xml:space="preserve">
+    <value>Solicitar todas as informações do endpoint</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataDeviceIdentityNotification" xml:space="preserve">
+    <value>Solicitar uma notificação de identidade do dispositivo</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointInfoNotification" xml:space="preserve">
+    <value>Solicitar a notificação de informações do endpoint</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointNameNotification" xml:space="preserve">
+    <value>Solicitar uma notificação de nome do endpoint. Pode resultar em múltiplas mensagens de resposta.</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointProductInstanceIdNotification" xml:space="preserve">
+    <value>Solicitar uma notificação de product instance id. Pode resultar em múltiplas mensagens de resposta.</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointStreamConfigurationNotification" xml:space="preserve">
+    <value>Solicitar uma notificação de configuração de stream</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointUmpVersionMajor" xml:space="preserve">
+    <value>A versão principal da especificação UMP. O padrão geralmente é suficiente.</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointUmpVersionMinor" xml:space="preserve">
+    <value>A versão secundária da especificação UMP. O padrão geralmente é suficiente.</value>
+  </data>
+  <data name="ParameterRequestFunctionBlockInfoNotification" xml:space="preserve">
+    <value>Solicitar as informações gerais de um Function Block</value>
+  </data>
+  <data name="ParameterRequestFunctionBlockNameNotification" xml:space="preserve">
+    <value>Solicitar o nome de um Function Block</value>
+  </data>
+  <data name="ParameterRequestFunctionBlockNumber" xml:space="preserve">
+    <value>Solicitar apenas o número de Function Block especificado</value>
+  </data>
+  <data name="ParameterRequestFunctionBlocksAll" xml:space="preserve">
+    <value>Solicitar todos os Function Blocks deste endpoint</value>
+  </data>
+  <data name="ParameterSendMessageAutoIncrementLastWord" xml:space="preserve">
+    <value>Isto é para desenvolvedores e aqueles que desejam verificar se todas as mensagens estão sendo enviadas/recebidas na ordem correta. Quando ativado, incrementará automaticamente a última palavra especificada em 1 para cada mensagem enviada. Requer que uma mensagem de duas ou mais palavras seja usada para que o nibble de tipo de mensagem não seja impactado.</value>
+  </data>
+  <data name="ParameterSendMessageCount" xml:space="preserve">
+    <value>Número de vezes para enviar esta mensagem</value>
+  </data>
+  <data name="ParameterSendMessageDelayBetweenMessages" xml:space="preserve">
+    <value>Pausa (atraso), em milissegundos, entre mensagens para temporizar mensagens e/ou permitir que dispositivos mais lentos processem dados de entrada sem estouro de buffer. Este é um atraso aproximado e depende dos temporizadores de thread do sistema. Especifique 0 para nenhum atraso.</value>
+  </data>
+  <data name="ParameterSendMessageEndpointDirectionDescription" xml:space="preserve">
+    <value>A direção do endpoint referenciado pelo Id. Se não corresponder ao tipo de endpoint, a conexão falhará.</value>
+  </data>
+  <data name="ParameterSendMessagesFileCommandFile" xml:space="preserve">
+    <value>Caminho e nome do arquivo de texto a enviar. Pode incluir linhas que começam com # para comentário, ou que estão completamente vazias para espaçamento. As linhas restantes devem ser palavras UMP hexadecimais (big-endian) delimitadas válidas.</value>
+  </data>
+  <data name="ParameterSendMessagesFileFieldDelimiter" xml:space="preserve">
+    <value>Delimitador entre campos. Defina como "Auto" para que seja avaliado para cada linha. Os valores válidos incluem:</value>
+  </data>
+  <data name="ParameterSendMessagesFileReplaceGroup" xml:space="preserve">
+    <value>Para mensagens que não são de stream, substituir o segundo nibble pelo novo índice de grupo especificado. Útil ao enviar SysEx previamente gravado para um novo grupo.</value>
+  </data>
+  <data name="ParameterSendMessagesFileVerbose" xml:space="preserve">
+    <value>Saída detalhada durante o envio das mensagens</value>
+  </data>
+  <data name="ParameterSendMessageTimestamp" xml:space="preserve">
+    <value>Valor absoluto de timestamp a usar para todas as mensagens. Use 0 para ignorar o agendamento e enviar imediatamente.</value>
+  </data>
+  <data name="ParameterSendMessageTimestampOffsetMicroseconds" xml:space="preserve">
+    <value>Deslocamento de timestamp em microssegundos (1/1.000.000 de segundo) a usar ao agendar esta mensagem. Um novo timestamp com este deslocamento é calculado para cada mensagem enviada no momento do envio.</value>
+  </data>
+  <data name="ParameterSendMessageWordFormat" xml:space="preserve">
+    <value>Formato de dados para as palavras individuais. Os valores válidos incluem:</value>
+  </data>
+  <data name="ParameterSendMessageWords" xml:space="preserve">
+    <value>Palavras MIDI de 32 bits, normalmente no formato hexadecimal 0x00000000, igual ao formato de protocolo MIDI na rede. Use o nome do parâmetro antes de cada palavra enviada.</value>
+  </data>
+  <data name="ParameterServicePingCount" xml:space="preserve">
+    <value>Número de vezes para fazer ping no Serviço MIDI do Windows</value>
+  </data>
+  <data name="ParameterServicePingTimeout" xml:space="preserve">
+    <value>Tempo limite total do ping em milissegundos. Não inclui o tempo de criação e encerramento da sessão e conexão.</value>
+  </data>
+  <data name="ParameterServicePingVerbose" xml:space="preserve">
+    <value>True para mostrar detalhes de cada solicitação e resposta de ping.</value>
+  </data>
+  <data name="ParameterServiceStatusVerbose" xml:space="preserve">
+    <value>Relatar detalhes adicionais sobre o serviço</value>
+  </data>
+  <data name="PingResultTableColumnHeaderPing" xml:space="preserve">
+    <value>Ping</value>
+  </data>
+  <data name="PingResultTableColumnHeaderReceiveTimestamp" xml:space="preserve">
+    <value>Timestamp
+de Recebimento
+do Cliente</value>
+  </data>
+  <data name="PingResultTableColumnHeaderRoundTripMicroseconds" xml:space="preserve">
+    <value>Ida e Volta
+do Cliente
+Microssegundos</value>
+  </data>
+  <data name="PingResultTableColumnHeaderRoundTripMilliseconds" xml:space="preserve">
+    <value>Ida e Volta
+do Cliente
+Milissegundos</value>
+  </data>
+  <data name="PingResultTableColumnHeaderRoundTripTicks" xml:space="preserve">
+    <value>Ida e Volta
+do Cliente
+Tiques do Sistema</value>
+  </data>
+  <data name="PingResultTableColumnHeaderSendTimestamp" xml:space="preserve">
+    <value>Timestamp
+de Envio
+do Cliente</value>
+  </data>
+  <data name="PingResultTableColumnHeaderServiceBreakdown" xml:space="preserve">
+    <value>Serviço
+Receber/Enviar
+Tiques do Sistema</value>
+  </data>
+  <data name="PingResultTableColumnHeaderServiceTimestamp" xml:space="preserve">
+    <value>Timestamp
+de Recebimento
+do Serviço</value>
+  </data>
+  <data name="PropertiesTableColumnHeaderProperty" xml:space="preserve">
+    <value>Propriedade</value>
+  </data>
+  <data name="PropertiesTableColumnHeaderValue" xml:space="preserve">
+    <value>Valor</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelContainerId" xml:space="preserve">
+    <value>Id do Container</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelDescription" xml:space="preserve">
+    <value>Descrição</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelDeviceFamily" xml:space="preserve">
+    <value>Família do Dispositivo</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelDeviceFamilyModelNumber" xml:space="preserve">
+    <value>Número do Modelo da Família do Dispositivo</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelDeviceInstanceId" xml:space="preserve">
+    <value>Device Instance Id</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelEndpointSuppliedName" xml:space="preserve">
+    <value>Nome Fornecido pelo Endpoint</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelId" xml:space="preserve">
+    <value>Id</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelManufacturer" xml:space="preserve">
+    <value>Fabricante</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelMultiClient" xml:space="preserve">
+    <value>Multi-client</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelName" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelNativeDataFormat" xml:space="preserve">
+    <value>Formato de dados nativo</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelProductInstanceId" xml:space="preserve">
+    <value>Product Instance Id</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelPurpose" xml:space="preserve">
+    <value>Finalidade</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelSerialNumber" xml:space="preserve">
+    <value>Número de Série</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelImageFileName" xml:space="preserve">
+    <value>Nome do Arquivo de Imagem</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelSoftwareRevisionLevel" xml:space="preserve">
+    <value>Nível de Revisão do Software</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelSystemExclusiveId" xml:space="preserve">
+    <value>Id de System Exclusive</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelTransportSuppliedDescription" xml:space="preserve">
+    <value>Descrição</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelUserSuppliedName" xml:space="preserve">
+    <value>Nome Fornecido pelo Usuário</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelVidPid" xml:space="preserve">
+    <value>USB VID / PID</value>
+  </data>
+  <data name="PropertiesTableSectionHeaderEndpointMetadata" xml:space="preserve">
+    <value>Metadados do Endpoint</value>
+  </data>
+  <data name="PropertiesTableSectionHeaderIdentification" xml:space="preserve">
+    <value>Identificação</value>
+  </data>
+  <data name="PropertiesTableSectionHeaderUserData" xml:space="preserve">
+    <value>Dados do Usuário</value>
+  </data>
+  <data name="PropertyTableErrorNoMatchingContainer" xml:space="preserve">
+    <value>Nenhum container correspondente encontrado</value>
+  </data>
+  <data name="PropertyTableErrorNoMatchingParent" xml:space="preserve">
+    <value>Nenhum dispositivo pai encontrado</value>
+  </data>
+  <data name="PropertyTableHeaderRawProperties" xml:space="preserve">
+    <value>Propriedades Brutas</value>
+  </data>
+  <data name="PropertyTablePropertyLabelCommonLastUpdated" xml:space="preserve">
+    <value>Última Atualização</value>
+  </data>
+  <data name="PropertyTablePropertyLabelConfiguredMIDI1Protocol" xml:space="preserve">
+    <value>Protocolo MIDI 1.0</value>
+  </data>
+  <data name="PropertyTablePropertyLabelConfiguredMIDI2Protocol" xml:space="preserve">
+    <value>Protocolo MIDI 2.0</value>
+  </data>
+  <data name="PropertyTablePropertyLabelConfiguredReceiveJR" xml:space="preserve">
+    <value>Recebendo JR Timestamps</value>
+  </data>
+  <data name="PropertyTablePropertyLabelConfiguredSendJR" xml:space="preserve">
+    <value>Enviando JR Timestamps</value>
+  </data>
+  <data name="PropertyTablePropertyLabelContainerId" xml:space="preserve">
+    <value>Id</value>
+  </data>
+  <data name="PropertyTablePropertyLabelContainerKind" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="PropertyTablePropertyLabelContainerName" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="PropertyTablePropertyLabelDeviceIdentityLastUpdated" xml:space="preserve">
+    <value>Última Atualização da Identidade do Dispositivo</value>
+  </data>
+  <data name="PropertyTablePropertyLabelEndpointInfoLastUpdated" xml:space="preserve">
+    <value>Última Atualização das Informações do Endpoint</value>
+  </data>
+  <data name="PropertyTablePropertyLabelEndpointSuppliedNameLastUpdated" xml:space="preserve">
+    <value>Última Atualização do Nome do Endpoint</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlock" xml:space="preserve">
+    <value>Function Block</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockActive" xml:space="preserve">
+    <value>Ativo</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockDirection" xml:space="preserve">
+    <value>Direção</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockFirstGroupIndex" xml:space="preserve">
+    <value>Índice do Primeiro Grupo</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockGroupCount" xml:space="preserve">
+    <value>Contagem de Grupos</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockMaxSysEx8Streams" xml:space="preserve">
+    <value>Máximo de Streams SysEx 8</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockMIDI10Connection" xml:space="preserve">
+    <value>MIDI 1.0</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockMIDICIVersionFormat" xml:space="preserve">
+    <value>Versão/Formato MIDI CI</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlocksDeclaredCount" xml:space="preserve">
+    <value>Contagem Declarada de Function Blocks</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlocksStatic" xml:space="preserve">
+    <value>Function Blocks Estáticos</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockUIHint" xml:space="preserve">
+    <value>Dica de UI</value>
+  </data>
+  <data name="PropertyTablePropertyLabelGTBGroupCount" xml:space="preserve">
+    <value>Contagem de Grupos</value>
+  </data>
+  <data name="PropertyTablePropertyLabelGTBMaxInputBandwidth" xml:space="preserve">
+    <value>Largura de Banda Máxima de Entrada</value>
+  </data>
+  <data name="PropertyTablePropertyLabelGTBMaxOutputBandwidth" xml:space="preserve">
+    <value>Largura de Banda Máxima de Saída</value>
+  </data>
+  <data name="PropertyTablePropertyLabelParentId" xml:space="preserve">
+    <value>Id</value>
+  </data>
+  <data name="PropertyTablePropertyLabelParentKind" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="PropertyTablePropertyLabelParentName" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="PropertyTablePropertyLabelProductInstanceIdLastUpdated" xml:space="preserve">
+    <value>Última Atualização do Product Instance Id</value>
+  </data>
+  <data name="PropertyTablePropertyLabelProtocol" xml:space="preserve">
+    <value>Protocolo</value>
+  </data>
+  <data name="PropertyTablePropertyLabelSupportsReceivingJR" xml:space="preserve">
+    <value>Suporta Recebimento de JR Time</value>
+  </data>
+  <data name="PropertyTablePropertyLabelSupportsSendingJR" xml:space="preserve">
+    <value>Suporta Envio de JR Time</value>
+  </data>
+  <data name="PropertyTablePropertyLabelTransportId" xml:space="preserve">
+    <value>Id do Transporte</value>
+  </data>
+  <data name="PropertyTablePropertyLabelTransportCode" xml:space="preserve">
+    <value>Código do Transporte</value>
+  </data>
+  <data name="PropertyTablePropertyLabelTransportSuppliedName" xml:space="preserve">
+    <value>Nome Fornecido pelo Transporte</value>
+  </data>
+  <data name="PropertyTablePropertyLabelUMPVersion" xml:space="preserve">
+    <value>Versão UMP</value>
+  </data>
+  <data name="PropertyTablePropertyValueFunctionBlockSysEx8NotSupported" xml:space="preserve">
+    <value>SysEx 8 Não Suportado</value>
+  </data>
+  <data name="PropertyTablePropertyValueFunctionBlockSysEx8SingleStreamSupported" xml:space="preserve">
+    <value>Stream SysEx Único</value>
+  </data>
+  <data name="PropertyTablePropertyValueGTBInputBandwidthUnknownOrNotFixed" xml:space="preserve">
+    <value>0 (Desconhecido ou Não Fixo)</value>
+  </data>
+  <data name="PropertyTablePropertyValueSuffixFunctionBlockMultipleSysexStreams" xml:space="preserve">
+    <value>Streams SysEx</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionActiveConfiguration" xml:space="preserve">
+    <value>Da descoberta de endpoint e negociação de protocolo, representando a configuração atual do endpoint.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionContainer" xml:space="preserve">
+    <value>O container é como o Windows agrupa dispositivos relacionados</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionDeclaredCapabilities" xml:space="preserve">
+    <value>Da descoberta de endpoint e negociação de protocolo, representando as capacidades do endpoint.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionEndpointMetadata" xml:space="preserve">
+    <value>Metadados capturados usando a descoberta de endpoint MIDI 2.0</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionFunctionBlocks" xml:space="preserve">
+    <value>Function Blocks são descobertos através da descoberta de endpoint in-protocol.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionParentDevice" xml:space="preserve">
+    <value>O dispositivo que "possui" este endpoint. Em alguns casos, é um dispositivo de software.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionTransportInformation" xml:space="preserve">
+    <value>Do plugin de transporte no serviço (e do driver nos casos em que um driver é utilizado)</value>
+  </data>
+  <data name="PropertyTableSectionHeaderActiveConfiguration" xml:space="preserve">
+    <value>Configuração Ativa</value>
+  </data>
+  <data name="PropertyTableSectionHeaderAdditionalProperties" xml:space="preserve">
+    <value>Capacidades/Propriedades Adicionais</value>
+  </data>
+  <data name="PropertyTableSectionHeaderContainer" xml:space="preserve">
+    <value>Container</value>
+  </data>
+  <data name="PropertyTableSectionHeaderDeclaredCapabilities" xml:space="preserve">
+    <value>Capacidades Declaradas</value>
+  </data>
+  <data name="PropertyTableSectionHeaderFunctionBlocks" xml:space="preserve">
+    <value>Function Blocks</value>
+  </data>
+  <data name="PropertyTableSectionHeaderGroupTerminalBlocks" xml:space="preserve">
+    <value>Group Terminal Blocks</value>
+  </data>
+  <data name="PropertyTableSectionHeaderParentDevice" xml:space="preserve">
+    <value>Dispositivo Pai</value>
+  </data>
+  <data name="PropertyTableSectionHeaderTransportInformation" xml:space="preserve">
+    <value>Informações de Transporte</value>
+  </data>
+  <data name="PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent" xml:space="preserve">
+    <value>Function Blocks também estão presentes e serão mais precisos.</value>
+  </data>
+  <data name="PropertyValueNativeDataFormatByteStream" xml:space="preserve">
+    <value>Formato de Dados em Bytes (MIDI 1.0)</value>
+  </data>
+  <data name="PropertyValueNativeDataFormatUmp" xml:space="preserve">
+    <value>Universal MIDI Packet (protocolo MIDI 1.0 ou MIDI 2.0)</value>
+  </data>
+  <data name="PropertyValueNativeDataFormatUnknown" xml:space="preserve">
+    <value>Formato de Dados Desconhecido</value>
+  </data>
+  <data name="SendMessageEscapePressedMessage" xml:space="preserve">
+    <value>Tecla Escape pressionada. Envio de mensagens encerrado.</value>
+  </data>
+  <data name="SendMessageFloodWarning" xml:space="preserve">
+    <value>Aviso: enviar um grande número de mensagens sem atraso pode resultar em estouro dos buffers. Isso é especialmente verdadeiro para endpoints de software como o loopback, ou hardware externo lento. Pode ocorrer perda de mensagens.</value>
+  </data>
+  <data name="SendMessagePressEscapeToStopSendingMessage" xml:space="preserve">
+    <value>Pressione Escape para parar de enviar mensagens.</value>
+  </data>
+  <data name="SendMessageResultTableColumnHeaderTimestamp" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="SendMessageResultTableColumnHeaderWordsSent" xml:space="preserve">
+    <value>Palavras MIDI Enviadas</value>
+  </data>
+  <data name="SendMessageSendingThroughEndpointLabel" xml:space="preserve">
+    <value>Enviando mensagem(ns) MIDI através de</value>
+  </data>
+  <data name="SendMessageSessionNameSuffix" xml:space="preserve">
+    <value>Remetente</value>
+  </data>
+  <data name="StatusCreatingSessionAndOpeningEndpoint" xml:space="preserve">
+    <value>Criando sessão e abrindo endpoint...</value>
+  </data>
+  <data name="TableColumnHeaderCommonDetailedMessageType" xml:space="preserve">
+    <value>Tipo Específico</value>
+  </data>
+  <data name="TableColumnHeaderCommonMessageType" xml:space="preserve">
+    <value>Tipo de Mensagem</value>
+  </data>
+  <data name="TableColumnHeaderCommonTimestamp" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="ValidationErrorInvalidGroup" xml:space="preserve">
+    <value>O índice de grupo especificado é inválido. Especifique um índice de grupo entre 0 e 15.</value>
+  </data>
+  <data name="ValidationErrorInvalidMessageCount" xml:space="preserve">
+    <value>Por favor, forneça uma contagem &gt; 0.</value>
+  </data>
+  <data name="ValidationErrorPingCountTooHigh" xml:space="preserve">
+    <value>A contagem de ping especificada é muito alta. Por favor, forneça um valor &lt;= 255.</value>
+  </data>
+  <data name="ValidationErrorPingCountTooLow" xml:space="preserve">
+    <value>A contagem de ping especificada é muito baixa. Por favor, forneça um valor &gt; 0.</value>
+  </data>
+  <data name="ValidationErrorPingTimeoutTooLow" xml:space="preserve">
+    <value>O tempo limite especificado é muito baixo. Por favor, forneça um valor &gt;= 10ms.</value>
+  </data>
+  <data name="WatcherEscapePressedMessage" xml:space="preserve">
+    <value>Tecla Escape pressionada. Encerrando observador.</value>
+  </data>
+  <data name="WatcherPressEscapeToStopWatchingMessage" xml:space="preserve">
+    <value>Pressione Escape para parar de observar alterações de endpoints.</value>
+  </data>
+  <data name="CommandSendSysExFileDescription" xml:space="preserve">
+    <value>(Recurso Experimental) Enviar um arquivo de mensagens SysEx MIDI 1.0 ou MIDI 2.0 (7 ou 8 bits, binário ou texto) para um endpoint compatível.</value>
+  </data>
+  <data name="ErrorMidiServiceNotAvailable" xml:space="preserve">
+    <value>O Serviço MIDI não está disponível.</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherStopped" xml:space="preserve">
+    <value>Observador Parado</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherInitialEnumerationCompleted" xml:space="preserve">
+    <value>Enumeração Inicial Concluída</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointRemoved" xml:space="preserve">
+    <value>Endpoint Removido</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdated" xml:space="preserve">
+    <value>Endpoint Atualizado</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedName" xml:space="preserve">
+    <value>Nome Atualizado</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedEndpointInformation" xml:space="preserve">
+    <value>Informações do Endpoint Atualizadas</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedStreamConfiguration" xml:space="preserve">
+    <value>Configuração de Stream Atualizada</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedFunctionBlocks" xml:space="preserve">
+    <value>Function Blocks Atualizados</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedDeviceIdentity" xml:space="preserve">
+    <value>Identidade do Dispositivo Atualizada</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedUserMetadata" xml:space="preserve">
+    <value>Metadados do Usuário Atualizados</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedAdditionalCapabilities" xml:space="preserve">
+    <value>Capacidades Adicionais Atualizadas</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointAdded" xml:space="preserve">
+    <value>Endpoint Adicionado</value>
+  </data>
+  <data name="EndpointReconnected" xml:space="preserve">
+    <value>Endpoint reconectado</value>
+  </data>
+  <data name="CommonStringCanceled" xml:space="preserve">
+    <value>Cancelado</value>
+  </data>
+  <data name="ErrorSdkInitializationFailed" xml:space="preserve">
+    <value>O runtime do SDK do Windows MIDI Services falhou ao inicializar. Ele está instalado?</value>
+  </data>
+  <data name="ErrorSdkInitializerInitializationFailed" xml:space="preserve">
+    <value>O runtime do SDK do Windows MIDI Services falhou ao inicializar. Ele está instalado? (O objeto COM pode não estar disponível ou registrado)</value>
+  </data>
+  <data name="ErrorSdkInitializerInitializationFailedExceptionInCreate" xml:space="preserve">
+    <value>O runtime do SDK do Windows MIDI Services falhou ao inicializar. Ele está instalado? (Exceção ao criar inicializador)</value>
+  </data>
+  <data name="CommandEnumerateMdnsAdvertisementsDescription" xml:space="preserve">
+    <value>Listar anúncios MDNS descobertos para serviços Network MIDI 2.0 (UDP) na rede.</value>
+  </data>
+  <data name="ParameterPlayNotesIndexes" xml:space="preserve">
+    <value>Lista de índices de notas MIDI 1.0 separados por espaço (0-127 decimal)</value>
+  </data>
+  <data name="ParameterPlayNotesLengthMilliseconds" xml:space="preserve">
+    <value>Duração da nota em milissegundos decimais inteiros.</value>
+  </data>
+  <data name="ParameterPlayNotesGroupNumber" xml:space="preserve">
+    <value>Número (1-16 decimal) do grupo para enviar as mensagens</value>
+  </data>
+  <data name="ParameterPlayNotesChannelNumber" xml:space="preserve">
+    <value>Número (1-16 decimal) do canal para enviar as mensagens</value>
+  </data>
+  <data name="ParameterPlayNotesVelocity" xml:space="preserve">
+    <value>Velocidade da nota (1.0 - 100.0) como porcentagem decimal fracionária do valor máximo para o protocolo.</value>
+  </data>
+  <data name="ParameterPlayNotesForever" xml:space="preserve">
+    <value>Defina como true para continuar repetindo as notas até que você pressione a tecla Escape</value>
+  </data>
+  <data name="CommandPlayNotesDescription" xml:space="preserve">
+    <value>Enviar mensagens MIDI 1.0 ou 2.0 de note on e note off para o endpoint</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds" xml:space="preserve">
+    <value>Identificadores únicos atualizados</value>
+  </data>
+  <data name="CommandEnumerateEndpointPropertyKeysDescription" xml:space="preserve">
+    <value>Listar as chaves de propriedade específicas do Windows MIDI Services</value>
+  </data>
+  <data name="ParameterPlayNotesRestMilliseconds" xml:space="preserve">
+    <value>Duração do tempo de espera entre notas, em milissegundos decimais inteiros</value>
+  </data>
+  <data name="ParameterPlayNotesMidi2" xml:space="preserve">
+    <value>Defina como true para usar mensagens de protocolo MIDI 2.0 (tipo 4) em vez de protocolo MIDI 1.0 (tipo 2)</value>
+  </data>
+  <data name="ServiceSetAutoDelayedStartDescription" xml:space="preserve">
+    <value>Configurar o Serviço MIDI para iniciar logo após o Windows iniciar, para evitar atrasos de conexão com a primeira conexão feita por um aplicativo.</value>
+  </data>
+  <data name="ParameterServiceRestart" xml:space="preserve">
+    <value>Reiniciar o serviço ao concluir</value>
+  </data>
+  <data name="DirectionMessageSource" xml:space="preserve">
+    <value>Origem da Mensagem (MIDI In)</value>
+  </data>
+  <data name="DirectionMessageDestination" xml:space="preserve">
+    <value>Destino da Mensagem (MIDI Out)</value>
+  </data>
+  <data name="DirectionMessageBiDi" xml:space="preserve">
+    <value>Origem/Destino</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>Desconhecido</value>
+  </data>
+  <data name="ParameterSendMessageNoWait" xml:space="preserve">
+    <value>Não solicitar ao usuário que pressione uma tecla para fechar a conexão</value>
+  </data>
+  <data name="SendMessagePressEscapeToCloseConnectionMessage" xml:space="preserve">
+    <value>Pressione Escape para fechar a conexão quando o endpoint tiver recebido todas as mensagens.</value>
+  </data>
+  <data name="PropertyTableSectionHeaderMidi1Ports" xml:space="preserve">
+    <value>Portas MIDI 1 Associadas</value>
+  </data>
+  <data name="PropertyTableNoAssociatedMidi1SourcePorts" xml:space="preserve">
+    <value>Nenhuma origem MIDI 1 associada (portas MIDI in)</value>
+  </data>
+  <data name="PropertyTableNoAssociatedMidi1DestinationPorts" xml:space="preserve">
+    <value>Nenhum destino MIDI 1 associado (portas MIDI out)</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionMidi1Ports" xml:space="preserve">
+    <value>As portas MIDI 1.0 associadas. O número à esquerda do nome da porta é o índice atual da porta WinMM.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionGroupTerminalBlocks" xml:space="preserve">
+    <value>Para dispositivos USB MIDI 2.0, Group Terminal Blocks são funções de fallback para quando Function Blocks não estão disponíveis. Para dispositivos MIDI 1.0, Group Terminal Blocks têm correspondência 1:1 com portas MIDI (embora os nomes possam ser diferentes)</value>
+  </data>
+  <data name="DevicePurposeDiagnosticLoopback" xml:space="preserve">
+    <value>Loopback de Diagnóstico para fins de teste e solução de problemas</value>
+  </data>
+  <data name="DevicePurposeDiagnosticPing" xml:space="preserve">
+    <value>Ping de Diagnóstico para fins de teste (não para uso por aplicativos)</value>
+  </data>
+  <data name="DevicePurposeVirtualDeviceResponder" xml:space="preserve">
+    <value>Dispositivo Virtual (endpoint privado do lado do dispositivo, não para uso geral por aplicativos)</value>
+  </data>
+  <data name="DevicePurposeInBoxGeneralMidiSynth" xml:space="preserve">
+    <value>Sintetizador General MIDI integrado</value>
+  </data>
+  <data name="DevicePurposeNormalMessageEndpoint" xml:space="preserve">
+    <value>Endpoint de mensagens normal para uso por aplicativos</value>
+  </data>
+  <data name="DevicePurposeUnknown" xml:space="preserve">
+    <value>Finalidade do endpoint desconhecida</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionIdentification" xml:space="preserve">
+    <value>Informações básicas de identificação deste endpoint</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionUserData" xml:space="preserve">
+    <value>Informações personalizadas fornecidas pelo usuário através do aplicativo MIDI Settings e/ou arquivos de configuração.</value>
+  </data>
+  <data name="PropertyTableSectionHeaderMidiProperties" xml:space="preserve">
+    <value>Propriedades Específicas do MIDI</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionMidiProperties" xml:space="preserve">
+    <value>Propriedades adicionadas pelo Windows MIDI Services. O prefixo STRING_PKEY_MIDI_ foi omitido por brevidade.</value>
+  </data>
+  <data name="ParameterSendSysExFileVerbose" xml:space="preserve">
+    <value>Relatar saída detalhada ao enviar o arquivo</value>
+  </data>
+  <data name="ParameterSendSysExFileReplaceGroup" xml:space="preserve">
+    <value>Para mensagens de saída em formato UMP, substituir o índice de grupo por este novo valor. Se ausente, os índices de grupo do arquivo serão utilizados.</value>
+  </data>
+  <data name="StartingMidiService" xml:space="preserve">
+    <value>Iniciando Serviço MIDI ...</value>
+  </data>
+  <data name="ParameterSendClockTempo" xml:space="preserve">
+    <value>Tempo do relógio em batidas por minuto. Valores fracionários são permitidos.</value>
+  </data>
+  <data name="ParameterSendClockPPQN" xml:space="preserve">
+    <value>Mensagens de relógio (pulsos) por semínima. Normalmente é 24, mas para alguns usos, 48 é comum.</value>
+  </data>
+  <data name="ParameterSendClockGroupNumbers" xml:space="preserve">
+    <value>A lista de grupos para enviar as mensagens de relógio</value>
+  </data>
+  <data name="CommandSendClockDescription" xml:space="preserve">
+    <value>(Recurso Experimental) Enviar MIDI beat clock para um ou mais grupos em um endpoint</value>
+  </data>
+  <data name="SendClockPressEscapeToStopSendingMessage" xml:space="preserve">
+    <value>Pressione Escape para parar de enviar mensagens de MIDI beat clock.</value>
+  </data>
+  <data name="ParameterSendClockSendMidiStartMessage" xml:space="preserve">
+    <value>Defina esta opção para enviar uma mensagem MIDI Start</value>
+  </data>
+  <data name="ParameterSendClockSendMidiStopMessage" xml:space="preserve">
+    <value>Defina esta opção para enviar uma mensagem MIDI Stop</value>
+  </data>
+  <data name="PropertyTableSectionHeaderNameTableDestinationNames" xml:space="preserve">
+    <value>Tabela de nomes de destinos MIDI 1</value>
+  </data>
+  <data name="PropertyTableSectionHeaderNameTableSourceNames" xml:space="preserve">
+    <value>Tabela de nomes de origens MIDI 1</value>
+  </data>
+  <data name="PropertyTableLabelNameTableCustomName" xml:space="preserve">
+    <value>Nome Personalizado</value>
+  </data>
+  <data name="PropertyTableLabelNameTableLegacyName" xml:space="preserve">
+    <value>Nome Legado WinMM</value>
+  </data>
+  <data name="PropertyTableLabelNameTableNewStyleName" xml:space="preserve">
+    <value>Nome no Novo Estilo</value>
+  </data>
+  <data name="ParameterEndpointPropertiesIncludeNameTable" xml:space="preserve">
+    <value>Incluir a lista de possíveis nomes de portas MIDI 1.0 gerados na criação ou personalização do endpoint.</value>
+  </data>
+  <data name="PropertyTableLabelNameSelection" xml:space="preserve">
+    <value>Seleção de Nome de Porta MIDI 1.0</value>
+  </data>
+  <data name="PropertyTableValueNamingApproachDefault" xml:space="preserve">
+    <value>Usar Padrão do SO</value>
+  </data>
+  <data name="PropertyTableValueNamingApproachUseClassicCompatible" xml:space="preserve">
+    <value>Usar Nomes Compatíveis com WinMM Legado</value>
+  </data>
+  <data name="PropertyTableValueNamingApproachUseNewStyle" xml:space="preserve">
+    <value>Usar Nomes no Novo Estilo</value>
+  </data>
+  <data name="PropertyTableSectionHeaderPortNaming" xml:space="preserve">
+    <value>Nomeação de Portas</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionPortNaming" xml:space="preserve">
+    <value>O Windows MIDI Services oferece duas opções para nomear portas MIDI 1: A forma mais antiga compatível e uma abordagem mais nova que resulta em nomes melhores.</value>
+  </data>
+  <data name="PropertyTablePropertyLabelPortNamingApproach" xml:space="preserve">
+    <value>Abordagem/Preferência de Nomeação</value>
+  </data>
+  <data name="PropertyTablePropertyValuePortNamingApproachClassicCompatible" xml:space="preserve">
+    <value>WinMM Clássico Compatível (Nomes Legados)</value>
+  </data>
+  <data name="PropertyTablePropertyValuePortNamingApproachNewStyle" xml:space="preserve">
+    <value>Novo Estilo (Usar Nomes de Pin/Jack)</value>
+  </data>
+  <data name="PropertyTablePropertyValuePortNamingApproachDefault" xml:space="preserve">
+    <value>Usar configuração padrão de todo o sistema</value>
+  </data>
+  <data name="CommandMeasureDescription" xml:space="preserve">
+    <value>Medir desempenho MIDI</value>
+  </data>
+  <data name="CommandMeasureLoopbackPerformanceDescription" xml:space="preserve">
+    <value>Medir latência e jitter MIDI usando dois endpoints conectados entre si. Por exemplo, uma interface USB MIDI 1.0 com saída e entrada conectadas via cabo DIN.</value>
+  </data>
+  <data name="ParameterMeasureDestinationEndpointDeviceId" xml:space="preserve">
+    <value>O endpoint para o qual enviar mensagens</value>
+  </data>
+  <data name="ParameterMeasureSourceEndpointDeviceId" xml:space="preserve">
+    <value>O endpoint no qual escutar mensagens recebidas</value>
+  </data>
+  <data name="ParameterMeasureDestinationGroupNumber" xml:space="preserve">
+    <value>O número do grupo (1-16) para o qual você deseja enviar as mensagens.</value>
+  </data>
+  <data name="ParameterMeasureSourceGroupNumber" xml:space="preserve">
+    <value>O número do grupo (1-16) no qual você deseja escutar mensagens recebidas.</value>
+  </data>
+  <data name="PleasePickDestinationEndpoint" xml:space="preserve">
+    <value>Por favor, escolha um endpoint para usar para enviar as mensagens</value>
+  </data>
+  <data name="PleasePickSourceEndpoint" xml:space="preserve">
+    <value>Por favor, escolha um endpoint para usar para escutar mensagens recebidas</value>
+  </data>
+  <data name="ParameterMeasureUseScheduler" xml:space="preserve">
+    <value>Defina esta opção para usar o agendador de mensagens de saída para enviar as mensagens</value>
+  </data>
+  <data name="ParameterMeasureUseMidi2" xml:space="preserve">
+    <value>Defina esta opção para usar mensagens de canal MIDI 2.0 em vez de mensagens de canal MIDI 1.0</value>
+  </data>
+  <data name="ErrorUnableToFindEndpointDevice" xml:space="preserve">
+    <value>O id de dispositivo de endpoint fornecido não parece corresponder a nenhum dispositivo atualmente no sistema.</value>
+  </data>
+  <data name="ParameterMonitorEndpointDecodeMessages" xml:space="preserve">
+    <value>Mostrar informações decodificadas sobre a mensagem</value>
+  </data>
+  <data name="ParameterMonitorEndpointIncludeTimestamp" xml:space="preserve">
+    <value>Incluir o timestamp na saída exibida</value>
+  </data>
+  <data name="ParameterMonitorEndpointIncludeRealTimeMessages" xml:space="preserve">
+    <value>Incluir mensagens frequentes/ruidosas como Clock pulse e Active Sense</value>
+  </data>
+  <data name="ParameterCreateLoopbackAssociationId" xml:space="preserve">
+    <value>Id (deve ser um GUID válido) usado para associar os dois endpoints. Também usado ao remover o par de loopback.</value>
+  </data>
+  <data name="ParameterCreateLoopbackNameA" xml:space="preserve">
+    <value>Nome único para o lado A do par de loopback</value>
+  </data>
+  <data name="ParameterCreateLoopbackNameB" xml:space="preserve">
+    <value>Nome único para o lado B do par de loopback</value>
+  </data>
+  <data name="ParameterCreateLoopbackUniqueIdentifier" xml:space="preserve">
+    <value>Identificador único para o par de loopback</value>
+  </data>
+  <data name="CommandLoopbackDescription" xml:space="preserve">
+    <value>Operações em endpoints de loopback bidirecionais (MIDI 2.0).</value>
+  </data>
+  <data name="CommandCreateLoopbackDescription" xml:space="preserve">
+    <value>Criar um conjunto temporário de endpoints de loopback MIDI 2.0 (e MIDI 1.0), conectados entre si. Mensagens enviadas para o loopback A serão recebidas por B, e mensagens enviadas para B serão recebidas por A. </value>
+  </data>
+  <data name="ErrorCreatingLoopback" xml:space="preserve">
+    <value>Erro ao tentar criar endpoints de loopback.</value>
+  </data>
+  <data name="MessageLoopbackCreationSuccess" xml:space="preserve">
+    <value>Endpoints de loopback criados.</value>
+  </data>
+  <data name="LabelLoopbackEndpointIdentifierA" xml:space="preserve">
+    <value>Endpoint A</value>
+  </data>
+  <data name="LabelLoopbackEndpointIdentifierB" xml:space="preserve">
+    <value>Endpoint B</value>
+  </data>
+  <data name="LabelAssociationId" xml:space="preserve">
+    <value>Id de Associação</value>
+  </data>
+  <data name="MessageLoopbackCreationSuccessDetails" xml:space="preserve">
+    <value>Diferentemente dos loopbacks clássicos MIDI 1.0, estes são endpoints bidirecionais totalmente compatíveis com MIDI 2.0. Mensagens enviadas para o Loopback A serão recebidas pelo Loopback B. Mensagens enviadas por B serão recebidas por A. Aplicativos MIDI 1.0 verão 4 portas criadas (2 origens, 2 destinos) como resultado.
+
+Estes endpoints desaparecerão quando o serviço ou o PC for reiniciado. Para criar endpoints de loopback permanentes, use o aplicativo MIDI Settings.</value>
+  </data>
+  <data name="CommandRemoveLoopbackDescription" xml:space="preserve">
+    <value>Remover um par de endpoints de loopback fornecendo o id de associação</value>
+  </data>
+  <data name="ParameterRemoveLoopbackAssociationId" xml:space="preserve">
+    <value>O GUID que identifica exclusivamente o par de endpoints de loopback</value>
+  </data>
+  <data name="MessageLoopbackRemovalSuccess" xml:space="preserve">
+    <value>Par de endpoints de loopback removido.</value>
+  </data>
+  <data name="ErrorRemovingLoopback" xml:space="preserve">
+    <value>Erro ao tentar remover par de endpoints de loopback.</value>
+  </data>
+  <data name="ParameterCreateLoopbackRootName" xml:space="preserve">
+    <value>Fornecer um nome raiz em vez de nomes individuais para os endpoints. "(A)" e "(B)" serão adicionados a este nome para criar os dois endpoints.</value>
+  </data>
+  <data name="ErrorMidiFeatureNotEnabled" xml:space="preserve">
+    <value>O recurso Windows MIDI Services não parece estar habilitado neste PC. A habilitação para versões suportadas do Windows virá através do Windows Update. Se você acredita que isso é um erro, uma ferramenta de desinstalação de driver ou de registro pode ter corrompido as entradas de registro do MIDI. Por favor, execute a ferramenta midifixreg em um prompt de comando de Administrador.</value>
+  </data>
+  <data name="ParameterCreateBasicLoopbackName" xml:space="preserve">
+    <value>O nome do endpoint de loopback básico MIDI 1.0</value>
+  </data>
+  <data name="CommandCreateBasicLoopbackDescription" xml:space="preserve">
+    <value>Criar um endpoint de loopback básico temporário MIDI 1.0 para conectar dois aplicativos MIDI 1.0 entre si.</value>
+  </data>
+  <data name="MessageBasicLoopbackCreationSuccessDetails" xml:space="preserve">
+    <value>Este endpoint desaparecerá quando o serviço MIDI ou o PC for reiniciado. Para criar endpoints de loopback permanentes, use o aplicativo MIDI Settings.</value>
+  </data>
+  <data name="MessageBasicLoopbackCreationSuccess" xml:space="preserve">
+    <value>Endpoint de loopback criado</value>
+  </data>
+  <data name="LabelLoopbackEndpointIdentifier" xml:space="preserve">
+    <value>Id do Endpoint</value>
+  </data>
+  <data name="CommandBasicLoopbackDescription" xml:space="preserve">
+    <value>Operações em endpoints de loopback básico MIDI 1.0</value>
+  </data>
+  <data name="CommandRemoveBasicLoopbackDescription" xml:space="preserve">
+    <value>Remover um endpoint de loopback básico MIDI 1.0 fornecendo o id de associação</value>
+  </data>
+  <data name="ParameterCreateBasicLoopbackUniqueIdentifier" xml:space="preserve">
+    <value>Identificador único para o endpoint de loopback MIDI 1.0</value>
+  </data>
+  <data name="ParameterCreateBasicLoopbackAssociationId" xml:space="preserve">
+    <value>Id (deve ser um GUID válido) usado para identificar o loopback antes e depois de ser criado. Usado ao remover o loopback.</value>
+  </data>
+</root>
