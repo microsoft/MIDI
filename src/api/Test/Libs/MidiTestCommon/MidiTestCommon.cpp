@@ -20,7 +20,6 @@
 
 #include "MidiDefs.h"
 
-#include "FeatureStaging-MIDI2.h"
 #include "Feature_Servicing_MIDI2WaveAPIFix.h"
 #include "Feature_Servicing_MIDI2SendTimeout.h"
 #include "Feature_Servicing_MIDI2DeviceRemoval.h"
@@ -34,6 +33,7 @@
 #include "Feature_Servicing_MIDI2RTTimestamp.h"
 #include "Feature_Servicing_MIDI2WinmmAddBufferSizeCheck.h"
 #include "Feature_Servicing_MIDI2ContainerIds.h"
+#include "Feature_Servicing_MIDI2DriverHang.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -106,7 +106,6 @@ void PrintMidiMessage(PVOID payload, UINT32 payloadSize, UINT32 expectedPayloadS
 void PrintStagingStates()
 {
     // 2602
-    LOG_FEATURE_STATE(Feature_MIDI2);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2WaveAPIFix);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2SendTimeout);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2DeviceRemoval);
@@ -122,6 +121,7 @@ void PrintStagingStates()
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2RTTimestamp);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2WinmmAddBufferSizeCheck);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2ContainerIds);
+    LOG_FEATURE_STATE(Feature_Servicing_MIDI2DriverHang);
 }
 
 HRESULT StartMIDIService()

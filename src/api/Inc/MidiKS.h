@@ -89,6 +89,8 @@ protected:
 
     unique_mmcss_handle m_MmcssHandle;
     DWORD m_MmcssTaskId {0};
+
+    KSSTATE m_CurrentState {KSSTATE_STOP};
 };
 
 class KSMidiOutDevice : public KSMidiDevice
