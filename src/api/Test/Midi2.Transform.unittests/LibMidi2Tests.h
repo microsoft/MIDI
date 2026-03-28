@@ -26,7 +26,7 @@ public:
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         END_TEST_CLASS()
 
-        //TEST_CLASS_SETUP(ClassSetup);
+        TEST_CLASS_SETUP(ClassSetup);
         //TEST_CLASS_CLEANUP(ClassCleanup);
 
         //TEST_METHOD_SETUP(TestSetup);

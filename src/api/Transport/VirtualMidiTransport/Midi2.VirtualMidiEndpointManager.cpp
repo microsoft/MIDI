@@ -11,6 +11,7 @@
 #include "midi2.VirtualMidiTransport.h"
 
 #include "MidiEndpointNameTable.h"
+#include "Feature_Servicing_MIDI2ContainerIds.h"
 
 using namespace wil;
 using namespace Microsoft::WRL;
@@ -42,8 +43,13 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_MidiProtocolManager));
 
-
-    m_ContainerId = TRANSPORT_LAYER_GUID;           // we use the transport ID as the container ID for convenience
+    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+    {
+    }
+    else
+    {
+        m_ContainerId = TRANSPORT_LAYER_GUID;           // we use the transport ID as the container ID for convenience
+    }
 
     RETURN_IF_FAILED(CreateParentDevice());
 
@@ -169,7 +175,13 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
     createInfo.pszInstanceId = parentDeviceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
-    createInfo.pContainerId = &m_ContainerId;
+    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+    {
+    }
+    else
+    {
+        createInfo.pContainerId = &m_ContainerId;
+    }
 
     wil::unique_cotaskmem_string newDeviceId;
 

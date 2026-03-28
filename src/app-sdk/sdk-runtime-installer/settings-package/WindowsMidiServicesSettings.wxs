@@ -22,6 +22,16 @@
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings">
                         <Directory Id="SETTINGSAPP_ASSETS_FOLDER" Name="Assets" />
+                        <Directory Id="SETTINGSAPP_CONTROLS_FOLDER" Name="Controls" />
+                      <Directory Id="SETTINGSAPP_STYLES_FOLDER" Name="Styles" />
+                      <Directory Id="SETTINGSAPP_THEMES_FOLDER" Name="Themes" />
+                      <Directory Id="SETTINGSAPP_VIEWS_FOLDER" Name="Views">
+                        <Directory Id="SETTINGSAPP_VIEWS_CORE_PAGES_FOLDER" Name="Core Pages" />
+                        <Directory Id="SETTINGSAPP_VIEWS_ENDPOINT_MANAGEMENT_PAGES_FOLDER" Name="Endpoint Management Pages" />
+                        <Directory Id="SETTINGSAPP_VIEWS_TOOLS_PAGES_FOLDER" Name="Tools Pages" />
+                        <Directory Id="SETTINGSAPP_VIEWS_TRANSPORT_SETUP_PAGES_FOLDER" Name="Transport Setup Pages" />
+
+                      </Directory>
                     </Directory>
                 </Directory>
             </Directory>
@@ -128,6 +138,15 @@
       <ComponentRef Id="SettingsAppAssets"/>
       <ComponentRef Id="SharedEndpointsAssets"/>
       <ComponentRef Id="SharedTransportsAssets"/>
+      
+      <ComponentRef Id="ControlsXBF"/>
+      <ComponentRef Id="StylesXBF"/>
+      <ComponentRef Id="ThemesXBF"/>
+      <ComponentRef Id="ViewsCorePagesXBF"/>
+      <ComponentRef Id="ViewsEndpointManagementPagesXBF"/>
+      <ComponentRef Id="ViewsToolsPagesXBF"/>
+      <ComponentRef Id="ViewsTransportSetupPagesXBF"/>
+
     </Feature>
     </Package>
 </Wix>

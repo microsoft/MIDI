@@ -43,4 +43,4 @@ private:
 
     LONGLONG m_context{};
     uint8_t m_groupIndex{};
-};
+};

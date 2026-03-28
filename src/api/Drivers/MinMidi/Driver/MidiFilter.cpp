@@ -2,6 +2,7 @@
 #include "common.h"
 #include "MidiPin.h"
 #include "MidiFilter.h"
+#include "MidiDev.h"
 
 static const
 GUID g_Categories[] =
@@ -25,14 +26,28 @@ KSTOPOLOGY_CONNECTION g_FilterConnections[] =
     {KSFILTER_NODE, 3, KSFILTER_NODE, 2}
 };
 
-DEFINE_KSFILTER_DESCRIPTOR (g_MidiFilterDescriptor)
+DEFINE_KSFILTER_DESCRIPTOR (g_MidiFilterDescriptorBytestream)
 {
     &g_FilterDispatch,
     nullptr, // AutomationTable
     KSFILTER_DESCRIPTOR_VERSION,
     KSFILTER_FLAG_CRITICAL_PROCESSING,
     &KSNAME_Filter, // ReferenceGuid
-    DEFINE_KSFILTER_PIN_DESCRIPTORS (g_MidiPinDescriptors),
+    DEFINE_KSFILTER_PIN_DESCRIPTORS (g_MidiPinDescriptorsBytestream),
+    DEFINE_KSFILTER_CATEGORIES (g_Categories),
+    DEFINE_KSFILTER_NODE_DESCRIPTORS_NULL,
+    DEFINE_KSFILTER_CONNECTIONS (g_FilterConnections),
+    nullptr // ComponentId
+};
+
+DEFINE_KSFILTER_DESCRIPTOR (g_MidiFilterDescriptorUMP)
+{
+    &g_FilterDispatch,
+    nullptr, // AutomationTable
+    KSFILTER_DESCRIPTOR_VERSION,
+    KSFILTER_FLAG_CRITICAL_PROCESSING,
+    &KSNAME_Filter, // ReferenceGuid
+    DEFINE_KSFILTER_PIN_DESCRIPTORS (g_MidiPinDescriptorsUMP),
     DEFINE_KSFILTER_CATEGORIES (g_Categories),
     DEFINE_KSFILTER_NODE_DESCRIPTORS_NULL,
     DEFINE_KSFILTER_CONNECTIONS (g_FilterConnections),
@@ -41,8 +56,10 @@ DEFINE_KSFILTER_DESCRIPTOR (g_MidiFilterDescriptor)
 
 _Use_decl_annotations_
 MidiFilter::MidiFilter(
-    PKSFILTER Filter
-) : m_Filter(Filter)
+    PKSFILTER filter,
+    PFILTER_INSTANCE filterInstance
+) : m_Filter(filter),
+    m_FilterInstance(filterInstance)
 {
     PAGED_CODE();
 }
@@ -56,17 +73,30 @@ MidiFilter::~MidiFilter()
 _Use_decl_annotations_
 NTSTATUS
 MidiFilter::Create(
-    PKSFILTER Filter,
+    PKSFILTER filter,
     PIRP /*irp*/
 )
 {
     PAGED_CODE();
 
-    MidiFilter* midiFilter = new (POOL_FLAG_NON_PAGED) MidiFilter(Filter);
+    KsFilterAcquireControl(filter);
+    auto releaseDeviceOnExit = wil::scope_exit([filter]() { KsFilterReleaseControl(filter); });
+
+    // Filter instance information is passed through the factory context, stored
+    // on the device
+    PKSFILTERFACTORY filterFactory = KsFilterGetParentFilterFactory(filter);
+
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, !filterFactory);
+
+    PFILTER_INSTANCE filterInstance = (FILTER_INSTANCE*) filterFactory->Context;
+
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, !filterInstance);
+
+    MidiFilter* midiFilter = new (POOL_FLAG_NON_PAGED) MidiFilter(filter, filterInstance);
 
     NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, !midiFilter);
 
-    Filter->Context = (PVOID)midiFilter;
+    filter->Context = (PVOID)midiFilter;
 
     return STATUS_SUCCESS;
 }
@@ -74,17 +104,38 @@ MidiFilter::Create(
 _Use_decl_annotations_
 NTSTATUS
 MidiFilter::Close(
-    PKSFILTER Filter,
-    PIRP /* Irp */
+    PKSFILTER filter,
+    PIRP irp
 )
 {
     PAGED_CODE();
 
-    MidiFilter * midiFilter = (MidiFilter *)Filter->Context;
+    KsFilterAcquireControl(filter);
+    auto releaseDeviceOnExit = wil::scope_exit([filter]() { KsFilterReleaseControl(filter); });
+
+    MidiFilter * midiFilter = (MidiFilter *)filter->Context;
     if (midiFilter)
     {
+        for (UINT i = 0; i < filter->Descriptor->PinDescriptorsCount; i++)
+        {
+            PKSPIN pin = (PKSPIN) KsFilterGetFirstChildPin(filter, i);
+            while (pin)
+            {
+                PKSPIN nextPin = KsPinGetNextSiblingPin(pin);
+            
+                // Get the MidiFilter context and clean it up
+                MidiPin* midiPin = (MidiPin*)pin->Context;
+                if (midiPin)
+                {
+                    midiPin->Close(pin, irp);
+                }
+
+                pin = nextPin;
+            }
+        }
+
         delete midiFilter;
-        Filter->Context = nullptr;
+        filter->Context = nullptr;
     }
 
     return STATUS_SUCCESS;
@@ -94,21 +145,22 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 CreateFilterFactory(
-    PKSDEVICE device
+    PKSDEVICE device,
+    PFILTER_INSTANCE filterInstance
 )
 {
     PAGED_CODE();
 
-    PKSFILTERFACTORY pKsFilterFactory = nullptr;
-
     NT_RETURN_IF_NTSTATUS_FAILED(KsCreateFilterFactory( device->FunctionalDeviceObject,
-                                      &g_MidiFilterDescriptor,
-                                      L"MinMidi",
+                                      &(filterInstance->FilterDescriptor),
+                                      (PWSTR) filterInstance->ReferenceString,
                                       nullptr,
                                       KSCREATE_ITEM_FREEONSTOP,
                                       nullptr, // Sleep Callback
                                       nullptr, // Wake Callback
-                                      &pKsFilterFactory));
+                                      &(filterInstance->FilterFactory)));
+
+    filterInstance->FilterFactory->Context = (PVOID) filterInstance;
 
     return STATUS_SUCCESS;
 }

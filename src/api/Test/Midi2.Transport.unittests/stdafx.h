@@ -2,7 +2,7 @@
 #pragma once
 
 
-// this is a hack, but because this is a test project, and we know we're not
+// this is a hack, but because this is a test project, and know we're not
 // using coroutines in our tests, we'll risk it. 
 #define _ALLOW_COROUTINE_ABI_MISMATCH
 
@@ -23,5 +23,30 @@
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
 
+#include <Devpkey.h>
+#include "MidiSwEnum.h"
+#include <initguid.h>
+#include "MidiDefs.h"
+#include "MidiKsDef.h"
+#include "MidiKsCommon.h"
+#include "MidiXProc.h"
+#include <mmdeviceapi.h>
+#include "KsHandleWrapper.h"
+#include "MidiKsEnum.h"
+
+#include <wil/resource.h>
+#include <setupapi.h>
+#include <cfgmgr32.h>
+
+#include <mmsystem.h>
+#include <mmeapi.h>
+#include <mmddk.h>
+
 #include "MidiTestCommon.h"
+
+#include "Midi2MidiSrvTransport.h"
+#include "Midi2KSTransport.h"
+#include "Midi2KSAggregateTransport.h"
+
+#include "MinMidiControl.h"
 

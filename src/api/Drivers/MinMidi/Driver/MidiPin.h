@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
-extern const KSPIN_DESCRIPTOR_EX g_MidiPinDescriptors[4];
+extern const KSPIN_DESCRIPTOR_EX g_MidiPinDescriptorsBytestream[4];
+extern const KSPIN_DESCRIPTOR_EX g_MidiPinDescriptorsUMP[4];
 
 class MidiFilter;
 
@@ -45,7 +46,8 @@ public:
     __drv_maxIRQL(PASSIVE_LEVEL)
     PAGED_CODE_SEG
     MidiPin(
-        _In_ PKSPIN Pin
+        _In_ PKSPIN pin,
+        _In_ MidiFilter *filter
     );
 
     __drv_maxIRQL(PASSIVE_LEVEL)
@@ -59,8 +61,8 @@ public:
     static
     NTSTATUS
     Create(
-        _In_ PKSPIN Pin,
-        _In_ PIRP Irp 
+        _In_ PKSPIN pin,
+        _In_ PIRP irp 
     );
 
     _Must_inspect_result_
@@ -69,8 +71,8 @@ public:
     static
     NTSTATUS
     Close(
-        _In_ PKSPIN Pin,
-        _In_ PIRP Irp 
+        _In_ PKSPIN pin,
+        _In_ PIRP irp 
     );
 
     _Must_inspect_result_
@@ -79,7 +81,7 @@ public:
     static
     NTSTATUS
     Process(
-        _In_ PKSPIN Pin 
+        _In_ PKSPIN pin 
     );
 
     _Must_inspect_result_
@@ -88,9 +90,9 @@ public:
     static
     NTSTATUS
     SetDeviceState(
-        _In_ PKSPIN Pin,
-        _In_ KSSTATE ToState,
-        _In_ KSSTATE FromState 
+        _In_ PKSPIN pin,
+        _In_ KSSTATE toState,
+        _In_ KSSTATE fromState 
     );
 
     _Must_inspect_result_
@@ -100,9 +102,9 @@ public:
     NTSTATUS
     GetLoopedStreamingBuffer
     (
-        _In_ PIRP                          Irp,
-        _In_ PKSMIDILOOPED_BUFFER_PROPERTY Request,
-        _Inout_ PKSMIDILOOPED_BUFFER          Buffer
+        _In_ PIRP                          irp,
+        _In_ PKSMIDILOOPED_BUFFER_PROPERTY request,
+        _Inout_ PKSMIDILOOPED_BUFFER       buffer
     );
 
     _Must_inspect_result_
@@ -112,9 +114,9 @@ public:
     NTSTATUS
     GetLoopedStreamingRegisters
     (
-        _In_ PIRP                      Irp,
-        _In_ PKSPROPERTY               Request,
-        _Inout_ PKSMIDILOOPED_REGISTERS   Buffer
+        _In_ PIRP                       irp,
+        _In_ PKSPROPERTY                request,
+        _Inout_ PKSMIDILOOPED_REGISTERS buffer
     );
 
     _Must_inspect_result_
@@ -124,9 +126,9 @@ public:
     NTSTATUS
     SetLoopedStreamingNotificationEvent
     (
-        _In_ PIRP                   Irp,
-        _In_ PKSPROPERTY            Request,
-        _In_ PKSMIDILOOPED_EVENT2   Buffer
+        _In_ PIRP                   irp,
+        _In_ PKSPROPERTY            request,
+        _In_ PKSMIDILOOPED_EVENT2   buffer
     );
 
     _Must_inspect_result_
@@ -142,7 +144,6 @@ public:
     );
 
 private:
-
     static KSTART_ROUTINE WorkerThread;
 
     __drv_maxIRQL(PASSIVE_LEVEL)
@@ -162,7 +163,7 @@ private:
     (
         _In_ UINT32 bufferSize,
         _In_ KPROCESSOR_MODE mode,
-        _In_ BOOL LockPages,
+        _In_ BOOL lockPages,
         _In_opt_ PSINGLE_BUFFER_MAPPING baseMapping,
         _Inout_ PSINGLE_BUFFER_MAPPING mapping
     );

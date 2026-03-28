@@ -668,6 +668,7 @@ class Build : NukeBuild
             // build x64 and Arm64
         });
 
+
     Target T_BuildSettingsApp => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildAndPackAllAppSDKs)
@@ -770,7 +771,10 @@ class Build : NukeBuild
                 paths.Add(settingsOutputFolder / "System.Management.dll");
                 paths.Add(settingsOutputFolder / "System.ServiceProcess.ServiceController.dll");
 
-             //   paths.Add(settingsOutputFolder / "System.Text.Json.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Graphics.Imaging.Projection.dll");
+                
+
+                //   paths.Add(settingsOutputFolder / "System.Text.Json.dll");
 
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.dll");
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.Projection.dll");
@@ -803,6 +807,10 @@ class Build : NukeBuild
                 paths.Add(settingsOutputFolder / "Microsoft.Windows.Widgets.Projection.dll");
 
 
+                paths.Add(settingsOutputFolder / "App.xbf");
+                paths.Add(settingsOutputFolder / "MainWindow.xbf");
+
+
                 // TODO: This doesn't deal with any localization content
 
                 // copy all the globbed files
@@ -822,6 +830,65 @@ class Build : NukeBuild
                 {
                     f.CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
                 }
+
+                // this is a really stupid way to do this, but just trying to fit into existing structure here
+                // put on the backlog to make this more robust and less silly
+                List<AbsolutePath> controlsXbf = [];
+                controlsXbf.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Controls" / "*.xbf"));
+
+                List<AbsolutePath> stylesXbf = [];
+                stylesXbf.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Styles" / "*.xbf"));
+
+                List<AbsolutePath> themesXbf = [];
+                themesXbf.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Themes" / "*.xbf"));
+
+                List<AbsolutePath> viewsCorePagesXbf = [];
+                viewsCorePagesXbf.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Views" / "Core Pages" / "*.xbf"));
+
+                List<AbsolutePath> viewsEndpointManagementPagesXbf = [];
+                viewsEndpointManagementPagesXbf.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Views" / "Endpoint Management Pages" / "*.xbf"));
+
+                List<AbsolutePath> viewsToolsPagesXbf = [];
+                viewsToolsPagesXbf.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Views" / "Tools Pages" / "*.xbf"));
+
+                List<AbsolutePath> viewsTransportSetupPagesXbf = [];
+                viewsTransportSetupPagesXbf.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Views" / "Transport Setup Pages" / "*.xbf"));
+
+                foreach (var f in controlsXbf)
+                {
+                    f.CopyToDirectory(stagingFolder / "Controls", ExistsPolicy.FileOverwrite);
+                }
+
+                foreach (var f in stylesXbf)
+                {
+                    f.CopyToDirectory(stagingFolder / "Styles", ExistsPolicy.FileOverwrite);
+                }
+
+                foreach (var f in themesXbf)
+                {
+                    f.CopyToDirectory(stagingFolder / "Themes", ExistsPolicy.FileOverwrite);
+                }
+
+                foreach (var f in viewsCorePagesXbf)
+                {
+                    f.CopyToDirectory(stagingFolder / "Views" / "Core Pages", ExistsPolicy.FileOverwrite);
+                }
+
+                foreach (var f in viewsEndpointManagementPagesXbf)
+                {
+                    f.CopyToDirectory(stagingFolder / "Views" / "Endpoint Management Pages", ExistsPolicy.FileOverwrite);
+                }
+
+                foreach (var f in viewsToolsPagesXbf)
+                {
+                    f.CopyToDirectory(stagingFolder / "Views" / "Tools Pages", ExistsPolicy.FileOverwrite);
+                }
+
+                foreach (var f in viewsTransportSetupPagesXbf)
+                {
+                    f.CopyToDirectory(stagingFolder / "Views" / "Transport Setup Pages", ExistsPolicy.FileOverwrite);
+                }
+
 
                 // also write lines to the setup include file
 
@@ -859,6 +926,65 @@ class Build : NukeBuild
                         }
 
                         writer.WriteLine("    </Component>");
+
+
+                        // Controls XBF
+                        writer.WriteLine("    <Component Id=\"ControlsXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_CONTROLS_FOLDER\" Guid =\"11c285bc-ee74-46d0-bdf2-0031a584e8f8\">");
+                        foreach (var f in controlsXbf)
+                        {
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Controls\\{f.Name}\" /> ");
+                        }
+                        writer.WriteLine("    </Component>");
+
+                        // Styles XBF
+                        writer.WriteLine("    <Component Id=\"StylesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_STYLES_FOLDER\" Guid =\"50dfb652-ca6a-4c5d-827d-212d7904000e\">");
+                        foreach (var f in stylesXbf)
+                        {
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Styles\\{f.Name}\" /> ");
+                        }
+                        writer.WriteLine("    </Component>");
+
+                        // Themes XBF
+                        writer.WriteLine("    <Component Id=\"ThemesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_THEMES_FOLDER\" Guid =\"47f1c6b9-4dca-40ac-8fe8-57d02336ea6d\">");
+                        foreach (var f in themesXbf)
+                        {
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Themes\\{f.Name}\" /> ");
+                        }
+                        writer.WriteLine("    </Component>");
+
+                        // Views\Core Pages XBF
+                        writer.WriteLine("    <Component Id=\"ViewsCorePagesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_VIEWS_CORE_PAGES_FOLDER\" Guid =\"78e8fba4-5e7b-45c6-a353-302bb4cfc923\">");
+                        foreach (var f in viewsCorePagesXbf)
+                        {
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Core Pages\\{f.Name}\" /> ");
+                        }
+                        writer.WriteLine("    </Component>");
+
+                        // Views\Endpoint Management Pages XBF
+                        writer.WriteLine("    <Component Id=\"ViewsEndpointManagementPagesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_VIEWS_ENDPOINT_MANAGEMENT_PAGES_FOLDER\" Guid =\"ca35002b-b144-4d55-b28c-0a90685f9340\">");
+                        foreach (var f in viewsEndpointManagementPagesXbf)
+                        {
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Endpoint Management Pages\\{f.Name}\" /> ");
+                        }
+                        writer.WriteLine("    </Component>");
+
+                        // Views\Tools Pages XBF
+                        writer.WriteLine("    <Component Id=\"ViewsToolsPagesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_VIEWS_TOOLS_PAGES_FOLDER\" Guid =\"f83a3ae0-b76c-4437-a4d5-443d25c9ea65\">");
+                        foreach (var f in viewsToolsPagesXbf)
+                        {
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Tools Pages\\{f.Name}\" /> ");
+                        }
+                        writer.WriteLine("    </Component>");
+
+                        // Views\Transport Setup Pages XBF
+                        writer.WriteLine("    <Component Id=\"ViewsTransportSetupPagesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_VIEWS_TRANSPORT_SETUP_PAGES_FOLDER\" Guid =\"8ab2aeab-88b5-4075-816f-50a32ce18eef\">");
+                        foreach (var f in viewsTransportSetupPagesXbf)
+                        {
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Transport Setup Pages\\{f.Name}\" /> ");
+                        }
+                        writer.WriteLine("    </Component>");
+
+
                         writer.WriteLine("  </Fragment>");
                         writer.WriteLine("</Wix>");
                     }

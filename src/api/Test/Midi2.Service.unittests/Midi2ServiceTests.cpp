@@ -542,6 +542,8 @@ bool Midi2ServiceTests::TestCleanup()
 
 bool Midi2ServiceTests::ClassSetup()
 {
+    PrintStagingStates();
+
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     return true;

@@ -235,3 +235,13 @@ void MidiBSToUMPTransformTests::TestTimingClock()
 //
 //    InternalTestBytes(groupIndex, bytes, _countof(bytes), 1, expectedWords);
 //}
+
+bool MidiBSToUMPTransformTests::ClassSetup()
+{
+    PrintStagingStates();
+
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    return true;
+}
+
