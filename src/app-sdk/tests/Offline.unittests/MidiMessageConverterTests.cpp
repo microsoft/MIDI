@@ -41,7 +41,6 @@ void MidiMessageConverterTests::TestConvertControlChangeMessages()
 
     LOG_OUTPUT(L"Building MIDI 1.0 CV Message");
 
-
     for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
     {
         auto message = MidiMessageConverter::ConvertMidi1Message(
@@ -57,7 +56,6 @@ void MidiMessageConverterTests::TestConvertControlChangeMessages()
         std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
         VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
     }
-
 }
 
 void MidiMessageConverterTests::TestConvertNoteOnMessages()
@@ -68,7 +66,6 @@ void MidiMessageConverterTests::TestConvertNoteOnMessages()
 
     LOG_OUTPUT(L"Building MIDI 1.0 CV Message");
 
-
     for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
     {
         auto message = MidiMessageConverter::ConvertMidi1Message(
@@ -84,7 +81,6 @@ void MidiMessageConverterTests::TestConvertNoteOnMessages()
         std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
         VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
     }
-
 }
 
 void MidiMessageConverterTests::TestConvertNoteOffMessages()
@@ -95,7 +91,6 @@ void MidiMessageConverterTests::TestConvertNoteOffMessages()
 
     LOG_OUTPUT(L"Building MIDI 1.0 Note Off Message");
 
-
     for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
     {
         auto message = MidiMessageConverter::ConvertMidi1Message(
@@ -112,7 +107,6 @@ void MidiMessageConverterTests::TestConvertNoteOffMessages()
         std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
         VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
     }
-
 }
 
 void MidiMessageConverterTests::TestConvertClockMessages()
@@ -152,6 +146,5 @@ void MidiMessageConverterTests::TestConvertClockMessages()
         VERIFY_ARE_EQUAL(message2.Word0(), expectedWord0);
         VERIFY_ARE_EQUAL(message3.Word0(), expectedWord0);
     }
-
 }
 
