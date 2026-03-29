@@ -271,6 +271,10 @@ std::vector<std::wstring> CheckRegistryAndGetValuesToDelete(_In_ std::wstring ke
                         {
                             WriteInfoDetail(L"Found CoolSoft MIDI Mapper '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
                         }
+                        else if (driverName == L"virtualmidisynth.dll" && valueName != L"midi" && valueName != L"midi1")
+                        {
+                            WriteInfoDetail(L"Found CoolSoft Virtual MIDI Synth '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
+                        }
                         else
                         {
                             WriteErrorDetail(L"Found value '" + valueName + L"' with value '" + driverName + L"'");
