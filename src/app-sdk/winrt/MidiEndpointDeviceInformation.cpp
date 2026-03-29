@@ -95,6 +95,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             ).get();
 
 
+            // TODO: this code checks too hard. It can end up getting the bus enumerator instead of the
+            // actual parent device, so needs to change.
+
             if (myDevice != nullptr)
             {
                 //auto parentDevice = devices.GetAt(0);
