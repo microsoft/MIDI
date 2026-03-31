@@ -16,6 +16,14 @@
 #define MAXIMUM_LOOPED_BUFFER_SIZE (PAGE_SIZE * 0x100)
 static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped buffer size may not exceed 1/2 MAX_ULONG");
 
+// Get the current time, in 100ns units
+ULONGLONG GetCurrentMIDITime( void )
+{
+    LARGE_INTEGER   liFrequency,liTime;
+    liTime = KeQueryPerformanceCounter(&liFrequency);
+    return (KSCONVERT_PERFORMANCE_TIME(liFrequency.QuadPart,liTime));
+}
+
 static const
 KSDATARANGE_MUSIC g_MidiStreamDataRangeUMP[] =
 {
@@ -605,7 +613,7 @@ MidiPin::Process(
                             {
                                 // copy the data in and add it to the list
                                 message->Size = musicHeader->ByteCount;
-                                message->Position = streamPtr->StreamHeader->PresentationTime.Time;
+                                message->Position = GetCurrentMIDITime();
                                 message->BufferIndex = (BYTE *) message->Buffer;
                                 RtlCopyMemory(message->Buffer, pData, musicHeader->ByteCount);
                                 InsertTailList(&This->m_Filter->m_FilterInstance->MidiInPin->m_LoopbackMessageQueue, &message->ListEntry);
@@ -677,6 +685,7 @@ MidiPin::Process(
                 ULONG numBytesToCopy = min(streamPtr->OffsetOut.Remaining - sizeof(KSMUSICFORMAT), message->Size);
                 ULONG copySize = sizeof(KSMUSICFORMAT) + numBytesToCopy;
                 ULONG copySizeAligned = (copySize + 3) & ~3;
+                LONGLONG position = message->Position;
 
                 // if we exceed the output buffer after aligning the buffer,
                 // remove the unaligned portion from the copy, do that in the next
@@ -688,8 +697,6 @@ MidiPin::Process(
                 }
 
                 RtlCopyMemory(midiMessage, message->BufferIndex, numBytesToCopy);
-
-                streamPtr->StreamHeader->PresentationTime.Time = message->Position;
 
                 if (numBytesToCopy < message->Size)
                 {
@@ -710,7 +717,8 @@ MidiPin::Process(
     
                 musicHeader->ByteCount = numBytesToCopy;
 
-                musicHeader->TimeDeltaMs = 0;
+                ASSERT(message->Position >= m_StartTime);
+                musicHeader->TimeDeltaMs = (ULONG)((position - This->m_StartTime) / 10000); // 100ns->Ms for delta MSec
 
                 KsStreamPointerAdvanceOffsetsAndUnlock(streamPtr, 0, copySizeAligned, TRUE);
 
@@ -1030,6 +1038,8 @@ MidiPin::SetDeviceState(
                         KeSetPriorityThread(This->m_WorkerThread, HIGH_PRIORITY);
                     }
                 }
+
+                This->m_StartTime = GetCurrentMIDITime();
             }
             break;
         default:

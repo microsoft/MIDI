@@ -198,6 +198,9 @@ private:
     MidiFilter * m_Filter {nullptr};
     KSSTATE m_DeviceState {KSSTATE_STOP};
 
+    // Time, in 100ns units, when the pin was started
+    ULONGLONG m_StartTime {0};
+
     // true for cyclic, false for standard
     BOOL m_IsLooped {FALSE};
 
