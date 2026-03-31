@@ -58,6 +58,9 @@
 #define MIDIDIAG_SECTION_LABEL_ENUM_REGISTRY_DRIVERS32                   "reg_drivers32"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY                    "reg_drivers32_entry"
 
+#define MIDIDIAG_SECTION_LABEL_ENUM_REGISTRY_DRIVERS32WOW                "reg_drivers32wow"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32WOW_ENTRY                 "reg_drivers32wow_entry"
+
 #define MIDIDIAG_SECTION_LABEL_ENUM_COM                                  "enum_com"
 
 
