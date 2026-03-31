@@ -34,6 +34,7 @@
 #include "Feature_Servicing_MIDI2WinmmAddBufferSizeCheck.h"
 #include "Feature_Servicing_MIDI2ContainerIds.h"
 #include "Feature_Servicing_MIDI2DriverHang.h"
+#include "Feature_Servicing_MIDI2LegacyTimestamp.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -122,6 +123,9 @@ void PrintStagingStates()
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2WinmmAddBufferSizeCheck);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2ContainerIds);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2DriverHang);
+
+    // 2605
+    LOG_FEATURE_STATE(Feature_Servicing_MIDI2LegacyTimestamp);
 }
 
 HRESULT StartMIDIService()

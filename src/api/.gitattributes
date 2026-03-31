@@ -18,7 +18,6 @@ packages.config text eol=crlf
 *.idl text eol=crlf
 *.rgs text eol=crlf
 *.rc text eol=crlf
-*.inf text eol=crlf
 *.json text eol=crlf
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
