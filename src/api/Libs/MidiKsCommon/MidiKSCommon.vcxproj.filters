@@ -18,20 +18,21 @@
     <ClCompile Include="MidiKsCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-	<ClCompile Include="KsHandleWrapper.cpp">
+    <ClCompile Include="KsHandleWrapper.cpp">
       <Filter>Source Files</Filter>
-	</ClCompile>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Inc\MidiKSCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-	<ClInclude Include="..\..\Inc\KsHandleWrapper.h">
+    <ClInclude Include="..\..\Inc\KsHandleWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

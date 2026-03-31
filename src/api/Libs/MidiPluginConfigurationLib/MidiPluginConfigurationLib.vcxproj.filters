@@ -19,9 +19,6 @@
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\Inc\MidiEndpointCustomProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,5 +39,8 @@
     <ClCompile Include="MidiEndpointCustomPropertiesCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
