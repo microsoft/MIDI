@@ -32,6 +32,9 @@
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateTransport.dll" SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateTransport.pdb"/>
 
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BS2UMPTransform.dll" SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BS2UMPTransform.pdb"/>
+
         </Component>
       
       <Component Id="RestartService"

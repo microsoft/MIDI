@@ -123,6 +123,9 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         {
             translatedWords.push_back(m_BS2UMP.readUMP());
         }
+
+        // due to m-audio driver bug, force a clear here if not in SysEx, we've received a complete message, and next byte is 0x00?
+
     }
 
     if (translatedWords.size() > 0)
