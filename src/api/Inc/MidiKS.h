@@ -163,4 +163,7 @@ private:
     BOOL m_Running{ TRUE };
 
     unique_mmcss_handle m_ThreadOwnedMmcssHandle;
+
+    LONGLONG m_StartTime{0};
+    LONGLONG m_qpcFrequency{0};
 };
