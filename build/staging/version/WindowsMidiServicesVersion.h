@@ -9,12 +9,12 @@
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L"GitHub Preview"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2026-03-31"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"Service Preview 17"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"1.0.17-preview.17.3"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"1.0.17-preview.17.11"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      1
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      0
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      17
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               3
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"preview.17.3"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"1.0.17.3"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               11
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"preview.17.11"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"1.0.17.11"
 
 #endif
