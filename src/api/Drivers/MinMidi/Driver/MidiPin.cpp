@@ -716,8 +716,6 @@ MidiPin::Process(
                 }
     
                 musicHeader->ByteCount = numBytesToCopy;
-
-                ASSERT(message->Position >= m_StartTime);
                 musicHeader->TimeDeltaMs = (ULONG)((position - This->m_StartTime) / 10000); // 100ns->Ms for delta MSec
 
                 KsStreamPointerAdvanceOffsetsAndUnlock(streamPtr, 0, copySizeAligned, TRUE);
