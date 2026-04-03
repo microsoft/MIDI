@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -68,6 +69,14 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiServiceRegistrySettingsService _registrySettingsService;
         private readonly IMidiConsoleToolsService _consoleToolsService;
 
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern int MessageBox(
+                            IntPtr hWnd,
+                            string lpText,
+                            string lpCaption,
+                            int uType);
+
+
         public GlobalMidiSettingsViewModel(
             IMidiServiceRegistrySettingsService registrySettingsService,
             IMidiConsoleToolsService consoleToolsService)
@@ -91,8 +100,26 @@ namespace Microsoft.Midi.Settings.ViewModels
                     if (proc != null)
                     {
                         proc.WaitForExit();
+
+                        if (proc.ExitCode == 0)
+                        {
+                            MessageBox(
+                                (IntPtr)0,
+                                "Message_ServiceSetToAutoStart".GetLocalized(),
+                                "AppDisplayName".GetLocalized(),
+                                0);
+                        }
+                        else
+                        {
+                            MessageBox(
+                                (IntPtr)0,
+                                "Error_ServiceNotSetToAutoStart".GetLocalized(),
+                                "AppDisplayName".GetLocalized(),
+                                0);
+                        }
                     }
                 }
+
 
             });
 
@@ -109,11 +136,42 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     if (UseNewStyleWinMMPortNames)
                     {
-                        _registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle);
+                        if (_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle))
+                        {
+                            MessageBox(
+                                (IntPtr)0,
+                                "Message_DefaultNamingSetToNewStyle".GetLocalized(),
+                                "AppDisplayName".GetLocalized(),
+                                0);
+                        }
+                        else
+                        {
+                            MessageBox(
+                                (IntPtr)0,
+                                "Error_UnableToChangeDefaultNamingStyle".GetLocalized(),
+                                "AppDisplayName".GetLocalized(),
+                                0);
+                        }
                     }
                     else
                     {
-                        _registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible);
+                        if (_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible))
+                        {
+                            MessageBox(
+                                (IntPtr)0,
+                                "Message_DefaultNamingSetToWinMMStyle".GetLocalized(),
+                                "AppDisplayName".GetLocalized(),
+                                0);
+                        }
+                        else
+                        {
+                            MessageBox(
+                                (IntPtr)0,
+                                "Error_UnableToChangeDefaultNamingStyle".GetLocalized(),
+                                "AppDisplayName".GetLocalized(),
+                                0);
+                        }
+
                     }
                 }
             });

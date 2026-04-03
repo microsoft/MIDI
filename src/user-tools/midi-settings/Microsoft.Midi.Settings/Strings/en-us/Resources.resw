@@ -820,4 +820,19 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   <data name="Error_SettingsAppCouldNotAutomaticallyRestart" xml:space="preserve">
     <value>The MIDI Settings app could not automatically close and restart. Please close the application and then relaunch it.</value>
   </data>
+  <data name="Message_ServiceSetToAutoStart" xml:space="preserve">
+    <value>The Windows MIDI Service has been set to auto-start on boot.</value>
+  </data>
+  <data name="Error_ServiceNotSetToAutoStart" xml:space="preserve">
+    <value>Error: Unable to set the service to auto-start. You can still do this manually in the Services app.</value>
+  </data>
+  <data name="Message_DefaultNamingSetToNewStyle" xml:space="preserve">
+    <value>Default port naming set to new-style naming.</value>
+  </data>
+  <data name="Message_DefaultNamingSetToWinMMStyle" xml:space="preserve">
+    <value>Default port naming set to classic (WinMM compatible, when using our in-box driver) style. If you used to use a vendor driver with this device, the name may be different from what you expect. New-style naming is recommended in those cases.</value>
+  </data>
+  <data name="Error_UnableToChangeDefaultNamingStyle" xml:space="preserve">
+    <value>Error: Unable to change the default naming style.</value>
+  </data>
 </root>
