@@ -263,6 +263,10 @@ std::vector<std::wstring> CheckRegistryAndGetValuesToDelete(_In_ std::wstring ke
                         {
                             WriteInfoDetail(L"Found correct required 'midi1' value '" + driverName + L"'. Leaving it alone.");
                         }
+                        else if (valueName == L"midimapper")
+                        {
+                            WriteInfoDetail(L"Found 'midimapper' with value '" + driverName + L"'. Leaving it alone.");
+                        }
                         else if (driverName == L"korgbm64.drv" && valueName != L"midi" && valueName != L"midi1")
                         {
                             WriteInfoDetail(L"Found KORG BLE driver '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
