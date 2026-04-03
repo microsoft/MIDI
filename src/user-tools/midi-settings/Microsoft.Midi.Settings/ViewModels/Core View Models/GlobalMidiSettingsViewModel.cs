@@ -68,21 +68,17 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private readonly IMidiServiceRegistrySettingsService _registrySettingsService;
         private readonly IMidiConsoleToolsService _consoleToolsService;
-
-        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int MessageBox(
-                            IntPtr hWnd,
-                            string lpText,
-                            string lpCaption,
-                            int uType);
+        private readonly IMessageBoxService _messageBoxService;
 
 
         public GlobalMidiSettingsViewModel(
             IMidiServiceRegistrySettingsService registrySettingsService,
-            IMidiConsoleToolsService consoleToolsService)
+            IMidiConsoleToolsService consoleToolsService,
+            IMessageBoxService messageBoxService)
         {
             _registrySettingsService = registrySettingsService;
             _consoleToolsService = consoleToolsService;
+            _messageBoxService = messageBoxService;
 
             UseNewStyleWinMMPortNames = _registrySettingsService.GetDefaultUseNewStyleMidi1PortNaming();
             UseClassicCompatibleWinMMPortNames = !UseNewStyleWinMMPortNames;
@@ -103,19 +99,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                         if (proc.ExitCode == 0)
                         {
-                            MessageBox(
-                                (IntPtr)0,
-                                "Message_ServiceSetToAutoStart".GetLocalized(),
-                                "AppDisplayName".GetLocalized(),
-                                0);
+                            _messageBoxService.ShowInfo("Message_ServiceSetToAutoStart".GetLocalized(), "AppDisplayName".GetLocalized());
                         }
                         else
                         {
-                            MessageBox(
-                                (IntPtr)0,
-                                "Error_ServiceNotSetToAutoStart".GetLocalized(),
-                                "AppDisplayName".GetLocalized(),
-                                0);
+                            _messageBoxService.ShowError("Error_ServiceNotSetToAutoStart".GetLocalized(), "AppDisplayName".GetLocalized());
+                            App.GetService<ILoggingService>().LogError("Unable to set service to auto-start");
                         }
                     }
                 }
@@ -136,40 +125,18 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     if (UseNewStyleWinMMPortNames)
                     {
-                        if (_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle))
+                        if (!_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle))
                         {
-                            MessageBox(
-                                (IntPtr)0,
-                                "Message_DefaultNamingSetToNewStyle".GetLocalized(),
-                                "AppDisplayName".GetLocalized(),
-                                0);
-                        }
-                        else
-                        {
-                            MessageBox(
-                                (IntPtr)0,
-                                "Error_UnableToChangeDefaultNamingStyle".GetLocalized(),
-                                "AppDisplayName".GetLocalized(),
-                                0);
+                            _messageBoxService.ShowError("Error_UnableToChangeDefaultNamingStyle".GetLocalized(), "AppDisplayName".GetLocalized());
+                            App.GetService<ILoggingService>().LogError("Unable to set default naming style to new-style");
                         }
                     }
                     else
                     {
-                        if (_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible))
+                        if (!_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible))
                         {
-                            MessageBox(
-                                (IntPtr)0,
-                                "Message_DefaultNamingSetToWinMMStyle".GetLocalized(),
-                                "AppDisplayName".GetLocalized(),
-                                0);
-                        }
-                        else
-                        {
-                            MessageBox(
-                                (IntPtr)0,
-                                "Error_UnableToChangeDefaultNamingStyle".GetLocalized(),
-                                "AppDisplayName".GetLocalized(),
-                                0);
+                            _messageBoxService.ShowError("Error_UnableToChangeDefaultNamingStyle".GetLocalized(), "AppDisplayName".GetLocalized());
+                            App.GetService<ILoggingService>().LogError("Unable to set default naming style to classic WinMM style");
                         }
 
                     }

@@ -28,14 +28,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class DeviceDetailViewModel : ObservableRecipient, INavigationAware
     {
-
-        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int MessageBox(
-            IntPtr hWnd,
-            string lpText,
-            string lpCaption,
-            int uType);
-
         public ICommand CopyEndpointDeviceIdCommand
         {
             get; private set;
@@ -66,17 +58,20 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
         private readonly IMidiConfigFileService _configFileService;
+        private readonly IMessageBoxService _messageBoxService;
 
         public DeviceDetailViewModel(
             ISynchronizationContextService synchronizationContextService, 
             IMidiEndpointCustomizationService endpointCustomizationService,
             IMidiEndpointEnumerationService endpointEnumerationService,
-            IMidiConfigFileService configFileService)
+            IMidiConfigFileService configFileService,
+            IMessageBoxService messageBoxService)
         {
             _synchronizationContextService = synchronizationContextService;
             _endpointCustomizationService = endpointCustomizationService;
             _endpointEnumerationService = endpointEnumerationService;
             _configFileService = configFileService;
+            _messageBoxService = messageBoxService;
 
 
             this.ShowMidi2Properties = false;
@@ -126,22 +121,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                             // todo: show error
                             App.GetService<ILoggingService>().LogError($"Could not save to config file");
-
-                            MessageBox(
-                                (IntPtr)0,
-                                "Could not save to config file",
-                                "Unable to save customization",
-                                0);
-
+                            _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfig", "AppDisplayName".GetLocalized());
                         }
                     }
                     else
                     {
-                        MessageBox(
-                            (IntPtr)0,
-                            "Could not save customization. No current configuration file.",
-                            "Unable to save customization",
-                            0);
+                        _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfigMissingConfig", "AppDisplayName".GetLocalized());
 
                         // could not save. No current config.
                         App.GetService<ILoggingService>().LogError($"Could not save to config file. No current config file.");

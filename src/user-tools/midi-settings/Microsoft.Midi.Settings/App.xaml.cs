@@ -136,6 +136,7 @@ public partial class App : Application
                     services.AddSingleton<IMidiDiagnosticsService, MidiDiagnosticsService>();
                     services.AddSingleton<IMidiConsoleToolsService, MidiConsoleToolsService>();
 
+                    services.AddSingleton<IMessageBoxService, MessageBoxService>();
 
 
                     // Views and ViewModels

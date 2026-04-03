@@ -47,10 +47,11 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
-        private IMidiConfigFileService m_configFileService;
-        private IMidiDefaultsService m_defaultsService;
-        private INavigationService m_navigationService;
-        private IMidiServiceRegistrySettingsService m_registryService;
+        private IMidiConfigFileService _configFileService;
+        private IMidiDefaultsService _defaultsService;
+        private INavigationService _navigationService;
+        private IMidiServiceRegistrySettingsService _registryService;
+        private IMessageBoxService _messageBoxService;
 
         public string ConfigFileName
         {
@@ -61,7 +62,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                return m_configFileService.GetConfigFilesLocation();
+                return _configFileService.GetConfigFilesLocation();
             }
         }
 
@@ -69,7 +70,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                return m_configFileService.ConfigFileExists(ConfigFileName);
+                return _configFileService.ConfigFileExists(ConfigFileName);
             }
         }
 
@@ -98,18 +99,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                return CreateConfigurationFile || m_configFileService.IsConfigFileActive;
+                return CreateConfigurationFile || _configFileService.IsConfigFileActive;
             }
         }
-
-        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int MessageBox(
-                            IntPtr hWnd,
-                            string lpText,
-                            string lpCaption,
-                            int uType);
-
-
 
         private void CompleteFirstRunSetup()
         {
@@ -120,8 +112,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (CreateConfigurationFile)
             {
-                string newConfigName = m_defaultsService.GetDefaultMidiConfigName(); ;
-                string newConfigFileName = m_defaultsService.GetDefaultMidiConfigFileName();
+                string newConfigName = _defaultsService.GetDefaultMidiConfigName(); ;
+                string newConfigFileName = _defaultsService.GetDefaultMidiConfigFileName();
 
                 if (ConfigFileName == null || ConfigFileName == string.Empty)
                 {
@@ -129,25 +121,25 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
 
                 // if the config file exists, we don't overwrite it
-                if (!m_configFileService.ConfigFileExists(ConfigFileName))
+                if (!_configFileService.ConfigFileExists(ConfigFileName))
                 {
                     // this can be false if the config file already existed
-                    bool newConfigCreated = m_configFileService.CreateNewConfigFile(newConfigName, newConfigFileName);
+                    bool newConfigCreated = _configFileService.CreateNewConfigFile(newConfigName, newConfigFileName);
                 }
 
-                if (m_registryService.UpdateRegistryCurrentConfigFileName(ConfigFileName))
+                if (_registryService.UpdateRegistryCurrentConfigFileName(ConfigFileName))
                 {
                     needServiceRestart = true;
 
                     var config = new MidiConfigFile(ConfigFileName);
                     config.Load();
 
-                    m_configFileService.CurrentConfig = config;
+                    _configFileService.CurrentConfig = config;
                 }
                 else
                 {
                     //  show an error and leave
-                    ErrorMessage = "Unable to update registry config file name.";
+                    ErrorMessage = "Error_UnableToUpdateRegistryConfigFileName".GetLocalized();
                     return;
                 }
 
@@ -155,9 +147,9 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (CreateDefaultLoopbackEndpoints)
             {
-                if (m_configFileService.CurrentConfig != null)
+                if (_configFileService.CurrentConfig != null)
                 {
-                    var midi2CreationConfig = m_defaultsService.GetDefaultLoopbackCreationConfig();
+                    var midi2CreationConfig = _defaultsService.GetDefaultLoopbackCreationConfig();
 
                     // Create the MIDI 2.0 loopback
 
@@ -165,29 +157,29 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     if (midi2result.Success)
                     {
-                        m_configFileService.CurrentConfig.StoreLoopbackEndpointPair(midi2CreationConfig);
+                        _configFileService.CurrentConfig.StoreLoopbackEndpointPair(midi2CreationConfig);
                     }
                     else
                     {
                         // update error information
-                        ErrorMessage = "Error creating MIDI 2.0 loopback endpoints. " + midi2result.ErrorInformation;
+                        ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI2 Bidirectional) " + midi2result.ErrorInformation;
                     }
 
 
                     // Create the basic loopback
 
-                    var midi1CreationConfig = m_defaultsService.GetDefaultBasicLoopbackCreationConfig();
+                    var midi1CreationConfig = _defaultsService.GetDefaultBasicLoopbackCreationConfig();
 
                     var midi1Result = MidiBasicLoopbackEndpointManager.CreateTransientLoopbackEndpoint(midi1CreationConfig);
 
                     if (midi1Result.Success)
                     {
-                        m_configFileService.CurrentConfig.StoreBasicLoopbackEndpoint(midi1CreationConfig);
+                        _configFileService.CurrentConfig.StoreBasicLoopbackEndpoint(midi1CreationConfig);
                     }
                     else
                     {
                         // update error information
-                        ErrorMessage = "Error creating MIDI 1.0 basic loopback endpoints. " + midi1Result.ErrorInformation;
+                        ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI1 Basic) " + midi1Result.ErrorInformation;
 
                     }
 
@@ -196,25 +188,25 @@ namespace Microsoft.Midi.Settings.ViewModels
                 else
                 {
                     // TODO: Report that a config file is needed
-                    ErrorMessage = "Cannot create loopback endpoints without a valid config file.";
+                    ErrorMessage = "Error_UnableToCreateLoopbackEndpointMissingConfigurationFile".GetLocalized();
                 }
 
             }
 
             if (UseNewStyleWinMMPortNames)
             {
-                bool storedUseNewStyleWinMMPortNames = m_registryService.GetDefaultUseNewStyleMidi1PortNaming();
+                bool storedUseNewStyleWinMMPortNames = _registryService.GetDefaultUseNewStyleMidi1PortNaming();
 
                 if (storedUseNewStyleWinMMPortNames != UseNewStyleWinMMPortNames)
                 {
                     if (UseNewStyleWinMMPortNames)
                     {
-                        m_registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle);
+                        _registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle);
                         needServiceRestart = true;
                     }
                     else
                     {
-                        m_registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible);
+                        _registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible);
                         needServiceRestart = true;
                     }
                 }
@@ -270,11 +262,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (serviceRestarted)
             {
-                MessageBox(
-                    (IntPtr)0,
-                    "Message_SettingsAppWillNowRestart".GetLocalized(),
-                    "AppDisplayName".GetLocalized(),
-                    0);
+                _messageBoxService.ShowInfo("Message_SettingsAppWillNowRestart".GetLocalized(), "AppDisplayName".GetLocalized());
 
                 // For now, we'll just restart the app, but it would be 
                 // better to reload config file and reload data
@@ -285,27 +273,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                 switch (restartError)
                 {
                     case AppRestartFailureReason.RestartPending:
-                        MessageBox(
-                            (IntPtr)0,
-                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
-                            "AppDisplayName".GetLocalized(),
-                            0);
+                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(), "AppDisplayName".GetLocalized());
                         break;
 
                     case AppRestartFailureReason.InvalidUser:
-                        MessageBox(
-                            (IntPtr)0,
-                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
-                            "AppDisplayName".GetLocalized(),
-                            0);
+                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(), "AppDisplayName".GetLocalized());
                         break;
 
                     case AppRestartFailureReason.Other:
-                        MessageBox(
-                            (IntPtr)0,
-                            "Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(),
-                            "AppDisplayName".GetLocalized(),
-                            0);
+                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(), "AppDisplayName".GetLocalized());
                         break;
                 }
             }
@@ -319,12 +295,14 @@ namespace Microsoft.Midi.Settings.ViewModels
             INavigationService navigationService,
             IMidiConfigFileService configService, 
             IMidiDefaultsService defaultsService,
-            IMidiServiceRegistrySettingsService registryService)
+            IMidiServiceRegistrySettingsService registryService,
+            IMessageBoxService messageBoxService)
         {
-            m_navigationService = navigationService;
-            m_defaultsService = defaultsService;
-            m_configFileService = configService;
-            m_registryService = registryService;
+            _navigationService = navigationService;
+            _defaultsService = defaultsService;
+            _configFileService = configService;
+            _registryService = registryService;
+            _messageBoxService = messageBoxService;
 
             CreateConfigurationFile = true;
             CreateDefaultLoopbackEndpoints = true;
@@ -334,7 +312,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
             // if reg setting for MIDI 1 already set, reflect that setting
-            UseNewStyleWinMMPortNames = m_registryService.GetDefaultUseNewStyleMidi1PortNaming();
+            UseNewStyleWinMMPortNames = _registryService.GetDefaultUseNewStyleMidi1PortNaming();
 
             //UpdateConfigFileName();
 
@@ -342,7 +320,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     CompleteFirstRunSetup();
                 });
-            m_registryService = registryService;
+            _registryService = registryService;
         }
     }
 }

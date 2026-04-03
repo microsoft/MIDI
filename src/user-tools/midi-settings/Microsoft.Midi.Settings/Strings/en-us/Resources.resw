@@ -826,13 +826,46 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   <data name="Error_ServiceNotSetToAutoStart" xml:space="preserve">
     <value>Error: Unable to set the service to auto-start. You can still do this manually in the Services app.</value>
   </data>
-  <data name="Message_DefaultNamingSetToNewStyle" xml:space="preserve">
-    <value>Default port naming set to new-style naming.</value>
-  </data>
-  <data name="Message_DefaultNamingSetToWinMMStyle" xml:space="preserve">
-    <value>Default port naming set to classic (WinMM compatible, when using our in-box driver) style. If you used to use a vendor driver with this device, the name may be different from what you expect. New-style naming is recommended in those cases.</value>
-  </data>
   <data name="Error_UnableToChangeDefaultNamingStyle" xml:space="preserve">
     <value>Error: Unable to change the default naming style.</value>
+  </data>
+  <data name="Error_CouldNotSaveEndpointCustomizationToConfig" xml:space="preserve">
+    <value>Could not save MIDI endpoint customization to configuration file.</value>
+  </data>
+  <data name="Error_CouldNotSaveEndpointCustomizationToConfigMissingConfig" xml:space="preserve">
+    <value>Could not save endpoint customization because configuration file is missing.</value>
+  </data>
+  <data name="Error_ServiceReportsFailureCreatingDefaultLoopback" xml:space="preserve">
+    <value>Service reports failure creating default loopback.</value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackEndpoint" xml:space="preserve">
+    <value>Unable to create loopback endpoint</value>
+  </data>
+  <data name="Error_ValidationLoopbackNameMustBeUnique" xml:space="preserve">
+    <value>The loopback endpoint name must be unique across all MIDI endpoint names.</value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackWithMessage" xml:space="preserve">
+    <value>Unable to create loopback endpoint. Message from MIDI service: </value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackEndpointMissingConfigurationFile" xml:space="preserve">
+    <value>Unable to create loopback endpoint. Missing or invalid MIDI configuration file</value>
+  </data>
+  <data name="Error_UnableToUpdateRegistryConfigFileName" xml:space="preserve">
+    <value>Unable to update registry config file name.</value>
+  </data>
+  <data name="Error_ValidationLoopbackBothNamesAreRequired" xml:space="preserve">
+    <value>Both endpoint names are required. Please provide a base name, or specify individual names</value>
+  </data>
+  <data name="Error_ValidationUniqueIdentifierRequired" xml:space="preserve">
+    <value>Unique identifier is required.</value>
+  </data>
+  <data name="Error_ValidationLoopbackUniqueIdAlreadyInUse" xml:space="preserve">
+    <value>Unique identifier is already in use with another loopback endpoint.</value>
+  </data>
+  <data name="Error_UnableToRestartMidiService" xml:space="preserve">
+    <value>Unable to restart MIDI service.</value>
+  </data>
+  <data name="Error_UnableToOpenMidiDiag" xml:space="preserve">
+    <value>Unable to open mididiag tool to capture diagnostic information. You may want to reinstall the SDK Runtime and Tools.</value>
   </data>
 </root>

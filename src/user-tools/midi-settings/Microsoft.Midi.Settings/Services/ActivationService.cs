@@ -26,6 +26,7 @@ public class ActivationService : IActivationService
     private readonly IGeneralSettingsService _generalSettingsService;
     private readonly IMidiSdkService _sdkService;
     private readonly IMidiEndpointEnumerationService _enumerationService;
+    private readonly IMessageBoxService _messageBoxService;
 
     private UIElement? _shell = null;
 
@@ -35,7 +36,8 @@ public class ActivationService : IActivationService
         IThemeSelectorService themeSelectorService, 
         IGeneralSettingsService generalSettingsService,
         IMidiSdkService sdkService,
-        IMidiEndpointEnumerationService enumerationService)
+        IMidiEndpointEnumerationService enumerationService,
+        IMessageBoxService messageBoxService)
     {
         _sdkService = sdkService;
         _defaultHandler = defaultHandler;
@@ -43,6 +45,7 @@ public class ActivationService : IActivationService
         _themeSelectorService = themeSelectorService;
         _generalSettingsService = generalSettingsService;
         _enumerationService = enumerationService;
+        _messageBoxService = messageBoxService;
     }
 
     private void PositionMainWindow()
@@ -106,13 +109,6 @@ public class ActivationService : IActivationService
         App.GetService<ILoggingService>().LogInfo("Exit");
     }
 
-    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern int MessageBox(
-                            IntPtr hWnd,
-                            string lpText,
-                            string lpCaption,
-                            int uType);
-
 
     public async Task<bool> ActivateAsync(object activationArgs)
     {
@@ -153,11 +149,7 @@ public class ActivationService : IActivationService
         {
             App.GetService<ILoggingService>().LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
 
-            MessageBox(
-                (IntPtr)0,
-                "Error_MidiServicesFeatureNotEnabled".GetLocalized(),
-                "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized(),
-                0);
+            _messageBoxService.ShowError("Error_MidiServicesFeatureNotEnabled".GetLocalized(), "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized());
 
             return false;
         }
@@ -176,11 +168,7 @@ public class ActivationService : IActivationService
             {
                 App.GetService<ILoggingService>().LogError("Unable to initialize SDK");
 
-                MessageBox(
-                    (IntPtr)0,
-                    "Error_UnableToInitializeMidiRuntime".GetLocalized(),
-                    "Error_StartupMessageBoxTitle".GetLocalized(),
-                    0);
+                _messageBoxService.ShowError("Error_UnableToInitializeMidiRuntime".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
 
                 return;
             }
@@ -188,11 +176,7 @@ public class ActivationService : IActivationService
             {
                 App.GetService<ILoggingService>().LogError("Unable to initialize Service");
 
-                MessageBox(
-                    (IntPtr)0,
-                    "Error_UnableToStartMidiService".GetLocalized(),
-                    "Error_StartupMessageBoxTitle".GetLocalized(),
-                    0);
+                _messageBoxService.ShowError("Error_UnableToStartMidiService".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
 
                 return;
             }

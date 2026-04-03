@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
+using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
 using System;
 using System.Collections.Generic;
@@ -47,24 +48,20 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
     private readonly INavigationService _navigationService;
     private readonly IMidiConsoleToolsService _consoleToolsService;
     private readonly IMidiDiagnosticsService _diagnosticsService;
+    private readonly IMessageBoxService _messageBoxService;
 
-
-    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern int MessageBox(
-        IntPtr hWnd,
-        string lpText,
-        string lpCaption,
-        int uType);
 
 
     public TroubleshootingViewModel(
         INavigationService navigationService,
         IMidiConsoleToolsService consoleToolsService,
-        IMidiDiagnosticsService diagnosticsService)
+        IMidiDiagnosticsService diagnosticsService,
+        IMessageBoxService messageBoxService)
     {
         _consoleToolsService = consoleToolsService;
         _navigationService = navigationService;
         _diagnosticsService = diagnosticsService;
+        _messageBoxService = messageBoxService;
 
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
@@ -75,11 +72,7 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
                 if (!success)
                 {
-                    MessageBox(
-                        (IntPtr)0,
-                        "Unable to restart MIDI service.",
-                        "AppDisplayName".GetLocalized(),
-                        0);
+                    _messageBoxService.ShowError("Error_UnableToRestartMidiService".GetLocalized(), "AppDisplayName".GetLocalized());
                 }
 
             });
@@ -91,11 +84,7 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
                 if (!success)
                 {
-                    MessageBox(
-                        (IntPtr)0,
-                        "Unable to open mididiag tool to capture diagnostic information. You may want to reinstall the SDK Runtime and Tools.",
-                        "AppDisplayName".GetLocalized(),
-                        0);
+                    _messageBoxService.ShowError("Error_UnableToOpenMidiDiag".GetLocalized(), "AppDisplayName".GetLocalized());
                 }
             });
     }
