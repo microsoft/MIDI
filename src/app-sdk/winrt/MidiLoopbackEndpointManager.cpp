@@ -45,37 +45,53 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         loop::MidiLoopbackEndpointCreationResult result{};
         result.Success = false;
 
-        auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
-
-
-        // parse the results
-        auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
-
-        if (successResult)
+        try
         {
-            json::JsonObject serviceResponseJson;
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
-            if (json::JsonObject::TryParse(serviceResponse.ResponseJson, serviceResponseJson))
+            // parse the results
+            auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
+
+            if (successResult)
             {
-                auto deviceIdA = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
-                auto deviceIdB = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
+                json::JsonObject serviceResponseJson;
 
-                if (!deviceIdA.empty() && !deviceIdB.empty())
+                if (json::JsonObject::TryParse(serviceResponse.ResponseJson, serviceResponseJson))
                 {
-                    // update the response object with the new ids
-                    result.AssociationId = creationConfig.AssociationId();
-                    result.EndpointDeviceIdA = deviceIdA;
-                    result.EndpointDeviceIdB = deviceIdB;
-                    result.Success = true;
-                }
+                    auto deviceIdA = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
+                    auto deviceIdB = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
 
+                    if (!deviceIdA.empty() && !deviceIdB.empty())
+                    {
+                        // update the response object with the new ids
+                        result.AssociationId = creationConfig.AssociationId();
+                        result.EndpointDeviceIdA = deviceIdA;
+                        result.EndpointDeviceIdB = deviceIdB;
+                        result.Success = true;
+                    }
+
+                }
+            }
+            else
+            {
+                result.ErrorInformation = serviceResponse.ServiceMessage;
+
+                //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Device creation failed (payload has false success value)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                );
             }
         }
-        else
+        catch (winrt::hresult_error ex)
         {
-            result.ErrorInformation = serviceResponse.ServiceMessage;
-
-            //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
+            result.ErrorInformation = ex.message();
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -83,7 +99,23 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Device creation failed (payload has false success value)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Device creation failed with hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "exception message"),
+                TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+            );
+        }
+        catch (...)
+        {
+            result.ErrorInformation = L"General exception/error.";
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Device creation failed with general exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingGuid(creationConfig.AssociationId(), "association id")
             );
         }
@@ -98,9 +130,38 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         // the success code in this defaults to False
         bool result = false;
 
-        auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(removalConfig);
+        try
+        {
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(removalConfig);
 
-        result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
+            result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
+        }
+        catch (winrt::hresult_error ex)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Device removal failed with hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "exception message"),
+                TraceLoggingGuid(removalConfig.AssociationId(), "association id")
+            );
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Device creation failed with general exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(removalConfig.AssociationId(), "association id")
+            );
+        }
 
         return result;
     }
@@ -201,8 +262,31 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
                 }
             }
         }
-        catch (winrt::hresult_error const&)
+        catch (winrt::hresult_error ex)
         {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Getting associated endpoint failed with hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "exception message"),
+                TraceLoggingWideString(loopbackEndpoint.EndpointDeviceId().c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Getting associated endpoint failed with general exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(loopbackEndpoint.EndpointDeviceId().c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
         }
 
         return nullptr;

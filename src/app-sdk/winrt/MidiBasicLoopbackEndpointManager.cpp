@@ -38,33 +38,51 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         bloop::MidiBasicLoopbackEndpointCreationResult result{};
         result.Success = false;
 
-        auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
-        // parse the results
-        auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
-
-        if (successResult)
+        try
         {
-            json::JsonObject serviceResponseJson;
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
-            if (json::JsonObject::TryParse(serviceResponse.ResponseJson, serviceResponseJson))
+            // parse the results
+            auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
+
+            if (successResult)
             {
-                auto deviceId = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY, L"");
+                json::JsonObject serviceResponseJson;
 
-                if (!deviceId.empty())
+                if (json::JsonObject::TryParse(serviceResponse.ResponseJson, serviceResponseJson))
                 {
-                    // update the response object with the new ids
-                    result.AssociationId = creationConfig.AssociationId();
-                    result.EndpointDeviceId = deviceId;
-                    result.Success = true;
+                    auto deviceId = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY, L"");
+
+                    if (!deviceId.empty())
+                    {
+                        // update the response object with the new ids
+                        result.AssociationId = creationConfig.AssociationId();
+                        result.EndpointDeviceId = deviceId;
+                        result.Success = true;
+                    }
                 }
             }
-        }
-        else
-        {
-            result.ErrorInformation = serviceResponse.ServiceMessage;
+            else
+            {
+                result.ErrorInformation = serviceResponse.ServiceMessage;
 
-            //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
+                //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Device creation failed (payload has false success value)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                );
+            }
+        }
+        catch (winrt::hresult_error ex)
+        {
+            result.ErrorInformation = ex.message();
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -72,9 +90,25 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Device creation failed (payload has false success value)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Device creation failed with hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(creationConfig.AssociationId(), "association id"),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD)
+                );
+        }
+        catch (...)
+        {
+            result.ErrorInformation = L"General exception / error.";
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Device creation failed with general exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingGuid(creationConfig.AssociationId(), "association id")
             );
+
         }
 
         return result;
@@ -85,12 +119,41 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
     bool MidiBasicLoopbackEndpointManager::RemoveTransientLoopbackEndpoint(
         bloop::MidiBasicLoopbackEndpointRemovalConfig const& removalConfig) noexcept
     {
-        // the success code in this defaults to False
         bool result = false;
 
-        auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(removalConfig);
+        try
+        {
+            // the success code in this defaults to False
 
-        result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(removalConfig);
+
+            result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
+        }
+        catch (winrt::hresult_error ex)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Device removal failed with hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(removalConfig.AssociationId(), "association id"),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD)
+            );
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Device removal failed with general exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(removalConfig.AssociationId(), "association id")
+            );
+        }
 
         return result;
     }
@@ -153,8 +216,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                     TraceLoggingWideString(result.ServiceMessage.c_str()),
                     TraceLoggingGuid(associationId, "association id")
                 );
-
-                return false;
             }
         }
         catch (winrt::hresult_error ex)
@@ -166,15 +227,26 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                 TraceLoggingWideString(L"Failed to mute loopback. hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingHResult(ex.code(), "hresult"),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), "error message"),
                 TraceLoggingGuid(associationId, "association id")
             );
 
-            return false;
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to mute loopback. General exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(associationId, "association id")
+            );
         }
 
-
+        return false;
     }
 
     _Use_decl_annotations_
@@ -205,8 +277,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                     TraceLoggingWideString(result.ServiceMessage.c_str()),
                     TraceLoggingGuid(associationId, "association id")
                 );
-
-                return false;
             }
         }
         catch (winrt::hresult_error ex)
@@ -218,14 +288,26 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                 TraceLoggingWideString(L"Failed to unmute loopback. hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingHResult(ex.code(), "hresult"),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), "error message"),
                 TraceLoggingGuid(associationId, "association id")
             );
 
-            return false;
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to unmute loopback. General exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(associationId, "association id")
+            );
         }
 
+        return false;
     }
 
 }
