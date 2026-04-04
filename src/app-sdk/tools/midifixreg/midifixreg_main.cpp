@@ -117,6 +117,7 @@ void WriteLabel(_In_ std::string label)
 }
 
 
+#define RETURN_NO_CHANGES_NEEDED        return -1
 #define RETURN_SUCCESS                  return 0
 #define RETURN_INSUFFICIENT_PERMISSIONS return 1
 #define RETURN_USER_ABORTED             return 2
@@ -529,20 +530,23 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
             // apps and causing a potential loss of data.
 
             WriteSuperImportant("Changes made. Please reboot your PC.");
+            WriteBlankLine();
+            RETURN_SUCCESS;
         }
         else
         {
             WriteImportant("No changes made.");
+            WriteBlankLine();
+            RETURN_USER_ABORTED;
         }
     }
     else
     {
         WriteSuperImportant("No incorrect values found. This part of the registry seems fine.");
+        WriteBlankLine();
+        RETURN_NO_CHANGES_NEEDED;
     }
 
-    WriteBlankLine();
-
-    RETURN_SUCCESS;
 }
 
 
