@@ -127,9 +127,14 @@
           <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midifixreg.exe" Vital="true" />
 
           <!-- Add folder to path -->
-          <Environment Id="AddMidi1FixRegUtilityToSystemPath"
+          <Environment Id="AddMidiFixRegUtilityToSystemPath"
                           Name="PATH" Action="set" Part="last" System="yes"
                           Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
+
+          <RegistryKey Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+            <RegistryValue Type="string" Name="MidiFixReg" Value="[TOOLSROOT_INSTALLFOLDER]midifixreg.exe" />
+          </RegistryKey>
         </Component>
 
         <!-- Install MIDI check service Utility -->
