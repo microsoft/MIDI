@@ -39,6 +39,17 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
         get; private set;
     }
 
+    public ICommand MidiFixRegCommand
+    {
+        get; private set;
+    }
+
+    public ICommand RestoreInBoxComponentsCommand
+    {
+        get; private set;
+    }
+
+    
 
     public bool IsUserRunningAsAdmin
     {
@@ -72,7 +83,7 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
                 if (!success)
                 {
-                    _messageBoxService.ShowError("Error_UnableToRestartMidiService".GetLocalized(), "AppDisplayName".GetLocalized());
+                    _messageBoxService.ShowError("Error_UnableToRestartMidiService".GetLocalized());
                 }
 
             });
@@ -84,9 +95,36 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
                 if (!success)
                 {
-                    _messageBoxService.ShowError("Error_UnableToOpenMidiDiag".GetLocalized(), "AppDisplayName".GetLocalized());
+                    _messageBoxService.ShowError("Error_UnableToOpenMidiDiag".GetLocalized());
                 }
             });
+
+        MidiFixRegCommand = new RelayCommand(
+            () =>
+            {
+                var success = _diagnosticsService.MidiFixReg();
+
+                if (!success)
+                {
+                    _messageBoxService.ShowError("Error_UnableToOpenMidiFixReg".GetLocalized());
+                }
+                else
+                {
+                    _messageBoxService.ShowInfo("Message_RegistryRepairedPleaseRestartAllMIDIApps".GetLocalized());
+                }
+            });
+
+        RestoreInBoxComponentsCommand = new RelayCommand(
+            () =>
+            {
+                var success = _diagnosticsService.RestoreInBoxComponentRegistrations();
+
+                if (!success)
+                {
+                    _messageBoxService.ShowError("Error_UnableToRestoreInBoxComponentRegistrations".GetLocalized());
+                }
+            });
+
     }
 
 

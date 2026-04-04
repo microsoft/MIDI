@@ -121,12 +121,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                             // todo: show error
                             App.GetService<ILoggingService>().LogError($"Could not save to config file");
-                            _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfig", "AppDisplayName".GetLocalized());
+                            _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfig");
                         }
                     }
                     else
                     {
-                        _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfigMissingConfig", "AppDisplayName".GetLocalized());
+                        _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfigMissingConfig");
 
                         // could not save. No current config.
                         App.GetService<ILoggingService>().LogError($"Could not save to config file. No current config file.");

@@ -1,4 +1,5 @@
-﻿using Microsoft.Midi.Settings.Contracts.Services;
+﻿using Microsoft.Extensions.Logging.Console;
+using Microsoft.Midi.Settings.Contracts.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
     private const string MidiRootRegKey = @"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows MIDI Services";
     private const string MidiSdkRootRegKey = MidiRootRegKey + @"\Desktop App SDK Runtime";
     private const string MidiDiagPathRegValue = "MidiDiag";
+    private const string MidiFixRegPathRegValue = "MidiFixReg";
 
     private static string GetMidiDiagPath()
     {
@@ -47,6 +49,39 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
     }
 
+    private static string GetMidiFixRegPath()
+    {
+        try
+        {
+            string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Tools\midifixreg.exe";
+
+            string fixRegPath = string.Empty;
+
+            var value = Microsoft.Win32.Registry.GetValue(MidiSdkRootRegKey, MidiFixRegPathRegValue, defaultPath);
+
+            if (value == null)
+            {
+                // happens when the key does not exist
+                fixRegPath = defaultPath;
+            }
+            else if (value is string)
+            {
+                fixRegPath = (string)value;
+            }
+            else
+            {
+                fixRegPath = defaultPath;
+            }
+
+            return fixRegPath;
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception getting MIDI Registry Fixer tool Path", ex);
+
+            return string.Empty;
+        }
+    }
 
     public bool IsMidiDiagPresent()
     {
@@ -69,6 +104,27 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         return true;
     }
 
+
+    public bool IsMidiFixRegPresent()
+    {
+        var path = GetMidiFixRegPath();
+
+        if (string.IsNullOrEmpty(path))
+        {
+            App.GetService<ILoggingService>().LogError($"MIDI Registry Fixer tool path is blank.");
+
+            return false;
+        }
+
+        if (!File.Exists(path))
+        {
+            App.GetService<ILoggingService>().LogError($"MIDI Registry Fixer tool does not exist in path '{path}' ");
+
+            return false;
+        }
+
+        return true;
+    }
 
     public bool CaptureMidiDiagOutputToNotepad()
     {
@@ -118,5 +174,74 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
             return false;
         }
     }
+
+
+    const int MIDIFIXREG_RETURN_NO_CHANGES_NEEDED = -1;
+    const int MIDIFIXREG_RETURN_SUCCESS = 0;
+    const int MIDIFIXREG_RETURN_INSUFFICIENT_PERMISSIONS = 1;
+    const int MIDIFIXREG_RETURN_USER_ABORTED = 2;
+    const int MIDIFIXREG_RETURN_NO_MIDI_SERVICES = 3;
+
+
+    public bool MidiFixReg()
+    {
+        try
+        {
+            if (IsMidiFixRegPresent())
+            {
+                string diagPath = GetMidiFixRegPath();
+
+                string mididiagTempFileName = Path.GetTempFileName();
+
+                using (var consoleProcess = new System.Diagnostics.Process())
+                {
+                    consoleProcess.StartInfo.FileName = diagPath;
+                    consoleProcess.StartInfo.Verb = "runas";
+                    consoleProcess.StartInfo.UseShellExecute = true;
+
+                    consoleProcess.Start();
+                    consoleProcess.WaitForExit();
+
+                    if (consoleProcess.ExitCode <= 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        App.GetService<ILoggingService>().LogError($"Registry fix failed. midifixreg returned {consoleProcess.ExitCode}");
+                    }
+                }
+            }
+            else
+            {
+                App.GetService<ILoggingService>().LogError("Unable to find midifixreg utility.");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Error fixing registry entries.", ex);
+        }
+
+        return false;
+    }
+
+
+
+    public bool RestoreInBoxComponentRegistrations()
+    {
+        return false;
+
+        //try
+        //{
+
+        //}
+        //catch (Exception ex)
+        //{
+        //    App.GetService<ILoggingService>().LogError("Error fixing registry entries.", ex);
+        //}
+    }
+
+
 
 }

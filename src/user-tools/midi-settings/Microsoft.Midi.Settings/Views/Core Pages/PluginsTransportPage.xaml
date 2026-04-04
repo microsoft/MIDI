@@ -37,7 +37,7 @@
 
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Plugins, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="midirept:MidiServiceTransportPluginInfo">
+                        <DataTemplate x:DataType="local:MidiServiceTransportPluginViewModel">
                            
                             <controls:SettingsCard IsClickEnabled="False" Margin="4">
                                 <controls:SettingsCard.Header>
@@ -51,9 +51,21 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
-                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="{x:Bind Name}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="1" Text="{x:Bind Description}" Style="{StaticResource SmallPlainPropertyValueWithWrap}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="{x:Bind Author}"  Style="{StaticResource SmallPlainPropertyValue}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="0" 
+                                                   Text="{x:Bind Name}" 
+                                                   Style="{StaticResource BodyLargeTextBlockStyle}" 
+                                                   Margin="4,0,0,8"
+                                                   />
+                                        <TextBlock Grid.Column="0" Grid.Row="1" 
+                                                   Text="{x:Bind Description}" 
+                                                   Style="{StaticResource SmallPlainPropertyValueWithWrap}" 
+                                                   />
+
+                                        <TextBlock Grid.Column="0" Grid.Row="2" 
+                                                   Text="{x:Bind ComImplementationPath, Mode=OneWay}"  
+                                                   Style="{StaticResource SmallPlainPropertyValue}" 
+                                                   Foreground="{StaticResource TextFillColorDisabled}"
+                                                   IsTextSelectionEnabled="True" />
 
                                     </Grid>
                                 </controls:SettingsCard.Header>
@@ -74,6 +86,7 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Version" Style="{StaticResource SmallPropertyLabel}" />
@@ -85,6 +98,8 @@
                                             <TextBlock Grid.Column="0" Grid.Row="2" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind Id}"  Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" IsTextSelectionEnabled="True" />
 
+                                            <TextBlock Grid.Column="0" Grid.Row="3" Text="Author" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind Author}"  Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" IsTextSelectionEnabled="True" />
                                         </Grid>
 
                                         <!--

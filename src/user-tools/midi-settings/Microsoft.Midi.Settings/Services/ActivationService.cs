@@ -131,9 +131,6 @@ public class ActivationService : IActivationService
 
         if (!MidiServiceHelper.ServiceIsReallyRunning(serviceController))
         {
-            // just initialize the service
-            System.Diagnostics.Debug.WriteLine("Showing loading window");
-
             // we use the main Window's dispatcher, since AppWindow doesn't surface this
             App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
             {
@@ -142,17 +139,17 @@ public class ActivationService : IActivationService
             });
         }
 
-        // Check for feature activation
-        bool featureEnabled = true;
-        featureEnabled = await MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync();
-        if (!featureEnabled)
-        {
-            App.GetService<ILoggingService>().LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
+        //// Check for feature activation
+        //bool featureEnabled = true;
+        //featureEnabled = await MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync();
+        //if (!featureEnabled)
+        //{
+        //    App.GetService<ILoggingService>().LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
 
-            _messageBoxService.ShowError("Error_MidiServicesFeatureNotEnabled".GetLocalized(), "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized());
+        //    _messageBoxService.ShowError("Error_MidiServicesFeatureNotEnabled".GetLocalized(), "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized());
 
-            return false;
-        }
+        //    return false;
+        //}
 
         if (_sdkService == null)
         {

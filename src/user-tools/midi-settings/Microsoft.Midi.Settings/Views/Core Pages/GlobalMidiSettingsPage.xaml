@@ -24,7 +24,7 @@
 
                     <controls:SettingsCard.Content>
                         <Button x:Uid="GlobalSettings_SetMidiServiceToAutoStartButton" 
-                                Command="{x:Bind ViewModel.SetServiceToAutoStartCommand }"
+                                Command="{x:Bind ViewModel.SetServiceToAutoStartCommand}"
                                 />
                     </controls:SettingsCard.Content>
 

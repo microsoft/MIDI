@@ -19,5 +19,8 @@ public interface IMidiDiagnosticsService
 {
     bool CaptureMidiDiagOutputToNotepad();
 
+    bool MidiFixReg();
+
+    bool RestoreInBoxComponentRegistrations();
 
 }

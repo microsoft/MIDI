@@ -382,7 +382,7 @@
     <value>Set a USB MIDI 1.0 device to use the new fast UMP MIDI 2.0 driver (requires Administrator account)</value>
   </data>
   <data name="CommonTasks_CreateLoopbackEndpoints.Text" xml:space="preserve">
-    <value>Create a loopback endpoint so two or more applications can communicate using MIDI messages</value>
+    <value>Create a MIDI2.0 loopback endpoint so two or more applications can communicate using MIDI messages</value>
   </data>
   <data name="CommonTasks_SendSysExFile.Text" xml:space="preserve">
     <value>Send a file of System Exclusive data (patches, firmware, etc.) to an endpoint</value>
@@ -812,7 +812,7 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
     <value>Default basic MIDI 1.0 loopback endpoint for use by applications.</value>
   </data>
   <data name="Shell_EndpointsBasicLoop.Content" xml:space="preserve">
-    <value>MIDI 1.0 Loopback Endpoints</value>
+    <value>MIDI 1.0 Basic Loopback Endpoints</value>
   </data>
   <data name="Message_SettingsAppWillNowRestart" xml:space="preserve">
     <value>The MIDI Settings app will now restart.</value>
@@ -867,5 +867,32 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   </data>
   <data name="Error_UnableToOpenMidiDiag" xml:space="preserve">
     <value>Unable to open mididiag tool to capture diagnostic information. You may want to reinstall the SDK Runtime and Tools.</value>
+  </data>
+  <data name="Error_UnableToRemoveLoopbackFromService" xml:space="preserve">
+    <value>Unable to remove loopback endpoint from service.</value>
+  </data>
+  <data name="Error_UnableToRemoveLoopbackFromConfigurationFile" xml:space="preserve">
+    <value>Unable to remove loopback endpoint from configuration file.</value>
+  </data>
+  <data name="Error_UnableToFindAssociationId" xml:space="preserve">
+    <value>Unable to find the association id.</value>
+  </data>
+  <data name="Error_ValidationLoopbackNameRequired" xml:space="preserve">
+    <value>Endpoint name is required.</value>
+  </data>
+  <data name="CommonTasks_CreateBasicLoopbackEndpoints.Text" xml:space="preserve">
+    <value>Create a basic MIDI 1.0 loopback endpoint (similar to loopMIDI and loopBE) so apps can communicate with each other.</value>
+  </data>
+  <data name="Error_UnableToOpenMidiFixReg" xml:space="preserve">
+    <value>Unable to run the midifixreg.exe utility.</value>
+  </data>
+  <data name="Message_RegistryRepairedPleaseRestartAllMIDIApps" xml:space="preserve">
+    <value>The registry has been repaired. Please reboot your PC or restart all MIDI apps and related services (NI, rtpMIDI, etc.)</value>
+  </data>
+  <data name="Error_UnableToRestoreInBoxComponentRegistrations" xml:space="preserve">
+    <value>Unable to restore in-box component registrations.</value>
+  </data>
+  <data name="Message_QuestionContinueRemovingLoopbackEndpoint" xml:space="preserve">
+    <value>You will likely need to restart any apps using MIDI 1.0 due to how port numbers get rearranged after a delete. Do you wish to continue removing this loopback endpoint?</value>
   </data>
 </root>

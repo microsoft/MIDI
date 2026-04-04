@@ -42,15 +42,23 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
         private readonly IMidiConfigFileService _configFileService;
+        private readonly IMessageBoxService _messageBoxService;
 
         public MidiLoopbackEndpointPair(
-            IMidiConfigFileService configFileService)
+            IMidiConfigFileService configFileService,
+            IMessageBoxService messageBoxService)
         {
             _configFileService = configFileService;
+            _messageBoxService = messageBoxService;
 
             RemoveCommand = new RelayCommand(
                 () =>
                 {
+                    if (!_messageBoxService.ShowMessageWithOkCancel("Message_QuestionContinueRemovingLoopbackEndpoint".GetLocalized()))
+                    {
+                        return;
+                    }
+
                     var associationId = MidiLoopbackEndpointManager.GetAssociationId(LoopA!.DeviceInformation);
 
                     if (associationId != Guid.Empty)
@@ -59,16 +67,27 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                         var response = MidiLoopbackEndpointManager.RemoveTransientLoopbackEndpoints(config);
 
-                        // todo: remove from config file
+                        if (!response)
+                        {
+                            _messageBoxService.ShowError("Error_UnableToRemoveLoopbackFromService".GetLocalized());
+
+                            return;
+                        }
 
                         if (_configFileService.CurrentConfig != null)
                         {
-                            _configFileService.CurrentConfig.RemoveLoopbackEndpointPair(associationId);
+                            var configResponse = _configFileService.CurrentConfig.RemoveLoopbackEndpointPair(associationId);
+
+                            if (!configResponse)
+                            {
+                                _messageBoxService.ShowError("Error_UnableToRemoveLoopbackFromConfigurationFile".GetLocalized());
+                            }
                         }
                     }
                     else
                     {
                         // association id was empty, so not found.
+                        _messageBoxService.ShowError("Error_UnableToFindAssociationId".GetLocalized());
                     }
 
                 });
@@ -364,7 +383,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 NewLoopbackSettingsAreValid = false;
 
                 // these message boxes are ugly, but it's the fastest way to get this out right now
-                _messageBoxService.ShowError(ValidationErrorMessage, "AppDisplayName".GetLocalized());
+                _messageBoxService.ShowError(ValidationErrorMessage);
 
                 return;
             }
@@ -398,13 +417,13 @@ namespace Microsoft.Midi.Settings.ViewModels
                     {
                         // no config file
 
-                        _messageBoxService.ShowError("Error_UnableToCreateLoopbackEndpointMissingConfigurationFile".GetLocalized(), "AppDisplayName".GetLocalized());
+                        _messageBoxService.ShowError("Error_UnableToCreateLoopbackEndpointMissingConfigurationFile".GetLocalized());
 
                     }
                 }
                 else
                 {
-                    _messageBoxService.ShowError("Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " " + result.ErrorInformation, "AppDisplayName".GetLocalized());
+                    _messageBoxService.ShowError("Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " " + result.ErrorInformation);
                 }
             }
 
@@ -454,7 +473,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                             if (!ids.ContainsKey(endpoint.DeviceInformation.EndpointDeviceId) &&
                                 !ids.ContainsKey(associated.EndpointDeviceId))
                             {
-                                var pair = new MidiLoopbackEndpointPair(_configFileService);
+                                var pair = new MidiLoopbackEndpointPair(_configFileService, _messageBoxService);
 
                                 pair.LoopA = endpoint;
                                 pair.LoopB = associated;

@@ -27,5 +27,4 @@ public interface IMidiConsoleToolsService
     bool RestartMidiService();
 
 
-
 }

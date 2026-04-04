@@ -99,11 +99,11 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                         if (proc.ExitCode == 0)
                         {
-                            _messageBoxService.ShowInfo("Message_ServiceSetToAutoStart".GetLocalized(), "AppDisplayName".GetLocalized());
+                            _messageBoxService.ShowInfo("Message_ServiceSetToAutoStart".GetLocalized());
                         }
                         else
                         {
-                            _messageBoxService.ShowError("Error_ServiceNotSetToAutoStart".GetLocalized(), "AppDisplayName".GetLocalized());
+                            _messageBoxService.ShowError("Error_ServiceNotSetToAutoStart".GetLocalized());
                             App.GetService<ILoggingService>().LogError("Unable to set service to auto-start");
                         }
                     }
@@ -127,7 +127,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     {
                         if (!_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle))
                         {
-                            _messageBoxService.ShowError("Error_UnableToChangeDefaultNamingStyle".GetLocalized(), "AppDisplayName".GetLocalized());
+                            _messageBoxService.ShowError("Error_UnableToChangeDefaultNamingStyle".GetLocalized());
                             App.GetService<ILoggingService>().LogError("Unable to set default naming style to new-style");
                         }
                     }
@@ -135,7 +135,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     {
                         if (!_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible))
                         {
-                            _messageBoxService.ShowError("Error_UnableToChangeDefaultNamingStyle".GetLocalized(), "AppDisplayName".GetLocalized());
+                            _messageBoxService.ShowError("Error_UnableToChangeDefaultNamingStyle".GetLocalized());
                             App.GetService<ILoggingService>().LogError("Unable to set default naming style to classic WinMM style");
                         }
 

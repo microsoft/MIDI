@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using static System.Net.WebRequestMethods;
 
 namespace Microsoft.Midi.Settings.Services
 {
@@ -33,19 +34,56 @@ namespace Microsoft.Midi.Settings.Services
             MB_ICONINFORMATION = 0x00000040,
             MB_ICONASTERISK = 0x00000040,
             MB_ICONQUESTION = 0x00000020,
+
             MB_ICONSTOP = 0x00000010,
             MB_ICONERROR = 0x00000010,
-            MB_ICONHAND = 0x00000010
+            MB_ICONHAND = 0x00000010,
 
+        }
+
+        private enum MessageBoxReturn : int
+        {
+            IDOK = 1,
+            IDCANCEL = 2,
+            IDABORT = 3,
+            IDRETRY = 4,
+            IDIGNORE = 5,
+            IDYES = 6,
+            IDNO = 7,
+            IDTRYAGAIN = 10,
+            IDCONTINUE = 11,
         }
 
 
         [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int MessageBox(
+        static extern MessageBoxReturn MessageBox(
                             IntPtr hWnd,
                             string lpText,
                             string lpCaption,
-                            uint uType);
+                            MessageBoxType uType);
+
+
+        public bool ShowMessageWithOkCancel(string message, string title)
+        {
+            if (MessageBox(
+                (IntPtr)0,
+                message,
+                title,
+                MessageBoxType.MB_ICONQUESTION | MessageBoxType.MB_OKCANCEL) == MessageBoxReturn.IDOK)
+            {
+                return true;
+            }
+            else
+            {
+                return false; 
+            }
+        }
+
+
+        public bool ShowMessageWithOkCancel(string message)
+        {
+            return ShowMessageWithOkCancel(message, "AppDisplayName".GetLocalized());
+        }
 
 
 
@@ -55,8 +93,14 @@ namespace Microsoft.Midi.Settings.Services
                 (IntPtr)0,
                 message,
                 title,
-                (uint)(MessageBoxType.MB_ICONINFORMATION | MessageBoxType.MB_OK));
+                MessageBoxType.MB_ICONINFORMATION | MessageBoxType.MB_OK);
         }
+
+        public void ShowInfo(string message)
+        {
+            ShowInfo(message, "AppDisplayName".GetLocalized());
+        }
+
 
 
         public void ShowError(string message, string title)
@@ -65,7 +109,14 @@ namespace Microsoft.Midi.Settings.Services
                 (IntPtr)0,
                 message,
                 title,
-                (uint)(MessageBoxType.MB_ICONERROR | MessageBoxType.MB_OK));
+                MessageBoxType.MB_ICONERROR | MessageBoxType.MB_OK);
         }
+
+        public void ShowError(string message)
+        {
+            ShowError(message, "AppDisplayName".GetLocalized());
+        }
+
+
     }
 }

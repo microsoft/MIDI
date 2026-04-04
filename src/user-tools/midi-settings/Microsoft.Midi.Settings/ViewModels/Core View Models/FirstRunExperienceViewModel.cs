@@ -262,7 +262,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (serviceRestarted)
             {
-                _messageBoxService.ShowInfo("Message_SettingsAppWillNowRestart".GetLocalized(), "AppDisplayName".GetLocalized());
+                _messageBoxService.ShowInfo("Message_SettingsAppWillNowRestart".GetLocalized());
 
                 // For now, we'll just restart the app, but it would be 
                 // better to reload config file and reload data
@@ -273,15 +273,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                 switch (restartError)
                 {
                     case AppRestartFailureReason.RestartPending:
-                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(), "AppDisplayName".GetLocalized());
+                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized());
                         break;
 
                     case AppRestartFailureReason.InvalidUser:
-                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(), "AppDisplayName".GetLocalized());
+                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized());
                         break;
 
                     case AppRestartFailureReason.Other:
-                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized(), "AppDisplayName".GetLocalized());
+                        _messageBoxService.ShowInfo("Error_SettingsAppCouldNotAutomaticallyRestart".GetLocalized());
                         break;
                 }
             }
