@@ -42,7 +42,8 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class DeviceDetailPage : Page
     {
-        private ILoggingService _loggingService;
+        private readonly ILoggingService _loggingService;
+        private readonly IMidiEndpointImageService _imageService;
 
         public DeviceDetailViewModel ViewModel
         {
@@ -54,67 +55,52 @@ namespace Microsoft.Midi.Settings.Views
         {
             ViewModel = App.GetService<DeviceDetailViewModel>();
 
-            Loaded += DeviceDetailPage_Loaded;
-
+            _imageService = App.GetService<IMidiEndpointImageService>();
             _loggingService = App.GetService<ILoggingService>();
 
             this.InitializeComponent();
         }
 
-        private void DeviceDetailPage_Loaded(object sender, RoutedEventArgs e)
-        {
-            
-        }
-
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void CustomizeButton_Click(object sender, RoutedEventArgs e)
         {
             if (ViewModel.EndpointWrapper == null)
             {
                 return;
             }
 
-          //  ViewModel.RefreshVM();
+            //ViewModel.RefreshVM();
 
-            editUserDefinedPropertiesDialog.Width = this.Width / 3;
+       //     editUserDefinedPropertiesDialog.Width = this.Width / 3;
 
 
             // TODO: Should probably have these in the viewmodel as
             // we'll need a renderable image anyway. This code is temp
 
-            if (!string.IsNullOrEmpty(ViewModel.CustomizationViewModel.ImageFileName))
+            if (ViewModel.CustomizationViewModel.HasImage)
             {
-                var file = await StorageFile.GetFileFromPathAsync(ViewModel.CustomizationViewModel.ImageFileName);
-
-                if (file != null)
-                {
-                    // Open a stream for the selected file.
-                    // The 'using' block ensures the stream is disposed
-                    // after the image is loaded.
-                    using IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.Read);
-
-                    // Set the image source to the selected bitmap.
-                    var bitmapImage = new BitmapImage();
-
-                    bitmapImage.SetSource(fileStream);
-
-                    UserMetadataImagePreview.Source = bitmapImage;
-                }
+                UserMetadataImagePreview.Source = ViewModel.CustomizationViewModel.Image;
             }
-
 
 
             ContentDialogResult result = await editUserDefinedPropertiesDialog.ShowAsync(ContentDialogPlacement.Popup);
 
-            if (result == ContentDialogResult.Primary)
-            {
-                // save the changes
+            //if (result == ContentDialogResult.Primary)
+            //{
+            //    // save the changes
 
 
-                // refresh the device information?
+            //    // refresh the device information?
 
-            }
+            //}
         }
 
+
+        // the command approach causes a binding error due to the window unloading before two-way binding gets updated
+        private void editUserDefinedPropertiesDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            ViewModel.SubmitCustomizationChanges();          
+
+        }
 
 
         private void RemoveImage_Click(object sender, RoutedEventArgs e)
@@ -139,21 +125,26 @@ namespace Microsoft.Midi.Settings.Views
 
             if (file != null)
             {
-                // update the edit vm
-                ViewModel.CustomizationViewModel.ImageFileName = file.Path;
+                // copy the image into the images folder
 
-                // Open a stream for the selected file.
-                // The 'using' block ensures the stream is disposed
-                // after the image is loaded.
-                using IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.Read);
+                string fileName = file.Path;
 
-                // Set the image source to the selected bitmap.
-                var bitmapImage = new BitmapImage();
+                string newFileName = App.GetService<IMidiEndpointImageService>().CopyToImageAssetsFolder(fileName);
 
-                bitmapImage.SetSource(fileStream);
+                if (!string.IsNullOrEmpty(newFileName))
+                {
+                    ViewModel.CustomizationViewModel.ImageFullPath = App.GetService<IMidiEndpointImageService>().GetImageAssetFullPath(newFileName);
+                    //ViewModel.CustomizationViewModel.ImageFileName = App.GetService<IMidiEndpointImageService>().GetImageAssetFileName(newFileName);
 
-                UserMetadataImagePreview.Source = bitmapImage;
-                ViewModel.CustomizationViewModel.HasImage = true;
+                    ViewModel.CustomizationViewModel.UpdateImage();
+
+                    UserMetadataImagePreview.Source = ViewModel.CustomizationViewModel.Image;
+                }
+                else
+                {
+                    UserMetadataImagePreview.Source = null;
+                }
+
             }
         }
 
@@ -181,5 +172,6 @@ namespace Microsoft.Midi.Settings.Views
                 App.GetService<ILoggingService>().LogError("Error opening console monitor", ex);
             }
         }
+
     }
 }

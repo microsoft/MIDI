@@ -108,12 +108,12 @@
                 </controls:SettingsCard>
 
 
-                <controls:SettingsCard Header="Repair in-box service component registration"
+                <!--<controls:SettingsCard Header="Repair in-box service component registration"
                                    Description="If you have used developer service plugins or the developer service, and want to revert to the in-box shipped versions, click the button below."
                                        >
                     <Button Content="Restore in-box Registrations"
                             Command="{x:Bind ViewModel.RestoreInBoxComponentsCommand}"/>
-                </controls:SettingsCard>
+                </controls:SettingsCard>-->
 
 
 

@@ -504,7 +504,7 @@
                                                Grid.RowSpan="3"
                                                Margin="0,0,16,16"
                                                HorizontalAlignment="Center"
-                                               VerticalAlignment="Top"
+                                               VerticalAlignment="Center"
                                                Source="{x:Bind Image, Mode=OneWay}"
                                                Stretch="Uniform"/>
 

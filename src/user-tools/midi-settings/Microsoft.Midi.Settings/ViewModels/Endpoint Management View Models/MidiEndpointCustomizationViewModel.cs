@@ -1,5 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Services;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.Devices.Midi2.Utilities.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,6 +21,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         [ObservableProperty]
         private string currentDisplayName;
+
+        [ObservableProperty]
+        private string calculatedOldStyleName;
+
+        [ObservableProperty]
+        private string calculatedNewStyleName;
 
         [ObservableProperty]
         private string originalCustomName;
@@ -40,7 +50,14 @@ namespace Microsoft.Midi.Settings.ViewModels
         private string imageFileName;
 
         [ObservableProperty]
+        private string imageFullPath;
+
+        [ObservableProperty]
         private bool hasImage;
+
+        [ObservableProperty]
+        private ImageSource? image;
+
 
         [ObservableProperty]
         private bool supportsMidiPolyphonicExpression;
@@ -65,6 +82,37 @@ namespace Microsoft.Midi.Settings.ViewModels
         private ObservableCollection<MidiEndpointMidi1PortCustomizationViewModel> midi1DestinationPorts = [];
 
 
+        public void UpdateImage()
+        {
+            if (!string.IsNullOrEmpty(ImageFullPath))
+            {
+                HasImage = File.Exists(ImageFullPath);
+                ImageFileName = App.GetService<IMidiEndpointImageService>().GetImageAssetFileName(ImageFullPath);
+            }
+            else
+            {
+                // use the image in the wrapper
+
+                HasImage = Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.EndpointHasValidCustomImageAsset(endpointWrapper.DeviceInformation);
+                ImageFullPath = Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.GetImageFullPathForEndpoint(endpointWrapper.DeviceInformation);
+            }
+
+
+            if (HasImage)
+            {
+                ImageFileName = App.GetService<IMidiEndpointImageService>().GetImageAssetFileName(ImageFullPath);
+
+                Image = App.GetService<IMidiEndpointImageService>().GetImageSource(ImageFullPath);
+            }
+            else
+            {
+                ImageFileName = string.Empty;
+                Image = null;
+            }
+
+
+        }
+
         public MidiEndpointCustomizationViewModel(MidiEndpointWrapper endpointWrapper)
         {
             Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
@@ -81,7 +129,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseClassicCompatible);
             midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseNewStyle);
 
-            HasImage = !string.IsNullOrEmpty(ImageFileName);
+            UpdateImage();
 
             // name table entries
 
@@ -91,6 +139,9 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 vm.NewCustomName = nameTableEntry.CustomName;
                 vm.OriginalCustomName = nameTableEntry.CustomName;
+
+                vm.CalculatedOldStyleName = nameTableEntry.LegacyCompatibleName;
+                vm.CalculatedNewStyleName = nameTableEntry.NewStyleName;
 
                 vm.Group = new MidiGroup(nameTableEntry.GroupIndex);
 
@@ -131,19 +182,35 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             configUpdate.Midi1PortNamingApproach = Midi1PortNaming;
 
-            foreach (var port in Midi1SourcePorts)
+            if (Midi1SourcePorts != null && Midi1SourcePorts.Count > 0)
             {
-                if (!string.IsNullOrWhiteSpace(port.NewCustomName))
+                foreach (var port in Midi1SourcePorts)
                 {
-                    configUpdate.AddMidi1SourcePortCustomName(port.Group, port.NewCustomName.Trim());
+                    if (!string.IsNullOrWhiteSpace(port.NewCustomName))
+                    {
+                        configUpdate.AddMidi1SourcePortCustomName(port.Group, port.NewCustomName.Trim());
+                    }
+                    else if (port.OriginalCustomName != port.NewCustomName)
+                    {
+                        // it used to have a value, and is now blank, so we need to clear it out
+                        configUpdate.AddMidi1SourcePortCustomName(port.Group, port.NewCustomName.Trim());
+                    }
                 }
             }
 
-            foreach (var port in Midi1DestinationPorts)
+            if (Midi1DestinationPorts != null && Midi1DestinationPorts.Count > 0)
             {
-                if (!string.IsNullOrWhiteSpace(port.NewCustomName))
+                foreach (var port in Midi1DestinationPorts)
                 {
-                    configUpdate.AddMidi1DestinationPortCustomName(port.Group, port.NewCustomName.Trim());
+                    if (!string.IsNullOrWhiteSpace(port.NewCustomName))
+                    {
+                        configUpdate.AddMidi1DestinationPortCustomName(port.Group, port.NewCustomName.Trim());
+                    }
+                    else if (port.OriginalCustomName != port.NewCustomName)
+                    {
+                        // it used to have a value, and is now blank, so we need to clear it out
+                        configUpdate.AddMidi1DestinationPortCustomName(port.Group, port.NewCustomName.Trim());
+                    }
                 }
             }
 

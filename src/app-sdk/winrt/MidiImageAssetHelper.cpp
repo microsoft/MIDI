@@ -10,6 +10,8 @@
 #include "MidiImageAssetHelper.h"
 #include "Utilities.Metadata.MidiImageAssetHelper.g.cpp"
 
+#include <filesystem>
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implementation
 {
 #define BASE_TRANSPORT_IMAGE_PATH                   L"%allusersprofile%\\Microsoft\\MIDI\\Assets\\Transports\\"
@@ -121,6 +123,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
     winrt::hstring MidiImageAssetHelper::GetDefaultImageFullPathForEndpoint(
         midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept
     {
+        if (endpointDeviceInformation == nullptr)
+        {
+            LOG_IF_FAILED(E_INVALIDARG);
+            return L"";
+        }
+
         auto code = endpointDeviceInformation.GetTransportSuppliedInfo().TransportCode;
         auto fileName = winrt::hstring{ ENDPOINT_SMALL_IMAGE_PREFIX_DEFAULT } + code + winrt::hstring{ SMALL_IMAGE_DEFAULT_SUFFIX_AND_EXTENSION };
 
@@ -139,27 +147,145 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
     }
 
 
+
     _Use_decl_annotations_
     winrt::hstring MidiImageAssetHelper::GetImageFullPathForEndpoint(
         midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept
     {
-        auto fileName = endpointDeviceInformation.GetUserSuppliedInfo().ImageFileName;
-
-        if (!FileNameValid(fileName))
+        if (endpointDeviceInformation == nullptr)
         {
-            // Return the default file for the transport
+            LOG_IF_FAILED(E_INVALIDARG);
+            return L"";
+        }
+
+        if (EndpointHasValidCustomImageAsset(endpointDeviceInformation))
+        {
+            return GetFullCustomImageAssetPathForEndpointImage(endpointDeviceInformation);
+        }
+        else
+        {
             return GetDefaultImageFullPathForEndpoint(endpointDeviceInformation);
         }
+    }
 
-        if (FileNameContainsPath(fileName) && FileExists(fileName))
+
+
+    _Use_decl_annotations_
+    bool MidiImageAssetHelper::EndpointHasValidCustomImageAsset(
+        midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept
+    {
+        if (endpointDeviceInformation == nullptr)
         {
-            return fileName;
+            LOG_IF_FAILED(E_INVALIDARG);
+            return false;
         }
 
-        // otherwise, it's a file in our standard folder. 
+        try
+        {
+            auto fileNamePropertyValue = endpointDeviceInformation.GetUserSuppliedInfo().ImageFileName;
 
-        return ExpandPath(BASE_ENDPOINT_IMAGE_PATH) + fileName;
+            if (fileNamePropertyValue.empty())
+            {
+                return false;
+            }
+
+            std::filesystem::path p(fileNamePropertyValue.c_str());
+
+            if (p.filename().empty())
+            {
+                return false;
+            }
+
+            auto fullPath = ExpandPath(BASE_ENDPOINT_IMAGE_PATH) + p.filename();
+
+            return FileExists(fullPath);
+        }
+        catch (winrt::hresult_error ex)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to check if endpoint has valid image asset", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"General exception. Unable to check if endpoint has valid image asset", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
+
+        return false;
     }
+
+    _Use_decl_annotations_
+    winrt::hstring MidiImageAssetHelper::GetFullCustomImageAssetPathForEndpointImage(
+        midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept
+    {
+        if (endpointDeviceInformation == nullptr)
+        {
+            LOG_IF_FAILED(E_INVALIDARG);
+            return L"";
+        }
+
+        try
+        {
+            auto fileNamePropertyValue = endpointDeviceInformation.GetUserSuppliedInfo().ImageFileName;
+
+            if (fileNamePropertyValue.empty())
+            {
+                return L"";
+            }
+
+            std::filesystem::path p(fileNamePropertyValue.c_str());
+
+            if (p.filename().empty())
+            {
+                return L"";
+            }
+
+            return ExpandPath(BASE_ENDPOINT_IMAGE_PATH) + p.filename();
+        }
+        catch (winrt::hresult_error ex)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to get full image asset path", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"General exception. Unable to get full image asset path", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
+
+        return L"";
+    }
+
+
+
 
 
 }

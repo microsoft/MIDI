@@ -23,5 +23,7 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.Metadata
         static String GetImageFullPathForEndpoint(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
         static String GetDefaultImageFullPathForEndpoint(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
 
+        static Boolean EndpointHasValidCustomImageAsset(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
+        static String GetFullCustomImageAssetPathForEndpointImage(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
     }
 }
