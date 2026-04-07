@@ -5,6 +5,7 @@
 
 #include <Feature_Servicing_MIDI2WinmmNoBufs.h>
 #include <Feature_Servicing_MIDI2WinmmAddBufferSizeCheck.h>
+#include <Feature_Servicing_MIDI2BsToUMPConv.h>
 
 #define CALC_TICKS(pos) ((DWORD) (((pos) * 1000.0) / m_qpcFrequency))
 
@@ -56,7 +57,16 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
     TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_WaitForSendComplete, MidiDataFormats_ByteStream, WINMM_APIID };
     DWORD mmcssTaskId {0};
     LARGE_INTEGER qpc{ 0 };
-    
+
+    if (Feature_Servicing_MIDI2BsToUMPConv::IsEnabled())
+    {
+        if (MidiFlowOut == flow)
+        {
+            // Winmm Midi out clients may send running status messages, not applicable for midi in.
+            transportCreationParams.MessageOptions = (MessageOptionFlags) (transportCreationParams.MessageOptions | MessageOptionFlags_HasRunningStatus);
+        }
+    }
+
     QueryPerformanceFrequency(&qpc);
     m_qpcFrequency = qpc.QuadPart;
 

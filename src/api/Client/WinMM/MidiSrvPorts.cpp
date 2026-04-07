@@ -2,6 +2,10 @@
 
 #include "pch.h"
 #include "MidiSrvPorts.h"
+#include <ntverp.h>
+#include <ks.h>
+
+#include "Feature_Servicing_MIDI2DevCaps2.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -131,7 +135,7 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             }
             break;
         case MIDM_GETDEVCAPS:
-            hr = GetDevCaps(MidiFlowIn, deviceID, param1);
+            hr = GetDevCaps(MidiFlowIn, deviceID, param1, param2);
             break;
         case MIDM_OPEN:
             hr = Open(MidiFlowIn, deviceID, (MIDIOPENDESC *) param1, param2, (MidiPortHandle*) user);
@@ -185,7 +189,7 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             }
             break;
         case MODM_GETDEVCAPS:
-            hr = GetDevCaps(MidiFlowOut, deviceID, param1);
+            hr = GetDevCaps(MidiFlowOut, deviceID, param1, param2);
             break;
         case MODM_OPEN:
             hr = Open(MidiFlowOut, deviceID, (MIDIOPENDESC *) param1, param2, (MidiPortHandle*) user);
@@ -253,6 +257,8 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
             DWORD requiredSize {0};
             WCHAR deviceDriverInterfaceId[MAX_PATH] = {0};
             std::unique_ptr<SP_DEVICE_INTERFACE_DETAIL_DATA> interfaceDetailData;
+            KSCOMPONENTID ksComponentId {0};
+            DWORD ksComponentIdSize {0};
 
             // retrieve the device interface id string
             if (!SetupDiGetDeviceInterfaceDetail(
@@ -341,6 +347,28 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
                 continue;
             }
 
+            if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+            {
+                // Retrieve the KS component id information, if available,
+                // from the SWD.
+                if (SetupDiGetDeviceInterfaceProperty(
+                    devInfo.get(),
+                    &deviceInterfaceData,
+                    &PKEY_MIDI_KsComponentId,
+                    &propType,
+                    (PBYTE) &ksComponentId,
+                    sizeof(KSCOMPONENTID),
+                    &ksComponentIdSize,
+                    0))
+                {
+                    if (propType != DEVPROP_TYPE_BINARY ||
+                        ksComponentIdSize != sizeof(KSCOMPONENTID))
+                    {
+                        continue;
+                    }
+                }
+            }
+
             // our port numbers start with 1 because they're the "global" port numbers
             // that the user should see and port 0 is reserved for the synth.
             // So, a service port number of 1 indicates that we have 1 port, and so on.
@@ -356,38 +384,123 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
             m_MidiPortInfo[flow][servicePortNum].Name = deviceName;
             m_MidiPortInfo[flow][servicePortNum].InterfaceId = interfaceDetailData->DevicePath;
             m_MidiPortInfo[flow][servicePortNum].DriverDeviceInterfaceId = WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(deviceDriverInterfaceId);
-            
-            // Fill in the midiCaps for this port
-            if (flow == MidiFlowOut)
+
+            if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
             {
-                MIDIOUTCAPSW *caps = &(m_MidiPortInfo[flow][servicePortNum].MidiOutCaps);
-            
-                caps->wMid = MM_MICROSOFT;
-                caps->wPid = MM_MSFT_GENERIC_MIDIOUT;
-                caps->vDriverVersion = 0x0100;
-            
-                wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
-                caps->szPname[MAXPNAMELEN - 1] = NULL;
-            
-                caps->wTechnology = MOD_MIDIPORT;
-                caps->wVoices = 0;
-                caps->wNotes = 0;
-                caps->wChannelMask = 0xFFFF;
-                caps->dwSupport = 0;
+                WORD wMid {MM_MICROSOFT};
+                WORD wPid = (flow == MidiFlowOut)?MM_MSFT_GENERIC_MIDIOUT:MM_MSFT_GENERIC_MIDIIN;
+                MMVERSION vDriverVersion {0x0100};
+                GUID manufacturerGuid {0};
+                GUID productGuid {0};
+                GUID nameGuid {0};
+
+                INIT_MMREG_MID( &manufacturerGuid, wMid );
+                INIT_MMREG_PID( &productGuid, wPid );
+
+                if (ksComponentIdSize > 0)
+                {
+                    // Legacy kscomponentid information is available, default to wdmaudio midi in/out
+                    // pid, in the event the pid provided by the driver is not compatible,
+                    // and the legacy driver versioning, in the even the provided version isn't
+                    // compatible.
+                    //
+                    // This is to as closely as possible match what wdmaud returned for these
+                    // drivers, which apps have come to depend upon.
+                    wPid = (flow == MidiFlowOut)?MM_MSFT_WDMAUDIO_MIDIOUT:MM_MSFT_WDMAUDIO_MIDIIN;
+                    vDriverVersion = MAKEWORD(VER_PRODUCTMINORVERSION, VER_PRODUCTMAJORVERSION);
+
+                    manufacturerGuid = ksComponentId.Manufacturer;
+                    productGuid = ksComponentId.Product;
+                    nameGuid = ksComponentId.Name;
+                
+                    if (IS_COMPATIBLE_MMREG_MID(&ksComponentId.Manufacturer))
+                    {
+                        wMid = EXTRACT_MMREG_MID(&ksComponentId.Manufacturer);
+                    }
+                    
+                    if (IS_COMPATIBLE_MMREG_PID(&ksComponentId.Product))
+                    {
+                        wPid = EXTRACT_MMREG_PID(&ksComponentId.Product);
+                    }
+                
+                    if ((ksComponentId.Version < 256) && (ksComponentId.Revision < 256))
+                    {
+                        vDriverVersion = MAKEWORD(ksComponentId.Revision, ksComponentId.Version);
+                    }
+                }
+
+                // Fill in the midiCaps for this port
+                if (flow == MidiFlowOut)
+                {
+                    MIDIOUTCAPS2W *caps = &(m_MidiPortInfo[flow][servicePortNum].MidiOutCaps);
+                
+                    caps->wMid = wMid;
+                    caps->wPid = wPid;
+                    caps->vDriverVersion = vDriverVersion;
+                    caps->ManufacturerGuid = manufacturerGuid;
+                    caps->ProductGuid = productGuid;
+                    caps->NameGuid = nameGuid;
+                
+                    wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
+                    caps->szPname[MAXPNAMELEN - 1] = NULL;
+                
+                    caps->wTechnology = MOD_MIDIPORT;
+                    caps->wVoices = 0;
+                    caps->wNotes = 0;
+                    caps->wChannelMask = 0xFFFF;
+                    caps->dwSupport = 0;
+                }
+                else
+                {
+                    MIDIINCAPS2W *caps = &(m_MidiPortInfo[flow][servicePortNum].MidiInCaps);
+                
+                    caps->wMid = wMid;
+                    caps->wPid = wPid;
+                    caps->vDriverVersion = vDriverVersion;
+                    caps->ManufacturerGuid = manufacturerGuid;
+                    caps->ProductGuid = productGuid;
+                    caps->NameGuid = nameGuid;
+
+                    wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
+                    caps->szPname[MAXPNAMELEN - 1] = NULL;
+                
+                    caps->dwSupport = 0;
+                }
             }
             else
             {
-                MIDIINCAPSW *caps = &(m_MidiPortInfo[flow][servicePortNum].MidiInCaps);
-            
-                caps->wMid = MM_MICROSOFT;
-                caps->wPid = MM_MSFT_GENERIC_MIDIIN;
-                caps->vDriverVersion = 0x0100;
+                // Fill in the midiCaps for this port
+                if (flow == MidiFlowOut)
+                {
+                    MIDIOUTCAPSW *caps = (MIDIOUTCAPSW*) &(m_MidiPortInfo[flow][servicePortNum].MidiOutCaps);
+                
+                    caps->wMid = MM_MICROSOFT;
+                    caps->wPid = MM_MSFT_GENERIC_MIDIOUT;
+                    caps->vDriverVersion = 0x0100;
+                
+                    wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
+                    caps->szPname[MAXPNAMELEN - 1] = NULL;
+                
+                    caps->wTechnology = MOD_MIDIPORT;
+                    caps->wVoices = 0;
+                    caps->wNotes = 0;
+                    caps->wChannelMask = 0xFFFF;
+                    caps->dwSupport = 0;
+                }
+                else
+                {
+                    MIDIINCAPSW *caps = (MIDIINCAPSW*) &(m_MidiPortInfo[flow][servicePortNum].MidiInCaps);
+                
+                    caps->wMid = MM_MICROSOFT;
+                    caps->wPid = MM_MSFT_GENERIC_MIDIIN;
+                    caps->vDriverVersion = 0x0100;
 
-                //wcsncpy_s(caps->szPname, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), MAXPNAMELEN);
-                wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
-                caps->szPname[MAXPNAMELEN - 1] = NULL;
-            
-                caps->dwSupport = 0;
+                    //wcsncpy_s(caps->szPname, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), MAXPNAMELEN);
+                    wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
+                    caps->szPname[MAXPNAMELEN - 1] = NULL;
+                
+                    caps->dwSupport = 0;
+                }
             }
         }
     }
@@ -409,7 +522,7 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
 
 _Use_decl_annotations_
 HRESULT
-CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps)
+CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps, DWORD_PTR midiCapsSize)
 {
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -426,14 +539,30 @@ CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps)
     // clear the provided caps, in the event that the port is not active.
     if (MidiFlowIn == flow)
     {
-        memset((PVOID) midiCaps, 0, sizeof(MIDIINCAPSW));
+        if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+        {
+            RETURN_HR_IF(E_INVALIDARG, midiCapsSize < sizeof(MIDIINCAPSW));
+            memset((PVOID) midiCaps, 0, midiCapsSize);
+        }
+        else
+        {
+            memset((PVOID) midiCaps, 0, sizeof(MIDIINCAPSW));
+        }
 
         // set the default name in case the port is not active. Some apps ignore the hresult
         ::LoadStringW(HINST_WDMAUD2, IDS_MIDI_UNAVAILABLE_ENDPOINT, ((MIDIINCAPSW*)midiCaps)->szPname, MAXPNAMELEN);
     }
     else
     {
-        memset((PVOID) midiCaps, 0, sizeof(MIDIOUTCAPSW));
+        if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+        {
+            RETURN_HR_IF(E_INVALIDARG, midiCapsSize < sizeof(MIDIOUTCAPSW));
+            memset((PVOID) midiCaps, 0, midiCapsSize);
+        }
+        else
+        {
+            memset((PVOID) midiCaps, 0, sizeof(MIDIOUTCAPSW));
+        }
 
         // set the default name in case the port is not active. Some apps ignore the hresult
         ::LoadStringW(HINST_WDMAUD2, IDS_MIDI_UNAVAILABLE_ENDPOINT, ((MIDIOUTCAPSW*)midiCaps)->szPname, MAXPNAMELEN);
@@ -454,11 +583,25 @@ CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps)
 
     if (MidiFlowIn == flow)
     {
-        memcpy((PVOID) midiCaps, &(port->second.MidiInCaps), sizeof(port->second.MidiInCaps));
+        if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+        {
+            memcpy((PVOID) midiCaps, &(port->second.MidiInCaps), min(sizeof(port->second.MidiInCaps), midiCapsSize));
+        }
+        else
+        {
+            memcpy((PVOID) midiCaps, &(port->second.MidiInCaps), sizeof(port->second.MidiInCaps));
+        }
     }
     else
     {
-        memcpy((PVOID) midiCaps, &(port->second.MidiOutCaps), sizeof(port->second.MidiOutCaps));
+        if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+        {
+            memcpy((PVOID) midiCaps, &(port->second.MidiOutCaps), min(sizeof(port->second.MidiOutCaps), midiCapsSize));
+        }
+        else
+        {
+            memcpy((PVOID) midiCaps, &(port->second.MidiOutCaps), sizeof(port->second.MidiOutCaps));
+        }
     }
 
     return S_OK;

@@ -3,6 +3,7 @@
 #include "pch.h"
 #include <libmidi2/bytestreamToUMP.h>
 #include "midi2.BS2UMPtransform.h"
+#include <Feature_Servicing_MIDI2BsToUMPConv.h>
 
 _Use_decl_annotations_
 HRESULT
@@ -28,8 +29,6 @@ CMidi2BS2UMPMidiTransform::Initialize(
 
     m_Device = device;
     m_Callback = callback;
-
-    //m_BS2UMP.outputMIDI2 = false;
 
     if (IS_VALID_GROUP_INDEX(creationParams->UmpGroupIndex))
     {
@@ -102,6 +101,11 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     std::vector<UINT32> translatedWords{};
     translatedWords.reserve(length / 3 + 1);        // as an approximation of output data size, this is reasonable
 
+    if (Feature_Servicing_MIDI2BsToUMPConv::IsEnabled())
+    {
+        // Set the running status flag on the converter if the incoming message could contain running status messages.
+        m_BS2UMP.enableRunningStatus = (optionFlags & MessageOptionFlags_HasRunningStatus);
+    }
 
     for (UINT i = 0; i < length; i++)
     {
@@ -128,17 +132,37 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     if (translatedWords.size() > 0)
     {
         // send the message. The context contains the group index
-        auto hr = m_Callback->Callback(
-            (MessageOptionFlags)(optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
-            static_cast<PVOID>(translatedWords.data()),
-            static_cast<UINT>(translatedWords.size() * sizeof(UINT32)),
-            position,
-            m_BS2UMP.defaultGroup);
+        // If the message contained running status, it no longer does
 
-        if (FAILED(hr))
+        if (Feature_Servicing_MIDI2BsToUMPConv::IsEnabled())
         {
-            m_BS2UMP.resetBuffer();
-            RETURN_IF_FAILED(hr);
+            auto hr = m_Callback->Callback(
+                (MessageOptionFlags)((optionFlags | MessageOptionFlags_ContextContainsGroupIndex) & ~MessageOptionFlags_HasRunningStatus),
+                static_cast<PVOID>(translatedWords.data()),
+                static_cast<UINT>(translatedWords.size() * sizeof(UINT32)),
+                position,
+                m_BS2UMP.defaultGroup);
+
+            if (FAILED(hr))
+            {
+                m_BS2UMP.resetBuffer();
+                RETURN_IF_FAILED(hr);
+            }
+        }
+        else
+        {
+            auto hr = m_Callback->Callback(
+                (MessageOptionFlags)(optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
+                static_cast<PVOID>(translatedWords.data()),
+                static_cast<UINT>(translatedWords.size() * sizeof(UINT32)),
+                position,
+                m_BS2UMP.defaultGroup);
+            
+            if (FAILED(hr))
+            {
+                m_BS2UMP.resetBuffer();
+                RETURN_IF_FAILED(hr);
+            }
         }
     }
 

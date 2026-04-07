@@ -18,6 +18,7 @@
 
 #include "Feature_Servicing_MIDI2DeviceRemoval.h"
 #include "Feature_Servicing_MIDI2ContainerIds.h"
+#include "Feature_Servicing_MIDI2DevCaps2.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -2957,6 +2958,10 @@ CMidiDeviceManager::SyncMidi1Ports(
     
     additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);       // need this pin map to find filter id
     additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);    // when no pin map is used, this has the filter id
+    if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+    {
+        additionalProperties.Append(STRING_PKEY_MIDI_KsComponentId);
+    }
 
     // We have function blocks to retrieve
     // build up the property keys to query for the function blocks
@@ -3006,6 +3011,17 @@ CMidiDeviceManager::SyncMidi1Ports(
 
     auto transportId = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(STRING_PKEY_MIDI_TransportLayer, deviceInfo, GUID_NULL);
     auto nativeDataFormat = (MidiDataFormats)internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(STRING_PKEY_MIDI_NativeDataFormat, deviceInfo, MidiDataFormats::MidiDataFormats_Invalid);
+    winrt::Windows::Foundation::IReferenceArray<uint8_t> ksComponentId {nullptr};
+    winrt::com_array<uint8_t> ksComponentIdData;
+
+    if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+    {
+        ksComponentId = internal::SafeGetSwdBinaryPropertyFromDeviceInformation(STRING_PKEY_MIDI_KsComponentId, deviceInfo);
+        if (ksComponentId != nullptr)
+        {
+            ksComponentIdData = ksComponentId.Value();
+        }
+    }
 
     // we need to know if this is a native UMP device on a UMP transport, a byte format device on a UMP transport, or a 
     // byte format device on a byte format transport. We should probably get this from other properties rather than
@@ -3081,6 +3097,15 @@ CMidiDeviceManager::SyncMidi1Ports(
 
                     interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
                         DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
+
+                    if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+                    {
+                        if (ksComponentIdData.size() > 0)
+                        {
+                            interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_KsComponentId, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_BINARY, ksComponentIdData.size(), (PVOID) ksComponentIdData.data() });
+                        }
+                    }
 
                     auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_SupportedDataFormats);
                     if (prop)
