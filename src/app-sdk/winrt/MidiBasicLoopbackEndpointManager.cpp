@@ -42,14 +42,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name).empty())
         {
             // todo: localize / pull from resources
-            result.ErrorInformation = L"Missing endpoint name";
+            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME);
             return result;
         }
 
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId).empty())
         {
             // todo: localize / pull from resources
-            result.ErrorInformation = L"Missing unique id";
+            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_UNIQUEID);
             return result;
         }
 

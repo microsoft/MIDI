@@ -48,29 +48,25 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Name).empty())
         {
-            // todo: localize / pull from resources
-            result.ErrorInformation = L"Missing name for endpoint A";
+            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A);
             return result;
         }
 
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().UniqueId).empty())
         {
-            // todo: localize / pull from resources
-            result.ErrorInformation = L"Missing unique id for endpoint A";
+            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_UNIQUEID_A);
             return result;
         }
 
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Name).empty())
         {
-            // todo: localize / pull from resources
-            result.ErrorInformation = L"Missing name for endpoint B";
+            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B);
             return result;
         }
 
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().UniqueId).empty())
         {
-            // todo: localize / pull from resources
-            result.ErrorInformation = L"Missing unique id for endpoint B";
+            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_UNIQUEID_B);
             return result;
         }
 
