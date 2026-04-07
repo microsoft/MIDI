@@ -77,8 +77,11 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "MidiXProc.h"
 
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #include <libmidi2/umpToBytestream.h>
 #include <libmidi2/bytestreamToUMP.h>
+#pragma warning(pop)
 
 #include "strsafe.h"
 

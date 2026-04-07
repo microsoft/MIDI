@@ -12,8 +12,11 @@
 #include <iomanip>
 
 #include "LibMidi2Tests.h"
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #include "libmidi2\bytestreamToUMP.h"
 #include "libmidi2\umpToBytestream.h"
+#pragma warning(pop)
 
 _Use_decl_annotations_
 void LibMidi2Tests::InternalTranslateMidi1BytesToUmpWords(

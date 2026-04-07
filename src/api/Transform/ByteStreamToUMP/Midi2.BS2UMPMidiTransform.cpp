@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "pch.h"
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #include <libmidi2/bytestreamToUMP.h>
+#pragma warning(pop)
 #include "midi2.BS2UMPtransform.h"
 #include <Feature_Servicing_MIDI2BsToUMPConv.h>
 

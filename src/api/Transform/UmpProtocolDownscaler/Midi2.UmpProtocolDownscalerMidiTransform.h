@@ -13,9 +13,12 @@
 
 #include "pch.h"
 
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #include <libmidi2/utils.h>                 // AM_MIDI2
 #include <libmidi2/umpMessageCreate.h>      // AM_MIDI2
 #include <libmidi2/umpToMIDI1Protocol.h>    // AM_MIDI2
+#pragma warning(pop)
 
 using namespace winrt::Windows::Devices::Enumeration;
 //
