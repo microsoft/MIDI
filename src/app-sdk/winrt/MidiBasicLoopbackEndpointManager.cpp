@@ -36,8 +36,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
     {
         // the success code in this defaults to False
         bloop::MidiBasicLoopbackEndpointCreationResult result{};
+        result.AssociationId = creationConfig.AssociationId();
         result.Success = false;
 
+        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name).empty())
+        {
+            // todo: localize / pull from resources
+            result.ErrorInformation = L"Missing endpoint name";
+            return result;
+        }
+
+        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId).empty())
+        {
+            // todo: localize / pull from resources
+            result.ErrorInformation = L"Missing unique id";
+            return result;
+        }
 
         try
         {
@@ -57,7 +71,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                     if (!deviceId.empty())
                     {
                         // update the response object with the new ids
-                        result.AssociationId = creationConfig.AssociationId();
                         result.EndpointDeviceId = deviceId;
                         result.Success = true;
                     }

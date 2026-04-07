@@ -44,6 +44,35 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         // the success code in this defaults to False
         loop::MidiLoopbackEndpointCreationResult result{};
         result.Success = false;
+        result.AssociationId = creationConfig.AssociationId();
+
+        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Name).empty())
+        {
+            // todo: localize / pull from resources
+            result.ErrorInformation = L"Missing name for endpoint A";
+            return result;
+        }
+
+        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().UniqueId).empty())
+        {
+            // todo: localize / pull from resources
+            result.ErrorInformation = L"Missing unique id for endpoint A";
+            return result;
+        }
+
+        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Name).empty())
+        {
+            // todo: localize / pull from resources
+            result.ErrorInformation = L"Missing name for endpoint B";
+            return result;
+        }
+
+        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().UniqueId).empty())
+        {
+            // todo: localize / pull from resources
+            result.ErrorInformation = L"Missing unique id for endpoint B";
+            return result;
+        }
 
         try
         {
