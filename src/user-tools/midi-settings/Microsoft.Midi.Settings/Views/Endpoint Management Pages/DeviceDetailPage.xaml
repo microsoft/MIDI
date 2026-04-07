@@ -67,6 +67,7 @@
 
                 <TextBlock Grid.Row="0"
                            HorizontalAlignment="Left"
+                           IsTextSelectionEnabled="True"
                            Text="{x:Bind ViewModel.EndpointWrapper.Name, Mode=OneWay}" 
                            Style="{StaticResource PageHeaderStyleDeviceName}" />
 
