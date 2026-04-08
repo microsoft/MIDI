@@ -14,6 +14,8 @@
 #include <iostream>     // for getline for string parsing of VID/PID/Serial from parent id
 
 #include "Feature_Servicing_MIDI2FilterCreations.h"
+#include "Feature_Servicing_MIDI2KSATVSFix.h"
+#include "Feature_Servicing_MIDI2DevCaps2.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -420,6 +422,21 @@ CMidi2KSAggregateMidiEndpointManager2::DeviceCreateMidiUmpEndpoint(
         endpointDefinition,
         pinMapPropertyData,
         groupTerminalBlocks));
+
+    if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+    {
+        // Write out the KSComponentId information, if available.
+        if (endpointDefinition->KsComponentIdSize > 0)
+        {
+            interfaceDevProperties.push_back({ { PKEY_MIDI_KsComponentId, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BINARY, static_cast<uint32_t>(endpointDefinition->KsComponentIdSize), &endpointDefinition->KsComponentId });
+        }
+        else
+        {
+            interfaceDevProperties.push_back({ { PKEY_MIDI_KsComponentId, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_EMPTY, 0, nullptr });
+        }
+    }
 
     interfaceDevProperties.push_back({ { DEVPKEY_KsAggMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
         DEVPROP_TYPE_BINARY, static_cast<uint32_t>(pinMapPropertyData.size()), pinMapPropertyData.data() });
@@ -893,7 +910,7 @@ CMidi2KSAggregateMidiEndpointManager2::GetPinDataFlow(_In_ HANDLE const hFilter,
 
 _Use_decl_annotations_
 HRESULT 
-CMidi2KSAggregateMidiEndpointManager2::GetKSDriverSuppliedName(HANDLE hInstantiatedFilter, std::wstring& name)
+CMidi2KSAggregateMidiEndpointManager2::GetKSDriverSuppliedName(HANDLE hInstantiatedFilter, std::wstring& name, KSCOMPONENTID &ksComponentId, DWORD& ksComponentIdSize)
 {
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -930,7 +947,20 @@ CMidi2KSAggregateMidiEndpointManager2::GetKSDriverSuppliedName(HANDLE hInstantia
         return hrComponent;
     }
 
-    componentId.Name;   // this is the GUID which points to the registry location with the driver-supplied name
+    if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+    {
+        if (countBytesReturned == sizeof(KSCOMPONENTID))
+        {
+            memcpy(&ksComponentId, &componentId, countBytesReturned);
+            ksComponentIdSize = (DWORD) countBytesReturned;
+        }
+
+        // componentId.Name, this is the GUID which points to the registry location with the driver-supplied name
+    }
+    else
+    {
+        componentId.Name;   // this is the GUID which points to the registry location with the driver-supplied name
+    }
 
     if (componentId.Name != GUID_NULL)
     {
@@ -945,7 +975,6 @@ CMidi2KSAggregateMidiEndpointManager2::GetKSDriverSuppliedName(HANDLE hInstantia
             name = nameFromRegistry;
         }
 
-
         TraceLoggingWrite(
             MidiKSAggregateTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
@@ -955,7 +984,7 @@ CMidi2KSAggregateMidiEndpointManager2::GetKSDriverSuppliedName(HANDLE hInstantia
             TraceLoggingWideString(L"Name found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(name.c_str(), "name")
         );
-
+        
         return S_OK;
     }
 
@@ -1889,7 +1918,9 @@ CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
     DeviceInformation filterDevice,
     std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>>& pinListToAddTo,
     uint32_t& countMidiSourcePinsAdded,
-    uint32_t& countMidiDestinationPinsAdded
+    uint32_t& countMidiDestinationPinsAdded,
+    KSCOMPONENTID& ksComponentId,
+    DWORD& ksComponentIdSize
     )
 {
     TraceLoggingWrite(
@@ -1916,7 +1947,7 @@ CMidi2KSAggregateMidiEndpointManager2::GetMidi1FilterPins(
     // we don't log the HRESULT because this is not critical and will often fail,
     // adding unnecessary noise to the error logs
     deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
-        return GetKSDriverSuppliedName(h, driverSuppliedName);
+        return GetKSDriverSuppliedName(h, driverSuppliedName, ksComponentId, ksComponentIdSize);
         });
 
     // =============================================================================================
@@ -2085,6 +2116,10 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
     {
         if (!pin->NeedsGroupIndexAssigned)
         {
+            if (Feature_Servicing_MIDI2KSATVSFix::IsEnabled())
+            {
+                RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(sourceGroupsUsed));
+            }
             sourceGroupsUsed[pin->GroupIndex] = true;
         }
     }
@@ -2093,6 +2128,10 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
     {
         if (!pin->NeedsGroupIndexAssigned)
         {
+            if (Feature_Servicing_MIDI2KSATVSFix::IsEnabled())
+            {
+                RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(destinationGroupsUsed));
+            }
             destinationGroupsUsed[pin->GroupIndex] = true;
         }
     }
@@ -2346,7 +2385,9 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
     std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>> pinList{ };
     uint32_t countEnumeratedMidiSourcePins{ 0 };
     uint32_t countEnumeratedMidiDestinationPins{ 0 };
-    RETURN_IF_FAILED(GetMidi1FilterPins(filterDevice, pinList, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins));
+    KSCOMPONENTID ksComponentId {0};
+    DWORD ksComponentIdSize {0};
+    RETURN_IF_FAILED(GetMidi1FilterPins(filterDevice, pinList, countEnumeratedMidiSourcePins, countEnumeratedMidiDestinationPins, ksComponentId, ksComponentIdSize));
 
     if (pinList.empty())
     {
@@ -2574,6 +2615,14 @@ CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded(
             RETURN_IF_FAILED(CreatePendingEndpointDefinitionForFilterDevice(filterDevice, endpointDefinition));
             RETURN_HR_IF_NULL(E_POINTER, endpointDefinition);
 
+            if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+            {
+                if (ksComponentIdSize > 0)
+                {
+                    memcpy(&endpointDefinition->KsComponentId, &ksComponentId, ksComponentIdSize);
+                    endpointDefinition->KsComponentIdSize = ksComponentIdSize;
+                }
+            }
 
             endpointDefinition->LockedForUpdating = true;
 
