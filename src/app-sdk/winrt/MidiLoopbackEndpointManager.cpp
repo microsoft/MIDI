@@ -65,7 +65,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         definitionB.UniqueId = internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId.c_str());
 
 
-        if (internal::TrimmedHStringCopy(definitionA.UniqueId).empty())
+        if (definitionA.UniqueId.empty())
         {
             // generate a unique id if one has not been provided
             std::wstring id{ internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid()) };
@@ -75,7 +75,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
         }
 
-        if (internal::TrimmedHStringCopy(definitionB.UniqueId).empty())
+        if (definitionB.UniqueId.empty())
         {
             definitionB.UniqueId = definitionA.UniqueId;
         }
