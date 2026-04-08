@@ -39,6 +39,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         result.AssociationId = creationConfig.AssociationId();
         result.Success = false;
 
+        winrt::hstring endpointUniqueId{ internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId) };
+
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name).empty())
         {
             // todo: localize / pull from resources
@@ -46,19 +48,42 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
             return result;
         }
 
-        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId).empty())
+        // we have to do all this so we don't change the method signature, but
+        // can provide a default value when the uniqueId is missing. The 
+        // endpoint definition is just a structure, with no constructor
+        bloop::MidiBasicLoopbackEndpointDefinition definition;
+        definition.Description = creationConfig.EndpointDefinition().Description;
+        definition.IsMuted = creationConfig.EndpointDefinition().IsMuted;
+        definition.Name = creationConfig.EndpointDefinition().Name;
+        definition.UniqueId = creationConfig.EndpointDefinition().UniqueId;
+
+
+        if (definition.UniqueId.empty())
         {
-            // todo: localize / pull from resources
-            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_UNIQUEID);
-            return result;
+            // generate a unique id if one has not been provided
+            const std::wstring allowedCharacters = L"0123456789abcdefghijklmnopqrstuvwzyz";
+
+            std::wstring id{ internal::GuidToString(foundation::GuidHelper::CreateNewGuid()) };
+            internal::InPlaceToLower(id);
+
+            std::erase_if(id, [&](auto& ch)
+                {
+                    return !std::any_of(allowedCharacters.begin(), allowedCharacters.end(), [&](auto& allowed) { return ch == allowed; });
+                });
+
+            definition.UniqueId = id.c_str();
         }
+
+        bloop::MidiBasicLoopbackEndpointCreationConfig updatedCreationConfig(creationConfig.AssociationId(), definition);
+
 
         try
         {
-            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(updatedCreationConfig);
 
             // parse the results
             auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
+
 
             if (successResult)
             {

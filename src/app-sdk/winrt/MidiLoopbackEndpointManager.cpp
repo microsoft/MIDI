@@ -11,6 +11,8 @@
 #include "MidiLoopbackEndpointManager.h"
 #include "Endpoints.Loopback.MidiLoopbackEndpointManager.g.cpp"
 
+#include <algorithm>
+
 // copied from service loopback_transport_defs.h
 
 #define MIDI_LOOP_INSTANCE_ID_A_PREFIX L"MIDIU_LOOP_A_"
@@ -46,33 +48,68 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         result.Success = false;
         result.AssociationId = creationConfig.AssociationId();
 
-        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Name).empty())
+        loop::MidiLoopbackEndpointDefinition definitionA;
+        loop::MidiLoopbackEndpointDefinition definitionB;
+
+        // we have to do all this so we don't change the method signature, but
+        // can provide a default value when the uniqueId is missing. The 
+        // endpoint definition is just a structure, with no constructor
+        definitionA.Description = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Description);
+        //definitionA.IsMuted = creationConfig.EndpointDefinitionA().IsMuted;
+        definitionA.Name = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Name);
+        definitionA.UniqueId = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().UniqueId);
+
+        definitionB.Description = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Description);
+        //definitionB.IsMuted = creationConfig.EndpointDefinitionB().IsMuted;
+        definitionB.Name = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Name);
+        definitionB.UniqueId = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().UniqueId);
+
+
+        if (internal::TrimmedHStringCopy(definitionA.UniqueId).empty())
+        {
+            // generate a unique id if one has not been provided
+            const std::wstring allowedCharacters = L"0123456789abcdefghijklmnopqrstuvwzyz";
+
+            std::wstring id{ internal::GuidToString(foundation::GuidHelper::CreateNewGuid()) };
+            internal::InPlaceToLower(id);
+
+            std::erase_if(id, [&](auto& ch)
+                {
+                    return !std::any_of(allowedCharacters.begin(), allowedCharacters.end(), [&](auto& allowed) { return ch == allowed; });
+                });
+
+            definitionA.UniqueId = id.c_str();
+        }
+
+        if (internal::TrimmedHStringCopy(definitionB.UniqueId).empty())
+        {
+            definitionB.UniqueId = definitionA.UniqueId;
+        }
+
+        loop::MidiLoopbackEndpointCreationConfig updatedCreationConfig(creationConfig.AssociationId(), definitionA, definitionB);
+        
+
+
+        if (internal::TrimmedHStringCopy(updatedCreationConfig.EndpointDefinitionA().Name).empty())
         {
             result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A);
             return result;
         }
 
-        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().UniqueId).empty())
-        {
-            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_UNIQUEID_A);
-            return result;
-        }
-
-        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Name).empty())
+        if (internal::TrimmedHStringCopy(updatedCreationConfig.EndpointDefinitionB().Name).empty())
         {
             result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B);
             return result;
         }
 
-        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().UniqueId).empty())
-        {
-            result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_UNIQUEID_B);
-            return result;
-        }
+
+
+
+
 
         try
         {
-            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(updatedCreationConfig);
 
             // parse the results
             auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
@@ -89,7 +126,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
                     if (!deviceIdA.empty() && !deviceIdB.empty())
                     {
                         // update the response object with the new ids
-                        result.AssociationId = creationConfig.AssociationId();
                         result.EndpointDeviceIdA = deviceIdA;
                         result.EndpointDeviceIdB = deviceIdB;
                         result.Success = true;
