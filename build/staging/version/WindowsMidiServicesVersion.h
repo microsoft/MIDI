@@ -9,12 +9,12 @@
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L"GitHub Preview"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2026-04-07"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"SDK Release Candidate 4"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"1.0.17-rc.4.5"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"1.0.17-rc.4.6"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      1
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      0
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      17
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               5
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"rc.4.5"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"1.0.17.5"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               6
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"rc.4.6"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"1.0.17.6"
 
 #endif

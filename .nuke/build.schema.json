@@ -35,6 +35,7 @@
         "T_BuildPowerShellProjection",
         "T_BuildSettingsApp",
         "T_BuildUserToolsSharedComponents",
+        "T_CopyCollectMidiLogs",
         "T_CopySharedDesignAssets",
         "T_CreateVersionIncludes",
         "T_Prerequisites",
