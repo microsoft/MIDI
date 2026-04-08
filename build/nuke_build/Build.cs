@@ -552,6 +552,7 @@ class Build : NukeBuild
         .DependsOn(T_BuildAndPackAllAppSDKs)
         .DependsOn(T_BuildAppSDKToolsAndTests)
         .DependsOn(T_CopySharedDesignAssets)
+        .DependsOn(T_CopyCollectMidiLogs)
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
@@ -1707,6 +1708,23 @@ class Build : NukeBuild
     });
 
 
+    Target T_CopyCollectMidiLogs => _ => _
+        .DependsOn(T_Prerequisites)
+        .Executes(() =>
+        {
+            var sourceFolder = ApiSolutionFolder / "CollectMidiLogs";
+
+            var stagingRoot = StagingRootFolder / "CollectMidiLogs";
+
+            (sourceFolder / "CollectMidiLogs.cmd").CopyToDirectory(stagingRoot, ExistsPolicy.FileOverwrite);
+            (sourceFolder / "CollectMidiLogs.ps1").CopyToDirectory(stagingRoot, ExistsPolicy.FileOverwrite);
+            (sourceFolder / "providers.wprp").CopyToDirectory(stagingRoot, ExistsPolicy.FileOverwrite);
+            (sourceFolder / "tttraceall.psm1").CopyToDirectory(stagingRoot, ExistsPolicy.FileOverwrite);
+        });
+
+
+
+
     Target T_ZipSamples => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_CreateVersionIncludes)
@@ -1770,6 +1788,7 @@ class Build : NukeBuild
             regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
         });
 
+    
 
     Target BuildAndPublishAll => _ => _
         .DependsOn(T_Prerequisites)
@@ -1783,6 +1802,7 @@ class Build : NukeBuild
         .DependsOn(T_BuildCSharpSamples)
         .DependsOn(T_ZipPowershellDevUtilities)
         .DependsOn(T_ZipSamples)
+        .DependsOn(T_CopyCollectMidiLogs)
         .Executes(() =>
         {
 

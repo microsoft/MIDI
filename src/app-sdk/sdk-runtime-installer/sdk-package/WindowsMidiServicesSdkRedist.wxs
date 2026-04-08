@@ -22,6 +22,8 @@
                 </Directory>
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                 </Directory>
+                <Directory Id="COLLECTMIDILOGS_INSTALLFOLDER" Name="Collect MIDI Logs">
+                </Directory>
             </Directory>
         </StandardDirectory>
         
@@ -173,8 +175,26 @@
             </RegistryKey>
         </Component>
 
+    <Component Id="WindowsMidiServicesCollectMidiLogs"
+               Permanent="no"
+               Bitness="always64"
+               Directory="COLLECTMIDILOGS_INSTALLFOLDER"
+               Guid="0686741b-2a74-4c32-9431-942bd23adc33">
 
-        <Feature Id="WindowsMIDIServices">
+        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\CollectMidiLogs.cmd" Vital="true"/>
+        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\CollectMidiLogs.ps1" Vital="true" />
+        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\providers.wprp" Vital="true" />
+        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\tttraceall.psm1" Vital="true" />
+
+
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+
+          <RegistryValue Type="string" Name="CollectMidiLogs" Value="[COLLECTMIDILOGS_INSTALLFOLDER]CollectMidiLogs.cmd" />
+
+        </RegistryKey>
+    </Component>
+
+    <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsMidiServicesAppSDK" />
             <ComponentRef Id="WindowsMidiServicesAppSdkImplementationRegEntries"/>
             <ComponentRef Id="MidiDiagUtility"/>
@@ -184,7 +204,8 @@
             <ComponentRef Id="Midi1EnumUtility"/>
             <ComponentRef Id="MidiFixRegUtility"/>
             <ComponentRef Id="MidiCheckServiceUtility"/>
-        </Feature>
+            <ComponentRef Id="WindowsMidiServicesCollectMidiLogs"/>
+    </Feature>
 
     </Package>
 </Wix>
