@@ -189,7 +189,7 @@
 
         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
 
-          <RegistryValue Type="string" Name="CollectMidiLogs" Value="[COLLECTMIDILOGS_INSTALLFOLDER]CollectMidiLogs.cmd" />
+          <RegistryValue Type="string" Name="CollectMidiLogs" Value="[COLLECTMIDILOGS_INSTALLFOLDER]CollectMidiLogs.ps1" />
 
         </RegistryKey>
     </Component>

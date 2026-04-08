@@ -23,4 +23,6 @@ public interface IMidiDiagnosticsService
 
     bool RestoreInBoxComponentRegistrations();
 
+    string CaptureMidiLogsToFile();
+
 }

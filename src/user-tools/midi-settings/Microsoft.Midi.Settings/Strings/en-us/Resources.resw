@@ -897,4 +897,7 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   <data name="Message_QuestionContinueRemovingLoopbackEndpoint" xml:space="preserve">
     <value>You will likely need to restart any apps using MIDI 1.0 due to how port numbers get rearranged after a delete. Do you wish to continue removing this loopback endpoint?</value>
   </data>
+  <data name="Error_UnableToCaptureMidiLogsToFile" xml:space="preserve">
+    <value>Unable to capture MIDI logs to file.</value>
+  </data>
 </root>

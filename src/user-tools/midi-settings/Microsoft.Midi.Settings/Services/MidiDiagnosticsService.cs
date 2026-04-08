@@ -2,6 +2,7 @@
 using Microsoft.Midi.Settings.Contracts.Services;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
     private const string MidiSdkRootRegKey = MidiRootRegKey + @"\Desktop App SDK Runtime";
     private const string MidiDiagPathRegValue = "MidiDiag";
     private const string MidiFixRegPathRegValue = "MidiFixReg";
+    private const string CollectMidiLogsPathRegValue = "CollectMidiLogs";
 
     private static string GetMidiDiagPath()
     {
@@ -44,6 +46,40 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         catch (Exception ex)
         {
             App.GetService<ILoggingService>().LogError($"Exception getting MIDI Diagnostics tool Path", ex);
+
+            return string.Empty;
+        }
+    }
+
+    private static string GetCollectMidiLogsPath()
+    {
+        try
+        {
+            string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Collect MIDI Logs\CollectMidiLogs.cmd";
+
+            string toolPath = string.Empty;
+
+            var value = Microsoft.Win32.Registry.GetValue(MidiSdkRootRegKey, CollectMidiLogsPathRegValue, defaultPath);
+
+            if (value == null)
+            {
+                // happens when the key does not exist
+                toolPath = defaultPath;
+            }
+            else if (value is string)
+            {
+                toolPath = (string)value;
+            }
+            else
+            {
+                toolPath = defaultPath;
+            }
+
+            return toolPath;
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError($"Exception getting CollectMIDILogs Path", ex);
 
             return string.Empty;
         }
@@ -81,6 +117,27 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
             return string.Empty;
         }
+    }
+
+    public bool IsCollectMidiLogsPresent()
+    {
+        var path = GetCollectMidiLogsPath();
+
+        if (string.IsNullOrEmpty(path))
+        {
+            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs path is blank.");
+
+            return false;
+        }
+
+        if (!File.Exists(path))
+        {
+            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs script does not exist in path '{path}' ");
+
+            return false;
+        }
+
+        return true;
     }
 
     public bool IsMidiDiagPresent()
@@ -230,18 +287,76 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool RestoreInBoxComponentRegistrations()
     {
+        try
+        {
+
+
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Error restoring in-box component registrations.", ex);
+        }
+
         return false;
-
-        //try
-        //{
-
-        //}
-        //catch (Exception ex)
-        //{
-        //    App.GetService<ILoggingService>().LogError("Error fixing registry entries.", ex);
-        //}
     }
 
+
+    public string CaptureMidiLogsToFile()
+    {
+        try
+        {
+            if (IsCollectMidiLogsPresent())
+            {
+                string path = GetCollectMidiLogsPath();
+
+                string outFileName = $"MIDI Capture {Environment.MachineName}_{DateTime.Now.ToString("yyyyMMdd-HHmmss")}.zip";
+                string collectMidiLogsOutputFileName = Path.Combine(Path.GetTempPath(), outFileName);
+
+                string arguments = "";
+                arguments += " -ExecutionPolicy Bypass";
+                arguments += " -NoProfile";
+                //arguments += " -NoExit";
+                arguments += $" -File \"{path}\" -specifiedOutputFile \"{collectMidiLogsOutputFileName}\" -automatic";
+
+                using (var consoleProcess = new System.Diagnostics.Process())
+                {
+                    consoleProcess.StartInfo.FileName = "powershell.exe";
+                    consoleProcess.StartInfo.Arguments = arguments;
+                    consoleProcess.StartInfo.Verb = "runas";
+                    consoleProcess.StartInfo.UseShellExecute = true;
+
+                    if (consoleProcess.Start())
+                    {
+                        consoleProcess.WaitForExit();
+
+                        if (consoleProcess.ExitCode <= 0)
+                        {
+                            return collectMidiLogsOutputFileName;
+                        }
+                        else
+                        {
+                            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs returned error {consoleProcess.ExitCode}");
+                        }
+                    }
+                    else
+                    {
+                        App.GetService<ILoggingService>().LogError($"Unable to start process to collect MIDI Logs");
+                    }
+                }
+            }
+            else
+            {
+                App.GetService<ILoggingService>().LogError("Unable to find CollectMIDILogs utility.");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Error collecting MIDI logs.", ex);
+        }
+
+        return "";
+    }
 
 
 }

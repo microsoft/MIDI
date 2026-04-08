@@ -96,6 +96,13 @@
                             Command="{x:Bind ViewModel.MidiDiagCommand}"/>
                 </controls:SettingsCard>
 
+                <controls:SettingsCard Header="Capture MIDI Activity Logs"
+                                   Description="If you need to capture MIDI activity while recreating a problem to help support diagnose the issue, then use this tool to create a log file you can upload to a sharing service."
+                                       >
+                    <Button Content="Capture MIDI Activity Logs"
+                            Command="{x:Bind ViewModel.CaptureMidiLogsCommand}"/>
+                </controls:SettingsCard>
+
 
                 <TextBlock Text="View and optionally repair required registry entries" 
                            Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>

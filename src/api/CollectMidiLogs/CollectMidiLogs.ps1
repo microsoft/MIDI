@@ -1,9 +1,38 @@
 ﻿# Copyright (c) Microsoft Corporation. All rights reserved.
 
+param(
+    [Parameter(Mandatory=$false)]
+    [string] $specifiedOutputFile,
+
+    [Parameter(Mandatory=$false)]
+    [switch] $automatic
+)
+
 Import-Module "$PSScriptRoot\tttraceall.psm1";
 
 # need this for [System.IO.Compression.ZipFile]::CreateFromDirectory to work on PowerShell 5
 Add-Type -AssemblyName System.IO.Compression.FileSystem;
+
+
+
+# Create a directory for all output files
+$tempOutDirName = "$($env:COMPUTERNAME)_$(Get-Date -Format yyyyMMdd-HHmmss)";
+
+Write-Host "Creating temporary directory $env:TEMP\$tempOutDirName.";
+$outDir = New-Item -Path $env:TEMP -ItemType Directory -Name $tempOutDirName;
+
+# see if the final results should be copied to a specific file name/path
+if ($PSBoundParameters.ContainsKey('specifiedOutputFile'))
+{
+    $outputFileName = $specifiedOutputFile;
+    Write-Host "Output will be here: $outputFileName";
+
+    # todo: check if output file already exists
+}
+else
+{
+    $outputFileName = "$PSScriptRoot\${outDirName}.zip";    
+}
 
 $system32 = "${env:windir}\system32";
 # check for WOW64
@@ -13,19 +42,17 @@ if ($env:PROCESSOR_ARCHITEW6432 -ne $null)
     $system32 = "${env:windir}\sysnative";
 }
 
-# Create a directory for all output files
-$outDirName = "$($env:COMPUTERNAME)_$(Get-Date -Format yyyyMMdd-HHmmss)";
-Write-Host "Creating temporary directory $env:TEMP\$outDirName.";
-$outDir = New-Item -Path $env:TEMP -ItemType Directory -Name $outDirName;
-
 # Ask the user if they'd like to take a repro trace
-do 
+if (-NOT $automatic)
 {
-    $reproResponse = Read-Host "Take a repro trace? (y/n)";
+    do 
+    {
+        $reproResponse = Read-Host "Take a repro trace? (y/n)";
+    }
+    while (($reproResponse.Trim().ToLower())[0] -ne 'y' -and ($reproResponse.Trim().ToLower())[0] -ne 'n');
 }
-while (($reproResponse.Trim().ToLower())[0] -ne 'y' -and ($reproResponse.Trim().ToLower())[0] -ne 'n');
 
-if (($reproResponse.Trim().ToLower())[0] -eq 'y')
+if ($automatic -OR ($reproResponse.Trim().ToLower())[0] -eq 'y')
 {
     # Packaged wprp file
     $wprp = "$PSScriptRoot\providers.wprp";
@@ -63,14 +90,22 @@ if (($reproResponse.Trim().ToLower())[0] -eq 'y')
 
 
 # Ask the user if they'd like to gather diagnostic information
-do 
+if (-NOT $automatic)
 {
-    $diagResponse = Read-Host "Gather system information (this can take a few minutes)? (y/n)";
+    do 
+    {
+        $diagResponse = Read-Host "Gather system information (this can take a few minutes)? (y/n)";
+    }
+    while (($diagResponse.Trim().ToLower())[0] -ne 'y' -and ($diagResponse.Trim().ToLower())[0] -ne 'n');
 }
-while (($diagResponse.Trim().ToLower())[0] -ne 'y' -and ($diagResponse.Trim().ToLower())[0] -ne 'n');
 
-if (($diagResponse.Trim().ToLower())[0] -eq 'y')
+if ($automatic -OR ($diagResponse.Trim().ToLower())[0] -eq 'y')
 {
+    # TODO: Get location of MIDI Diag and MIDI KSInfo from registry and also run that
+
+
+
+
     # Run command lines
     @(
         ("ddodiag", "$system32\ddodiag.exe", "-o `"$outDir\ddodiag.xml`""),
@@ -90,12 +125,12 @@ if (($diagResponse.Trim().ToLower())[0] -eq 'y')
     }
 }
 
-if (($reproResponse.Trim().ToLower())[0] -eq 'y' -or ($diagResponse.Trim().ToLower())[0] -eq 'y')
+if ($automatic -OR ($reproResponse.Trim().ToLower())[0] -eq 'y' -or ($diagResponse.Trim().ToLower())[0] -eq 'y')
 {
     # Logs should exist
 
     # Zip logs
-    $logLoc = "$PSScriptRoot\${outDirName}.zip";
+    $logLoc = $outputFileName; 
     Write-Host "Zipping logs...";
     [System.IO.Compression.ZipFile]::CreateFromDirectory($outDir, $logLoc);
 
@@ -106,7 +141,14 @@ if (($reproResponse.Trim().ToLower())[0] -eq 'y' -or ($diagResponse.Trim().ToLow
     # Write log location to console
     Write-Host '';
     Write-Host "Logs are located at $logLoc";
+    Write-Host 'You may now close this console window';
     Write-Host '';
+
+    if ($automatic)
+    {
+        Read-Host "Press enter to close window."
+    }
+
 }
 else
 {

@@ -49,7 +49,11 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
         get; private set;
     }
 
-    
+    public ICommand CaptureMidiLogsCommand
+    {
+        get; private set;
+    }
+
 
     public bool IsUserRunningAsAdmin
     {
@@ -124,6 +128,25 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
                     _messageBoxService.ShowError("Error_UnableToRestoreInBoxComponentRegistrations".GetLocalized());
                 }
             });
+
+        CaptureMidiLogsCommand = new RelayCommand(
+            () =>
+            {
+                var fileName = _diagnosticsService.CaptureMidiLogsToFile();
+
+                if (fileName != string.Empty)
+                {
+                    // open explorer with the file selected
+                    consoleToolsService.OpenExplorerWithFile(fileName);
+                }
+                else
+                {
+                    // TODO: add the path to the UI
+                    _messageBoxService.ShowError("Error_UnableToCaptureMidiLogsToFile".GetLocalized());
+                }
+
+            });
+
 
     }
 
