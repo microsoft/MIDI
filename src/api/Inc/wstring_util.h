@@ -16,8 +16,37 @@
 #include <cwctype>
 #include <algorithm>
 
+// these specifically do not include whitespace characters
+#define CHARACTER_STRING_ALPHAUPPER             L"ABCDEFGHIJKLMNOPQRSTUVWZYZ"
+#define CHARACTER_STRING_ALPHALOWER             L"abcdefghijklmnopqrstuvwxyz"
+#define CHARACTER_STRING_DIGITS                 L"0123456789"
+#define CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED  L"-_" CHARACTER_STRING_ALPHAUPPER CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS
+
 namespace WindowsMidiServicesInternal
 {
+    inline std::wstring RemoveDisallowedStringCharacters(_In_ std::wstring const& stringToClean, _In_ std::wstring const& allowedCharacters)
+    {
+        std::wstring result{ stringToClean };
+
+        std::erase_if(result, [&](auto& ch)
+            {
+                return !std::any_of(allowedCharacters.begin(), allowedCharacters.end(), [&](auto& allowed) { return ch == allowed; });
+            });
+
+        return result;
+    }
+
+    inline std::wstring RemoveInvalidSWDUniqueIdCharacters(_In_ std::wstring const& uniqueId)
+    {
+        return RemoveDisallowedStringCharacters(uniqueId, CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED);
+    }
+
+    inline std::wstring RemoveNonAlphaNumericCharacters(_In_ std::wstring const& source)
+    {
+        return RemoveDisallowedStringCharacters(source, CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS);
+    }
+
+
     // assumes the string passed in has already been trimmed of leading/trailing whitespace
     inline bool StringEndsWithSpecifiedNumber(
         _In_ std::wstring const& s,
@@ -159,6 +188,24 @@ namespace WindowsMidiServicesInternal
         }
     }
 
+    inline std::wstring GuidToHexDigitsOnlyString(_In_ GUID guid)
+    {
+        LPOLESTR str;
+        if (SUCCEEDED(StringFromCLSID(guid, &str)))
+        {
+            std::wstring guidString{ str };
+
+            ::CoTaskMemFree(str);
+
+            return RemoveDisallowedStringCharacters(guidString, CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_ALPHAUPPER CHARACTER_STRING_DIGITS);
+        }
+        else
+        {
+            return L"";
+        }
+    }
+
+
     // Expects enclosing braces: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
     inline GUID StringToGuid(_In_ std::wstring value)
     {
@@ -212,6 +259,8 @@ namespace WindowsMidiServicesInternal
 
         return dateTime;
     }
+
+
 
 
 

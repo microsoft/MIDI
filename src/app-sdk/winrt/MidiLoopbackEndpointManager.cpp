@@ -57,28 +57,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         definitionA.Description = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Description);
         //definitionA.IsMuted = creationConfig.EndpointDefinitionA().IsMuted;
         definitionA.Name = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Name);
-        definitionA.UniqueId = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().UniqueId);
+        definitionA.UniqueId = internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId.c_str());
 
         definitionB.Description = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Description);
         //definitionB.IsMuted = creationConfig.EndpointDefinitionB().IsMuted;
         definitionB.Name = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Name);
-        definitionB.UniqueId = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().UniqueId);
+        definitionB.UniqueId = internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId.c_str());
 
 
         if (internal::TrimmedHStringCopy(definitionA.UniqueId).empty())
         {
             // generate a unique id if one has not been provided
-            const std::wstring allowedCharacters = L"0123456789abcdefghijklmnopqrstuvwzyz";
-
-            std::wstring id{ internal::GuidToString(foundation::GuidHelper::CreateNewGuid()) };
+            std::wstring id{ internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid()) };
             internal::InPlaceToLower(id);
 
-            std::erase_if(id, [&](auto& ch)
-                {
-                    return !std::any_of(allowedCharacters.begin(), allowedCharacters.end(), [&](auto& allowed) { return ch == allowed; });
-                });
+            definitionA.UniqueId = id;
 
-            definitionA.UniqueId = id.c_str();
         }
 
         if (internal::TrimmedHStringCopy(definitionB.UniqueId).empty())
@@ -105,8 +99,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
 
 
-
-
         try
         {
             auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(updatedCreationConfig);
@@ -129,6 +121,18 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
                         result.EndpointDeviceIdA = deviceIdA;
                         result.EndpointDeviceIdB = deviceIdB;
                         result.Success = true;
+                    }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Device creation succeeded but returned device ids are empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                        );
                     }
 
                 }
