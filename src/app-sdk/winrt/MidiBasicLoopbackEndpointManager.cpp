@@ -43,7 +43,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
 
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name).empty())
         {
-            // todo: localize / pull from resources
             result.ErrorInformation = internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME);
             return result;
         }
@@ -55,23 +54,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         definition.Description = creationConfig.EndpointDefinition().Description;
         definition.IsMuted = creationConfig.EndpointDefinition().IsMuted;
         definition.Name = creationConfig.EndpointDefinition().Name;
-        definition.UniqueId = creationConfig.EndpointDefinition().UniqueId;
-
+        definition.UniqueId = internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinition().UniqueId.c_str());
 
         if (definition.UniqueId.empty())
         {
-            // generate a unique id if one has not been provided
-            const std::wstring allowedCharacters = L"0123456789abcdefghijklmnopqrstuvwzyz";
-
-            std::wstring id{ internal::GuidToString(foundation::GuidHelper::CreateNewGuid()) };
+            std::wstring id{ internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid()) };
             internal::InPlaceToLower(id);
 
-            std::erase_if(id, [&](auto& ch)
-                {
-                    return !std::any_of(allowedCharacters.begin(), allowedCharacters.end(), [&](auto& allowed) { return ch == allowed; });
-                });
-
-            definition.UniqueId = id.c_str();
+            definition.UniqueId = id;
         }
 
         bloop::MidiBasicLoopbackEndpointCreationConfig updatedCreationConfig(creationConfig.AssociationId(), definition);
@@ -98,6 +88,18 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                         // update the response object with the new ids
                         result.EndpointDeviceId = deviceId;
                         result.Success = true;
+                    }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Device creation succeeded but returned device id is empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                        );
                     }
                 }
             }
@@ -250,7 +252,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to mute loopback", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Failed to mute loopback. Service returned a failure result.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(result.ServiceMessage.c_str()),
                     TraceLoggingGuid(associationId, "association id")
                 );
