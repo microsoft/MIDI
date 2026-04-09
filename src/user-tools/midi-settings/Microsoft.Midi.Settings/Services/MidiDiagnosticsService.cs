@@ -479,13 +479,13 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
                                 if (entry.Value.ToUpper() == "VIRTUALMIDISYNTH.DLL")
                                 {
                                     entry.HasError = false;
-                                    entry.Comment = "Coolsoft Virtual MIDI Synth";
+                                    entry.Comment = "CoolSoft VirtualMIDISynth";
                                 }
 
                                 if (entry.Value.ToUpper() == "MIDIMAPPER.DLL")
                                 {
                                     entry.HasError = false;
-                                    entry.Comment = "Coolsoft MIDI Mapper";
+                                    entry.Comment = "CoolSoft MIDIMapper";
                                 }
                             }
                         }
