@@ -74,6 +74,8 @@ struct KsAggregateEndpointDefinition2
     std::atomic<uint64_t> LastUpdatedTimestamp{ 0 };
     std::atomic<bool> LockedForUpdating { false };
 
+    KSCOMPONENTID KsComponentId {0};
+    DWORD KsComponentIdSize {0};
 };
 
 
@@ -203,10 +205,11 @@ private:
         _In_ DeviceInformation,
         _In_ std::vector<std::shared_ptr<KsAggregateEndpointMidiPinDefinition2>>&,
         _Inout_ uint32_t& countMidiSourcePinsAdded,
-        _Inout_ uint32_t& countMidiDestinationPinsAdded);
+        _Inout_ uint32_t& countMidiDestinationPinsAdded,
+        _Inout_ KSCOMPONENTID& ksComponentId,
+        _Inout_ DWORD& ksComponentIdSize);
 
-    HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
-
+    HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name, _Inout_ KSCOMPONENTID &ksComponentId, _Inout_ DWORD& ksComponentIdSize);
 
     //HRESULT IncrementAndGetNextGroupIndex(
     //    _In_ std::shared_ptr<KsAggregateEndpointDefinition2> definition,

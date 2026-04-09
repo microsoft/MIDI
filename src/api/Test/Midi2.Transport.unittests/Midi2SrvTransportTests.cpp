@@ -321,10 +321,10 @@ MidiSrvTransportTests::TestMidiSrvMultiClient
         if (nativeInDataFormat == MidiDataFormats_ByteStream || 
             nativeOutDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 33));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 34));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 35));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 36));
+            VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 33));
+            VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 34));
+            VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 35));
+            VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 36));
         }
         else
         {
@@ -607,10 +607,10 @@ MidiSrvTransportTests::TestMidiSrvMultiClientBidi
         // that will roundtrip, the others will get dropped.
         if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 33));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 34));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 35));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 36));
+            VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 33));
+            VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 34));
+            VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 35));
+            VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 36));
         }
         else
         {

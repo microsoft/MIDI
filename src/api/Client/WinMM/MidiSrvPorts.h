@@ -14,8 +14,8 @@ typedef struct _PORT_INFO
     std::wstring Name;
     std::wstring DriverDeviceInterfaceId;
 
-    MIDIINCAPSW MidiInCaps {0};
-    MIDIOUTCAPSW MidiOutCaps {0};
+    MIDIINCAPS2W MidiInCaps {0};
+    MIDIOUTCAPS2W MidiOutCaps {0};
 } PORT_INFO;
 
 
@@ -38,7 +38,7 @@ public:
 
 private:
     HRESULT GetMidiDeviceCount(_In_ MidiFlow flow, _In_ UINT32& count);
-    HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps);
+    HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps, _In_ DWORD_PTR midiCapsSize);
     HRESULT Open(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ const MIDIOPENDESC* midiOpenDesc, _In_ DWORD_PTR flags, _In_ MidiPortHandle* openedPort);
     HRESULT Close(_In_ MidiFlow flow, _In_ MidiPortHandle portHandle);
     HRESULT ForwardMidMessage(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);

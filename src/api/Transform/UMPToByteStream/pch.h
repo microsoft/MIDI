@@ -40,7 +40,10 @@
 
 #include "mididefs.h"
 
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #include <libmidi2/umpToBytestream.h>
+#pragma warning(pop)
 
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"

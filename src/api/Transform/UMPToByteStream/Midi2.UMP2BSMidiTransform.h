@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #include <libmidi2/umpToBytestream.h>
+#pragma warning(pop)
 
 class CMidi2UMP2BSMidiTransform : 
     public Microsoft::WRL::RuntimeClass<
