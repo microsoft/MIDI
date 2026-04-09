@@ -48,7 +48,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
         public static string GetSearchPageDescription()
         {
-            return "View all currently installed transports in the MIDI Service";
+            return "View all currently installed transport plugins in the MIDI Service";
         }
 
 
