@@ -25,7 +25,7 @@ using System.Windows.Input;
 
 
 namespace Microsoft.Midi.Settings.ViewModels;
-public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
+public partial class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 {
     private DispatcherQueue _dispatcherQueue;
 
@@ -60,12 +60,26 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
         get { return UserHelper.CurrentUserHasAdminRights(); }
     }
 
+    [ObservableProperty]
+    private List<FoundRegistryEntry> drivers32MidiEntries;
+
+    [ObservableProperty]
+    private List<FoundRegistryEntry> drivers32WOWMidiEntries;
+
+    public void RefreshRegistryValues()
+    {
+        Drivers32MidiEntries = _diagnosticsService.GetDrivers32MidiEntries();
+
+        Drivers32WOWMidiEntries = _diagnosticsService.GetDrivers32WOWMidiEntries();
+    }
+
+
+
+
     private readonly INavigationService _navigationService;
     private readonly IMidiConsoleToolsService _consoleToolsService;
     private readonly IMidiDiagnosticsService _diagnosticsService;
     private readonly IMessageBoxService _messageBoxService;
-
-
 
     public TroubleshootingViewModel(
         INavigationService navigationService,
@@ -114,6 +128,8 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
                 }
                 else
                 {
+                    RefreshRegistryValues();
+
                     _messageBoxService.ShowInfo("Message_RegistryRepairedPleaseRestartAllMIDIApps".GetLocalized());
                 }
             });
@@ -158,6 +174,7 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
     public void OnNavigatedTo(object parameter)
     {
+        RefreshRegistryValues();
     }
 
 }

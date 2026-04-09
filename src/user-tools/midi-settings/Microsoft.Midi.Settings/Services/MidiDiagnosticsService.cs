@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging.Console;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,6 +9,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Services;
+
+
+
+
 
 public class MidiDiagnosticsService : IMidiDiagnosticsService
 {
@@ -358,5 +363,59 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         return "";
     }
 
+
+    private const string Drivers32Path = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32";
+    private const string Drivers32WOWPath = @"SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Drivers32";
+
+    private List<FoundRegistryEntry> GetHklmRegistryEntries(string key, RegistryView view)
+    {
+        List<FoundRegistryEntry> entries = new List<FoundRegistryEntry>();
+
+        var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
+
+        var subKey = root.OpenSubKey(key);
+
+        if (subKey != null)
+        {
+            var valueNames = subKey.GetValueNames();
+
+            foreach (var valueName in valueNames)
+            {
+                if (valueName != null)
+                {
+                    if (valueName.ToLower().StartsWith("midi"))
+                    {
+                        FoundRegistryEntry entry = new FoundRegistryEntry();
+                        entry.Name = valueName;
+
+                        var value = subKey.GetValue(valueName);
+
+                        if (value != null)
+                        {
+                            entry.Value = value.ToString()!;
+                        }
+                        else
+                        {
+                            entry.Value = "(null)";
+                        }
+
+                        entries.Add(entry);
+                    }
+                }
+            }
+        }
+
+        return entries;
+    }
+
+    public List<FoundRegistryEntry> GetDrivers32MidiEntries()
+    {
+        return GetHklmRegistryEntries(Drivers32Path, RegistryView.Registry64).OrderBy(x => x.Name).ToList();
+    }
+
+    public List<FoundRegistryEntry> GetDrivers32WOWMidiEntries()
+    {
+        return GetHklmRegistryEntries(Drivers32WOWPath, RegistryView.Registry32).OrderBy(x => x.Name).ToList();
+    }
 
 }

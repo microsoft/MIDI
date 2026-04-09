@@ -7,6 +7,7 @@
 // ============================================================================
 
 
+using Microsoft.Midi.Settings.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Contracts.Services;
+
+public class FoundRegistryEntry
+{
+    public string Name;
+    public string Value;
+    //   public bool HasError;
+}
 
 public interface IMidiDiagnosticsService
 {
@@ -25,4 +33,8 @@ public interface IMidiDiagnosticsService
 
     string CaptureMidiLogsToFile();
 
+
+    List<FoundRegistryEntry> GetDrivers32MidiEntries();
+
+    List<FoundRegistryEntry> GetDrivers32WOWMidiEntries();
 }
