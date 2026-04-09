@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging.Console;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -225,7 +226,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
             {
                 App.GetService<ILoggingService>().LogError("Unable to find mididiag utility.");
 
-                return false; 
+                return false;
             }
 
         }
@@ -399,6 +400,96 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
                             entry.Value = "(null)";
                         }
 
+
+                        if (entry.Name == "midi")
+                        {
+                            if (entry.Value.ToLower() == "wdmaud.drv")
+                            {
+                                entry.HasError = false;
+                                entry.Comment = "In-box synth support";
+                            }
+                            else
+                            {
+                                entry.HasError = true;
+                                entry.Comment = "Must be wdmaud.drv";
+                            }
+
+                        }
+                        else if (entry.Name == "midi1")
+                        {
+                            entry.HasError = true;
+
+                            if (entry.Value.ToLower() == "wdmaud2.drv")
+                            {
+                                entry.HasError = false;
+                                entry.Comment = "MIDI Service interface";
+                            }
+                            else
+                            {
+                                entry.HasError = true;
+                                entry.Comment = "Must be wdmaud2.drv";
+                            }
+                        }
+                        else if (entry.Name == "midimapper" && entry.Value == "midimap.dll")
+                        {
+                            entry.HasError = false;
+                            entry.Comment = "In-box MIDI Mapper";
+                        }
+                        else if (entry.Name == "MidisrvTransferComplete")
+                        {
+                            if (entry.Value == "1")
+                            {
+                                entry.HasError = false;
+                                entry.Comment = "Required service flag";
+                            }
+                            else
+                            {
+                                entry.HasError = true;
+                                entry.Comment = "Must be a REG_DWORD set to 1";
+                            }
+                        }
+                        else if (entry.Name == "midi0")
+                        {
+                            entry.HasError = true;
+                            entry.Comment = "Invalid value name";
+                        }
+                        else
+                        {
+                            string[] validEntries = { "midi2", "midi3", "midi4", "midi5", "midi6", "midi7", "midi8", "midi9", "midimapper", "MidisrvTransferComplete" };
+
+                            if (!validEntries.Contains(entry.Name))
+                            {
+                                entry.HasError = true;
+                                entry.Comment = "Unrecognized entry";
+                            }
+                            else
+                            {
+                                if (entry.Value.ToUpper() == "KORGUM64.DRV" || entry.Value.ToUpper() == "KORGUMDS.DRV" || entry.Value.ToUpper() == "KORGUMDD.DRV")
+                                {
+                                    entry.HasError = true;
+                                    entry.Comment = "Deprecated KORG USB Driver";
+                                }
+
+                                if (entry.Value.ToUpper() == "KORGBM64.DRV")
+                                {
+                                    entry.HasError = false;
+                                    entry.Comment = "KORG BLE MIDI";
+                                }
+
+                                if (entry.Value.ToUpper() == "VIRTUALMIDISYNTH.DLL")
+                                {
+                                    entry.HasError = false;
+                                    entry.Comment = "Coolsoft Virtual MIDI Synth";
+                                }
+
+                                if (entry.Value.ToUpper() == "MIDIMAPPER.DLL")
+                                {
+                                    entry.HasError = false;
+                                    entry.Comment = "Coolsoft MIDI Mapper";
+                                }
+                            }
+                        }
+
                         entries.Add(entry);
                     }
                 }
@@ -410,7 +501,19 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public List<FoundRegistryEntry> GetDrivers32MidiEntries()
     {
-        return GetHklmRegistryEntries(Drivers32Path, RegistryView.Registry64).OrderBy(x => x.Name).ToList();
+        var values = GetHklmRegistryEntries(Drivers32Path, RegistryView.Registry64).OrderBy(x => x.Name).ToList();
+
+        if (values.Find(x => x.Name.ToLower() == "midisrvtransfercomplete") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "MidisrvTransferComplete";
+
+            values.Add(entry);
+        }
+
+        return values;
     }
 
     public List<FoundRegistryEntry> GetDrivers32WOWMidiEntries()
@@ -418,4 +521,50 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         return GetHklmRegistryEntries(Drivers32WOWPath, RegistryView.Registry32).OrderBy(x => x.Name).ToList();
     }
 
+
+    //public bool LaunchRegeditWithDrivers32Location()
+    //{
+    //    try
+    //    {
+    //        string arguments = $"/m \"HKEY_LOCAL_MACHINE\\{Drivers32Path}\"";
+
+    //        var consoleProcess = new System.Diagnostics.Process();
+
+    //        consoleProcess.StartInfo.FileName = "regedit.exe";
+    //        consoleProcess.StartInfo.Verb = "runas";
+    //        consoleProcess.StartInfo.Arguments = arguments;
+    //        consoleProcess.StartInfo.UseShellExecute = true;
+
+    //        return consoleProcess.Start();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        App.GetService<ILoggingService>().LogError("Error opening regedit", ex);
+
+    //        return false;
+    //    }
+    //}
+
+    //public bool LaunchRegeditWithDrivers32WOWLocation()
+    //{
+    //    try
+    //    {
+    //        string arguments = $"/m \"HKEY_LOCAL_MACHINE\\{Drivers32WOWPath}\"";
+
+    //        var consoleProcess = new System.Diagnostics.Process();
+
+    //        consoleProcess.StartInfo.FileName = "regedit.exe";
+    //        consoleProcess.StartInfo.Verb = "runas";
+    //        consoleProcess.StartInfo.Arguments = arguments;
+    //        consoleProcess.StartInfo.UseShellExecute = true;
+
+    //        return consoleProcess.Start();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        App.GetService<ILoggingService>().LogError("Error opening regedit", ex);
+
+    //        return false;
+    //    }
+    //}
 }

@@ -904,7 +904,7 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
     <value>If you're working with support</value>
   </data>
   <data name="TroubleshootingSection_RepairRegistry.Text" xml:space="preserve">
-    <value>Repair required registry entries</value>
+    <value>If a driver uninstaller or other utility has made it so apps can't see MIDI devices</value>
   </data>
   <data name="TroubleshootingSection_UnknownIssue.Text" xml:space="preserve">
     <value>If you have an unknown issue</value>
@@ -937,7 +937,7 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
     <value>Restart Windows MIDI Services</value>
   </data>
   <data name="TroubleshootingSettingsCard_RepairRegistry.Description" xml:space="preserve">
-    <value>If you have uninstalled KORG or other drivers and MIDI is no longer working, you can run the tools here to view and optionally repair the registry.</value>
+    <value>If you have uninstalled KORG or other drivers and MIDI is no longer working, you can run the tools here to repair the registry. The current values for both important registry locations, and any errors, are indicated below.</value>
   </data>
   <data name="TroubleshootingSettingsCard_RepairRegistry.Header" xml:space="preserve">
     <value>Fix registry entries</value>
@@ -947,5 +947,8 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   </data>
   <data name="TroubleshootingMainHeader.Text" xml:space="preserve">
     <value>If you are running into problems with MIDI on your PC, the tools below may help you recover without requiring a reboot.</value>
+  </data>
+  <data name="Error_UnableToLaunchRegedit" xml:space="preserve">
+    <value>Unable to launch regedit</value>
   </data>
 </root>

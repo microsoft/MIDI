@@ -20,7 +20,8 @@ public class FoundRegistryEntry
 {
     public string Name;
     public string Value;
-    //   public bool HasError;
+    public bool HasError;
+    public string Comment;
 }
 
 public interface IMidiDiagnosticsService
@@ -37,4 +38,7 @@ public interface IMidiDiagnosticsService
     List<FoundRegistryEntry> GetDrivers32MidiEntries();
 
     List<FoundRegistryEntry> GetDrivers32WOWMidiEntries();
+
+    //bool LaunchRegeditWithDrivers32WOWLocation();
+    //bool LaunchRegeditWithDrivers32Location();
 }

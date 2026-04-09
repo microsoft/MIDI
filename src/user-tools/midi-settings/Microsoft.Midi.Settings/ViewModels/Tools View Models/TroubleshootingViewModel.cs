@@ -34,6 +34,16 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
         get; private set;
     }
 
+    //public ICommand OpenRegEdit64BitDrivers32
+    //{
+    //    get; private set;
+    //}
+
+    //public ICommand OpenRegEdit32BitDrivers32
+    //{
+    //    get; private set;
+    //}
+
     public ICommand MidiDiagCommand
     {
         get; private set;
@@ -163,6 +173,27 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
 
             });
 
+        //OpenRegEdit64BitDrivers32 = new RelayCommand(
+        //    () => 
+        //    {
+        //        var success = _diagnosticsService.LaunchRegeditWithDrivers32Location();
+
+        //        if (!success)
+        //        {
+        //            _messageBoxService.ShowError("Error_UnableToLaunchRegedit".GetLocalized());
+        //        }
+        //    });
+
+        //OpenRegEdit32BitDrivers32 = new RelayCommand(
+        //    () =>
+        //    {
+        //        var success = _diagnosticsService.LaunchRegeditWithDrivers32WOWLocation();
+
+        //        if (!success)
+        //        {
+        //            _messageBoxService.ShowError("Error_UnableToLaunchRegedit".GetLocalized());
+        //        }
+        //    });
 
     }
 
