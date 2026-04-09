@@ -39,7 +39,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="local:MidiServiceTransportPluginViewModel">
                            
-                            <controls:SettingsCard IsClickEnabled="False" Margin="4">
+                            <controls:SettingsCard IsClickEnabled="False" Margin="0,0,0,8">
                                 <controls:SettingsCard.Header>
                                     <Grid Grid.Column="0" Margin="0,0,21,0">
                                         <Grid.ColumnDefinitions>
@@ -95,7 +95,7 @@
                                             <TextBlock Grid.Column="0" Grid.Row="1" Text="Transport Code" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind TransportCode}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Plugin Id" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind Id}"  Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" IsTextSelectionEnabled="True" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" Text="Author" Style="{StaticResource SmallPropertyLabel}" />

@@ -437,7 +437,7 @@
                           ItemClick="GridView_ItemClick">
                     <GridView.ItemContainerStyle>
                         <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
-                            <Setter Property="Margin" Value="8"/>
+                            <Setter Property="Margin" Value="4"/>
                         </Style>
                     </GridView.ItemContainerStyle>
                     
@@ -445,7 +445,7 @@
                         <DataTemplate x:DataType="local:MidiEndpointWrapper">
 
                             <Grid CornerRadius="{StaticResource ControlCornerRadius}"
-                                  Margin="1"
+                                  Margin="0"
                                   Width="350"
                                   Height="310">
 

@@ -32,9 +32,8 @@
                         <DataTemplate x:DataType="local:MidiServiceSessionInformationWrapper">
 
                             <controls:SettingsExpander ItemsSource="{x:Bind SessionConnections, Mode=OneTime}"
-                                                       CornerRadius="8"
                                                        IsExpanded="True"
-                                                       Margin="3">
+                                                       Margin="0,0,0,8">
                                 <controls:SettingsExpander.Header>
 
                                     <Grid>

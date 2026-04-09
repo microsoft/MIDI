@@ -202,7 +202,7 @@
 
                     <!-- Remaining blocks on the page -->
 
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="2" RowSpacing="16" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
@@ -210,7 +210,7 @@
 
                         <!-- Left Column -->
                         <StackPanel Grid.Column="0" >
-                            <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
+                            <controls:SettingsExpander IsExpanded="True"  >
                                 <controls:SettingsExpander.Header>
                                     <StackPanel>
                                         <TextBlock Text="Common MIDI tasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
@@ -230,7 +230,7 @@
                                             <TextBlock x:Uid="CommonTasks_CreateBasicLoopbackEndpoints" TextWrapping="WrapWholeWords" />
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8ee;" Style="{StaticResource CommonTasksIconStyles}"/>
+                                            <ImageIcon Source="/Assets/LeftNav-CreateBasicLoopbackEndpoints.svg" />
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
@@ -241,7 +241,7 @@
                                             <TextBlock x:Uid="CommonTasks_CreateLoopbackEndpoints" TextWrapping="WrapWholeWords" />
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8ee;" Style="{StaticResource CommonTasksIconStyles}"/>
+                                            <ImageIcon Source="/Assets/LeftNav-CreateLoopbackEndpoints.svg" />
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
@@ -382,7 +382,7 @@
                         </StackPanel>
 
                         <!-- Right Column -->
-                        <StackPanel Grid.Column="1">
+                        <StackPanel Grid.Column="1" Spacing="16">
 
                             <!--
                     <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
@@ -475,7 +475,80 @@
                     </controls:SettingsExpander>
     -->
 
-                            <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
+
+                            <controls:SettingsExpander IsExpanded="True" >
+                                <controls:SettingsExpander.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="Useful tools" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                                        <TextBlock Text="Links to a few free tools you may find useful" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                                    </StackPanel>
+                                </controls:SettingsExpander.Header>
+
+                                <controls:SettingsExpander.Items>
+
+                                    <controls:SettingsCard IsClickEnabled="False">
+                                        <controls:SettingsCard.Header>
+                                            <HyperlinkButton NavigateUri="https://aka.ms/getpowertoys/">
+                                                <HyperlinkButton.Content>
+                                                    <TextBlock Text="Windows PowerToys (file management, crop and lock, and more)" TextWrapping="WrapWholeWords"/>
+                                                </HyperlinkButton.Content>
+                                            </HyperlinkButton>
+                                        </controls:SettingsCard.Header>
+                                        <controls:SettingsCard.HeaderIcon>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe897;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
+                                        </controls:SettingsCard.HeaderIcon>
+
+                                    </controls:SettingsCard>
+
+                                    <controls:SettingsCard IsClickEnabled="False">
+                                        <controls:SettingsCard.Header>
+                                            <HyperlinkButton NavigateUri="https://github.com/PowerShell/PowerShell/releases/tag/v7.6.0-preview.6">
+                                                <HyperlinkButton.Content>
+                                                    <TextBlock Text="PowerShell 7.6 (useful for MIDI scripting and more)" TextWrapping="WrapWholeWords"/>
+                                                </HyperlinkButton.Content>
+                                            </HyperlinkButton>
+                                        </controls:SettingsCard.Header>
+                                        <controls:SettingsCard.HeaderIcon>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
+                                        </controls:SettingsCard.HeaderIcon>
+                                    </controls:SettingsCard>
+
+                                    <controls:SettingsCard IsClickEnabled="False">
+                                        <controls:SettingsCard.Header>
+                                            <HyperlinkButton NavigateUri="https://apps.microsoft.com/detail/9NTV7MFLBBVX">
+                                                <HyperlinkButton.Content>
+                                                    <TextBlock Text="Pocket MIDI for MIDI 1.0 (useful for sending/receiving files, troubleshooting, and more)" TextWrapping="WrapWholeWords"/>
+                                                </HyperlinkButton.Content>
+                                            </HyperlinkButton>
+                                        </controls:SettingsCard.Header>
+                                        <controls:SettingsCard.HeaderIcon>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE90B;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
+                                        </controls:SettingsCard.HeaderIcon>
+                                    </controls:SettingsCard>
+
+
+                                    <!--
+                                <controls:SettingsCard IsClickEnabled="False">
+                                    <controls:SettingsCard.Header>
+                                        <HyperlinkButton NavigateUri="https://learn.microsoft.com/windows/terminal/install">
+                                            <HyperlinkButton.Content>
+                                                <TextBlock Text="Windows Terminal (default on Windows 11, so only needed for Windows 10)" TextWrapping="WrapWholeWords"/>
+                                            </HyperlinkButton.Content>
+                                        </HyperlinkButton>
+                                    </controls:SettingsCard.Header>
+                                    <controls:SettingsCard.HeaderIcon>
+                                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"/>
+                                    </controls:SettingsCard.HeaderIcon>
+                                </controls:SettingsCard>
+                                -->
+                                </controls:SettingsExpander.Items>
+                            </controls:SettingsExpander>
+
+
+                            <controls:SettingsExpander IsExpanded="True" >
                                 <controls:SettingsExpander.Header>
                                     <StackPanel>
                                         <TextBlock Text="Helpful Links" Style="{StaticResource HomeCardHeaderTitleStyle}" />
@@ -550,62 +623,6 @@
                                 </controls:SettingsExpander.Items>
                             </controls:SettingsExpander>
 
-
-                            <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
-                                <controls:SettingsExpander.Header>
-                                    <StackPanel>
-                                        <TextBlock Text="Useful tools" Style="{StaticResource HomeCardHeaderTitleStyle}" />
-                                        <TextBlock Text="Links to a few free tools you may find useful" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
-                                    </StackPanel>
-                                </controls:SettingsExpander.Header>
-
-                                <controls:SettingsExpander.Items>
-
-                                    <controls:SettingsCard IsClickEnabled="False">
-                                        <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://aka.ms/getpowertoys/">
-                                                <HyperlinkButton.Content>
-                                                    <TextBlock Text="Windows PowerToys (file management, crop and lock, and more)" TextWrapping="WrapWholeWords"/>
-                                                </HyperlinkButton.Content>
-                                            </HyperlinkButton>
-                                        </controls:SettingsCard.Header>
-                                        <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe897;"
-                                                      Style="{StaticResource CommonTasksIconStyles}"/>
-                                        </controls:SettingsCard.HeaderIcon>
-
-                                    </controls:SettingsCard>
-
-                                    <controls:SettingsCard IsClickEnabled="False">
-                                        <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://github.com/PowerShell/PowerShell/releases/tag/v7.6.0-preview.6">
-                                                <HyperlinkButton.Content>
-                                                    <TextBlock Text="PowerShell 7.6 (useful for MIDI scripting and more)" TextWrapping="WrapWholeWords"/>
-                                                </HyperlinkButton.Content>
-                                            </HyperlinkButton>
-                                        </controls:SettingsCard.Header>
-                                        <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"
-                                                      Style="{StaticResource CommonTasksIconStyles}"/>
-                                        </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>
-
-                                    <!--
-                                <controls:SettingsCard IsClickEnabled="False">
-                                    <controls:SettingsCard.Header>
-                                        <HyperlinkButton NavigateUri="https://learn.microsoft.com/windows/terminal/install">
-                                            <HyperlinkButton.Content>
-                                                <TextBlock Text="Windows Terminal (default on Windows 11, so only needed for Windows 10)" TextWrapping="WrapWholeWords"/>
-                                            </HyperlinkButton.Content>
-                                        </HyperlinkButton>
-                                    </controls:SettingsCard.Header>
-                                    <controls:SettingsCard.HeaderIcon>
-                                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"/>
-                                    </controls:SettingsCard.HeaderIcon>
-                                </controls:SettingsCard>
-                                -->
-                                </controls:SettingsExpander.Items>
-                            </controls:SettingsExpander>
 
 
                         </StackPanel>

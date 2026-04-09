@@ -130,10 +130,10 @@
     <value>ContentGrid</value>
   </data>
   <data name="Shell_PluginsNavHeader.Content" xml:space="preserve">
-    <value>Plugins</value>
+    <value>Service Plugins</value>
   </data>
   <data name="Shell_PluginsProcessing.Content" xml:space="preserve">
-    <value>Processing &amp; Filtering</value>
+    <value>Processing &amp; Filtering Plugins</value>
   </data>
   <data name="Shell_Configurations.Content" xml:space="preserve">
     <value>Configurations</value>
@@ -190,7 +190,7 @@
     <value>https://privacy.microsoft.com/privacystatement</value>
   </data>
   <data name="Shell_PluginsTransport.Content" xml:space="preserve">
-    <value>Transports</value>
+    <value>Transport Plugins</value>
   </data>
   <data name="Shell_MoreNavHeader.Content" xml:space="preserve">
     <value>More</value>
@@ -278,6 +278,9 @@
   </data>
   <data name="AppSessionName" xml:space="preserve">
     <value>MIDI Settings</value>
+  </data>
+  <data name="PluginsProcessingPage_Description.Text" xml:space="preserve">
+    <value>This page lists the full set of processing/transform plugins installed and recognized by Windows MIDI Services on this PC.</value>
   </data>
   <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
     <value>This page lists the full set of transport plugins installed and recognized by Windows MIDI Services on this PC. For information on the endpoint devices enumerated by these transport plugins, see the Devices page.</value>

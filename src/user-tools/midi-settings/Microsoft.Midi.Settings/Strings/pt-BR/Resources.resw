@@ -279,6 +279,10 @@
   <data name="AppSessionName" xml:space="preserve">
     <value>MIDI Settings</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="PluginsProcessingPage_Description.Text" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
   <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
     <value>Esta página lista o conjunto completo de plugins de transporte instalados e reconhecidos pelo Windows MIDI Services neste PC. Para informações sobre os dispositivos endpoint enumerados por esses plugins de transporte, consulte a página de Dispositivos.</value>
   </data>

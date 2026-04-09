@@ -67,8 +67,10 @@
                                                     VerticalAlignment="Center"
                                                     Grid.Column="1">
                                             <TextBlock Text="{x:Bind LoopA.Name}" 
+                                                       IsTextSelectionEnabled="True"
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}"/>
                                             <TextBlock Text="{x:Bind LoopB.Name}" 
+                                                       IsTextSelectionEnabled="True"
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}"/>
                                         </StackPanel>
 
@@ -82,8 +84,10 @@
                                         <StackPanel Orientation="Vertical"
                                                     VerticalAlignment="Center">
                                             <TextBlock Text="{x:Bind LoopA.Id}" 
+                                                       IsTextSelectionEnabled="True"
                                                        Style="{StaticResource SmallPlainPropertyValue}"/>
                                             <TextBlock Text="{x:Bind LoopB.EndpointDeviceId}" 
+                                                       IsTextSelectionEnabled="True"
                                                        Style="{StaticResource SmallPlainPropertyValue}"
                                                        />
                                         </StackPanel>

@@ -471,14 +471,15 @@
                         <ImageIcon Source="/Assets/LeftNav-Transports.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <!--
-                <NavigationViewItem x:Uid="Shell_PluginsProcessing" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsProcessingViewModel">
+
+                <NavigationViewItem x:Uid="Shell_PluginsProcessing" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsProcessingViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe912;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <!-- Temp Icon -->
+                        <ImageIcon Source="/Assets/LeftNav-Transports.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                -->
-
 
 
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>
