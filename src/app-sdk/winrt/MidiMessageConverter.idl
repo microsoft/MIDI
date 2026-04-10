@@ -19,7 +19,24 @@ import "MidiMessage32.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
+    [uuid(UUID_IMidiMessageConverterStatics2), version(1.0)]
+    interface IMidiMessageConverterStatics2
+    {
+        static IVector<UInt32> ConvertMidi1CompleteMessageBytesToUmpWords(
+            Microsoft.Windows.Devices.Midi2.MidiGroup group,
+            IIterable<UInt8> midi1Bytes,
+            Boolean allowRunningStatus
+        );
+
+        static IVector<UInt8> ConvertCompleteMessageUmpWordsToMidi1Bytes(
+            IIterable<UInt32> umpWords
+        );
+
+    };
+
+    [contract(MidiMessageUtilitiesApiContract, 1)]
     [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageConverterStatics", UUID_IMidiMessageConverterStatics)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageConverterStatics2", UUID_IMidiMessageConverterStatics2)]
     static runtimeclass MidiMessageConverter
     {
         static Microsoft.Windows.Devices.Midi2.MidiMessage32 ConvertMidi1Message(

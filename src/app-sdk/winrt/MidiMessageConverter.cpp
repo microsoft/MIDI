@@ -403,4 +403,28 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         return message;
     }
 
+
+
+    _Use_decl_annotations_
+    collections::IVector<uint32_t> MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(
+        midi2::MidiGroup const& group,
+        collections::IIterable<uint8_t> const& midi1Bytes,
+        bool const allowRunningStatus
+    ) noexcept
+    {
+
+   
+    }
+
+
+    _Use_decl_annotations_
+    collections::IVector<uint8_t> ConvertCompleteMessageUmpWordsToMidi1Bytes(
+        _In_ collections::IIterable<uint32_t> const& umpWords
+    ) noexcept
+    {
+
+
+
+    }
+
 }
