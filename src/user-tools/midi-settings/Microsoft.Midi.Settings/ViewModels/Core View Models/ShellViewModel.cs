@@ -107,6 +107,12 @@ public partial class ShellViewModel : ObservableRecipient
     [ObservableProperty]
     private bool showToolsSectionInLeftNav = false;
 
+    [ObservableProperty]
+    private bool showToolsTestInLeftNav = false;
+
+    [ObservableProperty]
+    private bool showToolsScratchPadInLeftNav = false;
+
     private void UpdateVisibilityOfLeftNavSections()
     {
         var transports = App.GetService<IMidiTransportInfoService>().GetAllTransports();
@@ -142,6 +148,8 @@ public partial class ShellViewModel : ObservableRecipient
         if (_generalSettingsService.GetPreviewToolsEnabled())
         {
             ShowSysExToolsInLeftNav = true;
+            //ShowToolsTestInLeftNav = true;
+            ShowToolsScratchPadInLeftNav = true;
 
             // sysex is the only tool
             ShowToolsSectionInLeftNav = true;

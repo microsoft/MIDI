@@ -31,15 +31,15 @@ namespace Microsoft.Midi.Settings.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class ToolsTestPage : Page
+    public sealed partial class ToolsScratchPadPage : Page
     {
-        public ToolsTestViewModel ViewModel
+        public ToolsScratchPadViewModel ViewModel
         {
             get;
         }
-        public ToolsTestPage()
+        public ToolsScratchPadPage()
         {
-            ViewModel = App.GetService<ToolsTestViewModel>();
+            ViewModel = App.GetService<ToolsScratchPadViewModel>();
             InitializeComponent();
         }
 
@@ -50,7 +50,7 @@ namespace Microsoft.Midi.Settings.Views
             foreach (char c in args.NewText)
             {
                 // allow ascii hex digita and space
-                if (!char.IsAsciiHexDigit(c) && c != ' ')
+                if (!char.IsAsciiHexDigit(c) && c != ' ' && c != '\n' && c != '\r')
                 {
                     args.Cancel = true; // Reject the change
                     break;

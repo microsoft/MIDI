@@ -45,6 +45,7 @@ public class PageService : IPageService
         //Configure<ToolsMonitorViewModel, ToolsMonitorPage>();
         Configure<ToolsSysExViewModel, ToolsSysExPage>();
         Configure<ToolsTestViewModel, ToolsTestPage>();
+        Configure<ToolsScratchPadViewModel, ToolsScratchPadPage>();
         Configure<TroubleshootingViewModel, TroubleshootingPage>();
 
         Configure<GlobalMidiSettingsViewModel, GlobalMidiSettingsPage>();

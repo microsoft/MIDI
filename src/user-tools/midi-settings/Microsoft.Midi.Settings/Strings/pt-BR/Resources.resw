@@ -159,8 +159,12 @@
   <data name="Shell_ToolsConsole.Content" xml:space="preserve">
     <value>Console</value>
   </data>
-  <data name="Shell_ToolsTest.Content" xml:space="preserve">
-    <value>Teste de Dispositivo</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Shell_ToolsTest.Text" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Shell_ToolsScratchPad.Text" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
   </data>
   <data name="Shell_ForDevelopers.Content" xml:space="preserve">
     <value>Desenvolvedores</value>
@@ -279,7 +283,6 @@
   <data name="AppSessionName" xml:space="preserve">
     <value>MIDI Settings</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="PluginsProcessingPage_Description.Text" type="System.Resources.ResXNullRef, System.Windows.Forms">
     <value />
   </data>

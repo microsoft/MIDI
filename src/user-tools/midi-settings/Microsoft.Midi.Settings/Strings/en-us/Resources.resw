@@ -159,8 +159,11 @@
   <data name="Shell_ToolsConsole.Content" xml:space="preserve">
     <value>Console</value>
   </data>
-  <data name="Shell_ToolsTest.Content" xml:space="preserve">
-    <value>Device Test</value>
+  <data name="Shell_ToolsTest.Text" xml:space="preserve">
+    <value>Test Messages</value>
+  </data>
+  <data name="Shell_ToolsScratchPad.Text" xml:space="preserve">
+    <value>MIDI 1.0 Scratchpad</value>
   </data>
   <data name="Shell_ForDevelopers.Content" xml:space="preserve">
     <value>Developers</value>

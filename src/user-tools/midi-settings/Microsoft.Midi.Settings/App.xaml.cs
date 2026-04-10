@@ -192,6 +192,9 @@ public partial class App : Application
                     services.AddTransient<ToolsTestPage>();
                     services.AddTransient<ToolsTestViewModel>();
 
+                    services.AddTransient<ToolsScratchPadPage>();
+                    services.AddTransient<ToolsScratchPadViewModel>();
+
                     services.AddTransient<TroubleshootingPage>();
                     services.AddTransient<TroubleshootingViewModel>();
 
