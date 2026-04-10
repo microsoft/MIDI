@@ -412,19 +412,98 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         bool const allowRunningStatus
     ) noexcept
     {
+        bytestreamToUMP converter;
 
-   
+        auto words = winrt::single_threaded_vector<uint32_t>();
+
+        converter.defaultGroup = group.Index();
+        converter.enableRunningStatus = allowRunningStatus;
+
+        for (auto it = midi1Bytes.begin(); it < midi1Bytes.end(); it++)
+        {
+            converter.bytestreamParse(*it);
+
+            while (converter.availableUMP())
+            {
+                words.Append(converter.readUMP());
+            }
+        }
+
+        return words;
     }
 
 
     _Use_decl_annotations_
-    collections::IVector<uint8_t> ConvertCompleteMessageUmpWordsToMidi1Bytes(
+    collections::IVector<uint8_t> MidiMessageConverter::ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(
         _In_ collections::IIterable<uint32_t> const& umpWords
     ) noexcept
     {
+        umpToBytestream converter;
+
+        auto bytes = winrt::single_threaded_vector<uint8_t>();
+
+        for (auto it = umpWords.begin(); it < umpWords.end(); it++)
+        {
+            converter.UMPStreamParse(*it);
+
+            while (converter.availableBS())
+            {
+                bytes.Append(converter.readBS());
+            }
+        }
+
+        return bytes;
+    }
 
 
+
+    _Use_decl_annotations_
+    collections::IVector<uint8_t> MidiMessageConverter::ConvertHexByteStringToByteArray(
+        _In_ winrt::hstring const& hexByteString
+    ) noexcept
+    {
+        auto bytes = winrt::single_threaded_vector<uint8_t>();
+
+        std::wstring s { hexByteString };
+
+        std::wstring currentByte{};
+
+        auto it = s.begin();
+
+        while (it != s.end())
+        {
+            if (std::isxdigit(*it))
+            {
+                currentByte.push_back(*it);
+            }
+            else if (!currentByte.empty())
+            {
+                // not a hex digit, so treat as a delimiter. 
+                // we already have some data started, so 
+                // commit it
+
+                bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
+                currentByte.clear();
+            }
+
+            if (currentByte.size() == 2)
+            {
+                bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
+                currentByte.clear();
+            }
+
+            it++;
+        }
+
+        // ensure the last digit is captured
+        if (!currentByte.empty())
+        {
+            bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
+        }
+
+        return bytes;
 
     }
+
 
 }

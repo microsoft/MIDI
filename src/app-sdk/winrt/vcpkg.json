@@ -1,0 +1,6 @@
+{
+  "dependencies": [
+    "libmidi2"
+  ],
+  "builtin-baseline": "5d00b6f2b5a1e0fb44effc9ac5acbb553d4588da"
+}

@@ -13,33 +13,6 @@
     <ClCompile Include="MidiChannelEndpointListener.cpp">
       <Filter>SDK\ClientPlugins</Filter>
     </ClCompile>
-    <ClCompile Include="libmidi2\src\midiCIMessageCreate.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
-    <ClCompile Include="libmidi2\src\midiCIProcessor.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
-    <ClCompile Include="libmidi2\src\mcoded7.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
-    <ClCompile Include="libmidi2\src\bytestreamToUMP.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
-    <ClCompile Include="libmidi2\src\umpMessageCreate.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
-    <ClCompile Include="libmidi2\src\umpProcessor.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
-    <ClCompile Include="libmidi2\src\umpToBytestream.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
-    <ClCompile Include="libmidi2\src\umpToMIDI1Protocol.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
-    <ClCompile Include="libmidi2\src\utils.cpp">
-      <Filter>libMidi2</Filter>
-    </ClCompile>
     <ClCompile Include="MidiUniqueId.cpp">
       <Filter>SDK\CapabilityInquiry</Filter>
     </ClCompile>
@@ -184,33 +157,6 @@
     </ClInclude>
     <ClInclude Include="MidiChannelEndpointListener.h">
       <Filter>SDK\ClientPlugins</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\midiCIMessageCreate.h">
-      <Filter>libMidi2</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\midiCIProcessor.h">
-      <Filter>libMidi2</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\mcoded7.h">
-      <Filter>libMidi2</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\bytestreamToUMP.h">
-      <Filter>libMidi2</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\umpMessageCreate.h">
-      <Filter>libMidi2</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\umpProcessor.h">
-      <Filter>libMidi2</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\umpToBytestream.h">
-      <Filter>libMidi2</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\umpToMIDI1Protocol.h">
-      <Filter>libMidi2</Filter>
-    </ClInclude>
-    <ClInclude Include="libmidi2\include\utils.h">
-      <Filter>libMidi2</Filter>
     </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
       <Filter>SDK\CapabilityInquiry</Filter>
@@ -841,9 +787,6 @@
     </Filter>
     <Filter Include="SDK\Endpoints\VirtualPatchBay">
       <UniqueIdentifier>{4b85eb66-0f79-43e0-86f8-ad9cadbcba6e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="libMidi2">
-      <UniqueIdentifier>{4df6aac3-15fd-48fc-893f-5500c79b4d5e}</UniqueIdentifier>
     </Filter>
     <Filter Include="SDK\Utilities">
       <UniqueIdentifier>{2daa4b05-a4d8-4091-9b6e-889d674b71dc}</UniqueIdentifier>
