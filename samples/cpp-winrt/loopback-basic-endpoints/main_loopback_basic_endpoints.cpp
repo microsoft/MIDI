@@ -10,12 +10,12 @@
 #include <winrt/Windows.Foundation.h>
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
 
-using namespace winrt::Microsoft::Windows::Devices::Midi2;                          // Core SDK
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback;     // For loopback endpoints
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;                // For message utilities and strong types
+using namespace winrt::Microsoft::Windows::Devices::Midi2;                              // Core SDK
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback;    // For basic / MIDI 1.0loopback endpoints
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;                    // For message utilities and strong types
 
 
 // where you find types like IAsyncOperation, IInspectable, etc.
@@ -30,45 +30,33 @@ namespace foundation = winrt::Windows::Foundation;
 namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 // we'll use these to keep track of the ids of the created endpoints
-winrt::hstring m_endpointAId{};
-winrt::hstring m_endpointBId{};
+winrt::hstring m_endpointId{};
 winrt::guid m_associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
 
 bool CreateLoopbackEndpoints()
 {
     std::cout << "Creating loopback endpoints." << std::endl;
 
-    MidiLoopbackEndpointDefinition definitionA;
-    MidiLoopbackEndpointDefinition definitionB;
+    MidiBasicLoopbackEndpointDefinition definition;
 
-    definitionA.Name = L"Sample App Loopback A";
-    definitionA.Description = L"The first description is optional, but is displayed to users. This becomes the transport-defined description.";
-    definitionA.UniqueId = L"8675309-OU812-5150";
+    definition.Name = L"Sample App Loopback";
+    definition.Description = L"The description is optional, but is displayed to users. This becomes the transport-defined description.";
+    definition.UniqueId = L"5150-8675309-OU812";    // if left blank, one will ge generated
 
-    definitionB.Name = L"Sample App Loopback B";
-    definitionB.Description = L"The second description is optional, but is displayed to users. This becomes the transport-defined description.";
-    definitionB.UniqueId = L"3263827-OU812-5150"; // can be the same as the first one, but doesn't need to be.
+    MidiBasicLoopbackEndpointCreationConfig creationConfig(m_associationId, definition);
 
-    MidiLoopbackEndpointCreationConfig creationConfig(m_associationId, definitionA, definitionB);
-
-    auto response = MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(creationConfig);
+    auto response = MidiBasicLoopbackEndpointManager::CreateTransientLoopbackEndpoint(creationConfig);
 
     if (response.Success())
     {
-        std::wcout << L"Endpoints created successfully" << std::endl << std::endl;
+        std::wcout << L"Endpoint created successfully" << std::endl << std::endl;
 
         std::cout
-            << "Loopback Endpoint A: " << std::endl 
-            << " - " << winrt::to_string(definitionA.Name) << std::endl
-            << " - " << winrt::to_string(response.EndpointDeviceIdA()) << std::endl << std::endl;
+            << "Loopback Endpoint: " << std::endl 
+            << " - " << winrt::to_string(definition.Name) << std::endl
+            << " - " << winrt::to_string(response.EndpointDeviceId()) << std::endl << std::endl;
 
-        std::cout 
-            << "Loopback Endpoint B: "  << std::endl
-            << " - " << winrt::to_string(definitionB.Name) << std::endl
-            << " - " << winrt::to_string(response.EndpointDeviceIdB()) << std::endl << std::endl;
-
-        m_endpointAId = response.EndpointDeviceIdA();
-        m_endpointBId = response.EndpointDeviceIdB();
+        m_endpointId = response.EndpointDeviceId();
     }
     else
     {
@@ -129,11 +117,9 @@ int main()
 
     if (CreateLoopbackEndpoints())
     {
-        auto sendEndpoint = session.CreateEndpointConnection(m_endpointAId);
-        std::cout << "Connected to sending endpoint: " << winrt::to_string(m_endpointAId) << std::endl;
+        auto endpoint = session.CreateEndpointConnection(m_endpointId);
+        std::cout << "Connected to endpoint: " << winrt::to_string(m_endpointId) << std::endl;
 
-        auto receiveEndpoint = session.CreateEndpointConnection(m_endpointBId);
-        std::cout << "Connected to receiving endpoint: " << winrt::to_string(m_endpointBId) << std::endl;
 
         // Wire up an event handler to receive the message. There is a single event handler type, but the
         // MidiMessageReceivedEventArgs class provides the different ways to access the data
@@ -173,16 +159,13 @@ int main()
             };
 
         // the returned token is used to deregister the event later.
-        auto eventRevokeToken = receiveEndpoint.MessageReceived(MessageReceivedHandler);
+        auto eventRevokeToken = endpoint.MessageReceived(MessageReceivedHandler);
 
         std::cout << std::endl << "Opening endpoint connection" << std::endl;
 
         // once you have wired up all your event handlers, added any filters/listeners, etc.
-        // You can open the connection. Doing this will query the cache for the in-protocol 
-        // endpoint information and function blocks. If not there, it will send out the requests
-        // which will come back asynchronously with responses.
-        sendEndpoint.Open();
-        receiveEndpoint.Open();
+        // You can open the connection.
+        endpoint.Open();
 
 
         std::cout << std::endl << "Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
@@ -201,7 +184,7 @@ int main()
         std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
 
         auto ump = ump32.as<IMidiUniversalPacket>();
-        auto sendResult = sendEndpoint.SendSingleMessagePacket(ump);          // could also use the SendWords methods, etc.
+        auto sendResult = endpoint.SendSingleMessagePacket(ump);          // could also use the SendWords methods, etc.
 
         if (MidiEndpointConnection::SendMessageFailed(sendResult))
         {
@@ -215,14 +198,13 @@ int main()
         if (eventRevokeToken)
         {
             // deregister the event by passing in the revoke token
-            receiveEndpoint.MessageReceived(eventRevokeToken);
+            endpoint.MessageReceived(eventRevokeToken);
         }
 
         std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
 
 
-        session.DisconnectEndpointConnection(sendEndpoint.ConnectionId());
-        session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId());
+        session.DisconnectEndpointConnection(endpoint.ConnectionId());
 
         // close the session, detaching all Windows MIDI Services resources and closing all connections
         // You can also disconnect individual Endpoint Connections when you are done with them, as we did above
@@ -233,9 +215,9 @@ int main()
         // If you don't do this, they will stay active, and the next attempt
         // to create them will fail because the unique Ids are already in use
 
-        MidiLoopbackEndpointRemovalConfig removalConfig(m_associationId);
+        MidiBasicLoopbackEndpointRemovalConfig removalConfig(m_associationId);
 
-        if (MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(removalConfig))
+        if (MidiBasicLoopbackEndpointManager::RemoveTransientLoopbackEndpoint(removalConfig))
         {
             std::cout << "Loopback endpoints removed." << std::endl;
         }

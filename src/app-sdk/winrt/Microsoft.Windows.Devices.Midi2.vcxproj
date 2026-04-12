@@ -297,6 +297,8 @@
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
     <ClInclude Include="date_util.h" />
+    <ClInclude Include="MidiBasicLoopbackEndpointCreationResult.h" />
+    <ClInclude Include="MidiLoopbackEndpointCreationResult.h" />
     <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h" />
     <ClInclude Include="MidiBasicLoopbackEndpointManager.h" />
     <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h" />
@@ -541,6 +543,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEndpointCreationResult.cpp" />
+    <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp" />
     <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp" />
     <ClCompile Include="MidiBasicLoopbackEndpointManager.cpp" />
     <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp" />
@@ -804,6 +808,7 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi1PortNamingApproachEnum.idl" />
+    <Midl Include="MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl" />
     <Midl Include="MidiImageAssetHelper.idl" />
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
@@ -815,6 +820,7 @@
     <Midl Include="MidiEndpointConnectionBasicSettings.idl" />
     <Midl Include="MidiEndpointDeviceIdHelper.idl" />
     <Midl Include="Midi1PortNameTableEntry.idl" />
+    <Midl Include="MidiLoopbackEndpointCreationResultErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiDeclaredEndpointInfo.idl" />

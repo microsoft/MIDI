@@ -205,10 +205,12 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiLoopbackEndpointManager.h"
 #include "MidiLoopbackEndpointCreationConfig.h"
 #include "MidiLoopbackEndpointRemovalConfig.h"
+#include "MidiLoopbackEndpointCreationResult.h"
 
 #include "MidiBasicLoopbackEndpointManager.h"
 #include "MidiBasicLoopbackEndpointCreationConfig.h"
 #include "MidiBasicLoopbackEndpointRemovalConfig.h"
+#include "MidiBasicLoopbackEndpointCreationResult.h"
 
 #include "MidiStreamConfigRequestReceivedEventArgs.h"
 #include "MidiVirtualDevice.h"

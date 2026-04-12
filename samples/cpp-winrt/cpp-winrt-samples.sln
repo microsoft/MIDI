@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.11.34929.205
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11626.88 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client-basics-cpp", "basics\client-basics-cpp.vcxproj", "{FB9D8E00-E6E5-42FA-93B5-EFE40DC66C04}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "endpoint-listeners-cpp", "endpoint-listeners\endpoint-listeners-cpp.vcxproj", "{9BA306AF-810C-4CBD-AA19-AC1954C38FE4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "full-init-cpp", "full-init\full-init-cpp.vcxproj", "{253D170C-C9ED-401C-93EE-96588853F1CF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "loopback-basic-endpoints-cpp", "loopback-basic-endpoints\loopback-basic-endpoints-cpp.vcxproj", "{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -159,6 +161,22 @@ Global
 		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|x64.Build.0 = Release|x64
 		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|x86.ActiveCfg = Release|x64
 		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|x86.Build.0 = Release|x64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Debug|ARM64.Build.0 = Debug|ARM64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Debug|x64.ActiveCfg = Debug|x64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Debug|x64.Build.0 = Debug|x64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Debug|x86.ActiveCfg = Debug|x64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Debug|x86.Build.0 = Debug|x64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Release|ARM64.ActiveCfg = Release|ARM64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Release|ARM64.Build.0 = Release|ARM64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Release|x64.ActiveCfg = Release|x64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Release|x64.Build.0 = Release|x64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Release|x86.ActiveCfg = Release|x64
+		{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

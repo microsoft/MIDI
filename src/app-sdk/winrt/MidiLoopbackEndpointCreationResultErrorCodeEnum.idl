@@ -9,22 +9,26 @@
 #include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-import "MidiLoopbackEndpointCreationResultErrorCodeEnum.idl";
+
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointCreationResult", UUID_IMidiLoopbackEndpointCreationResult)]
-    runtimeclass MidiLoopbackEndpointCreationResult
+    enum MidiLoopbackEndpointCreationResultErrorCode
     {
-        Boolean Success { get; };
+        NoErrorInformationAvailable = 0,
 
-        MidiLoopbackEndpointCreationResultErrorCode ErrorCode{ get; };
-        String ErrorInformation{ get; };
+        InvalidOrMissingUniqueIdA = 1000,
+        UniqueIdAInUse = 1010,
+        
+        InvalidOrMissingUniqueIdB = 2000,
+        UniqueIdBInUse = 2020,
 
-        Guid AssociationId{ get; };
+        InvalidOrMissingNameA = 4000,
+        NameAInUse = 4010,
 
-        String EndpointDeviceIdA{ get; };
-        String EndpointDeviceIdB{ get; };
+        InvalidOrMissingNameB = 5000,
+        NameBInUse = 5010,
+
     };
 }

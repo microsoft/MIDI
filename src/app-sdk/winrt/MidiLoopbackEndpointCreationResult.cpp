@@ -6,22 +6,10 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "midi_sdk_idl_defs.h"
+#include "pch.h"
+#include "MidiLoopbackEndpointCreationResult.h"
+#include "Endpoints.Loopback.MidiLoopbackEndpointCreationResult.g.cpp"
 
-import "MidiApiContracts.idl";
-
-import "MidiServiceConfigResponseStatusEnum.idl";
-
-namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    [contract(MidiServiceConfigApiContract, 1)]
-    struct MidiServiceConfigResponse
-    {
-        MidiServiceConfigResponseStatus Status;
-
-        UInt32 ServiceCode;
-        String ServiceMessage;
-
-        String ResponseJson;
-    };
 }

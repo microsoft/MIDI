@@ -142,6 +142,12 @@
     <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp">
       <Filter>SDK\Endpoints\Loopback-Basic</Filter>
     </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp">
+      <Filter>SDK\Endpoints\Loopback</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointCreationResult.cpp">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -297,6 +303,12 @@
       <Filter>SDK\Endpoints\Loopback-Basic</Filter>
     </ClInclude>
     <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointCreationResult.h">
+      <Filter>SDK\Endpoints\Loopback</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointCreationResult.h">
       <Filter>SDK\Endpoints\Loopback-Basic</Filter>
     </ClInclude>
   </ItemGroup>
@@ -719,6 +731,12 @@
       <Filter>SDK\Endpoints\Loopback-Basic</Filter>
     </Midl>
     <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl">
+      <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointCreationResultErrorCodeEnum.idl">
+      <Filter>SDK\Endpoints\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl">
       <Filter>SDK\Endpoints\Loopback-Basic</Filter>
     </Midl>
   </ItemGroup>

@@ -79,6 +79,7 @@
 #define UUID_IMidiLoopbackEndpointCreationConfig			8087b303-0519-31d1-c0de-dd0000190000
 #define UUID_IMidiLoopbackEndpointRemovalConfig				8087b303-0519-31d1-c0de-dd00001a0000
 #define UUID_IMidiLoopbackEndpointManagerStatics			8087b303-0519-31d1-c0de-ee00001b0000
+#define UUID_IMidiLoopbackEndpointCreationResult            8087b303-0519-31d1-c0de-ee00001c0000
 
 // virtual device
 #define UUID_IMidiStreamConfigRequestReceivedEventArgs		8087b303-0519-31d1-c0de-dd00002a0000
@@ -90,6 +91,8 @@
 #define UUID_IMidiBasicLoopbackEndpointCreationConfig		8087b303-0519-31d1-c0de-dd0000390000
 #define UUID_IMidiBasicLoopbackEndpointRemovalConfig		8087b303-0519-31d1-c0de-dd00003a0000
 #define UUID_IMidiBasicLoopbackEndpointManagerStatics		8087b303-0519-31d1-c0de-ee00003b0000
+#define UUID_IMidiBasicLoopbackEndpointCreationResult       8087b303-0519-31d1-c0de-ee00003c0000
+
 
 
 // TODO: Virtual Patch bay
