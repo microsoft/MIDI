@@ -144,15 +144,14 @@ public partial class ShellViewModel : ObservableRecipient
         }
 
 
+        ShowToolsSectionInLeftNav = true;
+        ShowToolsScratchPadInLeftNav = true;
+
         // SysEx and other tools
         if (_generalSettingsService.GetPreviewToolsEnabled())
         {
             ShowSysExToolsInLeftNav = true;
             //ShowToolsTestInLeftNav = true;
-            ShowToolsScratchPadInLeftNav = true;
-
-            // sysex is the only tool
-            ShowToolsSectionInLeftNav = true;
         }
 
 

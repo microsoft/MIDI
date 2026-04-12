@@ -44,9 +44,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         loop::MidiLoopbackEndpointCreationConfig creationConfig)
     {
         // the success code in this defaults to False
-        loop::implementation::MidiLoopbackEndpointCreationResult result{};
-        result.Success(false);
-        result.AssociationId(creationConfig.AssociationId());
+        auto result = winrt::make_self<implementation::MidiLoopbackEndpointCreationResult>();
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
+        
+        result->Success(false);
+        result->AssociationId(creationConfig.AssociationId());
 
         // TODO: Result error code
 
@@ -89,16 +94,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
         if (internal::TrimmedHStringCopy(updatedCreationConfig.EndpointDefinitionA().Name).empty())
         {
-            result.ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A));
-            result.ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::InvalidOrMissingNameA);
-            return result;
+            result->ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A));
+            result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::InvalidOrMissingNameA);
+            return *result;
         }
 
         if (internal::TrimmedHStringCopy(updatedCreationConfig.EndpointDefinitionB().Name).empty())
         {
-            result.ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B));
-            result.ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::InvalidOrMissingNameB);
-            return result;
+            result->ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B));
+            result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::InvalidOrMissingNameB);
+            return *result;
         }
 
 
@@ -123,9 +128,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
                     if (!deviceIdA.empty() && !deviceIdB.empty())
                     {
                         // update the response object with the new ids
-                        result.EndpointDeviceIdA(deviceIdA);
-                        result.EndpointDeviceIdB(deviceIdB);
-                        result.Success(true);
+                        result->EndpointDeviceIdA(deviceIdA);
+                        result->EndpointDeviceIdB(deviceIdB);
+                        result->Success(true);
                     }
                     else
                     {
@@ -144,7 +149,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             }
             else
             {
-                result.ErrorInformation(serviceResponse.ServiceMessage);
+                result->ErrorInformation(serviceResponse.ServiceMessage);
 
                 // TODO: Need to get error code from the service response
 
@@ -165,7 +170,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         }
         catch (winrt::hresult_error ex)
         {
-            result.ErrorInformation(ex.message());
+            result->ErrorInformation(ex.message());
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -181,7 +186,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         }
         catch (...)
         {
-            result.ErrorInformation(L"General exception/error.");
+            result->ErrorInformation(L"General exception/error.");
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -194,7 +199,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             );
         }
 
-        return result;
+        return *result;
     }
 
     _Use_decl_annotations_

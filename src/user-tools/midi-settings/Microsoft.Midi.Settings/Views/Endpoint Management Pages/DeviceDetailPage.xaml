@@ -953,6 +953,7 @@
                                 Width="200"
                                 Height="200"
                                 Margin="0,8,0,0"
+                                Background="Transparent"
                                 HorizontalAlignment="Left">
                             <Image Grid.Row="1"
                                    Stretch="Uniform"
@@ -964,6 +965,7 @@
                                 Margin="0,8,4,0"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
+                                Background="Transparent"
                                 Visibility="{x:Bind ViewModel.CustomizationViewModel.HasImage, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <SymbolIcon Symbol="Clear" />
                         </Button>

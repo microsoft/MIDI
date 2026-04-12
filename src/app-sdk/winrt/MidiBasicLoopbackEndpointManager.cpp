@@ -35,17 +35,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         bloop::MidiBasicLoopbackEndpointCreationConfig const& creationConfig) noexcept
     {
         // the success code in this defaults to False
-        bloop::implementation::MidiBasicLoopbackEndpointCreationResult result{};
-        result.AssociationId(creationConfig.AssociationId());
-        result.Success(false);
+        auto result = winrt::make_self<implementation::MidiBasicLoopbackEndpointCreationResult>();
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
+
+        result->AssociationId(creationConfig.AssociationId());
+        result->Success(false);
 
         winrt::hstring endpointUniqueId{ internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId) };
 
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name).empty())
         {
-            result.ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME));
-            result.ErrorCode(bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::InvalidOrMissingName);
-            return result;
+            result->ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME));
+            result->ErrorCode(bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::InvalidOrMissingName);
+            return *result;
         }
 
         // we have to do all this so we don't change the method signature, but
@@ -87,8 +92,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
                     if (!deviceId.empty())
                     {
                         // update the response object with the new ids
-                        result.EndpointDeviceId(deviceId);
-                        result.Success(true);
+                        result->EndpointDeviceId(deviceId);
+                        result->Success(true);
                     }
                     else
                     {
@@ -106,7 +111,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
             }
             else
             {
-                result.ErrorInformation(serviceResponse.ServiceMessage);
+                result->ErrorInformation(serviceResponse.ServiceMessage);
 
                 // TODO: Get error code from service response
 
@@ -125,7 +130,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         }
         catch (winrt::hresult_error ex)
         {
-            result.ErrorInformation(ex.message());
+            result->ErrorInformation(ex.message());
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -140,7 +145,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         }
         catch (...)
         {
-            result.ErrorInformation(L"General exception / error.");
+            result->ErrorInformation(L"General exception / error.");
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -154,7 +159,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
 
         }
 
-        return result;
+        return *result;
     }
 
 
