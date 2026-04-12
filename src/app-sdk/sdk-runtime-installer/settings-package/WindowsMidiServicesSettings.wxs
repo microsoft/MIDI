@@ -69,7 +69,7 @@
             <Component Id="SettingsAppShortcut" Guid="c71be7ba-f0b6-483e-a409-e40985e90117">
                 <Shortcut Id="ApplicationStartMenuShortcut"
                           Name="MIDI Settings"
-                          Description="Windows Musician and MIDI Services Settings and Configuration"
+                          Description="Windows Musician and MIDI Settings and Tools"
                           Target="[!ShortcutTargetExe]"
                           WorkingDirectory="SETTINGSAPP_INSTALLFOLDER" />
             </Component>
@@ -101,6 +101,10 @@
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Transports.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Troubleshooting.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-WindowsSettings.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Midi1ScratchPad.svg" />
+
+
+          
         </Component>
 
       <Component Id="SharedEndpointsAssets"

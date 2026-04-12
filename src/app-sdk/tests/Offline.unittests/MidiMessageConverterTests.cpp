@@ -148,3 +148,90 @@ void MidiMessageConverterTests::TestConvertClockMessages()
     }
 }
 
+
+void MidiMessageConverterTests::TestConvertHexStringToBytes()
+{
+    winrt::hstring string1 = L"F0 7E 7F 06 01 F7";
+    std::vector<uint8_t> expectedResults1 = { 0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7 };
+
+    auto actualResults1 = MidiMessageConverter::ConvertHexByteStringToByteArray(string1);
+
+    VERIFY_IS_NOT_NULL(actualResults1);
+    VERIFY_ARE_EQUAL(expectedResults1.size(), actualResults1.Size());
+
+    for (uint32_t i = 0; i < expectedResults1.size(); i++)
+    {
+        VERIFY_ARE_EQUAL(expectedResults1[i], actualResults1.GetAt(i));
+    }
+}
+
+void MidiMessageConverterTests::TestConvertHexStringNoSpacesToBytes()
+{
+    winrt::hstring string1 = L"F07E7F0601F7";
+    std::vector<uint8_t> expectedResults1 = { 0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7 };
+
+    auto actualResults1 = MidiMessageConverter::ConvertHexByteStringToByteArray(string1);
+
+    VERIFY_IS_NOT_NULL(actualResults1);
+    VERIFY_ARE_EQUAL(expectedResults1.size(), actualResults1.Size());
+
+    for (uint32_t i = 0; i < expectedResults1.size(); i++)
+    {
+        VERIFY_ARE_EQUAL(expectedResults1[i], actualResults1.GetAt(i));
+    }
+}
+
+void MidiMessageConverterTests::TestConvertHexStringMessyToBytes()
+{
+    winrt::hstring string1 = L"F0    7E/7Fz06 01F7  ";
+    std::vector<uint8_t> expectedResults1 = { 0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7 };
+
+    auto actualResults1 = MidiMessageConverter::ConvertHexByteStringToByteArray(string1);
+
+    VERIFY_IS_NOT_NULL(actualResults1);
+    VERIFY_ARE_EQUAL(expectedResults1.size(), actualResults1.Size());
+
+    for (uint32_t i = 0; i < expectedResults1.size(); i++)
+    {
+        VERIFY_ARE_EQUAL(expectedResults1[i], actualResults1.GetAt(i));
+    }
+}
+
+
+
+void MidiMessageConverterTests::TestConvertHexBytesToUMP()
+{
+    std::vector<uint8_t> bytes = { 0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7 };
+
+    // assumes group index 6 in the output
+    MidiGroup group(6);
+    std::vector<uint32_t> expectedResults = { 0x36047E7F, 0x06010000 };
+
+    auto actualResults = MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(group, bytes, false);
+
+    VERIFY_IS_NOT_NULL(actualResults);
+    VERIFY_ARE_EQUAL(expectedResults.size(), actualResults.Size());
+
+    for (uint32_t i = 0; i < expectedResults.size(); i++)
+    {
+        VERIFY_ARE_EQUAL(expectedResults[i], actualResults.GetAt(i));
+    }
+
+}
+
+void MidiMessageConverterTests::TestConvertUMPToHexBytes()
+{
+    std::vector<uint32_t> words = { 0x36047E7F, 0x06010000 };
+    std::vector<uint8_t> expectedResults = { 0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7 };
+
+    auto actualResults = MidiMessageConverter::ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(words);
+
+    VERIFY_IS_NOT_NULL(actualResults);
+    VERIFY_ARE_EQUAL(expectedResults.size(), actualResults.Size());
+
+    for (uint32_t i = 0; i < expectedResults.size(); i++)
+    {
+        VERIFY_ARE_EQUAL(expectedResults[i], actualResults.GetAt(i));
+    }
+
+}

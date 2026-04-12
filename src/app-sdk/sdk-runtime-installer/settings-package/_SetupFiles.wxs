@@ -124,6 +124,7 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\LivePerformanceSettingsPage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsConsolePage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsMonitorPage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsScratchPadPage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsSysExPage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsTestPage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\TroubleshootingPage.xbf" /> 

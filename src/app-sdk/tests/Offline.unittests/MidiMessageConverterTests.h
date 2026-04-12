@@ -32,6 +32,14 @@ public:
     TEST_METHOD(TestConvertNoteOffMessages);
     TEST_METHOD(TestConvertClockMessages);
 
+    TEST_METHOD(TestConvertHexStringToBytes);
+    TEST_METHOD(TestConvertHexStringNoSpacesToBytes);
+    TEST_METHOD(TestConvertHexStringMessyToBytes);
+    
+    TEST_METHOD(TestConvertUMPToHexBytes);
+    TEST_METHOD(TestConvertHexBytesToUMP);
+    
+
 
 private:
     init::MidiDesktopAppSdkInitializer m_initializer{};

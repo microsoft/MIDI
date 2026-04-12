@@ -47,6 +47,8 @@ namespace Microsoft.Midi.Settings.Views
 
         private void HexTextBox_BeforeTextChanging(TextBox sender, TextBoxBeforeTextChangingEventArgs args)
         {
+            if (ViewModel == null) return;
+
             foreach (char c in args.NewText)
             {
                 // allow ascii hex digita and space
@@ -58,7 +60,14 @@ namespace Microsoft.Midi.Settings.Views
             }
         }
 
+        private void HexTextBox_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel == null) return;
+            if (HexTextBox == null) return;
 
+            ViewModel.SelectedScratchPadText = HexTextBox.SelectedText;
 
+            ViewModel.IsSendSelectedButtonEnabled = ViewModel.IsValidDestinationSelected && ViewModel.SelectedScratchPadText != string.Empty;
+        }
     }
 }

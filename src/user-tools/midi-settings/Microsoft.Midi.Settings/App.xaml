@@ -40,6 +40,15 @@
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
             <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
 
+
+            <Style TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource SystemColorHighlightColor}" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemColorHighlightTextBrush}" />
+                <Setter Property="CornerRadius" Value="4" />
+            </Style>
+
+
+
             <!--
             Source - https://stackoverflow.com/a/75536976
             Posted by E. A. Bagby, modified by community. See post 'Timeline' for change history

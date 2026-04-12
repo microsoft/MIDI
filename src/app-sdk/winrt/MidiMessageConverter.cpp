@@ -419,14 +419,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         converter.defaultGroup = group.Index();
         converter.enableRunningStatus = allowRunningStatus;
 
-        for (auto it = midi1Bytes.begin(); it < midi1Bytes.end(); it++)
+        auto it = midi1Bytes.First();
+        while (it.HasCurrent())
         {
-            converter.bytestreamParse(*it);
+            converter.bytestreamParse(it.Current());
 
             while (converter.availableUMP())
             {
                 words.Append(converter.readUMP());
             }
+
+            it.MoveNext();
         }
 
         return words;
@@ -442,14 +445,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
         auto bytes = winrt::single_threaded_vector<uint8_t>();
 
-        for (auto it = umpWords.begin(); it < umpWords.end(); it++)
+        auto it = umpWords.First();
+        while (it.HasCurrent())
         {
-            converter.UMPStreamParse(*it);
+            converter.UMPStreamParse(it.Current());
 
             while (converter.availableBS())
             {
                 bytes.Append(converter.readBS());
             }
+
+            it.MoveNext();
         }
 
         return bytes;
@@ -462,46 +468,62 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         _In_ winrt::hstring const& hexByteString
     ) noexcept
     {
-        auto bytes = winrt::single_threaded_vector<uint8_t>();
-
-        std::wstring s { hexByteString };
-
-        std::wstring currentByte{};
-
-        auto it = s.begin();
-
-        while (it != s.end())
+        try
         {
-            if (std::isxdigit(*it))
-            {
-                currentByte.push_back(*it);
-            }
-            else if (!currentByte.empty())
-            {
-                // not a hex digit, so treat as a delimiter. 
-                // we already have some data started, so 
-                // commit it
+            auto bytes = winrt::single_threaded_vector<uint8_t>();
 
+            std::wstring s { hexByteString };
+
+            std::wstring currentByte{};
+
+            auto it = s.begin();
+
+            while (it != s.end())
+            {
+                if (std::isxdigit(*it))
+                {
+                    currentByte.push_back(*it);
+                }
+                else if (!currentByte.empty())
+                {
+                    // not a hex digit, so treat as a delimiter. 
+                    // we already have some data started, so 
+                    // commit it
+
+                    bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
+                    currentByte.clear();
+                }
+
+                if (currentByte.size() == 2)
+                {
+                    bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
+                    currentByte.clear();
+                }
+
+                it++;
+            }
+
+            // ensure the last digit is captured
+            if (!currentByte.empty())
+            {
                 bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
-                currentByte.clear();
             }
 
-            if (currentByte.size() == 2)
-            {
-                bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
-                currentByte.clear();
-            }
-
-            it++;
+            return bytes;
         }
-
-        // ensure the last digit is captured
-        if (!currentByte.empty())
+        catch (...)
         {
-            bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
-        }
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception attempting to convert string to bytes", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
 
-        return bytes;
+            return nullptr;
+        }
 
     }
 

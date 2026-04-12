@@ -424,7 +424,7 @@
                 <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsScratchPadViewModel"
                                     Visibility="{x:Bind ViewModel.ShowToolsScratchPadInLeftNav, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <ImageIcon Source="/Assets/LeftNav-SysEx.svg" />
+                        <ImageIcon Source="/Assets/LeftNav-Midi1ScratchPad.svg" />
                     </NavigationViewItem.Icon>
                     <NavigationViewItem.Content>
                         <Grid>

@@ -13,6 +13,7 @@
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:midicontrols="using:Microsoft.Midi.Settings.Controls"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     mc:Ignorable="d">
 
     <Grid RowSpacing="8">
@@ -35,26 +36,127 @@
                                                     Endpoints="{x:Bind ViewModel.MidiEndpoints, Mode=OneWay}"
                                                     />
 
+        
         <Grid Grid.Row="1">
-            <CommandBar HorizontalAlignment="Left"
-                        Margin="0,16,0,0"
-                        IsOpen="True"
-                        DefaultLabelPosition="Right"
-                        IsDynamicOverflowEnabled="False">
-                <CommandBar.PrimaryCommands>
-                    <AppBarButton Label="Add Empty SysEx Block"
-                                  Command="{x:Bind ViewModel.AddBlankSysExBlock}"/>
-                    <AppBarButton Label="Add Device Identity Request"
-                                  Command="{x:Bind ViewModel.AddSysExIdentityRequest}"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-                    <AppBarSeparator />
-                    
-                    <AppBarButton Label="Load File"/>
+            <TextBlock Text="Message Builders"
+                       Margin="0,0,0,8"
+                       Grid.Row="0" />
+            
+            <StackPanel Grid.Row="1" 
+                        Orientation="Horizontal" Spacing="8"
+                        VerticalAlignment="Top">
+                <Expander Header="SysEx" VerticalAlignment="Top">
+                    <StackPanel Orientation="Horizontal" 
+                                Spacing="8">
+                        <Button Content="Add Empty SysEx Block"
+                                  Command="{x:Bind ViewModel.AddBlankSysExBlockCommand}"/>
+                        <Button Content="Add Device Identity Request"
+                                  Command="{x:Bind ViewModel.AddSysExIdentityRequestCommand}"/>
+                    </StackPanel>
+                </Expander>
 
-                </CommandBar.PrimaryCommands>
-            </CommandBar>
+                <Expander Header="Note on/off" VerticalAlignment="Top">
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8">
+                        <ComboBox Header="Channel" 
+                                          SelectedItem="{x:Bind ViewModel.SelectedChannel, Mode=TwoWay}"
+                                          ItemsSource="{x:Bind ViewModel.AllValidChannels}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="midi2:MidiChannel">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="{x:Bind DisplayValue}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
 
+                        <ComboBox Header="Note" 
+                                          Width="100"
+                                          SelectedItem="{x:Bind ViewModel.SelectedNote, Mode=TwoWay}"
+                                          ItemsSource="{x:Bind ViewModel.AllValidNotes}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:MidiNote">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="{x:Bind NoteIndex}" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="(" />
+                                            <TextBlock Text="{x:Bind Description}" Opacity="0.50"/>
+                                            <TextBlock Text=")" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <ComboBox Header="Velocity" 
+                                          SelectedItem="{x:Bind ViewModel.SelectedVelocity, Mode=TwoWay}"
+                                      ItemsSource="{x:Bind ViewModel.AllValidVelocities}" />
+
+                        <Button Content="Add Note On"
+                                VerticalAlignment="Bottom"
+                                Command="{x:Bind ViewModel.AddNoteOnCommand}"/>
+                        <Button Content="Add Note Off" 
+                                VerticalAlignment="Bottom"
+                                Command="{x:Bind ViewModel.AddNoteOffCommand}"/>
+                    </StackPanel>
+                </Expander>
+
+                <Expander Header="Control Change" VerticalAlignment="Top">
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8">
+                        <ComboBox Header="Channel" 
+                                          SelectedItem="{x:Bind ViewModel.SelectedChannel, Mode=TwoWay}"
+                                          ItemsSource="{x:Bind ViewModel.AllValidChannels}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="midi2:MidiChannel">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{x:Bind DisplayValue}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <ComboBox Header="Controller" 
+                                          Width="200"
+                                          SelectedItem="{x:Bind ViewModel.SelectedController, Mode=TwoWay}"
+                                          ItemsSource="{x:Bind ViewModel.AllValidControllers}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:MidiController">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{x:Bind Index}" />
+                                        
+                                        
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="(" Visibility="{x:Bind HasDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                            <TextBlock Text="{x:Bind Description}" Opacity="0.50"/>
+                                            <TextBlock Text=")" Visibility="{x:Bind HasDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <ComboBox Header="Value" 
+                                  SelectedItem="{x:Bind ViewModel.SelectedControllerValue, Mode=TwoWay}"
+                                  ItemsSource="{x:Bind ViewModel.AllValidControllerValues}" />
+
+                        <Button Content="Add CC"
+                                VerticalAlignment="Bottom"
+                                Command="{x:Bind ViewModel.AddCCCommand}"/>
+                    </StackPanel>
+                </Expander>
+
+
+            </StackPanel>
+            
         </Grid>
+        
+        
         
         <Grid Grid.Row="2" 
               ColumnSpacing="16" 
@@ -73,14 +175,19 @@
 
             <TextBox Grid.Column="0"
                      Grid.Row="1"
-                     Text="{x:Bind ViewModel.AllScratchPadText, Mode=TwoWay}"
+                     x:Name="HexTextBox"
+                     Text="{x:Bind ViewModel.AllScratchPadText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      IsSpellCheckEnabled="False"
                      IsTextPredictionEnabled="False"
-                     TextWrapping="Wrap" AcceptsReturn="True"
+                     TextWrapping="Wrap" 
+                     AcceptsReturn="True"
                      HorizontalAlignment="Stretch"
                      VerticalAlignment="Stretch"
                      FontFamily="Consolas"
                      FontSize="16"
+                     SelectionHighlightColor="{StaticResource SystemColorHighlightColor}"
+                     SelectionHighlightColorWhenNotFocused="{StaticResource SystemColorHighlightColor}"
+                     SelectionChanged="HexTextBox_SelectionChanged"
                      BeforeTextChanging="HexTextBox_BeforeTextChanging"/>
 
             <StackPanel Grid.Column="1" 
@@ -88,10 +195,22 @@
                         Orientation="Vertical"
                         Spacing="8"
                         VerticalAlignment="Center">
-                       
 
-                <Button Content="Send All" />
-                <Button Content="Send Selected" />
+
+                <ToggleSwitch Header="Enable Running Status" 
+                              IsOn="{x:Bind ViewModel.AllowRunningStatus, Mode=TwoWay}" />
+
+                <AppBarSeparator />
+
+                <Button Content="Send All" 
+                        HorizontalAlignment="Stretch"
+                        Command="{x:Bind ViewModel.SendAllCommand}"
+                        IsEnabled="{x:Bind ViewModel.IsSendButtonEnabled, Mode=OneWay}"/>
+                
+                <Button Content="Send Selected" 
+                        HorizontalAlignment="Stretch"
+                        Command="{x:Bind ViewModel.SendSelectedCommand}"
+                        IsEnabled="{x:Bind ViewModel.IsSendSelectedButtonEnabled, Mode=OneWay}"/>
 
             </StackPanel>
         </Grid>
