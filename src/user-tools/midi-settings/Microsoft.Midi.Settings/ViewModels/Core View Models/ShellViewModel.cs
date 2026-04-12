@@ -84,6 +84,9 @@ public partial class ShellViewModel : ObservableRecipient
 
 
     [ObservableProperty]
+    private bool showMidiDevicesAndEndpointsInLeftNav = false;
+
+    [ObservableProperty]
     private bool showNetworkMidi2InLeftNav = false;
 
     [ObservableProperty]
@@ -122,35 +125,36 @@ public partial class ShellViewModel : ObservableRecipient
             switch (transport.TransportCode)
             {
                 case "LOOP":
-                    ShowLoopbackMidiInLeftNav = _configFileService.IsConfigFileActive;
+                    ShowLoopbackMidiInLeftNav = _configFileService.IsConfigFileActive && IsServiceAvailable;
                     break;
                 case "BLOOP":
-                    ShowBasicLoopbackMidiInLeftNav = _configFileService.IsConfigFileActive;
+                    ShowBasicLoopbackMidiInLeftNav = _configFileService.IsConfigFileActive && IsServiceAvailable;
                     break;
                 case "BLE10":
-                    ShowBle10MidiInLeftNav = _configFileService.IsConfigFileActive;
+                    ShowBle10MidiInLeftNav = _configFileService.IsConfigFileActive && IsServiceAvailable;
                     break;
                 case "BLE20":
-                    ShowBle20MidiInLeftNav = _configFileService.IsConfigFileActive;
+                    ShowBle20MidiInLeftNav = _configFileService.IsConfigFileActive && IsServiceAvailable;
                     break;
                 case "NET2UDP":
-                    ShowNetworkMidi2InLeftNav = _configFileService.IsConfigFileActive;
+                    ShowNetworkMidi2InLeftNav = _configFileService.IsConfigFileActive && IsServiceAvailable;
                     break;
                 case "VPB":
-                    ShowVirtualPatchBayInLeftNav = _configFileService.IsConfigFileActive;
+                    ShowVirtualPatchBayInLeftNav = _configFileService.IsConfigFileActive && IsServiceAvailable;
                     break;
 
             }
         }
 
+        ShowMidiDevicesAndEndpointsInLeftNav = IsServiceAvailable;
 
-        ShowToolsSectionInLeftNav = true;
-        ShowToolsScratchPadInLeftNav = true;
+        ShowToolsSectionInLeftNav = IsServiceAvailable;
+        ShowToolsScratchPadInLeftNav = IsServiceAvailable;
 
         // SysEx and other tools
         if (_generalSettingsService.GetPreviewToolsEnabled())
         {
-            ShowSysExToolsInLeftNav = true;
+            ShowSysExToolsInLeftNav = IsServiceAvailable;
             //ShowToolsTestInLeftNav = true;
         }
 

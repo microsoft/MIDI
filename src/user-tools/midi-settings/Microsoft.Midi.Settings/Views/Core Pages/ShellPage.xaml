@@ -307,12 +307,12 @@
 
 
                 <NavigationViewItemHeader x:Uid="Shell_MidiNavHeader"
-                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
+                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                 <NavigationViewItem x:Uid="Shell_AllMidiDevices" 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
-                    <NavigationViewItem.Icon>
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel"
+                                    Visibility="{x:Bind ViewModel.ShowMidiDevicesAndEndpointsInLeftNav, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-Endpoints.svg"  />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>

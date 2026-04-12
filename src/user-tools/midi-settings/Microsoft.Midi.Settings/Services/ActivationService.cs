@@ -9,11 +9,8 @@
 using Microsoft.Midi.Settings.Activation;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Views;
-using Microsoft.UI.Dispatching;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System.Runtime.InteropServices;
 
 
 namespace Microsoft.Midi.Settings.Services;
@@ -114,30 +111,37 @@ public class ActivationService : IActivationService
     {
         App.GetService<ILoggingService>().LogInfo("Enter");
 
-        App.MainWindow.Hide();
+        var splash = new Views.Core_Pages.LoadingPage();
+        App.MainWindow.Content = splash;
+        App.MainWindow.Show();
 
         // Execute tasks before activation.
         await InitializeAsync();
 
         WindowsDeveloperModeHelper.Refresh();
 
-        var serviceController = MidiServiceHelper.GetServiceController();
 
-        if (serviceController == null)
-        {
-            App.GetService<ILoggingService>().LogError("Unable to get service controller");
-            return false;
-        }
+        // restore window size from last close
+        App.GetService<ILoggingService>().LogInfo("Positioning main window");
+        PositionMainWindow();
 
-        if (!MidiServiceHelper.ServiceIsReallyRunning(serviceController))
-        {
-            // we use the main Window's dispatcher, since AppWindow doesn't surface this
-            App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
-            {
-                App.Splash.Show();
-                App.Splash.Activate();
-            });
-        }
+        //var serviceController = MidiServiceHelper.GetServiceController();
+
+        //if (serviceController == null)
+        //{
+        //    App.GetService<ILoggingService>().LogError("Unable to get service controller");
+        //    return false;
+        //}
+
+        //if (!MidiServiceHelper.ServiceIsReallyRunning(serviceController))
+        //{
+        //    // we use the main Window's dispatcher, since AppWindow doesn't surface this
+        //    App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+        //    {
+        //        App.Splash.Show();
+        //        App.Splash.Activate();
+        //    });
+        //}
 
         //// Check for feature activation
         //bool featureEnabled = true;
@@ -175,7 +179,7 @@ public class ActivationService : IActivationService
 
                 _messageBoxService.ShowError("Error_UnableToStartMidiService".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
 
-                return;
+           //     return;
             }
             else
             {
@@ -183,7 +187,7 @@ public class ActivationService : IActivationService
             }
         });
 
-        if (!_sdkService.IsRuntimeInitialized || !_sdkService.IsServiceInitialized)
+        if (!_sdkService.IsRuntimeInitialized /* || !_sdkService.IsServiceInitialized */)
         {
             App.GetService<ILoggingService>().LogError("Runtime and/or service are not initialized");
             return false;
@@ -191,13 +195,10 @@ public class ActivationService : IActivationService
 
         //App.MainWindow = (MainWindow)e!;
 
-        // restore window size from last close
-        App.GetService<ILoggingService>().LogInfo("Positioning main window");
-        PositionMainWindow();
 
         // Set the MainWindow Content.
         App.GetService<ILoggingService>().LogInfo("Setting main window content");
-        if (App.MainWindow.Content == null)
+        //if (App.MainWindow.Content == null)
         {
             _shell = App.GetService<ShellPage>();
             App.MainWindow.Content = _shell ?? new Frame();
