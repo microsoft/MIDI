@@ -289,6 +289,7 @@ class Build : NukeBuild
 
 
                 MSBuildTasks.MSBuild(_ => _
+                    .SetProcessToolPath(MSBuildPath)
                     .SetTargetPath(ApiSolutionFolder / "midi2-service-component-preview.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
@@ -413,6 +414,7 @@ class Build : NukeBuild
             );
 
             var output = MSBuildTasks.MSBuild(_ => _
+                .SetProcessToolPath(MSBuildPath)
                 .SetTargetPath(NetworkMidiSetupSolutionFolder / "midi-services-network-midi-preview-setup.sln")
                 .SetMaxCpuCount(null)
                 /*.SetOutDir(outputFolder) */
@@ -466,6 +468,7 @@ class Build : NukeBuild
                 );
 
                 var output = MSBuildTasks.MSBuild(_ => _
+                    .SetProcessToolPath(MSBuildPath)
                     .SetTargetPath(VirtualPatchBaySetupSolutionFolder / "midi-services-virtual-patch-bay-setup.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
@@ -519,6 +522,7 @@ class Build : NukeBuild
                 );
 
                 var output = MSBuildTasks.MSBuild(_ => _
+                    .SetProcessToolPath(MSBuildPath)
                     .SetTargetPath(BasicLoopbackSetupSolutionFolder / "midi-services-basic-loopback-setup.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
