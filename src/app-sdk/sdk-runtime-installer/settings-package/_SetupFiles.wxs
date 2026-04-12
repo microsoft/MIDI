@@ -108,6 +108,7 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\ForDevelopersPage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\GlobalMidiSettingsPage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\HomePage.xbf" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\LoadingPage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\ManagementSessionsPage.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\MidiServiceInitializationProgressWindow.xbf" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Core Pages\PluginsProcessingPage.xbf" /> 
