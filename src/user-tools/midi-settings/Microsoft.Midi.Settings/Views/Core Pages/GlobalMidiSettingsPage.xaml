@@ -14,7 +14,7 @@
 
     <Grid>
         <ScrollViewer>
-            <StackPanel Orientation="Vertical" Spacing="4">
+            <StackPanel Orientation="Vertical" Spacing="8">
 
 
                 <controls:SettingsCard x:Uid="GlobalSettings_SetMidiServiceToAutoStartCard">
@@ -24,6 +24,7 @@
 
                     <controls:SettingsCard.Content>
                         <Button x:Uid="GlobalSettings_SetMidiServiceToAutoStartButton" 
+                                Command="{x:Bind ViewModel.SetServiceToAutoStartCommand}"
                                 />
                     </controls:SettingsCard.Content>
 

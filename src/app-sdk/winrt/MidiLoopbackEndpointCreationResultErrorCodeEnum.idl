@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
+{
+    [contract(MidiEndpointsLoopbackApiContract, 1)]
+    enum MidiLoopbackEndpointCreationResultErrorCode
+    {
+        NoErrorInformationAvailable = 0,
+
+        InvalidOrMissingUniqueIdA = 1000,
+        UniqueIdAInUse = 1010,
+        
+        InvalidOrMissingUniqueIdB = 2000,
+        UniqueIdBInUse = 2020,
+
+        InvalidOrMissingNameA = 4000,
+        NameAInUse = 4010,
+
+        InvalidOrMissingNameB = 5000,
+        NameBInUse = 5010,
+
+    };
+}

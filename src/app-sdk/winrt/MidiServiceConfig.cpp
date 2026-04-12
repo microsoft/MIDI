@@ -89,6 +89,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
                 &rpcResponseString
             );
 
+
+
+
             if (SUCCEEDED(callStatus) && rpcResponseString != nullptr && wcslen(rpcResponseString) > 0)
             {
                 winrt::hstring hstr{ rpcResponseString };
@@ -119,6 +122,42 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
                     return response;
                 }
+            }
+            else if (rpcResponseString != nullptr && wcslen(rpcResponseString) > 0)
+            {
+                // the service calls return E_FAIL or other failure codes, and then still send 
+                // back the reason in the response. This is technically incorrect, but already 
+                // in production,so need to handle it here
+
+                winrt::hstring hstr{ rpcResponseString };
+
+                SAFE_COTASKMEMFREE(rpcResponseString);
+
+                json::JsonObject responseObject = json::JsonObject::Parse(hstr);
+
+                if (responseObject != nullptr)
+                {
+                    // returns the JSON we parsed from the service response
+                    return responseObject;
+                }
+                else
+                {
+                    // failed
+
+                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Unable to read response object from string", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
+
+                    return response;
+                }
+
             }
             else
             {

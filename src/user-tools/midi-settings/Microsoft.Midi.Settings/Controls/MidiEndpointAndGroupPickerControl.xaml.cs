@@ -27,23 +27,49 @@ namespace Microsoft.Midi.Settings.Controls
     public class MidiGroupForDisplay
     {
         public MidiGroup Group { get; internal set; }
+        public string AssociatedMidi1PortName { get; internal set; }
 
         public List<string> BlockNames = [];
 
-        public MidiGroupForDisplay (MidiGroup group)
+        public MidiGroupForDisplay (MidiGroup group, string associatedMidi1PortName)
         {
             Group = group;
+            AssociatedMidi1PortName = associatedMidi1PortName;
+        }
+
+        public MidiGroupForDisplay(MidiGroup group)
+        {
+            Group = group;
+            AssociatedMidi1PortName = string.Empty;
         }
 
         public override string ToString()
         {
+            string name = string.Empty;
+
             if (BlockNames.Count == 1)
             {
-                return MidiGroup.LongLabel + " " + (uint)Group.DisplayValue + " (" + BlockNames[0] + ")";
+                if (AssociatedMidi1PortName != string.Empty)
+                {
+                    if (BlockNames[0] == AssociatedMidi1PortName)
+                    {
+                        name = $"{AssociatedMidi1PortName} ({MidiGroup.LongLabel} {(uint)Group.DisplayValue})";
+                    }
+                    else
+                    {
+                        name = $"{AssociatedMidi1PortName} (Block: {BlockNames[0]}, {MidiGroup.LongLabel} {(uint)Group.DisplayValue})";
+                    }
+                }
+                else
+                {
+                    name = $"{BlockNames[0]} ({MidiGroup.LongLabel} {(uint)Group.DisplayValue})";
+                }
+
+                return name;
+
             }
             else if (BlockNames.Count > 1)
             {
-                string name = string.Empty;
 
                 foreach (string blockName in BlockNames)
                 {
@@ -55,7 +81,8 @@ namespace Microsoft.Midi.Settings.Controls
                     name += blockName;
                 }
 
-                name = MidiGroup.LongLabelPlural + " " + (uint)Group.DisplayValue + " (" + name + ")";
+                name = $"{MidiGroup.LongLabelPlural} {(uint)Group.DisplayValue} ({name})";
+
 
                 return name;
             }
@@ -165,7 +192,34 @@ namespace Microsoft.Midi.Settings.Controls
                                 {
                                     var group = new MidiGroup((byte)(groupNumber - 1));
 
-                                    groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group);
+                                    if (block.Direction == MidiGroupTerminalBlockDirection.BlockOutput)
+                                    {
+                                        var portInfo = SelectedEndpoint.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(group, Midi1PortFlow.MidiMessageSource);
+
+                                        if (portInfo != null)
+                                        {
+                                            groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group, portInfo.PortName);
+                                        }
+                                        else
+                                        {
+                                            groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group);
+                                        }
+
+                                    }
+                                    else
+                                    {
+                                        var portInfo = SelectedEndpoint.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(group, Midi1PortFlow.MidiMessageDestination);
+
+                                        if (portInfo != null)
+                                        {
+                                            groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group, portInfo.PortName);
+                                        }
+                                        else
+                                        {
+                                            groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group);
+                                        }
+                                    }
+
 
                                     if (block.Name != string.Empty)
                                     {

@@ -302,7 +302,6 @@
       <Folder Include="Generated Files\CsWinRT\" />
       <Folder Include="Views\Core Pages\" />
       <Folder Include="Views\Endpoint Management Pages\" />
-      <Folder Include="Views\Tools Pages\" />
     </ItemGroup>
     <ItemGroup>
       <PRIResource Remove="Views\Transport Setup\**" />

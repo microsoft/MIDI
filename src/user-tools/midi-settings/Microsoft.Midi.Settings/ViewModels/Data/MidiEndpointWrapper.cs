@@ -295,21 +295,17 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // small image
 
-                var imagePath = MidiImageAssetHelper.GetImageFullPathForEndpoint(DeviceInformation);
-
-                if (imagePath.ToLower().EndsWith(".svg"))
+                string imagePath = string.Empty;
+                if (MidiImageAssetHelper.EndpointHasValidCustomImageAsset(DeviceInformation))
                 {
-                    // SVG requires a specific decoder
-                    var source = new SvgImageSource(new Uri(imagePath, UriKind.Absolute));
-                    Image = source;
+                    imagePath = MidiImageAssetHelper.GetImageFullPathForEndpoint(DeviceInformation);
                 }
                 else
                 {
-                    // this works with PNG, JPG, etc.
-                    var source = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
-                    Image = source;
+                    imagePath = MidiImageAssetHelper.GetDefaultImageFullPathForEndpoint(DeviceInformation);
                 }
 
+                Image = App.GetService<IMidiEndpointImageService>().GetImageSource(imagePath);
 
                 // function blocks
                 FunctionBlocks.Clear();

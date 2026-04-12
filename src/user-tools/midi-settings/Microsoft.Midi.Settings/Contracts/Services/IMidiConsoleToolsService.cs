@@ -26,6 +26,7 @@ public interface IMidiConsoleToolsService
 
     bool RestartMidiService();
 
+    bool OpenExplorerWithFile(string filePath);
 
 
 }

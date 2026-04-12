@@ -22,7 +22,7 @@
             <StackPanel
                 HorizontalAlignment="Left"
                 Orientation="Vertical"
-                Spacing="4">
+                Spacing="8">
                 <TextBlock
                     Margin="1,0,0,8"
                     HorizontalAlignment="Left"
@@ -45,7 +45,6 @@
 
                 <InfoBar Margin="0"
                          x:Uid="ForDevelopers_RebootRequired" 
-                         CornerRadius="9"
                          IsOpen="{x:Bind ViewModel.RebootRequired, Mode=OneWay}"
                          Severity="Warning">
                     <!--
@@ -84,7 +83,7 @@
                 <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
                            x:Uid="ForDevelopers_Midi2FeaturesSectionHeader"/>
 
-                <controls:SettingsExpander CornerRadius="9"
+                <controls:SettingsExpander 
                     x:Uid="ForDevelopers_Discovery"
                     IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
@@ -136,7 +135,7 @@
                 <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
                            x:Uid="ForDevelopers_RelatedSupportSectionHeader"/>
 
-                <controls:SettingsCard CornerRadius="9"
+                <controls:SettingsCard 
                     HorizontalContentAlignment="Left"
                     ContentAlignment="Vertical"
                     Header="Reference Materials">
@@ -150,7 +149,7 @@
                     </StackPanel>
                 </controls:SettingsCard>
 
-                <controls:SettingsCard CornerRadius="9"
+                <controls:SettingsCard
                     HorizontalContentAlignment="Left"
                     ContentAlignment="Vertical"
                     Header="Specifications">

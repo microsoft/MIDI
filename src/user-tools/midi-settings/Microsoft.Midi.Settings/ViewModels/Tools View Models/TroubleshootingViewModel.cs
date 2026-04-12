@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
+using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ using System.Windows.Input;
 
 
 namespace Microsoft.Midi.Settings.ViewModels;
-public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
+public partial class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 {
     private DispatcherQueue _dispatcherQueue;
 
@@ -33,7 +34,32 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
         get; private set;
     }
 
+    //public ICommand OpenRegEdit64BitDrivers32
+    //{
+    //    get; private set;
+    //}
+
+    //public ICommand OpenRegEdit32BitDrivers32
+    //{
+    //    get; private set;
+    //}
+
     public ICommand MidiDiagCommand
+    {
+        get; private set;
+    }
+
+    public ICommand MidiFixRegCommand
+    {
+        get; private set;
+    }
+
+    public ICommand RestoreInBoxComponentsCommand
+    {
+        get; private set;
+    }
+
+    public ICommand CaptureMidiLogsCommand
     {
         get; private set;
     }
@@ -44,27 +70,37 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
         get { return UserHelper.CurrentUserHasAdminRights(); }
     }
 
+    [ObservableProperty]
+    private List<FoundRegistryEntry> drivers32MidiEntries;
+
+    [ObservableProperty]
+    private List<FoundRegistryEntry> drivers32WOWMidiEntries;
+
+    public void RefreshRegistryValues()
+    {
+        Drivers32MidiEntries = _diagnosticsService.GetDrivers32MidiEntries();
+
+        Drivers32WOWMidiEntries = _diagnosticsService.GetDrivers32WOWMidiEntries();
+    }
+
+
+
+
     private readonly INavigationService _navigationService;
     private readonly IMidiConsoleToolsService _consoleToolsService;
     private readonly IMidiDiagnosticsService _diagnosticsService;
-
-
-    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern int MessageBox(
-        IntPtr hWnd,
-        string lpText,
-        string lpCaption,
-        int uType);
-
+    private readonly IMessageBoxService _messageBoxService;
 
     public TroubleshootingViewModel(
         INavigationService navigationService,
         IMidiConsoleToolsService consoleToolsService,
-        IMidiDiagnosticsService diagnosticsService)
+        IMidiDiagnosticsService diagnosticsService,
+        IMessageBoxService messageBoxService)
     {
         _consoleToolsService = consoleToolsService;
         _navigationService = navigationService;
         _diagnosticsService = diagnosticsService;
+        _messageBoxService = messageBoxService;
 
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
@@ -75,11 +111,7 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
                 if (!success)
                 {
-                    MessageBox(
-                        (IntPtr)0,
-                        "Unable to restart MIDI service.",
-                        "AppDisplayName".GetLocalized(),
-                        0);
+                    _messageBoxService.ShowError("Error_UnableToRestartMidiService".GetLocalized());
                 }
 
             });
@@ -91,13 +123,78 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
                 if (!success)
                 {
-                    MessageBox(
-                        (IntPtr)0,
-                        "Unable to open mididiag tool to capture diagnostic information. You may want to reinstall the SDK Runtime and Tools.",
-                        "AppDisplayName".GetLocalized(),
-                        0);
+                    _messageBoxService.ShowError("Error_UnableToOpenMidiDiag".GetLocalized());
                 }
             });
+
+        MidiFixRegCommand = new RelayCommand(
+            () =>
+            {
+                var success = _diagnosticsService.MidiFixReg();
+
+                if (!success)
+                {
+                    _messageBoxService.ShowError("Error_UnableToOpenMidiFixReg".GetLocalized());
+                }
+                else
+                {
+                    RefreshRegistryValues();
+
+                    _messageBoxService.ShowInfo("Message_RegistryRepairedPleaseRestartAllMIDIApps".GetLocalized());
+                }
+            });
+
+        RestoreInBoxComponentsCommand = new RelayCommand(
+            () =>
+            {
+                var success = _diagnosticsService.RestoreInBoxComponentRegistrations();
+
+                if (!success)
+                {
+                    _messageBoxService.ShowError("Error_UnableToRestoreInBoxComponentRegistrations".GetLocalized());
+                }
+            });
+
+        CaptureMidiLogsCommand = new RelayCommand(
+            () =>
+            {
+                var fileName = _diagnosticsService.CaptureMidiLogsToFile();
+
+                if (fileName != string.Empty)
+                {
+                    // open explorer with the file selected
+                    consoleToolsService.OpenExplorerWithFile(fileName);
+                }
+                else
+                {
+                    // TODO: add the path to the UI
+                    _messageBoxService.ShowError("Error_UnableToCaptureMidiLogsToFile".GetLocalized());
+                }
+
+            });
+
+        //OpenRegEdit64BitDrivers32 = new RelayCommand(
+        //    () => 
+        //    {
+        //        var success = _diagnosticsService.LaunchRegeditWithDrivers32Location();
+
+        //        if (!success)
+        //        {
+        //            _messageBoxService.ShowError("Error_UnableToLaunchRegedit".GetLocalized());
+        //        }
+        //    });
+
+        //OpenRegEdit32BitDrivers32 = new RelayCommand(
+        //    () =>
+        //    {
+        //        var success = _diagnosticsService.LaunchRegeditWithDrivers32WOWLocation();
+
+        //        if (!success)
+        //        {
+        //            _messageBoxService.ShowError("Error_UnableToLaunchRegedit".GetLocalized());
+        //        }
+        //    });
+
     }
 
 
@@ -108,6 +205,7 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
     public void OnNavigatedTo(object parameter)
     {
+        RefreshRegistryValues();
     }
 
 }

@@ -10,6 +10,7 @@ using Microsoft.Midi.Settings.Activation;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Runtime.InteropServices;
@@ -25,6 +26,7 @@ public class ActivationService : IActivationService
     private readonly IGeneralSettingsService _generalSettingsService;
     private readonly IMidiSdkService _sdkService;
     private readonly IMidiEndpointEnumerationService _enumerationService;
+    private readonly IMessageBoxService _messageBoxService;
 
     private UIElement? _shell = null;
 
@@ -34,7 +36,8 @@ public class ActivationService : IActivationService
         IThemeSelectorService themeSelectorService, 
         IGeneralSettingsService generalSettingsService,
         IMidiSdkService sdkService,
-        IMidiEndpointEnumerationService enumerationService)
+        IMidiEndpointEnumerationService enumerationService,
+        IMessageBoxService messageBoxService)
     {
         _sdkService = sdkService;
         _defaultHandler = defaultHandler;
@@ -42,6 +45,7 @@ public class ActivationService : IActivationService
         _themeSelectorService = themeSelectorService;
         _generalSettingsService = generalSettingsService;
         _enumerationService = enumerationService;
+        _messageBoxService = messageBoxService;
     }
 
     private void PositionMainWindow()
@@ -59,29 +63,26 @@ public class ActivationService : IActivationService
         else
         {
             provided = true;
-
-            // TODO: This code needs to know the size of the monitor, and 
-            // these numbers are arbitrary
-            if (extents.Width < 1200)
-            {
-                extents.Width = 1200;
-            }
-
-            if (extents.Height < 700)
-            {
-                extents.Height = 700;
-            }
         }
 
         // arbitrary minimum size to ensure we're not just a floating title bar
-        if (extents.Width < 600 || extents.Height < 400)
+        if (extents.Width < 200 || extents.Height < 200)
         {
-            extents.Width = 600;
-            extents.Height = 400;
+            extents.Width = 200;
+            extents.Height = 200;
         }
 
+        if (extents.Left < 0)
+        {
+            extents.Left = 0;
+        }
 
-        App.MainWindow.AppWindow.Resize(new global::Windows.Graphics.SizeInt32(extents.Width, extents.Height));
+        if (extents.Top < 0)
+        {
+            extents.Top = 0;
+        }
+
+        //App.MainWindow.AppWindow.Resize(new global::Windows.Graphics.SizeInt32(extents.Width, extents.Height));
 
 
         // TODO: Need to check to see if we're off-screen
@@ -95,18 +96,18 @@ public class ActivationService : IActivationService
         }
         else
         {
-            App.MainWindow.AppWindow.Move(new global::Windows.Graphics.PointInt32(extents.Left, extents.Top));
+
+            var position = new global::Windows.Graphics.PointInt32(extents.Left, extents.Top);
+            var size = new global::Windows.Graphics.SizeInt32(extents.Width, extents.Height);
+
+            App.MainWindow.AppWindow.Move(position);
+            App.MainWindow.AppWindow.Resize(size);
+
+            App.MainWindow.AppWindow.MoveInZOrderAtTop();
         }
 
         App.GetService<ILoggingService>().LogInfo("Exit");
     }
-
-    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern int MessageBox(
-                            IntPtr hWnd,
-                            string lpText,
-                            string lpCaption,
-                            int uType);
 
 
     public async Task<bool> ActivateAsync(object activationArgs)
@@ -130,9 +131,6 @@ public class ActivationService : IActivationService
 
         if (!MidiServiceHelper.ServiceIsReallyRunning(serviceController))
         {
-            // just initialize the service
-            System.Diagnostics.Debug.WriteLine("Showing loading window");
-
             // we use the main Window's dispatcher, since AppWindow doesn't surface this
             App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
             {
@@ -141,21 +139,17 @@ public class ActivationService : IActivationService
             });
         }
 
-        // Check for feature activation
-        bool featureEnabled = true;
-        featureEnabled = await MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync();
-        if (!featureEnabled)
-        {
-            App.GetService<ILoggingService>().LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
+        //// Check for feature activation
+        //bool featureEnabled = true;
+        //featureEnabled = await MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync();
+        //if (!featureEnabled)
+        //{
+        //    App.GetService<ILoggingService>().LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
 
-            MessageBox(
-                (IntPtr)0,
-                "Error_MidiServicesFeatureNotEnabled".GetLocalized(),
-                "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized(),
-                0);
+        //    _messageBoxService.ShowError("Error_MidiServicesFeatureNotEnabled".GetLocalized(), "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized());
 
-            return false;
-        }
+        //    return false;
+        //}
 
         if (_sdkService == null)
         {
@@ -171,11 +165,7 @@ public class ActivationService : IActivationService
             {
                 App.GetService<ILoggingService>().LogError("Unable to initialize SDK");
 
-                MessageBox(
-                    (IntPtr)0,
-                    "Error_UnableToInitializeMidiRuntime".GetLocalized(),
-                    "Error_StartupMessageBoxTitle".GetLocalized(),
-                    0);
+                _messageBoxService.ShowError("Error_UnableToInitializeMidiRuntime".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
 
                 return;
             }
@@ -183,11 +173,7 @@ public class ActivationService : IActivationService
             {
                 App.GetService<ILoggingService>().LogError("Unable to initialize Service");
 
-                MessageBox(
-                    (IntPtr)0,
-                    "Error_UnableToStartMidiService".GetLocalized(),
-                    "Error_StartupMessageBoxTitle".GetLocalized(),
-                    0);
+                _messageBoxService.ShowError("Error_UnableToStartMidiService".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
 
                 return;
             }

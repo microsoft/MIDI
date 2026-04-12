@@ -53,22 +53,22 @@ bool CreateLoopbackEndpoints()
 
     auto response = MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(creationConfig);
 
-    if (response.Success)
+    if (response.Success())
     {
         std::wcout << L"Endpoints created successfully" << std::endl << std::endl;
 
         std::cout
             << "Loopback Endpoint A: " << std::endl 
             << " - " << winrt::to_string(definitionA.Name) << std::endl
-            << " - " << winrt::to_string(response.EndpointDeviceIdA) << std::endl << std::endl;
+            << " - " << winrt::to_string(response.EndpointDeviceIdA()) << std::endl << std::endl;
 
         std::cout 
             << "Loopback Endpoint B: "  << std::endl
             << " - " << winrt::to_string(definitionB.Name) << std::endl
-            << " - " << winrt::to_string(response.EndpointDeviceIdB) << std::endl << std::endl;
+            << " - " << winrt::to_string(response.EndpointDeviceIdB()) << std::endl << std::endl;
 
-        m_endpointAId = response.EndpointDeviceIdA;
-        m_endpointBId = response.EndpointDeviceIdB;
+        m_endpointAId = response.EndpointDeviceIdA();
+        m_endpointBId = response.EndpointDeviceIdB();
     }
     else
     {
@@ -78,7 +78,7 @@ bool CreateLoopbackEndpoints()
     }
 
     // Success here is a boolean for success/fail
-    return response.Success;
+    return response.Success();
 }
 
 

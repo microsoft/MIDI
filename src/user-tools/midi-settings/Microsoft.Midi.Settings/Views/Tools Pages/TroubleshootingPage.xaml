@@ -10,7 +10,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"   
+    xmlns:serviceContracts="using:Microsoft.Midi.Settings.Contracts.Services"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -22,11 +23,11 @@
 
     <Grid  x:Name="ContentArea">
         <ScrollViewer >
-            <StackPanel Orientation="Vertical" Spacing="4">
-                <TextBlock TextWrapping="Wrap" 
+            <StackPanel Orientation="Vertical" Spacing="8">
+                <!--<TextBlock TextWrapping="Wrap" 
                            Margin="1,0,0,8" 
-                           Text="If you are running into problems with MIDI on your PC, the tools below may help you recover without requiring a reboot.">
-                </TextBlock>
+                           x:Uid="TroubleshootingMainHeader"/> -->
+
 
                 <!--
                 <TextBlock Text="If you have a stuck note somewhere, and you're not sure where" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
@@ -85,26 +86,132 @@
                 </controls:SettingsExpander>-->
 
 
+                <TextBlock x:Uid="TroubleshootingSection_WorkingWithSupport" 
+                           Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+
+                <controls:SettingsCard x:Uid="TroubleshootingSettingsCard_ReportMidiSystemInfo">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE9D5;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <Button x:Uid="TroubleshootingButton_CaptureMidiSystemInfo"
+                            Command="{x:Bind ViewModel.MidiDiagCommand}"/>
+                </controls:SettingsCard>
+
+                <controls:SettingsCard x:Uid="TroubleshootingSettingsCard_CaptureMidiLogs">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE95E;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <Button x:Uid="TroubleshootingButton_CaptureMidiLogs"
+                            Command="{x:Bind ViewModel.CaptureMidiLogsCommand}"/>
+                </controls:SettingsCard>
 
 
-                <TextBlock Text="If you have an unknown issue" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+                <TextBlock x:Uid="TroubleshootingSection_RepairRegistry"
+                           Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
-                <controls:SettingsCard Header="Restart Windows MIDI Services"
-                           Description="Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.">
+                <controls:SettingsCard x:Uid="TroubleshootingSettingsCard_RepairRegistry">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE90F;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsCard.HeaderIcon>                    
+                    <Button x:Uid="TroubleshootingButton_RepairRegistry"
+                            Command="{x:Bind ViewModel.MidiFixRegCommand}"/>
+                </controls:SettingsCard>
+
+
+                <!-- Registry information -->
+
+                <Grid RowSpacing="8" ColumnSpacing="16"
+                      Margin="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid.Resources>
+                        <DataTemplate x:Key="FoundRegistryEntryTemplate" x:DataType="serviceContracts:FoundRegistryEntry">
+                            <Grid Margin="2">
+                                <Rectangle Visibility="{x:Bind HasError, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
+                                           Fill="{StaticResource SystemControlBackgroundBaseLowBrush}" 
+                                           Opacity="0.25" RadiusX="4" RadiusY="4" />
+                                <Rectangle Visibility="{x:Bind HasError, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Fill="{StaticResource SystemFillColorCriticalBackground}"
+                                           RadiusX="4" RadiusY="4" />
+
+
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="8,4,8,4">
+                                    <TextBlock Width="150" Text="{x:Bind Name}" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Width="200" Text="{x:Bind Value}" Style="{StaticResource SmallPlainPropertyValue}" />
+                                    <TextBlock Text="{x:Bind Comment}" Style="{StaticResource SmallPlainPropertyValue}" />
+                                </StackPanel>
+                            </Grid>
+                            
+                        </DataTemplate>
+                    </Grid.Resources>
+
+                    <TextBlock Grid.Column="0" 
+                               Grid.Row="0"
+                               Margin="4,0,16,0"
+                               Text="Drivers32 Registry Values for 64 Bit Apps" 
+                               Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                    
+                    <ItemsControl Grid.Column="0"
+                                  Grid.Row="1"
+                                  ItemsSource="{x:Bind ViewModel.Drivers32MidiEntries}"
+                                  ItemTemplate="{StaticResource FoundRegistryEntryTemplate}">
+
+                    </ItemsControl>
+
+                    <!--<HyperlinkButton Grid.Column="0" Grid.Row="2" Content="Open 64-bit Registry Location"
+                                     Command="{x:Bind ViewModel.OpenRegEdit64BitDrivers32}"/>-->
+
+                    <TextBlock Grid.Column="1" 
+                               Grid.Row="0"
+                               Margin="4,0,16,0"
+                               Text="Drivers32 Registry Values for 32 Bit Apps" 
+                               Style="{StaticResource BodyStrongTextBlockStyle}"/>
+
+                    <ItemsControl Grid.Column="1"
+                                  Grid.Row="1"
+                                  ItemsSource="{x:Bind ViewModel.Drivers32WOWMidiEntries}"
+                                  ItemTemplate="{StaticResource FoundRegistryEntryTemplate}">
+
+                    </ItemsControl>
+
+                    <!--<HyperlinkButton Grid.Column="1" Grid.Row="2" Content="Open 32-bit Registry Location"
+                                     Command="{x:Bind ViewModel.OpenRegEdit32BitDrivers32}"/>-->
+                </Grid>
+                
+                
+                
+                
+                <!--<controls:SettingsCard Header="Repair in-box service component registration"
+                                   Description="If you have used developer service plugins or the developer service, and want to revert to the in-box shipped versions, click the button below."
+                                       >
+                    <Button Content="Restore in-box Registrations"
+                            Command="{x:Bind ViewModel.RestoreInBoxComponentsCommand}"/>
+                </controls:SettingsCard>-->
+
+                <!-- -->
+
+                <TextBlock x:Uid="TroubleshootingSection_UnknownIssue" 
+                           Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+
+                <controls:SettingsCard x:Uid="TroubleshootingSettingsCard_RestartMidisrv">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xED21;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsCard.HeaderIcon>
                     <StackPanel>
-                        <Button Content="Restart MIDI Service"
+                        <Button x:Uid="TroubleshootingButton_RestartMidisrv"
                                 Command="{x:Bind ViewModel.RestartServiceCommand}"/>
                     </StackPanel>
                 </controls:SettingsCard>
 
-                <TextBlock Text="If you're working with support" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
-
-                <controls:SettingsCard Header="Report MIDI System Information"
-                                   Description="If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact."
-                                       >
-                    <Button Content="Capture MIDI System Information"
-                            Command="{x:Bind ViewModel.MidiDiagCommand}"/>
-                </controls:SettingsCard>
 
 
                 <!--<TextBlock Text="If you've found a bug" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>

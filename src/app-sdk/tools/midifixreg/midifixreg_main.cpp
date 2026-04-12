@@ -40,6 +40,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "color.hpp"
 #pragma warning(pop)
 
+const wchar_t* VALUE_NAME_MidisrvTransferComplete = L"MidisrvTransferComplete";
 
 #define LINE_LENGTH 80
 
@@ -53,24 +54,38 @@ void WriteDoubleLineSeparator()
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
 }
 
-void WriteInfo(std::string info)
+void WriteInfo(_In_ std::string info)
 {
     std::cout << dye::aqua(info) << std::endl;
 }
 
-void WriteInfo(std::wstring info)
+void WriteInfo(_In_ std::wstring info)
 {
     std::cout << hue::aqua;
     std::wcout << info;
     std::cout << hue::reset << std::endl;
 }
 
-void WriteImportant(std::string info)
+void WriteInfoDetail(_In_ std::wstring info)
+{
+    std::cout << hue::white;
+    std::wcout << L"- " << info;
+    std::cout << hue::reset << std::endl;
+}
+
+void WriteErrorDetail(_In_ std::wstring info)
+{
+    std::cout << hue::light_red;
+    std::wcout << L"- " << info;
+    std::cout << hue::reset << std::endl;
+}
+
+void WriteImportant(_In_ std::string info)
 {
     std::cout << dye::light_aqua(info) << std::endl;
 }
 
-void WriteImportant(std::wstring info)
+void WriteImportant(_In_ std::wstring info)
 {
     std::cout << hue::light_aqua;
     std::wcout << info;
@@ -78,30 +93,31 @@ void WriteImportant(std::wstring info)
 }
 
 
-void WriteSuperImportant(std::string info)
+void WriteSuperImportant(_In_ std::string info)
 {
     std::cout << dye::light_yellow(info) << std::endl;
 }
 
 
-void WriteError(std::string error)
+void WriteError(_In_ std::string error)
 {
     std::cout << dye::light_red(error) << std::endl;
 }
 
-void WriteBrightLabel(std::string label)
+void WriteBrightLabel(_In_ std::string label)
 {
     auto fullLabel = label + ":";
     std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::white(fullLabel);
 }
 
-void WriteLabel(std::string label)
+void WriteLabel(_In_ std::string label)
 {
     auto fullLabel = label + ":";
     std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::grey(fullLabel);
 }
 
 
+#define RETURN_NO_CHANGES_NEEDED        return -1
 #define RETURN_SUCCESS                  return 0
 #define RETURN_INSUFFICIENT_PERMISSIONS return 1
 #define RETURN_USER_ABORTED             return 2
@@ -163,7 +179,7 @@ bool CheckForAdminPermissions()
     return elevated;
 }
 
-bool ValueNeedsReplacing(std::wstring parentKey, std::wstring valueName, std::wstring requiredValue)
+bool ValueNeedsReplacing(_In_ std::wstring parentKey, _In_ std::wstring valueName, _In_ std::wstring requiredValue)
 {
     try
     {
@@ -182,14 +198,202 @@ bool ValueNeedsReplacing(std::wstring parentKey, std::wstring valueName, std::ws
     return true;
 }
 
+bool MidisrvTransferCompleteIsPresentAndEnabled(_In_ std::wstring parentKey)
+{
+    try
+    {
+        auto val = wil::reg::get_value_dword(HKEY_LOCAL_MACHINE, parentKey.c_str(), VALUE_NAME_MidisrvTransferComplete);
+
+        if (val == 1)
+        {
+            return true;
+        }
+    }
+    catch (...)
+    {
+        // missing key/value is a common cause of this
+    }
+
+    return false;
+}
+
+
+std::vector<std::wstring> CheckRegistryAndGetValuesToDelete(_In_ std::wstring key)
+{
+    std::vector<std::wstring> valuesToDelete{};
+
+    WriteBlankLine();
+    WriteInfo(L"Checking '" + key + L"'.");
+
+    wil::unique_hkey keyForDelete;  // closes when it goes out of scope
+
+    if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, key.c_str(), keyForDelete, wil::reg::key_access::readwrite)))
+    {
+        for (const auto& value_data : wil::make_range(wil::reg::value_iterator{ keyForDelete.get() }, wil::reg::value_iterator{}))
+        {
+            std::wstring valueName(value_data.name.begin(), value_data.name.end());
+
+            // Only allowed midi entries:
+            // midi : wdmaud.drv
+            // midi1 : wdmaud2.drv
+            // Other drivers like the Korg BLE driver are allowed, but we need to remove
+            // the Korg USB driver from here.
+            // midi0 is invalid. All others are unused.
+
+            if ((internal::ToLowerTrimmedWStringCopy(valueName).starts_with(L"midi")) &&
+                /*(valueName != "midimapper") && */
+                (valueName != VALUE_NAME_MidisrvTransferComplete))
+            {
+                auto checkValName = valueName;
+                checkValName.erase(0, 4);
+
+                if (checkValName.find_first_not_of(L"0123456789") == std::string::npos)
+                {
+                    std::wstring driverName{};
+
+                    if (value_data.type == REG_SZ)
+                    {
+                        driverName = wil::reg::get_value_string(HKEY_LOCAL_MACHINE, key.c_str(), value_data.name.c_str());
+                        internal::InPlaceToLower(driverName);
+
+                        if (valueName == L"midi" && driverName == L"wdmaud.drv")
+                        {
+                            WriteInfoDetail(L"Found correct required 'midi' value '" + driverName + L"'. Leaving it alone.");
+                        }
+                        else if (valueName == L"midi1" && driverName == L"wdmaud2.drv")
+                        {
+                            WriteInfoDetail(L"Found correct required 'midi1' value '" + driverName + L"'. Leaving it alone.");
+                        }
+                        else if (valueName == L"midimapper")
+                        {
+                            WriteInfoDetail(L"Found 'midimapper' with value '" + driverName + L"'. Leaving it alone.");
+                        }
+                        else if (driverName == L"korgbm64.drv" && valueName != L"midi" && valueName != L"midi1")
+                        {
+                            WriteInfoDetail(L"Found KORG BLE driver '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
+                        }
+                        else if (driverName == L"midimapper.dll" && valueName != L"midi" && valueName != L"midi1")
+                        {
+                            WriteInfoDetail(L"Found CoolSoft MIDI Mapper '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
+                        }
+                        else if (driverName == L"virtualmidisynth.dll" && valueName != L"midi" && valueName != L"midi1")
+                        {
+                            WriteInfoDetail(L"Found CoolSoft Virtual MIDI Synth '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
+                        }
+                        else
+                        {
+                            WriteErrorDetail(L"Found value '" + valueName + L"' with value '" + driverName + L"'");
+                            valuesToDelete.push_back(value_data.name);
+                        }
+                    }
+                    else
+                    {
+                        WriteErrorDetail(L"Found value '" + valueName + L"' with incorrect value type.");
+                        valuesToDelete.push_back(value_data.name);
+                    }
+
+                }
+                else
+                {
+                    // the string starts with "midi" but includes other characters than a number. Leaving it alone.
+                    WriteInfoDetail(L"Found value '" + valueName + L"'. Leaving it alone.");
+                }
+            }
+        }
+    }
+
+    
+    if (valuesToDelete.empty())
+    {
+        WriteInfo(L"No values require deleting from this location.");
+    }
+
+    WriteBlankLine();
+
+    return valuesToDelete;
+}
+
+
+bool FixMidisrvTransferComplete(_In_ std::wstring key)
+{
+    wil::unique_hkey keyForUpdate;
+
+    if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, key.c_str(), keyForUpdate, wil::reg::key_access::readwrite)))
+    {
+        return SUCCEEDED(wil::reg::set_value_dword_nothrow(HKEY_LOCAL_MACHINE, key.c_str(), VALUE_NAME_MidisrvTransferComplete, (DWORD)1));
+    }
+
+    return false;
+}
+
+
+bool FixRegistryValues(_In_ std::wstring key, _In_ std::vector<std::wstring> valueNamesToDelete, _In_ bool updateMidiValue, _In_ bool updateMidi1Value)
+{
+    wil::unique_hkey keyForDelete;
+
+    if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, key.c_str(), keyForDelete, wil::reg::key_access::readwrite)))
+    {
+        for (auto const& valueNameW : valueNamesToDelete)
+        {
+            auto ret = RegDeleteValue(keyForDelete.get(), valueNameW.c_str());
+
+            if (ret == ERROR_SUCCESS)
+            {
+                WriteInfoDetail(L"Deleted registry value '" + valueNameW + L"'");
+            }
+            else
+            {
+                WriteErrorDetail(L"Error deleting value '" + valueNameW + L"'");
+                return false;
+            }
+        }
+
+        HRESULT hr;
+
+        if (updateMidiValue)
+        {
+            hr = wil::reg::set_value_string_nothrow(HKEY_LOCAL_MACHINE, key.c_str(), L"midi", L"wdmaud.drv");
+            if (!SUCCEEDED(hr))
+            {
+                WriteErrorDetail(L"Unable to write 'midi' value of 'wdmaud.drv'");
+                return false;
+            }
+            else
+            {
+                WriteInfoDetail(L"Updated registry value 'midi' to 'wdmaud.drv'");
+            }
+        }
+
+        if (updateMidi1Value)
+        {
+            hr = wil::reg::set_value_string_nothrow(HKEY_LOCAL_MACHINE, key.c_str(), L"midi1", L"wdmaud2.drv");
+            if (!SUCCEEDED(hr))
+            {
+                WriteErrorDetail(L"Unable to write 'midi1' value of 'wdmaud2.drv'");
+                return false;
+            }
+            else
+            {
+                WriteInfoDetail(L"Updated registry value 'midi1' to 'wdmaud2.drv'");
+            }
+        }
 
 
 
+        return true;
+    }
+
+    return false;
+}
 
 
 int __cdecl main(int /*argc*/, char* /*argv[]*/)
 {
-    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (!SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
+    {
+        WriteError("Unable to initialize COM.");
+        return -1;
+    }
 
     WriteDoubleLineSeparator();
     WriteInfo("This tool is part of the Windows MIDI Services SDK and tools");
@@ -215,185 +419,134 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
     }
 
     std::wstring drivers32HklmKey = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
+    std::wstring drivers32WOWHklmKey = L"SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
 
     // we shouldn't need to do anything here, because the aliases are no longer used or present
     //std::wstring controlSetMediaRootHklmKey = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e96c-e325-11ce-bfc1-08002be10318}";
 
-    bool midiValueNeedsReplacing{ false };
-    bool midi1ValueNeedsReplacing{ false };
+    bool midiValueNeedsReplacing = ValueNeedsReplacing(drivers32HklmKey, L"midi", L"wdmaud.drv");
+    bool midi1ValueNeedsReplacing = ValueNeedsReplacing(drivers32HklmKey, L"midi1", L"wdmaud2.drv");
 
-    // TODO: Move the code to replace these into functions, and also run after user confirmation
+    bool midiWOWValueNeedsReplacing = ValueNeedsReplacing(drivers32WOWHklmKey, L"midi", L"wdmaud.drv");
+    bool midi1WOWValueNeedsReplacing = ValueNeedsReplacing(drivers32WOWHklmKey, L"midi1", L"wdmaud2.drv");
 
-    HRESULT hr{};
+    bool midiSrvTransferCompleteFound = MidisrvTransferCompleteIsPresentAndEnabled(drivers32HklmKey);
 
-    midiValueNeedsReplacing = ValueNeedsReplacing(drivers32HklmKey, L"midi", L"wdmaud.drv");
-    midi1ValueNeedsReplacing = ValueNeedsReplacing(drivers32HklmKey, L"midi1", L"wdmaud2.drv");
+    std::vector<std::wstring> valuesToDelete64 = CheckRegistryAndGetValuesToDelete(drivers32HklmKey);
+    std::vector<std::wstring> valuesToDeleteWOW = CheckRegistryAndGetValuesToDelete(drivers32WOWHklmKey);
 
-    std::vector<std::wstring> valuesToDelete;
-
-    wil::unique_hkey keyForDelete;
-    if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, drivers32HklmKey.c_str(), keyForDelete, wil::reg::key_access::readwrite)))
+    if (!midiSrvTransferCompleteFound || !valuesToDelete64.empty() || !valuesToDeleteWOW.empty() || 
+        midiValueNeedsReplacing || midi1ValueNeedsReplacing || 
+        midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing)
     {
-        for (const auto& value_data : wil::make_range(wil::reg::value_iterator{ keyForDelete.get() }, wil::reg::value_iterator{}))
+        // Prompt for confirmation
+
+        std::wstring response{};
+
+        WriteBlankLine();
+        WriteSuperImportant("Changes are required for Windows MIDI Services to work correctly with older applications.");
+        WriteSuperImportant("Before continuing, please close any other apps which use MIDI, and save your work.");
+        WriteBlankLine();
+
+        if (!midiSrvTransferCompleteFound || !valuesToDelete64.empty() ||
+            midiValueNeedsReplacing || midi1ValueNeedsReplacing)
         {
-            std::wstring valueName(value_data.name.begin(), value_data.name.end());
+            WriteImportant("Proposed changes for 64 bit app location:");
 
-            // Only allowed midi entries:
-            // midi : wdmaud.drv
-            // midi1 : wdmaud2.drv
-            // midi0 is invalid. All others are unused.
-
-            // we're going scorched earth here. 3P drivers shouldn't be listed anymore, so we simply remove them all and
-            // create entries only for wdmaud.drv and wdmaud2.drv
-
-            if ((valueName.starts_with(L"midi")) &&
-                /*(valueName != "midimapper") && */
-                (valueName != L"MidisrvTransferComplete"))
+            for (auto const& valueNameW : valuesToDelete64)
             {
-                auto checkValName = valueName;
-                checkValName.erase(0, 4);
-
-                if (checkValName.find_first_not_of(L"0123456789") == std::string::npos)
-                {
-                    if (value_data.type == REG_SZ)
-                    {
-                        auto valueDataW = wil::reg::get_value_string(HKEY_LOCAL_MACHINE, drivers32HklmKey.c_str(), value_data.name.c_str());
-
-                        WriteImportant(L"- Found value '" + valueName + L"' with value '" + valueDataW + L"'");
-                    }
-                    else
-                    {
-                        WriteImportant(L"- Found value '" + valueName + L"' with incorrect value type.");
-                    }
-
-                    // we handle these two differently
-                    if (valueName != L"midi" && valueName != L"midi1")
-                    {
-                        valuesToDelete.push_back(value_data.name);
-                    }
-                }
-                else
-                {
-                    // the string starts with "midi" but includes other characters than a number. Leaving it alone.
-                    WriteInfo(L"- Found value '" + valueName + L"'. Leaving it alone.");
-                }
-
-            }
-        }
-
-        if (valuesToDelete.size() > 0 || midiValueNeedsReplacing || midi1ValueNeedsReplacing)
-        {
-            // Prompt for confirmation
-
-            std::wstring response{};
-
-            WriteBlankLine();
-            WriteInfo("You only need to continue if you've used various apps to remove Korg or other MIDI 1.0");
-            WriteInfo("drivers from your system, and as a result no longer see MIDI ports in MIDI 1.0 apps.");
-            WriteBlankLine();
-            WriteSuperImportant("Before continuing, please close any other apps which use MIDI, and save your work.");
-            WriteBlankLine();
-
-            WriteImportant("Proposed changes:");
-            for (auto const& valueNameW : valuesToDelete)
-            {
-                std::string valueName(valueNameW.begin(), valueNameW.end());
-                WriteImportant("- Delete registry value '" + valueName + "'");
+                WriteInfoDetail(L"Delete registry value '" + valueNameW + L"'");
             }
 
             if (midiValueNeedsReplacing)
             {
-                WriteImportant("- Update registry value 'midi' to wdmaud.drv");
+                WriteInfoDetail(L"Update registry value 'midi' to 'wdmaud.drv'");
             }
 
             if (midi1ValueNeedsReplacing)
             {
-                WriteImportant("- Update registry value 'midi1' to wdmaud2.drv");
+                WriteInfoDetail(L"Update registry value 'midi1' to 'wdmaud2.drv'");
+            }
+
+            if (!midiSrvTransferCompleteFound)
+            {
+                WriteInfoDetail(L"Update registry value 'MidisrvTransferComplete' to '1'");
             }
 
             WriteBlankLine();
+        }
 
-            std::cout << "Enter 'y' to make the proposed changes, or 'n' to exit. ";
-            std::wcin >> response;
-
-            if (internal::ToLowerTrimmedWStringCopy(response) == L"y")
+        if (!valuesToDeleteWOW.empty() || midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing)
+        {
+            WriteImportant("Proposed changes for 32 bit app location:");
+            for (auto const& valueNameW : valuesToDeleteWOW)
             {
+                WriteInfoDetail(L"Delete registry value '" + valueNameW + L"'");
+            }
+
+            if (midiWOWValueNeedsReplacing)
+            {
+                WriteInfoDetail(L"Update registry value 'midi' to wdmaud.drv");
+            }
+
+            if (midi1WOWValueNeedsReplacing)
+            {
+                WriteInfoDetail(L"Update registry value 'midi1' to wdmaud2.drv");
+            }
+
+            WriteBlankLine();
+        }
+
+        std::cout << "Please enter 'y' to make the proposed changes, or 'n' to exit. ";
+        std::wcin >> response;
+
+        WriteBlankLine();
+
+        if (internal::ToLowerTrimmedWStringCopy(response) == L"y")
+        {
+            if (!midiSrvTransferCompleteFound || midiValueNeedsReplacing || midi1ValueNeedsReplacing || !valuesToDelete64.empty())
+            {
+                WriteImportant("Making required changes for 64 bit apps");
+                FixRegistryValues(drivers32HklmKey, valuesToDelete64, midiValueNeedsReplacing, midi1ValueNeedsReplacing);
+
+                if (!midiSrvTransferCompleteFound)
+                {
+                    FixMidisrvTransferComplete(drivers32HklmKey);
+                }
+
                 WriteBlankLine();
-                WriteImportant("Making changes... ");
-                // actually delete the values now
-
-                for (auto const& valueNameW : valuesToDelete)
-                {
-                    std::string valueName(valueNameW.begin(), valueNameW.end());
-
-                    auto ret = RegDeleteValue(keyForDelete.get(), valueNameW.c_str());
-
-                    if (ret == ERROR_SUCCESS)
-                    {
-                        WriteInfo("- Deleted value '" + valueName + "'");
-                    }
-                    else
-                    {
-                        WriteError("- Error deleting value '" + valueName + "'");
-                    }
-                }
-
-                if (midiValueNeedsReplacing)
-                {
-                    hr = wil::reg::set_value_string_nothrow(HKEY_LOCAL_MACHINE, drivers32HklmKey.c_str(), L"midi", L"wdmaud.drv");
-                    if (!SUCCEEDED(hr))
-                    {
-                        WriteError("- Unable to write 'midi' value of 'wdmaud.drv'");
-                        RETURN_INSUFFICIENT_PERMISSIONS;
-                    }
-                    else
-                    {
-                        WriteInfo("- Updated 'midi' to 'wdmaud.drv'");
-                    }
-                }
-
-                if (midi1ValueNeedsReplacing)
-                {
-                    hr = wil::reg::set_value_string_nothrow(HKEY_LOCAL_MACHINE, drivers32HklmKey.c_str(), L"midi1", L"wdmaud2.drv");
-                    if (!SUCCEEDED(hr))
-                    {
-                        WriteError("- Unable to write 'midi1' value of 'wdmaud2.drv'");
-                        RETURN_INSUFFICIENT_PERMISSIONS;
-                    }
-                    else
-                    {
-                        WriteInfo("- Updated 'midi1' to 'wdmaud2.drv'");
-                    }
-                }
-
-                // We don't automatically restart audiosrv, audioendpointbuilder, and midisrv here
-                // because that could cause problems with other apps which are open. Instead, we
-                // ask the user to reboot. It looks lazy, but it's more about not crashing other
-                // apps and causing a potential loss of data.
-
-                WriteSuperImportant("Changes made. Please reboot your PC.");
-
-
             }
-            else
+
+            if (! midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing || !valuesToDeleteWOW.empty())
             {
-                WriteImportant("No changes made.");
+                WriteImportant("Making required changes for 32 bit apps");
+                FixRegistryValues(drivers32WOWHklmKey, valuesToDeleteWOW, midiWOWValueNeedsReplacing, midi1WOWValueNeedsReplacing);
+                WriteBlankLine();
             }
+
+            // We don't automatically restart audiosrv, audioendpointbuilder, and midisrv here
+            // because that could cause problems with other apps which are open. Instead, we
+            // ask the user to reboot. It looks lazy, but it's more about not crashing other
+            // apps and causing a potential loss of data.
+
+            WriteSuperImportant("Changes made. Please reboot your PC.");
+            WriteBlankLine();
+            RETURN_SUCCESS;
         }
         else
         {
-            WriteImportant("No incorrect values found.");
+            WriteImportant("No changes made.");
+            WriteBlankLine();
+            RETURN_USER_ABORTED;
         }
     }
     else
     {
-        WriteError("Unable to open reg key for delete.");
+        WriteSuperImportant("No incorrect values found. This part of the registry seems fine.");
+        WriteBlankLine();
+        RETURN_NO_CHANGES_NEEDED;
     }
 
-    WriteBlankLine();
-
-
-    RETURN_SUCCESS;
 }
 
 

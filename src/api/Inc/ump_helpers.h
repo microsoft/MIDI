@@ -355,7 +355,8 @@ namespace WindowsMidiServicesInternal
         return value & (uint8_t)0x03;
     }
 
-    inline void SetGroupIndexInFirstWord(_Inout_ std::uint32_t firstWord, _In_ std::uint8_t groupIndex) noexcept
+    // this is only called from SDK code, so doesn't need CFR wrapping
+    inline void SetGroupIndexInFirstWord(_Inout_ std::uint32_t& firstWord, _In_ std::uint8_t groupIndex) noexcept
     {
         firstWord &= MIDI_MESSAGE_GROUP_WORD_CLEARING_MASK;
         firstWord |= static_cast<uint32_t>(CleanupNibble(groupIndex)) << MIDI_MESSAGE_GROUP_BITSHIFT;

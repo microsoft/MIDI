@@ -141,6 +141,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
             _In_ midi1::MidiProgramChangeMessage const& originalMessage
         ) noexcept;
 
+
+        static collections::IVector<uint32_t> ConvertMidi1CompleteMessageBytesToUmpWords(
+            _In_ midi2::MidiGroup  const& group,
+            _In_ collections::IIterable<uint8_t> const& midi1Bytes,
+            _In_ bool const allowRunningStatus
+        ) noexcept;
+
+        static collections::IVector<uint8_t> ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(
+            _In_ collections::IIterable<uint32_t> const& umpWords
+        ) noexcept;
+
+        static collections::IVector<uint8_t> ConvertHexByteStringToByteArray(
+            _In_ winrt::hstring const& byteString
+            ) noexcept;
+
     private:
         static uint32_t InternalConvertBytes(
             _In_ uint8_t const groupIndex,

@@ -52,14 +52,23 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         private readonly IMidiConfigFileService _configFileService;
+        private readonly IMessageBoxService _messageBoxService;
 
-        public MidiBasicLoopbackEndpoint(IMidiConfigFileService configFileService)
+        public MidiBasicLoopbackEndpoint(
+            IMidiConfigFileService configFileService, 
+            IMessageBoxService messageBoxService)
         {
             _configFileService = configFileService;
+            _messageBoxService = messageBoxService;
 
             RemoveCommand = new RelayCommand(
                 () =>
                 {
+                    if (!_messageBoxService.ShowMessageWithOkCancel("Message_QuestionContinueRemovingLoopbackEndpoint".GetLocalized()))
+                    {
+                        return;
+                    }
+
                     var associationId = MidiBasicLoopbackEndpointManager.GetAssociationId(Loop!.DeviceInformation);
 
                     if (associationId != Guid.Empty)
@@ -68,14 +77,27 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                         var response = MidiBasicLoopbackEndpointManager.RemoveTransientLoopbackEndpoint(config);
 
+                        if (!response)
+                        {
+                            _messageBoxService.ShowError("Error_UnableToRemoveLoopbackFromService".GetLocalized());
+
+                            return;
+                        }
+
                         if (_configFileService.CurrentConfig != null)
                         {
-                            _configFileService.CurrentConfig.RemoveBasicLoopbackEndpoint(associationId);
+                            var configResponse = _configFileService.CurrentConfig.RemoveBasicLoopbackEndpoint(associationId);
+
+                            if (!configResponse)
+                            {
+                                _messageBoxService.ShowError("Error_UnableToRemoveLoopbackFromConfigurationFile".GetLocalized());
+                            }
                         }
                     }
                     else
                     {
                         // association id was empty, so not found.
+                        _messageBoxService.ShowError("Error_UnableToFindAssociationId".GetLocalized());
                     }
 
                 });
@@ -246,7 +268,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             if (string.IsNullOrWhiteSpace(NewLoopbackEndpointName))
             {
-                ValidationErrorMessage = "Endpoint name is required.";
+                ValidationErrorMessage = "Error_ValidationLoopbackNameRequired".GetLocalized();
                 NewLoopbackSettingsAreValid = false;
                 return;
             }
@@ -256,7 +278,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             // validate the unique id is good
             if (string.IsNullOrWhiteSpace(NewUniqueIdentifier))
             {
-                ValidationErrorMessage = "Unique identifier is required.";
+                ValidationErrorMessage = "Error_ValidationUniqueIdentifierRequired".GetLocalized();
                 NewLoopbackSettingsAreValid = false;
                 return;
             }
@@ -267,7 +289,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 if (ep.Loop.DeviceInformation.GetTransportSuppliedInfo().SerialNumber.ToUpper() == NewUniqueIdentifier.ToUpper())
                 {
-                    ValidationErrorMessage = "Unique identifier is already in use with another basic loopback endpoint.";
+                    ValidationErrorMessage = "Error_ValidationLoopbackUniqueIdAlreadyInUse".GetLocalized();
                     NewLoopbackSettingsAreValid = false;
                     return;
                 }
@@ -298,16 +320,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             NewUniqueIdentifier = uniqueId;
         }
-
-
-
-        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int MessageBox(
-            IntPtr hWnd,
-            string lpText,
-            string lpCaption,
-            int uType);
-
 
         private void CreateNewLoopbackEndpoint()
         {
@@ -351,16 +363,9 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 // TODO: Need to show this and prevent the dialog from closing
 
-                ValidationErrorMessage = "The loopback endpoint name must be unique across all MIDI endpoint names.";
                 NewLoopbackSettingsAreValid = false;
 
-                // these message boxes are ugly, but it's the fastest way to get this out right now
-                MessageBox(
-                    (IntPtr)0,
-                    ValidationErrorMessage,
-                    "Unable to create loopback endpoint",
-                    0);
-
+                _messageBoxService.ShowError("Error_ValidationLoopbackNameMustBeUnique".GetLocalized(), "Error_UnableToCreateLoopbackEndpoint".GetLocalized());
                 return;
             }
 
@@ -389,14 +394,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     else
                     {
                         // no config file
-
-                        // these message boxes are ugly, but it's the fastest way to get this out right now
-                        MessageBox(
-                            (IntPtr)0,
-                            "Missing MIDI configuration file",
-                            "Unable to create loopback endpoint",
-                            0);
-
+                        _messageBoxService.ShowError("Error_UnableToCreateLoopbackEndpointMissingConfigurationFile".GetLocalized());
                     }
                 }
                 else
@@ -404,11 +402,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     App.GetService<ILoggingService>().LogError($"Unable to create basic loopback. Error '{result.ErrorInformation}'");
 
                     // these message boxes are ugly, but it's the fastest way to get this out right now
-                    MessageBox(
-                        (IntPtr)0,
-                        "Message from MIDI service: " + result.ErrorInformation,
-                        "Unable to create loopback endpoint",
-                        0);
+                    _messageBoxService.ShowError("Error_UnableToCreateLoopbackWithMessage".GetLocalized());
                 }
             }
 
@@ -445,7 +439,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     foreach (var endpoint in endpoints)
                     {
-                        var ep = new MidiBasicLoopbackEndpoint(_configFileService);
+                        var ep = new MidiBasicLoopbackEndpoint(_configFileService, _messageBoxService);
 
                         ep.Loop = endpoint;
 
@@ -476,13 +470,16 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly ISynchronizationContextService _contextService;
         private readonly INavigationService _navigationService;
         private readonly IMidiEndpointEnumerationService _enumerationService;
+        private readonly IMessageBoxService _messageBoxService;
+
 
         public EndpointsBasicLoopViewModel(
                         INavigationService navigationService, 
                         IMidiConfigFileService configFileService,
                         IMidiEndpointEnumerationService enumerationService,
                         IMidiDefaultsService defaultsService,
-                        ISynchronizationContextService contextService
+                        ISynchronizationContextService contextService,
+                        IMessageBoxService messageBoxService
 
             )
         {
@@ -491,6 +488,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             _contextService = contextService;
             _navigationService = navigationService;
             _enumerationService = enumerationService;
+            _messageBoxService = messageBoxService;
 
             LoadExistingEndpoints();
 
@@ -547,7 +545,9 @@ namespace Microsoft.Midi.Settings.ViewModels
                     }
                     else
                     {
-                        App.GetService<ILoggingService>().LogError($"Service reports failure creating default loopback '{result.ErrorInformation}'");
+                        App.GetService<ILoggingService>().LogError("Service reports failure creating default loopback. '{result.ErrorInformation}'");
+
+                        _messageBoxService.ShowError("Error_ServiceReportsFailureCreatingDefaultLoopback".GetLocalized() + $" '{result.ErrorInformation}'");
 
                         // TODO: Display to user
                     }

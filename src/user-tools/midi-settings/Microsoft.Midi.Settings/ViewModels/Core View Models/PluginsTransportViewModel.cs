@@ -13,10 +13,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Devices.Midi2.Tools.Shared.Config;
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
+    public class MidiServiceTransportPluginViewModel
+    {
+        public Guid Id;
+        public string TransportCode;
+
+        public string Name;
+        public string Description;
+
+        public string ImageFileName;
+        public string Author;
+        public string Version;
+
+        public string ComImplementationPath;
+    }
+
     public class PluginsTransportViewModel : ObservableRecipient, ISettingsSearchTarget
     {
         public static IList<string> GetSearchKeywords()
@@ -31,11 +48,11 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
         public static string GetSearchPageDescription()
         {
-            return "View all currently installed transports in the MIDI Service";
+            return "View all currently installed transport plugins in the MIDI Service";
         }
 
 
-        public ObservableCollection<MidiServiceTransportPluginInfo> Plugins { get; } = [];
+        public ObservableCollection<MidiServiceTransportPluginViewModel> Plugins { get; } = [];
 
         public PluginsTransportViewModel()
         {
@@ -45,9 +62,29 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             foreach (var plugin in plugins.OrderBy(x => x.Name)) 
             {
-                Plugins.Add(plugin);
-            }
+                var vm = new MidiServiceTransportPluginViewModel();
 
+                vm.Id = plugin.Id;
+                vm.TransportCode = plugin.TransportCode;
+                vm.Name = plugin.Name;
+                vm.Description = plugin.Description;
+                vm.Author = plugin.Author;
+                vm.Version = plugin.Version;
+
+                // Get the COM registration information
+                var path = RegistryHelper.GetImplementationPathForComClass(plugin.Id);
+
+                if (path != null)
+                {
+                    vm.ComImplementationPath = path;
+                }
+                
+                Plugins.Add(vm);
+            }
         }
+
+
+
+
     }
 }

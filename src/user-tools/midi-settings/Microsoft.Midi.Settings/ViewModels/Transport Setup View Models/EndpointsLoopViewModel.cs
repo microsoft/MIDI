@@ -42,14 +42,23 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
         private readonly IMidiConfigFileService _configFileService;
+        private readonly IMessageBoxService _messageBoxService;
 
-        public MidiLoopbackEndpointPair(IMidiConfigFileService configFileService)
+        public MidiLoopbackEndpointPair(
+            IMidiConfigFileService configFileService,
+            IMessageBoxService messageBoxService)
         {
             _configFileService = configFileService;
+            _messageBoxService = messageBoxService;
 
             RemoveCommand = new RelayCommand(
                 () =>
                 {
+                    if (!_messageBoxService.ShowMessageWithOkCancel("Message_QuestionContinueRemovingLoopbackEndpoint".GetLocalized()))
+                    {
+                        return;
+                    }
+
                     var associationId = MidiLoopbackEndpointManager.GetAssociationId(LoopA!.DeviceInformation);
 
                     if (associationId != Guid.Empty)
@@ -58,16 +67,27 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                         var response = MidiLoopbackEndpointManager.RemoveTransientLoopbackEndpoints(config);
 
-                        // todo: remove from config file
+                        if (!response)
+                        {
+                            _messageBoxService.ShowError("Error_UnableToRemoveLoopbackFromService".GetLocalized());
+
+                            return;
+                        }
 
                         if (_configFileService.CurrentConfig != null)
                         {
-                            _configFileService.CurrentConfig.RemoveLoopbackEndpointPair(associationId);
+                            var configResponse = _configFileService.CurrentConfig.RemoveLoopbackEndpointPair(associationId);
+
+                            if (!configResponse)
+                            {
+                                _messageBoxService.ShowError("Error_UnableToRemoveLoopbackFromConfigurationFile".GetLocalized());
+                            }
                         }
                     }
                     else
                     {
                         // association id was empty, so not found.
+                        _messageBoxService.ShowError("Error_UnableToFindAssociationId".GetLocalized());
                     }
 
                 });
@@ -80,6 +100,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
     public partial class EndpointsLoopViewModel : ObservableRecipient, INavigationAware, ISettingsSearchTarget
     {
+        private readonly IMessageBoxService _messageBoxService;
+
         public static IList<string> GetSearchKeywords()
         {
             // TODO: these need to be localized, so should refer to resources instead
@@ -234,7 +256,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(NewLoopbackEndpointBaseName))
                 {
-                    ValidationErrorMessage = "Both endpoint names are required. Please provide a base name, or specify individual names";
+                    ValidationErrorMessage = "Error_ValidationLoopbackBothNamesAreRequired".GetLocalized();
                     NewLoopbackSettingsAreValid = false;
                     return;
                 }
@@ -245,7 +267,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             // validate the unique id is good
             if (string.IsNullOrWhiteSpace(NewUniqueIdentifier))
             {
-                ValidationErrorMessage = "Unique identifier is required.";
+                ValidationErrorMessage = "Error_ValidationUniqueIdentifierRequired".GetLocalized();
                 NewLoopbackSettingsAreValid = false;
                 return;
             }
@@ -257,7 +279,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 if (pair.LoopA.DeviceInformation.GetTransportSuppliedInfo().SerialNumber.ToUpper() == NewUniqueIdentifier.ToUpper() ||
                     pair.LoopB.GetTransportSuppliedInfo().SerialNumber.ToUpper() == NewUniqueIdentifier.ToUpper())
                 {
-                    ValidationErrorMessage = "Unique identifier is already in use with another loopback endpoint.";
+                    ValidationErrorMessage = "Error_ValidationLoopbackUniqueIdAlreadyInUse".GetLocalized();
                     NewLoopbackSettingsAreValid = false;
                     return;
                 }
@@ -288,16 +310,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             NewUniqueIdentifier = uniqueId;
         }
-
-
-
-        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int MessageBox(
-            IntPtr hWnd,
-            string lpText,
-            string lpCaption,
-            int uType);
-
 
         private void CreateNewLoopbackEndpoints()
         {
@@ -367,15 +379,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 // TODO: Need to show this and prevent the dialog from closing
 
-                ValidationErrorMessage = "The loopback endpoint names must be unique across all MIDI endpoint names.";
+                ValidationErrorMessage = "Error_ValidationLoopbackNameMustBeUnique".GetLocalized();
                 NewLoopbackSettingsAreValid = false;
 
                 // these message boxes are ugly, but it's the fastest way to get this out right now
-                MessageBox(
-                    (IntPtr)0,
-                    ValidationErrorMessage,
-                    "Unable to create loopback endpoints",
-                    0);
+                _messageBoxService.ShowError(ValidationErrorMessage);
 
                 return;
             }
@@ -409,23 +417,13 @@ namespace Microsoft.Midi.Settings.ViewModels
                     {
                         // no config file
 
-                        // these message boxes are ugly, but it's the fastest way to get this out right now
-                        MessageBox(
-                            (IntPtr)0,
-                            "Missing MIDI configuration file",
-                            "Unable to create loopback endpoints",
-                            0);
+                        _messageBoxService.ShowError("Error_UnableToCreateLoopbackEndpointMissingConfigurationFile".GetLocalized());
 
                     }
                 }
                 else
                 {
-                    // these message boxes are ugly, but it's the fastest way to get this out right now
-                    MessageBox(
-                        (IntPtr)0,
-                        "Message from MIDI service: " + result.ErrorInformation,
-                        "Unable to create loopback endpoints",
-                        0);
+                    _messageBoxService.ShowError("Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " " + result.ErrorInformation);
                 }
             }
 
@@ -475,7 +473,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                             if (!ids.ContainsKey(endpoint.DeviceInformation.EndpointDeviceId) &&
                                 !ids.ContainsKey(associated.EndpointDeviceId))
                             {
-                                var pair = new MidiLoopbackEndpointPair(_configFileService);
+                                var pair = new MidiLoopbackEndpointPair(_configFileService, _messageBoxService);
 
                                 pair.LoopA = endpoint;
                                 pair.LoopB = associated;
@@ -517,7 +515,8 @@ namespace Microsoft.Midi.Settings.ViewModels
                         IMidiConfigFileService configFileService,
                         IMidiEndpointEnumerationService enumerationService,
                         IMidiDefaultsService defaultsService,
-                        ISynchronizationContextService contextService
+                        ISynchronizationContextService contextService,
+                        IMessageBoxService messageBoxService
 
             )
         {
@@ -526,6 +525,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             _contextService = contextService;
             _navigationService = navigationService;
             _enumerationService = enumerationService;
+            _messageBoxService = messageBoxService;
 
             LoadExistingEndpointPairs();
 

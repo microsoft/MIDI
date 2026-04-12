@@ -15,6 +15,7 @@
     mc:Ignorable="d">
 
     
+    
     <Grid HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -37,7 +38,7 @@
                     BorderThickness="0"
                     Padding="0"
                     Visibility="{x:Bind ViewModel.ShowCustomizeButton, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
-                    Click="Button_Click">
+                    Click="CustomizeButton_Click">
                 <Image Source="{x:Bind ViewModel.EndpointWrapper.Image, Mode=OneWay}"
                        Stretch="Uniform"
                        VerticalAlignment="Center"
@@ -66,6 +67,7 @@
 
                 <TextBlock Grid.Row="0"
                            HorizontalAlignment="Left"
+                           IsTextSelectionEnabled="True"
                            Text="{x:Bind ViewModel.EndpointWrapper.Name, Mode=OneWay}" 
                            Style="{StaticResource PageHeaderStyleDeviceName}" />
 
@@ -83,7 +85,7 @@
                         Padding="0"
                         Foreground="{StaticResource AccentTextFillColorTertiaryBrush}"
                         Background="Transparent"
-                        Click="Button_Click"
+                        Click="CustomizeButton_Click"
                         Visibility="{x:Bind ViewModel.ShowCustomizeButton, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                     
                     <ToolTipService.ToolTip>
@@ -820,13 +822,17 @@
         
 
         <ContentDialog x:Name="editUserDefinedPropertiesDialog"
+                       Style="{StaticResource SSXScrollableContentDialogStyle}"
                        PrimaryButtonText="OK" 
                        IsPrimaryButtonEnabled="True"
                        CloseButtonText="Cancel"
-                       PrimaryButtonCommand="{x:Bind ViewModel.SubmitEndpointCustomizationCommand}"
+                       ScrollViewer.HorizontalScrollMode="Disabled"
+                       ScrollViewer.VerticalScrollMode="Auto"
+                       
+                       PrimaryButtonClick="editUserDefinedPropertiesDialog_PrimaryButtonClick"
                        >
             <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">1300</x:Double>
+                <x:Double x:Key="ContentDialogMaxWidth">1200</x:Double>
                 <x:Double x:Key="ContentDialogMaxHeight">850</x:Double>
             </ContentDialog.Resources>
             
@@ -838,8 +844,9 @@
                 </DataTemplate>
             </ContentDialog.TitleTemplate>
 
-            <Grid Margin="0,16,0,0">
+            <Grid Margin="0,16,0,0" MaxWidth="1168">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -895,26 +902,17 @@
 
                 </Grid>
 
-                <!-- Third row: content -->
-                <Grid Grid.Row="2" 
-                      Margin="0,16,0,0"
-                      ColumnSpacing="32">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="350" />
-                        <ColumnDefinition Width="Auto" MinWidth="400" />
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Column 1 : Name, description, image -->
-
-                    <Grid Grid.Column="0" RowSpacing="16">
+                <!-- Third row: Endpoint content -->
+                <Grid Row="2" RowSpacing="16" ColumnSpacing="16">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Row="0" 
                                    Style="{StaticResource DialogHeaderTextBlockStyle}"
@@ -923,6 +921,7 @@
                         <TextBox Grid.Row="1" 
                                  Header="Name"
                                  HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Top"
                                  Text="{x:Bind ViewModel.CustomizationViewModel.CustomName, Mode=TwoWay}" />
 
                         <TextBox Grid.Row="2" 
@@ -932,118 +931,224 @@
                                  IsSpellCheckEnabled="True"
                                  Text="{x:Bind ViewModel.CustomizationViewModel.CustomDescription, Mode=TwoWay}"/>
 
-                        <TextBlock Grid.Row="3" 
-                                   Text="Image (Click/Tap to Browse)" />
-                        
-                        <Button Grid.Row="4"
+
+                    <Grid Grid.Row="1"
+                          Grid.Column="1"
+                          Grid.RowSpan="2"
+                          VerticalAlignment="Top"
+                          HorizontalAlignment="Left"
+                          Margin="32,4,8,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" 
+                                   Text="Image (Click/Tap to Browse)" 
+                                   VerticalAlignment="Top"/>
+
+                        <Button Grid.Row="1" 
                                 Click="BrowseImage_Click"
-                                Width="175"
-                                Height="175"
+                                Width="200"
+                                Height="200"
+                                Margin="0,8,0,0"
+                                Background="Transparent"
                                 HorizontalAlignment="Left">
                             <Image Grid.Row="1"
                                    Stretch="Uniform"
                                    x:Name="UserMetadataImagePreview" />
                         </Button>
 
-                        <Button Grid.Row="4"
+                        <Button Grid.Row="1"
                                 Click="RemoveImage_Click"
-                                HorizontalAlignment="Left"
+                                Margin="0,8,4,0"
+                                HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
+                                Background="Transparent"
                                 Visibility="{x:Bind ViewModel.CustomizationViewModel.HasImage, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <SymbolIcon Symbol="Clear" />
                         </Button>
-                        
 
-                        <TextBlock Grid.Row="5"
-                                   Text="{x:Bind ViewModel.CustomizationViewModel.ImageFileName, Mode=TwoWay}"
+                        <TextBlock Grid.Row="2"
+                                   Text="{x:Bind ViewModel.CustomizationViewModel.ImageFileName, Mode=OneWay}"
                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                     </Grid>
-
-
-                    <!-- Column 2 : Default MIDI 1.0 naming approach, and port names -->
-                    <Grid Grid.Column="1" RowSpacing="16">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" 
-                                   Style="{StaticResource DialogHeaderTextBlockStyle}" 
-                                   Text="MIDI 1.0 Ports"/>
-
-                        <!-- Bind this to viewmodel values -->
-                        <ComboBox Grid.Row="1"
-                                  IsEditable="False"
-                                  HorizontalAlignment="Left"
-                                  Header="Default MIDI 1 Port Naming"
-                                  ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNamingOptions, Mode=OneWay}"
-                                  SelectedItem="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="midi2:Midi1PortNamingApproach">
-                                    <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource Midi1PortNamingApproachConverter}}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-
-
-
-                        <ScrollViewer Grid.Row="2" 
-                                      VerticalScrollMode="Auto"
-                                      VerticalScrollBarVisibility="Auto"
-                                      VerticalAlignment="Stretch"
-                                      MaxHeight="450">
-
-                            <ScrollViewer.Resources>
-                                <DataTemplate x:Key="Midi1PortCustomizationTemplate" 
-                                              x:DataType="vm:MidiEndpointMidi1PortCustomizationViewModel">
-                                    <Grid Margin="4" ColumnSpacing="16">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="70" />
-                                            <ColumnDefinition Width="250" />
-                                            <ColumnDefinition Width="250" />
-                                        </Grid.ColumnDefinitions>
-                                        
-                                        <TextBlock Grid.Column="0" 
-                                                   Text="{x:Bind Group, Mode=OneWay}"
-                                                   VerticalAlignment="Center"/>
-                                        
-                                        <TextBlock Grid.Column="1" 
-                                                   Text="{x:Bind CurrentDisplayName, Mode=OneWay}" 
-                                                   Opacity="0.55"
-                                                   VerticalAlignment="Center"/>
-                                        
-                                        <TextBox Grid.Column="2"
-                                                 MaxLength="32"
-                                                 HorizontalAlignment="Stretch" 
-                                                 Text="{x:Bind NewCustomName, Mode=TwoWay}" />
-                                    </Grid>
-
-                                </DataTemplate>
-                            </ScrollViewer.Resources>
-                            
-                            <!-- TODO: This needs to bind to a type that has a field for custom name -->
-                            <StackPanel Orientation="Vertical" Spacing="8">
-                                <TextBlock Text="MIDI 1.0 Sources/Inputs" />
-                                <ItemsControl ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1SourcePorts, Mode=OneWay}"
-                                              ItemTemplate="{StaticResource Midi1PortCustomizationTemplate}">
-                                </ItemsControl>
-                                
-                                <TextBlock Text="MIDI 1.0 Destinations/Outputs" />
-                                <ItemsControl ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1DestinationPorts, Mode=OneWay}"
-                                              ItemTemplate="{StaticResource Midi1PortCustomizationTemplate}">
-                                </ItemsControl>
-                            </StackPanel>
-                            
-                        </ScrollViewer>
-
+                        
 
                     </Grid>
 
-                </Grid>
+                <!-- Fourth Row : Default MIDI 1.0 naming approach, and port names -->
+                <Grid Row="3" RowSpacing="16" VerticalAlignment="Stretch">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
+                    <TextBlock Grid.Row="0" 
+                                   Style="{StaticResource DialogHeaderTextBlockStyle}" 
+                                   Text="MIDI 1.0 Ports"/>
+
+                    <!-- Bind this to viewmodel values -->
+                    <ComboBox Grid.Row="1"
+                              IsEditable="False"
+                              HorizontalAlignment="Left"
+                              Header="Default MIDI 1 Port Naming for this Device/Endpoint"
+                              ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNamingOptions, Mode=OneWay}"
+                              SelectedItem="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="midi2:Midi1PortNamingApproach">
+                                <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource Midi1PortNamingApproachConverter}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+
+
+                    <Grid Grid.Row="2" 
+                          RowSpacing="8" 
+                          VerticalAlignment="Top" Margin="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.Resources>
+                            <DataTemplate x:Key="Midi1PortCustomizationTemplate" 
+                                              x:DataType="vm:MidiEndpointMidi1PortCustomizationViewModel">
+                                <Grid Margin="4" ColumnSpacing="8"
+                                      Padding="0,2,0,2"
+                                      Background="#13000000">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="70" />
+                                        <ColumnDefinition Width="250" />
+                                        <ColumnDefinition Width="250" />
+                                        <ColumnDefinition Width="250" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" 
+                                                   Text="{x:Bind Group.DisplayValue, Mode=OneWay}"
+                                                   VerticalAlignment="Center"/>
+
+                                    <TextBlock Grid.Column="1" 
+                                                   Text="{x:Bind CurrentDisplayName, Mode=OneWay}" 
+                                                   Opacity="0.8"
+                                                   VerticalAlignment="Center"/>
+
+                                    <TextBlock Grid.Column="2" 
+                                                   Text="{x:Bind CalculatedOldStyleName, Mode=OneWay}" 
+                                                   Opacity="0.55"
+                                                   VerticalAlignment="Center"/>
+
+                                    <TextBlock Grid.Column="3" 
+                                                   Text="{x:Bind CalculatedNewStyleName, Mode=OneWay}" 
+                                                   Opacity="0.55"
+                                                   VerticalAlignment="Center"/>
+
+                                    <TextBox Grid.Column="4"
+                                                 MaxLength="32"
+                                                 HorizontalAlignment="Stretch" 
+                                                 Text="{x:Bind NewCustomName, Mode=TwoWay}" />
+                                </Grid>
+
+                            </DataTemplate>
+                        </Grid.Resources>
+
+                        <Grid RowSpacing="8" VerticalAlignment="Top" Margin="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row ="0" Text="MIDI 1.0 Sources/Inputs" 
+                                       Margin="0,16,0,0"/>
+
+                            <Grid Grid.Row="1" Margin="4" ColumnSpacing="8"
+                                  Padding="0,2,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="70" />
+                                    <ColumnDefinition Width="250" />
+                                    <ColumnDefinition Width="250" />
+                                    <ColumnDefinition Width="250" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="Group"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="1" 
+                                           Text="Current Name" 
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="2" 
+                                           Text="Classic API Compatible Name" 
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="3" 
+                                           Text="New-Style Name" 
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="4"
+                                       Text="Custom Name (overrides other names)"
+                                        VerticalAlignment="Center"/>
+                            </Grid>
+                            
+
+                            <ItemsControl Grid.Row="2" ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1SourcePorts, Mode=OneWay}"
+                                              ItemTemplate="{StaticResource Midi1PortCustomizationTemplate}">
+                            </ItemsControl>
+
+                            <TextBlock Grid.Row="3" Margin="0,16,0,0" Text="MIDI 1.0 Destinations/Outputs" />
+
+                            <Grid Grid.Row="4" Margin="4" ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="70" />
+                                    <ColumnDefinition Width="250" />
+                                    <ColumnDefinition Width="250" />
+                                    <ColumnDefinition Width="250" />
+                                    <ColumnDefinition Width="250" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="Group"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="1" 
+                                           Text="Current Name" 
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="2" 
+                                           Text="Classic API Compatible Name" 
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="3" 
+                                           Text="New-Style Name" 
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="4"
+                                       Text="Custom Name (overrides other names)"
+                                        VerticalAlignment="Center"/>
+                            </Grid>
+                            <ItemsControl Grid.Row="5" ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1DestinationPorts, Mode=OneWay}"
+                                              ItemTemplate="{StaticResource Midi1PortCustomizationTemplate}">
+                            </ItemsControl>
+
+                        </Grid>
+
+                    </Grid>
+
+
+                </Grid>
 
             </Grid>
             

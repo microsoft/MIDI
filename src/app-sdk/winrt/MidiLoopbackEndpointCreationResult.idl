@@ -9,19 +9,22 @@
 #include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
+import "MidiLoopbackEndpointCreationResultErrorCodeEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    struct MidiLoopbackEndpointCreationResult
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointCreationResult", UUID_IMidiLoopbackEndpointCreationResult)]
+    runtimeclass MidiLoopbackEndpointCreationResult
     {
-        Boolean Success;
-        String ErrorInformation;
+        Boolean Success { get; };
 
-        Guid AssociationId;
+        MidiLoopbackEndpointCreationResultErrorCode ErrorCode{ get; };
+        String ErrorInformation{ get; };
 
-        String EndpointDeviceIdA;
-        String EndpointDeviceIdB;
+        Guid AssociationId{ get; };
+
+        String EndpointDeviceIdA{ get; };
+        String EndpointDeviceIdB{ get; };
     };
 }

@@ -90,18 +90,37 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Page Title -->
-        <TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,0" />
-
         <!-- View type, Sort, and Filter -->
 
         <Grid Grid.Row="1">
-            <CommandBar HorizontalAlignment="Left"
-                        Margin="0,0,0,8"
+            <!-- Filter by transport -->
+            <ComboBox ItemsSource="{x:Bind ViewModel.Transports, Mode=OneTime}"
+                                SelectedItem="{x:Bind ViewModel.SelectedTransport, Mode=TwoWay}"
+                                FontSize="{StaticResource SmallFontSize}"
+                                Margin="0,0,8,12"
+                                VerticalAlignment="Bottom">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:TransportFilterEntry">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Bind Name}"/>
+
+                            <TextBlock Text="(" Margin="4,0,0,0"  />
+                            <TextBlock Text="{x:Bind TransportCode}" Opacity="0.5"/>
+                            <TextBlock Text=")"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+
+            <CommandBar HorizontalAlignment="Right"
+                        Margin="0,0,8,8"
                         IsOpen="False"
                         DefaultLabelPosition="Right"
                         IsDynamicOverflowEnabled="False">
                 <CommandBar.PrimaryCommands>
+
+
                     
                     <!-- Cards, Icons, or List -->
 
@@ -125,26 +144,7 @@
 
                     <AppBarSeparator/>
 
-                    <!-- Filter by transport -->
-                    <AppBarElementContainer VerticalAlignment="Center">
-                        <ComboBox ItemsSource="{x:Bind ViewModel.Transports, Mode=OneTime}"
-                                  SelectedItem="{x:Bind ViewModel.SelectedTransport, Mode=TwoWay}"
-                                  FontSize="{StaticResource SmallFontSize}"
-                                  Margin="8,0,8,0"
-                                  VerticalAlignment="Bottom">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="local:TransportFilterEntry">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{x:Bind Name}"/>
 
-                                        <TextBlock Text="(" Margin="4,0,0,0"  />
-                                        <TextBlock Text="{x:Bind TransportCode}" Opacity="0.5"/>
-                                        <TextBlock Text=")"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </AppBarElementContainer>
                     
                     
                     
@@ -158,7 +158,7 @@
         <ScrollView Grid.Row="2"
                     Visibility="{x:Bind ViewModel.UseListView, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-            <Grid Margin="8,0,16,0" HorizontalAlignment="Stretch">
+            <Grid Margin="-4,0,12,0" HorizontalAlignment="Stretch">
                 <ItemsView ItemsSource="{x:Bind ViewModel.Endpoints, Mode=OneWay}"
                            SelectionMode="None"
                            IsItemInvokedEnabled="False">
@@ -437,7 +437,7 @@
                           ItemClick="GridView_ItemClick">
                     <GridView.ItemContainerStyle>
                         <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
-                            <Setter Property="Margin" Value="8"/>
+                            <Setter Property="Margin" Value="4"/>
                         </Style>
                     </GridView.ItemContainerStyle>
                     
@@ -445,7 +445,7 @@
                         <DataTemplate x:DataType="local:MidiEndpointWrapper">
 
                             <Grid CornerRadius="{StaticResource ControlCornerRadius}"
-                                  Margin="1"
+                                  Margin="0"
                                   Width="350"
                                   Height="310">
 
@@ -504,7 +504,7 @@
                                                Grid.RowSpan="3"
                                                Margin="0,0,16,16"
                                                HorizontalAlignment="Center"
-                                               VerticalAlignment="Top"
+                                               VerticalAlignment="Center"
                                                Source="{x:Bind Image, Mode=OneWay}"
                                                Stretch="Uniform"/>
 
@@ -512,10 +512,10 @@
 
                                             <!-- Name -->
                                             <TextBlock Text="{x:Bind Name, Mode=OneWay}" 
-                                                   Grid.Row="0"
-                                                   Grid.Column="1"
-                                                   Margin="4,0,4,8"
-                                                   Style="{StaticResource EndpointCardNameStyle}" />
+                                                       Grid.Row="0"
+                                                       Grid.Column="1"
+                                                       Margin="4,0,4,8"
+                                                       Style="{StaticResource EndpointCardNameStyle}" />
 
 
                                             <!-- Description -->

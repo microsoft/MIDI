@@ -136,6 +136,10 @@ public partial class App : Application
                     services.AddSingleton<IMidiDiagnosticsService, MidiDiagnosticsService>();
                     services.AddSingleton<IMidiConsoleToolsService, MidiConsoleToolsService>();
 
+                    services.AddSingleton<IMessageBoxService, MessageBoxService>();
+                    services.AddSingleton<IMidiEndpointImageService, MidiEndpointImageService>();
+
+                    
 
 
                     // Views and ViewModels
@@ -188,6 +192,9 @@ public partial class App : Application
                     services.AddTransient<ToolsTestPage>();
                     services.AddTransient<ToolsTestViewModel>();
 
+                    services.AddTransient<ToolsScratchPadPage>();
+                    services.AddTransient<ToolsScratchPadViewModel>();
+
                     services.AddTransient<TroubleshootingPage>();
                     services.AddTransient<TroubleshootingViewModel>();
 
@@ -211,18 +218,6 @@ public partial class App : Application
 
             App.GetService<IGeneralSettingsService>().InitializeAsync().GetAwaiter().GetResult();
 
-
-            //}
-            //else
-            //{
-            //    MessageBox(
-            //        (IntPtr)0,
-            //        "Error_UnableToInitializeMidiRuntime".GetLocalized(),
-            //        "Error_StartupMessageBoxTitle".GetLocalized(),
-            //        0);
-
-            //    Exit();
-            //}
         }
         catch (Exception ex)
         {
@@ -248,6 +243,9 @@ public partial class App : Application
             App.GetService<ILoggingService>().LogError(e.Message);
 
             MessageBox((IntPtr)0, e.Message, "Unhandled Error", 0);
+
+            // try not to completely abort
+            e.Handled = true;
         }
         catch (Exception)
         {

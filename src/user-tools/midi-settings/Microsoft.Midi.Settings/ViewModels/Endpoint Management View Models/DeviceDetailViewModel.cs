@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -57,26 +58,78 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
         private readonly IMidiConfigFileService _configFileService;
+        private readonly IMessageBoxService _messageBoxService;
+
+
+        public void SubmitCustomizationChanges()
+        {
+            // cache this here because the update event may trigger before we save to the config file
+            var updateConfig = CustomizationViewModel.GetUpdateConfig();
+
+            // System.Diagnostics.Debug.WriteLine("Config json before updating endpoint.");
+            // System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+
+            var success = _endpointCustomizationService.UpdateEndpoint(
+                updateConfig);
+
+            //   System.Diagnostics.Debug.WriteLine("Config json after updating endpoint.");
+            //   System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+
+            if (success)
+            {
+                if (_configFileService.CurrentConfig != null)
+                {
+                    if (_configFileService.CurrentConfig.StoreEndpointCustomization(updateConfig))
+                    {
+                        //System.Diagnostics.Debug.WriteLine("Config json after successfully saving to config.");
+                        //System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+
+
+                        // success
+                        // update the properties again
+              //          RefreshVM();
+                    }
+                    else
+                    {
+                        //System.Diagnostics.Debug.WriteLine("Config json after FAILING to save to config.");
+                        //System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+
+                        // todo: show error
+                        App.GetService<ILoggingService>().LogError($"Could not save to config file");
+                        _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfig");
+                    }
+                }
+                else
+                {
+                    _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfigMissingConfig");
+
+                    // could not save. No current config.
+                    App.GetService<ILoggingService>().LogError($"Could not save to config file. No current config file.");
+                }
+            }
+            else
+            {
+                // todo: show error
+            }
+
+
+        }
 
         public DeviceDetailViewModel(
             ISynchronizationContextService synchronizationContextService, 
             IMidiEndpointCustomizationService endpointCustomizationService,
             IMidiEndpointEnumerationService endpointEnumerationService,
-            IMidiConfigFileService configFileService)
+            IMidiConfigFileService configFileService,
+            IMessageBoxService messageBoxService)
         {
             _synchronizationContextService = synchronizationContextService;
             _endpointCustomizationService = endpointCustomizationService;
             _endpointEnumerationService = endpointEnumerationService;
             _configFileService = configFileService;
-
-
-            System.Diagnostics.Debug.WriteLine("Start clearing properties");
-
+            _messageBoxService = messageBoxService;
 
             this.ShowMidi2Properties = false;
             this.ShowGroupTerminalBlocks = false;
-
-            System.Diagnostics.Debug.WriteLine("Finished clearing properties");
 
             CopyEndpointDeviceIdCommand = new RelayCommand(
             () =>
@@ -89,51 +142,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             SubmitEndpointCustomizationCommand = new RelayCommand(
             () =>
             {
-                // cache this here because the update event may trigger before we save to the config file
-                var updateConfig = CustomizationViewModel.GetUpdateConfig();
-
-               // System.Diagnostics.Debug.WriteLine("Config json before updating endpoint.");
-               // System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
-
-                var success = _endpointCustomizationService.UpdateEndpoint(
-                    updateConfig);
-
-             //   System.Diagnostics.Debug.WriteLine("Config json after updating endpoint.");
-             //   System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
-
-                if (success)
-                {
-                    if (_configFileService.CurrentConfig != null)
-                    {
-                        if (_configFileService.CurrentConfig.StoreEndpointCustomization(updateConfig))
-                        {
-                            //System.Diagnostics.Debug.WriteLine("Config json after successfully saving to config.");
-                            //System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
-
-
-                            // success
-                            // todo: update the properties again
-                        }
-                        else
-                        {
-                            //System.Diagnostics.Debug.WriteLine("Config json after FAILING to save to config.");
-                            //System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
-
-                            // todo: show error
-                            System.Diagnostics.Debug.WriteLine("Could not save to config file.");
-                        }
-                    }
-                    else
-                    {
-                        // could not save. No current config.
-                        System.Diagnostics.Debug.WriteLine("Could not save. No current config.");
-                    }
-                }
-                else
-                {
-                    // todo: show error
-                }
-
+                SubmitCustomizationChanges();
             });
 
         }

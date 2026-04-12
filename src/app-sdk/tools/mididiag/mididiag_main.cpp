@@ -323,6 +323,86 @@ void OutputCOMComponentInfo(std::string const dllNameFieldName, std::wstring con
     }
 }
 
+bool DoSectionDrivers32WOWRegistryEntries(_In_ bool const verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_REGISTRY_DRIVERS32WOW);
+
+    // list all MIDI values under Drivers32
+
+    try
+    {
+        std::wstring drivers32KeyLocation = std::wstring{ L"SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32" };
+        wil::unique_hkey drivers32Key{ };
+
+        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, drivers32KeyLocation.c_str(), drivers32Key, wil::reg::key_access::read)))
+        {
+            bool wdmaud2drvFound{ false };
+
+            for (const auto& valueData : wil::make_range(wil::reg::value_iterator{ drivers32Key.get() }, wil::reg::value_iterator{}))
+            {
+                //valueData.name;
+                //valueData.type;
+
+                if (valueData.name.starts_with(L"midi") && valueData.name != L"midimapper")
+                {
+                    auto val = wil::reg::try_get_value_string(drivers32Key.get(), valueData.name.c_str());
+
+                    if (val.has_value())
+                    {
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32WOW_ENTRY, valueData.name + L" = " + val.value());
+
+                        // this is added by something in the korg uninstall process. Possibly third-party, possibly korg.
+                        // it's an invalid value that is not picked up by WinMM
+                        if (valueData.name == L"midi0")
+                        {
+                            OutputError("The above \"midi0\" entry is invalid. It should be named \"midi\" to be recognized by AudioEndpointBuilder.");
+                        }
+                        else if (internal::ToLowerTrimmedWStringCopy(val.value()) == L"wdmaud2.drv")
+                        {
+                            wdmaud2drvFound = true;
+                        }
+                    }
+
+                }
+                else if (valueData.name == L"MidisrvTransferComplete")
+                {
+                    auto val = wil::reg::try_get_value_dword(drivers32Key.get(), valueData.name.c_str());
+
+                    if (val.has_value())
+                    {
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32WOW_ENTRY, valueData.name + L" = " + std::to_wstring(val.value()));
+                    }
+                }
+            }
+
+            if (!wdmaud2drvFound)
+            {
+                OutputError("No valid entry found with wdmaud2.drv listed in " + winrt::to_string(drivers32KeyLocation) + ".");
+                OutputError("Typically, this will be the \"midi1\" entry. Without this, WinMM apps will not see your MIDI 1.0 ports.");
+                OutputError("Run midifixreg.exe (installed with these tools) as Administrator to fix this.");
+            }
+        }
+        else
+        {
+            OutputStringField("ERROR", drivers32KeyLocation);
+            OutputError("Could not open Drivers32 Key");
+        }
+    }
+    catch (...)
+    {
+        OutputError("Exception enumerating registry keys and values.");
+
+        return false;
+    }
+
+
+    return true;
+
+}
+
+
 
 bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
 {
@@ -396,7 +476,7 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
         OutputError("Exception enumerating registry keys and values.");
 
         return false;
-}
+    }
 
 
     return true;
@@ -1449,6 +1529,8 @@ int __cdecl main()
         // some level of info available even if Windows MIDI Services is not installed
 
         DoSectionDrivers32RegistryEntries(verbose); // don't bail if fails
+
+        DoSectionDrivers32WOWRegistryEntries(verbose); // don't bail if fails
 
         DoSectionWinRTMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 

@@ -11,6 +11,8 @@
 #include "MidiMessageConverter.h"
 #include "Messages.MidiMessageConverter.g.cpp"
 
+#include "midi1_message_defs.h"
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
@@ -20,37 +22,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         uint8_t const statusByte
     ) noexcept
     {
-        uint32_t midiWord{ 0 };
-
-        midiWord = internal::MidiWordFromBytes(
-            (uint8_t)0x00,
-            statusByte,
-            0x00,
-            0x00
-        );
-
-
- //       auto statusNibble = (statusByte & 0xF0) >> 4;
-
-
-
-
-        // TODO: this is an assumption. We need to check the message type for system etc.
-
-
-        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
-
-        //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
-
-        // set the group
-        internal::SetGroupIndexInFirstWord(midiWord, group.Index());
-
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(midiWord);
-
-        return message;
-
+        return ConvertMidi1Message(timestamp, group, statusByte, 0, 0);
     }
 
     _Use_decl_annotations_
@@ -61,29 +33,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         uint8_t const dataByte1
     ) noexcept
     {
-        uint32_t midiWord{ 0 };
-
-        midiWord = internal::MidiWordFromBytes(
-            (uint8_t)0x00,
-            statusByte,
-            internal::CleanupByte7(dataByte1),
-            0x00
-        );
-
-        // TODO: this is an assumption. We need to check the message type for system etc.
-
-
-        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
-        //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
-
-        // set the group
-        internal::SetGroupIndexInFirstWord(midiWord, group.Index());
-
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(midiWord);
-
-        return message;
+        return ConvertMidi1Message(timestamp, group, statusByte, dataByte1, 0);
     }
 
     _Use_decl_annotations_
@@ -95,8 +45,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         uint8_t const dataByte2
     ) noexcept
     {
-        uint32_t midiWord{ 0 };
+        // we don't handle sysex here
+        if (MIDI_BYTE_IS_SYSEX_START_STATUS(statusByte) || MIDI_BYTE_IS_SYSEX_END_STATUS(statusByte))
+        {
+            return nullptr;
+        }
 
+
+        uint32_t midiWord{ 0 };
         midiWord = internal::MidiWordFromBytes(
             (uint8_t)0x00,
             statusByte,
@@ -104,12 +60,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
             internal::CleanupByte7(dataByte2)
         );
 
-        // TODO: this is an assumption. We need to check the message type for system etc.
-
-
-        //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff)
-
-        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
+        if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(statusByte))
+        {
+            // convert rt message
+            internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::SystemCommon32);
+        }
+        else if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(statusByte))
+        {
+            // convert cv message
+            internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
+        }
 
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, group.Index());
@@ -442,5 +402,130 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
         return message;
     }
+
+
+
+    _Use_decl_annotations_
+    collections::IVector<uint32_t> MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(
+        midi2::MidiGroup const& group,
+        collections::IIterable<uint8_t> const& midi1Bytes,
+        bool const allowRunningStatus
+    ) noexcept
+    {
+        bytestreamToUMP converter;
+
+        auto words = winrt::single_threaded_vector<uint32_t>();
+
+        converter.defaultGroup = group.Index();
+        converter.enableRunningStatus = allowRunningStatus;
+
+        auto it = midi1Bytes.First();
+        while (it.HasCurrent())
+        {
+            converter.bytestreamParse(it.Current());
+
+            while (converter.availableUMP())
+            {
+                words.Append(converter.readUMP());
+            }
+
+            it.MoveNext();
+        }
+
+        return words;
+    }
+
+
+    _Use_decl_annotations_
+    collections::IVector<uint8_t> MidiMessageConverter::ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(
+        _In_ collections::IIterable<uint32_t> const& umpWords
+    ) noexcept
+    {
+        umpToBytestream converter;
+
+        auto bytes = winrt::single_threaded_vector<uint8_t>();
+
+        auto it = umpWords.First();
+        while (it.HasCurrent())
+        {
+            converter.UMPStreamParse(it.Current());
+
+            while (converter.availableBS())
+            {
+                bytes.Append(converter.readBS());
+            }
+
+            it.MoveNext();
+        }
+
+        return bytes;
+    }
+
+
+
+    _Use_decl_annotations_
+    collections::IVector<uint8_t> MidiMessageConverter::ConvertHexByteStringToByteArray(
+        _In_ winrt::hstring const& hexByteString
+    ) noexcept
+    {
+        try
+        {
+            auto bytes = winrt::single_threaded_vector<uint8_t>();
+
+            std::wstring s { hexByteString };
+
+            std::wstring currentByte{};
+
+            auto it = s.begin();
+
+            while (it != s.end())
+            {
+                if (std::isxdigit(*it))
+                {
+                    currentByte.push_back(*it);
+                }
+                else if (!currentByte.empty())
+                {
+                    // not a hex digit, so treat as a delimiter. 
+                    // we already have some data started, so 
+                    // commit it
+
+                    bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
+                    currentByte.clear();
+                }
+
+                if (currentByte.size() == 2)
+                {
+                    bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
+                    currentByte.clear();
+                }
+
+                it++;
+            }
+
+            // ensure the last digit is captured
+            if (!currentByte.empty())
+            {
+                bytes.Append(static_cast<uint8_t>(std::stoi(currentByte, nullptr, 16)));
+            }
+
+            return bytes;
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception attempting to convert string to bytes", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            return nullptr;
+        }
+
+    }
+
 
 }

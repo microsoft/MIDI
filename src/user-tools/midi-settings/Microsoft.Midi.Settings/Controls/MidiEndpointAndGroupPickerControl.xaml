@@ -24,7 +24,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -32,7 +32,7 @@
                   Grid.Column="0"
                   Margin="0,0,13,0"
                   HorizontalAlignment="Stretch"
-                  Header="Endpoint"
+                  Header="Device / Endpoint"
                   ItemsSource="{x:Bind Endpoints, Mode=OneWay}"
                   SelectedItem="{x:Bind SelectedEndpoint, Mode=TwoWay}"
                   >
@@ -47,7 +47,7 @@
                   Grid.Column="1"
                   Margin="0,0,13,0"
                   HorizontalAlignment="Stretch"
-                  Header="Group"
+                  Header="MIDI 2 Group or MIDI 1 Port"
                   IsEnabled="True"
                   ItemsSource="{x:Bind Groups, Mode=OneWay}"
                   SelectedItem="{x:Bind SelectedGroup, Mode=TwoWay}"

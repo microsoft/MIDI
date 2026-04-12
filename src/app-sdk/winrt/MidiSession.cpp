@@ -292,9 +292,25 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             m_mmcssTaskId = 0;
             
         }
+        catch(winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception on close", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "exception")
+                );
+
+        }
         catch (...)
         {
-            LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),

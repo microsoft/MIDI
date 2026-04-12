@@ -104,21 +104,15 @@ namespace Microsoft.Midi.Settings.Views
         }
 
 
-        //public void OnNavigatedFrom()
-        //{
-        //}
 
-        //public void OnNavigatedTo(object parameter)
-        //{
-        //    if (parameter != null && ((string)parameter).ToLower() == "create")
-        //    {
-        //        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
-        //        {
-        //            var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
-        //        });
-        //    }
-        //}
 
+        //private void foo()
+        //{
+        //    ContentDialog dialog;
+        //    dialog.Text(L"Hello MessageDialog");
+        //    dialog.XamlRoot(Content().XamlRoot() /* Assuming that you're showing from the window */);
+        //    dialog.ShowAsync();
+        //}
 
 
     }

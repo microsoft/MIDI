@@ -10,8 +10,6 @@
 #include "MidiSystemExclusiveSender.h"
 #include "Utilities.SysExTransfer.MidiSystemExclusiveSender.g.cpp"
 
-#include <bytestreamToUMP.h>
-
 #define DEFAULT_MESSAGE_SPACING_MILLISECONDS 2
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysExTransfer::implementation

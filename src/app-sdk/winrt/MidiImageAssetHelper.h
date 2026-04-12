@@ -26,6 +26,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
 
         static winrt::hstring GetDefaultImageFullPathForEndpoint(
             _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
+
+
+        static bool EndpointHasValidCustomImageAsset(
+            _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
+
+        static winrt::hstring GetFullCustomImageAssetPathForEndpointImage(
+            _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::factory_implementation

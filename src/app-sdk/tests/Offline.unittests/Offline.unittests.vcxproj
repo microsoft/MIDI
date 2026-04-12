@@ -20,7 +20,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.16-rc.3.7</WindowsMidiServicesSdkPackage>
+    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.17-rc.4.24</WindowsMidiServicesSdkPackage>
     <VCProjectVersion>17.0</VCProjectVersion>
     <ProjectGuid>{BCAE6353-5F32-4AE8-9949-039A2BC2C8C6}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -161,6 +161,7 @@
     <ClCompile Include="MidiMessage64Tests.cpp" />
     <ClCompile Include="MidiMessage96Tests.cpp" />
     <ClCompile Include="MidiMessageBuilderTests.cpp" />
+    <ClCompile Include="MidiMessageConverterTests.cpp" />
     <ClCompile Include="MidiMessagePacketTests.cpp" />
     <ClCompile Include="MidiStreamMessageBuilderTests.cpp" />
     <ClCompile Include="MidiUniqueIdTests.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="MidiMessage64Tests.h" />
     <ClInclude Include="MidiMessage96Tests.h" />
     <ClInclude Include="MidiMessageBuilderTests.h" />
+    <ClInclude Include="MidiMessageConverterTests.h" />
     <ClInclude Include="MidiMessagePacketTests.h" />
     <ClInclude Include="MidiStreamMessageBuilderTests.h" />
     <ClInclude Include="MidiUniqueIdTests.h" />

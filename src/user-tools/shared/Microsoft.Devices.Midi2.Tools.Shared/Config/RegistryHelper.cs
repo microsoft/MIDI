@@ -34,32 +34,67 @@ namespace Microsoft.Devices.Midi2.Tools.Shared.Config
 
         public static string? GetCurrentConfigFileName()
         {
-            var wmsRegKey = GetWindowsMidiServicesBaseRegKey();
-
-            if (wmsRegKey != null)
+            try
             {
-                var value = wmsRegKey.GetValue("CurrentConfig");
+                var wmsRegKey = GetWindowsMidiServicesBaseRegKey();
 
-                if (value != null && value.ToString() != string.Empty)
+                if (wmsRegKey != null)
                 {
-                    var fileName = value!.ToString()!;
+                    var value = wmsRegKey.GetValue("CurrentConfig");
 
-                    if (fileName.Contains('\\') || fileName.Contains('/') || fileName.Contains(':') || fileName.Contains('%'))
+                    if (value != null && value.ToString() != string.Empty)
                     {
-                        // invalid entry. We only support storing the file name, not the path
+                        var fileName = value!.ToString()!;
 
-                        return null;
-                    }
-                    else
-                    {
-                        return fileName;
+                        if (fileName.Contains('\\') || fileName.Contains('/') || fileName.Contains(':') || fileName.Contains('%'))
+                        {
+                            // invalid entry. We only support storing the file name, not the path
+
+                            return null;
+                        }
+                        else
+                        {
+                            return fileName;
+                        }
                     }
                 }
+            }
+            catch (Exception)
+            {
             }
 
             return null;
 
         }
+
+        public static string? GetImplementationPathForComClass(Guid clsid)
+        {
+            try
+            {
+                var root = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64);
+
+                if (root != null)
+                {
+                    var loc = root.OpenSubKey($@"CLSID\{clsid.ToString("B")}\InProcServer32");
+
+                    if (loc != null)
+                    {
+                        var path = loc.GetValue(null);
+
+                        if (path != null)
+                        {
+                            return (string)path;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return null;
+        }
+
 
 
     }

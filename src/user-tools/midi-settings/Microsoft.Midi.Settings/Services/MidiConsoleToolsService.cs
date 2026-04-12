@@ -179,4 +179,26 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
         }
     }
 
+    public bool OpenExplorerWithFile(string filePath)
+    {
+        try
+        {
+            string arguments = $"/select,\"{filePath}\"";
+
+            var consoleProcess = new System.Diagnostics.Process();
+
+            consoleProcess.StartInfo.FileName = "explorer.exe";
+            consoleProcess.StartInfo.Arguments = arguments;
+            consoleProcess.StartInfo.UseShellExecute = true;
+
+            return consoleProcess.Start();
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Error restarting MIDI service", ex);
+
+            return false;
+        }
+    }
+
 }

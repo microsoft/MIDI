@@ -141,5 +141,22 @@ namespace Microsoft.Windows.Devices.Midi2.Messages
             Microsoft.Windows.Devices.Midi2.MidiGroup group,
             Windows.Devices.Midi.MidiSystemResetMessage originalMessage
         );
+
+
+        static IVector<UInt32> ConvertMidi1CompleteMessageBytesToUmpWords(
+            Microsoft.Windows.Devices.Midi2.MidiGroup group,
+            IIterable<UInt8> midi1Bytes,
+            Boolean allowRunningStatus
+        );
+
+        static IVector<UInt8> ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(
+            IIterable<UInt32> umpWords
+        );
+
+        static IVector<UInt8> ConvertHexByteStringToByteArray(
+            String hexByteString
+        );
+
+
     };
 }

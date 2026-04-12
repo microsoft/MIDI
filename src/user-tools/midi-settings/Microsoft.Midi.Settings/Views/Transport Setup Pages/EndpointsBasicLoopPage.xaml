@@ -85,9 +85,10 @@
                                                     VerticalAlignment="Center"
                                                     Grid.Column="1">
                                                 <TextBlock Text="{x:Bind Loop.Name}" 
-                                                       Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                           IsTextSelectionEnabled="True"
+                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
                                                 <TextBlock Text="{x:Bind Loop.Description}" 
-                                                       Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                           Style="{StaticResource SmallPlainPropertyValue}"/>
                                             </StackPanel>
 
 
@@ -106,6 +107,7 @@
 
                                         <TextBlock Grid.Row="0" 
                                                    Text="{x:Bind Loop.Id}" 
+                                                   IsTextSelectionEnabled="True"
                                                    Style="{StaticResource SmallPlainPropertyValue}"/>
 
                                         <StackPanel Grid.Row="1" 

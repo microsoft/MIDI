@@ -42,5 +42,23 @@ namespace Microsoft.Midi.Settings.Views
             ViewModel = App.GetService<ToolsTestViewModel>();
             InitializeComponent();
         }
+
+
+
+        private void HexTextBox_BeforeTextChanging(TextBox sender, TextBoxBeforeTextChangingEventArgs args)
+        {
+            foreach (char c in args.NewText)
+            {
+                // allow ascii hex digita and space
+                if (!char.IsAsciiHexDigit(c) && c != ' ')
+                {
+                    args.Cancel = true; // Reject the change
+                    break;
+                }
+            }
+        }
+
+
+
     }
 }

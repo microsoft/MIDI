@@ -68,6 +68,12 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public ICommand CommonTaskCreateBasicLoopbackEndpointsCommand
+        {
+            get; private set;
+        }
+        
+
         public ICommand CommonTaskSendSysExCommand
         {
             get; private set;
@@ -150,6 +156,9 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         [ObservableProperty]
         private bool isNetworkMidi2Available;
+
+        [ObservableProperty]
+        private bool isBasicLoopbackTransportAvailable;
 
         public string CurrentConfigurationName
         {
@@ -348,6 +357,12 @@ namespace Microsoft.Midi.Settings.ViewModels
                     _navigationService.NavigateTo(typeof(EndpointsLoopViewModel).FullName!, "create");
                 });
 
+            CommonTaskCreateBasicLoopbackEndpointsCommand = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(EndpointsBasicLoopViewModel).FullName!, "create");
+                });
+
             CommonTaskSendSysExCommand = new RelayCommand(
                 () =>
                 {
@@ -376,7 +391,8 @@ namespace Microsoft.Midi.Settings.ViewModels
                 CheckForSdkUpdates();
             }
 
-            IsNetworkMidi2Available = _transportInfoService.IsTransportAvailable("NET2UDP");
+            IsNetworkMidi2Available = _transportInfoService.IsTransportAvailable("NET2UDP") && IsValidConfigLoaded;
+            IsBasicLoopbackTransportAvailable = _transportInfoService.IsTransportAvailable("BLOOP") && IsValidConfigLoaded;
 
             //LaunchNewSdkVersionUpdateCommand = new RelayCommand(
             //    () => 

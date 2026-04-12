@@ -405,6 +405,33 @@
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
 
+                <!--<NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsTestViewModel"
+                                    Visibility="{x:Bind ViewModel.ShowToolsTestInLeftNav, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-SysEx.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_ToolsTest" />
+
+                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>-->
+
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsScratchPadViewModel"
+                                    Visibility="{x:Bind ViewModel.ShowToolsScratchPadInLeftNav, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-Midi1ScratchPad.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_ToolsScratchPad" />
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>                
                 <!--<NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WindowsSettingsViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
@@ -471,14 +498,15 @@
                         <ImageIcon Source="/Assets/LeftNav-Transports.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <!--
-                <NavigationViewItem x:Uid="Shell_PluginsProcessing" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsProcessingViewModel">
+
+                <NavigationViewItem x:Uid="Shell_PluginsProcessing" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsProcessingViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe912;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <!-- Temp Icon -->
+                        <ImageIcon Source="/Assets/LeftNav-Transports.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                -->
-
 
 
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>

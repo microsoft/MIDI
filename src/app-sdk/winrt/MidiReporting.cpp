@@ -23,74 +23,88 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
             winrt::com_ptr<IMidiServicePluginMetadataReporter> metadataReporter;
 
             serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
+            if (serviceTransport == nullptr)
+            {
+                return transportList;
+            }
 
-            if (serviceTransport != nullptr)
+            if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiServicePluginMetadataReporter), (void**)&metadataReporter)))
             {
 
+                LPWSTR rpcCallJson{ nullptr };
+                auto callStatus = metadataReporter->GetTransportList(&rpcCallJson);
 
-                if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiServicePluginMetadataReporter), (void**)&metadataReporter)))
+                if (SUCCEEDED(callStatus) && rpcCallJson != nullptr && wcslen(rpcCallJson) > 0)
                 {
+                    winrt::hstring metadataListJsonString(rpcCallJson);
 
-                    LPWSTR rpcCallJson{ nullptr };
-                    auto callStatus = metadataReporter->GetTransportList(&rpcCallJson);
+                    // parse it into json objects
 
-                    if (SUCCEEDED(callStatus) && rpcCallJson != nullptr && wcslen(rpcCallJson) > 0)
+                    if (metadataListJsonString.size() > 0)
                     {
-                        winrt::hstring metadataListJsonString(rpcCallJson);
+                        // Parse the json, create the objects, throw them into the vector and return
 
-                        // parse it into json objects
+                        json::JsonObject jsonObject = json::JsonObject::Parse(metadataListJsonString);
 
-                        if (metadataListJsonString.size() > 0)
+                        if (jsonObject != nullptr)
                         {
-                            // Parse the json, create the objects, throw them into the vector and return
-
-                            json::JsonObject jsonObject = json::JsonObject::Parse(metadataListJsonString);
-
-                            if (jsonObject != nullptr)
+                            for (auto const& transportKV : jsonObject)
                             {
-                                for (auto const& transportKV : jsonObject)
-                                {
-                                    rept::MidiServiceTransportPluginInfo info;
+                                rept::MidiServiceTransportPluginInfo info;
 
-                                    auto transport = transportKV.Value().GetObject();
+                                auto transport = transportKV.Value().GetObject();
 
-                                    info.Id = internal::StringToGuid(transportKV.Key().c_str());
-                                    info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
-                                    info.TransportCode = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L"");
-                                    info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
-                                    info.ImageFileName = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IMAGE_FILENAME_PROPERTY_KEY, L"");
-                                    info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
-                                    info.Version = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY, L"");
-                                    info.IsSystemManaged = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false);
-                                    info.IsRuntimeCreatableByApps = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false);
-                                    info.IsRuntimeCreatableBySettings = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false);
-                                    info.CanConfigure = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false);
+                                info.Id = internal::StringToGuid(transportKV.Key().c_str());
+                                info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
+                                info.TransportCode = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L"");
+                                info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
+                                info.ImageFileName = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IMAGE_FILENAME_PROPERTY_KEY, L"");
+                                info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
+                                info.Version = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY, L"");
+                                info.IsSystemManaged = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false);
+                                info.IsRuntimeCreatableByApps = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false);
+                                info.IsRuntimeCreatableBySettings = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false);
+                                info.CanConfigure = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false);
 
-                                    //transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, L"");
+                                //transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, L"");
 
-                                    transportList.Append(std::move(info));
-                                }
+                                transportList.Append(std::move(info));
                             }
                         }
-
-                        SAFE_COTASKMEMFREE(rpcCallJson);
                     }
-                    else
-                    {
-                        LOG_IF_FAILED(callStatus);
 
-                        TraceLoggingWrite(
-                            Midi2SdkTelemetryProvider::Provider(),
-                            MIDI_SDK_TRACE_EVENT_ERROR,
-                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                            TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                            TraceLoggingWideString(L"Failed to call service function.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                            TraceLoggingHResult(callStatus, "hresult")
-                        );
-                    }
+                    SAFE_COTASKMEMFREE(rpcCallJson);
+                }
+                else
+                {
+                    LOG_IF_FAILED(callStatus);
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Failed to call service function.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingHResult(callStatus, MIDI_SDK_TRACE_HRESULT_FIELD)
+                    );
                 }
             }
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception processing transport plugin list result json", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "exception")
+            );
         }
         catch (...)
         {
@@ -102,24 +116,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception processing session tracker result json", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Exception processing transport plugin list result json", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
         }
 
         return transportList;
     }
-
-
-    //foundation::Collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> MidiReporting::GetInstalledMessageProcessingPlugins()
-    //{
-
-    //    // TODO: Need to implement GetInstalledMessageProcessingPlugins. For now, return an empty collection instead of throwing
-
-    //    // This can be read from the registry, but the additional metadata requires calling into the objects themselves
-
-    //    return winrt::single_threaded_vector<rept::MidiServiceMessageProcessingPluginInfo>();
-    //}
-
 
     foundation::Collections::IVector<rept::MidiServiceSessionInfo> MidiReporting::GetActiveSessions()
     {
@@ -235,6 +237,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
             }
 
 
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception processing session tracker result json", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "exception")
+            );
         }
         catch (...)
         {

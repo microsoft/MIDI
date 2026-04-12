@@ -130,10 +130,10 @@
     <value>ContentGrid</value>
   </data>
   <data name="Shell_PluginsNavHeader.Content" xml:space="preserve">
-    <value>Plugins</value>
+    <value>Service Plugins</value>
   </data>
   <data name="Shell_PluginsProcessing.Content" xml:space="preserve">
-    <value>Processing &amp; Filtering</value>
+    <value>Processing &amp; Filtering Plugins</value>
   </data>
   <data name="Shell_Configurations.Content" xml:space="preserve">
     <value>Configurations</value>
@@ -159,8 +159,11 @@
   <data name="Shell_ToolsConsole.Content" xml:space="preserve">
     <value>Console</value>
   </data>
-  <data name="Shell_ToolsTest.Content" xml:space="preserve">
-    <value>Device Test</value>
+  <data name="Shell_ToolsTest.Text" xml:space="preserve">
+    <value>Test Messages</value>
+  </data>
+  <data name="Shell_ToolsScratchPad.Text" xml:space="preserve">
+    <value>MIDI 1.0 Scratchpad</value>
   </data>
   <data name="Shell_ForDevelopers.Content" xml:space="preserve">
     <value>Developers</value>
@@ -190,7 +193,7 @@
     <value>https://privacy.microsoft.com/privacystatement</value>
   </data>
   <data name="Shell_PluginsTransport.Content" xml:space="preserve">
-    <value>Transports</value>
+    <value>Transport Plugins</value>
   </data>
   <data name="Shell_MoreNavHeader.Content" xml:space="preserve">
     <value>More</value>
@@ -278,6 +281,9 @@
   </data>
   <data name="AppSessionName" xml:space="preserve">
     <value>MIDI Settings</value>
+  </data>
+  <data name="PluginsProcessingPage_Description.Text" xml:space="preserve">
+    <value>This page lists the full set of processing/transform plugins installed and recognized by Windows MIDI Services on this PC.</value>
   </data>
   <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
     <value>This page lists the full set of transport plugins installed and recognized by Windows MIDI Services on this PC. For information on the endpoint devices enumerated by these transport plugins, see the Devices page.</value>
@@ -382,7 +388,7 @@
     <value>Set a USB MIDI 1.0 device to use the new fast UMP MIDI 2.0 driver (requires Administrator account)</value>
   </data>
   <data name="CommonTasks_CreateLoopbackEndpoints.Text" xml:space="preserve">
-    <value>Create a loopback endpoint so two or more applications can communicate using MIDI messages</value>
+    <value>Create a MIDI2.0 loopback endpoint so two or more applications can communicate using MIDI messages</value>
   </data>
   <data name="CommonTasks_SendSysExFile.Text" xml:space="preserve">
     <value>Send a file of System Exclusive data (patches, firmware, etc.) to an endpoint</value>
@@ -778,7 +784,9 @@ This change will require a MIDI Service restart before it will take effect.</val
     <value>Enable preview tools like the System Exclusive message sender. These tools are not yet stable and may have bugs or incomplete functionality. Requires restarting this app to see the changes.</value>
   </data>
   <data name="EndpointPersonalizationUniqueIdInfoBar.Message" xml:space="preserve">
-    <value>This MIDI device does not report a serial number or unique identifier. As a result, the customizations may not stay applied if you change how the device is connected to this PC (different USB port, or hub, for example). If you have more than one of these devices, and connect them at different times, Windows may not know which one to apply the personalization to.</value>
+    <value>This MIDI device does not report a serial number or unique identifier. As a result, the customizations may not stay applied if you change how the device is connected to this PC (different USB port, or hub, for example), or you upgrade Windows versions. 
+
+If you have more than one of these devices, and connect them at different times, Windows may not know which one to apply the personalization to.</value>
   </data>
   <data name="EndpointPersonalizationUniqueIdInfoBar.Title" xml:space="preserve">
     <value>Personalization may not be permanent</value>
@@ -812,12 +820,141 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
     <value>Default basic MIDI 1.0 loopback endpoint for use by applications.</value>
   </data>
   <data name="Shell_EndpointsBasicLoop.Content" xml:space="preserve">
-    <value>MIDI 1.0 Loopback Endpoints</value>
+    <value>MIDI 1.0 Basic Loopback Endpoints</value>
   </data>
   <data name="Message_SettingsAppWillNowRestart" xml:space="preserve">
     <value>The MIDI Settings app will now restart.</value>
   </data>
   <data name="Error_SettingsAppCouldNotAutomaticallyRestart" xml:space="preserve">
     <value>The MIDI Settings app could not automatically close and restart. Please close the application and then relaunch it.</value>
+  </data>
+  <data name="Message_ServiceSetToAutoStart" xml:space="preserve">
+    <value>The Windows MIDI Service has been set to auto-start on boot.</value>
+  </data>
+  <data name="Error_ServiceNotSetToAutoStart" xml:space="preserve">
+    <value>Error: Unable to set the service to auto-start. You can still do this manually in the Services app.</value>
+  </data>
+  <data name="Error_UnableToChangeDefaultNamingStyle" xml:space="preserve">
+    <value>Error: Unable to change the default naming style.</value>
+  </data>
+  <data name="Error_CouldNotSaveEndpointCustomizationToConfig" xml:space="preserve">
+    <value>Could not save MIDI endpoint customization to configuration file.</value>
+  </data>
+  <data name="Error_CouldNotSaveEndpointCustomizationToConfigMissingConfig" xml:space="preserve">
+    <value>Could not save endpoint customization because configuration file is missing.</value>
+  </data>
+  <data name="Error_ServiceReportsFailureCreatingDefaultLoopback" xml:space="preserve">
+    <value>Service reports failure creating default loopback.</value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackEndpoint" xml:space="preserve">
+    <value>Unable to create loopback endpoint</value>
+  </data>
+  <data name="Error_ValidationLoopbackNameMustBeUnique" xml:space="preserve">
+    <value>The loopback endpoint name must be unique across all MIDI endpoint names.</value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackWithMessage" xml:space="preserve">
+    <value>Unable to create loopback endpoint. Message from MIDI service: </value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackEndpointMissingConfigurationFile" xml:space="preserve">
+    <value>Unable to create loopback endpoint. Missing or invalid MIDI configuration file</value>
+  </data>
+  <data name="Error_UnableToUpdateRegistryConfigFileName" xml:space="preserve">
+    <value>Unable to update registry config file name.</value>
+  </data>
+  <data name="Error_ValidationLoopbackBothNamesAreRequired" xml:space="preserve">
+    <value>Both endpoint names are required. Please provide a base name, or specify individual names</value>
+  </data>
+  <data name="Error_ValidationUniqueIdentifierRequired" xml:space="preserve">
+    <value>Unique identifier is required.</value>
+  </data>
+  <data name="Error_ValidationLoopbackUniqueIdAlreadyInUse" xml:space="preserve">
+    <value>Unique identifier is already in use with another loopback endpoint.</value>
+  </data>
+  <data name="Error_UnableToRestartMidiService" xml:space="preserve">
+    <value>Unable to restart MIDI service.</value>
+  </data>
+  <data name="Error_UnableToOpenMidiDiag" xml:space="preserve">
+    <value>Unable to open mididiag tool to capture diagnostic information. You may want to reinstall the SDK Runtime and Tools.</value>
+  </data>
+  <data name="Error_UnableToRemoveLoopbackFromService" xml:space="preserve">
+    <value>Unable to remove loopback endpoint from service.</value>
+  </data>
+  <data name="Error_UnableToRemoveLoopbackFromConfigurationFile" xml:space="preserve">
+    <value>Unable to remove loopback endpoint from configuration file.</value>
+  </data>
+  <data name="Error_UnableToFindAssociationId" xml:space="preserve">
+    <value>Unable to find the association id.</value>
+  </data>
+  <data name="Error_ValidationLoopbackNameRequired" xml:space="preserve">
+    <value>Endpoint name is required.</value>
+  </data>
+  <data name="CommonTasks_CreateBasicLoopbackEndpoints.Text" xml:space="preserve">
+    <value>Create a basic MIDI 1.0 loopback endpoint (similar to loopMIDI and loopBE) so apps can communicate with each other.</value>
+  </data>
+  <data name="Error_UnableToOpenMidiFixReg" xml:space="preserve">
+    <value>Unable to run the midifixreg.exe utility.</value>
+  </data>
+  <data name="Message_RegistryRepairedPleaseRestartAllMIDIApps" xml:space="preserve">
+    <value>The registry has been repaired. Please reboot your PC or restart all MIDI apps and related services (NI, rtpMIDI, etc.)</value>
+  </data>
+  <data name="Error_UnableToRestoreInBoxComponentRegistrations" xml:space="preserve">
+    <value>Unable to restore in-box component registrations.</value>
+  </data>
+  <data name="Message_QuestionContinueRemovingLoopbackEndpoint" xml:space="preserve">
+    <value>You will likely need to restart any apps using MIDI 1.0 due to how port numbers get rearranged after a delete. Do you wish to continue removing this loopback endpoint?</value>
+  </data>
+  <data name="Error_UnableToCaptureMidiLogsToFile" xml:space="preserve">
+    <value>Unable to capture MIDI logs to file.</value>
+  </data>
+  <data name="TroubleshootingSection_WorkingWithSupport.Text" xml:space="preserve">
+    <value>If you're working with support</value>
+  </data>
+  <data name="TroubleshootingSection_RepairRegistry.Text" xml:space="preserve">
+    <value>If a driver uninstaller or other utility has made it so apps can't see MIDI devices</value>
+  </data>
+  <data name="TroubleshootingSection_UnknownIssue.Text" xml:space="preserve">
+    <value>If you have an unknown issue</value>
+  </data>
+  <data name="TroubleshootingButton_CaptureMidiSystemInfo.Content" xml:space="preserve">
+    <value>Capture MIDI system information</value>
+  </data>
+  <data name="TroubleshootingButton_CaptureMidiLogs.Content" xml:space="preserve">
+    <value>Capture MIDI Activity Logs</value>
+  </data>
+  <data name="TroubleshootingButton_RepairRegistry.Content" xml:space="preserve">
+    <value>Repair Registry Entries</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_ReportMidiSystemInfo.Header" xml:space="preserve">
+    <value>Report MIDI System Information</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_ReportMidiSystemInfo.Description" xml:space="preserve">
+    <value>If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact.</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_CaptureMidiLogs.Header" xml:space="preserve">
+    <value>Capture MIDI Activity Logs</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_CaptureMidiLogs.Description" xml:space="preserve">
+    <value>If you need to capture MIDI activity while recreating a problem to help support diagnose the issue, then use this tool to create an activity capture (ETL trace) and system information you can upload to a sharing service.</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_RestartMidisrv.Description" xml:space="preserve">
+    <value>Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_RestartMidisrv.Header" xml:space="preserve">
+    <value>Restart Windows MIDI Services</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_RepairRegistry.Description" xml:space="preserve">
+    <value>If you have uninstalled KORG or other drivers and MIDI is no longer working, you can run the tools here to repair the registry. The current values for both important registry locations, and any errors, are indicated below.</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_RepairRegistry.Header" xml:space="preserve">
+    <value>Fix registry entries</value>
+  </data>
+  <data name="TroubleshootingButton_RestartMidisrv.Content" xml:space="preserve">
+    <value>Restart MIDI Service</value>
+  </data>
+  <data name="TroubleshootingMainHeader.Text" xml:space="preserve">
+    <value>If you are running into problems with MIDI on your PC, the tools below may help you recover without requiring a reboot.</value>
+  </data>
+  <data name="Error_UnableToLaunchRegedit" xml:space="preserve">
+    <value>Unable to launch regedit</value>
   </data>
 </root>
