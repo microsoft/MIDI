@@ -43,16 +43,16 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            
-                            <TextBlock Text="Windows Version"
+
+                            <TextBlock x:Uid="TroubleshootingLabel_WindowsVersion"
                                        Style="{StaticResource SmallPropertyLabel}"
                                        Grid.Column="0"
                                        Grid.Row="0"/>
-                            <TextBlock Text="Architecture"
+                            <TextBlock x:Uid="TroubleshootingLabel_WindowsArchitecture"
                                        Style="{StaticResource SmallPropertyLabel}"
                                        Grid.Column="0"
                                        Grid.Row="1"/>
-                            <TextBlock Text="Windows Culture Info"
+                            <TextBlock x:Uid="TroubleshootingLabel_WindowsCultureInfo"
                                        Style="{StaticResource SmallPropertyLabel}"
                                        Grid.Column="0"
                                        Grid.Row="2"/>
@@ -74,15 +74,15 @@
                                        Grid.Row="2"/>
 
 
-                            <TextBlock Text="Windows App SDK Version"
+                            <TextBlock x:Uid="TroubleshootingLabel_WindowsAppSdkVersion"
                                        Style="{StaticResource SmallPropertyLabel}"
                                        Grid.Column="2"
                                        Grid.Row="0"/>
-                            <TextBlock Text=".NET Runtime Version"
+                            <TextBlock x:Uid="TroubleshootingLabel_DotNetRuntimeVersion"
                                        Style="{StaticResource SmallPropertyLabel}"
                                        Grid.Column="2"
                                        Grid.Row="1"/>
-                            <TextBlock Text="MIDI SDK Version"
+                            <TextBlock x:Uid="TroubleshootingLabel_MidiSdkVersion"
                                        Style="{StaticResource SmallPropertyLabel}"
                                        Grid.Column="2"
                                        Grid.Row="2"/>

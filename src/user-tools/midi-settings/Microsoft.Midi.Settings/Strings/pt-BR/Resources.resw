@@ -827,4 +827,85 @@ Se esse for o caso, abra um prompt de comando como Administrador, digite midifix
   <data name="Error_SettingsAppCouldNotAutomaticallyRestart" xml:space="preserve">
     <value>O aplicativo MIDI Settings não pôde fechar e reiniciar automaticamente. Por favor, feche o aplicativo e reabra-o.</value>
   </data>
+  <data name="Message_ServiceSetToAutoStart" xml:space="preserve">
+    <value>O Serviço MIDI do Windows foi configurado para iniciar automaticamente na inicialização.</value>
+  </data>
+  <data name="Error_ServiceNotSetToAutoStart" xml:space="preserve">
+    <value>Erro: Não foi possível configurar o serviço para iniciar automaticamente. Você ainda pode fazer isso manualmente no aplicativo Serviços.</value>
+  </data>
+  <data name="Error_UnableToChangeDefaultNamingStyle" xml:space="preserve">
+    <value>Erro: Não foi possível alterar o estilo de nomenclatura padrão.</value>
+  </data>
+  <data name="Error_CouldNotSaveEndpointCustomizationToConfig" xml:space="preserve">
+    <value>Não foi possível salvar a personalização do endpoint MIDI no arquivo de configuração.</value>
+  </data>
+  <data name="Error_CouldNotSaveEndpointCustomizationToConfigMissingConfig" xml:space="preserve">
+    <value>Não foi possível salvar a personalização do endpoint porque o arquivo de configuração está ausente.</value>
+  </data>
+  <data name="Error_ServiceReportsFailureCreatingDefaultLoopback" xml:space="preserve">
+    <value>O serviço relata falha ao criar o loopback padrão.</value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackEndpoint" xml:space="preserve">
+    <value>Não é possível criar o endpoint de loopback</value>
+  </data>
+  <data name="Error_ValidationLoopbackNameMustBeUnique" xml:space="preserve">
+    <value>O nome do endpoint de loopback deve ser único entre todos os nomes de endpoint MIDI.</value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackWithMessage" xml:space="preserve">
+    <value>Não foi possível criar o endpoint de loopback. Mensagem do serviço MIDI:</value>
+  </data>
+  <data name="Error_UnableToCreateLoopbackEndpointMissingConfigurationFile" xml:space="preserve">
+    <value>Não foi possível criar o ponto de extremidade de loopback. Arquivo de configuração MIDI ausente ou inválido</value>
+  </data>
+  <data name="Error_UnableToUpdateRegistryConfigFileName" xml:space="preserve">
+    <value>Não foi possível atualizar o nome do arquivo de configuração do registro.</value>
+  </data>
+  <data name="Error_ValidationLoopbackBothNamesAreRequired" xml:space="preserve">
+    <value>Ambos os nomes de endpoint são obrigatórios. Por favor, forneça um nome base ou especifique nomes individuais</value>
+  </data>
+  <data name="Error_ValidationUniqueIdentifierRequired" xml:space="preserve">
+    <value>Identificador único é obrigatório.</value>
+  </data>
+  <data name="Error_ValidationLoopbackUniqueIdAlreadyInUse" xml:space="preserve">
+    <value>O identificador único já está em uso com outro ponto de extremidade de loopback.</value>
+  </data>
+  <data name="Error_UnableToRestartMidiService" xml:space="preserve">
+    <value>Incapaz de reiniciar o serviço MIDI.</value>
+  </data>
+  <data name="Error_UnableToOpenMidiDiag" xml:space="preserve">
+    <value>Não foi possível abrir a ferramenta mididiag para capturar informações de diagnóstico. Você pode querer reinstalar o Runtime e as Ferramentas do SDK.</value>
+  </data>
+  <data name="Error_UnableToRemoveLoopbackFromService" xml:space="preserve">
+    <value>Não foi possível remover o endpoint de loopback do serviço.</value>
+  </data>
+  <data name="Error_UnableToRemoveLoopbackFromConfigurationFile" xml:space="preserve">
+    <value>Não foi possível remover o endpoint de loopback do arquivo de configuração.</value>
+  </data>
+  <data name="Error_UnableToFindAssociationId" xml:space="preserve">
+    <value>Não foi possível encontrar o id da associação.</value>
+  </data>
+  <data name="Error_ValidationLoopbackNameRequired" xml:space="preserve">
+    <value>O nome do endpoint é obrigatório.</value>
+  </data>
+  <data name="CommonTasks_CreateBasicLoopbackEndpoints.Text" xml:space="preserve">
+    <value>Crie um endpoint de loopback MIDI 1.0 básico (semelhante ao loopMIDI e loopBE) para que os aplicativos possam se comunicar entre si.</value>
+  </data>
+  <data name="Error_UnableToOpenMidiFixReg" xml:space="preserve">
+    <value>Não foi possível executar o utilitário midifixreg.exe.</value>
+  </data>
+  <data name="Message_RegistryRepairedPleaseRestartAllMIDIApps" xml:space="preserve">
+    <value>O registro foi reparado. Por favor, reinicie seu PC ou reinicie todos os aplicativos MIDI e serviços relacionados (NI, rtpMIDI, etc.)</value>
+  </data>
+  <data name="Error_UnableToRestoreInBoxComponentRegistrations" xml:space="preserve">
+    <value>Não foi possível restaurar os registros de componentes padrão.</value>
+  </data>
+  <data name="Message_QuestionContinueRemovingLoopbackEndpoint" xml:space="preserve">
+    <value>Você provavelmente precisará reiniciar quaisquer aplicativos que estejam usando MIDI 1.0 devido a como os números das portas são rearranjados após uma exclusão. Você deseja continuar removendo este endpoint de loopback?</value>
+  </data>
+  <data name="Error_UnableToCaptureMidiLogsToFile" xml:space="preserve">
+    <value>Não foi possível capturar os registros MIDI para arquivo.</value>
+  </data>
+  <data name="Error_UnableToLaunchRegedit" xml:space="preserve">
+    <value>Não foi possível abrir o regedit</value>
+  </data>
 </root>

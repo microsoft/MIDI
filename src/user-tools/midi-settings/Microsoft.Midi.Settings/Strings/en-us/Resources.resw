@@ -963,4 +963,22 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   <data name="TroubleshootingSettingsCard_SystemInformation.Description" xml:space="preserve">
     <value>Basic information about this version of Windows and this version of this application.</value>
   </data>
+  <data name="TroubleshootingLabel_WindowsVersion.Text" xml:space="preserve">
+    <value>Windows Version</value>
+  </data>
+  <data name="TroubleshootingLabel_WindowsArchitecture.Text" xml:space="preserve">
+    <value>Windows Architecture</value>
+  </data>
+  <data name="TroubleshootingLabel_WindowsCultureInfo.Text" xml:space="preserve">
+    <value>Windows Culture</value>
+  </data>
+  <data name="TroubleshootingLabel_WindowsAppSdkVersion.Text" xml:space="preserve">
+    <value>Windows App SDK Version</value>
+  </data>
+  <data name="TroubleshootingLabel_DotNetRuntimeVersion.Text" xml:space="preserve">
+    <value>.NET Runtime Version</value>
+  </data>
+  <data name="TroubleshootingLabel_MidiSdkVersion.Text" xml:space="preserve">
+    <value>MIDI App SDK Version</value>
+  </data>
 </root>
