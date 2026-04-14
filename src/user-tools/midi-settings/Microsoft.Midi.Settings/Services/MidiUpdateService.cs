@@ -93,6 +93,8 @@ public class MidiUpdateService : IMidiUpdateService
 
     public async Task<bool> DownloadAndInstallUpdate(Uri uri)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         // validate internet access
         // download the update (this needs to follow redirects due to how github hosting works)
         // launch the installer
@@ -157,7 +159,7 @@ public class MidiUpdateService : IMidiUpdateService
                         await response.Content.CopyToAsync(installerFileStream);
                     }
 
-                    System.Diagnostics.Debug.WriteLine("File downloaded to: " + installerFullPath);
+                    App.GetService<ILoggingService>().LogInfo($"File downloaded to:{installerFullPath}");
 
                     var process = new Process();
                     process.StartInfo.FileName = installerFullPath;

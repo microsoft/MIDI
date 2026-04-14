@@ -241,6 +241,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private bool SendMidi1TextWithValidation(string text)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             if (string.IsNullOrWhiteSpace(AllScratchPadText))
             {
                 _messageBoxService.ShowInfo("No message bytes to send");
@@ -370,6 +372,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMessageBoxService messageBoxService
             )
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _messageBoxService = messageBoxService;
             _sessionService = sessionService;
             _sdkService = sdkService;
@@ -412,6 +416,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendAllCommand = new RelayCommand(
             () =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 var success = SendMidi1TextWithValidation(AllScratchPadText);
 
                 // TODO: Update UI to show that messages were sent
@@ -420,6 +426,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendSelectedCommand = new RelayCommand(
             () =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 var success = SendMidi1TextWithValidation(SelectedScratchPadText);
 
                 // TODO: Update UI to show that messages were sent
@@ -458,6 +466,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshDeviceCollection()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _synchronizationContextService.GetUIContext().Post(_ =>
             {
                 MidiEndpoints.Clear();

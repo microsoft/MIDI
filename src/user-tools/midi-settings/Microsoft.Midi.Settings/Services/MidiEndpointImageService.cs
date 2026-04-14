@@ -30,6 +30,8 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     private string GetPersistentImageRootFileName(string sourceImagePath)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         if (String.IsNullOrWhiteSpace(sourceImagePath)) return string.Empty;
 
         return EndpointImagePrefix + Path.GetFileName(sourceImagePath);
@@ -38,6 +40,8 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     private bool FilesAreIdentical(string fullPath1, string fullPath2)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         const uint bufferSize = 2048;
 
         using var stream1 = new FileStream(fullPath1, FileMode.Open, FileAccess.Read);
@@ -71,6 +75,8 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     public string CopyToImageAssetsFolder(string sourceImagePath)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         if (String.IsNullOrWhiteSpace(sourceImagePath)) return string.Empty;
 
         string bareFileName = GetPersistentImageRootFileName(sourceImagePath);
@@ -133,6 +139,8 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     public bool ImageAssetExists(string imageFileName)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         string fullPath = Path.Combine(GetImagesFolder(), Path.GetFileName(imageFileName));
 
         //return Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.EndpointHasValidCustomImageAsset(endpoint);
@@ -143,17 +151,23 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     public string GetImageAssetFileName(string imageFilePath)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return Path.GetFileName(imageFilePath);
     }
 
 
     public string GetImageAssetFullPath(string imageFileName)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return Path.Combine(GetImagesFolder(), Path.GetFileName(imageFileName));
     }
 
     public ImageSource GetImageSource(string imageFilePath)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         if (Path.GetExtension(imageFilePath).ToLower() == ".svg")
         {
             // SVG requires a specific decoder

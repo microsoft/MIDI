@@ -114,6 +114,8 @@ public partial class ForDevelopersViewModel : ObservableRecipient //, ISettingsS
 
     private bool GrantAdministratorFullRegKeyPermissions(RegLocation location, string key, uint recurseLevel = 0)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         // call RtlAdjustPrivilege to grant administrator rights
         // SeTakeOwnership, SeBackup, and SeRestore
         // recursive
@@ -264,6 +266,8 @@ public partial class ForDevelopersViewModel : ObservableRecipient //, ISettingsS
 
     private bool TakeOwnershipOfFile(string fullFilePath)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var takeOwnCommand = "takeown /F " + fullFilePath;
 
         ProcessStartInfo info = new ProcessStartInfo();
@@ -283,6 +287,8 @@ public partial class ForDevelopersViewModel : ObservableRecipient //, ISettingsS
 
     private bool GrantAdministratorFullFilePermissions(string fullFilePath)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var command = "icacls " + fullFilePath + " /grant administrators:F";
 
         ProcessStartInfo info = new ProcessStartInfo();
@@ -303,6 +309,8 @@ public partial class ForDevelopersViewModel : ObservableRecipient //, ISettingsS
 
     public bool ReplaceWdmaud2(string fileName)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         string systemDriverPath = Environment.ExpandEnvironmentVariables(@"%systemroot%\System32\wdmaud2.drv");
         string systemDriverBakPath = Environment.ExpandEnvironmentVariables(@"%systemroot%\System32\wdmaud2.drv.bak");
 
@@ -368,6 +376,8 @@ public partial class ForDevelopersViewModel : ObservableRecipient //, ISettingsS
 
     public ForDevelopersViewModel(IMidiServiceRegistrySettingsService registrySettingsService)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         m_registrySettingsService = registrySettingsService;
 
         // TODO read these values from the registry

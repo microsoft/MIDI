@@ -58,12 +58,16 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiConfigFileService configFileService, 
             IMessageBoxService messageBoxService)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _configFileService = configFileService;
             _messageBoxService = messageBoxService;
 
             RemoveCommand = new RelayCommand(
                 () =>
                 {
+                    App.GetService<ILoggingService>().LogInfo($"Enter");
+
                     if (!_messageBoxService.ShowMessageWithOkCancel("Message_QuestionContinueRemovingLoopbackEndpoint".GetLocalized()))
                     {
                         return;
@@ -105,6 +109,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             MuteCommand = new RelayCommand(
                 () =>
                 {
+                    App.GetService<ILoggingService>().LogInfo($"Enter");
+
                     var associationId = MidiBasicLoopbackEndpointManager.GetAssociationId(Loop!.DeviceInformation);
 
                     if (associationId != Guid.Empty)
@@ -136,6 +142,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             UnmuteCommand = new RelayCommand(
                 () =>
                 {
+                    App.GetService<ILoggingService>().LogInfo($"Enter");
+
                     var associationId = MidiBasicLoopbackEndpointManager.GetAssociationId(Loop!.DeviceInformation);
 
                     if (associationId != Guid.Empty)
@@ -301,6 +309,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private string CleanupUniqueId(string source)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             string result = string.Empty;
 
             foreach (char ch in source.ToCharArray())

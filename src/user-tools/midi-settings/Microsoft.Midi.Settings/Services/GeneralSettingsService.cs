@@ -40,6 +40,8 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public WindowRect? GetMainWindowPositionAndSize()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             return _localSettingsService.ReadSetting<WindowRect>(MainWindowPositionAndSize_SettingsKey);
@@ -57,6 +59,8 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public EndpointListView GetEndpointListLastUsedView()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             return _localSettingsService.ReadSetting<EndpointListView>(EndpointListLastUsedView_SettingsKey);
@@ -79,6 +83,8 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public bool GetPreviewToolsEnabled()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             return _localSettingsService.ReadSetting<bool>(PreviewToolsEnabled_SettingsKey);
@@ -121,7 +127,9 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public async Task InitializeAsync()
     {
-     //   _showDeveloperOptions = await LoadShowDeveloperOptionsFromSettingsAsync();
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
+        //   _showDeveloperOptions = await LoadShowDeveloperOptionsFromSettingsAsync();
 
         await Task.CompletedTask;
     }

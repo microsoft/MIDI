@@ -100,6 +100,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public async void OnNavigatedTo(object parameter)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             Messages.Clear();
             UmpEndpointNames.Clear();
 

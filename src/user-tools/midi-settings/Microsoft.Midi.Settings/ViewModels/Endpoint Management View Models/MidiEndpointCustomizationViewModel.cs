@@ -84,6 +84,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void UpdateImage()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             if (!string.IsNullOrEmpty(ImageFullPath))
             {
                 HasImage = File.Exists(ImageFullPath);
@@ -93,8 +95,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 // use the image in the wrapper
 
-                HasImage = Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.EndpointHasValidCustomImageAsset(endpointWrapper.DeviceInformation);
-                ImageFullPath = Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.GetImageFullPathForEndpoint(endpointWrapper.DeviceInformation);
+                HasImage = Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.EndpointHasValidCustomImageAsset(EndpointWrapper.DeviceInformation);
+                ImageFullPath = Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.GetImageFullPathForEndpoint(EndpointWrapper.DeviceInformation);
             }
 
 
@@ -115,6 +117,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public MidiEndpointCustomizationViewModel(MidiEndpointWrapper endpointWrapper)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
             EndpointWrapper = endpointWrapper;
 
@@ -164,6 +168,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public MidiServiceEndpointCustomizationConfig GetUpdateConfig()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             var configUpdate = new MidiServiceEndpointCustomizationConfig(
                 EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().TransportId);
 

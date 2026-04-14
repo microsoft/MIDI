@@ -203,6 +203,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void CheckForSdkUpdates()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             try
             {
 
@@ -281,6 +283,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public async void StartSdkUpdate()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             // TODO: We need to make sure we pull the correct architecture
 
             IsSdkDownloadInProgress = true;
@@ -317,6 +321,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiDiagnosticsService diagnosticsService
             )
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _navigationService = navigationService;
             _configFileService = midiConfigFileService;
             _updateService = updateService;
@@ -409,6 +415,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             var timerInfo = MidiClock.GetCurrentSystemTimerInfo();
 
             if (timerInfo.CurrentIntervalTicks > 0)

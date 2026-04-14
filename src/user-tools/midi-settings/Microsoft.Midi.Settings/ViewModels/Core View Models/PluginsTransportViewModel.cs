@@ -56,6 +56,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public PluginsTransportViewModel()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             Plugins.Clear();
 
             var plugins = MidiReporting.GetInstalledTransportPlugins();

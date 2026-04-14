@@ -7,6 +7,7 @@
 // ============================================================================
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Controls;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ToolsTestViewModel()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
         }
     }
 }

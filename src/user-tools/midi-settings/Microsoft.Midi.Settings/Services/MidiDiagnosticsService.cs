@@ -59,6 +59,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     private static string GetCollectMidiLogsPath()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Collect MIDI Logs\CollectMidiLogs.cmd";
@@ -93,6 +95,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     private static string GetMidiFixRegPath()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Tools\midifixreg.exe";
@@ -127,6 +131,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsCollectMidiLogsPresent()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var path = GetCollectMidiLogsPath();
 
         if (string.IsNullOrEmpty(path))
@@ -148,6 +154,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsMidiDiagPresent()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var path = GetMidiDiagPath();
 
         if (string.IsNullOrEmpty(path))
@@ -170,6 +178,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsMidiFixRegPresent()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var path = GetMidiFixRegPath();
 
         if (string.IsNullOrEmpty(path))
@@ -191,6 +201,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool CaptureMidiDiagOutputToNotepad()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             if (IsMidiDiagPresent())
@@ -248,6 +260,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool MidiFixReg()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             if (IsMidiFixRegPresent())
@@ -293,6 +307,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool RestoreInBoxComponentRegistrations()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
 
@@ -309,6 +325,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public string CaptureMidiLogsToFile()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             if (IsCollectMidiLogsPresent())
@@ -370,6 +388,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     private List<FoundRegistryEntry> GetHklmRegistryEntries(string key, RegistryView view)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         List<FoundRegistryEntry> entries = new List<FoundRegistryEntry>();
 
         var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
@@ -501,6 +521,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public List<FoundRegistryEntry> GetDrivers32MidiEntries()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var values = GetHklmRegistryEntries(Drivers32Path, RegistryView.Registry64).OrderBy(x => x.Name).ToList();
 
         if (values.Find(x => x.Name.ToLower() == "midisrvtransfercomplete") == null)
@@ -518,53 +540,9 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public List<FoundRegistryEntry> GetDrivers32WOWMidiEntries()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return GetHklmRegistryEntries(Drivers32WOWPath, RegistryView.Registry32).OrderBy(x => x.Name).ToList();
     }
 
-
-    //public bool LaunchRegeditWithDrivers32Location()
-    //{
-    //    try
-    //    {
-    //        string arguments = $"/m \"HKEY_LOCAL_MACHINE\\{Drivers32Path}\"";
-
-    //        var consoleProcess = new System.Diagnostics.Process();
-
-    //        consoleProcess.StartInfo.FileName = "regedit.exe";
-    //        consoleProcess.StartInfo.Verb = "runas";
-    //        consoleProcess.StartInfo.Arguments = arguments;
-    //        consoleProcess.StartInfo.UseShellExecute = true;
-
-    //        return consoleProcess.Start();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        App.GetService<ILoggingService>().LogError("Error opening regedit", ex);
-
-    //        return false;
-    //    }
-    //}
-
-    //public bool LaunchRegeditWithDrivers32WOWLocation()
-    //{
-    //    try
-    //    {
-    //        string arguments = $"/m \"HKEY_LOCAL_MACHINE\\{Drivers32WOWPath}\"";
-
-    //        var consoleProcess = new System.Diagnostics.Process();
-
-    //        consoleProcess.StartInfo.FileName = "regedit.exe";
-    //        consoleProcess.StartInfo.Verb = "runas";
-    //        consoleProcess.StartInfo.Arguments = arguments;
-    //        consoleProcess.StartInfo.UseShellExecute = true;
-
-    //        return consoleProcess.Start();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        App.GetService<ILoggingService>().LogError("Error opening regedit", ex);
-
-    //        return false;
-    //    }
-    //}
 }

@@ -65,6 +65,8 @@ namespace Microsoft.Midi.Settings.Services
 
         public bool ShowMessageWithOkCancel(string message, string title)
         {
+            App.GetService<ILoggingService>().LogInfo(message);
+
             if (MessageBox(
                 (IntPtr)0,
                 message,
@@ -89,6 +91,8 @@ namespace Microsoft.Midi.Settings.Services
 
         public void ShowInfo(string message, string title)
         {
+            App.GetService<ILoggingService>().LogInfo(message);
+
             MessageBox(
                 (IntPtr)0,
                 message,
@@ -105,6 +109,8 @@ namespace Microsoft.Midi.Settings.Services
 
         public void ShowError(string message, string title)
         {
+            App.GetService<ILoggingService>().LogInfo(message);
+
             MessageBox(
                 (IntPtr)0,
                 message,

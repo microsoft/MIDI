@@ -62,6 +62,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             ISynchronizationContextService synchronizationContextService
             )
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _navigationService = navigationService;
             _enumerationService = enumerationService;
             _transportInfoService = transportInfoService;

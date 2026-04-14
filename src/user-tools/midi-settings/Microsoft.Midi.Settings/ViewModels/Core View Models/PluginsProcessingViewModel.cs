@@ -8,6 +8,7 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Devices.Midi2.Tools.Shared.Config;
+using Microsoft.Midi.Settings.Contracts.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -79,6 +80,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public PluginsProcessingViewModel()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             // these are hard-coded in this app because they are not yet dynamic in the service,
             // and so there's no API to call to get a list of them. 
 

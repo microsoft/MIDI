@@ -76,6 +76,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiConsoleToolsService consoleToolsService,
             IMessageBoxService messageBoxService)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _registrySettingsService = registrySettingsService;
             _consoleToolsService = consoleToolsService;
             _messageBoxService = messageBoxService;
@@ -114,11 +116,15 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             RestartMidiServiceCommand = new RelayCommand(() =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 _consoleToolsService.RestartMidiService();
             });
 
             SetDefaultNamingApproachCommand = new RelayCommand(() =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 bool storedUseNewStyleWinMMPortNames = _registrySettingsService.GetDefaultUseNewStyleMidi1PortNaming();
 
                 if (storedUseNewStyleWinMMPortNames != UseNewStyleWinMMPortNames)

@@ -31,6 +31,8 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
     public void Refresh()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         // build the initial search list
         AllItems.Clear();
 
@@ -224,6 +226,8 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
     public IList<MidiSettingsSearchResult> GetFilteredResults(string filterText)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         IList<MidiSettingsSearchResult> results = [];
 
         var cleanedSearchtext = filterText.ToLower().Trim();

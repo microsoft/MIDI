@@ -48,6 +48,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiConfigFileService configFileService,
             IMessageBoxService messageBoxService)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _configFileService = configFileService;
             _messageBoxService = messageBoxService;
 
@@ -246,6 +248,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void UpdateValidState()
         {
+   
             if (!string.IsNullOrEmpty(NewLoopbackEndpointAName) && !string.IsNullOrEmpty(NewLoopbackEndpointBName))
             {
                 // we're using the direct names
@@ -291,6 +294,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private string CleanupUniqueId(string source)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             string result = string.Empty;
 
             foreach (char ch in source.ToCharArray())
@@ -306,6 +311,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void GenerateNewUniqueId()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             var uniqueId = CleanupUniqueId(GuidHelper.CreateNewGuid().ToString());
 
             NewUniqueIdentifier = uniqueId;
@@ -313,6 +320,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void CreateNewLoopbackEndpoints()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             var endpointA = new MidiLoopbackEndpointDefinition();
             var endpointB = new MidiLoopbackEndpointDefinition();
 
@@ -449,6 +458,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         
         private void LoadExistingEndpointPairs()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpointPairs().");
 
             _contextService.GetUIContext().Post(_ =>
@@ -520,6 +531,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             )
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _configFileService = configFileService;
             _defaultsService = defaultsService;
             _contextService = contextService;
@@ -552,6 +565,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             CreateDefaultLoopbackPairsCommand = new RelayCommand(
                 () =>
                 {
+                    App.GetService<ILoggingService>().LogInfo($"Enter");
+
                     var creationConfig = _defaultsService.GetDefaultLoopbackCreationConfig();
 
                     var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
@@ -577,6 +592,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _enumerationService.EndpointUpdated += (s, e) =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' updated.");
                 if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
                 {
@@ -586,6 +603,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _enumerationService.EndpointAdded += (s, e) =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' added.");
                 if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
                 {
@@ -595,6 +614,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _enumerationService.EndpointRemoved += (s, e) =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' removed.");
                 if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
                 {

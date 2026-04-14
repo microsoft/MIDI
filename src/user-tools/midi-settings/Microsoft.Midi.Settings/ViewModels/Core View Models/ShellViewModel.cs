@@ -118,6 +118,8 @@ public partial class ShellViewModel : ObservableRecipient
 
     private void UpdateVisibilityOfLeftNavSections()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var transports = App.GetService<IMidiTransportInfoService>().GetAllTransports();
 
         foreach (var transport in transports)
@@ -171,6 +173,8 @@ public partial class ShellViewModel : ObservableRecipient
         IMidiSettingsSearchService settingsSearchService
         )
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         _settingsSearchService = settingsSearchService;
         _sdkService = sdkService;
         _configFileService = midiConfigFileService;
@@ -196,6 +200,8 @@ public partial class ShellViewModel : ObservableRecipient
 
     private void OnNavigated(object sender, NavigationEventArgs e)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         IsBackEnabled = NavigationService.CanGoBack;
 
         if (e.SourcePageType == typeof(SettingsPage))

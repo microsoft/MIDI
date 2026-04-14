@@ -23,6 +23,8 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     private static string GetMidiConsolePath()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Tools\Console\midi.exe";
@@ -58,6 +60,8 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool IsMidiConsolePresent()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var path = GetMidiConsolePath();
 
         if (string.IsNullOrEmpty(path))
@@ -79,6 +83,8 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool OpenMidiConsole()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             if (IsMidiConsolePresent())
@@ -114,6 +120,8 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool MonitorEndpoint(string endpointDeviceId)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             if (IsMidiConsolePresent())
@@ -149,6 +157,8 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool RestartMidiService()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             if (IsMidiConsolePresent())
@@ -181,6 +191,8 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool OpenExplorerWithFile(string filePath)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             string arguments = $"/select,\"{filePath}\"";

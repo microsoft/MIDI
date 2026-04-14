@@ -32,6 +32,8 @@ public class MidiDefaultsService : IMidiDefaultsService
 
     public MidiLoopbackEndpointCreationConfig GetDefaultLoopbackCreationConfig()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var endpointA = new MidiLoopbackEndpointDefinition();
         var endpointB = new MidiLoopbackEndpointDefinition();
 
@@ -61,6 +63,8 @@ public class MidiDefaultsService : IMidiDefaultsService
 
     public MidiBasicLoopbackEndpointCreationConfig GetDefaultBasicLoopbackCreationConfig()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var endpoint = new MidiBasicLoopbackEndpointDefinition();
 
         endpoint.Name = "DefaultBasicLoopbackName".GetLocalized();
@@ -81,6 +85,8 @@ public class MidiDefaultsService : IMidiDefaultsService
 
     public bool DoesDefaultLoopbackAlreadyExist()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         if (Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.DoesLoopbackAExist(DefaultLoopbackAUniqueId))
         {
             return true;
@@ -93,6 +99,8 @@ public class MidiDefaultsService : IMidiDefaultsService
 
     public bool DoesDefaultBasicLoopbackAlreadyExist()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.DoesLoopbackExist(DefaultBasicLoopbackUniqueId);
     }
 

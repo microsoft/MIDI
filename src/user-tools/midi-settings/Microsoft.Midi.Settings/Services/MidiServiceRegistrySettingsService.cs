@@ -25,6 +25,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
     private const string MidiSdkRootRegKey = MidiRootRegKey + @"\Desktop App SDK Runtime";
     private UInt32 GetRegistryNumericDWORDValue(string keyName, string valueName, UInt32 defaultValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             var value = Microsoft.Win32.Registry.GetValue(keyName, valueName, defaultValue);
@@ -49,6 +51,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private bool GetRegistryBooleanDWORDValue(string keyName, string valueName, bool defaultValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             UInt32 defaultNumericValue = 0;
@@ -88,6 +92,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private string GetRegistryStringValue(string keyName, string valueName, string defaultValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             var value = Microsoft.Win32.Registry.GetValue(keyName, valueName, defaultValue);
@@ -116,6 +122,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private bool SetRegistryNumericDWORDValue(string keyName, string valueName, UInt32 newValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             Microsoft.Win32.Registry.SetValue(keyName, valueName, newValue, Win32.RegistryValueKind.DWord);
@@ -138,6 +146,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private bool SetRegistryBooleanDWORDValue(string keyName, string valueName, bool newValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             var val = newValue ? (UInt32)1 : (UInt32)0;
@@ -162,6 +172,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private bool SetRegistryStringValue(string keyName, string valueName, string newValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             Microsoft.Win32.Registry.SetValue(keyName, valueName, newValue.Trim(), Win32.RegistryValueKind.String);
@@ -221,6 +233,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public MidiRuntimeReleaseTypes GetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes defaultIfMissing)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         var value = GetRegistryStringValue(
             MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, "").ToLower().Trim();
 
@@ -245,6 +259,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool SetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes releaseType)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         if (releaseType == MidiRuntimeReleaseTypes.Preview)
         {
             return SetRegistryStringValue(MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, Value_PreferredRuntimeReleaseType_Preview);
@@ -260,11 +276,15 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool GetAutoCheckForUpdatesEnabled()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return GetRegistryBooleanDWORDValue(MidiSdkRootRegKey, ValueName_AutoCheckForRuntimeUpdates, true);
     }
 
     public bool SetAutoCheckForUpdatesEnabled(bool newValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return SetRegistryBooleanDWORDValue(MidiSdkRootRegKey, ValueName_AutoCheckForRuntimeUpdates, newValue);
     }
 
@@ -274,6 +294,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool GetDefaultUseNewStyleMidi1PortNaming()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         //return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_DefaultToOldMidi1PortNaming, SettingsDefaultMidi1PortNaming);
 
         var val = GetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_DefaultMidi1PortNaming, (uint)(Midi1PortNamingApproach.UseClassicCompatible));
@@ -290,28 +312,38 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
     }
     public bool SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach newValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return SetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_DefaultMidi1PortNaming, (uint)newValue);
     }
 
 
     public bool GetMidi2DiscoveryEnabled()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_Midi2DiscoveryEnabled, SettingsDefaultDiscoveryEnabled);
     }
 
     public UInt32 GetMidi2DiscoveryTimeoutMS()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return GetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_Midi2DiscoveryTimeoutMS, SettingsDefaultDiscoveryTimeout);
     }
 
     public bool GetUseMMCSS()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_UseMMCSS, SettingsDefaultUseMMCSS);
     }
 
 
     public bool SetMidi2DiscoveryEnabled(bool newValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         // TODO: if the new value is the default, then just delete the reg entry
 
         return SetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_Midi2DiscoveryEnabled, newValue);
@@ -319,6 +351,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool SetMidi2DiscoveryTimeoutMS(UInt32 newValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         // TODO: if the new value is the default, then just delete the reg entry
 
         return SetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_Midi2DiscoveryTimeoutMS, newValue);
@@ -326,6 +360,8 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool SetUseMMCSS(bool newValue)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         // if the new value is the default, then just delete the reg entry
 
         return SetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_UseMMCSS, newValue);

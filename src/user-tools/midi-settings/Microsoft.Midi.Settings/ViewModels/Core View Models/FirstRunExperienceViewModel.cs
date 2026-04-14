@@ -105,6 +105,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void CompleteFirstRunSetup()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             bool needServiceRestart = false;
             bool serviceRestarted = false;
 

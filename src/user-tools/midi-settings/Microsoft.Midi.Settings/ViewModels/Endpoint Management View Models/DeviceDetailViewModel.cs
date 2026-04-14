@@ -63,6 +63,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void SubmitCustomizationChanges()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             // cache this here because the update event may trigger before we save to the config file
             var updateConfig = CustomizationViewModel.GetUpdateConfig();
 
@@ -122,6 +124,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiConfigFileService configFileService,
             IMessageBoxService messageBoxService)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _synchronizationContextService = synchronizationContextService;
             _endpointCustomizationService = endpointCustomizationService;
             _endpointEnumerationService = endpointEnumerationService;
@@ -134,6 +138,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             CopyEndpointDeviceIdCommand = new RelayCommand(
             () =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 var dataPackage = new DataPackage();
                 dataPackage.SetText(EndpointWrapper.Id);
                 Clipboard.SetContent(dataPackage);
@@ -150,6 +156,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshVM()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             System.Diagnostics.Debug.WriteLine("DeviceDetailViewModel.RefreshVM");
 
             if (EndpointWrapper != null)
@@ -185,6 +193,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             if (parameter is string)
             {
                 this.EndpointWrapper = _endpointEnumerationService.GetEndpointById((string)parameter);

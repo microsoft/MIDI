@@ -76,6 +76,8 @@ public class NavigationService : INavigationService
 
     public bool GoBack()
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (CanGoBack)
         {
             var vmBeforeNavigation = _frame.GetPageViewModel();
@@ -93,6 +95,8 @@ public class NavigationService : INavigationService
 
     public bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false)
     {
+        App.GetService<ILoggingService>().LogInfo(pageKey);
+
         var pageType = _pageService.GetPageType(pageKey);
 
         if (_frame != null && (_frame.Content?.GetType() != pageType || (parameter != null && !parameter.Equals(_lastParameterUsed))))
@@ -117,6 +121,8 @@ public class NavigationService : INavigationService
 
     private void OnNavigated(object sender, NavigationEventArgs e)
     {
+        App.GetService<ILoggingService>().LogInfo("Enter");
+
         if (sender is Frame frame)
         {
             var clearNavigation = (bool)frame.Tag;

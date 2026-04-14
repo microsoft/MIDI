@@ -119,6 +119,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             IGeneralSettingsService generalSettingsService
             )
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _navigationService = navigationService;
             _enumerationService = enumerationService;
             _transportInfoService = transportInfoService;
@@ -178,6 +180,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         // todo: this should have a sort order and filter
         public void RefreshMidiEndpointDevices()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _synchronizationContextService.GetUIContext()?.Post(_ =>
             {
                 try

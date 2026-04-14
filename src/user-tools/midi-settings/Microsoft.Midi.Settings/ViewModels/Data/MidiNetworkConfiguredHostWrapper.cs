@@ -31,6 +31,8 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
         IMidiConfigFileService configFileService
         )
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         _configFileService = configFileService;
 
         Host = host;
@@ -61,6 +63,8 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
 
         StopCommand = new RelayCommand(async () =>
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             var result = await MidiNetworkTransportManager.StopNetworkHostAsync(host.Id);
 
             if (result.Success)
@@ -81,6 +85,8 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
 
         DeleteCommand = new RelayCommand(async () =>
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             // first, stop the host.
 
             var result = await MidiNetworkTransportManager.StopNetworkHostAsync(host.Id);

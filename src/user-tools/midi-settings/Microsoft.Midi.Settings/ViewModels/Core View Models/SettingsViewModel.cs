@@ -131,6 +131,8 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
         ILocalSettingsService localSettingsService, 
         IGeneralSettingsService generalSettingsService)
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         _midiUpdateService = midiUpdateService;
         _themeSelectorService = themeSelectorService;
         _localSettingsService = localSettingsService;

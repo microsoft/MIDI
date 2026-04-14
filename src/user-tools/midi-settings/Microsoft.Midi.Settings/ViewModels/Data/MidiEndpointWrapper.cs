@@ -154,6 +154,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshData()
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             // Property updates need to happen on UI thread
             var context = _synchronizationContextService.GetUIContext();
 
@@ -333,6 +335,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             Task.Run(() =>
             {
+                App.GetService<ILoggingService>().LogInfo($"Enter");
+
                 System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Getting MIDI 1.0 Ports");
 
                 // MIDI 1.0 Input Ports / Sources
@@ -398,6 +402,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiConsoleToolsService consoleToolsService,
             IMidiPanicService panicService)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Constructing");
 
             _navigationService = navigationService;
@@ -427,6 +433,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendPanicCommand = new RelayCommand(
                 () =>
                 {
+                    App.GetService<ILoggingService>().LogInfo($"Enter");
+
                     System.Diagnostics.Debug.WriteLine("Sending panic");
 
                     // TODO: Could make this a bit faster by sending only for valid groups
@@ -438,6 +446,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             MonitorEndpointCommand = new RelayCommand(
                 () =>
                 {
+                    App.GetService<ILoggingService>().LogInfo($"Enter");
+
                     System.Diagnostics.Debug.WriteLine("Monitor");
 
                     _consoleToolsService.MonitorEndpoint(DeviceInformation.EndpointDeviceId);                   

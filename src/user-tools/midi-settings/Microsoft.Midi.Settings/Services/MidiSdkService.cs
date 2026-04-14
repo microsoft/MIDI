@@ -102,6 +102,8 @@ public class MidiSdkService : IMidiSdkService
 
     public bool InitializeSdk()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             _runtimeInitialized = false;
@@ -131,6 +133,8 @@ public class MidiSdkService : IMidiSdkService
 
     public bool InitializeService()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         try
         {
             if (_initializer == null)

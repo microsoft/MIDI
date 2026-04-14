@@ -41,6 +41,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             INavigationService navigationService,
             IMidiEndpointEnumerationService enumerationService)
         {
+            App.GetService<ILoggingService>().LogInfo($"Enter");
+
             _transportCode = transportCode.ToUpper().Trim();
 
             _navigationService = navigationService;

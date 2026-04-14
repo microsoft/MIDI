@@ -43,6 +43,8 @@ public class LocalSettingsService : ILocalSettingsService
 
     public void Initialize()
     {
+        App.GetService<ILoggingService>().LogInfo($"Enter");
+
         if (!_isInitialized)
         {
             _settings = _fileService.Read(_applicationDataFolder, _settingsFile) ?? global::Windows.Data.Json.JsonObject.Parse("{}");

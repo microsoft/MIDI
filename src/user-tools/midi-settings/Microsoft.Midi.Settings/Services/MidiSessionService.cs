@@ -24,6 +24,8 @@ public class MidiSessionService : IMidiSessionService
 
     public MidiEndpointConnection? GetConnection(string endpointDeviceId)
     {
+        App.GetService<ILoggingService>().LogInfo(endpointDeviceId);
+
         var cleanId = endpointDeviceId.ToLower().Trim();
 
         if (string.IsNullOrEmpty(cleanId))
