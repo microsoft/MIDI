@@ -8,6 +8,7 @@
 
 
 using CommunityToolkit.WinUI.Animations;
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -50,7 +51,14 @@ namespace Microsoft.Midi.Settings.Views
         {
             ViewModel = App.GetService<GlobalMidiSettingsViewModel>();
 
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
 
         }
 

@@ -7,6 +7,7 @@
 // ============================================================================
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.UI.Xaml.Markup;
 using System.Runtime.CompilerServices;
 using Windows.Foundation.Diagnostics;
 
@@ -16,6 +17,12 @@ namespace Microsoft.Midi.Settings.Services;
 
 public partial class LoggingService : ILoggingService
 {
+    private const string MIDI_LOG_EVENT_LOCATION_FIELD = "Location";
+    private const string MIDI_EVENT_NAME_VERBOSE = "Midi.Verbose";
+    private const string MIDI_EVENT_NAME_INFO = "Midi.Info";
+    private const string MIDI_EVENT_NAME_WARNING = "Midi.Warning";
+    private const string MIDI_EVENT_NAME_ERROR = "Midi.Error";
+
     //ILogger _logger;
 
     LoggingChannel _loggingChannel;
@@ -28,7 +35,7 @@ public partial class LoggingService : ILoggingService
         _loggingChannel = new LoggingChannel("MIDI Settings", null, channelId);
     }
 
-    private string BuildEventName(string filePath, string memberName)
+    private string BuildLocationName(string filePath, string memberName)
     {
         //var fileName = Path.GetFileName(filePath);
 
@@ -40,10 +47,12 @@ public partial class LoggingService : ILoggingService
 
     public void LogError(string message, [CallerMemberName]string memberName="", [CallerFilePath]string filePath="")
     {
-        string eventName = BuildEventName(filePath, memberName);
+        string eventName = MIDI_EVENT_NAME_ERROR;
 
         var fields = new LoggingFields();
+        fields.AddString(MIDI_LOG_EVENT_LOCATION_FIELD, BuildLocationName(filePath, memberName));
         fields.AddString("file name", filePath);
+        fields.AddString("culture", System.Globalization.CultureInfo.CurrentCulture.ToString());
         fields.AddString("message", message);
 
         _loggingChannel.LogEvent(eventName, fields, LoggingLevel.Error);
@@ -51,23 +60,36 @@ public partial class LoggingService : ILoggingService
 
     public void LogError(string message, Exception ex, [CallerMemberName] string memberName = "", [CallerFilePath] string filePath = "")
     {
-        string eventName = BuildEventName(filePath, memberName);
+        string eventName = MIDI_EVENT_NAME_ERROR;
 
         var fields = new LoggingFields();
+        fields.AddString(MIDI_LOG_EVENT_LOCATION_FIELD, BuildLocationName(filePath, memberName));
         fields.AddString("file name", filePath);
+        fields.AddString("culture", System.Globalization.CultureInfo.CurrentCulture.ToString());
         fields.AddString("message", message);
         fields.AddString("exception", ex.ToString());
+
+        if (ex.InnerException != null)
+        {
+            fields.AddString("inner exception", ex.InnerException.ToString());
+        }
+        
+        foreach (var key in ex.Data.Keys)
+        {
+            fields.AddString(key.ToString(), ex.Data[key]?.ToString());
+        }
 
         _loggingChannel.LogEvent(eventName, fields, LoggingLevel.Error);
     }
 
-
     public void LogWarning(string message, [CallerMemberName] string memberName = "", [CallerFilePath] string filePath = "")
     {
-        string eventName = BuildEventName(filePath, memberName);
+        string eventName = MIDI_EVENT_NAME_WARNING;
 
         var fields = new LoggingFields();
+        fields.AddString(MIDI_LOG_EVENT_LOCATION_FIELD, BuildLocationName(filePath, memberName));
         fields.AddString("file name", filePath);
+        fields.AddString("culture", System.Globalization.CultureInfo.CurrentCulture.ToString());
         fields.AddString("message", message);
 
         _loggingChannel.LogEvent(eventName, fields, LoggingLevel.Warning);
@@ -75,13 +97,28 @@ public partial class LoggingService : ILoggingService
 
     public void LogInfo(string message, [CallerMemberName] string memberName = "", [CallerFilePath] string filePath = "")
     {
-        string eventName = BuildEventName(filePath, memberName);
+        string eventName = MIDI_EVENT_NAME_INFO;
 
         var fields = new LoggingFields();
+        fields.AddString(MIDI_LOG_EVENT_LOCATION_FIELD, BuildLocationName(filePath, memberName));
         fields.AddString("file name", filePath);
+        fields.AddString("culture", System.Globalization.CultureInfo.CurrentCulture.ToString());
         fields.AddString("message", message);
 
         _loggingChannel.LogEvent(eventName, fields, LoggingLevel.Information);
+    }
+
+    public void LogVerbose(string message, [CallerMemberName] string memberName = "", [CallerFilePath] string filePath = "")
+    {
+        string eventName = MIDI_EVENT_NAME_VERBOSE;
+
+        var fields = new LoggingFields();
+        fields.AddString(MIDI_LOG_EVENT_LOCATION_FIELD, BuildLocationName(filePath, memberName));
+        fields.AddString("file name", filePath);
+        fields.AddString("culture", System.Globalization.CultureInfo.CurrentCulture.ToString());
+        fields.AddString("message", message);
+
+        _loggingChannel.LogEvent(eventName, fields, LoggingLevel.Verbose);
     }
 
 }

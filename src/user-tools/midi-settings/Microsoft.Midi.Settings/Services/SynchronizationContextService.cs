@@ -21,8 +21,6 @@ public class SynchronizationContextService : ISynchronizationContextService
 
     public SynchronizationContextService(SynchronizationContext uiContext)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
-
         _uiContext = uiContext;
 
         System.Diagnostics.Debug.WriteLine($"SynchronizationContextService: UI Context captured.");

@@ -55,8 +55,14 @@ namespace Microsoft.Midi.Settings.Views
 
             Loaded += Page_Loaded;
 
-
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
         }
 
         private void UpdateDialogSize(ContentDialog dialog)

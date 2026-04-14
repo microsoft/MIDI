@@ -31,7 +31,15 @@ public sealed partial class ShellPage : Page
     public ShellPage(ShellViewModel viewModel)
     {
         ViewModel = viewModel;
-        InitializeComponent();
+
+        try
+        {
+            InitializeComponent();
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+        }
 
         AppTitleBarControl.Title = App.MainWindow.Title;
 

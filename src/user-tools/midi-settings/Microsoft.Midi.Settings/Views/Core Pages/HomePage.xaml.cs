@@ -50,7 +50,14 @@ namespace Microsoft.Midi.Settings.Views
 
             ViewModel.UpdateFailed += ViewModel_UpdateFailed;
 
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
         }
 
         private void ViewModel_UpdateFailed(object? sender, string e)

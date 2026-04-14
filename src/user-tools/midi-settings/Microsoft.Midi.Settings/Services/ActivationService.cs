@@ -209,7 +209,7 @@ public class ActivationService : IActivationService
         await HandleActivationAsync(activationArgs);
 
         App.GetService<ILoggingService>().LogInfo("Closing splash screen");
-        App.Splash.Close();
+   //     App.Splash.Close();
 
         //if (App.Splash != null && App.Splash.Visible)
         //{

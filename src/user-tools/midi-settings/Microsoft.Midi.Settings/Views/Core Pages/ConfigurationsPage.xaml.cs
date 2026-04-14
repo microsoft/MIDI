@@ -23,6 +23,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.UI.Xaml.Markup;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -45,7 +46,15 @@ namespace Microsoft.Midi.Settings.Views
             _loggingService = App.GetService<ILoggingService>();
 
             ViewModel = App.GetService<ConfigurationsViewModel>();
-            InitializeComponent();
+
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
 
         }
     }

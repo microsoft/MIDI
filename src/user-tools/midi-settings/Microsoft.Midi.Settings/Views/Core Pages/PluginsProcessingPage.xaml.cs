@@ -45,7 +45,15 @@ namespace Microsoft.Midi.Settings.Views
             _loggingService = App.GetService<ILoggingService>();
 
             ViewModel = App.GetService<PluginsProcessingViewModel>();
-            InitializeComponent();
+
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
 
         }
     }

@@ -1,3 +1,4 @@
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -25,7 +26,14 @@ namespace Microsoft.Midi.Settings.Views
     {
         public AdvancedUsbSettingsPage()
         {
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
         }
     }
 }

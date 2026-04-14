@@ -138,6 +138,9 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
                 consoleProcess.StartInfo.Arguments = arguments;
                 consoleProcess.StartInfo.UseShellExecute = false;
 
+                System.Diagnostics.Debug.Write($" --- starting wt{consoleProcess.StartInfo.Arguments}");
+
+
                 return consoleProcess.Start();
             }
             else

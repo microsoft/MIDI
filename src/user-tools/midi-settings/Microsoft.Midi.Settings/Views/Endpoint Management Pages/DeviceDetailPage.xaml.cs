@@ -58,7 +58,14 @@ namespace Microsoft.Midi.Settings.Views
             _imageService = App.GetService<IMidiEndpointImageService>();
             _loggingService = App.GetService<ILoggingService>();
 
-            this.InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
         }
 
         private async void CustomizeButton_Click(object sender, RoutedEventArgs e)

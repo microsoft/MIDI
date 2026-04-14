@@ -18,8 +18,8 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Markup;
 using System.Runtime.InteropServices;
-using Windows.UI.Popups;
 
 namespace Microsoft.Midi.Settings;
 
@@ -240,12 +240,16 @@ public partial class App : Application
 
         try
         {
-            App.GetService<ILoggingService>().LogError(e.Message);
+            string errorMessage = string.Empty;
 
-            MessageBox((IntPtr)0, e.Message, "Unhandled Error", 0);
+            errorMessage = $"{e.Message}\n\n{e.Exception.ToString()}";
+
+            App.GetService<ILoggingService>().LogError(e.Message, e.Exception);
+
+            MessageBox((IntPtr)0, errorMessage, "Unhandled Error", 0);
 
             // try not to completely abort
-            e.Handled = true;
+            //e.Handled = true;
         }
         catch (Exception)
         {
@@ -254,12 +258,6 @@ public partial class App : Application
         }
 
     }
-
-    //private MidiDesktopAppSdkInitializer? _midiInitializer = null;
-
-    //public MidiDesktopAppSdkInitializer? MidiInitializer => _midiInitializer;
-
-    public SynchronizationContext UIThreadSynchronizationContext;
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
@@ -282,6 +280,9 @@ public partial class App : Application
             if (!success)
             {
                 App.GetService<ILoggingService>().LogError("Unable to startup app. Exiting.");
+
+                MessageBox((IntPtr)0, "Unable to start up MIDI Settings app. Closing.", "Unhandled Error", 0);
+
                 Exit();
             }
         }

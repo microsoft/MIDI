@@ -8,6 +8,11 @@
 
 
 using CommunityToolkit.WinUI.Animations;
+using global::Windows.Win32;
+using global::Windows.Win32.Foundation;
+using global::Windows.Win32.UI.Shell;
+using global::Windows.Win32.UI.Shell.Common;
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -25,11 +30,6 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage.Pickers;
-
-using global::Windows.Win32.Foundation;
-using global::Windows.Win32;
-using global::Windows.Win32.UI.Shell;
-using global::Windows.Win32.UI.Shell.Common;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -52,7 +52,14 @@ namespace Microsoft.Midi.Settings.Views
 
             this.Loaded += Page_Loaded;
 
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
 
         }
 

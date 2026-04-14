@@ -50,7 +50,14 @@ namespace Microsoft.Midi.Settings.Views
 
             Loaded += DevicesPage_Loaded;
 
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
         }
 
         private void DevicesPage_Loaded(object sender, RoutedEventArgs e)

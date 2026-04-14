@@ -55,7 +55,14 @@ namespace Microsoft.Midi.Settings.Views
             Loaded += Page_Loaded;
             Unloaded += Page_Unloaded;
 
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            }
         }
 
         bool m_showCreateDialog = false;

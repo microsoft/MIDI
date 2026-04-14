@@ -28,7 +28,14 @@ public sealed partial class SettingsPage : Page
 
         ViewModel = App.GetService<SettingsViewModel>();
 
-        InitializeComponent();
+        try
+        {
+            InitializeComponent();
+        }
+        catch (Exception ex)
+        {
+            App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+        }
 
 
         AboutCard_Title.Text = ResourceExtensions.GetLocalized("AppDisplayName");
