@@ -113,6 +113,11 @@ public class ActivationService : IActivationService
 
         var splash = new Views.Core_Pages.LoadingPage();
         App.MainWindow.Content = splash;
+
+        // restore window size from last close
+        App.GetService<ILoggingService>().LogInfo("Positioning main window");
+        PositionMainWindow();
+
         App.MainWindow.Show();
 
         // Execute tasks before activation.
@@ -120,10 +125,6 @@ public class ActivationService : IActivationService
 
         WindowsDeveloperModeHelper.Refresh();
 
-
-        // restore window size from last close
-        App.GetService<ILoggingService>().LogInfo("Positioning main window");
-        PositionMainWindow();
 
         //var serviceController = MidiServiceHelper.GetServiceController();
 
