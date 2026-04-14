@@ -30,30 +30,30 @@
                    Guid="f460814c-4cf6-47af-a1d1-20ebacb3730f">
 
             <!-- PowerShell Module Binary -->
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.deps.json" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.dll" Vital="true" PatchWholeFile="yes"  />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.deps.json" Vital="true" PatchWholeFile="yes" />
 
             <!-- PowerShell Module Definition -->
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.psd1" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.psd1" Vital="true" PatchWholeFile="yes" />
 
             <!-- C# / WinRT -->
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WinRT.Runtime.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WinRT.Runtime.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" Vital="true" PatchWholeFile="yes" />
 
             <!-- Other .NET libs -->
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.ApplicationInsights.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Win32.Registry.AccessControl.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Newtonsoft.Json.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.CodeDom.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Configuration.ConfigurationManager.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Diagnostics.EventLog.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.DirectoryServices.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Management.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Cryptography.Pkcs.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Cryptography.ProtectedData.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Permissions.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Windows.Extensions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.ApplicationInsights.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Win32.Registry.AccessControl.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Newtonsoft.Json.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.CodeDom.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Configuration.ConfigurationManager.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Diagnostics.EventLog.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.DirectoryServices.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Management.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Cryptography.Pkcs.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Cryptography.ProtectedData.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Permissions.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Windows.Extensions.dll" Vital="true" PatchWholeFile="yes" />
 
             <!-- Add folder to powershell path -->
             <Environment Id="AddCmdletsToPowerShellPath"
