@@ -506,6 +506,57 @@ void LibMidi2Tests::TestSelectedChannelMessagesToBytes()
 
 }
 
+
+// this test is to ensure MIDI 1 values are not lossless. Why?
+// because specific velocity values can be used by apps like 
+// Resolume Arena to set specific LED colors on devices
+void LibMidi2Tests::TestRoundTripTranslateNoteOnVelocity()
+{
+    bytestreamToUMP bs2ump;
+    umpToBytestream ump2bs;
+
+    uint8_t statusByte = 0x90;  // note on
+    uint8_t noteByte = 0x20;     // random note
+
+    for (uint8_t v = 0; v < 128; v++)
+    {
+        bs2ump.bytestreamParse(statusByte);
+        bs2ump.bytestreamParse(noteByte);
+        bs2ump.bytestreamParse(v);      // velocity
+
+        // translate to UMP
+        VERIFY_IS_TRUE(bs2ump.availableUMP());
+
+        auto ump = bs2ump.readUMP();
+
+        // translate from UMP back to MIDI 1
+
+        ump2bs.UMPStreamParse(ump);
+
+        VERIFY_IS_TRUE(ump2bs.availableBS());
+        auto receivedStatus = ump2bs.readBS();
+
+        VERIFY_IS_TRUE(ump2bs.availableBS());
+        auto receivedNote = ump2bs.readBS();
+
+        VERIFY_IS_TRUE(ump2bs.availableBS());
+        auto receivedVelocity = ump2bs.readBS();
+
+        VERIFY_ARE_EQUAL(statusByte, receivedStatus);
+        VERIFY_ARE_EQUAL(noteByte, receivedNote);
+        VERIFY_ARE_EQUAL(v, receivedVelocity);
+    }
+
+}
+
+
+
+
+
+
+
+
+
 bool LibMidi2Tests::ClassSetup()
 {
     PrintStagingStates();

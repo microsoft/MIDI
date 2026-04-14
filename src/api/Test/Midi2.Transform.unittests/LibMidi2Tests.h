@@ -52,6 +52,10 @@ public:
         TEST_METHOD(TestTranslateToBytesNoteOnVelocityZero);
         
 
+        TEST_METHOD(TestRoundTripTranslateNoteOnVelocity);
+
+
+
     void InternalTranslateMidi1BytesToUmpWords(
         _In_ uint8_t const groupIndex, 
         _In_reads_bytes_(byteCount) uint8_t const sysexBytes[], 
