@@ -957,4 +957,10 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   <data name="Error_UnableToLaunchRegedit" xml:space="preserve">
     <value>Unable to launch regedit</value>
   </data>
+  <data name="TroubleshootingSettingsCard_SystemInformation.Header" xml:space="preserve">
+    <value>System Information</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_SystemInformation.Description" xml:space="preserve">
+    <value>Basic information about this version of Windows and this version of this application.</value>
+  </data>
 </root>
