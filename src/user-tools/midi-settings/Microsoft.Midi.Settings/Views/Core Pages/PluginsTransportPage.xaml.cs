@@ -34,8 +34,7 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class PluginsTransportPage : Page
     {
-        private ILoggingService _loggingService;
-
+        private readonly ILoggingService _loggingService;
         public PluginsTransportViewModel ViewModel
         {
             get;
@@ -43,7 +42,6 @@ namespace Microsoft.Midi.Settings.Views
         public PluginsTransportPage()
         {
             _loggingService = App.GetService<ILoggingService>();
-
             ViewModel = App.GetService<PluginsTransportViewModel>();
 
             try
@@ -52,7 +50,7 @@ namespace Microsoft.Midi.Settings.Views
             }
             catch (Exception ex)
             {
-                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+                _loggingService.LogError("Error initializing page", ex);
             }
 
         }

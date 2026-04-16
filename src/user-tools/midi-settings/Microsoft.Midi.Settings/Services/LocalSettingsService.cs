@@ -16,7 +16,6 @@ namespace Microsoft.Midi.Settings.Services;
 
 public class LocalSettingsService : ILocalSettingsService
 {
-    private readonly IFileService _fileService;
     //private readonly LocalSettingsOptions _options;
 
     private readonly string _programDataRoot;
@@ -29,21 +28,28 @@ public class LocalSettingsService : ILocalSettingsService
 
     private bool _isInitialized;
 
-    public LocalSettingsService(IFileService fileService)
+    private readonly IFileService _fileService;
+    private readonly ILoggingService _loggingService;
+
+
+    public LocalSettingsService(
+        IFileService fileService,
+        ILoggingService loggingService
+        )
     {
+        _fileService = fileService;
+        _loggingService = loggingService;
+
         _programDataRoot = Environment.ExpandEnvironmentVariables("%ProgramData%");
         _applicationDataFolder = Path.Combine(_programDataRoot, @"Microsoft\MIDI\");
         _settingsFile = "SettingsApp.appconfig.json";
 
-        _fileService = fileService;
-
         //_settings = new Dictionary<string, object>();
-
     }
 
     public void Initialize()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService?.LogInfo($"Enter");
 
         if (!_isInitialized)
         {
@@ -55,9 +61,9 @@ public class LocalSettingsService : ILocalSettingsService
 
     public T? ReadSetting<T>(string key)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
-
         Initialize();
+
+        _loggingService?.LogInfo("Enter");
 
         if (RuntimeHelper.IsMSIX)
         {
@@ -80,9 +86,9 @@ public class LocalSettingsService : ILocalSettingsService
 
     public T? ReadSetting<T>(string key, T defaultIfNotSet)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
-
         Initialize();
+
+        _loggingService?.LogInfo("Enter");
 
         if (RuntimeHelper.IsMSIX)
         {
@@ -105,9 +111,9 @@ public class LocalSettingsService : ILocalSettingsService
 
     public void SaveSetting<T>(string key, T value)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
-
         Initialize();
+
+        _loggingService?.LogInfo("Enter");
 
 
         if (RuntimeHelper.IsMSIX)

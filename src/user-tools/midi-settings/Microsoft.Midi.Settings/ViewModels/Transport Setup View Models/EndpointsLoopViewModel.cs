@@ -43,13 +43,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private readonly IMidiConfigFileService _configFileService;
         private readonly IMessageBoxService _messageBoxService;
+        private readonly ILoggingService _loggingService;
 
         public MidiLoopbackEndpointPair(
             IMidiConfigFileService configFileService,
-            IMessageBoxService messageBoxService)
+            IMessageBoxService messageBoxService,
+            ILoggingService loggingService)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
-
+            _loggingService = loggingService;
             _configFileService = configFileService;
             _messageBoxService = messageBoxService;
 
@@ -294,7 +295,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private string CleanupUniqueId(string source)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             string result = string.Empty;
 
@@ -311,7 +312,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void GenerateNewUniqueId()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var uniqueId = CleanupUniqueId(GuidHelper.CreateNewGuid().ToString());
 
@@ -320,7 +321,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void CreateNewLoopbackEndpoints()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var endpointA = new MidiLoopbackEndpointDefinition();
             var endpointB = new MidiLoopbackEndpointDefinition();
@@ -458,7 +459,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         
         private void LoadExistingEndpointPairs()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpointPairs().");
 
@@ -484,7 +485,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                             if (!ids.ContainsKey(endpoint.DeviceInformation.EndpointDeviceId) &&
                                 !ids.ContainsKey(associated.EndpointDeviceId))
                             {
-                                var pair = new MidiLoopbackEndpointPair(_configFileService, _messageBoxService);
+                                var pair = new MidiLoopbackEndpointPair(_configFileService, _messageBoxService, _loggingService);
 
                                 pair.LoopA = endpoint;
                                 pair.LoopB = associated;
@@ -520,6 +521,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly ISynchronizationContextService _contextService;
         private readonly INavigationService _navigationService;
         private readonly IMidiEndpointEnumerationService _enumerationService;
+        private readonly ILoggingService _loggingService;
 
         public EndpointsLoopViewModel(
                         INavigationService navigationService, 
@@ -527,12 +529,12 @@ namespace Microsoft.Midi.Settings.ViewModels
                         IMidiEndpointEnumerationService enumerationService,
                         IMidiDefaultsService defaultsService,
                         ISynchronizationContextService contextService,
-                        IMessageBoxService messageBoxService
+                        IMessageBoxService messageBoxService,
+                        ILoggingService loggingService
 
             )
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
-
+            _loggingService = loggingService;
             _configFileService = configFileService;
             _defaultsService = defaultsService;
             _contextService = contextService;
@@ -565,7 +567,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             CreateDefaultLoopbackPairsCommand = new RelayCommand(
                 () =>
                 {
-                    App.GetService<ILoggingService>().LogInfo($"Enter");
+                    _loggingService.LogInfo($"Enter");
 
                     var creationConfig = _defaultsService.GetDefaultLoopbackCreationConfig();
 
@@ -592,7 +594,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _enumerationService.EndpointUpdated += (s, e) =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' updated.");
                 if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
@@ -603,7 +605,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _enumerationService.EndpointAdded += (s, e) =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' added.");
                 if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
@@ -614,7 +616,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _enumerationService.EndpointRemoved += (s, e) =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' removed.");
                 if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)

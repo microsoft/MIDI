@@ -42,15 +42,17 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ObservableCollection<MidiServiceSessionInformationWrapper> Sessions { get; private set; } = [];
 
-        public ManagementSessionsViewModel()
+        private readonly ILoggingService _loggingService;
+        public ManagementSessionsViewModel(ILoggingService loggingService)
         {
             RefreshSessions();
+            _loggingService = loggingService;
         }
 
 
         public void RefreshSessions()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             Sessions.Clear();
 

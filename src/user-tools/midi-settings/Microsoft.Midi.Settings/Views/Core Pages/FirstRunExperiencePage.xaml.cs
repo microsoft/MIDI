@@ -39,9 +39,11 @@ namespace Microsoft.Midi.Settings.Views
             get;
         }
 
-
+        private readonly ILoggingService _loggingService;
         public FirstRunExperiencePage()
         {
+            _loggingService = App.GetService<ILoggingService>();
+
             ViewModel = App.GetService<FirstRunExperienceViewModel>();
 
             Loaded += FirstRunExperiencePage_Loaded;
@@ -52,7 +54,7 @@ namespace Microsoft.Midi.Settings.Views
             }
             catch (Exception ex)
             {
-                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+                _loggingService.LogError("Error initializing page", ex);
             }
 
         }

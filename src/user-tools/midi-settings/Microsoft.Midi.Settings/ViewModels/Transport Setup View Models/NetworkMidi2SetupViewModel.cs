@@ -53,13 +53,15 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ICommand ConnectCommand { get; private set; }
         public ICommand DisconnectCommand { get; private set; }
 
-        public MidiNetworkRemoteHostEntry()
+        private readonly ILoggingService _loggingService;
+        public MidiNetworkRemoteHostEntry(ILoggingService loggingService)
         {
+            _loggingService = loggingService;
             ConfigEntryId = Guid.NewGuid().ToString("B");
 
             ConnectCommand = new RelayCommand(() =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 try
                 {
@@ -88,10 +90,12 @@ namespace Microsoft.Midi.Settings.ViewModels
                     {
                         System.Diagnostics.Debug.WriteLine("Unable to connect to remote host");
                         System.Diagnostics.Debug.WriteLine(result.ErrorInformation);
+                        _loggingService.LogError("Unable to connect to remote host " + result.ErrorInformation);
                     }
                 }
                 catch (Exception ex)
                 {
+                    _loggingService.LogError("Unable to connect to remote host", ex);
                    // _messageBoxService
                 }
             })
@@ -100,7 +104,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             };
             DisconnectCommand = new RelayCommand(() =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 var config = new MidiNetworkClientDisconnectConfig();
                 config.Id = ConfigEntryId;
@@ -115,6 +119,8 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     System.Diagnostics.Debug.WriteLine("Unable to disconnect to remote host");
                     System.Diagnostics.Debug.WriteLine(result.ErrorInformation);
+
+                    _loggingService.LogError("Unable to disconnect from remote host " + result.ErrorInformation);
                 }
             });
 
@@ -211,12 +217,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ObservableCollection<MidiNetworkConfiguredClient> ConfiguredClients { get; } = [];
 
+        private readonly ILoggingService _loggingService;
         public NetworkMidi2SetupViewModel(
             IMidiTransportInfoService transportInfoService, 
-            IMidiConfigFileService configFileService)
+            IMidiConfigFileService configFileService,
+            ILoggingService loggingService)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
-
+            _loggingService = loggingService;
             _configFileService = configFileService;
 
             if (transportInfoService != null)
@@ -239,13 +246,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _watcher.Added += (s, e) =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 if (DispatcherQueue == null) return;
 
                 DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
                 {
-                    var entry = new MidiNetworkRemoteHostEntry();
+                    var entry = new MidiNetworkRemoteHostEntry(_loggingService);
                     entry.Name = e.AddedHost.UmpEndpointName;
                     entry.AdvertisedHost = e.AddedHost;
                     entry.IsDirectConnect = false;
@@ -279,7 +286,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _watcher.EnumerationCompleted += (s, e) =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 LoadConfiguredClients();
             };
@@ -294,7 +301,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void _watcher_EnumerationCompleted(MidiNetworkAdvertisedHostWatcher sender, object args)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
         }
 
@@ -306,7 +313,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void InitializeNewHostSettings()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             // TODO: Should verify this name doesn't already exist
             // TODO: Should also verify that the name is valid for DNS
@@ -328,7 +335,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public bool CreateHost()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var config = new MidiNetworkHostCreationConfig();
 
@@ -367,7 +374,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void InitializeNewClientSettings()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             NewClientDeviceId = string.Empty;
             NewClientHostNameOrIP = string.Empty;
@@ -378,7 +385,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public bool CreateClientDirect()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var config = new MidiNetworkClientConnectConfig();
 
@@ -458,7 +465,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void LoadConfiguredHosts()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var hosts = MidiNetworkTransportManager.GetConfiguredHosts();
 
@@ -466,7 +473,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             foreach (var host in hosts)
             {
-                ConfiguredHosts.Add(new MidiNetworkConfiguredHostWrapper(host, _configFileService));
+                ConfiguredHosts.Add(new MidiNetworkConfiguredHostWrapper(host, _configFileService, _loggingService));
             }
 
         }
@@ -474,7 +481,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void FoldInRemoteHostConnection(MidiNetworkRemoteHostEntry? entry)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             if (entry == null)
             {
@@ -502,7 +509,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         // TODO: Need to fold this in with the discovered remote hosts
         private void LoadConfiguredClients()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var clients = MidiNetworkTransportManager.GetConfiguredClients();
 

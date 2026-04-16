@@ -93,7 +93,7 @@ public class MidiUpdateService : IMidiUpdateService
 
     public async Task<bool> DownloadAndInstallUpdate(Uri uri)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         // validate internet access
         // download the update (this needs to follow redirects due to how github hosting works)
@@ -159,7 +159,7 @@ public class MidiUpdateService : IMidiUpdateService
                         await response.Content.CopyToAsync(installerFileStream);
                     }
 
-                    App.GetService<ILoggingService>().LogInfo($"File downloaded to:{installerFullPath}");
+                    _loggingService.LogInfo($"File downloaded to:{installerFullPath}");
 
                     var process = new Process();
                     process.StartInfo.FileName = installerFullPath;
@@ -182,7 +182,7 @@ public class MidiUpdateService : IMidiUpdateService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error downloading and installing update.", ex);
+            _loggingService.LogError("Error downloading and installing update.", ex);
 
             System.Diagnostics.Debug.WriteLine("Exception downloading file: " + ex.ToString());
 
@@ -207,17 +207,19 @@ public class MidiUpdateService : IMidiUpdateService
     }
 
 
-
+    private readonly ILoggingService _loggingService;
     public MidiUpdateService(
         IMidiSdkService sdkService, 
         IMidiSessionService sessionService,
         ILocalSettingsService localSettingsService,
-        IMidiServiceRegistrySettingsService registrySettingsService)
+        IMidiServiceRegistrySettingsService registrySettingsService,
+        ILoggingService loggingService)
     {
         _sessionService = sessionService;
         _sdkService = sdkService;
         _localSettingsService = localSettingsService;
         _registrySettingsService = registrySettingsService;
+        _loggingService = loggingService;
     }
 
 

@@ -23,7 +23,15 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
     private const string MidiFixRegPathRegValue = "MidiFixReg";
     private const string CollectMidiLogsPathRegValue = "CollectMidiLogs";
 
-    private static string GetMidiDiagPath()
+
+
+    private readonly ILoggingService _loggingService;
+    public MidiDiagnosticsService(ILoggingService loggingService)
+    {
+        _loggingService = loggingService;
+    }
+
+    private string GetMidiDiagPath()
     {
         try
         {
@@ -51,15 +59,15 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception getting MIDI Diagnostics tool Path", ex);
+            _loggingService.LogError($"Exception getting MIDI Diagnostics tool Path", ex);
 
             return string.Empty;
         }
     }
 
-    private static string GetCollectMidiLogsPath()
+    private string GetCollectMidiLogsPath()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -87,15 +95,15 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception getting CollectMIDILogs Path", ex);
+            _loggingService.LogError($"Exception getting CollectMIDILogs Path", ex);
 
             return string.Empty;
         }
     }
 
-    private static string GetMidiFixRegPath()
+    private string GetMidiFixRegPath()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -123,7 +131,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception getting MIDI Registry Fixer tool Path", ex);
+            _loggingService.LogError($"Exception getting MIDI Registry Fixer tool Path", ex);
 
             return string.Empty;
         }
@@ -131,20 +139,20 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsCollectMidiLogsPresent()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         var path = GetCollectMidiLogsPath();
 
         if (string.IsNullOrEmpty(path))
         {
-            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs path is blank.");
+            _loggingService.LogError($"Collect MIDI Logs path is blank.");
 
             return false;
         }
 
         if (!File.Exists(path))
         {
-            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs script does not exist in path '{path}' ");
+            _loggingService.LogError($"Collect MIDI Logs script does not exist in path '{path}' ");
 
             return false;
         }
@@ -154,20 +162,20 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsMidiDiagPresent()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         var path = GetMidiDiagPath();
 
         if (string.IsNullOrEmpty(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Diagnostics tool path is blank.");
+            _loggingService.LogError($"MIDI Diagnostics tool path is blank.");
 
             return false;
         }
 
         if (!File.Exists(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Diagnostics tool does not exist in path '{path}' ");
+            _loggingService.LogError($"MIDI Diagnostics tool does not exist in path '{path}' ");
 
             return false;
         }
@@ -178,20 +186,20 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsMidiFixRegPresent()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         var path = GetMidiFixRegPath();
 
         if (string.IsNullOrEmpty(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Registry Fixer tool path is blank.");
+            _loggingService.LogError($"MIDI Registry Fixer tool path is blank.");
 
             return false;
         }
 
         if (!File.Exists(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Registry Fixer tool does not exist in path '{path}' ");
+            _loggingService.LogError($"MIDI Registry Fixer tool does not exist in path '{path}' ");
 
             return false;
         }
@@ -201,7 +209,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool CaptureMidiDiagOutputToNotepad()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -236,7 +244,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
             }
             else
             {
-                App.GetService<ILoggingService>().LogError("Unable to find mididiag utility.");
+                _loggingService.LogError("Unable to find mididiag utility.");
 
                 return false;
             }
@@ -244,7 +252,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error capturing mididiag.exe output and opening in notepad.", ex);
+            _loggingService.LogError("Error capturing mididiag.exe output and opening in notepad.", ex);
 
             return false;
         }
@@ -260,7 +268,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool MidiFixReg()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -285,19 +293,19 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
                     }
                     else
                     {
-                        App.GetService<ILoggingService>().LogError($"Registry fix failed. midifixreg returned {consoleProcess.ExitCode}");
+                        _loggingService.LogError($"Registry fix failed. midifixreg returned {consoleProcess.ExitCode}");
                     }
                 }
             }
             else
             {
-                App.GetService<ILoggingService>().LogError("Unable to find midifixreg utility.");
+                _loggingService.LogError("Unable to find midifixreg utility.");
             }
 
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error fixing registry entries.", ex);
+            _loggingService.LogError("Error fixing registry entries.", ex);
         }
 
         return false;
@@ -307,7 +315,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool RestoreInBoxComponentRegistrations()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -316,7 +324,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error restoring in-box component registrations.", ex);
+            _loggingService.LogError("Error restoring in-box component registrations.", ex);
         }
 
         return false;
@@ -325,7 +333,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public string CaptureMidiLogsToFile()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -359,24 +367,24 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
                         }
                         else
                         {
-                            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs returned error {consoleProcess.ExitCode}");
+                            _loggingService.LogError($"Collect MIDI Logs returned error {consoleProcess.ExitCode}");
                         }
                     }
                     else
                     {
-                        App.GetService<ILoggingService>().LogError($"Unable to start process to collect MIDI Logs");
+                        _loggingService.LogError($"Unable to start process to collect MIDI Logs");
                     }
                 }
             }
             else
             {
-                App.GetService<ILoggingService>().LogError("Unable to find CollectMIDILogs utility.");
+                _loggingService.LogError("Unable to find CollectMIDILogs utility.");
             }
 
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error collecting MIDI logs.", ex);
+            _loggingService.LogError("Error collecting MIDI logs.", ex);
         }
 
         return "";
@@ -388,7 +396,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     private List<FoundRegistryEntry> GetHklmRegistryEntries(string key, RegistryView view)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         List<FoundRegistryEntry> entries = new List<FoundRegistryEntry>();
 
@@ -521,7 +529,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public List<FoundRegistryEntry> GetDrivers32MidiEntries()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         var values = GetHklmRegistryEntries(Drivers32Path, RegistryView.Registry64).OrderBy(x => x.Name).ToList();
 
@@ -540,7 +548,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public List<FoundRegistryEntry> GetDrivers32WOWMidiEntries()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return GetHklmRegistryEntries(Drivers32WOWPath, RegistryView.Registry32).OrderBy(x => x.Name).ToList();
     }

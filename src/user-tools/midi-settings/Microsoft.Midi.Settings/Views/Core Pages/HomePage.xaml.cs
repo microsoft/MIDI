@@ -34,8 +34,7 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class HomePage : Page
     {
-        private ILoggingService _loggingService;
-
+        private readonly ILoggingService _loggingService;
 
         public HomeViewModel ViewModel
         {
@@ -56,12 +55,14 @@ namespace Microsoft.Midi.Settings.Views
             }
             catch (Exception ex)
             {
-                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+                _loggingService.LogError("Error initializing page", ex);
             }
         }
 
         private void ViewModel_UpdateFailed(object? sender, string e)
         {
+            _loggingService.LogError("Update failed.");
+
             Dialog_DownloadingUpdate_Progress.Visibility = Visibility.Collapsed;
             Dialog_DownloadingUpdate_MainText.Text = "Download Failed...";               // TODO: Bind this to VM and have it set from a resource
 
@@ -72,6 +73,8 @@ namespace Microsoft.Midi.Settings.Views
 #pragma warning disable 4014
         private void UpdateSdkRuntime_Click(object sender, RoutedEventArgs e)
         {
+            _loggingService.LogError("Enter.");
+
             // we show the dialog but do not wait on it
             Dialog_DownloadingUpdate.ShowAsync();
 

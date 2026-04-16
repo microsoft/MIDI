@@ -23,9 +23,20 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
     private const string MidiRootRegKey = @"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows MIDI Services";
 
     private const string MidiSdkRootRegKey = MidiRootRegKey + @"\Desktop App SDK Runtime";
+
+
+    private readonly ILoggingService _loggingService;
+    public MidiServiceRegistrySettingsService(ILoggingService loggingService)
+    {  
+        _loggingService = loggingService; 
+    }
+
+
+
+
     private UInt32 GetRegistryNumericDWORDValue(string keyName, string valueName, UInt32 defaultValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -43,7 +54,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error getting registry DWORD value for {keyName} : {valueName}", ex);
+            _loggingService.LogError($"Error getting registry DWORD value for {keyName} : {valueName}", ex);
 
             return defaultValue;
         }
@@ -51,7 +62,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private bool GetRegistryBooleanDWORDValue(string keyName, string valueName, bool defaultValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -83,7 +94,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error getting registry Boolean DWORD value for {keyName} : {valueName}", ex);
+            _loggingService.LogError($"Error getting registry Boolean DWORD value for {keyName} : {valueName}", ex);
 
             return defaultValue;
         }
@@ -92,7 +103,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private string GetRegistryStringValue(string keyName, string valueName, string defaultValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -114,7 +125,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error getting registry string value for {keyName} : {valueName}", ex);
+            _loggingService.LogError($"Error getting registry string value for {keyName} : {valueName}", ex);
 
             return defaultValue;
         }
@@ -122,7 +133,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private bool SetRegistryNumericDWORDValue(string keyName, string valueName, UInt32 newValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -132,13 +143,13 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
         }
         catch (UnauthorizedAccessException ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error setting registry DWORD value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
+            _loggingService.LogError($"Error setting registry DWORD value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
 
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error setting registry DWORD value for {keyName} : {valueName}", ex);
+            _loggingService.LogError($"Error setting registry DWORD value for {keyName} : {valueName}", ex);
 
             return false;
         }
@@ -146,7 +157,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private bool SetRegistryBooleanDWORDValue(string keyName, string valueName, bool newValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -158,13 +169,13 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
         }
         catch (UnauthorizedAccessException ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error setting registry Boolean value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
+            _loggingService.LogError($"Error setting registry Boolean value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
 
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error setting registry Boolean DWORD value for {keyName} : {valueName}", ex);
+            _loggingService.LogError($"Error setting registry Boolean DWORD value for {keyName} : {valueName}", ex);
 
             return false;
         }
@@ -172,7 +183,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     private bool SetRegistryStringValue(string keyName, string valueName, string newValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         try
         {
@@ -182,13 +193,13 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
         }
         catch (UnauthorizedAccessException ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error setting registry String value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
+            _loggingService.LogError($"Error setting registry String value for {keyName} : {valueName}. Current user does not have the correct permissions.", ex);
 
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Error setting registry String value for {keyName} : {valueName}", ex);
+            _loggingService.LogError($"Error setting registry String value for {keyName} : {valueName}", ex);
 
             return false;
         }
@@ -233,7 +244,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public MidiRuntimeReleaseTypes GetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes defaultIfMissing)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         var value = GetRegistryStringValue(
             MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, "").ToLower().Trim();
@@ -259,7 +270,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool SetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes releaseType)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         if (releaseType == MidiRuntimeReleaseTypes.Preview)
         {
@@ -276,14 +287,14 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool GetAutoCheckForUpdatesEnabled()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return GetRegistryBooleanDWORDValue(MidiSdkRootRegKey, ValueName_AutoCheckForRuntimeUpdates, true);
     }
 
     public bool SetAutoCheckForUpdatesEnabled(bool newValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return SetRegistryBooleanDWORDValue(MidiSdkRootRegKey, ValueName_AutoCheckForRuntimeUpdates, newValue);
     }
@@ -294,7 +305,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool GetDefaultUseNewStyleMidi1PortNaming()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         //return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_DefaultToOldMidi1PortNaming, SettingsDefaultMidi1PortNaming);
 
@@ -312,7 +323,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
     }
     public bool SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach newValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return SetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_DefaultMidi1PortNaming, (uint)newValue);
     }
@@ -320,21 +331,21 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool GetMidi2DiscoveryEnabled()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_Midi2DiscoveryEnabled, SettingsDefaultDiscoveryEnabled);
     }
 
     public UInt32 GetMidi2DiscoveryTimeoutMS()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return GetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_Midi2DiscoveryTimeoutMS, SettingsDefaultDiscoveryTimeout);
     }
 
     public bool GetUseMMCSS()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_UseMMCSS, SettingsDefaultUseMMCSS);
     }
@@ -342,7 +353,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool SetMidi2DiscoveryEnabled(bool newValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         // TODO: if the new value is the default, then just delete the reg entry
 
@@ -351,7 +362,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool SetMidi2DiscoveryTimeoutMS(UInt32 newValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         // TODO: if the new value is the default, then just delete the reg entry
 
@@ -360,7 +371,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
 
     public bool SetUseMMCSS(bool newValue)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         // if the new value is the default, then just delete the reg entry
 

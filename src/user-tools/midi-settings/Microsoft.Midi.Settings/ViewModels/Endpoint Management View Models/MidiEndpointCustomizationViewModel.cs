@@ -84,7 +84,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void UpdateImage()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             if (!string.IsNullOrEmpty(ImageFullPath))
             {
@@ -115,9 +115,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         }
 
-        public MidiEndpointCustomizationViewModel(MidiEndpointWrapper endpointWrapper)
+        private readonly ILoggingService _loggingService;
+        public MidiEndpointCustomizationViewModel(MidiEndpointWrapper endpointWrapper, ILoggingService loggingService)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService = loggingService;
 
             Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
             EndpointWrapper = endpointWrapper;
@@ -164,11 +165,13 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
 
             }
+
+            _loggingService = loggingService;
         }
 
         public MidiServiceEndpointCustomizationConfig GetUpdateConfig()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var configUpdate = new MidiServiceEndpointCustomizationConfig(
                 EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().TransportId);

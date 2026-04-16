@@ -154,7 +154,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshData()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             // Property updates need to happen on UI thread
             var context = _synchronizationContextService.GetUIContext();
@@ -335,7 +335,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             Task.Run(() =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Getting MIDI 1.0 Ports");
 
@@ -394,15 +394,17 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiPanicService _panicService;
         private readonly IMidiTransportInfoService _transportInfoService;
         private readonly IMidiConsoleToolsService _consoleToolsService;
+        private readonly ILoggingService _loggingService;
 
         public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,
             IMidiTransportInfoService transportInfoService,
             INavigationService navigationService,
             ISynchronizationContextService synchronizationContextService,
             IMidiConsoleToolsService consoleToolsService,
-            IMidiPanicService panicService)
+            IMidiPanicService panicService,
+            ILoggingService loggingService)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService = loggingService;
 
             System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Constructing");
 
@@ -433,7 +435,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendPanicCommand = new RelayCommand(
                 () =>
                 {
-                    App.GetService<ILoggingService>().LogInfo($"Enter");
+                    _loggingService.LogInfo($"Enter");
 
                     System.Diagnostics.Debug.WriteLine("Sending panic");
 
@@ -446,7 +448,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             MonitorEndpointCommand = new RelayCommand(
                 () =>
                 {
-                    App.GetService<ILoggingService>().LogInfo($"Enter");
+                    _loggingService.LogInfo($"Enter");
 
                     System.Diagnostics.Debug.WriteLine("Monitor");
 

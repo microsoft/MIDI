@@ -59,7 +59,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private async void SendSysEx()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             if (SelectedEndpoint == null)
             {
@@ -101,7 +101,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             await Task.Run(async () =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 var connection = _sessionService.GetConnection(SelectedEndpoint.Id);
 
@@ -177,16 +177,17 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
         private readonly IMidiSessionService _sessionService;
         private readonly ISynchronizationContextService _synchronizationContextService;
-
+        private readonly ILoggingService _loggingService;
 
         public ToolsSysExViewModel(
             IMidiSdkService sdkService,
             IMidiSessionService sessionService,
             IMidiEndpointEnumerationService endpointEnumerationService,
-            ISynchronizationContextService synchronizationContextService
+            ISynchronizationContextService synchronizationContextService,
+            ILoggingService loggingService
             )
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService = loggingService;
 
             _sessionService = sessionService;
             _sdkService = sdkService;
@@ -243,7 +244,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshDeviceCollection()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             _synchronizationContextService.GetUIContext().Post( _ =>
             {

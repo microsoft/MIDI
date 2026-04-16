@@ -77,10 +77,10 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ObservableCollection<MidiServiceProcessingPluginViewModel> Plugins { get; } = [];
 
 
-
-        public PluginsProcessingViewModel()
+        private readonly ILoggingService _loggingService;
+        public PluginsProcessingViewModel(ILoggingService loggingService)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService = loggingService;
 
             // these are hard-coded in this app because they are not yet dynamic in the service,
             // and so there's no API to call to get a list of them. 

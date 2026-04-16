@@ -54,9 +54,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ObservableCollection<MidiServiceTransportPluginViewModel> Plugins { get; } = [];
 
-        public PluginsTransportViewModel()
+        private readonly ILoggingService _loggingService;
+        public PluginsTransportViewModel(ILoggingService loggingService)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService = loggingService;
 
             Plugins.Clear();
 

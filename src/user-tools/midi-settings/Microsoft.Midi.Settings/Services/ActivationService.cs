@@ -24,6 +24,7 @@ public class ActivationService : IActivationService
     private readonly IMidiSdkService _sdkService;
     private readonly IMidiEndpointEnumerationService _enumerationService;
     private readonly IMessageBoxService _messageBoxService;
+    private readonly ILoggingService _loggingService;
 
     private UIElement? _shell = null;
 
@@ -34,7 +35,8 @@ public class ActivationService : IActivationService
         IGeneralSettingsService generalSettingsService,
         IMidiSdkService sdkService,
         IMidiEndpointEnumerationService enumerationService,
-        IMessageBoxService messageBoxService)
+        IMessageBoxService messageBoxService,
+        ILoggingService loggingService)
     {
         _sdkService = sdkService;
         _defaultHandler = defaultHandler;
@@ -43,11 +45,12 @@ public class ActivationService : IActivationService
         _generalSettingsService = generalSettingsService;
         _enumerationService = enumerationService;
         _messageBoxService = messageBoxService;
+        _loggingService = loggingService;  
     }
 
     private void PositionMainWindow()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         bool provided = false;
 
@@ -103,19 +106,19 @@ public class ActivationService : IActivationService
             App.MainWindow.AppWindow.MoveInZOrderAtTop();
         }
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+        _loggingService.LogInfo("Exit");
     }
 
 
     public async Task<bool> ActivateAsync(object activationArgs)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         var splash = new Views.Core_Pages.LoadingPage();
         App.MainWindow.Content = splash;
 
         // restore window size from last close
-        App.GetService<ILoggingService>().LogInfo("Positioning main window");
+        _loggingService.LogInfo("Positioning main window");
         PositionMainWindow();
 
         App.MainWindow.Show();
@@ -130,7 +133,7 @@ public class ActivationService : IActivationService
 
         //if (serviceController == null)
         //{
-        //    App.GetService<ILoggingService>().LogError("Unable to get service controller");
+        //    _loggingService.LogError("Unable to get service controller");
         //    return false;
         //}
 
@@ -149,7 +152,7 @@ public class ActivationService : IActivationService
         //featureEnabled = await MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync();
         //if (!featureEnabled)
         //{
-        //    App.GetService<ILoggingService>().LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
+        //    _loggingService.LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
 
         //    _messageBoxService.ShowError("Error_MidiServicesFeatureNotEnabled".GetLocalized(), "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized());
 
@@ -158,7 +161,7 @@ public class ActivationService : IActivationService
 
         if (_sdkService == null)
         {
-            App.GetService<ILoggingService>().LogError("SDK Service is null");
+            _loggingService.LogError("SDK Service is null");
             return false;
         }
 
@@ -168,7 +171,7 @@ public class ActivationService : IActivationService
         {
             if (!_sdkService.InitializeSdk())
             {
-                App.GetService<ILoggingService>().LogError("Unable to initialize SDK");
+                _loggingService.LogError("Unable to initialize SDK");
 
                 _messageBoxService.ShowError("Error_UnableToInitializeMidiRuntime".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
 
@@ -176,7 +179,7 @@ public class ActivationService : IActivationService
             }
             else if (!_sdkService.InitializeService())
             {
-                App.GetService<ILoggingService>().LogError("Unable to initialize Service");
+                _loggingService.LogError("Unable to initialize Service");
 
                 _messageBoxService.ShowError("Error_UnableToStartMidiService".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
 
@@ -190,7 +193,7 @@ public class ActivationService : IActivationService
 
         if (!_sdkService.IsRuntimeInitialized /* || !_sdkService.IsServiceInitialized */)
         {
-            App.GetService<ILoggingService>().LogError("Runtime and/or service are not initialized");
+            _loggingService.LogError("Runtime and/or service are not initialized");
             return false;
         }
 
@@ -198,7 +201,7 @@ public class ActivationService : IActivationService
 
 
         // Set the MainWindow Content.
-        App.GetService<ILoggingService>().LogInfo("Setting main window content");
+        _loggingService.LogInfo("Setting main window content");
         //if (App.MainWindow.Content == null)
         {
             _shell = App.GetService<ShellPage>();
@@ -208,7 +211,7 @@ public class ActivationService : IActivationService
         // Handle activation via ActivationHandlers.
         await HandleActivationAsync(activationArgs);
 
-        App.GetService<ILoggingService>().LogInfo("Closing splash screen");
+        _loggingService.LogInfo("Closing splash screen");
    //     App.Splash.Close();
 
         //if (App.Splash != null && App.Splash.Visible)
@@ -227,7 +230,7 @@ public class ActivationService : IActivationService
         // Execute tasks after activation.
         await StartupAsync();
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+        _loggingService.LogInfo("Exit");
 
         return true;
     }
@@ -236,7 +239,7 @@ public class ActivationService : IActivationService
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo("Enter");
+            _loggingService.LogInfo("Enter");
 
             var activationHandler = _activationHandlers.FirstOrDefault(h => h.CanHandle(activationArgs));
 
@@ -250,11 +253,11 @@ public class ActivationService : IActivationService
                 await _defaultHandler.HandleAsync(activationArgs);
             }
 
-            App.GetService<ILoggingService>().LogInfo("Exit");
+            _loggingService.LogInfo("Exit");
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Exception during HandleActivationAsync", ex);
+            _loggingService.LogError("Exception during HandleActivationAsync", ex);
         }
     }
 
@@ -262,17 +265,17 @@ public class ActivationService : IActivationService
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo("Enter");
+            _loggingService.LogInfo("Enter");
 
             await _themeSelectorService.InitializeAsync().ConfigureAwait(false);
             await _generalSettingsService.InitializeAsync().ConfigureAwait(false);
             await Task.CompletedTask;
 
-            App.GetService<ILoggingService>().LogInfo("Exit");
+            _loggingService.LogInfo("Exit");
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Exception during InitializeAsync", ex);
+            _loggingService.LogError("Exception during InitializeAsync", ex);
         }
     }
 
@@ -280,16 +283,16 @@ public class ActivationService : IActivationService
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo("Enter");
+            _loggingService.LogInfo("Enter");
 
             await _themeSelectorService.SetRequestedThemeAsync();
             await Task.CompletedTask;
 
-            App.GetService<ILoggingService>().LogInfo("Exit");
+            _loggingService.LogInfo("Exit");
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Exception during StartupAsync", ex);
+            _loggingService.LogError("Exception during StartupAsync", ex);
         }
 
     }

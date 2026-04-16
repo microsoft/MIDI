@@ -111,16 +111,18 @@ public class MidiConfigFile : IMidiConfigFile
         }
     }
 
+    private readonly ILoggingService _loggingService;
 
-    public MidiConfigFile(string localFileName)
+    public MidiConfigFile(string localFileName, ILoggingService loggingService)
     {
         FileName = localFileName;
+        _loggingService = loggingService;
     }
 
 
     internal bool LoadHeaderOnly()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         if (m_fullFileName == string.Empty) return false;
 
@@ -139,7 +141,7 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 if (!obj.Keys.Contains(MidiConfigConstants.JsonKeys.Header))
                 {
-                    App.GetService<ILoggingService>().LogError("Missing config file header");
+                    _loggingService.LogError("Missing config file header");
 
                     return false;
                 }
@@ -148,7 +150,7 @@ public class MidiConfigFile : IMidiConfigFile
 
                 if (!headerObject.Keys.Contains(MidiConfigConstants.JsonKeys.HeaderConfigName))
                 {
-                    App.GetService<ILoggingService>().LogError("Missing config file header config name");
+                    _loggingService.LogError("Missing config file header config name");
                     return false;
                 }
 
@@ -169,7 +171,7 @@ public class MidiConfigFile : IMidiConfigFile
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error loading config file header", ex);
+            _loggingService.LogError("Error loading config file header", ex);
 
             return false;
         }
@@ -177,7 +179,7 @@ public class MidiConfigFile : IMidiConfigFile
 
     public bool Load()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         if (m_fullFileName == string.Empty) return false;
 
@@ -185,7 +187,7 @@ public class MidiConfigFile : IMidiConfigFile
         {
             if (!File.Exists(m_fullFileName))
             {
-                App.GetService<ILoggingService>().LogError($"Config file '{m_fullFileName}' does not exist");
+                _loggingService.LogError($"Config file '{m_fullFileName}' does not exist");
 
                 return false;
             }
@@ -228,7 +230,7 @@ public class MidiConfigFile : IMidiConfigFile
             }
             else
             {
-                App.GetService<ILoggingService>().LogError($"Unable to parse contents of config file");
+                _loggingService.LogError($"Unable to parse contents of config file");
 
                 return false;
             }
@@ -236,7 +238,7 @@ public class MidiConfigFile : IMidiConfigFile
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error loading config file", ex);
+            _loggingService.LogError("Error loading config file", ex);
 
             return false;
         }
@@ -244,7 +246,7 @@ public class MidiConfigFile : IMidiConfigFile
 
     private bool Save()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         if (m_config == null) return false;
         if (m_fullFileName == string.Empty) return false;
@@ -264,7 +266,7 @@ public class MidiConfigFile : IMidiConfigFile
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error saving config file", ex);
+            _loggingService.LogError("Error saving config file", ex);
 
         }
 
@@ -273,7 +275,7 @@ public class MidiConfigFile : IMidiConfigFile
 
     private JsonObject? FindExistingTransportSection(JsonObject mainConfigObject, Guid transportId)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter. Looking for transport '{transportId}'");
+        _loggingService.LogInfo($"Enter. Looking for transport '{transportId}'");
 
         string transportIdKey = transportId.ToString("B").ToUpper();
 
@@ -289,7 +291,7 @@ public class MidiConfigFile : IMidiConfigFile
             }
         }
 
-        App.GetService<ILoggingService>().LogInfo($"Unable to find transport section");
+        _loggingService.LogInfo($"Unable to find transport section");
 
         return null;
     }
@@ -298,13 +300,13 @@ public class MidiConfigFile : IMidiConfigFile
 
     private JsonObject FindOrCreateTransportSection(JsonObject mainConfigObject, Guid transportId)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter. Looking for transport '{transportId.ToString()}'");
+        _loggingService.LogInfo($"Enter. Looking for transport '{transportId.ToString()}'");
 
         string transportIdKey = transportId.ToString("B").ToUpper();
 
         if (!mainConfigObject.Keys.Contains(MidiConfigConstants.JsonKeys.TransportPluginSettings))
         {
-            App.GetService<ILoggingService>().LogInfo($"Adding missing transport plugin settings section");
+            _loggingService.LogInfo($"Adding missing transport plugin settings section");
 
             // need to add transport plugin settings to the main config
             JsonObject section = new JsonObject();
@@ -315,7 +317,7 @@ public class MidiConfigFile : IMidiConfigFile
 
         if (!transportPluginsSettings.Keys.Contains(transportIdKey))
         {
-            App.GetService<ILoggingService>().LogInfo($"Adding transport key '{transportId}'");
+            _loggingService.LogInfo($"Adding transport key '{transportId}'");
 
             // need to add section for this transport
             JsonObject section = new JsonObject();
@@ -465,7 +467,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             if (mainConfigObject == null) return false;
             if (objectToMergeIn == null) return false;
@@ -501,7 +503,7 @@ public class MidiConfigFile : IMidiConfigFile
 
             if (!foundIncoming)
             {
-                App.GetService<ILoggingService>().LogInfo($"Incoming object not found");
+                _loggingService.LogInfo($"Incoming object not found");
 
                 return false;
             }
@@ -537,13 +539,13 @@ public class MidiConfigFile : IMidiConfigFile
                 }
             }
 
-            App.GetService<ILoggingService>().LogError($"Finished without merging object");
+            _loggingService.LogError($"Finished without merging object");
 
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception merging data into config", ex);
+            _loggingService.LogError($"Exception merging data into config", ex);
 
             return false;
         }
@@ -560,7 +562,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id: {associationId}");
+            _loggingService.LogInfo($"Enter. Association Id: {associationId}");
 
             if (m_config == null) return false;
 
@@ -576,18 +578,18 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 createSection.Remove(endpointKey);
 
-                App.GetService<ILoggingService>().LogInfo($"Saving: {associationId}");
+                _loggingService.LogInfo($"Saving: {associationId}");
 
                 return Save();
             }
 
-            App.GetService<ILoggingService>().LogError($"Unable to find or save loopback {associationId}");
+            _loggingService.LogError($"Unable to find or save loopback {associationId}");
 
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception removing basic loopback endpoint. Association Id: {associationId}", ex);
+            _loggingService.LogError($"Exception removing basic loopback endpoint. Association Id: {associationId}", ex);
 
             return false;
         }
@@ -601,7 +603,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id {creationConfig.AssociationId}");
+            _loggingService.LogInfo($"Enter. Association Id {creationConfig.AssociationId}");
 
             if (m_config == null) return false;
             if (creationConfig == null) return false;
@@ -609,25 +611,25 @@ public class MidiConfigFile : IMidiConfigFile
             // get the latest from disk
             if (!Load())
             {
-                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                _loggingService.LogError($"Unable to load config");
                 return false;
             }
 
             if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
             {
                 // write the property
-                App.GetService<ILoggingService>().LogInfo($"Saving. Association Id {creationConfig.AssociationId}");
+                _loggingService.LogInfo($"Saving. Association Id {creationConfig.AssociationId}");
 
                 return Save();
             }
 
-            App.GetService<ILoggingService>().LogError($"Failed to store basic loopback endpoint {creationConfig.AssociationId}");
+            _loggingService.LogError($"Failed to store basic loopback endpoint {creationConfig.AssociationId}");
 
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception storing basic loopback endpoint. Association Id: {creationConfig.AssociationId}", ex);
+            _loggingService.LogError($"Exception storing basic loopback endpoint. Association Id: {creationConfig.AssociationId}", ex);
 
             return false;
         }
@@ -638,14 +640,14 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id: {associationId}, isMuted: {isMuted} ");
+            _loggingService.LogInfo($"Enter. Association Id: {associationId}, isMuted: {isMuted} ");
 
             if (m_config == null) return false;
 
             // get the latest from disk
             if (!Load())
             {
-                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                _loggingService.LogError($"Unable to load config");
                 return false;
             }
 
@@ -658,14 +660,14 @@ public class MidiConfigFile : IMidiConfigFile
 
             endpointObject.SetNamedValue(MidiConfigConstants.JsonKeys.Muted, JsonValue.CreateBooleanValue(isMuted));
 
-            App.GetService<ILoggingService>().LogInfo($"Saving. Association Id: {associationId}, isMuted: {isMuted} ");
+            _loggingService.LogInfo($"Saving. Association Id: {associationId}, isMuted: {isMuted} ");
 
             return Save();
 
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception storing muted property Association Id: {associationId}, isMuted: {isMuted}", ex);
+            _loggingService.LogError($"Exception storing muted property Association Id: {associationId}, isMuted: {isMuted}", ex);
 
             return false;
         }
@@ -675,7 +677,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id: {associationId}");
+            _loggingService.LogInfo($"Enter. Association Id: {associationId}");
 
             if (m_config == null) return false;
 
@@ -691,16 +693,16 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 createSection.Remove(endpointKey);
 
-                App.GetService<ILoggingService>().LogInfo($"Saving. Association Id: {associationId}");
+                _loggingService.LogInfo($"Saving. Association Id: {associationId}");
                 return Save();
             }
 
-            App.GetService<ILoggingService>().LogError($"Unable to remove loopback endpoint pair");
+            _loggingService.LogError($"Unable to remove loopback endpoint pair");
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception removing loopback pair Association Id: {associationId}", ex);
+            _loggingService.LogError($"Exception removing loopback pair Association Id: {associationId}", ex);
 
             return false;
         }
@@ -713,7 +715,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter. Association Id: {creationConfig.AssociationId}");
+            _loggingService.LogInfo($"Enter. Association Id: {creationConfig.AssociationId}");
 
             if (m_config == null) return false;
             if (creationConfig == null) return false;
@@ -721,7 +723,7 @@ public class MidiConfigFile : IMidiConfigFile
             // get the latest from disk
             if (!Load())
             {
-                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                _loggingService.LogError($"Unable to load config");
                 return false;
             }
 
@@ -729,16 +731,16 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 // write the property
 
-                App.GetService<ILoggingService>().LogInfo($"Saving. Association Id: {{creationConfig.AssociationId}}\"");
+                _loggingService.LogInfo($"Saving. Association Id: {{creationConfig.AssociationId}}\"");
                 return Save();
             }
 
-            App.GetService<ILoggingService>().LogError($"Unable to remove loopback endpoint pair");
+            _loggingService.LogError($"Unable to remove loopback endpoint pair");
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception storing loopback pair Association Id: {creationConfig.AssociationId}", ex);
+            _loggingService.LogError($"Exception storing loopback pair Association Id: {creationConfig.AssociationId}", ex);
 
             return false;
         }
@@ -749,7 +751,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter. Id: {creationConfig.Id}");
+            _loggingService.LogInfo($"Enter. Id: {creationConfig.Id}");
 
             if (m_config == null) return false;
             if (creationConfig == null) return false;
@@ -757,7 +759,7 @@ public class MidiConfigFile : IMidiConfigFile
             // get the latest from disk
             if (!Load())
             {
-                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                _loggingService.LogError($"Unable to load config");
                 return false;
             }
 
@@ -765,16 +767,16 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 // write the property
 
-                App.GetService<ILoggingService>().LogInfo($"Saving. Id: {creationConfig.Id}");
+                _loggingService.LogInfo($"Saving. Id: {creationConfig.Id}");
                 return Save();
             }
 
-            App.GetService<ILoggingService>().LogError($"Unable to store network host");
+            _loggingService.LogError($"Unable to store network host");
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception storing network host. Id: {creationConfig.Id}", ex);
+            _loggingService.LogError($"Exception storing network host. Id: {creationConfig.Id}", ex);
 
             return false;
         }
@@ -784,7 +786,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter. Id: {hostEntryId}");
+            _loggingService.LogInfo($"Enter. Id: {hostEntryId}");
 
             if (m_config == null) return false;
             if (string.IsNullOrEmpty(hostEntryId)) return false;
@@ -792,7 +794,7 @@ public class MidiConfigFile : IMidiConfigFile
             // get the latest from disk
             if (!Load())
             {
-                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                _loggingService.LogError($"Unable to load config");
                 return false;
             }
 
@@ -809,7 +811,7 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 hostsObject.Remove(hostEntryId);
 
-                App.GetService<ILoggingService>().LogInfo($"Saving. Id: {hostEntryId}");
+                _loggingService.LogInfo($"Saving. Id: {hostEntryId}");
                 return Save();
             }
             else
@@ -819,7 +821,7 @@ public class MidiConfigFile : IMidiConfigFile
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception removing network host. Id: {hostEntryId}", ex);
+            _loggingService.LogError($"Exception removing network host. Id: {hostEntryId}", ex);
 
             return false;
         }
@@ -832,7 +834,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter. Id: '{creationConfig.Id}'");
+            _loggingService.LogInfo($"Enter. Id: '{creationConfig.Id}'");
 
             if (m_config == null) return false;
             if (creationConfig == null) return false;
@@ -840,7 +842,7 @@ public class MidiConfigFile : IMidiConfigFile
             // get the latest from disk
             if (!Load())
             {
-                App.GetService<ILoggingService>().LogError($"Unable to load config");
+                _loggingService.LogError($"Unable to load config");
                 return false;
             }
 
@@ -848,17 +850,17 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 // write the property
 
-                App.GetService<ILoggingService>().LogInfo($"Saving. Id: '{creationConfig.Id}'");
+                _loggingService.LogInfo($"Saving. Id: '{creationConfig.Id}'");
                 return Save();
             }
 
-            App.GetService<ILoggingService>().LogError("Unable to store network client in config file.");
+            _loggingService.LogError("Unable to store network client in config file.");
 
             return false;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception storing network client. Id: {creationConfig.Id}", ex);
+            _loggingService.LogError($"Exception storing network client. Id: {creationConfig.Id}", ex);
 
             return false;
         }
@@ -950,7 +952,7 @@ public class MidiConfigFile : IMidiConfigFile
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception storing endpoint customization. Transport Id: {updateConfig.TransportId}", ex);
+            _loggingService.LogError($"Exception storing endpoint customization. Transport Id: {updateConfig.TransportId}", ex);
 
             return false;
         }
@@ -966,7 +968,6 @@ class MidiConfigFileService : IMidiConfigFileService
 {
     public event EventHandler ActiveConfigFileChanged;
 
-    private readonly IMidiServiceRegistrySettingsService _registryService;
 
     private MidiConfigFile? m_currentConfigFile = null;
     public IMidiConfigFile? CurrentConfig
@@ -986,10 +987,14 @@ class MidiConfigFileService : IMidiConfigFileService
         get { return CurrentConfig != null; }
     }
 
-
-    public MidiConfigFileService(IMidiServiceRegistrySettingsService registryService)
+    private readonly IMidiServiceRegistrySettingsService _registryService;
+    private readonly ILoggingService _loggingService;
+    public MidiConfigFileService(
+        IMidiServiceRegistrySettingsService registryService,
+        ILoggingService loggingService)
     {
         _registryService = registryService;
+        _loggingService = loggingService;
 
         string localFileName = _registryService.GetCurrentConfigFileName();
 
@@ -1022,7 +1027,7 @@ class MidiConfigFileService : IMidiConfigFileService
             // some futzing around, so we just pretend it doesn't exist.
             if (localFileName.ToLower() != "default.midiconfig.json")
             {
-                var configFile = new MidiConfigFile(localFileName);
+                var configFile = new MidiConfigFile(localFileName, _loggingService);
 
                 if (configFile.LoadHeaderOnly())
                 {
@@ -1037,7 +1042,7 @@ class MidiConfigFileService : IMidiConfigFileService
 
     private MidiConfigFile? LoadConfigFile(string localFileName)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         // early Canary builds went out with a file of this name, and
         // it's protected in a way that we can't write to it without
@@ -1046,7 +1051,7 @@ class MidiConfigFileService : IMidiConfigFileService
             localFileName != string.Empty &&
             localFileName.ToLower() != "default.midiconfig.json")
         {
-            var config = new MidiConfigFile(localFileName);
+            var config = new MidiConfigFile(localFileName, _loggingService);
 
             if (config.Load())
             {
@@ -1139,7 +1144,7 @@ class MidiConfigFileService : IMidiConfigFileService
 
     public bool CreateNewConfigFile(string configName, string configLocalFileName)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         try
         {
@@ -1151,7 +1156,7 @@ class MidiConfigFileService : IMidiConfigFileService
             if (ConfigFileExists(configLocalFileName))
             {
                 // TODO: Back up the old one and overwrite this one?
-                App.GetService<ILoggingService>().LogError($"Config file '{configLocalFileName}' already exists");
+                _loggingService.LogError($"Config file '{configLocalFileName}' already exists");
 
                 return false;
             }
@@ -1172,7 +1177,7 @@ class MidiConfigFileService : IMidiConfigFileService
 
             if (Path.Exists(filePath))
             {
-                App.GetService<ILoggingService>().LogError($"Config file '{filePath}' already exists");
+                _loggingService.LogError($"Config file '{filePath}' already exists");
                 return false;
             }
 
@@ -1182,7 +1187,7 @@ class MidiConfigFileService : IMidiConfigFileService
                 fs.Close();
             }
 
-            var config = new MidiConfigFile(configLocalFileName);
+            var config = new MidiConfigFile(configLocalFileName, _loggingService);
             config.LoadHeaderOnly();
 
             m_currentConfigFile = config;
@@ -1192,13 +1197,13 @@ class MidiConfigFileService : IMidiConfigFileService
                 ActiveConfigFileChanged(this, new EventArgs());
             }
 
-            App.GetService<ILoggingService>().LogInfo($"Config file '{config.FileName}' created");
+            _loggingService.LogInfo($"Config file '{config.FileName}' created");
 
             return true;
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error creating new config file", ex);
+            _loggingService.LogError("Error creating new config file", ex);
 
             return false;
         }

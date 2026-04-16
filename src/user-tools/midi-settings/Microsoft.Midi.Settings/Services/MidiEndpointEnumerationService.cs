@@ -63,7 +63,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private void StartDeviceWatcher(bool includeAll)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         if (_watcher != null)
         {
@@ -89,29 +89,33 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
         _watcher.Start();
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+        _loggingService.LogInfo("Exit");
     }
 
 
     public void Start()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         StartDeviceWatcher(false);
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+        _loggingService.LogInfo("Exit");
     }
 
     private readonly ISynchronizationContextService _synchronizationContextService;
-    public MidiEndpointEnumerationService(ISynchronizationContextService synchronizationContextService)
+    private readonly ILoggingService _loggingService;
+    public MidiEndpointEnumerationService(
+        ISynchronizationContextService synchronizationContextService, 
+        ILoggingService loggingService)
     {
         _synchronizationContextService = synchronizationContextService;
+        _loggingService = loggingService;
     }
 
 
     private MidiEndpointWrapper BuildWrapper(MidiEndpointDeviceInformation deviceInformation)
     {
-        App.GetService<ILoggingService>().LogInfo("Building MidiEndpointWrapper");
+        _loggingService.LogInfo("Building MidiEndpointWrapper");
 
         return new MidiEndpointWrapper(
             deviceInformation,
@@ -119,7 +123,8 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             App.GetService<INavigationService>(),
             _synchronizationContextService,
             App.GetService<IMidiConsoleToolsService>(),
-            App.GetService<IMidiPanicService>());
+            App.GetService<IMidiPanicService>(),
+            _loggingService);
 
     }
 
@@ -131,7 +136,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private void OnDeviceWatcherEndpointAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationAddedEventArgs args)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         System.Diagnostics.Debug.WriteLine("MidiEndpointEnumerationService: EndpointAdded");
 
@@ -147,12 +152,12 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             }
         }, null);
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+        _loggingService.LogInfo("Exit");
     }
 
     private void OnDeviceWatcherEndpointRemoved(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationRemovedEventArgs args)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         foreach (MidiEndpointWrapper info in _endpoints)
         {
@@ -168,12 +173,12 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             }
         }
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+        _loggingService.LogInfo("Exit");
     }
 
     private void OnDeviceWatcherEndpointUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         foreach (MidiEndpointWrapper info in _endpoints)
         {
@@ -189,7 +194,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             }
         }
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+        _loggingService.LogInfo("Exit");
 
     }
 
@@ -200,7 +205,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     private void ShutDownDeviceWatcher()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         if (_watcher != null)
         {
@@ -214,7 +219,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             _watcher = null;
         }
 
-        App.GetService<ILoggingService>().LogInfo("Exit");
+        _loggingService.LogInfo("Exit");
     }
 
 

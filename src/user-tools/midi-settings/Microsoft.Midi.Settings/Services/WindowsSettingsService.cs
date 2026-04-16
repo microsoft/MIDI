@@ -19,6 +19,12 @@ namespace Microsoft.Midi.Settings.Services;
 
 internal class WindowsSettingsService : IWindowsSettingsService
 {
+    private readonly ILoggingService _loggingService;
+    public WindowsSettingsService(ILoggingService loggingService)
+    {
+        _loggingService = loggingService;
+    }
+
     private void ShellExec(string uri)
     {
         try
@@ -33,7 +39,7 @@ internal class WindowsSettingsService : IWindowsSettingsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error navigating to app URI", ex);
+            _loggingService.LogError("Error navigating to app URI", ex);
         }
     }
 

@@ -33,18 +33,16 @@ namespace Microsoft.Midi.Settings.Views;
 /// </summary>
 public sealed partial class TroubleshootingPage : Page
 {
-    private readonly ILoggingService _loggingService;
-
     public TroubleshootingViewModel ViewModel
     {
         get;
     }
 
+    private readonly ILoggingService _loggingService;
 
     public TroubleshootingPage()
     {
         _loggingService = App.GetService<ILoggingService>();
-
         ViewModel = App.GetService<TroubleshootingViewModel>();
 
         try
@@ -53,7 +51,7 @@ public sealed partial class TroubleshootingPage : Page
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            _loggingService.LogError("Error initializing page", ex);
         }
     }
 }

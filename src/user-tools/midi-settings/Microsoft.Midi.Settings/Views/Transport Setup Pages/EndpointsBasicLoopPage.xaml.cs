@@ -61,7 +61,7 @@ namespace Microsoft.Midi.Settings.Views
             }
             catch (Exception ex)
             {
-                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+                _loggingService.LogError("Error initializing page", ex);
             }
         }
 

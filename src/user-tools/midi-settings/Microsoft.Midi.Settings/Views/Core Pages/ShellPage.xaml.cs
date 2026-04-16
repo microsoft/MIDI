@@ -28,8 +28,10 @@ public sealed partial class ShellPage : Page
         get;
     }
 
+    private readonly ILoggingService _loggingService;
     public ShellPage(ShellViewModel viewModel)
     {
+        _loggingService = App.GetService<ILoggingService>();
         ViewModel = viewModel;
 
         try
@@ -38,7 +40,7 @@ public sealed partial class ShellPage : Page
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            _loggingService.LogError("Error initializing page", ex);
         }
 
         AppTitleBarControl.Title = App.MainWindow.Title;

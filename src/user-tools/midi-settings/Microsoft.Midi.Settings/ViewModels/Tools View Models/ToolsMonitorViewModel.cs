@@ -31,9 +31,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public class ToolsMonitorViewModel : ObservableRecipient, INavigationAware
     {
-        private readonly INavigationService _navigationService;
-        private readonly ISampleDataService _sampleDataService;
-
         public ObservableCollection<MidiMessageViewModel> Messages { get; } = new ObservableCollection<MidiMessageViewModel>();
         public ObservableCollection<string> UmpEndpointNames { get; } = new ObservableCollection<string>();
         public ObservableCollection<string> AllGroups { get; } = new ObservableCollection<string>();
@@ -47,12 +44,20 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private DispatcherQueue _dispatcherQueue;
 
-        public ToolsMonitorViewModel(INavigationService navigationService, ISampleDataService sampleDataService)
+        private readonly INavigationService _navigationService;
+        private readonly ISampleDataService _sampleDataService;
+        private readonly ILoggingService _loggingService;
+
+        public ToolsMonitorViewModel(
+            INavigationService navigationService, 
+            ISampleDataService sampleDataService,
+            ILoggingService loggingService)
         {
             _navigationService = navigationService;
             _sampleDataService = sampleDataService;
+            _loggingService = loggingService;
 
-//            MonitorOnScreenCommand = new RelayCommand(OnStartMonitoringToScreenAsyncCommand);
+            //            MonitorOnScreenCommand = new RelayCommand(OnStartMonitoringToScreenAsyncCommand);
 
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
         }
@@ -100,7 +105,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public async void OnNavigatedTo(object parameter)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             Messages.Clear();
             UmpEndpointNames.Clear();

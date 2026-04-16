@@ -23,6 +23,13 @@ public class MidiEndpointImageService : IMidiEndpointImageService
     private const string RawImagesFileLocation = @"%allusersprofile%\Microsoft\MIDI\Assets\Endpoints";
     private const string EndpointImagePrefix = "ep-";
 
+
+    private readonly ILoggingService _loggingService;
+    public MidiEndpointImageService(ILoggingService loggingService)
+    {
+        _loggingService = loggingService;
+    }
+
     private string GetImagesFolder()
     {
         return Environment.ExpandEnvironmentVariables(RawImagesFileLocation);
@@ -30,7 +37,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     private string GetPersistentImageRootFileName(string sourceImagePath)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         if (String.IsNullOrWhiteSpace(sourceImagePath)) return string.Empty;
 
@@ -40,7 +47,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     private bool FilesAreIdentical(string fullPath1, string fullPath2)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         const uint bufferSize = 2048;
 
@@ -75,7 +82,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     public string CopyToImageAssetsFolder(string sourceImagePath)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         if (String.IsNullOrWhiteSpace(sourceImagePath)) return string.Empty;
 
@@ -88,7 +95,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
         {
             // trying to copy over itself.
 
-            App.GetService<ILoggingService>().LogError($"Cannot copy image over itself.");
+            _loggingService.LogError($"Cannot copy image over itself.");
             return string.Empty;
         }
 
@@ -107,7 +114,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
             if (index > 500)
             {
-                App.GetService<ILoggingService>().LogError($"Tried to find a unique name, but we hit the limit of the number of attempts.");
+                _loggingService.LogError($"Tried to find a unique name, but we hit the limit of the number of attempts.");
                 return string.Empty;
             }
 
@@ -130,7 +137,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Could not copy image asset.", ex);
+            _loggingService.LogError($"Could not copy image asset.", ex);
 
             return string.Empty;
         }
@@ -139,7 +146,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     public bool ImageAssetExists(string imageFileName)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         string fullPath = Path.Combine(GetImagesFolder(), Path.GetFileName(imageFileName));
 
@@ -151,7 +158,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     public string GetImageAssetFileName(string imageFilePath)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return Path.GetFileName(imageFilePath);
     }
@@ -159,14 +166,14 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
     public string GetImageAssetFullPath(string imageFileName)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         return Path.Combine(GetImagesFolder(), Path.GetFileName(imageFileName));
     }
 
     public ImageSource GetImageSource(string imageFilePath)
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        _loggingService.LogInfo($"Enter");
 
         if (Path.GetExtension(imageFilePath).ToLower() == ".svg")
         {

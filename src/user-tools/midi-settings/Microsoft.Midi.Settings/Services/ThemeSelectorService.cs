@@ -20,15 +20,16 @@ public class ThemeSelectorService : IThemeSelectorService
     public ElementTheme Theme { get; set; } = ElementTheme.Default;
 
     private readonly ILocalSettingsService _localSettingsService;
-
-    public ThemeSelectorService(ILocalSettingsService localSettingsService)
+    private readonly ILoggingService _loggingService;
+    public ThemeSelectorService(ILocalSettingsService localSettingsService, ILoggingService loggingService)
     {
         _localSettingsService = localSettingsService;
+        _loggingService = loggingService;
     }
 
     public async Task InitializeAsync()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         Theme = await LoadThemeFromSettingsAsync();
         await Task.CompletedTask;
@@ -36,7 +37,7 @@ public class ThemeSelectorService : IThemeSelectorService
 
     public async Task SetThemeAsync(ElementTheme theme)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         Theme = theme;
 
@@ -46,7 +47,7 @@ public class ThemeSelectorService : IThemeSelectorService
 
     public async Task SetRequestedThemeAsync()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         if (App.MainWindow.Content is FrameworkElement rootElement)
         {
@@ -60,7 +61,7 @@ public class ThemeSelectorService : IThemeSelectorService
 
     private async Task<ElementTheme> LoadThemeFromSettingsAsync()
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         var themeName = _localSettingsService.ReadSetting<string>(SettingsKey);
 
@@ -74,7 +75,7 @@ public class ThemeSelectorService : IThemeSelectorService
 
     private async Task SaveThemeInSettingsAsync(ElementTheme theme)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         _localSettingsService.SaveSetting<string>(SettingsKey, theme.ToString());
     }

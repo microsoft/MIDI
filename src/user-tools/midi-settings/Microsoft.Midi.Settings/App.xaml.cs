@@ -213,7 +213,6 @@ public partial class App : Application
                 }).
                 Build();
 
-
             App.GetService<ILoggingService>().LogInfo("Starting up: Services registered.");
 
             App.GetService<IGeneralSettingsService>().InitializeAsync().GetAwaiter().GetResult();
@@ -221,13 +220,26 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            MessageBox(
-                (IntPtr)0,
-                "Error_ExceptionThrownDuringSdkInitialization".GetLocalized() + ex.ToString(),
-                "Error_StartupMessageBoxTitle".GetLocalized(),
-                0);
+            try
+            {
+                MessageBox(
+                    (IntPtr)0,
+                    "Error_ExceptionThrownDuringSdkInitialization".GetLocalized() + ex.ToString(),
+                    "Error_StartupMessageBoxTitle".GetLocalized(),
+                    0);
 
-            App.GetService<ILoggingService>().LogError("Error registering services, pages, and viewmodels", ex);
+                App.GetService<ILoggingService>().LogError("Error registering services, pages, and viewmodels", ex);
+            }
+            catch
+            {
+                // we're SOL here at this point, but don't want to bomb out, so hard-code hte strings
+                // in case localization was the issue
+                MessageBox(
+                    (IntPtr)0,
+                    "Couldn't handle exception." + ex.ToString(),
+                    "MIDI Settings Startup Failure",
+                    0);
+            }
 
             Exit();
         }

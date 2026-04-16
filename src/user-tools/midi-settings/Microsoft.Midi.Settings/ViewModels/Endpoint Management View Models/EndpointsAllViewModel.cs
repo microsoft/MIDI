@@ -110,17 +110,17 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         private const string AllTransportsFilterCode = "All";
-
+        private readonly ILoggingService _loggingService;
         public EndpointsAllViewModel(
             INavigationService navigationService,
             IMidiEndpointEnumerationService enumerationService,
             IMidiTransportInfoService transportInfoService,
             ISynchronizationContextService synchronizationContextService,
-            IGeneralSettingsService generalSettingsService
+            IGeneralSettingsService generalSettingsService,
+            ILoggingService loggingService
             )
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
-
+            _loggingService = loggingService;
             _navigationService = navigationService;
             _enumerationService = enumerationService;
             _transportInfoService = transportInfoService;
@@ -180,7 +180,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         // todo: this should have a sort order and filter
         public void RefreshMidiEndpointDevices()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             _synchronizationContextService.GetUIContext()?.Post(_ =>
             {

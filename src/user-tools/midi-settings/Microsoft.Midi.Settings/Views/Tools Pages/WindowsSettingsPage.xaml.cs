@@ -32,15 +32,19 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class WindowsSettingsPage : Page
     {
+        private readonly ILoggingService _loggingService;
+
         public WindowsSettingsPage()
         {
+            _loggingService = App.GetService<ILoggingService>();
+
             try
             {
                 InitializeComponent();
             }
             catch (Exception ex)
             {
-                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+                _loggingService.LogError("Error initializing page", ex);
             }
         }
     }

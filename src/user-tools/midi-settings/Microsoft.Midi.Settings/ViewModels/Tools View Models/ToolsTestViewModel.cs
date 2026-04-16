@@ -32,7 +32,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ToolsTestViewModel()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            //_loggingService.LogInfo($"Enter");
 
         }
     }

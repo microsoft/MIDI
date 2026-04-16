@@ -15,8 +15,7 @@ namespace Microsoft.Midi.Settings.Views;
 // TODO: Set the URL for your privacy policy by updating SettingsPage_PrivacyTermsLink.NavigateUri in Resources.resw.
 public sealed partial class SettingsPage : Page
 {
-    private ILoggingService _loggingService;
-
+    private readonly ILoggingService _loggingService;
     public SettingsViewModel ViewModel
     {
         get;
@@ -25,7 +24,6 @@ public sealed partial class SettingsPage : Page
     public SettingsPage()
     {
         _loggingService = App.GetService<ILoggingService>();
-
         ViewModel = App.GetService<SettingsViewModel>();
 
         try
@@ -34,7 +32,7 @@ public sealed partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+            _loggingService.LogError("Error initializing page", ex);
         }
 
 

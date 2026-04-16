@@ -241,7 +241,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private bool SendMidi1TextWithValidation(string text)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             if (string.IsNullOrWhiteSpace(AllScratchPadText))
             {
@@ -363,17 +363,18 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
         private readonly IMidiSessionService _sessionService;
         private readonly ISynchronizationContextService _synchronizationContextService;
+        private readonly ILoggingService _loggingService;
 
         public ToolsScratchPadViewModel(
             IMidiSdkService sdkService,
             IMidiSessionService sessionService,
             IMidiEndpointEnumerationService endpointEnumerationService,
             ISynchronizationContextService synchronizationContextService,
-            IMessageBoxService messageBoxService
+            IMessageBoxService messageBoxService,
+            ILoggingService loggingService
             )
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
-
+            _loggingService = loggingService;
             _messageBoxService = messageBoxService;
             _sessionService = sessionService;
             _sdkService = sdkService;
@@ -416,7 +417,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendAllCommand = new RelayCommand(
             () =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 var success = SendMidi1TextWithValidation(AllScratchPadText);
 
@@ -426,7 +427,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendSelectedCommand = new RelayCommand(
             () =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 var success = SendMidi1TextWithValidation(SelectedScratchPadText);
 
@@ -466,7 +467,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshDeviceCollection()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             _synchronizationContextService.GetUIContext().Post(_ =>
             {

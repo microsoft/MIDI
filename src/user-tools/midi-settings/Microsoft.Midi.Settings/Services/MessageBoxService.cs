@@ -62,10 +62,16 @@ namespace Microsoft.Midi.Settings.Services
                             string lpCaption,
                             MessageBoxType uType);
 
+        private readonly ILoggingService _loggingService;
+        public MessageBoxService(ILoggingService loggingService)
+        {
+            _loggingService = loggingService;
+        }
+
 
         public bool ShowMessageWithOkCancel(string message, string title)
         {
-            App.GetService<ILoggingService>().LogInfo(message);
+            _loggingService.LogInfo(message);
 
             if (MessageBox(
                 (IntPtr)0,
@@ -91,7 +97,7 @@ namespace Microsoft.Midi.Settings.Services
 
         public void ShowInfo(string message, string title)
         {
-            App.GetService<ILoggingService>().LogInfo(message);
+            _loggingService.LogInfo(message);
 
             MessageBox(
                 (IntPtr)0,
@@ -109,7 +115,7 @@ namespace Microsoft.Midi.Settings.Services
 
         public void ShowError(string message, string title)
         {
-            App.GetService<ILoggingService>().LogInfo(message);
+            _loggingService.LogInfo(message);
 
             MessageBox(
                 (IntPtr)0,

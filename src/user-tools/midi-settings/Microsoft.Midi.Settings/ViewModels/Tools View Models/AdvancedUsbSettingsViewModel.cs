@@ -20,7 +20,7 @@ public class AdvancedUsbSettingsViewModel : ObservableRecipient
 {
     public AdvancedUsbSettingsViewModel()
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
+        
 
     }
 }

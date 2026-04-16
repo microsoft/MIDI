@@ -203,7 +203,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void CheckForSdkUpdates()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             try
             {
@@ -237,7 +237,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
             catch (Exception ex)
             {
-                App.GetService<ILoggingService>().LogError("Error checking for SDK updates", ex);
+                _loggingService.LogError("Error checking for SDK updates", ex);
 
                 // error trying to check for a new release. Firewall? No network?
 
@@ -283,7 +283,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public async void StartSdkUpdate()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             // TODO: We need to make sure we pull the correct architecture
 
@@ -309,6 +309,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiSdkService _sdkService;
         private readonly IMidiConsoleToolsService _consoleToolsService;
         private readonly IMidiDiagnosticsService _diagnosticsService;
+        private readonly ILoggingService _loggingService;
 
 
         public HomeViewModel(
@@ -318,10 +319,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiSdkService sdkService,
             IMidiTransportInfoService transportInfoService,
             IMidiConsoleToolsService consoleToolsService,
-            IMidiDiagnosticsService diagnosticsService
+            IMidiDiagnosticsService diagnosticsService,
+            ILoggingService loggingService
             )
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService = loggingService;
 
             _navigationService = navigationService;
             _configFileService = midiConfigFileService;
@@ -415,7 +417,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var timerInfo = MidiClock.GetCurrentSystemTimerInfo();
 

@@ -25,14 +25,14 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
     public ICommand DeleteCommand { get; private set; }
 
     private readonly IMidiConfigFileService _configFileService;
-
+    private readonly ILoggingService _loggingService;
     public MidiNetworkConfiguredHostWrapper(
         MidiNetworkConfiguredHost host,
-        IMidiConfigFileService configFileService
+        IMidiConfigFileService configFileService,
+        ILoggingService loggingService
         )
     {
-        App.GetService<ILoggingService>().LogInfo($"Enter");
-
+        _loggingService = loggingService;
         _configFileService = configFileService;
 
         Host = host;
@@ -63,7 +63,7 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
 
         StopCommand = new RelayCommand(async () =>
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             var result = await MidiNetworkTransportManager.StopNetworkHostAsync(host.Id);
 
@@ -85,7 +85,7 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
 
         DeleteCommand = new RelayCommand(async () =>
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             // first, stop the host.
 

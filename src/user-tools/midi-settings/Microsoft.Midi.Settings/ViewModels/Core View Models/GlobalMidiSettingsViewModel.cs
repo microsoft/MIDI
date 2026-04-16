@@ -69,15 +69,16 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiServiceRegistrySettingsService _registrySettingsService;
         private readonly IMidiConsoleToolsService _consoleToolsService;
         private readonly IMessageBoxService _messageBoxService;
+        private readonly ILoggingService _loggingService;
 
 
         public GlobalMidiSettingsViewModel(
             IMidiServiceRegistrySettingsService registrySettingsService,
             IMidiConsoleToolsService consoleToolsService,
-            IMessageBoxService messageBoxService)
+            IMessageBoxService messageBoxService, 
+            ILoggingService loggingService)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
-
+            _loggingService = loggingService;
             _registrySettingsService = registrySettingsService;
             _consoleToolsService = consoleToolsService;
             _messageBoxService = messageBoxService;
@@ -106,7 +107,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         else
                         {
                             _messageBoxService.ShowError("Error_ServiceNotSetToAutoStart".GetLocalized());
-                            App.GetService<ILoggingService>().LogError("Unable to set service to auto-start");
+                            _loggingService.LogError("Unable to set service to auto-start");
                         }
                     }
                 }
@@ -116,14 +117,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             RestartMidiServiceCommand = new RelayCommand(() =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 _consoleToolsService.RestartMidiService();
             });
 
             SetDefaultNamingApproachCommand = new RelayCommand(() =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 bool storedUseNewStyleWinMMPortNames = _registrySettingsService.GetDefaultUseNewStyleMidi1PortNaming();
 
@@ -134,7 +135,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         if (!_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseNewStyle))
                         {
                             _messageBoxService.ShowError("Error_UnableToChangeDefaultNamingStyle".GetLocalized());
-                            App.GetService<ILoggingService>().LogError("Unable to set default naming style to new-style");
+                            _loggingService.LogError("Unable to set default naming style to new-style");
                         }
                     }
                     else
@@ -142,7 +143,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         if (!_registrySettingsService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNamingApproach.UseClassicCompatible))
                         {
                             _messageBoxService.ShowError("Error_UnableToChangeDefaultNamingStyle".GetLocalized());
-                            App.GetService<ILoggingService>().LogError("Unable to set default naming style to classic WinMM style");
+                            _loggingService.LogError("Unable to set default naming style to classic WinMM style");
                         }
 
                     }

@@ -54,16 +54,10 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private MidiEndpointWrapper endpointWrapper;
 
-        private readonly ISynchronizationContextService _synchronizationContextService;
-        private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
-        private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
-        private readonly IMidiConfigFileService _configFileService;
-        private readonly IMessageBoxService _messageBoxService;
-
 
         public void SubmitCustomizationChanges()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             // cache this here because the update event may trigger before we save to the config file
             var updateConfig = CustomizationViewModel.GetUpdateConfig();
@@ -97,7 +91,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         //System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
                         // todo: show error
-                        App.GetService<ILoggingService>().LogError($"Could not save to config file");
+                        _loggingService.LogError($"Could not save to config file");
                         _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfig");
                     }
                 }
@@ -106,7 +100,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     _messageBoxService.ShowError("Error_CouldNotSaveEndpointCustomizationToConfigMissingConfig");
 
                     // could not save. No current config.
-                    App.GetService<ILoggingService>().LogError($"Could not save to config file. No current config file.");
+                    _loggingService.LogError($"Could not save to config file. No current config file.");
                 }
             }
             else
@@ -117,14 +111,22 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         }
 
+
+        private readonly ISynchronizationContextService _synchronizationContextService;
+        private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
+        private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
+        private readonly IMidiConfigFileService _configFileService;
+        private readonly IMessageBoxService _messageBoxService;
+        private readonly ILoggingService _loggingService;
         public DeviceDetailViewModel(
             ISynchronizationContextService synchronizationContextService, 
             IMidiEndpointCustomizationService endpointCustomizationService,
             IMidiEndpointEnumerationService endpointEnumerationService,
             IMidiConfigFileService configFileService,
-            IMessageBoxService messageBoxService)
+            IMessageBoxService messageBoxService,
+            ILoggingService loggingService)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService = loggingService;
 
             _synchronizationContextService = synchronizationContextService;
             _endpointCustomizationService = endpointCustomizationService;
@@ -138,7 +140,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             CopyEndpointDeviceIdCommand = new RelayCommand(
             () =>
             {
-                App.GetService<ILoggingService>().LogInfo($"Enter");
+                _loggingService.LogInfo($"Enter");
 
                 var dataPackage = new DataPackage();
                 dataPackage.SetText(EndpointWrapper.Id);
@@ -156,13 +158,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshVM()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             System.Diagnostics.Debug.WriteLine("DeviceDetailViewModel.RefreshVM");
 
             if (EndpointWrapper != null)
             {
-                CustomizationViewModel = new MidiEndpointCustomizationViewModel(EndpointWrapper);
+                CustomizationViewModel = new MidiEndpointCustomizationViewModel(EndpointWrapper, _loggingService);
 
                 // only show group terminal blocks for native UMP endpoints
                 this.ShowGroupTerminalBlocks = EndpointWrapper.IsNativeUmp;
@@ -193,7 +195,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             if (parameter is string)
             {

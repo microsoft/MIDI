@@ -15,16 +15,19 @@ namespace Microsoft.Midi.Settings.Services;
 public class MidiEndpointCustomizationService : IMidiEndpointCustomizationService
 {
     private readonly IMidiConfigFileService _configFileService;
+    private readonly ILoggingService _loggingService;
 
-
-    public MidiEndpointCustomizationService(IMidiConfigFileService configFileService)
+    public MidiEndpointCustomizationService(
+        IMidiConfigFileService configFileService,
+        ILoggingService loggingService)
     {
         _configFileService = configFileService;
+        _loggingService = loggingService;
     }
 
     public bool UpdateEndpoint(MidiServiceEndpointCustomizationConfig configUpdate)
     {
-        App.GetService<ILoggingService>().LogInfo("Enter");
+        _loggingService.LogInfo("Enter");
 
         // build the json and send up through the transport
 

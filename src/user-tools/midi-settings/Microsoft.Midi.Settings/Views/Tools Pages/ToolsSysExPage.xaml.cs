@@ -46,8 +46,11 @@ namespace Microsoft.Midi.Settings.Views
         {
             get;
         }
+        private readonly ILoggingService _loggingService;
+        
         public ToolsSysExPage()
         {
+            _loggingService = App.GetService<ILoggingService>();
             ViewModel = App.GetService<ToolsSysExViewModel>();
 
             this.Loaded += Page_Loaded;
@@ -58,7 +61,7 @@ namespace Microsoft.Midi.Settings.Views
             }
             catch (Exception ex)
             {
-                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+                _loggingService.LogError("Error initializing page", ex);
             }
 
         }

@@ -17,13 +17,15 @@ public static class ResourceExtensions
 
     public static string GetLocalized(this string resourceKey)
     {
+        var loggingService = App.GetService<ILoggingService>();
+
         try
         {
             var resourceString = _resourceLoader.GetString(resourceKey);
 
             if (string.IsNullOrEmpty(resourceString))
             {
-                App.GetService<ILoggingService>().LogError($"Resource not found or is empty: '{resourceKey}'");
+                loggingService?.LogError($"Resource not found or is empty: '{resourceKey}'");
             }
             else
             {
@@ -33,7 +35,7 @@ public static class ResourceExtensions
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception getting resource '{resourceKey}'", ex);
+            loggingService?.LogError($"Exception getting resource '{resourceKey}'", ex);
         }
 
         // when the resource is missing, we return just the key

@@ -48,10 +48,13 @@ namespace Microsoft.Midi.Settings.Views
         }
 
 
+        private readonly ILoggingService _loggingService;
+
         public NetworkMidi2SetupPage()
         {
+            _loggingService = App.GetService<ILoggingService>();
+
             ViewModel = App.GetService<NetworkMidi2SetupViewModel>();
-            //_loggingService = App.GetService<ILoggingService>();
 
             Loaded += Page_Loaded;
 
@@ -61,7 +64,7 @@ namespace Microsoft.Midi.Settings.Views
             }
             catch (Exception ex)
             {
-                App.GetService<ILoggingService>().LogError("Error initializing page", ex);
+                _loggingService.LogError("Error initializing page", ex);
             }
         }
 
