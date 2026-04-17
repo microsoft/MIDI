@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "MidiSrvPort.h"
+#include <cfgmgr32.h>
 
 #pragma once
 
+using unique_cm_notification = wil::unique_any<HCMNOTIFICATION, decltype(&::CM_Unregister_Notification), ::CM_Unregister_Notification>;
 typedef ULONGLONG MidiPortHandle;
 
 typedef struct _PORT_INFO
@@ -35,9 +37,15 @@ public:
     HRESULT Shutdown();
     DWORD APIENTRY MidMessage(_In_ UINT deviceID, _In_ UINT msg, _In_ DWORD_PTR user, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
     DWORD APIENTRY ModMessage(_In_ UINT deviceID, _In_ UINT msg, _In_ DWORD_PTR user, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
+    HRESULT MidiInterfaceChange(MidiFlow Flow, bool IsArrival, WCHAR *SymbolicLink);
 
 private:
+    HRESULT RegisterNotifications();
+    // Start remove with Feature_Servicing_MIDI2NumDevsPerf
     HRESULT GetMidiDeviceCount(_In_ MidiFlow flow, _In_ UINT32& count);
+    // End remove with Feature_Servicing_MIDI2NumDevsPerf
+    HRESULT RefreshPortsForFlow(_In_ MidiFlow flow);
+    HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps);
     HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps, _In_ DWORD_PTR midiCapsSize);
     HRESULT Open(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ const MIDIOPENDESC* midiOpenDesc, _In_ DWORD_PTR flags, _In_ MidiPortHandle* openedPort);
     HRESULT Close(_In_ MidiFlow flow, _In_ MidiPortHandle portHandle);
@@ -66,5 +74,8 @@ private:
     // map of the open midi clients ordered by the port handle, which is just the
     // address of the CMidiPort object for that client. 
     std::map<MidiPortHandle, wil::com_ptr_nothrow<CMidiPort>> m_OpenPorts;
+
+    unique_cm_notification m_NotifyMidiOut;
+    unique_cm_notification m_NotifyMidiIn;
 };
 

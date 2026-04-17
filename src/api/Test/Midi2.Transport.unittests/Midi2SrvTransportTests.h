@@ -79,12 +79,17 @@ public:
 
     TEST_METHOD(TestKSAPortEnumeration);
 
+    TEST_METHOD(TestWinmmPortEnumeration);
+
 private:
     void TestMidiSrvMultiClient(_In_ MidiDataFormats, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiSrvMultiClientBidi(_In_ MidiDataFormats, _In_ MidiDataFormats);
 
     void GetKSAMinMidiEndpoints    (std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices,   std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices);
     HRESULT WaitForDeviceCount(std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices, std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices, UINT expectedInCount, UINT expectedOutCount);
+
+    void GetWinmmMinMidiEndpoints    (std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices,    std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices, UINT& numInDevices, UINT& numOutDevices);
+    HRESULT WaitForWinmmDeviceCount(std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices, std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices, UINT& numInDevices, UINT& numOutDevices, UINT expectedInCount, UINT expectedOutCount);
 };
 
 
