@@ -19,6 +19,7 @@
 #include "Feature_Servicing_MIDI2DeviceRemoval.h"
 #include "Feature_Servicing_MIDI2ContainerIds.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
+#include "Feature_Servicing_MIDI2NumDevsPerf.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -479,14 +480,28 @@ SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResult, _
 
     if (SUCCEEDED(creationContext->MidiPort->hr))
     {
-        creationContext->MidiPort->hr = SwDeviceInterfaceRegister(
-            swDevice,
-            creationContext->MidiPort->InterfaceCategory,
-            nullptr,
-            creationContext->IntPropertyCount,
-            creationContext->InterfaceDevProperties,
-            TRUE,
-            wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
+        if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
+        {
+            creationContext->MidiPort->hr = SwDeviceInterfaceRegister(
+                swDevice,
+                creationContext->MidiPort->InterfaceCategory,
+                nullptr,
+                creationContext->IntPropertyCount,
+                creationContext->InterfaceDevProperties,
+                FALSE, // must register as "disabled" so that we have the opportunity to assign a port number prior to it going active
+                wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
+        }
+        else
+        {
+            creationContext->MidiPort->hr = SwDeviceInterfaceRegister(
+                swDevice,
+                creationContext->MidiPort->InterfaceCategory,
+                nullptr,
+                creationContext->IntPropertyCount,
+                creationContext->InterfaceDevProperties,
+                TRUE,
+                wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
+        }
     }
 
     if (SUCCEEDED(creationContext->MidiPort->hr))
@@ -3190,8 +3205,11 @@ CMidiDeviceManager::SyncMidi1Ports(
                     nullptr,
                     &createdMidiPort));
 
-                // Assign the new port number.
-                RETURN_IF_FAILED(AssignPortNumber(createdMidiPort->SwDevice.get(), createdMidiPort->DeviceInterfaceId.get(), createdMidiPort->Flow));
+                if (!Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
+                {
+                    // Assign the new port number.
+                    RETURN_IF_FAILED(AssignPortNumber(createdMidiPort->SwDevice.get(), createdMidiPort->DeviceInterfaceId.get(), createdMidiPort->Flow));
+                }
 
                 // We want to reuse interfaceProperties for the next creation,
                 // so pop the endpoint specific properties off in preparation.
