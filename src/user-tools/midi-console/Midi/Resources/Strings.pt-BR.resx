@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!--
-    Microsoft ResX Schema
-
+  <!-- 
+    Microsoft ResX Schema 
+    
     Version 2.0
-
-    The primary goals of this format is to allow a simple XML format
-    that is mostly human readable. The generation and parsing of the
-    various data types are done through the TypeConverter classes
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
     associated with the data types.
-
+    
     Example:
-
+    
     ... ado.net/XML headers & schema ...
     <resheader name="resmimetype">text/microsoft-resx</resheader>
     <resheader name="version">2.0</resheader>
@@ -26,36 +26,36 @@
         <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
         <comment>This is a comment</comment>
     </data>
-
-    There are any number of "resheader" rows that contain simple
+                
+    There are any number of "resheader" rows that contain simple 
     name/value pairs.
-
-    Each data row contains a name, and value. The row also contains a
-    type or mimetype. Type corresponds to a .NET class that support
-    text/value conversion through the TypeConverter architecture.
-    Classes that don't support this are serialized and stored with the
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
     mimetype set.
-
-    The mimetype is used for serialized objects, and tells the
-    ResXResourceReader how to depersist the object. This is currently not
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
     extensible. For a given mimetype the value must be set accordingly:
-
-    Note - application/x-microsoft.net.object.binary.base64 is the format
-    that the ResXResourceWriter will generate, however the reader can
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
     read any of the formats listed below.
-
+    
     mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with
+    value   : The object must be serialized with 
             : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
-
+    
     mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with
+    value   : The object must be serialized with 
             : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
             : and then encoded with base64 encoding.
 
     mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array
+    value   : The object must be serialized into a byte array 
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
@@ -1179,5 +1179,32 @@ Estes endpoints desaparecerão quando o serviço ou o PC for reiniciado. Para cr
   </data>
   <data name="ParameterCreateBasicLoopbackAssociationId" xml:space="preserve">
     <value>Id (deve ser um GUID válido) usado para identificar o loopback antes e depois de ser criado. Usado ao remover o loopback.</value>
+  </data>
+  <data name="CommandBridgeBleDescription" xml:space="preserve">
+    <value>Crie um novo endpoint BLE visível no WInMM e API criando uma ponte para a API WinRT MIDI 1.0 e um novo endpoint de loopback UMP</value>
+  </data>
+  <data name="CommandBridgeEndpointsDescription" xml:space="preserve">
+    <value>Crie uma ponte entre dois pontos finais para conectar dois dispositivos juntos</value>
+  </data>
+  <data name="CommandBridgeEndpointsValidationError_WinRTPortIdsMissing" xml:space="preserve">
+    <value>São necessários tanto um ID de porta WinRT de entrada quanto um ID de porta WinRT de saída. Estes devem estar no mesmo dispositivo BLE MIDI 1.0.</value>
+  </data>
+  <data name="CommandBridgeEndpointsValidationError_WinRTPortMustBeBluetooth" xml:space="preserve">
+    <value>Ambas as portas WinRT fornecidas devem ser portas BLE MIDI 1.0 no mesmo dispositivo Bluetooth.</value>
+  </data>
+  <data name="CommandBridgeEndpoints_VirtualDeviceDescription" xml:space="preserve">
+    <value>Ponte WinRT MIDI 1.0 Bluetooth para Windows MIDI Services</value>
+  </data>
+  <data name="CommandBridgeEndpointsValidationError_NewEndpointNameMissing" xml:space="preserve">
+    <value>Por favor, forneça um novo nome de endpoint único para a conexão do bridge.</value>
+  </data>
+  <data name="CommandBridgeEndpoints_SessionNamePrefix" xml:space="preserve">
+    <value>BLE Bridge Host</value>
+  </data>
+  <data name="BridgePressEscapeToStopMessage" xml:space="preserve">
+    <value>Pressione Escape para desligar a ponte.</value>
+  </data>
+  <data name="BridgeEscapePressedMessage" xml:space="preserve">
+    <value>Tecla Escape pressionada. Desligando a ponte.</value>
   </data>
 </root>

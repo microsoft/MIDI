@@ -435,6 +435,44 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         return words;
     }
 
+    _Use_decl_annotations_
+    collections::IVector<uint32_t> MidiMessageConverter::ConvertMidi1MessageToUmpWords(
+        _In_ midi2::MidiGroup const& group,
+        _In_ midi1::IMidiMessage const& originalMessage
+    ) noexcept
+    {
+        bytestreamToUMP converter;
+
+        auto words = winrt::single_threaded_vector<uint32_t>();
+
+        converter.defaultGroup = group.Index();
+        converter.enableRunningStatus = false;
+
+        auto data = originalMessage.RawData().data();
+        auto dataLength = originalMessage.RawData().Length();
+
+        for (uint32_t i = 0; i < dataLength; i++)
+        {
+            converter.bytestreamParse(data[i]);
+
+            // if on the last byte, ensure we close out sysex
+            // in case this message isn't complete SysEx with F7
+            if (i == dataLength -1)
+            {
+                converter.dumpSysex7State(true);
+            }
+
+            while (converter.availableUMP())
+            {
+                words.Append(converter.readUMP());
+            }
+        }
+
+        return words;
+
+    }
+
+
 
     _Use_decl_annotations_
     collections::IVector<uint8_t> MidiMessageConverter::ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(

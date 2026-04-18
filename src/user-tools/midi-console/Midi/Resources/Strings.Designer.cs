@@ -88,11 +88,92 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Escape key pressed. Shutting down the bridge..
+        /// </summary>
+        internal static string BridgeEscapePressedMessage {
+            get {
+                return ResourceManager.GetString("BridgeEscapePressedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press escape to shut down the bridge..
+        /// </summary>
+        internal static string BridgePressEscapeToStopMessage {
+            get {
+                return ResourceManager.GetString("BridgePressEscapeToStopMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operations on MIDI 1.0 basic loopback endpoints.
         /// </summary>
         internal static string CommandBasicLoopbackDescription {
             get {
                 return ResourceManager.GetString("CommandBasicLoopbackDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a new-API and WInMM-visible BLE endpoint by bridging to the WinRT MIDI 1.0 API and a new UMP loopback endpoint.
+        /// </summary>
+        internal static string CommandBridgeBleDescription {
+            get {
+                return ResourceManager.GetString("CommandBridgeBleDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BLE Bridge Host.
+        /// </summary>
+        internal static string CommandBridgeEndpoints_SessionNamePrefix {
+            get {
+                return ResourceManager.GetString("CommandBridgeEndpoints_SessionNamePrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WinRT MIDI 1.0 Bluetooth to Windows MIDI Services Bridge.
+        /// </summary>
+        internal static string CommandBridgeEndpoints_VirtualDeviceDescription {
+            get {
+                return ResourceManager.GetString("CommandBridgeEndpoints_VirtualDeviceDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a bridge between two endpoints to connect two devices together.
+        /// </summary>
+        internal static string CommandBridgeEndpointsDescription {
+            get {
+                return ResourceManager.GetString("CommandBridgeEndpointsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide a new unique endpoint name for the bridge connection..
+        /// </summary>
+        internal static string CommandBridgeEndpointsValidationError_NewEndpointNameMissing {
+            get {
+                return ResourceManager.GetString("CommandBridgeEndpointsValidationError_NewEndpointNameMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Both an input WinRT port id and an output WinRT port id are required. These must be on the same BLE MIDI 1.0 device..
+        /// </summary>
+        internal static string CommandBridgeEndpointsValidationError_WinRTPortIdsMissing {
+            get {
+                return ResourceManager.GetString("CommandBridgeEndpointsValidationError_WinRTPortIdsMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Both of the provided WinRT ports must be BLE MIDI 1.0 ports on the same bluetooth device..
+        /// </summary>
+        internal static string CommandBridgeEndpointsValidationError_WinRTPortMustBeBluetooth {
+            get {
+                return ResourceManager.GetString("CommandBridgeEndpointsValidationError_WinRTPortMustBeBluetooth", resourceCulture);
             }
         }
         

@@ -1180,4 +1180,31 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   <data name="ParameterCreateBasicLoopbackAssociationId" xml:space="preserve">
     <value>Id (must be a valid GUID) used to identify the loopback before and after it has been created. Used when removing the loopback.</value>
   </data>
+  <data name="CommandBridgeBleDescription" xml:space="preserve">
+    <value>Create a new-API and WInMM-visible BLE endpoint by bridging to the WinRT MIDI 1.0 API and a new UMP loopback endpoint</value>
+  </data>
+  <data name="CommandBridgeEndpointsDescription" xml:space="preserve">
+    <value>Create a bridge between two endpoints to connect two devices together</value>
+  </data>
+  <data name="CommandBridgeEndpointsValidationError_WinRTPortIdsMissing" xml:space="preserve">
+    <value>Both an input WinRT port id and an output WinRT port id are required. These must be on the same BLE MIDI 1.0 device.</value>
+  </data>
+  <data name="CommandBridgeEndpointsValidationError_WinRTPortMustBeBluetooth" xml:space="preserve">
+    <value>Both of the provided WinRT ports must be BLE MIDI 1.0 ports on the same bluetooth device.</value>
+  </data>
+  <data name="CommandBridgeEndpoints_VirtualDeviceDescription" xml:space="preserve">
+    <value>WinRT MIDI 1.0 Bluetooth to Windows MIDI Services Bridge</value>
+  </data>
+  <data name="CommandBridgeEndpointsValidationError_NewEndpointNameMissing" xml:space="preserve">
+    <value>Please provide a new unique endpoint name for the bridge connection.</value>
+  </data>
+  <data name="CommandBridgeEndpoints_SessionNamePrefix" xml:space="preserve">
+    <value>BLE Bridge Host</value>
+  </data>
+  <data name="BridgePressEscapeToStopMessage" xml:space="preserve">
+    <value>Press escape to shut down the bridge.</value>
+  </data>
+  <data name="BridgeEscapePressedMessage" xml:space="preserve">
+    <value>Escape key pressed. Shutting down the bridge.</value>
+  </data>
 </root>

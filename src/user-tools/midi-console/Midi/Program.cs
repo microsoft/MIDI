@@ -94,6 +94,7 @@ app.Configure(config =>
             .WithAlias("legacy-endpoints")
             .WithAlias("bytestream-endpoints")
             .WithAlias("legacy")
+            .WithAlias("winrt1")
             .WithDescription(Strings.CommandEnumerateLegacyEndpointsDescription)
             .WithExample("enumerate", "legacy-winrt-api-endpoints", "--direction", "all")
             .WithExample("enumerate", "legacy", "--direction", "all")
@@ -279,6 +280,31 @@ app.Configure(config =>
         .WithDescription(Strings.CommandWatchEndpointsDescription)
         .WithExample("watch-endpoints")
         ;
+
+
+    config.AddBranch("bridge", bridge =>
+    {
+        //bridge.SetDescription(Strings.CommandBridgeDescription);
+
+
+        bridge.AddCommand<BridgeBleCommand>("ble")
+            .WithDescription(Strings.CommandBridgeBleDescription)
+            .WithAlias("bluetooth")
+            ;
+
+
+        bridge.AddCommand<BridgeEndpointsCommand>("endpoints")
+            .WithDescription(Strings.CommandBridgeEndpointsDescription)
+            ;
+
+
+    }).WithAlias("connect");
+
+
+
+
+
+
 
 
     //config.AddBranch("measure", measure =>
