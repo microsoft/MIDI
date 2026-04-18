@@ -26,6 +26,7 @@ namespace Microsoft.Midi.ConsoleApp
             [CommandOption("-o|--output|--winrt-output-ble-port")]
             public string WinRTOutputPortId { get; set; }
 
+
             [LocalizedDescription("ParameterBridgeEndpointsNewEndpointName")]
             [CommandOption("-n|--name|--new-endpoint-name")]
             public string NewEndpointName { get; set; }
@@ -274,7 +275,15 @@ namespace Microsoft.Midi.ConsoleApp
 
             Console.WriteLine("Opening virtual device...");
 
-            virtualConnection.Open();
+            if (!virtualConnection.Open())
+            {
+                session.Dispose();
+
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Unable to open connection for virtual device"));
+
+                // TODO: Log and output
+                return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+            }
 
 
 
