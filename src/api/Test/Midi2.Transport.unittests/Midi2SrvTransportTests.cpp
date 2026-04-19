@@ -1376,6 +1376,195 @@ MidiSrvTransportTests::TestKSAPortEnumeration()
     }
 }
 
+void
+MidiSrvTransportTests::GetWinmmMinMidiEndpoints
+(
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices,
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices,
+    UINT &numInDevices,
+    UINT &numOutDevices
+)
+{
+    #define MINMIDI_STRING L"MINMIDI"
+
+    for (UINT i = 0; i < midiInGetNumDevs(); i++)
+    {
+        MIDIINCAPS inCaps {0};
+        if (MMSYSERR_NOERROR == midiInGetDevCaps(i, &inCaps, sizeof(MIDIINCAPS)))
+        {
+            if (0 == _wcsnicmp(inCaps.szPname, MINMIDI_STRING, wcslen(MINMIDI_STRING)))
+            {
+                numInDevices++;
+            }
+        }
+    }
+
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiInDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->Flow == MidiFlowIn &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(MINMIDI_STRING) &&
+            TRUE == device->MidiOne)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
+
+    for (UINT i = 0; i < midiOutGetNumDevs(); i++)
+    {
+        MIDIOUTCAPS outCaps {0};
+        if (MMSYSERR_NOERROR == midiOutGetDevCaps(i, &outCaps, sizeof(MIDIOUTCAPS)))
+        {
+            if (0 == _wcsnicmp(outCaps.szPname, MINMIDI_STRING, wcslen(MINMIDI_STRING)))
+            {
+                numOutDevices++;
+            }
+        }
+    }
+
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiOutDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->Flow == MidiFlowOut &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(MINMIDI_STRING) &&
+            TRUE == device->MidiOne)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
+}
+
+#define WINMM_PORT_TIMEOUT 120000
+#define WINMM_PORT_QUERY_DELAY 500
+
+HRESULT
+MidiSrvTransportTests::WaitForWinmmDeviceCount
+(
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices,
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices,
+    UINT &numInDevices,
+    UINT &numOutDevices,
+    UINT expectedInCount,
+    UINT expectedOutCount
+)
+{
+    UINT64 startTime = GetTickCount64();
+
+    while ((midiInDevices.size() != expectedInCount || numInDevices != expectedInCount || 
+            midiOutDevices.size() != expectedOutCount || numOutDevices != expectedOutCount) && 
+            (GetTickCount64() - startTime < WINMM_PORT_TIMEOUT))
+    {
+        midiInDevices.clear();
+        numInDevices = 0;
+        midiOutDevices.clear();
+        numOutDevices = 0;
+        Sleep(WINMM_PORT_QUERY_DELAY);
+        GetWinmmMinMidiEndpoints(midiInDevices, midiOutDevices, numInDevices, numOutDevices);
+    };
+
+    if (midiInDevices.size() != expectedInCount || numInDevices != expectedInCount ||
+        numOutDevices != expectedOutCount || midiOutDevices.size() != expectedOutCount)
+    {
+        LOG_OUTPUT(L"Expect %d in ports and %d out ports", expectedInCount, expectedOutCount);
+        LOG_OUTPUT(L"Actually %d in ports and %d out ports and %d winmm in ports and %d winmm out ports", midiInDevices.size(), midiOutDevices.size(), numInDevices, numOutDevices);
+    }
+
+    RETURN_HR_IF(E_FAIL, midiInDevices.size() != expectedInCount || midiOutDevices.size() != expectedOutCount);
+    RETURN_HR_IF(E_FAIL, numInDevices != expectedInCount || numOutDevices != expectedOutCount);
+
+    return S_OK;
+}
+
+void
+MidiSrvTransportTests::TestWinmmPortEnumeration()
+{
+    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    {
+        WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+        std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
+        std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
+        UINT numInDevices {0};
+        UINT numOutDevices {0};
+        std::wstring minmidiInstanceId;
+
+        GetWinmmMinMidiEndpoints(midiInDevices, midiOutDevices, numInDevices, numOutDevices);
+
+        if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
+        {
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires MinMidi.");
+            return;
+        }
+
+        VERIFY_ARE_EQUAL(midiInDevices.size(), numInDevices);
+        VERIFY_ARE_EQUAL(midiOutDevices.size(), numOutDevices);
+
+        minmidiInstanceId = midiInDevices[0]->ParentDeviceInstanceId;
+        LOG_OUTPUT(L"Testing %s", minmidiInstanceId.c_str());
+
+        auto cleanup = wil::scope_exit([&]()
+        {
+            // Simulate a surprise removal to restore the driver back to the baseline state in the event this
+            // test fails.
+            SendDriverCommand(KSPROPERTY_MINMIDICONTROL_SURPRISEREMOVESIMULATION, 1);
+            SetDeviceEnabled(minmidiInstanceId.c_str(), false);
+            SetDeviceEnabled(minmidiInstanceId.c_str(), true);
+        });
+
+        // remove all of the endpoints.
+        LOG_OUTPUT(L"Removing all minmidi ports");
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)));
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)));
+
+        // There should be 0
+        LOG_OUTPUT(L"Confirming removed");
+        VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, 0, 0));
+
+        // now enable all available bytestream interfaces on the driver and confirm the ports show up w/ both the SWD,
+        // and winmm
+        UINT expectedPortcount = 0;
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_ByteStream)))
+        {
+            expectedPortcount++;
+            LOG_OUTPUT(L"Enabling bytestream port %d", expectedPortcount);
+            VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
+        }
+
+        // now enable all available UMP interfaces on the driver and confirm those ports show up w/ both the SWD,
+        // and winmm.
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_UMP)))
+        {
+            expectedPortcount++;
+            LOG_OUTPUT(L"Enabling UMP port %d", expectedPortcount);
+            VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
+        }
+
+        // And disable all the ports and make sure they all go away.
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)))
+        {
+            expectedPortcount--;
+            LOG_OUTPUT(L"Disabling bytestream port %d", expectedPortcount);
+            VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
+        }
+        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)))
+        {
+            expectedPortcount--;
+            LOG_OUTPUT(L"Disabling UMP port %d", expectedPortcount);
+            VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
+        }
+
+        // There again should be be 0
+        LOG_OUTPUT(L"Confirming all gone");
+        VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, 0, 0));
+    }
+}
+
 bool MidiSrvTransportTests::TestSetup()
 {
     m_MidiInCallback = nullptr;

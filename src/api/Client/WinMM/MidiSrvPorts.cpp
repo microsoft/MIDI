@@ -6,6 +6,7 @@
 #include <ks.h>
 
 #include "Feature_Servicing_MIDI2DevCaps2.h"
+#include "Feature_Servicing_MIDI2NumDevsPerf.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -13,6 +14,107 @@ using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestro
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_WDMAUD2 ((HINSTANCE)&__ImageBase)
 
+DWORD CMEventCallback
+(
+    HCMNOTIFICATION,
+    PVOID Context,
+    CM_NOTIFY_ACTION  Action,
+    PCM_NOTIFY_EVENT_DATA EventData,
+    DWORD EventDataSize
+)
+{
+    // context must be valid, this must be for a midi in or midi out device interface,
+    // it must be an arrival or removal, and the notify event data must be valid.
+    if (Context != nullptr &&
+        EventData->FilterType == CM_NOTIFY_FILTER_TYPE_DEVICEINTERFACE &&
+        (EventData->u.DeviceInterface.ClassGuid == DEVINTERFACE_MIDI_OUTPUT || EventData->u.DeviceInterface.ClassGuid == DEVINTERFACE_MIDI_INPUT) &&
+        (Action == CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL || Action == CM_NOTIFY_ACTION_DEVICEINTERFACEREMOVAL) &&
+        EventDataSize >= sizeof(CM_NOTIFY_EVENT_DATA))
+    {
+        CMidiPorts * pThis = (CMidiPorts *) Context;
+        MidiFlow flow = (EventData->u.DeviceInterface.ClassGuid == DEVINTERFACE_MIDI_OUTPUT)?MidiFlowOut:MidiFlowIn;
+        bool isArrival = (Action == CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL);
+        pThis->MidiInterfaceChange(flow, isArrival, EventData->u.DeviceInterface.SymbolicLink);
+    }
+
+    return 0;
+}
+
+HRESULT
+CMidiPorts::RegisterNotifications()
+{
+    CONFIGRET cr;
+    CM_NOTIFY_FILTER notifyFilter = {};
+
+    auto lock = m_Lock.lock();
+
+    notifyFilter.cbSize = sizeof(notifyFilter);
+    notifyFilter.FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEINTERFACE;
+    notifyFilter.u.DeviceInterface.ClassGuid = DEVINTERFACE_MIDI_OUTPUT;
+    cr = CM_Register_Notification(&notifyFilter, this, &CMEventCallback, &m_NotifyMidiOut);
+    if (cr != CR_SUCCESS)
+    {
+        RETURN_IF_FAILED(HRESULT_FROM_WIN32(CM_MapCrToWin32Err(cr, ERROR_INVALID_DATA)));
+    }
+    LOG_IF_FAILED(RefreshPortsForFlow(MidiFlowOut));
+
+    notifyFilter.cbSize = sizeof(notifyFilter);
+    notifyFilter.FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEINTERFACE;
+    notifyFilter.u.DeviceInterface.ClassGuid = DEVINTERFACE_MIDI_INPUT;
+    cr = CM_Register_Notification(&notifyFilter, this, &CMEventCallback, &m_NotifyMidiIn);
+    if (cr != CR_SUCCESS)
+    {
+        RETURN_IF_FAILED(HRESULT_FROM_WIN32(CM_MapCrToWin32Err(cr, ERROR_INVALID_DATA)));
+    }
+    LOG_IF_FAILED(RefreshPortsForFlow(MidiFlowIn));
+
+    return S_OK;
+}
+
+HRESULT
+CMidiPorts::MidiInterfaceChange
+(
+    MidiFlow Flow,
+    bool IsArrival,
+    WCHAR *SymbolicLink
+)
+{
+    std::wstring notifiedInterface = WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(SymbolicLink);
+
+    auto lock = m_Lock.lock();
+
+    // search the flow for the interface id
+    for (auto const& [portNum, port] : m_MidiPortInfo[Flow])
+    {
+        if (port.InterfaceId == notifiedInterface)
+        {
+            // if found and is removal, refresh to remove,
+            // else it's already present so noop.
+            if (!IsArrival)
+            {
+                RETURN_IF_FAILED(RefreshPortsForFlow(Flow));
+
+                for (auto const& [portHandle, openPort] : m_OpenPorts)
+                {
+                    openPort->NotifyInterfaceRemoval(notifiedInterface);
+                }
+            }
+
+            // it was found, so we are finished (there will only ever be 1
+            // instance of an interface id in the map)
+            return S_OK;
+        }
+    }
+
+    // if not found and is arrival, refresh to add,
+    // else it's already removed so noop
+    if (IsArrival)
+    {
+        RETURN_IF_FAILED(RefreshPortsForFlow(Flow));
+    }
+
+    return S_OK;
+}
 
 CMidiPorts::CMidiPorts()
 {
@@ -72,6 +174,11 @@ CMidiPorts::RuntimeClassInitialize()
 
     RETURN_IF_FAILED(m_MidisrvTransport->AddClientSession(m_SessionId, m_SessionName.c_str()));
 
+    if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
+    {
+        RETURN_IF_FAILED(RegisterNotifications());
+    }
+
     return S_OK;        
 }
 
@@ -84,6 +191,13 @@ CMidiPorts::Shutdown()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"));
+
+    if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
+    {
+        // first, shut down notifications, as it may hold the lock
+        m_NotifyMidiOut.reset();
+        m_NotifyMidiIn.reset();
+    }
 
     auto lock = m_Lock.lock();
 
@@ -126,11 +240,20 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
     {
         case MIDM_GETNUMDEVS:
             {
-                UINT32 deviceCount{ };
-                hr = GetMidiDeviceCount(MidiFlowIn, deviceCount);
-                if (SUCCEEDED(hr))
+                if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
                 {
+                    auto lock = m_Lock.lock();
+                    UINT32 deviceCount = m_MidiPortCount[MidiFlowIn];
                     return (MAKELONG(deviceCount, MMSYSERR_NOERROR));
+                }
+                else
+                {
+                    UINT32 deviceCount{ };
+                    hr = GetMidiDeviceCount(MidiFlowIn, deviceCount);
+                    if (SUCCEEDED(hr))
+                    {
+                        return (MAKELONG(deviceCount, MMSYSERR_NOERROR));
+                    }
                 }
             }
             break;
@@ -180,11 +303,20 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
     {
         case MODM_GETNUMDEVS:
             {
-                UINT32 deviceCount{ };
-                hr = GetMidiDeviceCount(MidiFlowOut, deviceCount);
-                if (SUCCEEDED(hr))
+                if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
                 {
+                    auto lock = m_Lock.lock();
+                    UINT32 deviceCount = m_MidiPortCount[MidiFlowOut];
                     return (MAKELONG(deviceCount, MMSYSERR_NOERROR));
+                }
+                else
+                {
+                    UINT32 deviceCount{ };
+                    hr = GetMidiDeviceCount(MidiFlowOut, deviceCount);
+                    if (SUCCEEDED(hr))
+                    {
+                        return (MAKELONG(deviceCount, MMSYSERR_NOERROR));
+                    }
                 }
             }
             break;
@@ -213,6 +345,7 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
     return MMRESULT_FROM_HRESULT(hr);
 }
 
+// Start remove with Feature_Servicing_MIDI2NumDevsPerf
 _Use_decl_annotations_
 HRESULT
 CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
@@ -519,6 +652,310 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
 
     return S_OK;
 }
+// End remove with Feature_Servicing_MIDI2NumDevsPerf
+
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::RefreshPortsForFlow(MidiFlow flow)
+{
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)flow, "MidiFlow"));
+
+    RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
+
+    // We return the largest valid port number here, the client
+    // is then responsible to retrieve the dev caps for these ports
+    // to determine which ports are present at runtime.
+    UINT highestPortNumber {0};
+
+    // throw away old structure for this flow
+    // build up new structure of all active devices for the requested flow, return
+    // maximum port number, our port numbers are from 1->, max port number is 0->
+    // (because port 0 is reserved for the synth, which will eventually be in midisrv)           
+    m_MidiPortInfo[flow].clear();
+    m_MidiPortCount[flow] = 0;
+
+    SP_DEVINFO_DATA device = { sizeof(SP_DEVINFO_DATA) };
+    const GUID* interfaceCategory = (flow == MidiFlowOut) ? &DEVINTERFACE_MIDI_OUTPUT : &DEVINTERFACE_MIDI_INPUT;
+    auto devInfo = unique_hdevinfo{ SetupDiGetClassDevs(interfaceCategory, nullptr, nullptr, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT) };
+    RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), !devInfo);
+
+    for (DWORD deviceIndex = 0; SetupDiEnumDeviceInfo(devInfo.get(), deviceIndex, &device); deviceIndex++)
+    {
+        SP_DEVICE_INTERFACE_DATA deviceInterfaceData = { sizeof(SP_DEVICE_INTERFACE_DATA) };
+        for (DWORD deviceInterfaceIndex = 0; SetupDiEnumDeviceInterfaces(devInfo.get(), &device, interfaceCategory, deviceInterfaceIndex, &deviceInterfaceData); deviceInterfaceIndex++ )
+        {
+            DEVPROPTYPE propType = DEVPROP_TYPE_NULL;
+            WCHAR deviceName[MAXPNAMELEN] = {0};
+            DWORD servicePortNum {0};
+            DWORD requiredSize {0};
+            WCHAR deviceDriverInterfaceId[MAX_PATH] = {0};
+            std::unique_ptr<SP_DEVICE_INTERFACE_DETAIL_DATA> interfaceDetailData;
+            KSCOMPONENTID ksComponentId {0};
+            DWORD ksComponentIdSize {0};
+
+            // retrieve the device interface id string
+            if (!SetupDiGetDeviceInterfaceDetail(
+                devInfo.get(),
+                &deviceInterfaceData,
+                nullptr,
+                0,
+                &requiredSize,
+                nullptr))
+            {
+                if (ERROR_INSUFFICIENT_BUFFER == GetLastError())
+                {
+                    interfaceDetailData.reset((PSP_DEVICE_INTERFACE_DETAIL_DATA)(new (std::nothrow) BYTE[requiredSize]));
+                    RETURN_IF_NULL_ALLOC(interfaceDetailData);
+                    memset(interfaceDetailData.get(), 0, requiredSize);
+                    interfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+                    SetupDiGetDeviceInterfaceDetail(
+                                    devInfo.get(),
+                                    &deviceInterfaceData,
+                                    interfaceDetailData.get(),
+                                    requiredSize,
+                                    nullptr,
+                                    nullptr);
+                }
+            }
+            if (nullptr == interfaceDetailData)
+            {
+                continue;
+            }
+
+            // retrieve the assigned port number for this interface
+            // if not present, then this may be the synth, which currently
+            // doesn't go through midisrv.
+            if (!SetupDiGetDeviceInterfaceProperty(
+                devInfo.get(),
+                &deviceInterfaceData,
+                &PKEY_MIDI_ServiceAssignedPortNumber,
+                &propType,
+                (PBYTE) &servicePortNum,
+                sizeof(DWORD),
+                nullptr,
+                0))
+            {
+                continue;
+            }
+            if (propType != DEVPROP_TYPE_UINT32)
+            {
+                continue;
+            }
+
+            // retrieve the friendly name for the port
+            if (!SetupDiGetDeviceInterfaceProperty(
+                devInfo.get(),
+                &deviceInterfaceData,
+                &DEVPKEY_DeviceInterface_FriendlyName,
+                &propType,
+                (PBYTE) &deviceName,
+                sizeof(deviceName),
+                &requiredSize,
+                0))
+            {
+                continue;
+            }
+            if (propType != DEVPROP_TYPE_STRING ||
+                requiredSize < sizeof(WCHAR))
+            {
+                continue;
+            }
+
+            // to support DRV_QUERYDEVICEINTERFACE
+            if (!SetupDiGetDeviceInterfaceProperty(
+                devInfo.get(),
+                &deviceInterfaceData,
+                &PKEY_MIDI_DriverDeviceInterface,
+                &propType,
+                (PBYTE)&deviceDriverInterfaceId,
+                sizeof(deviceDriverInterfaceId),
+                &requiredSize,
+                0))
+            {
+                continue;
+            }
+            if (propType != DEVPROP_TYPE_STRING ||
+                requiredSize < sizeof(WCHAR))
+            {
+                continue;
+            }
+
+            if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+            {
+                // Retrieve the KS component id information, if available,
+                // from the SWD.
+                if (SetupDiGetDeviceInterfaceProperty(
+                    devInfo.get(),
+                    &deviceInterfaceData,
+                    &PKEY_MIDI_KsComponentId,
+                    &propType,
+                    (PBYTE) &ksComponentId,
+                    sizeof(KSCOMPONENTID),
+                    &ksComponentIdSize,
+                    0))
+                {
+                    if (propType != DEVPROP_TYPE_BINARY ||
+                        ksComponentIdSize != sizeof(KSCOMPONENTID))
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            // our port numbers start with 1 because they're the "global" port numbers
+            // that the user should see and port 0 is reserved for the synth.
+            // So, a service port number of 1 indicates that we have 1 port, and so on.
+            // This means that the port number count is simply the largest port number
+            // we are aware of.
+            if (servicePortNum > highestPortNumber)
+            {
+                highestPortNumber = servicePortNum;
+            }
+
+            // save the port information to the array.
+            m_MidiPortInfo[flow][servicePortNum].PortNumber = servicePortNum;
+            m_MidiPortInfo[flow][servicePortNum].Name = deviceName;
+            m_MidiPortInfo[flow][servicePortNum].InterfaceId = WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(interfaceDetailData->DevicePath);
+            m_MidiPortInfo[flow][servicePortNum].DriverDeviceInterfaceId = WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(deviceDriverInterfaceId);
+
+            if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+            {
+                WORD wMid {MM_MICROSOFT};
+                WORD wPid = (flow == MidiFlowOut)?MM_MSFT_GENERIC_MIDIOUT:MM_MSFT_GENERIC_MIDIIN;
+                MMVERSION vDriverVersion {0x0100};
+                GUID manufacturerGuid {0};
+                GUID productGuid {0};
+                GUID nameGuid {0};
+
+                INIT_MMREG_MID( &manufacturerGuid, wMid );
+                INIT_MMREG_PID( &productGuid, wPid );
+
+                if (ksComponentIdSize > 0)
+                {
+                    // Legacy kscomponentid information is available, default to wdmaudio midi in/out
+                    // pid, in the event the pid provided by the driver is not compatible,
+                    // and the legacy driver versioning, in the even the provided version isn't
+                    // compatible.
+                    //
+                    // This is to as closely as possible match what wdmaud returned for these
+                    // drivers, which apps have come to depend upon.
+                    wPid = (flow == MidiFlowOut)?MM_MSFT_WDMAUDIO_MIDIOUT:MM_MSFT_WDMAUDIO_MIDIIN;
+                    vDriverVersion = MAKEWORD(VER_PRODUCTMINORVERSION, VER_PRODUCTMAJORVERSION);
+
+                    manufacturerGuid = ksComponentId.Manufacturer;
+                    productGuid = ksComponentId.Product;
+                    nameGuid = ksComponentId.Name;
+                
+                    if (IS_COMPATIBLE_MMREG_MID(&ksComponentId.Manufacturer))
+                    {
+                        wMid = EXTRACT_MMREG_MID(&ksComponentId.Manufacturer);
+                    }
+                    
+                    if (IS_COMPATIBLE_MMREG_PID(&ksComponentId.Product))
+                    {
+                        wPid = EXTRACT_MMREG_PID(&ksComponentId.Product);
+                    }
+                
+                    if ((ksComponentId.Version < 256) && (ksComponentId.Revision < 256))
+                    {
+                        vDriverVersion = MAKEWORD(ksComponentId.Revision, ksComponentId.Version);
+                    }
+                }
+
+                // Fill in the midiCaps for this port
+                if (flow == MidiFlowOut)
+                {
+                    MIDIOUTCAPS2W *caps = &(m_MidiPortInfo[flow][servicePortNum].MidiOutCaps);
+                
+                    caps->wMid = wMid;
+                    caps->wPid = wPid;
+                    caps->vDriverVersion = vDriverVersion;
+                    caps->ManufacturerGuid = manufacturerGuid;
+                    caps->ProductGuid = productGuid;
+                    caps->NameGuid = nameGuid;
+                
+                    wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
+                    caps->szPname[MAXPNAMELEN - 1] = NULL;
+                
+                    caps->wTechnology = MOD_MIDIPORT;
+                    caps->wVoices = 0;
+                    caps->wNotes = 0;
+                    caps->wChannelMask = 0xFFFF;
+                    caps->dwSupport = 0;
+                }
+                else
+                {
+                    MIDIINCAPS2W *caps = &(m_MidiPortInfo[flow][servicePortNum].MidiInCaps);
+                
+                    caps->wMid = wMid;
+                    caps->wPid = wPid;
+                    caps->vDriverVersion = vDriverVersion;
+                    caps->ManufacturerGuid = manufacturerGuid;
+                    caps->ProductGuid = productGuid;
+                    caps->NameGuid = nameGuid;
+
+                    wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
+                    caps->szPname[MAXPNAMELEN - 1] = NULL;
+                
+                    caps->dwSupport = 0;
+                }
+            }
+            else
+            {
+                // Fill in the midiCaps for this port
+                if (flow == MidiFlowOut)
+                {
+                    MIDIOUTCAPSW *caps = (MIDIOUTCAPSW*) &(m_MidiPortInfo[flow][servicePortNum].MidiOutCaps);
+                
+                    caps->wMid = MM_MICROSOFT;
+                    caps->wPid = MM_MSFT_GENERIC_MIDIOUT;
+                    caps->vDriverVersion = 0x0100;
+                
+                    wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
+                    caps->szPname[MAXPNAMELEN - 1] = NULL;
+                
+                    caps->wTechnology = MOD_MIDIPORT;
+                    caps->wVoices = 0;
+                    caps->wNotes = 0;
+                    caps->wChannelMask = 0xFFFF;
+                    caps->dwSupport = 0;
+                }
+                else
+                {
+                    MIDIINCAPSW *caps = (MIDIINCAPSW*) &(m_MidiPortInfo[flow][servicePortNum].MidiInCaps);
+                
+                    caps->wMid = MM_MICROSOFT;
+                    caps->wPid = MM_MSFT_GENERIC_MIDIIN;
+                    caps->vDriverVersion = 0x0100;
+
+                    //wcsncpy_s(caps->szPname, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), MAXPNAMELEN);
+                    wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
+                    caps->szPname[MAXPNAMELEN - 1] = NULL;
+                
+                    caps->dwSupport = 0;
+                }
+            }
+        }
+    }
+
+    // save and return the highest port number
+    m_MidiPortCount[flow] = highestPortNumber;
+
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)flow, "MidiFlow"));
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT
@@ -667,7 +1104,14 @@ CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDes
     // to the port number provided by winmm.
     UINT localPortNumber = portNumber + 1;
 
-    RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_BADDEVICEID), localPortNumber > m_MidiPortCount[flow]);
+    if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
+    {
+        RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), localPortNumber > m_MidiPortCount[flow]);
+    }
+    else
+    {
+        RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_BADDEVICEID), localPortNumber > m_MidiPortCount[flow]);
+    }
 
     auto portInfo = m_MidiPortInfo[flow].find(localPortNumber);
 
@@ -784,6 +1228,19 @@ CMidiPorts::ForwardMidMessage(UINT msg, MidiPortHandle portHandle, DWORD_PTR par
     wil::com_ptr_nothrow<CMidiPort> port;
 
     RETURN_IF_FAILED(GetOpenedPort(MidiFlowIn, portHandle, port));
+
+    if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
+    {
+        // If this is a close message, we still want to forward
+        // the message to the port so that it has the opportunity
+        // to close, even if it has been invalidated.
+        if (MIDM_CLOSE != msg && port->IsInvalidated())
+        {
+            // If the device has been removed, return no driver
+            return HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER);
+        }
+    }
+
     RETURN_IF_FAILED(port->MidMessage(msg, param1, param2));
     return S_OK;
 }
@@ -805,6 +1262,19 @@ CMidiPorts::ForwardModMessage(UINT msg, MidiPortHandle portHandle, DWORD_PTR par
     wil::com_ptr_nothrow<CMidiPort> port;
 
     RETURN_IF_FAILED(GetOpenedPort(MidiFlowOut, portHandle, port));
+
+    if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
+    {
+        // If this is a close message, we still want to forward
+        // the message to the port so that it has the opportunity
+        // to close, even if it has been invalidated.
+        if (MODM_CLOSE != msg && port->IsInvalidated())
+        {
+            // If the device has been removed, return no driver
+            return E_HANDLE;
+        }
+    }
+
     RETURN_IF_FAILED(port->ModMessage(msg, param1, param2));
     return S_OK;
 }

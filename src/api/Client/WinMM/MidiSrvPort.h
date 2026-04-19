@@ -30,6 +30,20 @@ public:
     HRESULT ModMessage(_In_ UINT msg, _In_  DWORD_PTR param1, _In_ DWORD_PTR param2);
     bool IsFlow(_In_ MidiFlow flow);
 
+    void NotifyInterfaceRemoval(std::wstring interfaceId)
+    {
+        auto lock = m_Lock.lock();
+        if (m_InterfaceId == interfaceId)
+        {
+            m_Invalidated = true;
+        }
+    }
+    bool IsInvalidated()
+    {
+        auto lock = m_Lock.lock();
+        return m_Invalidated;
+    }
+
 private:
     HRESULT Reset();
     HRESULT AddBuffer(_In_ LPMIDIHDR buffer, _In_ DWORD_PTR bufferSize);
@@ -48,6 +62,8 @@ private:
     void WinmmClientCallback(_In_ UINT msg, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
 
     wil::critical_section m_Lock;
+
+    bool m_Invalidated {false};
 
     MIDIOPENDESC m_OpenDesc {0};
     DWORD_PTR m_Flags {0};
