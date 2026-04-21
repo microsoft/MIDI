@@ -39,6 +39,7 @@ namespace Microsoft.Windows.Devices.Midi2
     interface IMidiEndpointDeviceInformation2
     {
         Boolean IsMuted{ get; };
+        Boolean IsMidi1PortCreationEnabled{ get; };
     };
 
 

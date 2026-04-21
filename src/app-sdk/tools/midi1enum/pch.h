@@ -36,6 +36,7 @@
 #include <wil\result_macros.h>
 
 #include <mmeapi.h>
+//#include <mmddk.h>
 
 #include <atlbase.h>
 #include <atlcom.h>

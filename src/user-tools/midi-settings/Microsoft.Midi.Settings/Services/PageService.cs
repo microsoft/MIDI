@@ -57,6 +57,10 @@ public class PageService : IPageService
 
         Configure<MidiVirtualPatchBaySetupViewModel, MidiVirtualPatchBaySetupPage>();
 
+        Configure<BluetoothBridgeViewModel, BluetoothBridgesPage>();
+        Configure<EndpointBridgeViewModel, EndpointBridgesPage>();
+
+
         Configure<HomeViewModel, HomePage>();
     }
 

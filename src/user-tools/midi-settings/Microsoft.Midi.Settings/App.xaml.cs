@@ -208,6 +208,13 @@ public partial class App : Application
                     services.AddTransient<MidiVirtualPatchBaySetupPage>();
                     services.AddTransient<MidiVirtualPatchBaySetupViewModel>();
 
+                    services.AddTransient<EndpointBridgesPage>();
+                    services.AddTransient<EndpointBridgeViewModel>();
+
+                    services.AddTransient<BluetoothBridgesPage>();
+                    services.AddTransient<BluetoothBridgeViewModel>();
+
+
                     // Configuration
                     services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
                 }).

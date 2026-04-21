@@ -20,6 +20,10 @@ bool m_showActiveSense{ false };
 bool m_showClock{ false };
 
 
+#define DRV_RESERVED                    0x0800
+#define DRV_QUERYDEVICEINTERFACE        (DRV_RESERVED + 12)
+#define DRV_QUERYDEVICEINTERFACESIZE    (DRV_RESERVED + 13)
+
 
 void WriteInfo(std::string info)
 {
@@ -49,7 +53,14 @@ struct MidiPort
 {
     uint16_t Index;
     std::wstring Name;
+
+    uint16_t ManufacturerId{ 0 };
+    uint16_t ProductId{ 0 };
+    uint32_t DriverVersion{ 0 };
+
     bool IsError{ false };
+
+    std::wstring DriverInterface;
 };
 
 std::vector<MidiPort> m_midiInputs{};
@@ -57,6 +68,7 @@ std::vector<MidiPort> m_midiOutputs{};
 
 uint32_t m_midiInputCountNoErrors{ 0 };
 uint32_t m_midiOutputCountNoErrors{ 0 };
+
 
 void LoadWinMMDevices()
 {
@@ -71,19 +83,44 @@ void LoadWinMMDevices()
 
     for (uint16_t i = 0; i < inputDeviceCount; i++)
     {
-        MIDIINCAPSW inputCaps{ 0 };
+        MIDIINCAPSW caps{ 0 };
 
-        auto result = midiInGetDevCaps(i, &inputCaps, sizeof(inputCaps));
+        auto result = midiInGetDevCaps(i, &caps, sizeof(caps));
 
         MidiPort port{};
         port.Index = i;
 
         if (result == MMSYSERR_NOERROR)
         {
-            port.Name = inputCaps.szPname;
+            port.Name = caps.szPname;
             port.IsError = false;
+            port.ManufacturerId = caps.wMid;
+            port.ProductId = caps.wPid;
+            port.DriverVersion = caps.vDriverVersion;
 
-            m_midiInputCountNoErrors++;
+            ULONG interfaceStringSize{ 0 };
+            auto queryResult = midiInMessage((HMIDIIN)i, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR)(&interfaceStringSize), 0);
+
+            if (queryResult == MMSYSERR_NOERROR)
+            {
+                port.DriverInterface.resize(interfaceStringSize / sizeof(wchar_t));
+
+                queryResult = midiInMessage((HMIDIIN)i, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR)(port.DriverInterface.data()), interfaceStringSize);
+
+                if (queryResult == MMSYSERR_NOERROR)
+                {
+                    m_midiInputCountNoErrors++;
+                }
+                else
+                {
+                    port.IsError = true;
+                }
+            }
+            else
+            {
+                port.IsError = true;
+            }
+
         }
         else
         {
@@ -101,19 +138,44 @@ void LoadWinMMDevices()
 
     for (uint16_t i = 0; i < outputDeviceCount; i++)
     {
-        MIDIOUTCAPSW outputCaps{ 0 };
+        MIDIOUTCAPSW caps{ 0 };
 
-        auto result = midiOutGetDevCaps(i, &outputCaps, sizeof(outputCaps));
+        auto result = midiOutGetDevCaps(i, &caps, sizeof(caps));
 
         MidiPort port{};
         port.Index = i;
 
         if (result == MMSYSERR_NOERROR)
         {
-            port.Name = outputCaps.szPname;
+            port.Name = caps.szPname;
             port.IsError = false;
+            port.ManufacturerId = caps.wMid;
+            port.ProductId = caps.wPid;
+            port.DriverVersion = caps.vDriverVersion;
 
-            m_midiOutputCountNoErrors++;
+            ULONG interfaceStringSize{ 0 };
+            auto queryResult = midiOutMessage((HMIDIOUT)i, DRV_QUERYDEVICEINTERFACESIZE, (DWORD_PTR)(&interfaceStringSize), 0);
+
+            if (queryResult == MMSYSERR_NOERROR)
+            {
+                port.DriverInterface.resize(interfaceStringSize / sizeof(wchar_t));
+
+                queryResult = midiOutMessage((HMIDIOUT)i, DRV_QUERYDEVICEINTERFACE, (DWORD_PTR)(port.DriverInterface.data()), interfaceStringSize);
+
+                if (queryResult == MMSYSERR_NOERROR)
+                {
+                    m_midiInputCountNoErrors++;
+                }
+                else
+                {
+                    port.IsError = true;
+                }
+            }
+            else
+            {
+                port.IsError = true;
+            }
+
         }
         else
         {
@@ -126,6 +188,47 @@ void LoadWinMMDevices()
 
 }
 
+void DisplayPort(MidiPort const& port)
+{
+    if (port.IsError)
+    {
+        std::cout
+            << std::setw(3) << dye::red(port.Index)
+            << dye::grey(" : ");
+    }
+    else
+    {
+        std::cout
+            << std::setw(3) << dye::yellow(port.Index)
+            << dye::grey(" : ");
+    }
+
+    std::wcout
+        << std::setw(33)
+        << std::left
+        << port.Name;
+
+    //std::cout
+    //    << dye::grey(" MID: ")
+    //    << std::setw(4)
+    //    << dye::aqua(port.ManufacturerId)
+    //    << dye::grey(", PID: ")
+    //    << std::setw(4)
+    //    << dye::aqua(port.ProductId)
+    //    << dye::grey(", VER: ")
+    //    << std::setw(8)
+    //    << dye::aqua(port.DriverVersion);
+
+    std::cout
+        << dye::grey(" - Dev Interface: ");
+        
+    std::wcout
+        << port.DriverInterface
+        << std::endl;
+
+
+}
+
 void DisplayAllWinMMInputs()
 {
     auto deviceCount = midiInGetNumDevs();
@@ -135,22 +238,7 @@ void DisplayAllWinMMInputs()
 
     for (auto const& port : m_midiInputs)
     {
-        if (port.IsError)
-        {
-            std::cout
-                << std::setw(3) << dye::red(port.Index)
-                << dye::grey(" : ");
-        }
-        else
-        {
-            std::cout
-                << std::setw(3) << dye::yellow(port.Index)
-                << dye::grey(" : ");
-        }
-
-        std::wcout
-            << port.Name
-            << std::endl;
+        DisplayPort(port);
     }
 
     std::wcout << std::endl;
@@ -166,22 +254,7 @@ void DisplayAllWinMMOutputs()
 
     for (auto const& port : m_midiOutputs)
     {
-        if (port.IsError)
-        {
-            std::cout
-                << std::setw(3) << dye::red(port.Index)
-                << dye::grey(" : ");
-        }
-        else
-        {
-            std::cout
-                << std::setw(3) << dye::yellow(port.Index)
-                << dye::grey(" : ");
-        }
-
-        std::wcout
-            << port.Name
-            << std::endl;
+        DisplayPort(port);
     }
 
     std::wcout << std::endl;

@@ -137,6 +137,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     public:
         bool IsMuted() const noexcept { return internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_IsMuted, false); }
+        bool IsMidi1PortCreationEnabled() const noexcept { return internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint, true); }
 
     };
 }

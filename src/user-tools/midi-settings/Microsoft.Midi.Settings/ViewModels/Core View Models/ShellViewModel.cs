@@ -116,6 +116,12 @@ public partial class ShellViewModel : ObservableRecipient
     [ObservableProperty]
     private bool showToolsScratchPadInLeftNav = false;
 
+    [ObservableProperty]
+    private bool showEndpointBridgeInLeftNav = false;
+
+    [ObservableProperty]
+    private bool showBluetoothBridgeInLeftNav = false;
+
     private void UpdateVisibilityOfLeftNavSections()
     {
         _loggingService.LogInfo($"Enter");
@@ -158,6 +164,9 @@ public partial class ShellViewModel : ObservableRecipient
         {
             ShowSysExToolsInLeftNav = IsServiceAvailable;
             //ShowToolsTestInLeftNav = true;
+
+            ShowEndpointBridgeInLeftNav = IsServiceAvailable;
+            ShowBluetoothBridgeInLeftNav= IsServiceAvailable;
         }
 
 

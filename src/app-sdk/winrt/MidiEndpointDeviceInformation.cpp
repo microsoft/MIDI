@@ -278,6 +278,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         
         additionalProperties.Append(STRING_PKEY_MIDI_IsMuted);
+        additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
 
 
 

@@ -981,4 +981,10 @@ If that is the case, open an Administrator command prompt, type midifixreg, and 
   <data name="TroubleshootingLabel_MidiSdkVersion.Text" xml:space="preserve">
     <value>MIDI App SDK Version</value>
   </data>
+  <data name="Shell_BluetoothBridge.Text" xml:space="preserve">
+    <value>Bluetooth Bridge</value>
+  </data>
+  <data name="Shell_EndpointBridge.Text" xml:space="preserve">
+    <value>Endpoint Bridge</value>
+  </data>
 </root>
