@@ -103,7 +103,7 @@ public class ActivationService : IActivationService
             App.MainWindow.AppWindow.Move(position);
             App.MainWindow.AppWindow.Resize(size);
 
-            App.MainWindow.AppWindow.MoveInZOrderAtTop();
+//            App.MainWindow.AppWindow.MoveInZOrderAtTop();
         }
 
         _loggingService.LogInfo("Exit");
@@ -127,37 +127,6 @@ public class ActivationService : IActivationService
         await InitializeAsync();
 
         WindowsDeveloperModeHelper.Refresh();
-
-
-        //var serviceController = MidiServiceHelper.GetServiceController();
-
-        //if (serviceController == null)
-        //{
-        //    _loggingService.LogError("Unable to get service controller");
-        //    return false;
-        //}
-
-        //if (!MidiServiceHelper.ServiceIsReallyRunning(serviceController))
-        //{
-        //    // we use the main Window's dispatcher, since AppWindow doesn't surface this
-        //    App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
-        //    {
-        //        App.Splash.Show();
-        //        App.Splash.Activate();
-        //    });
-        //}
-
-        //// Check for feature activation
-        //bool featureEnabled = true;
-        //featureEnabled = await MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync();
-        //if (!featureEnabled)
-        //{
-        //    _loggingService.LogInfo("Windows MIDI Services Feature has not been enabled, or there is a registry or service problem.");
-
-        //    _messageBoxService.ShowError("Error_MidiServicesFeatureNotEnabled".GetLocalized(), "Error_WindowsMIDIServicesNotEnabledMessageBoxTitle".GetLocalized());
-
-        //    return false;
-        //}
 
         if (_sdkService == null)
         {
@@ -183,7 +152,7 @@ public class ActivationService : IActivationService
 
                 _messageBoxService.ShowError("Error_UnableToStartMidiService".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
 
-           //     return;
+                //     return;
             }
             else
             {
@@ -197,35 +166,23 @@ public class ActivationService : IActivationService
             return false;
         }
 
-        //App.MainWindow = (MainWindow)e!;
-
+        _loggingService.LogInfo("Closing splash screen");
+        if (splash != null)
+        {
+            splash = null;
+            App.MainWindow.Content = null;
+        }
 
         // Set the MainWindow Content.
         _loggingService.LogInfo("Setting main window content");
-        //if (App.MainWindow.Content == null)
-        {
-            _shell = App.GetService<ShellPage>();
-            App.MainWindow.Content = _shell ?? new Frame();
-        }
+        _shell = App.GetService<ShellPage>();
+        App.MainWindow.Content = _shell;
 
         // Handle activation via ActivationHandlers.
         await HandleActivationAsync(activationArgs);
 
-        _loggingService.LogInfo("Closing splash screen");
-   //     App.Splash.Close();
-
-        //if (App.Splash != null && App.Splash.Visible)
-        //{
-        //    App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
-        //    {
-        //        App.Splash.Close();
-        //    });
-        //}
-        //App.Splash.Dispatcher.ProcessEvents(CoreProcessEventsOption.ProcessAllIfPresent);
-
         // Activate the MainWindow.
-        //App.MainWindow.Show();
-        App.MainWindow.Activate();
+//        App.MainWindow.Activate();
 
         // Execute tasks after activation.
         await StartupAsync();

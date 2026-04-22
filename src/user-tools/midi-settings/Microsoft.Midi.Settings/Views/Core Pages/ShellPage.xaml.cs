@@ -62,7 +62,7 @@ public sealed partial class ShellPage : Page
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.GoBack));
 
         // prime the endpoint data
-        App.GetService<IMidiEndpointEnumerationService>().GetEndpoints();
+   //     App.GetService<IMidiEndpointEnumerationService>().GetEndpoints();
 
     }
 

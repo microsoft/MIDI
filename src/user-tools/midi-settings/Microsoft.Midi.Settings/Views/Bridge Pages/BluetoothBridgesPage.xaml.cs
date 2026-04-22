@@ -50,9 +50,6 @@ namespace Microsoft.Midi.Settings.Views
             ViewModel = App.GetService<BluetoothBridgeViewModel>();
             _loggingService = App.GetService<ILoggingService>();
 
-            Loaded += Page_Loaded;
-            Unloaded += Page_Unloaded;
-
             try
             {
                 InitializeComponent();
@@ -70,54 +67,6 @@ namespace Microsoft.Midi.Settings.Views
             m_showCreateDialog = true;
         }
 
-
-        private void Page_Unloaded(object sender, RoutedEventArgs e)
-        {
-           // ViewModel.ShowCreateDialog -= ViewModel_ShowCreateDialog;
-        }
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (m_showCreateDialog)
-            {
-                // showing the dialog fails if it is attempted before Loaded has completed
-                // as a result, we set a flag in the event from the VM and then
-                // show it here, in loaded. Not my favorite code.
-
-                DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
-                {
-                    var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
-                });
-
-                m_showCreateDialog = false;
-            }
-
-        }
-
-        private async void CreateNewLoopback_Click(object sender, RoutedEventArgs e)
-        {
-            Dialog_CreateLoopbackEndpoints.Resources["ContentDialogMaxHeight"] = Math.Max(1200.0, this.ActualHeight);
-
-            // TODO: Read this from local settings
-
-            var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
-        }
-
-
-        private void Dialog_CreateLoopbackEndpoints_Closing(ContentDialog sender, ContentDialogClosingEventArgs args)
-        {
-
-        }
-
-
-
-
-        //private void foo()
-        //{
-        //    ContentDialog dialog;
-        //    dialog.Text(L"Hello MessageDialog");
-        //    dialog.XamlRoot(Content().XamlRoot() /* Assuming that you're showing from the window */);
-        //    dialog.ShowAsync();
-        //}
 
 
     }

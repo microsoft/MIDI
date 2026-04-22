@@ -223,11 +223,14 @@
 
         </StackPanel>
 
-
+        <!--
         <Grid Grid.Row="3" Margin="0,0,0,16">
-            <TextBlock Text="Byte Count: " />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Send Byte Count:" />
+                <TextBlock Text="{x:Bind ViewModel.ByteCount}" />
+            </StackPanel>
         </Grid>
-        
+        -->
         
     </Grid>
 </Page>

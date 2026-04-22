@@ -35,6 +35,12 @@ public partial class LoggingService : ILoggingService
         _loggingChannel = new LoggingChannel("MIDI Settings", null, channelId);
     }
 
+
+    ~LoggingService()
+    {
+        _loggingChannel.Dispose();
+    }
+
     private string BuildLocationName(string filePath, string memberName)
     {
         //var fileName = Path.GetFileName(filePath);

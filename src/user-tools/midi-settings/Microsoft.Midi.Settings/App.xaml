@@ -8,12 +8,12 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <ResourceDictionary Source="/Styles/DefaultFont.xaml" />
-                <ResourceDictionary Source="/Styles/FontSizes.xaml" />
-                <ResourceDictionary Source="/Styles/Thickness.xaml" />
-                <ResourceDictionary Source="/Styles/TextBlock.xaml" />
-                <ResourceDictionary Source="/Styles/MessageTemplates.xaml" />
-                <ResourceDictionary Source="/Styles/MidiStyles.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/DefaultFont.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/FontSizes.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/Thickness.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/TextBlock.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/MessageTemplates.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/MidiStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <helpers:HasUniqueIdToVisibilityConverter x:Key="HasUniqueIdToVisibilityConverter" />

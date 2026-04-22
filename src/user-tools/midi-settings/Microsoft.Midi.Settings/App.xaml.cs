@@ -69,8 +69,6 @@ public partial class App : Application
     // this is set from the splashscreen handling in the activation service
     public static Window MainWindow { get; } = new MainWindow();
 
-    public static MidiServiceInitializationProgressWindow Splash { get; } = new MidiServiceInitializationProgressWindow();
-
     public App()
     {
         UnhandledException += App_UnhandledException;
@@ -247,8 +245,10 @@ public partial class App : Application
                     "MIDI Settings Startup Failure",
                     0);
             }
-
-            Exit();
+            finally
+            {
+                Exit();
+            }
         }
     }
 

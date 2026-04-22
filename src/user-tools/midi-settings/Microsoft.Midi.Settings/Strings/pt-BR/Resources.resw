@@ -905,7 +905,85 @@ Se esse for o caso, abra um prompt de comando como Administrador, digite midifix
   <data name="Error_UnableToCaptureMidiLogsToFile" xml:space="preserve">
     <value>Não foi possível capturar os registros MIDI para arquivo.</value>
   </data>
+  <data name="TroubleshootingSection_WorkingWithSupport.Text" xml:space="preserve">
+    <value>Se você está trabalhando com o suporte</value>
+  </data>
+  <data name="TroubleshootingSection_RepairRegistry.Text" xml:space="preserve">
+    <value>Se um desinstalador de driver ou outro utilitário fez com que os aplicativos não possam ver os dispositivos MIDI</value>
+  </data>
+  <data name="TroubleshootingSection_UnknownIssue.Text" xml:space="preserve">
+    <value>Se você tiver um problema desconhecido</value>
+  </data>
+  <data name="TroubleshootingButton_CaptureMidiSystemInfo.Content" xml:space="preserve">
+    <value>Capturar informações do sistema MIDI</value>
+  </data>
+  <data name="TroubleshootingButton_CaptureMidiLogs.Content" xml:space="preserve">
+    <value>Capturar registros de atividade MIDI</value>
+  </data>
+  <data name="TroubleshootingButton_RepairRegistry.Content" xml:space="preserve">
+    <value>Reparar Entradas do Registro</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_ReportMidiSystemInfo.Header" xml:space="preserve">
+    <value>Relatar Informações do Sistema MIDI</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_ReportMidiSystemInfo.Description" xml:space="preserve">
+    <value>Se você estiver trabalhando com o suporte técnico de um aplicativo ou hardware, eles podem pedir que você capture informações do sistema MIDI em um arquivo e as envie para eles. Você poderá visualizar as informações capturadas antes de enviá-las para o seu contato de suporte.</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_CaptureMidiLogs.Header" xml:space="preserve">
+    <value>Capturar registros de atividade MIDI</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_CaptureMidiLogs.Description" xml:space="preserve">
+    <value>Se você precisar capturar a atividade MIDI enquanto recria um problema para ajudar o suporte a diagnosticar a questão, use esta ferramenta para criar uma captura de atividade (rastreamento ETL) e informações do sistema que você pode enviar para um serviço de compartilhamento.</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_RestartMidisrv.Description" xml:space="preserve">
+    <value>Espero que não chegue a esse ponto, mas se algo estiver preso no serviço, você pode reiniciá-lo aqui.</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_RestartMidisrv.Header" xml:space="preserve">
+    <value>Reiniciar os serviços MIDI do Windows</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_RepairRegistry.Description" xml:space="preserve">
+    <value>Se você desinstalou o KORG ou outros drivers e o MIDI não está mais funcionando, você pode executar as ferramentas aqui para reparar o registro. Os valores atuais para ambos os locais importantes do registro, e quaisquer erros, estão indicados abaixo.</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_RepairRegistry.Header" xml:space="preserve">
+    <value>Corrigir entradas do registro</value>
+  </data>
+  <data name="TroubleshootingButton_RestartMidisrv.Content" xml:space="preserve">
+    <value>Reiniciar Serviço MIDI</value>
+  </data>
+  <data name="TroubleshootingMainHeader.Text" xml:space="preserve">
+    <value>Se você está tendo problemas com MIDI no seu PC, as ferramentas abaixo podem ajudá-lo a se recuperar sem precisar reiniciar.</value>
+  </data>
   <data name="Error_UnableToLaunchRegedit" xml:space="preserve">
     <value>Não foi possível abrir o regedit</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_SystemInformation.Header" xml:space="preserve">
+    <value>Informações do Sistema</value>
+  </data>
+  <data name="TroubleshootingSettingsCard_SystemInformation.Description" xml:space="preserve">
+    <value>Informações básicas sobre esta versão do Windows e esta versão deste aplicativo.</value>
+  </data>
+  <data name="TroubleshootingLabel_WindowsVersion.Text" xml:space="preserve">
+    <value>Versão do Windows</value>
+  </data>
+  <data name="TroubleshootingLabel_WindowsArchitecture.Text" xml:space="preserve">
+    <value>Arquitetura do Windows</value>
+  </data>
+  <data name="TroubleshootingLabel_WindowsCultureInfo.Text" xml:space="preserve">
+    <value>Cultura do Windows</value>
+  </data>
+  <data name="TroubleshootingLabel_WindowsAppSdkVersion.Text" xml:space="preserve">
+    <value>Versão do Windows App SDK</value>
+  </data>
+  <data name="TroubleshootingLabel_DotNetRuntimeVersion.Text" xml:space="preserve">
+    <value>Versão do .NET Runtime</value>
+  </data>
+  <data name="TroubleshootingLabel_MidiSdkVersion.Text" xml:space="preserve">
+    <value>Versão do SDK do App MIDI</value>
+  </data>
+  <data name="Shell_BluetoothBridge.Text" xml:space="preserve">
+    <value>Conexão Bluetooth</value>
+  </data>
+  <data name="Shell_EndpointBridge.Text" xml:space="preserve">
+    <value>Conexão Endpoint</value>
   </data>
 </root>

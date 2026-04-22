@@ -159,6 +159,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         private byte selectedControllerValue;
 
 
+        [ObservableProperty]
+        private UInt32 byteCount;
+
 
         [ObservableProperty]
         private string allScratchPadText;
@@ -260,6 +263,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             Busy = true;
 
             var bytes = MidiMessageConverter.ConvertHexByteStringToByteArray(text);
+
+            ByteCount = (uint)bytes.Count;
 
             bool success = false;
 

@@ -543,6 +543,26 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
             values.Add(entry);
         }
 
+        if (values.Find(x => x.Name.ToLower() == "midi") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "midi";
+
+            values.Add(entry);
+        }
+
+        if (values.Find(x => x.Name.ToLower() == "midi1") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "mid1";
+
+            values.Add(entry);
+        }
+
         return values;
     }
 
@@ -550,7 +570,29 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
     {
         _loggingService.LogInfo($"Enter");
 
-        return GetHklmRegistryEntries(Drivers32WOWPath, RegistryView.Registry32).OrderBy(x => x.Name).ToList();
+        var values = GetHklmRegistryEntries(Drivers32WOWPath, RegistryView.Registry32).OrderBy(x => x.Name).ToList();
+
+        if (values.Find(x => x.Name.ToLower() == "midi") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "midi";
+
+            values.Add(entry);
+        }
+
+        if (values.Find(x => x.Name.ToLower() == "midi1") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "mid1";
+
+            values.Add(entry);
+        }
+
+        return values;
     }
 
 }
