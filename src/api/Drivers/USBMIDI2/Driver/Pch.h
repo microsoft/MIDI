@@ -75,7 +75,6 @@ extern "C" {
 #endif
 
 #include <wil\resource.h>
-#include <Feature_Servicing_USBMIDI2Spinlock.h>
 
 #include "Driver.h"
 #include "Device.h"

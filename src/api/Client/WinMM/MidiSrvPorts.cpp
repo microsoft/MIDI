@@ -1026,7 +1026,7 @@ CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps, DWORD
         }
         else
         {
-            memcpy((PVOID) midiCaps, &(port->second.MidiInCaps), sizeof(port->second.MidiInCaps));
+            memcpy((PVOID) midiCaps, &(port->second.MidiInCaps), sizeof(MIDIINCAPSW));
         }
     }
     else
@@ -1037,7 +1037,7 @@ CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps, DWORD
         }
         else
         {
-            memcpy((PVOID) midiCaps, &(port->second.MidiOutCaps), sizeof(port->second.MidiOutCaps));
+            memcpy((PVOID) midiCaps, &(port->second.MidiOutCaps), sizeof(MIDIOUTCAPSW));
         }
     }
 
