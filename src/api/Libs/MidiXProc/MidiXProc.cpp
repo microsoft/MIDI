@@ -28,8 +28,6 @@
 #include "MidiXProc.h"
 #include "ump_iterator.h"
 
-#include <Feature_Servicing_MIDI2SendTimeout.h>
-
 class MidiXProcTelemetryProvider : public wil::TraceLoggingProvider
 {
     IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
@@ -42,18 +40,10 @@ class MidiXProcTelemetryProvider : public wil::TraceLoggingProvider
 // infinite timeouts when waiting for read events cause the server to just hang
 // waits for more than 5 seconds cause UI app hang crashes.
 #define MIDI_XPROC_BUFFER_AVAILABLE_WAIT_TIMEOUT 1000
-// begin remove with Feature_Servicing_MIDI2SendTimeout
-// infinite timeouts when waiting for read events cause the server to just hang
-#define MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT 5000
-// end remove with Feature_Servicing_MIDI2SendTimeout
 
 // timeout waiting for the messages to be received
 // waits for more than 5 seconds cause UI app hang crashes.
 #define MIDI_XPROC_BUFFER_RECEIVED_WAIT 1000
-// begin remove with Feature_Servicing_MIDI2SendTimeout
-// timeout waiting for the messages to be recieved
-#define MIDI_XPROC_BUFFER_EMPTY_WAIT_TIMEOUT 5000
-// end remove with Feature_Servicing_MIDI2SendTimeout
 
 // timeout waiting for the messages to be received
 #define MIDI_XPROC_CALLBACK_RETRY_TIMEOUT 1000
@@ -250,241 +240,155 @@ _Use_decl_annotations_
 HRESULT
 CMidiXProc::WaitForSendComplete(ULONG startingReadPosition, ULONG BufferWrittenPosition, UINT32 BufferLength)
 {
-    if (Feature_Servicing_MIDI2SendTimeout::IsEnabled())
+    // Wait for midi messages to be received by other end of pipe
+    if (m_MidiOut)
     {
-        // Wait for midi messages to be received by other end of pipe
-        if (m_MidiOut)
+        // Open a new handle to the read event, this will be a different handle than the
+        // event used for adding messages to the queue, ensuring that a thread waiting for
+        // space to come available won't interfere with a thread waiting for its message
+        // to be consumed
+        wil::unique_event_nothrow openedReadEvent;
+        HANDLE readEventHandle = m_MidiOut->ReadEvent.get();
+
+        if (m_MidiOut->ReadEventName.size() > 0)
         {
-            // Open a new handle to the read event, this will be a different handle than the
-            // event used for adding messages to the queue, ensuring that a thread waiting for
-            // space to come available won't interfere with a thread waiting for its message
-            // to be consumed
-            wil::unique_event_nothrow openedReadEvent;
-            HANDLE readEventHandle = m_MidiOut->ReadEvent.get();
-
-            if (m_MidiOut->ReadEventName.size() > 0)
+            openedReadEvent.reset(OpenEvent(EVENT_ALL_ACCESS, FALSE, m_MidiOut->ReadEventName.c_str()));
+            if (openedReadEvent.get())
             {
-                openedReadEvent.reset(OpenEvent(EVENT_ALL_ACCESS, FALSE, m_MidiOut->ReadEventName.c_str()));
-                if (openedReadEvent.get())
-                {
-                    readEventHandle = openedReadEvent.get();
-                }
+                readEventHandle = openedReadEvent.get();
             }
-            HANDLE handles[] = { m_ThreadTerminateEvent.get(), readEventHandle };
+        }
+        HANDLE handles[] = { m_ThreadTerminateEvent.get(), readEventHandle };
 
-            // calculate the linear position for the end of the written buffer.
-            // We are using linear positions rather than looped position to simplify the calculations
-            // needed to determine if the data has been read yet.
-            ULONG bufferWrittenEndPosition = (BufferWrittenPosition + BufferLength);
+        // calculate the linear position for the end of the written buffer.
+        // We are using linear positions rather than looped position to simplify the calculations
+        // needed to determine if the data has been read yet.
+        ULONG bufferWrittenEndPosition = (BufferWrittenPosition + BufferLength);
 
-            // the starting read position is the read position at the time the buffer was written, which is
-            // by definition earlier than the linear position of the buffer that was just written.
-            // If the buffer was written into the xproc queue behind the current read position,
-            // then the linear position it was written into is actually 1 buffer size ahead relative to the 
-            // starting read position, so we need to move the bufferWrittenEndPosition forward
-            // by one BufferSize.
-            if (startingReadPosition > BufferWrittenPosition)
+        // the starting read position is the read position at the time the buffer was written, which is
+        // by definition earlier than the linear position of the buffer that was just written.
+        // If the buffer was written into the xproc queue behind the current read position,
+        // then the linear position it was written into is actually 1 buffer size ahead relative to the 
+        // starting read position, so we need to move the bufferWrittenEndPosition forward
+        // by one BufferSize.
+        if (startingReadPosition > BufferWrittenPosition)
+        {
+            bufferWrittenEndPosition += m_MidiOut->Data.BufferSize;
+        }
+
+        // used for calculating and counting times the buffer has looped since monitoring
+        // for completion of this buffer started
+        ULONG previousReadPosition = startingReadPosition;
+        ULONG readPosition = InterlockedCompareExchange((LONG*)m_MidiOut->Registers.ReadPosition, 0, 0);
+        ULONG loopcount = 0;
+
+        {
+            // Check to see if the pipe is currently stalled, if so then check to see if the stall has resolved since
+            // the last check. If nothing has changed, there's no need to continue to wait.
+            auto lock = m_MessageSendLock.lock();
+            if (m_PipeStalled)
             {
-                bufferWrittenEndPosition += m_MidiOut->Data.BufferSize;
-            }
-
-            // used for calculating and counting times the buffer has looped since monitoring
-            // for completion of this buffer started
-            ULONG previousReadPosition = startingReadPosition;
-            ULONG readPosition = InterlockedCompareExchange((LONG*)m_MidiOut->Registers.ReadPosition, 0, 0);
-            ULONG loopcount = 0;
-
-            {
-                // Check to see if the pipe is currently stalled, if so then check to see if the stall has resolved since
-                // the last check. If nothing has changed, there's no need to continue to wait.
-                auto lock = m_MessageSendLock.lock();
-                if (m_PipeStalled)
+                if (readPosition == m_StalledReadPosition)
                 {
-                    if (readPosition == m_StalledReadPosition)
-                    {
-                        TraceLoggingWrite(
-                            MidiXProcTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"MidiXProc Wait skipped during continued stall.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingValue(readPosition, "readPosition"),
-                            TraceLoggingValue(m_StalledReadPosition, "m_StalledReadPosition"),
-                            TraceLoggingValue(BufferWrittenPosition, "BufferWrittenPosition")
-                        );
+                    TraceLoggingWrite(
+                        MidiXProcTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"MidiXProc Wait skipped during continued stall.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingValue(readPosition, "readPosition"),
+                        TraceLoggingValue(m_StalledReadPosition, "m_StalledReadPosition"),
+                        TraceLoggingValue(BufferWrittenPosition, "BufferWrittenPosition")
+                    );
 
-                        // Nothing has changed since the last time we checked, the pipe is still stalled
-                        // fail this buffer.
-                        return E_ABORT;
-                    }
-                    else
-                    {
-                        TraceLoggingWrite(
-                            MidiXProcTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"MidiXProc Detected stall resolved before WaitForSendComplete.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingValue(readPosition, "readPosition"),
-                            TraceLoggingValue(m_StalledReadPosition, "m_StalledReadPosition"),
-                            TraceLoggingValue(BufferWrittenPosition, "BufferWrittenPosition")
-                        );
-
-                        // The read position has changed, data seems to be flowing again, reset the stalled state
-                        // and go forward with waiting for the buffer to be consumed.
-                        m_PipeStalled = false;
-                        m_StalledReadPosition = 0;
-                    }
-                }
-            }
-
-            do
-            {
-                // wait for either the other end to read the buffer, termination, or timeout with no messages read
-                DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_RECEIVED_WAIT);
-                if (ret == (WAIT_OBJECT_0 + 1))
-                {
-                    // this is a manual reset event, so reset the event before reading the updated position so
-                    // that we do not miss any reads.
-                    ResetEvent(readEventHandle);
-
-                    // received a read event, retrieve the new read position
-                    readPosition = InterlockedCompareExchange((LONG*)m_MidiOut->Registers.ReadPosition, 0, 0);
-
-                    // calculate the current linear read position, accounting for loops
-                    readPosition += (m_MidiOut->Data.BufferSize * loopcount);
-
-                    // if the new read position is less than the previous, we've read past the end of the buffer,
-                    // so we've completed a loop, increment the loop count.
-                    if (readPosition < previousReadPosition)
-                    {
-                        loopcount++;
-                        // and add another buffer size to the position for this iteration
-                        readPosition += m_MidiOut->Data.BufferSize;
-                    }
-
-                    // comparing linear positions, if the read position has advanced past the end of the buffer,
-                    // then it has been read.
-                    if (readPosition >= bufferWrittenEndPosition)
-                    {
-                        return S_OK;
-                    }
-
-                    previousReadPosition = readPosition;
+                    // Nothing has changed since the last time we checked, the pipe is still stalled
+                    // fail this buffer.
+                    return E_ABORT;
                 }
                 else
                 {
-                    // timed out without position advancing, pipe is stalled, save the stall position info
-                    // to refer back to later, set the stalled flag to prevent future waits.
-                    if (ret == WAIT_TIMEOUT)
-                    {
-                        auto lock = m_MessageSendLock.lock();
-                        m_PipeStalled = true;
-                        m_StalledReadPosition = readPosition;
+                    TraceLoggingWrite(
+                        MidiXProcTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"MidiXProc Detected stall resolved before WaitForSendComplete.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingValue(readPosition, "readPosition"),
+                        TraceLoggingValue(m_StalledReadPosition, "m_StalledReadPosition"),
+                        TraceLoggingValue(BufferWrittenPosition, "BufferWrittenPosition")
+                    );
 
-                        TraceLoggingWrite(
-                            MidiXProcTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"MidiXProc stall detected during wait.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingValue(readPosition, "readPosition"),
-                            TraceLoggingValue(m_StalledReadPosition, "m_StalledReadPosition"),
-                            TraceLoggingValue(BufferWrittenPosition, "BufferWrittenPosition")
-                        );
-                    }
-
-                    // termination or timeout, wait aborted
-                    return E_ABORT;
+                    // The read position has changed, data seems to be flowing again, reset the stalled state
+                    // and go forward with waiting for the buffer to be consumed.
+                    m_PipeStalled = false;
+                    m_StalledReadPosition = 0;
                 }
-            } while (true);
+            }
         }
-    }
-    else
-    {
-        // Wait for midi messages to be recieved by other end of pipe
-        if (m_MidiOut)
+
+        do
         {
-            // Open a new handle to the read event, this will be a different handle than the
-            // event used for adding messages to the queue, ensuring that a thread waiting for
-            // space to come available won't interfere with a thread waiting for its message
-            // to be consumed
-            wil::unique_event_nothrow openedReadEvent;
-            HANDLE readEventHandle = m_MidiOut->ReadEvent.get();
-        
-            if (m_MidiOut->ReadEventName.size() > 0)
+            // wait for either the other end to read the buffer, termination, or timeout with no messages read
+            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_RECEIVED_WAIT);
+            if (ret == (WAIT_OBJECT_0 + 1))
             {
-                openedReadEvent.reset(OpenEvent(EVENT_ALL_ACCESS, FALSE, m_MidiOut->ReadEventName.c_str()));
-                if (openedReadEvent.get())
+                // this is a manual reset event, so reset the event before reading the updated position so
+                // that we do not miss any reads.
+                ResetEvent(readEventHandle);
+
+                // received a read event, retrieve the new read position
+                readPosition = InterlockedCompareExchange((LONG*)m_MidiOut->Registers.ReadPosition, 0, 0);
+
+                // calculate the current linear read position, accounting for loops
+                readPosition += (m_MidiOut->Data.BufferSize * loopcount);
+
+                // if the new read position is less than the previous, we've read past the end of the buffer,
+                // so we've completed a loop, increment the loop count.
+                if (readPosition < previousReadPosition)
                 {
-                    readEventHandle = openedReadEvent.get();
+                    loopcount++;
+                    // and add another buffer size to the position for this iteration
+                    readPosition += m_MidiOut->Data.BufferSize;
                 }
+
+                // comparing linear positions, if the read position has advanced past the end of the buffer,
+                // then it has been read.
+                if (readPosition >= bufferWrittenEndPosition)
+                {
+                    return S_OK;
+                }
+
+                previousReadPosition = readPosition;
             }
-            HANDLE handles[] = { m_ThreadTerminateEvent.get(), readEventHandle };
-        
-            // calculate the linear position for the end of the written buffer.
-            // We are using linear positions rather than looped position to simplify the calculations
-            // needed to determine if the data has been read yet.
-            ULONG bufferWrittenEndPosition = (BufferWrittenPosition + BufferLength);
-        
-            // the starting read position is the read position at the time the buffer was written, which is
-            // by definition earlier than the linear position of the buffer that was just written.
-            // If the buffer was written into the xproc queue behind the current read position,
-            // then the linear position it was written into is actually 1 buffer size ahead relative to the 
-            // starting read position, so we need to move the bufferWrittenEndPosition forward
-            // by one BufferSize.
-            if (startingReadPosition > BufferWrittenPosition)
+            else
             {
-                bufferWrittenEndPosition += m_MidiOut->Data.BufferSize;
+                // timed out without position advancing, pipe is stalled, save the stall position info
+                // to refer back to later, set the stalled flag to prevent future waits.
+                if (ret == WAIT_TIMEOUT)
+                {
+                    auto lock = m_MessageSendLock.lock();
+                    m_PipeStalled = true;
+                    m_StalledReadPosition = readPosition;
+
+                    TraceLoggingWrite(
+                        MidiXProcTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"MidiXProc stall detected during wait.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingValue(readPosition, "readPosition"),
+                        TraceLoggingValue(m_StalledReadPosition, "m_StalledReadPosition"),
+                        TraceLoggingValue(BufferWrittenPosition, "BufferWrittenPosition")
+                    );
+                }
+
+                // termination or timeout, wait aborted
+                return E_ABORT;
             }
-        
-            // used for calculating and counting times the buffer has looped since monitoring
-            // for completion of this buffer started
-            ULONG previousReadPosition = startingReadPosition;
-            ULONG loopcount = 0;
-        
-            do
-            {
-                // wait for either the other end to read the buffer, termination, or timeout with no messages read
-                DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_EMPTY_WAIT_TIMEOUT);
-                if (ret == (WAIT_OBJECT_0 + 1))
-                {
-                    // this is a manual reset event, so reset the event before reading the updated position so
-                    // that we do not miss any reads.
-                    ResetEvent(readEventHandle);
-        
-                    // received a read event, retrieve the new read position
-                    ULONG readPosition = InterlockedCompareExchange((LONG*)m_MidiOut->Registers.ReadPosition, 0, 0);
-        
-                    // if the new read position is less than the previous, we've read past the end of the buffer,
-                    // so we've completed a loop, increment the loop count.
-                    if (readPosition < previousReadPosition)
-                    {
-                        loopcount++;
-                    }
-        
-                    // calculate the current linear read position, accounting for loops
-                    readPosition += (m_MidiOut->Data.BufferSize * loopcount);
-        
-                    // comparing linear positions, if the read position has advanced past the end of the buffer,
-                    // then it has been read.
-                    if (readPosition > bufferWrittenEndPosition)
-                    {
-                        return S_OK;
-                    }
-        
-                    previousReadPosition = readPosition;
-                }
-                else
-                {
-                    // termination or timeout, wait aborted
-                    return E_ABORT;
-                }
-            } while (true);
-        }
+        } while (true);
     }
 
     // no midi out pipe, waiting not applicable
@@ -646,341 +550,99 @@ CMidiXProc::SendMidiMessageInternal(
     LONGLONG position
 )
 {
-    if (Feature_Servicing_MIDI2SendTimeout::IsEnabled())
+    bool bufferSent{false};
+    UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
+
+    PMEMORY_MAPPED_REGISTERS registers = &(m_MidiOut->Registers);
+    PMEMORY_MAPPED_DATA data = &(m_MidiOut->Data);
+    bool retry {false};
+    ULONG bufferWrittenPosition {0};
+    ULONG startingReadPosition {0};
+
     {
-        bool bufferSent{false};
-        UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
+        // only 1 caller may add a message to the xproc queue at a time
+        auto lock = m_MessageSendLock.lock();
 
-        PMEMORY_MAPPED_REGISTERS registers = &(m_MidiOut->Registers);
-        PMEMORY_MAPPED_DATA data = &(m_MidiOut->Data);
-        bool retry {false};
-        ULONG bufferWrittenPosition {0};
-        ULONG startingReadPosition {0};
+        do{
+            retry = false;
 
-        {
-            // only 1 caller may add a message to the xproc queue at a time
-            auto lock = m_MessageSendLock.lock();
+            // reset the read event, so we will know when the client reads data in the event
+            // that the buffer is full
+            m_MidiOut->ReadEvent.ResetEvent();
 
-            do{
-                retry = false;
+            // the write position is the last position we have written,
+            // the read position is the last position the driver (or client) has read from
+            ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
+            ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
+            ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
+            ULONG bytesAvailable{ 0 };
 
-                // reset the read event, so we will know when the client reads data in the event
-                // that the buffer is full
-                m_MidiOut->ReadEvent.ResetEvent();
-
-                // the write position is the last position we have written,
-                // the read position is the last position the driver (or client) has read from
-                ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
-                ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
-                ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
-                ULONG bytesAvailable{ 0 };
-
-                // Calculate the available space in the buffer.
-                if (readPosition <= writePosition)
-                {
-                    bytesAvailable = data->BufferSize - (writePosition - readPosition);
-                }
-                else
-                {
-                    bytesAvailable = (readPosition - writePosition);
-                }
-
-                // Note, if we fill the buffer up 100%, then write position == read position,
-                // which is the same as when the buffer is empty and everything in the buffer
-                // would be lost.
-                // Reserve 1 byte so that when the buffer is full the write position will trail
-                // the read position.
-                // Because of this reserve, and the above calculation, the true bytesAvailable 
-                // count can never be 0.
-                assert(bytesAvailable != 0);
-                bytesAvailable--;
-
-                // if there is sufficient space to write the buffer, send it
-                if (bytesAvailable >= requiredBufferSize)
-                {
-                    PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)data->BufferAddress) + writePosition);
-
-                    header->ByteCount = length;
-                    CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), midiData, length);
-
-                    // if a position provided is nonzero, use it, otherwise use the current QPC
-                    if (position)
-                    {
-                        header->Position = position;
-                    }
-                    else if (m_OverwriteZeroTimestamp)
-                    {
-                        LARGE_INTEGER qpc{ 0 };
-                        QueryPerformanceCounter(&qpc);
-                        header->Position = qpc.QuadPart;
-                    }
-                    else
-                    {
-                        header->Position = 0;
-                    }
-
-                    // update the write position and notify the other side that data is available.
-                    InterlockedExchange((LONG*)registers->WritePosition, newWritePosition);
-                    RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
-
-                    bufferSent = true;
-
-                    // Retain the position that the buffer was written into, if the client requires
-                    // us to wait for it to complete.
-                    bufferWrittenPosition = writePosition;
-                    startingReadPosition = readPosition;
-
-                    if (m_PipeStalled)
-                    {
-                        m_SequentialDroppedBuffers = 0;
-
-                        // We were able to successfully write data, maybe we're no longer stalled?
-                        // If the read position has advanced since the stall was detected,
-                        // the stall has resolved.
-                        if (readPosition != m_StalledReadPosition)
-                        {
-                            m_PipeStalled = false;
-                            m_StalledReadPosition = 0;
-                            TraceLoggingWrite(
-                                MidiXProcTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_INFO,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"MidiXProc recovered from stall.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingPointer(midiData, "midiData"),
-                                TraceLoggingValue(readPosition, "readPosition"),
-                                TraceLoggingValue(writePosition, "writePosition"),
-                                TraceLoggingValue(m_PipeStalled, "PipeStalled"),
-                                TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
-                                TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
-                            );
-                        }
-                        else
-                        {
-                            // Pipe was previously stalled, however space is available now
-                            // pipe has recovered and is no longer stalled.
-                            TraceLoggingWrite(
-                                MidiXProcTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_INFO,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"MidiXProc buffer added to queue will in stalled state.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingPointer(midiData, "midiData"),
-                                TraceLoggingValue(readPosition, "readPosition"),
-                                TraceLoggingValue(writePosition, "writePosition"),
-                                TraceLoggingValue(m_PipeStalled, "PipeStalled"),
-                                TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
-                                TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
-                            );
-                        }
-                    }
-                }
-                else if (!m_PipeStalled)
-                {
-                    // Buffer is full, and either the pipe has not been detected as being stalled yet, or the client requested 
-                    // to always wait for a retry. Wait for the client to read some data out of the buffer to
-                    // make space
-                    HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
-                    DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_AVAILABLE_WAIT_TIMEOUT);
-                    if (ret == (WAIT_OBJECT_0 + 1))
-                    {
-                        // space has been made, try again.
-                        retry = true;
-                        continue;
-                    }
-
-                    // We're either terminating, or space did not come available, so this buffer is going to be dropped
-                    m_TotalDroppedBuffers++;
-
-                    if (ret == WAIT_OBJECT_0)
-                    {
-                        // We're terminating
-                        TraceLoggingWrite(
-                            MidiXProcTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"MidiXProc terminated, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingPointer(midiData, "midiData"),
-                            TraceLoggingValue(readPosition, "readPosition"),
-                            TraceLoggingValue(writePosition, "writePosition"),
-                            TraceLoggingValue(m_PipeStalled, "PipeStalled"),
-                            TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
-                            TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
-                        );
-                    }
-                    else if (ret == WAIT_TIMEOUT)
-                    {
-                        // Queue is full and no movement within the wait timeout, set the stalled flag
-                        // and save the stalled read position to assist with identifying when/if the stall
-                        // resolves.
-                        m_PipeStalled = true;
-                        m_StalledReadPosition = readPosition;
-
-                        // Pipe is running and we timed out waiting for space.
-                        // The pipe is stalled, set a flag so we skip waiting the full timeout for additional messages
-                        // that come in while the pipe is stalled, however we will still check to see if the pipe has
-                        // recovered when new messages arrive.
-                        TraceLoggingWrite(
-                            MidiXProcTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"MidiXProc stall detected during send, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingPointer(midiData, "midiData"),
-                            TraceLoggingValue(readPosition, "readPosition"),
-                            TraceLoggingValue(writePosition, "writePosition"),
-                            TraceLoggingValue(m_PipeStalled, "PipeStalled"),
-                            TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
-                            TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
-                        );
-                    }
-                }
-                else
-                {
-                    // The pipe is stalled and continues to be stalled, and the client did not request retry, 
-                    // log that the message has been lost, don't wait for space, and report the failure
-                    m_TotalDroppedBuffers++;
-                    m_SequentialDroppedBuffers++;
-                    TraceLoggingWrite(
-                        MidiXProcTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"MidiXProc stalled, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingPointer(midiData, "midiData"),
-                        TraceLoggingValue(readPosition, "readPosition"),
-                        TraceLoggingValue(writePosition, "writePosition"),
-                        TraceLoggingValue(m_PipeStalled, "PipeStalled"),
-                        TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
-                        TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
-                    );
-                }
-            }while (retry);
-        }
-
-        // if we successfully sent data, and are configured to wait for the transfer to complete
-        // wait for the pipe to be emptied. This is done outside of the lock, to enable multiple
-        // callers to wait for their send to complete without blocking others from sending.
-        if (bufferSent && (MessageOptionFlags_WaitForSendComplete == (optionFlags & MessageOptionFlags_WaitForSendComplete)))
-        {
-            RETURN_IF_FAILED(WaitForSendComplete(startingReadPosition, bufferWrittenPosition, requiredBufferSize));
-        }
-
-        // Failed to send the buffer due to insufficient space,
-        // fail.
-        if (!bufferSent)
-        {
-            if (m_PipeStalled && m_SequentialDroppedBuffers > 0)
+            // Calculate the available space in the buffer.
+            if (readPosition <= writePosition)
             {
-                // pipe is stalled and there have been multiple dropped since the stall,
-                // the pipe is in the bad state, client should abort.
-                return E_ABORT;
+                bytesAvailable = data->BufferSize - (writePosition - readPosition);
             }
             else
             {
-                // insufficient space for the buffer
-                LOG_IF_FAILED(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER));
-                return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+                bytesAvailable = (readPosition - writePosition);
             }
-        }
-    }
-    else
-    {
-        bool bufferSent{false};
-        UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
-        
-        PMEMORY_MAPPED_REGISTERS registers = &(m_MidiOut->Registers);
-        PMEMORY_MAPPED_DATA data = &(m_MidiOut->Data);
-        bool retry {false};
-        ULONG bufferWrittenPosition {0};
-        ULONG startingReadPosition {0};
-        
-        {
-            // only 1 caller may add a message to the xproc queue at a time
-            auto lock = m_MessageSendLock.lock();
-        
-            do{
-                retry = false;
-        
-                // reset the read event, so we will know when the client reads data in the event
-                // that the buffer is full
-                m_MidiOut->ReadEvent.ResetEvent();
-        
-                // the write position is the last position we have written,
-                // the read position is the last position the driver (or client) has read from
-                ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
-                ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
-                ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
-                ULONG bytesAvailable{ 0 };
-        
-                // Calculate the available space in the buffer.
-                if (readPosition <= writePosition)
+
+            // Note, if we fill the buffer up 100%, then write position == read position,
+            // which is the same as when the buffer is empty and everything in the buffer
+            // would be lost.
+            // Reserve 1 byte so that when the buffer is full the write position will trail
+            // the read position.
+            // Because of this reserve, and the above calculation, the true bytesAvailable 
+            // count can never be 0.
+            assert(bytesAvailable != 0);
+            bytesAvailable--;
+
+            // if there is sufficient space to write the buffer, send it
+            if (bytesAvailable >= requiredBufferSize)
+            {
+                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)data->BufferAddress) + writePosition);
+
+                header->ByteCount = length;
+                CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), midiData, length);
+
+                // if a position provided is nonzero, use it, otherwise use the current QPC
+                if (position)
                 {
-                    bytesAvailable = data->BufferSize - (writePosition - readPosition);
+                    header->Position = position;
+                }
+                else if (m_OverwriteZeroTimestamp)
+                {
+                    LARGE_INTEGER qpc{ 0 };
+                    QueryPerformanceCounter(&qpc);
+                    header->Position = qpc.QuadPart;
                 }
                 else
                 {
-                    bytesAvailable = (readPosition - writePosition);
+                    header->Position = 0;
                 }
-        
-                // Note, if we fill the buffer up 100%, then write position == read position,
-                // which is the same as when the buffer is empty and everything in the buffer
-                // would be lost.
-                // Reserve 1 byte so that when the buffer is full the write position will trail
-                // the read position.
-                // Because of this reserve, and the above calculation, the true bytesAvailable 
-                // count can never be 0.
-                assert(bytesAvailable != 0);
-                bytesAvailable--;
-        
-                // if there is sufficient space to write the buffer, send it
-                if (bytesAvailable >= requiredBufferSize)
+
+                // update the write position and notify the other side that data is available.
+                InterlockedExchange((LONG*)registers->WritePosition, newWritePosition);
+                RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
+
+                bufferSent = true;
+
+                // Retain the position that the buffer was written into, if the client requires
+                // us to wait for it to complete.
+                bufferWrittenPosition = writePosition;
+                startingReadPosition = readPosition;
+
+                if (m_PipeStalled)
                 {
-                    PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)data->BufferAddress) + writePosition);
-        
-                    header->ByteCount = length;
-                    CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), midiData, length);
-        
-                    // if a position provided is nonzero, use it, otherwise use the current QPC
-                    if (position)
-                    {
-                        header->Position = position;
-                    }
-                    else if (m_OverwriteZeroTimestamp)
-                    {
-                        LARGE_INTEGER qpc{ 0 };
-                        QueryPerformanceCounter(&qpc);
-                        header->Position = qpc.QuadPart;
-                    }
-                    else
-                    {
-                        header->Position = 0;
-                    }
-        
-                    // update the write position and notify the other side that data is available.
-                    InterlockedExchange((LONG*)registers->WritePosition, newWritePosition);
-                    RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
-        
-                    bufferSent = true;
-        
-                    // Retain the position that the buffer was written into, if the client requires
-                    // us to wait for it to complete.
-                    bufferWrittenPosition = writePosition;
-                    startingReadPosition = readPosition;
-        
-                    if (m_PipeStalled)
+                    m_SequentialDroppedBuffers = 0;
+
+                    // We were able to successfully write data, maybe we're no longer stalled?
+                    // If the read position has advanced since the stall was detected,
+                    // the stall has resolved.
+                    if (readPosition != m_StalledReadPosition)
                     {
                         m_PipeStalled = false;
-                        m_SequentialDroppedBuffers = 0;
-
-                        // Pipe was previously stalled, however space is available now
-                        // pipe has recovered and is no longer stalled.
+                        m_StalledReadPosition = 0;
                         TraceLoggingWrite(
                             MidiXProcTelemetryProvider::Provider(),
                             MIDI_TRACE_EVENT_INFO,
@@ -996,34 +658,17 @@ CMidiXProc::SendMidiMessageInternal(
                             TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
                         );
                     }
-                }
-                else if (!m_PipeStalled)
-                {
-                    // Buffer is full, and either the pipe has not been detected as being stalled, or the client requested 
-                    // to always wait for a retry. Wait for the client to read some data out of the buffer to
-                    // make space
-                    HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
-                    DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT);
-                    if (ret == (WAIT_OBJECT_0 + 1))
+                    else
                     {
-                        // space has been made, try again.
-                        retry = true;
-                        continue;
-                    }
-        
-                    // We're either terminating, or space did not come available, so this buffer is going to be dropped
-                    m_TotalDroppedBuffers++;
-        
-                    if (ret == WAIT_OBJECT_0)
-                    {
-                        // We're terminating
+                        // Pipe was previously stalled, however space is available now
+                        // pipe has recovered and is no longer stalled.
                         TraceLoggingWrite(
                             MidiXProcTelemetryProvider::Provider(),
                             MIDI_TRACE_EVENT_INFO,
                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"MidiXProc terminated, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(L"MidiXProc buffer added to queue will in stalled state.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                             TraceLoggingPointer(midiData, "midiData"),
                             TraceLoggingValue(readPosition, "readPosition"),
                             TraceLoggingValue(writePosition, "writePosition"),
@@ -1032,43 +677,35 @@ CMidiXProc::SendMidiMessageInternal(
                             TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
                         );
                     }
-                    else if (ret == WAIT_TIMEOUT)
-                    {
-                        m_PipeStalled = true;                    
+                }
+            }
+            else if (!m_PipeStalled)
+            {
+                // Buffer is full, and either the pipe has not been detected as being stalled yet, or the client requested 
+                // to always wait for a retry. Wait for the client to read some data out of the buffer to
+                // make space
+                HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
+                DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_AVAILABLE_WAIT_TIMEOUT);
+                if (ret == (WAIT_OBJECT_0 + 1))
+                {
+                    // space has been made, try again.
+                    retry = true;
+                    continue;
+                }
 
-                        // Pipe is running and we timed out waiting for space.
-                        // The pipe is stalled, set a flag so we skip waiting the full timeout for additional messages
-                        // that come in while the pipe is stalled, however we will still check to see if the pipe has
-                        // recovered when new messages arrive.
-                        TraceLoggingWrite(
-                            MidiXProcTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"MidiXProc stall detected, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingPointer(midiData, "midiData"),
-                            TraceLoggingValue(readPosition, "readPosition"),
-                            TraceLoggingValue(writePosition, "writePosition"),
-                            TraceLoggingValue(m_PipeStalled, "PipeStalled"),
-                            TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
-                            TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
-                        );
-                    }
-                }
-                else
+                // We're either terminating, or space did not come available, so this buffer is going to be dropped
+                m_TotalDroppedBuffers++;
+
+                if (ret == WAIT_OBJECT_0)
                 {
-                    // The pipe is stalled and continues to be stalled, and the client did not request retry, 
-                    // log that the message has been lost, don't wait for space, and report the failure
-                    m_TotalDroppedBuffers++;
-                    m_SequentialDroppedBuffers++;
+                    // We're terminating
                     TraceLoggingWrite(
                         MidiXProcTelemetryProvider::Provider(),
                         MIDI_TRACE_EVENT_INFO,
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"MidiXProc stalled, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"MidiXProc terminated, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingPointer(midiData, "midiData"),
                         TraceLoggingValue(readPosition, "readPosition"),
                         TraceLoggingValue(writePosition, "writePosition"),
@@ -1077,21 +714,79 @@ CMidiXProc::SendMidiMessageInternal(
                         TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
                     );
                 }
-            }while (retry);
-        }
-        
-        // if we successfully sent data, and are configured to wait for the transfer to complete
-        // wait for the pipe to be emptied. This is done outside of the lock, to enable multiple
-        // callers to wait for their send to complete without blocking others from sending.
-        if (bufferSent && (MessageOptionFlags_WaitForSendComplete == (optionFlags & MessageOptionFlags_WaitForSendComplete)))
+                else if (ret == WAIT_TIMEOUT)
+                {
+                    // Queue is full and no movement within the wait timeout, set the stalled flag
+                    // and save the stalled read position to assist with identifying when/if the stall
+                    // resolves.
+                    m_PipeStalled = true;
+                    m_StalledReadPosition = readPosition;
+
+                    // Pipe is running and we timed out waiting for space.
+                    // The pipe is stalled, set a flag so we skip waiting the full timeout for additional messages
+                    // that come in while the pipe is stalled, however we will still check to see if the pipe has
+                    // recovered when new messages arrive.
+                    TraceLoggingWrite(
+                        MidiXProcTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"MidiXProc stall detected during send, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingPointer(midiData, "midiData"),
+                        TraceLoggingValue(readPosition, "readPosition"),
+                        TraceLoggingValue(writePosition, "writePosition"),
+                        TraceLoggingValue(m_PipeStalled, "PipeStalled"),
+                        TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
+                        TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
+                    );
+                }
+            }
+            else
+            {
+                // The pipe is stalled and continues to be stalled, and the client did not request retry, 
+                // log that the message has been lost, don't wait for space, and report the failure
+                m_TotalDroppedBuffers++;
+                m_SequentialDroppedBuffers++;
+                TraceLoggingWrite(
+                    MidiXProcTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"MidiXProc stalled, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingPointer(midiData, "midiData"),
+                    TraceLoggingValue(readPosition, "readPosition"),
+                    TraceLoggingValue(writePosition, "writePosition"),
+                    TraceLoggingValue(m_PipeStalled, "PipeStalled"),
+                    TraceLoggingValue(m_SequentialDroppedBuffers, "SequentialDroppedBuffers"),
+                    TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
+                );
+            }
+        }while (retry);
+    }
+
+    // if we successfully sent data, and are configured to wait for the transfer to complete
+    // wait for the pipe to be emptied. This is done outside of the lock, to enable multiple
+    // callers to wait for their send to complete without blocking others from sending.
+    if (bufferSent && (MessageOptionFlags_WaitForSendComplete == (optionFlags & MessageOptionFlags_WaitForSendComplete)))
+    {
+        RETURN_IF_FAILED(WaitForSendComplete(startingReadPosition, bufferWrittenPosition, requiredBufferSize));
+    }
+
+    // Failed to send the buffer due to insufficient space,
+    // fail.
+    if (!bufferSent)
+    {
+        if (m_PipeStalled && m_SequentialDroppedBuffers > 0)
         {
-            RETURN_IF_FAILED(WaitForSendComplete(startingReadPosition, bufferWrittenPosition, length));
+            // pipe is stalled and there have been multiple dropped since the stall,
+            // the pipe is in the bad state, client should abort.
+            return E_ABORT;
         }
-        
-        // Failed to send the buffer due to insufficient space,
-        // fail.
-        if (!bufferSent)
+        else
         {
+            // insufficient space for the buffer
             LOG_IF_FAILED(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER));
             return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
         }

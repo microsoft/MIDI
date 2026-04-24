@@ -11,7 +11,6 @@
 #include <cfgmgr32.h>
 #include <functional>
 #include "threadpoolwork.h"
-#include "Feature_Servicing_MIDI2DeviceRemoval.h"
 
 enum class HandleType
 {
@@ -66,29 +65,25 @@ public:
 
     HRESULT RegisterOnRemoveCallback(std::function<void()> OnRemoveCallback)
     {
-        if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
-        {
-            auto lock = m_lock.lock_exclusive();
+        auto lock = m_lock.lock_exclusive();
 
-            RETURN_HR_IF(E_INVALIDARG, nullptr == OnRemoveCallback);
-            RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), nullptr != m_OnRemoveCallback);
+        RETURN_HR_IF(E_INVALIDARG, nullptr == OnRemoveCallback);
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), nullptr != m_OnRemoveCallback);
 
-            m_OnRemoveCallback = std::move(OnRemoveCallback);
-        }
+        m_OnRemoveCallback = std::move(OnRemoveCallback);
+
         return S_OK;
     }
 
     HRESULT RegisterOnRestoreCallback(std::function<void()> OnRestoreCallback)
     {
-        if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
-        {
-            auto lock = m_lock.lock_exclusive();
+        auto lock = m_lock.lock_exclusive();
 
-            RETURN_HR_IF(E_INVALIDARG, nullptr == OnRestoreCallback);
-            RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), nullptr != m_OnRestoreCallback);
+        RETURN_HR_IF(E_INVALIDARG, nullptr == OnRestoreCallback);
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), nullptr != m_OnRestoreCallback);
 
-            m_OnRestoreCallback = std::move(OnRestoreCallback);
-        }
+        m_OnRestoreCallback = std::move(OnRestoreCallback);
+
         return S_OK;
     }
 
