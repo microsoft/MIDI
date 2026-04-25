@@ -74,13 +74,23 @@ int main()
 
     std::cout << "Enumerating endpoints..." << std::endl;
 
+
+    auto enumerationStartTime = MidiClock::Now();
+
+    // you can change the MidiEndpointDeviceInformationFilters here depending upon the types
+    // of endpoints you want returned. "AllStandardEndpoints" contains what MIDI application
+    // users (in a DAW, for example) will typically need to see.
     auto endpoints = MidiEndpointDeviceInformation::FindAll(
         MidiEndpointDeviceInformationSortOrder::Name,
-        MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat |
-        MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat |
-        MidiEndpointDeviceInformationFilters::DiagnosticLoopback |
-        MidiEndpointDeviceInformationFilters::VirtualDeviceResponder
+        MidiEndpointDeviceInformationFilters::AllStandardEndpoints |
+        MidiEndpointDeviceInformationFilters::DiagnosticLoopback
     );
+
+    auto enumerationEndTime = MidiClock::Now();
+
+    auto enumerationDuration = enumerationEndTime - enumerationStartTime;
+
+    std::cout << "Enumeration took " << MidiClock::ConvertTimestampTicksToMilliseconds(enumerationDuration) << " milliseconds" << std::endl;
 
     std::cout << endpoints.Size() << " endpoints returned" << std::endl << std::endl;
 
