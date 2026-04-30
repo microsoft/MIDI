@@ -60,7 +60,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         definition.Description = creationConfig.EndpointDefinition().Description;
         definition.IsMuted = creationConfig.EndpointDefinition().IsMuted;
         definition.Name = creationConfig.EndpointDefinition().Name;
-        definition.UniqueId = internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinition().UniqueId.c_str());
+        definition.UniqueId = internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinition().UniqueId.c_str()).c_str(), MAXPNAMELEN);
+
 
         if (definition.UniqueId.empty())
         {
@@ -231,7 +232,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
     _Use_decl_annotations_
     bool MidiBasicLoopbackEndpointManager::DoesLoopbackExist(winrt::hstring const& uniqueIdentifier)
     {
-        winrt::hstring id = BuildDeviceId(MIDI_BLOOP_INSTANCE_ID_PREFIX, uniqueIdentifier.c_str());
+        winrt::hstring cleanId { internal::RemoveInvalidSWDUniqueIdCharacters(uniqueIdentifier.c_str()) };
+        cleanId = internal::TruncateHStringCopy(cleanId.c_str(), MAXPNAMELEN);
+        winrt::hstring id = BuildDeviceId(MIDI_BLOOP_INSTANCE_ID_PREFIX, cleanId.c_str());
 
         return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
     }

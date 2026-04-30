@@ -1197,6 +1197,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Endpoint Identifier of the first endpoint in the bridge.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsEndpointIdA {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsEndpointIdA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint Identifier of the second endpoint in the bridge.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsEndpointIdB {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsEndpointIdB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to True to annotate messages written to the file. Annotations begin with the # sign and are written on the line before the UMP data line. The annotation includes timestamp information as well as the specific message type..
         /// </summary>
         internal static string ParameterCaptureMessagesAnnotate {

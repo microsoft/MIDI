@@ -1207,4 +1207,10 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   <data name="BridgeEscapePressedMessage" xml:space="preserve">
     <value>Escape key pressed. Shutting down the bridge.</value>
   </data>
+  <data name="ParameterBridgeEndpointsEndpointIdA" xml:space="preserve">
+    <value>Endpoint Identifier of the first endpoint in the bridge</value>
+  </data>
+  <data name="ParameterBridgeEndpointsEndpointIdB" xml:space="preserve">
+    <value>Endpoint Identifier of the second endpoint in the bridge</value>
+  </data>
 </root>

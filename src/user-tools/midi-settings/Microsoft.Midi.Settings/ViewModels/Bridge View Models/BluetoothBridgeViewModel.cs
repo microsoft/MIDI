@@ -19,6 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.Devices.Enumeration;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
@@ -41,12 +42,81 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
+        public ICommand CreateNewBridgeCommand
+        {
+            get;
+        }
+
+
+        [ObservableProperty]
+        private bool isConfigFileActive = false;
+
+        [ObservableProperty]
+        private bool newBridgeSettingsAreValid = false;
+
+        [ObservableProperty]
+        private bool bleMidi1PortsFound = false;
+
+
+        public ObservableCollection<DeviceInformation> SourcePorts { get; private set; } = [];
+        public ObservableCollection<DeviceInformation> DestinationPorts { get; private set; } = [];
+
+        [ObservableProperty]
+        private DeviceInformation selectedSourcePort;
+
+        [ObservableProperty]
+        private DeviceInformation selectedDestinationPort;
+
+
+
+        private bool CreateNewBridge()
+        {
+            // TODO
+
+
+            return false;
+        }
+
+        private void RefreshMidi1Ports()
+        {
+            SourcePorts.Clear();
+            var sources = _midiWinRTMidi1PortEnumerationService.GetBleSourcePorts();
+            foreach (var source in sources)
+            {
+                SourcePorts.Add(source);
+            }
+
+
+            DestinationPorts.Clear();
+            var destinations = _midiWinRTMidi1PortEnumerationService.GetBleDestinationPorts();
+            foreach (var destination in destinations)
+            {
+                DestinationPorts.Add(destination);
+            }
+
+            BleMidi1PortsFound = SourcePorts.Count > 0 || DestinationPorts.Count > 0;
+
+            if (SourcePorts.Count == 1)
+            {
+                SelectedSourcePort = SourcePorts[0];
+            }
+
+            if (DestinationPorts.Count == 1)
+            {
+                SelectedDestinationPort = DestinationPorts[0];
+            }
+
+        }
+
+
         private readonly IMidiSdkService _sdkService;
         private readonly IMessageBoxService _messageBoxService;
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
         private readonly IMidiSessionService _sessionService;
+        private readonly IMidiWinRTMidi1PortEnumerationService _midiWinRTMidi1PortEnumerationService;
         private readonly ISynchronizationContextService _synchronizationContextService;
         private readonly ILoggingService _loggingService;
+        private readonly IMidiConfigFileService _configFileService;
 
         public BluetoothBridgeViewModel(
             IMidiSdkService sdkService,
@@ -54,6 +124,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiEndpointEnumerationService endpointEnumerationService,
             ISynchronizationContextService synchronizationContextService,
             IMessageBoxService messageBoxService,
+            IMidiConfigFileService configFileService,
+            IMidiWinRTMidi1PortEnumerationService midiWinRTMidi1PortEnumerationService,
             ILoggingService loggingService
             )
         {
@@ -63,12 +135,31 @@ namespace Microsoft.Midi.Settings.ViewModels
             _sdkService = sdkService;
             _endpointEnumerationService = endpointEnumerationService;
             _synchronizationContextService = synchronizationContextService;
+            _configFileService = configFileService;
+            _midiWinRTMidi1PortEnumerationService = midiWinRTMidi1PortEnumerationService;
+
+
+            IsConfigFileActive = _configFileService.IsConfigFileActive;
+
+            CreateNewBridgeCommand = new RelayCommand(() =>
+            {
+                if (CreateNewBridge())
+                {
+                    // all good
+                }
+                else
+                {
+                    // TODO: Show error dialog
+                }
+            });
 
         }
 
 
         public void OnNavigatedTo(object parameter)
         {
+            RefreshMidi1Ports();
+
 
         }
 

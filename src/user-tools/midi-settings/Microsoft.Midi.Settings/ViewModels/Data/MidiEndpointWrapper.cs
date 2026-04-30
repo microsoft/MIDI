@@ -309,21 +309,27 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 Image = App.GetService<IMidiEndpointImageService>().GetImageSource(imagePath);
 
-                // function blocks
-                FunctionBlocks.Clear();
-                foreach (var fb in DeviceInformation.GetDeclaredFunctionBlocks())
+                lock (FunctionBlocks)
                 {
-                    FunctionBlocks.Add(fb);
+                    // function blocks
+                    FunctionBlocks.Clear();
+                    foreach (var fb in DeviceInformation.GetDeclaredFunctionBlocks())
+                    {
+                        FunctionBlocks.Add(fb);
+                    }
+                    HasFunctionBlocks = FunctionBlocks.Count > 0;
                 }
-                HasFunctionBlocks = FunctionBlocks.Count > 0;
 
-                // group terminal blocks
-                GroupTerminalBlocks.Clear();
-                foreach (var gtb in DeviceInformation.GetGroupTerminalBlocks())
+                lock (GroupTerminalBlocks)
                 {
-                    GroupTerminalBlocks.Add(gtb);
+                    // group terminal blocks
+                    GroupTerminalBlocks.Clear();
+                    foreach (var gtb in DeviceInformation.GetGroupTerminalBlocks())
+                    {
+                        GroupTerminalBlocks.Add(gtb);
+                    }
+                    HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
                 }
-                HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
 
                 // parent device info
                 ParentDeviceInformation = DeviceInformation.GetParentDeviceInformation();
@@ -348,37 +354,39 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 context.Post(_ =>
                 {
-
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread to update MIDI 1 port list");
 
-                    Midi1InputPorts.Clear();
-                    Midi1OutputPorts.Clear();
-
-                    foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
+                    lock (Midi1InputPorts)
                     {
-                        Midi1InputPorts.Add(source);
+                        Midi1InputPorts.Clear();
+                        foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
+                        {
+                            Midi1InputPorts.Add(source);
+                        }
+                        CountMidi1InputPorts = Midi1InputPorts.Count;
+                        HasSingleInputPort = CountMidi1InputPorts == 1;
+
+                        if (HasSingleInputPort)
+                        {
+                            SingleInputPortName = inputPorts[0].PortName;
+                        }
                     }
 
-                    // MIDI 1.0 Output Ports / Destinations
-                    foreach (var destination in outputPorts.OrderBy((p) => p.PortNumber))
+                    lock (Midi1OutputPorts)
                     {
-                        Midi1OutputPorts.Add(destination);
-                    }
+                        Midi1OutputPorts.Clear();
+                        // MIDI 1.0 Output Ports / Destinations
+                        foreach (var destination in outputPorts.OrderBy((p) => p.PortNumber))
+                        {
+                            Midi1OutputPorts.Add(destination);
+                        }
+                        CountMidi1OutputPorts = Midi1OutputPorts.Count;
+                        HasSingleOutputPort = CountMidi1OutputPorts == 1;
 
-                    CountMidi1InputPorts = Midi1InputPorts.Count;
-                    CountMidi1OutputPorts = Midi1OutputPorts.Count;
-
-                    HasSingleInputPort = CountMidi1InputPorts == 1;
-                    HasSingleOutputPort = CountMidi1OutputPorts == 1;
-
-                    if (HasSingleInputPort)
-                    {
-                        SingleInputPortName = inputPorts[0].PortName;
-                    }
-
-                    if (HasSingleOutputPort)
-                    {
-                        SingleOutputPortName = outputPorts[0].PortName;
+                        if (HasSingleOutputPort)
+                        {
+                            SingleOutputPortName = outputPorts[0].PortName;
+                        }
                     }
 
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Completed posting to UI Thread");

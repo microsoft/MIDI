@@ -137,7 +137,7 @@ public partial class App : Application
                     services.AddSingleton<IMessageBoxService, MessageBoxService>();
                     services.AddSingleton<IMidiEndpointImageService, MidiEndpointImageService>();
 
-                    
+                    services.AddSingleton<IMidiWinRTMidi1PortEnumerationService, MidiWinRTMidi1PortEnumerationService>();
 
 
                     // Views and ViewModels

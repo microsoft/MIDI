@@ -1207,4 +1207,10 @@ Estes endpoints desaparecerão quando o serviço ou o PC for reiniciado. Para cr
   <data name="BridgeEscapePressedMessage" xml:space="preserve">
     <value>Tecla Escape pressionada. Desligando a ponte.</value>
   </data>
+  <data name="ParameterBridgeEndpointsEndpointIdA" xml:space="preserve">
+    <value>Identificador do Endpoint do primeiro endpoint na ponte</value>
+  </data>
+  <data name="ParameterBridgeEndpointsEndpointIdB" xml:space="preserve">
+    <value>Identificador de Extremidade do segundo endpoint na ponte</value>
+  </data>
 </root>

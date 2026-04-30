@@ -45,8 +45,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly ILoggingService _loggingService;
         public ManagementSessionsViewModel(ILoggingService loggingService)
         {
-            RefreshSessions();
             _loggingService = loggingService;
+
+            RefreshSessions();
         }
 
 

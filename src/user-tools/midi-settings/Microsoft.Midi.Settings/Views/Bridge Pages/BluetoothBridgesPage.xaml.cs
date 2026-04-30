@@ -62,12 +62,20 @@ namespace Microsoft.Midi.Settings.Views
 
         bool m_showCreateDialog = false;
 
-        private void ViewModel_ShowCreateDialog(object? sender, EventArgs e)
+        //private void ViewModel_ShowCreateDialog(object? sender, EventArgs e)
+        //{
+        //    m_showCreateDialog = true;
+        //}
+
+
+        private async void CreateNewBridge_Click(object sender, RoutedEventArgs e)
         {
-            m_showCreateDialog = true;
+            Dialog_CreateBridge.Resources["ContentDialogMaxHeight"] = Math.Max(1200.0, this.ActualHeight);
+
+            // TODO: Read this from local settings
+
+            var result = await Dialog_CreateBridge.ShowAsync();
         }
-
-
 
     }
 }

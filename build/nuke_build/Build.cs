@@ -54,9 +54,9 @@ class Build : NukeBuild
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 17;
+    const UInt16 BuildVersionPatch = 23;
 
-    const UInt16 BuildVersionPreviewNumber = 4;
+    const UInt16 BuildVersionPreviewNumber = 5;
     string VersionName => "SDK Release Candidate " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------

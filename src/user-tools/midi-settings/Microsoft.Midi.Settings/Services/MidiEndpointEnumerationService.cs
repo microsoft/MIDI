@@ -144,7 +144,10 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
         {
             var info = BuildWrapper(args.AddedDevice);
 
-            _endpoints.Add(info);
+            lock (_endpoints)
+            {
+                _endpoints.Add(info);
+            }
 
             if (EndpointAdded != null)
             {
@@ -163,7 +166,10 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
         {
             if (info.Id == args.EndpointDeviceId)
             {
-                _endpoints.Remove(info);
+                lock (_endpoints)
+                {
+                    _endpoints.Remove(info);
+                }
 
                 if (EndpointRemoved != null)
                 {
