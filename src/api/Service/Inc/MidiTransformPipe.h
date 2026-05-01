@@ -9,7 +9,6 @@
 #pragma once
 
 #include "MidiPipe.h"
-#include "Feature_Servicing_MIDI2DeviceRemoval.h"
 
 typedef struct MIDISRV_TRANSFORMCREATION_PARAMS
 {
@@ -38,14 +37,7 @@ public:
 
     BOOL IsDevicePipe(_In_ wil::com_ptr_nothrow<CMidiPipe>& devicePipe)
     {
-        if (Feature_Servicing_MIDI2DeviceRemoval::IsEnabled())
-        {
-            return (BOOL) (m_DevicePipe == devicePipe);
-        }
-        else
-        {
-            return FALSE;
-        }
+        return (BOOL) (m_DevicePipe == devicePipe);
     }
 
 private:

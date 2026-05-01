@@ -20,11 +20,6 @@
 
 #include "MidiDefs.h"
 
-#include "Feature_Servicing_MIDI2WaveAPIFix.h"
-#include "Feature_Servicing_MIDI2SendTimeout.h"
-#include "Feature_Servicing_MIDI2DeviceRemoval.h"
-#include "Feature_Servicing_USBMIDI2Spinlock.h"
-
 #include "Feature_Servicing_MIDI2WinmmNoBufs.h"
 #include "Feature_Servicing_MIDI2MultipleGroups.h"
 #include "Feature_Servicing_MIDI2FilterCreations.h"
@@ -109,12 +104,6 @@ void PrintMidiMessage(PVOID payload, UINT32 payloadSize, UINT32 expectedPayloadS
 
 void PrintStagingStates()
 {
-    // 2602
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2WaveAPIFix);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2SendTimeout);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2DeviceRemoval);
-    LOG_FEATURE_STATE(Feature_Servicing_USBMIDI2Spinlock);
-
     // 2603
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2WinmmNoBufs);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2MultipleGroups);
@@ -129,6 +118,8 @@ void PrintStagingStates()
     // 2605
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2WinRtStartup);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2DriverHang);
+
+    // 2605
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2LegacyTimestamp);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2BsToUMPConv);
     LOG_FEATURE_STATE(Feature_Servicing_MIDI2DevCaps2);
