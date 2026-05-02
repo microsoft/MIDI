@@ -9,7 +9,7 @@
     <AssemblyName>midi</AssemblyName>
     <RootNamespace>Microsoft.Midi.ConsoleApp</RootNamespace>
     <!--<PlatformTargets>x64, ARM64</PlatformTargets>-->
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 
       <PublishSingleFile>false</PublishSingleFile>
       <PublishSelfContained>false</PublishSelfContained>

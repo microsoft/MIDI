@@ -19,6 +19,7 @@
           Microsoft.Windows.Devices.Midi2.Messages
           Microsoft.Windows.Devices.Midi2.ServiceConfig
           Microsoft.Windows.Devices.Midi2.Endpoints
+          Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback
           Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
           Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
           Microsoft.Windows.Devices.Midi2.Endpoints.Network
@@ -46,6 +47,8 @@
         <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
         <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
         <Deterministic>true</Deterministic>
+
+      <EnableComInterop>true</EnableComInterop>
     </PropertyGroup>
 
 

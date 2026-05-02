@@ -74,6 +74,10 @@
     "Create Loopback Endpoints": {
       "commandName": "Project",
       "commandLineArgs": "loopback create -a \"Test A\" -b \"Test B\""
+    },
+    "Bridge Endpoints": {
+      "commandName": "Project",
+      "commandLineArgs": "bridge endpoints -a \"\\\\?\\swd#midisrv#midiu_ksa_11903499759367215751#{e7cce071-3c03-423f-88d3-f1045d02552b}\" -b \"\\\\?\\swd#midisrv#midiu_loop_a_default#{e7cce071-3c03-423f-88d3-f1045d02552b}\""
     }
   }
 }

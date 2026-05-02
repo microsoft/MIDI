@@ -51,12 +51,27 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     )
     {
         RETURN_HR_IF_NULL(E_FAIL, m_endpointTransport);
+        RETURN_HR_IF(E_INVALIDARG, wordCount > GetSupportedMaxMidiWordsPerTransmission());
+
+        MessageOptionFlags flags;
+
+        if (m_connectionSettings.WaitForEndpointReceiptOnSend())
+        {
+            flags = MessageOptionFlags::MessageOptionFlags_WaitForSendComplete;
+        }
+        else
+        {
+            flags = MessageOptionFlags::MessageOptionFlags_None;
+        }
+
+        // send it
 
         return m_endpointTransport->SendMidiMessage(
-            MessageOptionFlags::MessageOptionFlags_None, 
-            static_cast<PVOID>(completeMessages), 
+            flags,
+            static_cast<PVOID>(completeMessages),
             wordCount * sizeof(UINT32),
             timestamp);
+
     }
 
     _Use_decl_annotations_
@@ -76,8 +91,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         RETURN_HR_IF_NULL(E_INVALIDARG, messagesReceivedCallback);
 
-        // We now own a reference to this callback
-        m_comCallback.copy_from(messagesReceivedCallback);
+        // Attach does not increment the ref count. 
+        //m_comCallback.copy_from(messagesReceivedCallback);
+        m_comCallback.attach(messagesReceivedCallback);
 
         return S_OK;
     }
@@ -95,7 +111,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         );
 
         // Clear out the callback
-        m_comCallback = nullptr;
+        
+        if (m_comCallback)
+        {
+            m_comCallback.detach();
+            m_comCallback = nullptr;
+        }
+
 
         return S_OK;
     }
