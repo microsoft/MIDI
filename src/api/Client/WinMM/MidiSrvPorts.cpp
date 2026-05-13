@@ -7,6 +7,7 @@
 
 #include "Feature_Servicing_MIDI2DevCaps2.h"
 #include "Feature_Servicing_MIDI2NumDevsPerf.h"
+#include "Feature_Servicing_MIDI2LegacyControl.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -168,6 +169,13 @@ CMidiPorts::RuntimeClassInitialize()
 
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
+
+    if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
+    {
+        // This would only happen if wdmaud2.drv were registered as a driver, but midisrv has been
+        // disabled via the use of legacy mode
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_SERVICE_DISABLED), !midiSrv->VerifyConnectivity());
+    }
 
     RETURN_IF_FAILED(midiSrv->Initialize());
     m_MidisrvTransport = std::move(midiSrv);

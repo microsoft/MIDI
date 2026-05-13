@@ -25,6 +25,7 @@
 #include "MidiKsCommon.h"
 #include "KsHandleWrapper.h"
 #include <Feature_Servicing_MIDI2VirtualPortDriversFix.h>
+#include <Feature_Servicing_MIDI2KSHandleWrapperCrash.h>
 
 // Filter constructor
 KsHandleWrapper::KsHandleWrapper(std::wstring pwszFilterName)
@@ -55,17 +56,58 @@ KsHandleWrapper::KsHandleWrapper(std::wstring pwszFilterName, UINT pinId, MidiTr
 
 KsHandleWrapper::~KsHandleWrapper()
 {
-    // UnregisterForNotifications blocks until all callbacks have completed,
-    // do not acquire the lock here, because doing so will block callbacks from completing
-    UnregisterForNotifications();
-    m_handle.reset();
-    m_OnRemoveCallback = nullptr;
-    m_OnRestoreCallback = nullptr;
+    if (Feature_Servicing_MIDI2KSHandleWrapperCrash::IsEnabled())
+    {
+        wil::unique_handle handle;
+        wil::unique_handle parentHandle;
+
+        {
+            // Prevent any inflight query remove cancel calls
+            // from reopening our pin and take over the handles,
+            // so any incoming calls after destruction starts will not
+            // use them.
+            auto lock = m_lock.lock_exclusive();
+            m_destructing = true;
+            handle = std::move(m_handle);
+            parentHandle = std::move(m_ParentFilterHandle);
+        }
+
+        // UnregisterForNotifications blocks until all callbacks have completed,
+        // do not acquire the lock here, because doing so will block callbacks from completing
+        // We're assured it's not going to reregister for notifications at or after this point
+        // due to the m_destructing flag set above while holding the lock.
+        UnregisterForNotifications();
+
+        // Now that we're unregistered and all threadpool callbacks are completed,
+        // release the handles and finish the cleanup.
+        handle.reset();
+        parentHandle.reset();
+        m_OnRemoveCallback = nullptr;
+        m_OnRestoreCallback = nullptr;
+    }
+    else
+    {
+        // UnregisterForNotifications blocks until all callbacks have completed,
+        // do not acquire the lock here, because doing so will block callbacks from completing
+        UnregisterForNotifications();
+
+        m_handle.reset();
+        m_OnRemoveCallback = nullptr;
+        m_OnRestoreCallback = nullptr;
+    }
 }
 
 HRESULT KsHandleWrapper::Open()
 {
     auto lock = m_lock.lock_exclusive();
+
+    if (Feature_Servicing_MIDI2KSHandleWrapperCrash::IsEnabled())
+    {
+        if (m_destructing)
+        {
+            return E_ABORT;
+        }
+    }
 
     if (m_handleType == HandleType::Filter)
     {
@@ -154,8 +196,22 @@ void KsHandleWrapper::SetHandle(wil::unique_handle handle)
 {
     auto lock = m_lock.lock_exclusive();
 
-    // Take ownership of the existing handle
-    m_handle = std::move(handle);
+    if (Feature_Servicing_MIDI2KSHandleWrapperCrash::IsEnabled())
+    {
+        // If we're tearing down, do not transfer ownership,
+        // instead it'll be freed by the caller when it goes
+        // out of scope.
+        if (!m_destructing)
+        {
+            // Take ownership of the existing handle
+            m_handle = std::move(handle);
+        }
+    }
+    else
+    {
+        // Take ownership of the existing handle
+        m_handle = std::move(handle);
+    }
 }
 
 void KsHandleWrapper::OnDeviceQueryRemove()

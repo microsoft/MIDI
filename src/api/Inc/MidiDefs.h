@@ -78,6 +78,16 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 
 #define MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT (LONGLONG)3263827
 
+//
+// Registry keys for Drivers32 control and configuration
+//
+#define MIDI_DRIVERS32_REG_KEY                          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32"
+#define MIDI_DRIVERS32_WOW_REG_KEY                      L"SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32"
+#define MIDI_USE_LEGACY_REG_KEY                         L"UseLegacyMidi"
+
+#define MIDI_USE_MIDISRV 0
+#define MIDI_USE_LEGACY 1
+#define MIDI_USE_HYBRID_LEGACY 2
 
 //
 // Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs

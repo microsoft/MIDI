@@ -716,7 +716,17 @@ MidiPin::Process(
                 }
     
                 musicHeader->ByteCount = numBytesToCopy;
-                musicHeader->TimeDeltaMs = (ULONG)((position - This->m_StartTime) / 10000); // 100ns->Ms for delta MSec
+                // The conversion from 100ns->Ms truncates up to .9999 milliseconds of time elapsed,
+                // causing the time to appear to have gone backwards by up to almost a millisecond when
+                // converted back to QPC. For peripherals backed by hardware, this rounding error is not an
+                // issue due to underlying hardware latencies.
+                //
+                // This rounding error and backwards time jump does cause issues for internal midi tests,
+                // making it appear that messages looped back by minmidi were recieved before the test sent
+                // them.
+                //
+                // Round up the calculated timestamp by .9999 Ms to ensure the timestamp never goes backwards in time.
+                musicHeader->TimeDeltaMs = ((ULONG)((position - This->m_StartTime + 9999) / 10000)); // 100ns->Ms for delta MSec.
 
                 KsStreamPointerAdvanceOffsetsAndUnlock(streamPtr, 0, copySizeAligned, TRUE);
 

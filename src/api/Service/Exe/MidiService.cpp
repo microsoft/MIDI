@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "stdafx.h"
+#include "Feature_Servicing_MIDI2LegacyControl.h"
 
 // This says "(Preview)" so self-builds show up correctly in SCM
 #define SVCNAME L"MidiSrv"
@@ -471,6 +472,21 @@ VOID SvcInit()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
+
+    if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
+    {
+        DWORD dataSize = sizeof(DWORD);
+        DWORD legacyMidi = 0;
+
+        legacyMidi = (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, MIDI_DRIVERS32_REG_KEY, MIDI_USE_LEGACY_REG_KEY, RRF_RT_DWORD, NULL, &legacyMidi, &dataSize) && dataSize == sizeof(DWORD))?legacyMidi:MIDI_USE_MIDISRV;
+        if (legacyMidi == MIDI_USE_LEGACY)
+        {
+            // if legacy midi is being used, exit immediately, we don't want
+            // the service running.
+            ReportSvcStatus( SERVICE_STOPPED, NO_ERROR, 0 );
+            return;
+        }
+    }
 
     // service control event
     g_SvcStopEvent.reset(CreateEvent(NULL, TRUE, FALSE, NULL));

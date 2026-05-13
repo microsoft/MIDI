@@ -212,6 +212,13 @@ MidiSrvTransportTests::TestMidiSrvMultiClient
 
     if (midiSessionTracker.get() != nullptr)
     {
+        if (!midiSessionTracker->VerifyConnectivity())
+        {
+            midiSessionTracker.reset();
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+            return;
+        }
+
         // create the client session on the service before calling GetEndpoints, which will kickstart
         // the service if it's not already running.
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiSrvMultiClient"));
@@ -543,6 +550,13 @@ MidiSrvTransportTests::TestMidiSrvMultiClientBidi
 
     if (midiSessionTracker.get() != nullptr)
     {
+        if (!midiSessionTracker->VerifyConnectivity())
+        {
+            midiSessionTracker.reset();
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+            return;
+        }
+
         // create the client session on the service before calling GetEndpoints, which will kickstart
         // the service if it's not already running.
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiSrvMultiClientBidi"));
@@ -877,19 +891,25 @@ public:
         };
     
         RETURN_IF_FAILED(allMessagesReceived.create());
-    
+
         if (midiSessionTracker.get() != nullptr)
         {
+            if (!midiSessionTracker->VerifyConnectivity())
+            {
+                midiSessionTracker.reset();
+                return E_ABORT;
+            }
+
             // create the client session on the service before calling GetEndpoints, which will kickstart
             // the service if it's not already running.
             RETURN_IF_FAILED(midiSessionTracker->AddClientSession(m_SessionId, testConfig.SessionName.c_str()));
         }
-    
+
         if (!GetBidiEndpoint(transportCreationParams.DataFormat, __uuidof(Midi2MidiSrvTransport), midiBidirectionalInstanceId))
         {
             return E_ABORT;
         }
-    
+
         LOG_OUTPUT(L"%s - Initializing midi Bidi", testConfig.SessionName.c_str());
         RETURN_IF_FAILED(midiBidiDevice->Initialize(midiBidirectionalInstanceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, m_SessionId));
     
@@ -1315,6 +1335,14 @@ MidiSrvTransportTests::TestKSAPortEnumeration()
 
         VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker));
         VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+
+        if (!midiSessionTracker->VerifyConnectivity())
+        {
+            midiSessionTracker.reset();
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+            return;
+        }
+
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestKSAPortEnumeration"));
 
         GetKSAMinMidiEndpoints(midiInDevices, midiOutDevices);

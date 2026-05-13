@@ -222,6 +222,13 @@ void MidiTransportTestsBase::TestMidiTransport(REFIID iid, MidiDataFormats dataF
 
     if (midiSessionTracker.get() != nullptr)
     {
+        if (!midiSessionTracker->VerifyConnectivity())
+        {
+            midiSessionTracker.reset();
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+            return;
+        }
+
         // create the client session on the service before calling GetEndpoints, which will kickstart
         // the service if it's not already running.
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiTransport"));
@@ -375,6 +382,13 @@ void MidiTransportTestsBase::TestMidiTransportCreationOrder(REFIID iid, _In_ Mid
 
     if (midiSessionTracker.get() != nullptr)
     {
+        if (!midiSessionTracker->VerifyConnectivity())
+        {
+            midiSessionTracker.reset();
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+            return;
+        }
+
         // create the client session on the service before calling GetEndpoints, which will kickstart
         // the service if it's not already running.
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiTransportCreationOrder"));
@@ -509,6 +523,13 @@ void MidiTransportTestsBase::TestMidiTransportBidi(REFIID iid, MidiDataFormats d
 
     if (midiSessionTracker.get() != nullptr)
     {
+        if (!midiSessionTracker->VerifyConnectivity())
+        {
+            midiSessionTracker.reset();
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+            return;
+        }
+
         // create the client session on the service before calling GetEndpoints, which will kickstart
         // the service if it's not already running.
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiTransportBidi"));
@@ -719,6 +740,13 @@ void MidiTransportTestsBase::TestMidiIO_Latency(REFIID iid, MidiDataFormats data
 
     if (midiSessionTracker.get() != nullptr)
     {
+        if (!midiSessionTracker->VerifyConnectivity())
+        {
+            midiSessionTracker.reset();
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+            return;
+        }
+
         // create the client session on the service before calling GetEndpoints, which will kickstart
         // the service if it's not already running.
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiIO_Latency"));

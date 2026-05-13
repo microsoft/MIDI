@@ -32,10 +32,12 @@ public:
     ~MidiLoopbackBidiDevice();
 
 private:
-    IMidiCallback* m_CallbackA;
+    wil::critical_section m_CallbackLock;
+
+    wil::com_ptr_nothrow<IMidiCallback> m_CallbackA;
     LONGLONG m_ContextA;
 
-    IMidiCallback* m_CallbackB;
+    wil::com_ptr_nothrow<IMidiCallback> m_CallbackB;
     LONGLONG m_ContextB;
 
 };

@@ -51,6 +51,22 @@ MIDI_MESSAGE g_MidiTestMessage = { 0x91, 0x70, 0x42 }; // translates to UMP 0x40
 
 #define MIDI_SERVICE_NAME L"MidiSrv"
 
+bool IsLegacyMode()
+{
+    DWORD legacyMidi = 0;
+    DWORD dataSize = sizeof(DWORD);
+    legacyMidi = (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, MIDI_DRIVERS32_REG_KEY, MIDI_USE_LEGACY_REG_KEY, RRF_RT_DWORD, NULL, &legacyMidi, &dataSize) && dataSize == sizeof(DWORD))?legacyMidi:MIDI_USE_MIDISRV;
+    
+    // If "legacy midi" is enabled, skip activating midisrv,
+    // as it's not used in this case.
+    if (legacyMidi == MIDI_USE_LEGACY)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 _Use_decl_annotations_
 void PrintMidiMessage(PVOID payload, UINT32 payloadSize, UINT32 expectedPayloadSize, LONGLONG payloadPosition)
 {
@@ -131,6 +147,12 @@ HRESULT StartMIDIService()
     wil::unique_schandle midiService;
     SERVICE_STATUS_PROCESS serviceStatusProcess {0};
     DWORD size_needed {0};
+
+    if (IsLegacyMode())
+    {
+        LOG_OUTPUT(L"Running in legacy mode, skipping start of midisrv.");
+        return S_OK;
+    }
 
     LOG_OUTPUT(L"Attempting to start [midisrv]");
 

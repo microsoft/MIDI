@@ -120,6 +120,12 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     std::unique_ptr<CMidiXProc> midiPump;
     DWORD MmCssTaskId{ 0 };
 
+    if (IsLegacyMode())
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode.");
+        return;
+    }
+
     // create the client session on the service before calling EnumerateDevices, which will kickstart
     // the service if it's not already running.
     LOG_OUTPUT(L"Retrieving binding handle");
@@ -314,6 +320,12 @@ void Midi2ServiceTests::TestMidiServiceInvalidCreationParams()
 
     wil::unique_rpc_binding bindingHandle;
 
+    if (IsLegacyMode())
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode.");
+        return;
+    }
+
     // create the client session on the service before calling EnumerateDevices, which will kickstart
     // the service if it's not already running.
     LOG_OUTPUT(L"Retrieving binding handle");
@@ -450,6 +462,12 @@ void Midi2ServiceTests::TestMidiServiceFailedCreation()
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     wil::unique_rpc_binding bindingHandle;
+
+    if (IsLegacyMode())
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode.");
+        return;
+    }
 
     // create the client session on the service before calling EnumerateDevices, which will kickstart
     // the service if it's not already running.

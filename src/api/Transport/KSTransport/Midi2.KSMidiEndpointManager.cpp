@@ -12,6 +12,7 @@
 
 #include "Feature_Servicing_MIDI2FilterCreations.h"
 #include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
+#include "Feature_Servicing_MIDI2SWDAbortCrash.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -745,9 +746,23 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                                                             &createInfo,
                                                             &newDeviceInterfaceId));
 
-        // keep the created endpoint device interface id because this is used in some lookups later
-        // specifically around matching for customization
-        MidiPin->EndpointDeviceId = static_cast<LPWSTR>(newDeviceInterfaceId.get());
+        if (Feature_Servicing_MIDI2SWDAbortCrash::IsEnabled())
+        {
+            // If SWD creation is aborted, newDeviceInterfaceId will be NULL,
+            // don't crash and continue to push forward with the available pins.
+            if (SUCCEEDED(MidiPin->SwdCreation))
+            {
+                // keep the created endpoint device interface id because this is used in some lookups later
+                // specifically around matching for customization
+                MidiPin->EndpointDeviceId = static_cast<LPWSTR>(newDeviceInterfaceId.get());
+            }
+        }
+        else
+        {
+            // keep the created endpoint device interface id because this is used in some lookups later
+            // specifically around matching for customization
+            MidiPin->EndpointDeviceId = static_cast<LPWSTR>(newDeviceInterfaceId.get());
+        }
 
         // Now we deal with metadata provided in-protocol and also by the user
 
