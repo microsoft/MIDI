@@ -26,7 +26,6 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromAToB(
         }
 
         // we don't want a fail hresult here as it just means the callback went away
-        if (m_CallbackB == nullptr) return S_OK;
         if (callback == nullptr) return S_OK;
 
         RETURN_HR_IF_NULL(E_INVALIDARG, message);
@@ -34,7 +33,6 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromAToB(
 
         // Sending message from A output to B input
 
-        return m_CallbackB->Callback(MessageOptionFlags_None, message, size, timestamp, m_ContextB);
         return callback->Callback(MessageOptionFlags_None, message, size, timestamp, context);
     }
     else
@@ -67,7 +65,6 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
         }
 
         // we don't want a fail hresult here as it just means the callback went away
-        if (m_CallbackA == nullptr) return S_OK;
         if (callback == nullptr) return S_OK;
 
         RETURN_HR_IF_NULL(E_INVALIDARG, message);
@@ -75,7 +72,6 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
 
         // Sending message from B output to A input
 
-        return m_CallbackA->Callback(MessageOptionFlags_None, message, size, timestamp, m_ContextB);
         return callback->Callback(MessageOptionFlags_None, message, size, timestamp, context);
     }
     else
