@@ -8,7 +8,7 @@
 
 
 using System.Runtime.InteropServices;
-using Microsoft.Windows.Devices.Midi2.NetProjection;
+using Microsoft.Windows.Devices.Midi2;
 using System.Data.Common;
 using System.Net;
 using System.Runtime.InteropServices;
