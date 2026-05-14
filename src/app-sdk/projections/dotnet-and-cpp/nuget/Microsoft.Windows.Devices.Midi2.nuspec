@@ -64,7 +64,7 @@
       <!-- COM Extensions -->
       <file target="build\native\include\winmidi"             src="..\..\..\..\..\build\staging\app-sdk\WindowsMidiServicesAppSdkComExtensions.h" />
       <file target="build\native\include\winmidi"             src="..\..\..\..\..\build\staging\app-sdk\WindowsMidiServicesAppSdkComExtensions_i.c" />
-      <file target="build\native\include\winmidi"             src="..\..\..\..\..\build\staging\app-sdk\WindowsMidiServicesAppSdkComExtensions_p.c" />
+     <!-- <file target="build\native\include\winmidi"             src="..\..\..\..\..\build\staging\app-sdk\WindowsMidiServicesAppSdkComExtensions_p.c" /> -->
 
         
       <file src="README.md" target="\" />

@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 using System.Text;
 using WinRT;
 
-namespace Microsoft.Windows.Devices.Midi2.NetProjection
+namespace Microsoft.Windows.Devices.Midi2
 {
     public static class MidiInterfaceExtensionMethods
     {
-        public static IMidiEndpointConnectionRaw GetMidiEndpointConnectionRawInterface(this MidiEndpointConnection connection)
+        public static IMidiEndpointConnectionRaw GetMidiEndpointConnectionRawInterface(this Microsoft.Windows.Devices.Midi2.MidiEndpointConnection connection)
         {
             return connection.As<IMidiEndpointConnectionRaw>();
         }

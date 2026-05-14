@@ -112,7 +112,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\winrt\Microsoft.Windows.Devices.Midi2.vcxproj" />
+    <ProjectReference Include="..\..\winrt\Microsoft.Windows.Devices.Midi2.vcxproj">
+      <ReferenceOutputAssembly>True</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
 
