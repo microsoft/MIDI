@@ -460,7 +460,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     System.Diagnostics.Debug.WriteLine("Monitor");
 
-                    _consoleToolsService.MonitorEndpoint(DeviceInformation.EndpointDeviceId);                   
+                    _consoleToolsService.MonitorEndpoint(DeviceInformation);                   
 
                 });
 

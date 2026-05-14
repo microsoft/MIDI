@@ -19,7 +19,7 @@ public interface IMidiConsoleToolsService
 {
     bool OpenMidiConsole();
 
-    bool MonitorEndpoint(string endpointDeviceId);
+    bool MonitorEndpoint(MidiEndpointDeviceInformation deviceInformation);
 
     bool IsMidiConsolePresent();
 

@@ -105,10 +105,14 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
                     UseShellExecute = false,
                 };
 
-                startInfo.ArgumentList.Add("new-tab");
-                startInfo.ArgumentList.Add("--title");
-                startInfo.ArgumentList.Add("Windows MIDI Services Console");
-                startInfo.ArgumentList.Add($@"cmd /k call ""{consoleExe}""");
+                startInfo.ArgumentList.Add("--useApplicationTitle");
+                startInfo.ArgumentList.Add("--window");
+                startInfo.ArgumentList.Add("new");
+
+                startInfo.ArgumentList.Add($@"cmd");
+                startInfo.ArgumentList.Add($@"/k");
+                startInfo.ArgumentList.Add($@"{consoleExe}");
+
 
                 var process = new Process
                 {
@@ -132,7 +136,7 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
 
 
-    public bool MonitorEndpoint(string endpointDeviceId)
+    public bool MonitorEndpoint(MidiEndpointDeviceInformation deviceInformation)
     {
         _loggingService.LogInfo($"Enter");
 
@@ -144,14 +148,28 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
                 var startInfo = new ProcessStartInfo
                 {
-                    FileName = "wt",
+                    FileName = "wt.exe",
                     UseShellExecute = false,
                 };
 
-                startInfo.ArgumentList.Add("new-tab");
+                startInfo.ArgumentList.Add("--useApplicationTitle");
+
+                startInfo.ArgumentList.Add("--size");
+                startInfo.ArgumentList.Add("150,40");
+
+                startInfo.ArgumentList.Add("--window");
+                startInfo.ArgumentList.Add("new");
+
                 startInfo.ArgumentList.Add("--title");
-                startInfo.ArgumentList.Add("Windows MIDI Services Console");
-                startInfo.ArgumentList.Add($@"cmd /k call ""{consoleExe}"" endpoint monitor {endpointDeviceId}");
+                startInfo.ArgumentList.Add($@"{deviceInformation.Name}");
+
+
+                startInfo.ArgumentList.Add($@"cmd");
+                startInfo.ArgumentList.Add($@"/k");
+                startInfo.ArgumentList.Add($@"{consoleExe}");
+                startInfo.ArgumentList.Add($@"endpoint");
+                startInfo.ArgumentList.Add($@"{deviceInformation.EndpointDeviceId}");
+                startInfo.ArgumentList.Add($@"monitor");
 
                 var process = new Process
                 {
