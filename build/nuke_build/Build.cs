@@ -361,6 +361,13 @@ class Build : NukeBuild
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
             var sdkIntermediateRootFolder = AppSdkSolutionFolder / "vsfiles" / "intermediate";
 
+
+            // these are not architecture-specific
+            (sdkIntermediateRootFolder / "com-extensions-idl" / "x64" / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions.h").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
+            (sdkIntermediateRootFolder / "com-extensions-idl" / "x64" / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_i.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
+           // (sdkIntermediateRootFolder / "com-extensions-idl" / "x64" / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_p.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
+
+
             // header files and similar
             foreach (var sourcePlatform in SdkPlatforms)
             {
@@ -378,10 +385,6 @@ class Build : NukeBuild
                 (AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
                 //(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
 
-                // these are not architecture-specific
-                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions.h").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
-                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_i.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
-                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_p.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
             }
 
 
