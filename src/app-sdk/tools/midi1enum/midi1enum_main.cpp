@@ -164,7 +164,7 @@ void LoadWinMMDevices()
 
                 if (queryResult == MMSYSERR_NOERROR)
                 {
-                    m_midiInputCountNoErrors++;
+                    m_midiOutputCountNoErrors++;
                 }
                 else
                 {
