@@ -304,6 +304,7 @@
     <None Include="Midi2.NetworkMidiTransport.def" />
     <None Include="Midi2.NetworkMidiTransport.rgs" />
     <None Include="packages.config" />
+    <None Include="SPEC_REVIEW.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiNetworkConnection.h" />
