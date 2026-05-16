@@ -147,5 +147,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="MidiEndpointProtocolManager-Threading-Review.md" />
   </ItemGroup>
 </Project>

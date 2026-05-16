@@ -51,6 +51,18 @@ namespace WindowsMidiServicesInternal
         responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, successVal);
     }
 
+    inline void SetConfigurationResponseObjectFailWithErrorCode(_In_ json::JsonObject& responseObject, _In_ uint32_t errorCode, _In_ std::wstring message)
+    {
+        auto messageVal = json::JsonValue::CreateStringValue(message.c_str());
+        responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, messageVal);
+
+        auto successVal = json::JsonValue::CreateBooleanValue(false);
+        responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, successVal);
+
+        auto errorCodeVal = json::JsonValue::CreateNumberValue(errorCode);
+        responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_ERROR_CODE_PROPERTY_KEY, errorCodeVal);
+    }
+
     inline void SetConfigurationResponseObjectSuccess(_In_ json::JsonObject& responseObject)
     {
         auto successVal = json::JsonValue::CreateBooleanValue(true);

@@ -392,6 +392,7 @@
     <Image Include="ParentDevice.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="MidiEndpointProtocolManager-Threading-Review.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
