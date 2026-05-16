@@ -161,15 +161,14 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
                 startInfo.ArgumentList.Add("new");
 
                 startInfo.ArgumentList.Add("--title");
-                startInfo.ArgumentList.Add($@"{deviceInformation.Name}");
+                startInfo.ArgumentList.Add($"{deviceInformation.Name}");
 
-
-                startInfo.ArgumentList.Add($@"cmd");
-                startInfo.ArgumentList.Add($@"/k");
-                startInfo.ArgumentList.Add($@"{consoleExe}");
-                startInfo.ArgumentList.Add($@"endpoint");
-                startInfo.ArgumentList.Add($@"{deviceInformation.EndpointDeviceId}");
-                startInfo.ArgumentList.Add($@"monitor");
+                startInfo.ArgumentList.Add("cmd");
+                startInfo.ArgumentList.Add("/k");
+                startInfo.ArgumentList.Add($"{consoleExe}");
+                startInfo.ArgumentList.Add("endpoint");
+                startInfo.ArgumentList.Add($"{deviceInformation.EndpointDeviceId}");
+                startInfo.ArgumentList.Add("monitor");
 
                 var process = new Process
                 {
