@@ -1,0 +1,871 @@
+# Azure DevOps Pipeline for Windows MIDI Services SDK
+# Translated from Nuke Build script
+#
+# CODE SIGNING SETUP:
+# --------------------
+# To enable code signing, you need to:
+# 1. Set up an Azure Key Vault with your code signing certificate
+# 2. Create a Service Connection in Azure DevOps to access the Key Vault
+# 3. Install the "Azure Sign Tool" extension in your Azure DevOps organization
+#    (or use alternative signing tools like SignTool.exe)
+# 4. Uncomment the signing tasks throughout this pipeline
+# 5. Configure the signing variables below in Pipeline Variables or a Variable Group
+# 6. Update the service connection names and Key Vault URLs in the signing tasks
+#
+# Required Variables for Code Signing:
+# - SigningCertificateName: Name of the certificate in Azure Key Vault
+# - SigningTimeStampServer: URL of timestamp server (e.g., http://timestamp.digicert.com)
+# - SigningDescription: Description to embed in signed files
+#
+# Files that will be signed:
+# - SDK DLLs (Microsoft.Windows.Devices.Midi2.dll)
+# - Tool executables (mididiag.exe, midiksinfo.exe, etc.)
+# - Console application (midi.exe)
+# - Settings application (MidiSettings.exe)
+# - PowerShell module DLL (WindowsMidiServices.dll)
+# - PowerShell scripts (.ps1, .psd1 files)
+# - Installer executables (WindowsMidiServicesSdkRuntimeSetup.exe)
+# - NuGet packages (optional, see NuGet package signing task)
+#
+# --------------------
+
+trigger:
+  branches:
+    include:
+    - network-midi-2-summer-2026
+    - main
+  paths:
+    exclude:
+    - docs/*
+    - '*.md'
+
+pr:
+  branches:
+    include:
+    - '*'
+
+variables:
+  # Version Configuration
+  BuildVersionMajor: 1
+  BuildVersionMinor: 0
+  BuildVersionPatch: 23
+  BuildVersionPreviewNumber: 5
+  BuildType: 'rc' # Options: preview, rc, stable
+  VersionName: 'SDK Release Candidate $(BuildVersionPreviewNumber)'
+
+  # Build Configuration
+  BuildConfiguration: 'Release'
+  TargetWindowsSdkVersion: '10.0.26100.0'
+  NugetPackageId: 'Microsoft.Windows.Devices.Midi2'
+
+  # Build Platforms
+  SdkPlatforms: 'x64;Arm64EC'
+  SdkPlatformsIncludingAnyCpu: 'AnyCPU;x64;Arm64EC'
+  ServiceAndApiPlatforms: 'x64;Arm64'
+  ServiceAndApiPlatformsAll: 'x64;Arm64;Arm64EC'
+  ToolsPlatforms: 'x64;Arm64'
+  NativeSamplesPlatforms: 'x64;Arm64;Arm64EC'
+  ManagedSamplesPlatforms: 'x64;Arm64'
+  InstallerPlatforms: 'x64;Arm64'
+
+  # Paths
+  BuildVerbosity: 'minimal'
+  MSBuildPath: 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
+
+  # Code Signing Configuration
+  # TODO: Configure these variables in Azure DevOps Pipeline Variables or Variable Groups
+  # SigningCertificateName: 'YourCertificateName'
+  # SigningTimeStampServer: 'http://timestamp.digicert.com'
+  # SigningDescription: 'Windows MIDI Services'
+
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+- stage: Initialize
+  displayName: 'Initialize Build'
+  jobs:
+  - job: Prerequisites
+    displayName: 'Setup Prerequisites'
+    steps:
+    - checkout: self
+      clean: true
+      fetchDepth: 1
+
+    - task: PowerShell@2
+      displayName: 'Set Environment Variables'
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Set MIDI_REPO_ROOT
+          $repoRoot = "$(Build.SourcesDirectory)"
+          Write-Host "##vso[task.setvariable variable=MIDI_REPO_ROOT]$repoRoot"
+
+          # Calculate build number
+          $buildNumberFile = Join-Path $repoRoot "build\staging\version\SDK_BuildNumber.txt"
+          $buildNumber = 0
+          $versionKey = "$(BuildVersionMajor).$(BuildVersionMinor).$(BuildVersionPatch)"
+
+          if (Test-Path $buildNumberFile) {
+              $lines = Get-Content $buildNumberFile
+              if ($lines[0] -eq $versionKey) {
+                  $buildNumber = [int]$lines[1] + 1
+              }
+          }
+
+          # Create staging directory if needed
+          $stagingVersionDir = Join-Path $repoRoot "build\staging\version"
+          New-Item -ItemType Directory -Force -Path $stagingVersionDir | Out-Null
+
+          # Write build number
+          @($versionKey, $buildNumber) | Set-Content $buildNumberFile
+
+          Write-Host "##vso[task.setvariable variable=BuildVersionBuildNumber]$buildNumber"
+
+          # Calculate version strings
+          $buildType = "$(BuildType)"
+          $previewString = ""
+          $nugetVersion = "$versionKey"
+
+          if ($buildType -eq "rc") {
+              $previewString = "rc.$(BuildVersionPreviewNumber).$buildNumber"
+              $nugetVersion = "$versionKey-$previewString"
+          } elseif ($buildType -eq "preview") {
+              $previewString = "preview.$(BuildVersionPreviewNumber).$buildNumber"
+              $nugetVersion = "$versionKey-$previewString"
+          }
+
+          Write-Host "##vso[task.setvariable variable=BuildVersionPreviewString]$previewString"
+          Write-Host "##vso[task.setvariable variable=BuildVersionFullString]$nugetVersion"
+          Write-Host "##vso[task.setvariable variable=BuildVersionAssemblyFullString]$versionKey.$buildNumber"
+          Write-Host "##vso[task.setvariable variable=BuildVersionFileFullString]$versionKey.$buildNumber"
+          Write-Host "##vso[task.setvariable variable=NugetPackageVersion]$nugetVersion"
+          Write-Host "##vso[task.setvariable variable=NugetFullPackageIdWithVersion]$(NugetPackageId).$nugetVersion"
+
+          Write-Host "Building version: $nugetVersion"
+          Write-Host "Build number: $buildNumber"
+
+    - task: PowerShell@2
+      displayName: 'Create Release Folder'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $timestamp = Get-Date -Format "yyyy-MM-dd HH-mm-ss"
+          $releaseFolderName = "$(VersionName) ($timestamp)"
+          $releasePath = Join-Path "$(Build.SourcesDirectory)" "build\release\$releaseFolderName"
+          New-Item -ItemType Directory -Force -Path $releasePath | Out-Null
+          Write-Host "##vso[task.setvariable variable=ThisReleaseFolder]$releasePath"
+          Write-Host "Release folder: $releasePath"
+
+- stage: GenerateVersionIncludes
+  displayName: 'Generate Version Include Files'
+  dependsOn: Initialize
+  jobs:
+  - job: CreateVersionIncludes
+    displayName: 'Create Version Include Files'
+    steps:
+    - checkout: self
+
+    - task: MSBuild@1
+      displayName: 'Generate Version Includes'
+      inputs:
+        solution: '$(Build.SourcesDirectory)\src\build-gen-version-includes\GenVersionIncludes.csproj'
+        msbuildArchitecture: 'x64'
+        msbuildArguments: >
+          /t:TransformAll
+          /p:MidiBuildType=$(BuildType)
+          /p:MidiBuildSource="Azure DevOps Pipeline"
+          /p:MidiVersionName="$(VersionName)"
+          /p:MidiBuildVersionMajor=$(BuildVersionMajor)
+          /p:MidiBuildVersionMinor=$(BuildVersionMinor)
+          /p:MidiBuildVersionPatch=$(BuildVersionPatch)
+          /p:MidiBuildVersionBuildNumber=$(BuildVersionBuildNumber)
+          /p:MidiBuildVersionPreviewString="$(BuildVersionPreviewString)"
+          /p:MidiVersionOutputFolder="$(Build.SourcesDirectory)\build\staging\version"
+        configuration: '$(BuildConfiguration)'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Version Files'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\build\staging\version'
+        artifact: 'VersionFiles'
+
+- stage: BuildAppSDK
+  displayName: 'Build App SDK'
+  dependsOn: GenerateVersionIncludes
+  jobs:
+  - job: BuildAndPackAppSDK
+    displayName: 'Build and Pack App SDK'
+    strategy:
+      matrix:
+        AnyCPU:
+          BuildPlatform: 'AnyCPU'
+        x64:
+          BuildPlatform: 'x64'
+        Arm64EC:
+          BuildPlatform: 'Arm64EC'
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Version Files'
+      inputs:
+        artifact: 'VersionFiles'
+        targetPath: '$(Build.SourcesDirectory)\build\staging\version'
+
+    - task: MSBuild@1
+      displayName: 'Build App SDK ($(BuildPlatform))'
+      inputs:
+        solution: '$(Build.SourcesDirectory)\src\app-sdk\app-sdk.sln'
+        platform: '$(BuildPlatform)'
+        configuration: '$(BuildConfiguration)'
+        msbuildArchitecture: 'x64'
+        msbuildArguments: >
+          /p:SolutionDir="$(Build.SourcesDirectory)\src\app-sdk\"
+          /p:NoWarn=MSB3271
+          /p:Version=$(BuildVersionFullString)
+          /p:VersionPrefix=$(BuildVersionMajor).$(BuildVersionMinor).$(BuildVersionPatch)
+          /p:AssemblyVersion=$(BuildVersionAssemblyFullString)
+          /p:FileVersion=$(BuildVersionFileFullString)
+          /m
+          /v:$(BuildVerbosity)
+
+    - task: PowerShell@2
+      displayName: 'Copy SDK Binaries to Staging'
+      condition: and(succeeded(), ne(variables['BuildPlatform'], 'AnyCPU'))
+      inputs:
+        targetType: 'inline'
+        script: |
+          $platform = "$(BuildPlatform)"
+          $stagingPlatform = $platform
+          if ($platform -eq "Arm64EC") { $stagingPlatform = "Arm64" }
+
+          $srcDir = "$(Build.SourcesDirectory)\src\app-sdk\vsfiles\out\Microsoft.Windows.Devices.Midi2\$platform\$(BuildConfiguration)"
+          $destDir = "$(Build.SourcesDirectory)\build\staging\app-sdk\$stagingPlatform"
+
+          New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+
+          Copy-Item "$srcDir\Microsoft.Windows.Devices.Midi2.winmd" $destDir -Force
+          Copy-Item "$srcDir\Microsoft.Windows.Devices.Midi2.dll" $destDir -Force
+          Copy-Item "$srcDir\Microsoft.Windows.Devices.Midi2.pri" $destDir -Force
+          Copy-Item "$srcDir\Microsoft.Windows.Devices.Midi2.pdb" $destDir -Force
+
+          Write-Host "Copied SDK binaries for $platform to $destDir"
+
+    # TODO: Configure code signing for SDK DLLs
+    # Uncomment and configure the following task to sign the SDK binaries
+    # - task: AzureSignTool@3
+    #   displayName: 'Sign SDK DLL ($(BuildPlatform))'
+    #   condition: and(succeeded(), ne(variables['BuildPlatform'], 'AnyCPU'))
+    #   inputs:
+    #     ConnectedServiceName: 'YourAzureServiceConnection'
+    #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
+    #     CertificateName: '$(SigningCertificateName)'
+    #     SignedFilePath: |
+    #       $(Build.SourcesDirectory)\build\staging\app-sdk\**\Microsoft.Windows.Devices.Midi2.dll
+    #     TimeStampServer: '$(SigningTimeStampServer)'
+    #     FileDigest: 'SHA256'
+    #     TimeStampDigest: 'SHA256'
+    #     Description: '$(SigningDescription)'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish SDK Staging Files'
+      condition: and(succeeded(), ne(variables['BuildPlatform'], 'AnyCPU'))
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\build\staging\app-sdk'
+        artifact: 'AppSDKStaging-$(BuildPlatform)'
+
+  - job: CreateNuGetPackage
+    displayName: 'Create NuGet Package'
+    dependsOn: BuildAndPackAppSDK
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download x64 SDK Files'
+      inputs:
+        artifact: 'AppSDKStaging-x64'
+        targetPath: '$(Build.SourcesDirectory)\build\staging\app-sdk'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Arm64EC SDK Files'
+      inputs:
+        artifact: 'AppSDKStaging-Arm64EC'
+        targetPath: '$(Build.SourcesDirectory)\build\staging\app-sdk'
+
+    - task: PowerShell@2
+      displayName: 'Copy Header Files'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $stagingRoot = "$(Build.SourcesDirectory)\build\staging\app-sdk"
+          $intermediateRoot = "$(Build.SourcesDirectory)\src\app-sdk\vsfiles\intermediate"
+
+          # Copy bootstrap files
+          Copy-Item "$(Build.SourcesDirectory)\src\app-sdk\client-initialization-redist\Microsoft.Windows.Devices.Midi2.Initialization.hpp" "$stagingRoot\x64" -Force
+          Copy-Item "$(Build.SourcesDirectory)\src\app-sdk\client-initialization-redist\Microsoft.Windows.Devices.Midi2.Initialization.hpp" "$stagingRoot\Arm64" -Force
+
+          # Copy COM extension headers
+          Copy-Item "$intermediateRoot\com-extensions-idl\x64\$(BuildConfiguration)\WindowsMidiServicesAppSdkComExtensions.h" $stagingRoot -Force
+          Copy-Item "$intermediateRoot\com-extensions-idl\x64\$(BuildConfiguration)\WindowsMidiServicesAppSdkComExtensions_i.c" $stagingRoot -Force
+          Copy-Item "$intermediateRoot\com-extensions-idl\x64\$(BuildConfiguration)\WindowsMidiServicesAppSdkComExtensions_p.c" $stagingRoot -Force
+
+    - task: NuGetCommand@2
+      displayName: 'Pack NuGet Package'
+      inputs:
+        command: 'pack'
+        packagesToPack: '$(Build.SourcesDirectory)\src\app-sdk\projections\dotnet-and-cpp\nuget\Microsoft.Windows.Devices.Midi2.nuspec'
+        packDestination: '$(Build.SourcesDirectory)\build\release\nuget'
+        versioningScheme: 'byEnvVar'
+        versionEnvVar: 'NugetPackageVersion'
+        buildProperties: 'id=$(NugetPackageId)'
+
+    # TODO: Configure NuGet package signing
+    # Uncomment and configure the following task to sign the NuGet package
+    # - task: NuGetCommand@2
+    #   displayName: 'Sign NuGet Package'
+    #   inputs:
+    #     command: 'custom'
+    #     arguments: >
+    #       sign $(Build.SourcesDirectory)\build\release\nuget\$(NugetFullPackageIdWithVersion).nupkg
+    #       -CertificatePath $(SigningCertificatePath)
+    #       -CertificatePassword $(SigningCertificatePassword)
+    #       -Timestamper $(SigningTimeStampServer)
+    #       -NonInteractive
+    #
+    # Alternative: Use Azure Sign Tool for NuGet packages
+    # - task: PowerShell@2
+    #   displayName: 'Sign NuGet Package with Azure Sign Tool'
+    #   inputs:
+    #     targetType: 'inline'
+    #     script: |
+    #       # Install Azure Sign Tool if not already available
+    #       # dotnet tool install --global AzureSignTool
+    #       
+    #       $nupkgPath = "$(Build.SourcesDirectory)\build\release\nuget\$(NugetFullPackageIdWithVersion).nupkg"
+    #       
+    #       azuresigntool sign `
+    #         --file-digest sha256 `
+    #         --timestamp-rfc3161 $(SigningTimeStampServer) `
+    #         --azure-key-vault-url "https://yourkeyvault.vault.azure.net/" `
+    #         --azure-key-vault-certificate "$(SigningCertificateName)" `
+    #         --verbose `
+    #         $nupkgPath
+    #       
+    #       Write-Host "Signed NuGet package: $(NugetFullPackageIdWithVersion).nupkg"
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish NuGet Package'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\build\release\nuget'
+        artifact: 'NuGetPackage'
+
+- stage: BuildToolsAndTests
+  displayName: 'Build Tools and Tests'
+  dependsOn: BuildAppSDK
+  jobs:
+  - job: BuildAppSDKToolsAndTests
+    displayName: 'Build SDK Tools and Tests'
+    strategy:
+      matrix:
+        x64:
+          BuildPlatform: 'x64'
+        Arm64EC:
+          BuildPlatform: 'Arm64EC'
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Version Files'
+      inputs:
+        artifact: 'VersionFiles'
+        targetPath: '$(Build.SourcesDirectory)\build\staging\version'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download NuGet Package'
+      inputs:
+        artifact: 'NuGetPackage'
+        targetPath: '$(Build.SourcesDirectory)\build\release\nuget'
+
+    - task: PowerShell@2
+      displayName: 'Update NuGet Packages in Tools Projects'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $solutionDir = "$(Build.SourcesDirectory)\src\app-sdk\"
+          $toolsDirs = @(
+            "tools\mididiag",
+            "tools\midiusbinfo",
+            "tools\midimdnsinfo",
+            "tests\InitializationExe",
+            "tests\Benchmarks",
+            "tests\Offline.unittests",
+            "tests\SdkInitialization.unittests",
+            "tests\Service.integrationtests"
+          )
+
+          foreach ($dir in $toolsDirs) {
+            $fullPath = Join-Path $solutionDir $dir
+            $packagesConfig = Join-Path $fullPath "packages.config"
+
+            if (Test-Path $packagesConfig) {
+              Write-Host "Updating packages.config in $dir"
+              [xml]$xml = Get-Content $packagesConfig
+              $package = $xml.packages.package | Where-Object { $_.id -eq "$(NugetPackageId)" }
+              if ($package) {
+                $package.version = "$(NugetPackageVersion)"
+                $xml.Save($packagesConfig)
+              }
+
+              # Restore NuGet packages
+              nuget restore $packagesConfig -SolutionDirectory $solutionDir -Source "$(Build.SourcesDirectory)\build\release\nuget;https://api.nuget.org/v3/index.json"
+            }
+          }
+
+    - task: MSBuild@1
+      displayName: 'Build Tools and Tests ($(BuildPlatform))'
+      inputs:
+        solution: '$(Build.SourcesDirectory)\src\app-sdk\app-sdk-tools-and-tests.sln'
+        platform: '$(BuildPlatform)'
+        configuration: '$(BuildConfiguration)'
+        msbuildArchitecture: 'x64'
+        msbuildArguments: >
+          /p:SolutionDir="$(Build.SourcesDirectory)\src\app-sdk\"
+          /p:NoWarn=MSB3271
+          /p:VersionPrefix=$(BuildVersionMajor).$(BuildVersionMinor).$(BuildVersionPatch)
+          /p:Version=$(BuildVersionFullString)
+          /p:AssemblyVersion=$(BuildVersionAssemblyFullString)
+          /p:FileVersion=$(BuildVersionFileFullString)
+          /m
+          /v:$(BuildVerbosity)
+
+    - task: PowerShell@2
+      displayName: 'Copy Tool Executables to Staging'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $platform = "$(BuildPlatform)"
+          $stagingPlatform = $platform
+          if ($platform -eq "Arm64EC") { $stagingPlatform = "Arm64" }
+
+          $srcDir = "$(Build.SourcesDirectory)\src\app-sdk\vsfiles\out"
+          $destDir = "$(Build.SourcesDirectory)\build\staging\app-sdk\$stagingPlatform"
+
+          $tools = @("mididiag", "midiksinfo", "midimdnsinfo", "midi1monitor", "midi1enum", "midifixreg", "midicheckservice")
+
+          foreach ($tool in $tools) {
+            $toolPath = "$srcDir\$tool\$stagingPlatform\$(BuildConfiguration)\$tool.exe"
+            if (Test-Path $toolPath) {
+              Copy-Item $toolPath $destDir -Force
+              Write-Host "Copied $tool.exe"
+            }
+          }
+
+    # TODO: Configure code signing for SDK tool executables
+    # Uncomment and configure the following task to sign the tool binaries
+    # - task: AzureSignTool@3
+    #   displayName: 'Sign SDK Tool Executables ($(BuildPlatform))'
+    #   inputs:
+    #     ConnectedServiceName: 'YourAzureServiceConnection'
+    #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
+    #     CertificateName: '$(SigningCertificateName)'
+    #     SignedFilePath: |
+    #       $(Build.SourcesDirectory)\build\staging\app-sdk\**\*.exe
+    #     TimeStampServer: '$(SigningTimeStampServer)'
+    #     FileDigest: 'SHA256'
+    #     TimeStampDigest: 'SHA256'
+    #     Description: '$(SigningDescription) - SDK Tools'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Tool Binaries'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\build\staging\app-sdk'
+        artifact: 'SDKTools-$(BuildPlatform)'
+
+- stage: BuildUserApplications
+  displayName: 'Build User Applications'
+  dependsOn: BuildAppSDK
+  jobs:
+  - job: BuildConsoleApp
+    displayName: 'Build MIDI Console'
+    strategy:
+      matrix:
+        x64:
+          BuildPlatform: 'x64'
+          RuntimeIdentifier: 'win-x64'
+        Arm64:
+          BuildPlatform: 'Arm64'
+          RuntimeIdentifier: 'win-arm64'
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download NuGet Package'
+      inputs:
+        artifact: 'NuGetPackage'
+        targetPath: '$(Build.SourcesDirectory)\build\release\nuget'
+
+    - task: NuGetCommand@2
+      displayName: 'Restore Console NuGet Packages'
+      inputs:
+        command: 'restore'
+        restoreSolution: '$(Build.SourcesDirectory)\src\user-tools\midi-console\midi-console.sln'
+        feedsToUse: 'config'
+        nugetConfigPath: '$(Build.SourcesDirectory)\NuGet.config'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build MIDI Console ($(BuildPlatform))'
+      inputs:
+        command: 'build'
+        projects: '$(Build.SourcesDirectory)\src\user-tools\midi-console\Midi\Midi.csproj'
+        arguments: >
+          --configuration $(BuildConfiguration)
+          --runtime $(RuntimeIdentifier)
+          /p:Version=$(BuildVersionFullString)
+          /p:FileVersion=$(BuildVersionFileFullString)
+          /p:AssemblyVersion=$(BuildVersionAssemblyFullString)
+          /p:PublishSingleFile=false
+          /p:PublishTrimmed=false
+          /p:SelfContained=false
+
+    # TODO: Configure code signing for Console application
+    # Uncomment and configure the following task to sign the console executable
+    # - task: AzureSignTool@3
+    #   displayName: 'Sign MIDI Console Executable ($(BuildPlatform))'
+    #   inputs:
+    #     ConnectedServiceName: 'YourAzureServiceConnection'
+    #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
+    #     CertificateName: '$(SigningCertificateName)'
+    #     SignedFilePath: |
+    #       $(Build.SourcesDirectory)\src\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\midi.exe
+    #     TimeStampServer: '$(SigningTimeStampServer)'
+    #     FileDigest: 'SHA256'
+    #     TimeStampDigest: 'SHA256'
+    #     Description: '$(SigningDescription) - Console Application'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Console Binaries'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\src\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
+        artifact: 'ConsoleApp-$(BuildPlatform)'
+
+  - job: BuildSettingsApp
+    displayName: 'Build MIDI Settings'
+    strategy:
+      matrix:
+        x64:
+          BuildPlatform: 'x64'
+          RuntimeIdentifier: 'win-x64'
+        # Uncomment when Arm64 support is ready
+        # Arm64:
+        #   BuildPlatform: 'Arm64'
+        #   RuntimeIdentifier: 'win-arm64'
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download NuGet Package'
+      inputs:
+        artifact: 'NuGetPackage'
+        targetPath: '$(Build.SourcesDirectory)\build\release\nuget'
+
+    - task: NuGetCommand@2
+      displayName: 'Restore Settings NuGet Packages'
+      inputs:
+        command: 'restore'
+        restoreSolution: '$(Build.SourcesDirectory)\src\user-tools\midi-settings\midi-settings.sln'
+        feedsToUse: 'config'
+        nugetConfigPath: '$(Build.SourcesDirectory)\NuGet.config'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build MIDI Settings ($(BuildPlatform))'
+      inputs:
+        command: 'build'
+        projects: '$(Build.SourcesDirectory)\src\user-tools\midi-settings\Microsoft.Midi.Settings\Microsoft.Midi.Settings.csproj'
+        arguments: >
+          --configuration $(BuildConfiguration)
+          --runtime $(RuntimeIdentifier)
+          /p:Version=$(BuildVersionFullString)
+          /p:FileVersion=$(BuildVersionFileFullString)
+          /p:AssemblyVersion=$(BuildVersionAssemblyFullString)
+          /p:PublishSingleFile=false
+          /p:PublishTrimmed=false
+          /p:SelfContained=false
+
+    # TODO: Configure code signing for Settings application
+    # Uncomment and configure the following task to sign the settings executable
+    # - task: AzureSignTool@3
+    #   displayName: 'Sign MIDI Settings Executable ($(BuildPlatform))'
+    #   inputs:
+    #     ConnectedServiceName: 'YourAzureServiceConnection'
+    #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
+    #     CertificateName: '$(SigningCertificateName)'
+    #     SignedFilePath: |
+    #       $(Build.SourcesDirectory)\src\user-tools\midi-settings\Microsoft.Midi.Settings\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\MidiSettings.exe
+    #     TimeStampServer: '$(SigningTimeStampServer)'
+    #     FileDigest: 'SHA256'
+    #     TimeStampDigest: 'SHA256'
+    #     Description: '$(SigningDescription) - Settings Application'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Settings Binaries'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\src\user-tools\midi-settings\Microsoft.Midi.Settings\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
+        artifact: 'SettingsApp-$(BuildPlatform)'
+
+  - job: BuildPowerShellModule
+    displayName: 'Build PowerShell Module'
+    strategy:
+      matrix:
+        x64:
+          BuildPlatform: 'x64'
+          RuntimeIdentifier: 'win-x64'
+        Arm64:
+          BuildPlatform: 'Arm64'
+          RuntimeIdentifier: 'win-arm64'
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download NuGet Package'
+      inputs:
+        artifact: 'NuGetPackage'
+        targetPath: '$(Build.SourcesDirectory)\build\release\nuget'
+
+    - task: NuGetCommand@2
+      displayName: 'Restore PowerShell Module NuGet Packages'
+      inputs:
+        command: 'restore'
+        restoreSolution: '$(Build.SourcesDirectory)\src\app-sdk\projections\powershell\midi-powershell.sln'
+        feedsToUse: 'config'
+        nugetConfigPath: '$(Build.SourcesDirectory)\NuGet.config'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build PowerShell Module ($(BuildPlatform))'
+      inputs:
+        command: 'build'
+        projects: '$(Build.SourcesDirectory)\src\app-sdk\projections\powershell\WindowsMidiServices.csproj'
+        arguments: >
+          --configuration $(BuildConfiguration)
+          --runtime $(RuntimeIdentifier)
+          /p:Version=$(BuildVersionFullString)
+          /p:FileVersion=$(BuildVersionFileFullString)
+          /p:AssemblyVersion=$(BuildVersionAssemblyFullString)
+          /p:PublishSingleFile=false
+          /p:PublishTrimmed=false
+          /p:SelfContained=false
+
+    # TODO: Configure code signing for PowerShell module DLL
+    # Uncomment and configure the following task to sign the PowerShell module DLL
+    # - task: AzureSignTool@3
+    #   displayName: 'Sign PowerShell Module DLL ($(BuildPlatform))'
+    #   inputs:
+    #     ConnectedServiceName: 'YourAzureServiceConnection'
+    #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
+    #     CertificateName: '$(SigningCertificateName)'
+    #     SignedFilePath: |
+    #       $(Build.SourcesDirectory)\src\app-sdk\projections\powershell\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\WindowsMidiServices.dll
+    #     TimeStampServer: '$(SigningTimeStampServer)'
+    #     FileDigest: 'SHA256'
+    #     TimeStampDigest: 'SHA256'
+    #     Description: '$(SigningDescription) - PowerShell Module'
+
+    # TODO: Configure PowerShell script signing
+    # Uncomment and configure the following task to sign PowerShell scripts (.ps1, .psd1, .psm1)
+    # - task: PowerShell@2
+    #   displayName: 'Sign PowerShell Module Scripts ($(BuildPlatform))'
+    #   inputs:
+    #     targetType: 'inline'
+    #     script: |
+    #       # Sign PowerShell manifest and script files
+    #       $cert = Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object { $_.Subject -like "*YourCertSubject*" }
+    #       $filesToSign = Get-ChildItem "$(Build.SourcesDirectory)\src\app-sdk\projections\powershell\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)" -Include "*.ps1", "*.psd1", "*.psm1" -Recurse
+    #       foreach ($file in $filesToSign) {
+    #         Set-AuthenticodeSignature -FilePath $file.FullName -Certificate $cert -TimestampServer "$(SigningTimeStampServer)"
+    #         Write-Host "Signed: $($file.Name)"
+    #       }
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish PowerShell Module'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\src\app-sdk\projections\powershell\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
+        artifact: 'PowerShellModule-$(BuildPlatform)'
+
+- stage: BuildInstaller
+  displayName: 'Build Installer'
+  dependsOn:
+  - BuildAppSDK
+  - BuildToolsAndTests
+  - BuildUserApplications
+  jobs:
+  - job: CopySharedAssets
+    displayName: 'Copy Shared Assets'
+    steps:
+    - checkout: self
+
+    - task: PowerShell@2
+      displayName: 'Copy Design Assets to Staging'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $designSrc = "$(Build.SourcesDirectory)\design"
+          $assetsDest = "$(Build.SourcesDirectory)\build\staging\Assets"
+
+          New-Item -ItemType Directory -Force -Path "$assetsDest\Transports" | Out-Null
+          New-Item -ItemType Directory -Force -Path "$assetsDest\Endpoints" | Out-Null
+
+          # Copy transport icons
+          $transportIcons = @("APPPUB-small.svg", "BLE10-small.svg", "DIAG-small.svg", "KSA-small.svg", "KS-small.svg", "LOOP-small.svg", "NET2UDP-small.svg", "BLOOP-small.svg")
+          foreach ($icon in $transportIcons) {
+            Copy-Item "$designSrc\$icon" "$assetsDest\Transports\" -Force
+          }
+
+          # Copy endpoint icons
+          $endpointIcons = @("default-small.svg", "default-apppub-small.svg", "default-ble10-small.svg", "default-diag-small.svg", "default-ksa-small.svg", "default-ks-small.svg", "default-loop-small.svg", "default-bloop-small.svg", "default-net2udp-small.svg")
+          foreach ($icon in $endpointIcons) {
+            Copy-Item "$designSrc\$icon" "$assetsDest\Endpoints\" -Force
+          }
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Shared Assets'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\build\staging\Assets'
+        artifact: 'SharedAssets'
+
+  - job: BuildSDKInstaller
+    displayName: 'Build SDK Runtime Installer'
+    dependsOn: CopySharedAssets
+    strategy:
+      matrix:
+        x64:
+          BuildPlatform: 'x64'
+        Arm64:
+          BuildPlatform: 'Arm64'
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download All Artifacts'
+      inputs:
+        downloadType: 'specific'
+        downloadPath: '$(Build.SourcesDirectory)\build'
+
+    - task: PowerShell@2
+      displayName: 'Generate Bundle Info Include File'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $bundleInfoFile = "$(Build.SourcesDirectory)\build\staging\version\BundleInfo.wxi"
+          $content = @"
+<Include>
+  <?define SetupVersionName="$(VersionName) $(BuildPlatform)" ?>
+  <?define SetupVersionNumber="$(BuildVersionFullString)" ?>
+  <?define MidiSdkAndToolsVersion="$(BuildVersionFullString)" ?>
+</Include>
+"@
+          New-Item -ItemType Directory -Force -Path (Split-Path $bundleInfoFile) | Out-Null
+          Set-Content -Path $bundleInfoFile -Value $content
+
+    - task: MSBuild@1
+      displayName: 'Build Setup Bundle ($(BuildPlatform))'
+      inputs:
+        solution: '$(Build.SourcesDirectory)\src\app-sdk\sdk-runtime-installer\midi-services-app-sdk-runtime-setup.sln'
+        platform: '$(BuildPlatform)'
+        configuration: '$(BuildConfiguration)'
+        msbuildArchitecture: 'x64'
+        msbuildArguments: >
+          /t:Clean;Rebuild
+          /p:VersionPrefix=$(BuildVersionMajor).$(BuildVersionMinor).$(BuildVersionPatch)
+          /p:Version=$(BuildVersionFileFullString)
+          /p:FileVersion=$(BuildVersionFileFullString)
+          /m
+          /v:$(BuildVerbosity)
+
+    # TODO: Configure code signing for the installer executable
+    # WiX installers should be signed after they are built
+    # Uncomment and configure the following task to sign the installer
+    # - task: AzureSignTool@3
+    #   displayName: 'Sign Installer Executable ($(BuildPlatform))'
+    #   inputs:
+    #     ConnectedServiceName: 'YourAzureServiceConnection'
+    #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
+    #     CertificateName: '$(SigningCertificateName)'
+    #     SignedFilePath: |
+    #       $(Build.SourcesDirectory)\src\app-sdk\sdk-runtime-installer\main-bundle\bin\$(BuildPlatform)\$(BuildConfiguration)\WindowsMidiServicesSdkRuntimeSetup.exe
+    #     TimeStampServer: '$(SigningTimeStampServer)'
+    #     FileDigest: 'SHA256'
+    #     TimeStampDigest: 'SHA256'
+    #     Description: '$(SigningDescription) - Installer'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Installer'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\src\app-sdk\sdk-runtime-installer\main-bundle\bin\$(BuildPlatform)\$(BuildConfiguration)\WindowsMidiServicesSdkRuntimeSetup.exe'
+        artifact: 'Installer-$(BuildPlatform)'
+
+- stage: PublishRelease
+  displayName: 'Publish Release Artifacts'
+  dependsOn:
+  - BuildInstaller
+  condition: succeeded()
+  jobs:
+  - job: PublishArtifacts
+    displayName: 'Publish Release Artifacts'
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download All Build Artifacts'
+      inputs:
+        downloadType: 'specific'
+        downloadPath: '$(Build.ArtifactStagingDirectory)'
+
+    - task: PowerShell@2
+      displayName: 'Organize Release Files'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $timestamp = Get-Date -Format "yyyy-MM-dd HH-mm-ss"
+          $releaseName = "$(VersionName) ($timestamp)"
+          $releaseDir = "$(Build.ArtifactStagingDirectory)\Release\$releaseName"
+
+          New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
+
+          # Copy NuGet package
+          Get-ChildItem "$(Build.ArtifactStagingDirectory)\NuGetPackage\*.nupkg" | Copy-Item -Destination $releaseDir
+
+          # Rename and copy installers
+          Get-ChildItem "$(Build.ArtifactStagingDirectory)\Installer-*\*.exe" | ForEach-Object {
+            $platform = if ($_.Directory.Name -match "x64") { "x64" } else { "arm64" }
+            $newName = "Windows MIDI Services (SDK Runtime and Tools) $(BuildVersionFullString)-$platform.exe"
+            Copy-Item $_.FullName "$releaseDir\$newName"
+          }
+
+          Write-Host "Release artifacts organized in: $releaseDir"
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Release Build Artifacts'
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)\Release'
+        artifactName: 'Release'
+        publishLocation: 'Container'
+
+    - task: PowerShell@2
+      displayName: 'Display Build Summary'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "======================================"
+          Write-Host "Build Summary"
+          Write-Host "======================================"
+          Write-Host "Version: $(BuildVersionFullString)"
+          Write-Host "NuGet Package: $(NugetFullPackageIdWithVersion)"
+          Write-Host "Build Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+          Write-Host "======================================"
+          Write-Host ""
+          Write-Host "Built Artifacts:"
+          Write-Host "  - NuGet Package: $(NugetFullPackageIdWithVersion).nupkg"
+          Write-Host "  - SDK Runtime Installer (x64)"
+          Write-Host "  - SDK Runtime Installer (Arm64)"
+          Write-Host "  - Console App (x64, Arm64)"
+          Write-Host "  - Settings App (x64)"
+          Write-Host "  - PowerShell Module (x64, Arm64)"
+          Write-Host "======================================"
