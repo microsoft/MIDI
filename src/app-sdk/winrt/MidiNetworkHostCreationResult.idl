@@ -9,16 +9,22 @@
 #include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
+import "MidiNetworkHostCreationResultErrorCodeEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiNetworkHostCreationResult
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkHostCreationResult")]
+    runtimeclass MidiNetworkHostCreationResult
     {
-        //Guid HostId;
+        String HostId{ get; };
 
-		Boolean Success;
-        String ErrorInformation;
+		Boolean Success{ get; };
+
+        MidiNetworkHostCreationResultErrorCode ErrorCode{ get; };
+
+        String ErrorInformation{ get; };
 
 
     };

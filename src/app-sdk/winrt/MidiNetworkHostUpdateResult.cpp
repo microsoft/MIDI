@@ -6,19 +6,12 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "midi_sdk_idl_defs.h"
+#include "pch.h"
+#include "MidiNetworkHostUpdateResult.h"
+#include "Endpoints.Network.MidiNetworkHostUpdateResult.g.cpp"
 
-import "MidiApiContracts.idl";
 
-namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    [experimental]
-    struct MidiNetworkClientConnectionResult
-    {
-        Boolean Success;
-        String ErrorInformation;
 
-        String EndpointDeviceId;
-    };
 }
-

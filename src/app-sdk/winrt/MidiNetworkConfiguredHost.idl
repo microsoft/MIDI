@@ -16,7 +16,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     [contract(MidiEndpointsNetworkApiContract, 1)]
     struct MidiNetworkConfiguredHost
     {
-        String Id;  // internal id we use to match up in config file
+        String HostId;  // internal id we use to match up in config file
 
         Boolean IsEnabled;                  // true if this is allows to connect. Mostly for pre-configured connections
         Boolean HasStarted;                 // true if this has started

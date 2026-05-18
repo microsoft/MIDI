@@ -51,7 +51,12 @@ public:
 
     HRESULT Shutdown();
 
+
+    uint64_t GetCountNetworkPacketsSent() { return m_countNetworkPacketsSent; }
+
 private:
+    uint64_t m_countNetworkPacketsSent{ 0 };
+
     inline std::string ConvertWStringToUTF8(_In_ std::wstring s, _In_ size_t maxByteCount)
     {
         // this is deprecated, and removed in C++ 23, but there's currently no replacement

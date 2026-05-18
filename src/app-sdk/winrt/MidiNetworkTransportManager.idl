@@ -17,8 +17,10 @@ import "MidiNetworkHostRemovalConfig.idl";
 import "MidiNetworkHostUpdateResult.idl";
 
 
-import "MidiNetworkClientConnectionResult.idl";
+import "MidiNetworkClientConnectResult.idl";
 import "MidiNetworkClientConnectConfig.idl";
+
+import "MidiNetworkClientDisconnectResult.idl";
 import "MidiNetworkClientDisconnectConfig.idl";
 
 import "MidiNetworkAdvertisedHost.idl";
@@ -46,16 +48,15 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         // keeps the host entry in memory, but closes all connections
         // stops advertising, and refuses any new connections
         static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResult> StopNetworkHostAsync(String hostId);
-
         static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResult> StartNetworkHostAsync(String hostId);
 
 
         // Sends new client info to the service
-        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectionResult> ConnectNetworkClientAsync(
+        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectResult> ConnectNetworkClientAsync(
             MidiNetworkClientConnectConfig connectConfig);
 
         //// Closes the connection and removes the entry in the service
-        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectionResult> DisconnectNetworkClientAsync(
+        static Windows.Foundation.IAsyncOperation<MidiNetworkClientDisconnectResult> DisconnectNetworkClientAsync(
             MidiNetworkClientDisconnectConfig disconnectConfig);
 
 

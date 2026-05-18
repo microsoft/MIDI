@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.WinUI.Collections;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
+using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
 using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
 using System;
@@ -38,7 +39,13 @@ namespace Microsoft.Midi.Settings.ViewModels
         private bool isConnected;
 
         [ObservableProperty]
+        private bool isSessionActive;
+
+        [ObservableProperty]
         private bool isDirectConnect;
+
+        [ObservableProperty]
+        private MidiEndpointWrapper? endpointDeviceInformationWrapper;
 
         [ObservableProperty]
         private string? remoteAddress;
@@ -49,14 +56,28 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private string stringifiedIpAddresses;
 
+        [ObservableProperty]
+        private double currentLatencyMilliseconds;
+
+        [ObservableProperty]
+        private UInt64 totalCountNetworkPacketsSent;
+
+        [ObservableProperty]
+        private UInt64 totalCountNetworkPacketsReceived;
+
 
         public ICommand ConnectCommand { get; private set; }
         public ICommand DisconnectCommand { get; private set; }
 
         private readonly ILoggingService _loggingService;
-        public MidiNetworkRemoteHostEntry(ILoggingService loggingService)
+        private readonly IMessageBoxService _messageBoxService;
+        public MidiNetworkRemoteHostEntry(
+            ILoggingService loggingService,
+            IMessageBoxService messageBoxService)
         {
             _loggingService = loggingService;
+            _messageBoxService = messageBoxService;
+
             ConfigEntryId = Guid.NewGuid().ToString("B");
 
             ConnectCommand = new RelayCommand(() =>
@@ -78,7 +99,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     config.MatchCriteria.DeviceId = AdvertisedHost.DeviceId;
                     config.MatchCriteria.DirectHostNameOrIPAddress = AdvertisedHost.IPAddresses[0];
                     config.MatchCriteria.DirectPort = AdvertisedHost.Port;
-                    config.UmpEndpointName = AdvertisedHost.UmpEndpointName;
+                    //config.UmpEndpointName = AdvertisedHost.UmpEndpointName;
 
                     var result = MidiNetworkTransportManager.ConnectNetworkClientAsync(config).GetAwaiter().GetResult();
 
@@ -88,20 +109,20 @@ namespace Microsoft.Midi.Settings.ViewModels
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine("Unable to connect to remote host");
-                        System.Diagnostics.Debug.WriteLine(result.ErrorInformation);
+                        _messageBoxService.ShowError($"Unable to connect to remote host. {result.ErrorInformation}");
+
                         _loggingService.LogError("Unable to connect to remote host " + result.ErrorInformation);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _loggingService.LogError("Unable to connect to remote host", ex);
-                   // _messageBoxService
-                }
-            })
-            {
+                    _messageBoxService.ShowError($"Unable to connect to remote host. {ex.ToString()}");
 
-            };
+                    _loggingService.LogError($"Failed to start host. {ex.ToString()}");
+
+                }
+            });
+
             DisconnectCommand = new RelayCommand(() =>
             {
                 _loggingService.LogInfo($"Enter");
@@ -117,8 +138,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("Unable to disconnect to remote host");
-                    System.Diagnostics.Debug.WriteLine(result.ErrorInformation);
+                    _messageBoxService.ShowError($"Unable to disconnect from remote host. {result.ErrorInformation}");
 
                     _loggingService.LogError("Unable to disconnect from remote host " + result.ErrorInformation);
                 }
@@ -146,13 +166,13 @@ namespace Microsoft.Midi.Settings.ViewModels
             return "Set up a Network MIDI 2.0 host on this PC, and also connect to external network MIDI 2.0 hosts.";
         }
 
-        private readonly IMidiConfigFileService _configFileService;
         private MidiNetworkAdvertisedHostWatcher _watcher;
 
         public ObservableCollection<MidiNetworkRemoteHostEntry> RemoteHostEntries = [];
 
         [ObservableProperty]
         private AdvancedCollectionView remoteHostEntriesSorted;
+
 
         public ObservableCollection<MidiNetworkRemoteHostEntry> LocalHostEntries = [];
 
@@ -215,16 +235,28 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ObservableCollection<MidiNetworkConfiguredHostWrapper> ConfiguredHosts { get; } = [];
 
-        public ObservableCollection<MidiNetworkConfiguredClient> ConfiguredClients { get; } = [];
+        public ObservableCollection<MidiNetworkConfiguredClientWrapper> ConfiguredClients { get; } = [];
 
         private readonly ILoggingService _loggingService;
+        private readonly IMessageBoxService _messageBoxService;
+        private readonly IMidiTransportInfoService _transportInfoService;
+        private readonly IMidiConfigFileService _configFileService;
+        private readonly IMidiEndpointEnumerationService _enumerationService;
+
         public NetworkMidi2SetupViewModel(
             IMidiTransportInfoService transportInfoService, 
             IMidiConfigFileService configFileService,
-            ILoggingService loggingService)
+            ILoggingService loggingService,
+            IMessageBoxService messageBoxService,
+            IMidiEndpointEnumerationService enumerationService)
         {
             _loggingService = loggingService;
             _configFileService = configFileService;
+            _messageBoxService = messageBoxService;
+            _transportInfoService = transportInfoService;
+            _enumerationService = enumerationService;
+    
+            DispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             if (transportInfoService != null)
             {
@@ -241,6 +273,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             RemoteHostEntriesSorted = new AdvancedCollectionView(RemoteHostEntries);
             RemoteHostEntriesSorted.SortDescriptions.Add(new SortDescription("Name", SortDirection.Ascending));
 
+            LoadConfiguredClients();
+            StartClientRefreshTimer();
 
             _watcher = MidiNetworkAdvertisedHostWatcher.Create();
 
@@ -252,7 +286,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
                 {
-                    var entry = new MidiNetworkRemoteHostEntry(_loggingService);
+                    var entry = new MidiNetworkRemoteHostEntry(_loggingService, _messageBoxService);
                     entry.Name = e.AddedHost.UmpEndpointName;
                     entry.AdvertisedHost = e.AddedHost;
                     entry.IsDirectConnect = false;
@@ -288,15 +322,12 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 _loggingService.LogInfo($"Enter");
 
-                LoadConfiguredClients();
             };
-
 
             _watcher.Removed += (s, e) =>
             {
                 // todo: remove host from collection
             };
-
         }
 
         private void _watcher_EnumerationCompleted(MidiNetworkAdvertisedHostWatcher sender, object args)
@@ -473,11 +504,53 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             foreach (var host in hosts)
             {
-                ConfiguredHosts.Add(new MidiNetworkConfiguredHostWrapper(host, _configFileService, _loggingService));
+                ConfiguredHosts.Add(new MidiNetworkConfiguredHostWrapper(host, _configFileService, _loggingService, _messageBoxService));
             }
 
         }
 
+
+        private void FoldInRemoteHostConnection(MidiNetworkRemoteHostEntry? entry, MidiNetworkConfiguredClient client)
+        {
+            _loggingService.LogInfo($"Enter");
+
+            if (entry == null)
+            {
+                return;
+            }
+
+            entry.IsConnected = true;
+            entry.IsSessionActive = client.IsSessionActive;
+
+            if (client.CurrentLatencyTicks > 0)
+            {
+                entry.CurrentLatencyMilliseconds = MidiClock.ConvertTimestampTicksToMilliseconds(client.CurrentLatencyTicks);
+            }
+
+            entry.TotalCountNetworkPacketsReceived = client.TotalCountNetworkPacketsReceived;
+            entry.TotalCountNetworkPacketsSent = client.TotalCountNetworkPacketsSent;
+
+            // if there's no more associated endpoint, then clear it out
+            if (string.IsNullOrEmpty(client.EndpointDeviceId))
+            {
+                entry.EndpointDeviceInformationWrapper = null;
+            }
+            else  if (entry.EndpointDeviceInformationWrapper == null)
+            {
+                // find the endpoint
+
+                var endpoint = _enumerationService.GetEndpointById(client.EndpointDeviceId);
+
+                if (endpoint != null)
+                {
+                    entry.EndpointDeviceInformationWrapper = endpoint;
+                }
+                else
+                {
+                    entry.EndpointDeviceInformationWrapper = null;
+                }
+            }
+        }
 
         private void FoldInRemoteHostConnection(MidiNetworkRemoteHostEntry? entry)
         {
@@ -491,14 +564,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             foreach (var client in ConfiguredClients)
             {
-                if (!string.IsNullOrEmpty(client.ConnectedRemoteAddress) &&
-                    !string.IsNullOrEmpty(client.ConnectedRemotePort) &&
-                    entry.RemoteAddress == client.ConnectedRemoteAddress &&
-                    entry.RemotePort == client.ConnectedRemotePort)
+                if (!string.IsNullOrEmpty(client.Client.ConnectedRemoteAddress) &&
+                    !string.IsNullOrEmpty(client.Client.ConnectedRemotePort) &&
+                    entry.RemoteAddress == client.Client.ConnectedRemoteAddress &&
+                    entry.RemotePort == client.Client.ConnectedRemotePort)
                 {
-                    entry.IsConnected = true;
-                    // TODO: Other properties
-
+                    FoldInRemoteHostConnection(entry, client.Client);
                     break;
                 }
             }
@@ -517,29 +588,119 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             foreach (var client in clients)
             {
-                ConfiguredClients.Add(client);
+                var wrapper = new MidiNetworkConfiguredClientWrapper(client, _configFileService, _loggingService, _messageBoxService);
+
+                ConfiguredClients.Add(wrapper);
 
                 // see if there's a remote host entry for this. If so, update it
                 var entry = RemoteHostEntries.Where(e => (
                     e.RemoteAddress == client.ConnectedRemoteAddress &&
                     e.RemotePort == client.ConnectedRemotePort)).FirstOrDefault();
 
-                FoldInRemoteHostConnection(entry);
 
+                if (entry != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"client.EndpointDeviceId: {client.EndpointDeviceId}");
+                    System.Diagnostics.Debug.WriteLine($"client.IsSessionActive:  {client.IsSessionActive}");
+                    System.Diagnostics.Debug.WriteLine("");
+
+                    FoldInRemoteHostConnection(entry, wrapper.Client);
+                }
+            }
+        }
+
+        private System.Timers.Timer _clientRefreshTimer;
+
+        private void StartClientRefreshTimer()
+        {
+            try
+            {
+                UpdatePerformanceData();
+
+                _clientRefreshTimer = new System.Timers.Timer(1000);
+                _clientRefreshTimer.Elapsed += _clientRefreshTimer_Elapsed;
+                _clientRefreshTimer.AutoReset = true;
+
+                _clientRefreshTimer.Enabled = true;
+
+                _clientRefreshTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError("Failed to start client refresh timer.", ex);
+            }
+        }
+
+        private void StopClientRefreshtimer()
+        {
+            if (_clientRefreshTimer != null)
+            {
+                _clientRefreshTimer.Elapsed -= _clientRefreshTimer_Elapsed;
+                _clientRefreshTimer.Stop();
+            }
+        }
+
+        private void UpdatePerformanceData()
+        {
+            _loggingService?.LogInfo($"Enter");
+
+            // TODO: Change this to just get the performance data
+            var clients = MidiNetworkTransportManager.GetConfiguredClients();
+
+            foreach (var client in clients)
+            {
+                // see if we have a configured client entry for this. If so, update the performance information
+
+                // var existingClient = ConfiguredClients.Where(c => c.Client.Id == client.Id).FirstOrDefault();
+
+                // see if there's a remote host entry for this. If so, update it
+                var entry = RemoteHostEntries.Where(e => (
+                    e.RemoteAddress == client.ConnectedRemoteAddress &&
+                    e.RemotePort == client.ConnectedRemotePort)).FirstOrDefault();
+
+                if (entry != null)
+                {
+                    DispatcherQueue?.TryEnqueue(() =>
+                    {
+                        FoldInRemoteHostConnection(entry, client);
+                    });
+
+                }
+            }
+
+            // TODO: Should we also check for connectivity here?
+            // that requires coming at this from a different angle.
+
+            foreach (var remoteHost in  RemoteHostEntries)
+            {
+                var client = ConfiguredClients.Where(c => c.Client.ConnectedRemoteAddress == remoteHost.RemoteAddress &&
+                                              c.Client.ConnectedRemotePort == remoteHost.RemotePort).FirstOrDefault();
+
+                if (client == null)
+                {
+                    remoteHost.IsSessionActive = false;
+                    remoteHost.IsConnected = false;
+                }
             }
 
         }
 
+        private void _clientRefreshTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            UpdatePerformanceData();
+        }
 
         public void OnNavigatedTo(object parameter)
         {
             LoadConfiguredHosts();
             LoadConfiguredClients();
+
+        //  StartClientRefreshTimer();
         }
 
         public void OnNavigatedFrom()
         {
-            
+            StopClientRefreshtimer();
         }
     }
 }

@@ -297,6 +297,11 @@
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
     <ClInclude Include="date_util.h" />
+    <ClInclude Include="MidiNetworkClientConnectResult.h" />
+    <ClInclude Include="MidiNetworkClientDisconnectResult.h" />
+    <ClInclude Include="MidiNetworkHostCreationResult.h" />
+    <ClInclude Include="MidiNetworkHostRemovalResult.h" />
+    <ClInclude Include="MidiNetworkHostUpdateResult.h" />
     <ClInclude Include="MidiBasicLoopbackEndpointCreationResult.h" />
     <ClInclude Include="MidiLoopbackEndpointCreationResult.h" />
     <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h" />
@@ -543,6 +548,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiNetworkClientConnectResult.cpp" />
+    <ClCompile Include="MidiNetworkClientDisconnectResult.cpp" />
+    <ClCompile Include="MidiNetworkHostCreationResult.cpp" />
+    <ClCompile Include="MidiNetworkHostRemovalResult.cpp" />
+    <ClCompile Include="MidiNetworkHostUpdateResult.cpp" />
     <ClCompile Include="MidiBasicLoopbackEndpointCreationResult.cpp" />
     <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp" />
     <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp" />
@@ -860,14 +870,18 @@
     <Midl Include="MidiNetworkAdvertisedHostWatcher.idl" />
     <Midl Include="MidiNetworkAuthenticationTypeEnum.idl" />
     <Midl Include="MidiNetworkClientConnectConfig.idl" />
-    <Midl Include="MidiNetworkClientConnectionResult.idl" />
+    <Midl Include="MidiNetworkClientConnectResultErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkClientConnectResult.idl" />
     <Midl Include="MidiNetworkClientDisconnectConfig.idl" />
     <Midl Include="MidiNetworkClientDisconnectResult.idl" />
+    <Midl Include="MidiNetworkClientDisconnectResultErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkClientMatchCriteria.idl" />
     <Midl Include="MidiNetworkConfiguredClient.idl" />
     <Midl Include="MidiNetworkConfiguredHost.idl" />
+    <Midl Include="MidiNetworkHostCreationResultErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkHostRemovalResultErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostUpdateResult.idl" />
+    <Midl Include="MidiNetworkHostUpdateResultErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkTransportManager.idl" />
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
     <Midl Include="MidiNetworkHostCreationConfig.idl" />

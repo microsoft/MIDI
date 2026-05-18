@@ -35,6 +35,8 @@
             <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
             <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
 
+            <helpers:UIntDisplayConverter x:Key="UIntDisplayConverter" />
+
             <helpers:Midi1PortNamingApproachConverter x:Key="Midi1PortNamingApproachConverter" />
 
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />

@@ -258,7 +258,6 @@ MidiNetworkConnection::StartOutboundMidiMessageProcessingThread()
     m_newMessagesInQueueEvent.ResetEvent();
 
     m_outboundProcessingThread = std::jthread (std::bind_front(&MidiNetworkConnection::OutboundProcessingThreadWorker, this));
- //   m_outboundProcessingThread.detach();
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -286,7 +285,6 @@ MidiNetworkConnection::StartConnectionWatchdogThread()
     );
 
     m_connectionWatcherThread = std::jthread(std::bind_front(&MidiNetworkConnection::ConnectionWatcherThreadWorker, this));
-    m_connectionWatcherThread.detach();
 
     return S_OK;
 }
@@ -929,7 +927,12 @@ MidiNetworkConnection::HandleIncomingPingReply(uint32_t const pingId)
             pingEntry.PingReceiveTimestamp = timestamp;
             pingEntry.Received = true;
 
-            // todo: calculate latency and update the latency properties used in the scheduler
+            // calculate latency
+            AddLatencyToAverageLatencyTicks(pingEntry.PingReceiveTimestamp - pingEntry.PingSendTimestamp);
+
+            // we may want to do a running average here instead of just the last.
+             
+            // todo: update the latency properties used in the scheduler
 
             break;
         }
@@ -1021,6 +1024,7 @@ MidiNetworkConnection::ProcessIncomingMessage(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    m_totalNetworkPacketsReceived++;
 
     // we've received a new message, so reset our disconnect event
     // this also sets the timestamp of the incoming

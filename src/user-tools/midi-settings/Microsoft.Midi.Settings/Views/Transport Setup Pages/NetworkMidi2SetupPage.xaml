@@ -53,11 +53,11 @@
                                     </controls:SettingsCard.HeaderIcon>
                                     
                                     <controls:SettingsCard.Header>
-                                        <TextBlock TextWrapping="NoWrap">
-                                            <Run Text="{x:Bind Name}" FontWeight="Bold" Foreground="{StaticResource AccentFillColorDefaultBrush}" />
-                                            <Run Text="on" Foreground="{StaticResource AccentFillColorDisabledBrush}" />
-                                            <Run Text="{x:Bind AdvertisedHost.HostName}" />
-                                        </TextBlock>
+                                        <StackPanel Orientation="Vertical">
+                                            <TextBlock Text="{x:Bind Name}" FontWeight="Bold" Foreground="{StaticResource AccentFillColorDefaultBrush}" />
+                                            <TextBlock Text="{x:Bind AdvertisedHost.HostName}" Style="{StaticResource SmallPlainPropertyValue}" IsTextSelectionEnabled="True"/>
+                                            <TextBlock Text="{x:Bind StringifiedIpAddresses}" Style="{StaticResource SmallPlainPropertyValue}" IsTextSelectionEnabled="True"/>
+                                        </StackPanel>
                                     </controls:SettingsCard.Header>
                                     
                                     <Grid>
@@ -66,22 +66,66 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
-                                        <Grid Grid.Column="0">
+                                        <Grid Grid.Column="0"
+                                              VerticalAlignment="Top">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="150" />
-                                                <ColumnDefinition Width="400" />
+                                                <ColumnDefinition Width="200" />
+                                                <ColumnDefinition Width="350" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="IP Addresses" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind StringifiedIpAddresses}" Style="{StaticResource SmallEmphasizedPropertyValue}"  IsTextSelectionEnabled="True"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind AdvertisedHost.ProductInstanceId}" Style="{StaticResource SmallEmphasizedPropertyValue}" IsTextSelectionEnabled="True" />
 
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind AdvertisedHost.ProductInstanceId}" Style="{StaticResource SmallEmphasizedPropertyValue}" IsTextSelectionEnabled="True" />
+                                            <TextBlock Grid.Row="1" Grid.Column="0" 
+                                                       Text="Round-Trip Latency" 
+                                                       Visibility="{x:Bind IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}"                                                       
+                                                       Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="1" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" 
+                                                       IsTextSelectionEnabled="False"
+                                                       Visibility="{x:Bind IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <Run Text="{x:Bind CurrentLatencyMilliseconds, Mode=OneWay}" />
+                                                <Run Text=" milliseconds" />
+                                            </TextBlock>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" 
+                                                       Text="Network Packets Sent/Received" 
+                                                       Visibility="{x:Bind IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}"                                                                                                             
+                                                       Style="{StaticResource SmallPropertyLabel}" />
+
+
+                                            <TextBlock Grid.Row="2" Grid.Column="1"
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" 
+                                                       IsTextSelectionEnabled="False"
+                                                       Visibility="{x:Bind IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <Run Text="{x:Bind TotalCountNetworkPacketsSent, Mode=OneWay, Converter={StaticResource UIntDisplayConverter}}" />
+                                                <Run Text=" / " />  
+                                                <Run Text="{x:Bind TotalCountNetworkPacketsReceived, Mode=OneWay, Converter={StaticResource UIntDisplayConverter}}" />
+                                            </TextBlock>
+
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Session Endpoint" 
+                                                       Style="{StaticResource SmallPropertyLabel}" />
+
+                                            <HyperlinkButton Grid.Row="3" Grid.Column="1"
+                                                             Content="{x:Bind EndpointDeviceInformationWrapper.Name, Mode=OneWay}"
+                                                             Style="{StaticResource SmallEmphasizedPropertyValue}" 
+                                                             Visibility="{x:Bind IsConnected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                             Command="{x:Bind EndpointDeviceInformationWrapper.ViewDeviceDetailsCommand, Mode=OneWay}"/>
+
+                                            <Grid Grid.Row="3" Grid.Column="1"
+                                                  Visibility="{x:Bind IsConnected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <TextBlock  
+                                                       Text="Pending (you may need to accept the invite on the remote)" 
+                                                       Visibility="{x:Bind IsSessionActive, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
+                                                       Style="{StaticResource SmallPropertyLabel}" />
+                                            </Grid>
+                                           
                                         </Grid>
 
                                         <StackPanel Orientation="Horizontal" Grid.Column="1" Width="150">

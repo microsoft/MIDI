@@ -9,15 +9,21 @@
 #include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
+import "MidiNetworkClientDisconnectResultErrorCodeEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiNetworkClientDisconnectResult
+    runtimeclass MidiNetworkClientDisconnectResult
     {
-        Boolean Success;
-        String ErrorInformation;
+        Guid ClientId{ get; };
 
-    };
+        Boolean Success{ get; };
+
+        MidiNetworkClientDisconnectResultErrorCode ErrorCode{ get; };
+
+        String ErrorInformation{ get; };
+
+    }
 }
 
