@@ -29,9 +29,16 @@ public class MidiDefaultsService : IMidiDefaultsService
         return MidiConfigConstants.DefaultConfigurationFileName;
     }
 
+    private readonly ILoggingService _loggingService;
+    public MidiDefaultsService(ILoggingService loggingService)
+    {
+        _loggingService = loggingService;
+    }
 
     public MidiLoopbackEndpointCreationConfig GetDefaultLoopbackCreationConfig()
     {
+        _loggingService.LogInfo($"Enter");
+
         var endpointA = new MidiLoopbackEndpointDefinition();
         var endpointB = new MidiLoopbackEndpointDefinition();
 
@@ -61,6 +68,8 @@ public class MidiDefaultsService : IMidiDefaultsService
 
     public MidiBasicLoopbackEndpointCreationConfig GetDefaultBasicLoopbackCreationConfig()
     {
+        _loggingService.LogInfo($"Enter");
+
         var endpoint = new MidiBasicLoopbackEndpointDefinition();
 
         endpoint.Name = "DefaultBasicLoopbackName".GetLocalized();
@@ -81,6 +90,8 @@ public class MidiDefaultsService : IMidiDefaultsService
 
     public bool DoesDefaultLoopbackAlreadyExist()
     {
+        _loggingService.LogInfo($"Enter");
+
         if (Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.DoesLoopbackAExist(DefaultLoopbackAUniqueId))
         {
             return true;
@@ -93,6 +104,8 @@ public class MidiDefaultsService : IMidiDefaultsService
 
     public bool DoesDefaultBasicLoopbackAlreadyExist()
     {
+        _loggingService.LogInfo($"Enter");
+
         return Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.DoesLoopbackExist(DefaultBasicLoopbackUniqueId);
     }
 

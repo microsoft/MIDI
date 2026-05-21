@@ -377,10 +377,49 @@
                 </NavigationViewItem>
                 
 
-                <NavigationViewItem x:Name="SectionBLE10" Visibility="Collapsed" x:Uid="Shell_EndpointsBle10" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsBle10ViewModel">
+                <NavigationViewItem x:Name="SectionBLE10" 
+                                    Visibility="Collapsed" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsBle10ViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe702;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+
+                <NavigationViewItem x:Name="SectionBluetoothBridge" 
+                                    Visibility="{x:Bind ViewModel.ShowBluetoothBridgeInLeftNav, Mode=OneWay}"  
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.BluetoothBridgeViewModel">
+                    <!--<NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-NetworkMidi.svg" />
+                    </NavigationViewItem.Icon>-->
+
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_BluetoothBridge" />
+
+                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+
+                <NavigationViewItem x:Name="SectionEndpointBridge" 
+                                    Visibility="{x:Bind ViewModel.ShowEndpointBridgeInLeftNav, Mode=OneWay}"  
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointBridgeViewModel">
+                    <!--<NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-NetworkMidi.svg" />
+                    </NavigationViewItem.Icon>-->
+
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_EndpointBridge" />
+
+                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
                 </NavigationViewItem>
 
 

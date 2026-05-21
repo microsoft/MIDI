@@ -35,10 +35,10 @@
                    Directory="SDK_INSTALLFOLDER"
                    Guid="8016a59d-d844-4984-93e8-fa53f279abba">
 
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" SelfRegCost="1"/>
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.winmd" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pdb" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" PatchWholeFile="yes"  SelfRegCost="1"/>
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.winmd" Vital="true" PatchWholeFile="yes"  />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pdb" Vital="true" PatchWholeFile="yes"  />
 
             <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\WindowsMidiServicesClientInitialization.dll" Vital="true" SelfRegCost="1"/>-->
             <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\WindowsMidiServicesClientInitialization.tlb" Vital="true"/>-->
@@ -51,7 +51,7 @@
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="a10cb6cb-571a-462e-9df7-f388460da50f"  >
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe" Vital="true" PatchWholeFile="yes"  />
 
             <!-- Add folder to path -->
             <Environment Id="AddMidiDiagUtilityToSystemPath"
@@ -70,7 +70,7 @@
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="704c5cee-8af7-4826-a9b8-d45d14d24684"  >
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiksinfo.exe" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiksinfo.exe" Vital="true" PatchWholeFile="yes"  />
 
             <!-- Add folder to path -->
             <Environment Id="AddMidiUsbUtilityToSystemPath"
@@ -84,7 +84,7 @@
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="246488ea-a9de-45bc-82a0-a01a61c434ff"  >
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midimdnsinfo.exe" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midimdnsinfo.exe" Vital="true" PatchWholeFile="yes"  />
 
             <!-- Add folder to path -->
             <Environment Id="AddMidiMdnsUtilityToSystemPath"
@@ -98,7 +98,7 @@
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="7f65432f-5f95-4e8d-9e1b-c25405868244"  >
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1monitor.exe" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1monitor.exe" Vital="true" PatchWholeFile="yes"  />
 
             <!-- Add folder to path -->
             <Environment Id="AddMidi1MonitorUtilityToSystemPath"
@@ -112,7 +112,7 @@
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="318aa3ff-3f4c-41c6-bce7-8e343b7b2ae4"  >
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1enum.exe" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1enum.exe" Vital="true" PatchWholeFile="yes"  />
 
             <!-- Add folder to path -->
             <Environment Id="AddMidi1EnumUtilityToSystemPath"
@@ -126,7 +126,7 @@
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="fbafecf6-5bf1-4ee5-bee6-fdec96e0bb04"  >
-          <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midifixreg.exe" Vital="true" />
+          <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midifixreg.exe" Vital="true" PatchWholeFile="yes"  />
 
           <!-- Add folder to path -->
           <Environment Id="AddMidiFixRegUtilityToSystemPath"
@@ -145,7 +145,7 @@
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="49384aeb-c8ad-4ad1-8744-b83ad8d51fb1"  >
-          <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midicheckservice.exe" Vital="true" />
+          <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midicheckservice.exe" Vital="true" PatchWholeFile="yes"  />
 
           <!-- Add folder to path -->
           <Environment Id="AddMidiCheckServiceToSystemPath"
@@ -181,10 +181,10 @@
                Directory="COLLECTMIDILOGS_INSTALLFOLDER"
                Guid="0686741b-2a74-4c32-9431-942bd23adc33">
 
-        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\CollectMidiLogs.cmd" Vital="true"/>
-        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\CollectMidiLogs.ps1" Vital="true" />
-        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\providers.wprp" Vital="true" />
-        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\tttraceall.psm1" Vital="true" />
+        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\CollectMidiLogs.cmd" Vital="true" PatchWholeFile="yes" />
+        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\CollectMidiLogs.ps1" Vital="true" PatchWholeFile="yes"  />
+        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\providers.wprp" Vital="true" PatchWholeFile="yes"  />
+        <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\tttraceall.psm1" Vital="true" PatchWholeFile="yes"  />
 
 
         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">

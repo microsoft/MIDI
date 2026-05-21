@@ -23,7 +23,15 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
     private const string MidiFixRegPathRegValue = "MidiFixReg";
     private const string CollectMidiLogsPathRegValue = "CollectMidiLogs";
 
-    private static string GetMidiDiagPath()
+
+
+    private readonly ILoggingService _loggingService;
+    public MidiDiagnosticsService(ILoggingService loggingService)
+    {
+        _loggingService = loggingService;
+    }
+
+    private string GetMidiDiagPath()
     {
         try
         {
@@ -51,14 +59,16 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception getting MIDI Diagnostics tool Path", ex);
+            _loggingService.LogError($"Exception getting MIDI Diagnostics tool Path", ex);
 
             return string.Empty;
         }
     }
 
-    private static string GetCollectMidiLogsPath()
+    private string GetCollectMidiLogsPath()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Collect MIDI Logs\CollectMidiLogs.cmd";
@@ -85,14 +95,16 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception getting CollectMIDILogs Path", ex);
+            _loggingService.LogError($"Exception getting CollectMIDILogs Path", ex);
 
             return string.Empty;
         }
     }
 
-    private static string GetMidiFixRegPath()
+    private string GetMidiFixRegPath()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Tools\midifixreg.exe";
@@ -119,7 +131,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception getting MIDI Registry Fixer tool Path", ex);
+            _loggingService.LogError($"Exception getting MIDI Registry Fixer tool Path", ex);
 
             return string.Empty;
         }
@@ -127,18 +139,20 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsCollectMidiLogsPresent()
     {
+        _loggingService.LogInfo($"Enter");
+
         var path = GetCollectMidiLogsPath();
 
         if (string.IsNullOrEmpty(path))
         {
-            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs path is blank.");
+            _loggingService.LogError($"Collect MIDI Logs path is blank.");
 
             return false;
         }
 
         if (!File.Exists(path))
         {
-            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs script does not exist in path '{path}' ");
+            _loggingService.LogError($"Collect MIDI Logs script does not exist in path '{path}' ");
 
             return false;
         }
@@ -148,18 +162,20 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsMidiDiagPresent()
     {
+        _loggingService.LogInfo($"Enter");
+
         var path = GetMidiDiagPath();
 
         if (string.IsNullOrEmpty(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Diagnostics tool path is blank.");
+            _loggingService.LogError($"MIDI Diagnostics tool path is blank.");
 
             return false;
         }
 
         if (!File.Exists(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Diagnostics tool does not exist in path '{path}' ");
+            _loggingService.LogError($"MIDI Diagnostics tool does not exist in path '{path}' ");
 
             return false;
         }
@@ -170,18 +186,20 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool IsMidiFixRegPresent()
     {
+        _loggingService.LogInfo($"Enter");
+
         var path = GetMidiFixRegPath();
 
         if (string.IsNullOrEmpty(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Registry Fixer tool path is blank.");
+            _loggingService.LogError($"MIDI Registry Fixer tool path is blank.");
 
             return false;
         }
 
         if (!File.Exists(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Registry Fixer tool does not exist in path '{path}' ");
+            _loggingService.LogError($"MIDI Registry Fixer tool does not exist in path '{path}' ");
 
             return false;
         }
@@ -191,6 +209,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool CaptureMidiDiagOutputToNotepad()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             if (IsMidiDiagPresent())
@@ -224,7 +244,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
             }
             else
             {
-                App.GetService<ILoggingService>().LogError("Unable to find mididiag utility.");
+                _loggingService.LogError("Unable to find mididiag utility.");
 
                 return false;
             }
@@ -232,7 +252,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error capturing mididiag.exe output and opening in notepad.", ex);
+            _loggingService.LogError("Error capturing mididiag.exe output and opening in notepad.", ex);
 
             return false;
         }
@@ -248,6 +268,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool MidiFixReg()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             if (IsMidiFixRegPresent())
@@ -271,19 +293,19 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
                     }
                     else
                     {
-                        App.GetService<ILoggingService>().LogError($"Registry fix failed. midifixreg returned {consoleProcess.ExitCode}");
+                        _loggingService.LogError($"Registry fix failed. midifixreg returned {consoleProcess.ExitCode}");
                     }
                 }
             }
             else
             {
-                App.GetService<ILoggingService>().LogError("Unable to find midifixreg utility.");
+                _loggingService.LogError("Unable to find midifixreg utility.");
             }
 
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error fixing registry entries.", ex);
+            _loggingService.LogError("Error fixing registry entries.", ex);
         }
 
         return false;
@@ -293,6 +315,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public bool RestoreInBoxComponentRegistrations()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
 
@@ -300,7 +324,7 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error restoring in-box component registrations.", ex);
+            _loggingService.LogError("Error restoring in-box component registrations.", ex);
         }
 
         return false;
@@ -309,6 +333,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public string CaptureMidiLogsToFile()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             if (IsCollectMidiLogsPresent())
@@ -341,24 +367,24 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
                         }
                         else
                         {
-                            App.GetService<ILoggingService>().LogError($"Collect MIDI Logs returned error {consoleProcess.ExitCode}");
+                            _loggingService.LogError($"Collect MIDI Logs returned error {consoleProcess.ExitCode}");
                         }
                     }
                     else
                     {
-                        App.GetService<ILoggingService>().LogError($"Unable to start process to collect MIDI Logs");
+                        _loggingService.LogError($"Unable to start process to collect MIDI Logs");
                     }
                 }
             }
             else
             {
-                App.GetService<ILoggingService>().LogError("Unable to find CollectMIDILogs utility.");
+                _loggingService.LogError("Unable to find CollectMIDILogs utility.");
             }
 
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error collecting MIDI logs.", ex);
+            _loggingService.LogError("Error collecting MIDI logs.", ex);
         }
 
         return "";
@@ -370,6 +396,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     private List<FoundRegistryEntry> GetHklmRegistryEntries(string key, RegistryView view)
     {
+        _loggingService.LogInfo($"Enter");
+
         List<FoundRegistryEntry> entries = new List<FoundRegistryEntry>();
 
         var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
@@ -501,6 +529,8 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
 
     public List<FoundRegistryEntry> GetDrivers32MidiEntries()
     {
+        _loggingService.LogInfo($"Enter");
+
         var values = GetHklmRegistryEntries(Drivers32Path, RegistryView.Registry64).OrderBy(x => x.Name).ToList();
 
         if (values.Find(x => x.Name.ToLower() == "midisrvtransfercomplete") == null)
@@ -513,58 +543,56 @@ public class MidiDiagnosticsService : IMidiDiagnosticsService
             values.Add(entry);
         }
 
+        if (values.Find(x => x.Name.ToLower() == "midi") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "midi";
+
+            values.Add(entry);
+        }
+
+        if (values.Find(x => x.Name.ToLower() == "midi1") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "mid1";
+
+            values.Add(entry);
+        }
+
         return values;
     }
 
     public List<FoundRegistryEntry> GetDrivers32WOWMidiEntries()
     {
-        return GetHklmRegistryEntries(Drivers32WOWPath, RegistryView.Registry32).OrderBy(x => x.Name).ToList();
+        _loggingService.LogInfo($"Enter");
+
+        var values = GetHklmRegistryEntries(Drivers32WOWPath, RegistryView.Registry32).OrderBy(x => x.Name).ToList();
+
+        if (values.Find(x => x.Name.ToLower() == "midi") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "midi";
+
+            values.Add(entry);
+        }
+
+        if (values.Find(x => x.Name.ToLower() == "midi1") == null)
+        {
+            var entry = new FoundRegistryEntry();
+            entry.HasError = true;
+            entry.Comment = "Missing";
+            entry.Name = "mid1";
+
+            values.Add(entry);
+        }
+
+        return values;
     }
 
-
-    //public bool LaunchRegeditWithDrivers32Location()
-    //{
-    //    try
-    //    {
-    //        string arguments = $"/m \"HKEY_LOCAL_MACHINE\\{Drivers32Path}\"";
-
-    //        var consoleProcess = new System.Diagnostics.Process();
-
-    //        consoleProcess.StartInfo.FileName = "regedit.exe";
-    //        consoleProcess.StartInfo.Verb = "runas";
-    //        consoleProcess.StartInfo.Arguments = arguments;
-    //        consoleProcess.StartInfo.UseShellExecute = true;
-
-    //        return consoleProcess.Start();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        App.GetService<ILoggingService>().LogError("Error opening regedit", ex);
-
-    //        return false;
-    //    }
-    //}
-
-    //public bool LaunchRegeditWithDrivers32WOWLocation()
-    //{
-    //    try
-    //    {
-    //        string arguments = $"/m \"HKEY_LOCAL_MACHINE\\{Drivers32WOWPath}\"";
-
-    //        var consoleProcess = new System.Diagnostics.Process();
-
-    //        consoleProcess.StartInfo.FileName = "regedit.exe";
-    //        consoleProcess.StartInfo.Verb = "runas";
-    //        consoleProcess.StartInfo.Arguments = arguments;
-    //        consoleProcess.StartInfo.UseShellExecute = true;
-
-    //        return consoleProcess.Start();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        App.GetService<ILoggingService>().LogError("Error opening regedit", ex);
-
-    //        return false;
-    //    }
-    //}
 }

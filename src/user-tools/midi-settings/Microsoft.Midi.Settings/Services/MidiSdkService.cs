@@ -18,6 +18,14 @@ public class MidiSdkService : IMidiSdkService
     private bool _serviceInitialized = false;
     private bool _runtimeInitialized = false;
 
+    private readonly ILoggingService _loggingService;
+    public MidiSdkService(ILoggingService loggingService)
+    {
+        _loggingService = loggingService;
+    }
+
+
+
     public bool IsServiceInitialized
     {
         get
@@ -102,6 +110,8 @@ public class MidiSdkService : IMidiSdkService
 
     public bool InitializeSdk()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             _runtimeInitialized = false;
@@ -123,7 +133,7 @@ public class MidiSdkService : IMidiSdkService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error initializing MIDI SDK", ex);
+            _loggingService.LogError("Error initializing MIDI SDK", ex);
 
             return false;
         }
@@ -131,6 +141,8 @@ public class MidiSdkService : IMidiSdkService
 
     public bool InitializeService()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             if (_initializer == null)
@@ -153,7 +165,7 @@ public class MidiSdkService : IMidiSdkService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error initializing MIDI Service", ex);
+            _loggingService.LogError("Error initializing MIDI Service", ex);
 
             return false;
         }

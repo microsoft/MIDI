@@ -80,8 +80,42 @@ public:
 
 
     bool IsSessionActive() { return m_sessionActive; }
+    std::wstring GetEndpointDeviceId() { return m_sessionEndpointDeviceInterfaceId; }
 
     // todo: session info, connection to bidi streams, etc.
+
+    uint64_t GetTotalNetworkPacketsSent() { return m_writer ? m_writer->GetCountNetworkPacketsSent() : 0; }
+    uint64_t GetTotalNetworkPacketsReceived() { return m_totalNetworkPacketsReceived; }
+
+    uint64_t GetAndResetAverageLatencyTicks() 
+    { 
+        auto lock = m_latencyLock.lock();
+
+        uint64_t totalLatency = m_latencyTotalTicks;
+        uint32_t countEntries = m_latencyCountEntries;
+
+        m_latencyTotalTicks = 0;
+        m_latencyCountEntries = 0;
+
+        auto latency = countEntries > 0 ? totalLatency / countEntries : 0;
+        
+        return latency; 
+    }
+
+    void AddLatencyToAverageLatencyTicks(uint64_t latencyTicks)
+    {
+        auto lock = m_latencyLock.lock();
+
+        m_latencyTotalTicks += latencyTicks;
+        m_latencyCountEntries++;
+
+        // reset so we don't have overflow issues when the values aren't read
+        if (m_latencyCountEntries > 5000)
+        {
+            m_latencyTotalTicks = 0;
+            m_latencyCountEntries = 0;
+        }
+    }
 
 private:
     HRESULT Initialize(
@@ -107,6 +141,10 @@ private:
 
     bool m_shuttingDown { false };
 
+    wil::critical_section m_latencyLock;
+    uint64_t m_latencyTotalTicks{ 0 };
+    uint32_t m_latencyCountEntries{ 0 };
+    uint64_t m_totalNetworkPacketsReceived{ 0 };
 
     bool m_byeReplyReceived{ false };
     bool m_inSelfInitiatedByeSequence { false };    // true if we're trying to close the session by sending Bye, and waiting for bye reply

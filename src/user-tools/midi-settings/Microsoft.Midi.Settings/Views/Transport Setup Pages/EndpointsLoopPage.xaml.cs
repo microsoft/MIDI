@@ -36,7 +36,7 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class EndpointsLoopPage : Page
     {
-        private ILoggingService _loggingService;
+        private readonly ILoggingService _loggingService;
 
 
         public EndpointsLoopViewModel ViewModel
@@ -55,7 +55,14 @@ namespace Microsoft.Midi.Settings.Views
             Loaded += Page_Loaded;
             Unloaded += Page_Unloaded;
 
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError("Error initializing page", ex);
+            }
         }
 
         bool m_showCreateDialog = false;

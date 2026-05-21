@@ -34,8 +34,7 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class PluginsProcessingPage : Page
     {
-        private ILoggingService _loggingService;
-
+        private readonly ILoggingService _loggingService;
         public PluginsProcessingViewModel ViewModel
         {
             get;
@@ -43,9 +42,16 @@ namespace Microsoft.Midi.Settings.Views
         public PluginsProcessingPage()
         {
             _loggingService = App.GetService<ILoggingService>();
-
             ViewModel = App.GetService<PluginsProcessingViewModel>();
-            InitializeComponent();
+
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError("Error initializing page", ex);
+            }
 
         }
     }

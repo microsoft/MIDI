@@ -34,6 +34,7 @@
 
 #define UUID_IMidiEndpointDeviceInformation					8087b303-0519-31d1-c0de-dd000000a000
 #define UUID_IMidiEndpointDeviceInformation2                8087b303-0519-31d1-c0de-dd000000a002
+#define UUID_IMidiEndpointDeviceInformation3                8087b303-0519-31d1-c0de-dd000000a003
 
 #define UUID_IMidiEndpointDeviceInformationStatics			8087b303-0519-31d1-c0de-ee000000a000
 

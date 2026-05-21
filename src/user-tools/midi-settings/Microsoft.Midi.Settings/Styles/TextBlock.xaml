@@ -110,7 +110,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="SemiLight" />
         <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
-        <Setter Property="Margin" Value="3,3,10,3" />
+        <Setter Property="Margin" Value="0,3,10,3" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
@@ -121,7 +121,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
-        <Setter Property="Margin" Value="3" />
+        <Setter Property="Margin" Value="0,3,3,3" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
@@ -130,7 +130,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
-        <Setter Property="Margin" Value="3" />
+        <Setter Property="Margin" Value="0,3,3,3" />
         <Setter Property="TextTrimming" Value="None" />
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
@@ -139,7 +139,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
-        <Setter Property="Margin" Value="3" />
+        <Setter Property="Margin" Value="0,3,3,3" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
@@ -148,7 +148,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
-        <Setter Property="Margin" Value="3" />
+        <Setter Property="Margin" Value="0,3,3,3" />
         <Setter Property="TextTrimming" Value="None" />
         <Setter Property="TextWrapping" Value="WrapWholeWords" />
     </Style>
@@ -167,7 +167,7 @@
                BasedOn="{StaticResource BodyStrongTextBlockStyle}"
                TargetType="TextBlock">
         <Style.Setters>
-            <Setter Property="Margin" Value="1,30,0,6" />
+            <Setter Property="Margin" Value="1,16,0,6" />
         </Style.Setters>
     </Style>
 

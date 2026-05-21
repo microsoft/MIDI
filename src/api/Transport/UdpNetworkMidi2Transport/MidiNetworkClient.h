@@ -64,8 +64,30 @@ public:
 
     bool IsSessionActive() { return m_networkConnection != nullptr ? m_networkConnection->IsSessionActive() : false; }
 
+    uint32_t GetRetransmitCount() { return m_retransmitCount; }
+    uint32_t GetRetransmitRequestCount() { return m_retransmitRequestCount; }
+    uint64_t GetAndResetAverageLatencyTicks()
+    { 
+        if (m_networkConnection != nullptr) 
+        {
+            return m_networkConnection->GetAndResetAverageLatencyTicks();
+        }
+        else
+        {
+            return 0; 
+        }
+    }
+
+    uint64_t GetTotalNetworkPacketsSent() { return m_networkConnection ? m_networkConnection->GetTotalNetworkPacketsSent() : 0; }
+    uint64_t GetTotalNetworkPacketsReceived() { return m_networkConnection ? m_networkConnection->GetTotalNetworkPacketsReceived() : 0; }
+
+    std::wstring GetEndpointDeviceId() { return m_networkConnection ? m_networkConnection->GetEndpointDeviceId() : L""; }
+
 private:
     MidiNetworkClientDefinition m_clientDefinition;
+
+    uint32_t m_retransmitCount{ 0 };
+    uint32_t m_retransmitRequestCount{ 0 };
 
     winrt::hstring m_configIdentifier{};
 
@@ -76,7 +98,6 @@ private:
 
     std::wstring m_thisEndpointName{ };
     std::wstring m_thisProductInstanceId{ };
-
 
     winrt::event_token m_messageReceivedEventToken;
 

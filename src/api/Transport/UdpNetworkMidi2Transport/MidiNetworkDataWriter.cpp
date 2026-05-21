@@ -18,6 +18,9 @@ MidiNetworkDataWriter::Send()
 
     m_dataWriter.StoreAsync().get();
 
+
+    m_countNetworkPacketsSent++;
+
     return S_OK;
 }
 

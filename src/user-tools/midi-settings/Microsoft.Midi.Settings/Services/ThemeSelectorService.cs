@@ -9,6 +9,7 @@
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.UI.Xaml;
+using WinUIEx.Messaging;
 
 namespace Microsoft.Midi.Settings.Services;
 
@@ -19,20 +20,25 @@ public class ThemeSelectorService : IThemeSelectorService
     public ElementTheme Theme { get; set; } = ElementTheme.Default;
 
     private readonly ILocalSettingsService _localSettingsService;
-
-    public ThemeSelectorService(ILocalSettingsService localSettingsService)
+    private readonly ILoggingService _loggingService;
+    public ThemeSelectorService(ILocalSettingsService localSettingsService, ILoggingService loggingService)
     {
         _localSettingsService = localSettingsService;
+        _loggingService = loggingService;
     }
 
     public async Task InitializeAsync()
     {
+        _loggingService.LogInfo("Enter");
+
         Theme = await LoadThemeFromSettingsAsync();
         await Task.CompletedTask;
     }
 
     public async Task SetThemeAsync(ElementTheme theme)
     {
+        _loggingService.LogInfo("Enter");
+
         Theme = theme;
 
         await SetRequestedThemeAsync();
@@ -41,6 +47,8 @@ public class ThemeSelectorService : IThemeSelectorService
 
     public async Task SetRequestedThemeAsync()
     {
+        _loggingService.LogInfo("Enter");
+
         if (App.MainWindow.Content is FrameworkElement rootElement)
         {
             rootElement.RequestedTheme = Theme;
@@ -53,6 +61,8 @@ public class ThemeSelectorService : IThemeSelectorService
 
     private async Task<ElementTheme> LoadThemeFromSettingsAsync()
     {
+        _loggingService.LogInfo("Enter");
+
         var themeName = _localSettingsService.ReadSetting<string>(SettingsKey);
 
         if (Enum.TryParse(themeName, out ElementTheme cacheTheme))
@@ -65,6 +75,8 @@ public class ThemeSelectorService : IThemeSelectorService
 
     private async Task SaveThemeInSettingsAsync(ElementTheme theme)
     {
+        _loggingService.LogInfo("Enter");
+
         _localSettingsService.SaveSetting<string>(SettingsKey, theme.ToString());
     }
 }

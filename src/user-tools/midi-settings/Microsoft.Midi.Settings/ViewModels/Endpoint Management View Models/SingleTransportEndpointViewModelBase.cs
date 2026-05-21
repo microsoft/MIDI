@@ -36,11 +36,16 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public DispatcherQueue? DispatcherQueue { get; set; }
 
+        private readonly ILoggingService _loggingService;
+
         public SingleTransportEndpointViewModelBase(
             string transportCode, 
             INavigationService navigationService,
-            IMidiEndpointEnumerationService enumerationService)
+            IMidiEndpointEnumerationService enumerationService,
+            ILoggingService loggingService)
         {
+            _loggingService = loggingService;
+
             _transportCode = transportCode.ToUpper().Trim();
 
             _navigationService = navigationService;

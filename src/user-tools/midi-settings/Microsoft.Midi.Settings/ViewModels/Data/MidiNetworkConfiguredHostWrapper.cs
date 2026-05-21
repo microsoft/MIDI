@@ -25,13 +25,19 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
     public ICommand DeleteCommand { get; private set; }
 
     private readonly IMidiConfigFileService _configFileService;
+    private readonly ILoggingService _loggingService;
+    private readonly IMessageBoxService _messageBoxService;
 
     public MidiNetworkConfiguredHostWrapper(
         MidiNetworkConfiguredHost host,
-        IMidiConfigFileService configFileService
+        IMidiConfigFileService configFileService,
+        ILoggingService loggingService,
+        IMessageBoxService messageBoxService
         )
     {
+        _loggingService = loggingService;
         _configFileService = configFileService;
+        _messageBoxService = messageBoxService;
 
         Host = host;
 
@@ -40,7 +46,7 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
 
         StartCommand = new RelayCommand(async () =>
         {
-            var result = await MidiNetworkTransportManager.StartNetworkHostAsync(host.Id);
+            var result = await MidiNetworkTransportManager.StartNetworkHostAsync(host.HostId);
 
             if (result.Success)
             {
@@ -50,10 +56,9 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
             }
             else
             {
-                // TODO
+                _messageBoxService.ShowError($"Failed to start host. {result.ErrorInformation}");
 
-                System.Diagnostics.Debug.WriteLine("Failed to start host");
-                System.Diagnostics.Debug.WriteLine(result.ErrorInformation);
+                _loggingService.LogError($"Failed to start host. {result.ErrorInformation}");
             }
 
         });
@@ -61,7 +66,9 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
 
         StopCommand = new RelayCommand(async () =>
         {
-            var result = await MidiNetworkTransportManager.StopNetworkHostAsync(host.Id);
+            _loggingService.LogInfo($"Enter");
+
+            var result = await MidiNetworkTransportManager.StopNetworkHostAsync(host.HostId);
 
             if (result.Success)
             {
@@ -71,8 +78,9 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("Failed to stop host");
-                System.Diagnostics.Debug.WriteLine(result.ErrorInformation);
+                _messageBoxService.ShowError($"Failed to stop host. {result.ErrorInformation}");
+
+                _loggingService.LogError($"Failed to stop host. {result.ErrorInformation}");
             }
 
             // TODO
@@ -81,9 +89,11 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
 
         DeleteCommand = new RelayCommand(async () =>
         {
+            _loggingService.LogInfo($"Enter");
+
             // first, stop the host.
 
-            var result = await MidiNetworkTransportManager.StopNetworkHostAsync(host.Id);
+            var result = await MidiNetworkTransportManager.StopNetworkHostAsync(host.HostId);
 
             if (result.Success)
             {
@@ -94,14 +104,16 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
                 if (_configFileService.CurrentConfig != null)
                 {
                     // remove it from the config file
-                    _configFileService.CurrentConfig.RemoveNetworkHost(host.Id);
+                    _configFileService.CurrentConfig.RemoveNetworkHost(host.HostId);
                 }
 
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("Failed to stop host");
-                System.Diagnostics.Debug.WriteLine(result.ErrorInformation);
+                _messageBoxService.ShowError($"Failed to stop host. {result.ErrorInformation}");
+
+                _loggingService.LogError($"Failed to stop host. {result.ErrorInformation}");
+                
             }
 
             // TODO

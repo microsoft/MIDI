@@ -15,10 +15,7 @@ namespace Microsoft.Midi.Settings.Services;
 
 public class MidiSettingsSearchService : IMidiSettingsSearchService
 {
-    private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
-    private readonly IMidiTransportInfoService _transportInfoService;
 
-    private readonly IPageService _pageService;
 
     private List<MidiSettingsSearchResult> AllItems = [];
 
@@ -31,6 +28,8 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
     public void Refresh()
     {
+        _loggingService.LogInfo($"Enter");
+
         // build the initial search list
         AllItems.Clear();
 
@@ -212,18 +211,26 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
     }
 
+    private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
+    private readonly IMidiTransportInfoService _transportInfoService;
+    private readonly IPageService _pageService;
+    private readonly ILoggingService _loggingService;
     public MidiSettingsSearchService(
         IMidiEndpointEnumerationService endpointEnumerationService,
         IMidiTransportInfoService transportInfoService,
-        IPageService pageService)
+        IPageService pageService,
+        ILoggingService loggingService)
     {
         _endpointEnumerationService = endpointEnumerationService;
         _transportInfoService = transportInfoService;
         _pageService = pageService;
+        _loggingService = loggingService;
     }
 
     public IList<MidiSettingsSearchResult> GetFilteredResults(string filterText)
     {
+        _loggingService.LogInfo($"Enter");
+
         IList<MidiSettingsSearchResult> results = [];
 
         var cleanedSearchtext = filterText.ToLower().Trim();

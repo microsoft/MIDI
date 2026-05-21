@@ -54,9 +54,9 @@ class Build : NukeBuild
     
     const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 17;
+    const UInt16 BuildVersionPatch = 23;
 
-    const UInt16 BuildVersionPreviewNumber = 4;
+    const UInt16 BuildVersionPreviewNumber = 5;
     string VersionName => "SDK Release Candidate " + BuildVersionPreviewNumber;
 
     // --------------------------------------------------------------------------------------
@@ -361,6 +361,13 @@ class Build : NukeBuild
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
             var sdkIntermediateRootFolder = AppSdkSolutionFolder / "vsfiles" / "intermediate";
 
+
+            // these are not architecture-specific
+            (sdkIntermediateRootFolder / "com-extensions-idl" / "x64" / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions.h").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
+            (sdkIntermediateRootFolder / "com-extensions-idl" / "x64" / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_i.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
+           // (sdkIntermediateRootFolder / "com-extensions-idl" / "x64" / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_p.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
+
+
             // header files and similar
             foreach (var sourcePlatform in SdkPlatforms)
             {
@@ -378,10 +385,6 @@ class Build : NukeBuild
                 (AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
                 //(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
 
-                // these are not architecture-specific
-                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions.h").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
-                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_i.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
-                (sdkIntermediateRootFolder / "com-extensions-idl" / sourcePlatform / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_p.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
             }
 
 
@@ -922,7 +925,7 @@ class Build : NukeBuild
                             else
                             {
                                 // normal file
-                                writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\{f.Name}\" /> ");
+                                writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\{f.Name}\" Vital=\"true\" PatchWholeFile=\"yes\"/> ");
                             }
                         }
 
@@ -933,7 +936,7 @@ class Build : NukeBuild
                         writer.WriteLine("    <Component Id=\"ControlsXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_CONTROLS_FOLDER\" Guid =\"11c285bc-ee74-46d0-bdf2-0031a584e8f8\">");
                         foreach (var f in controlsXbf)
                         {
-                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Controls\\{f.Name}\" /> ");
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Controls\\{f.Name}\" Vital=\"true\" PatchWholeFile=\"yes\"/> ");
                         }
                         writer.WriteLine("    </Component>");
 
@@ -941,7 +944,7 @@ class Build : NukeBuild
                         writer.WriteLine("    <Component Id=\"StylesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_STYLES_FOLDER\" Guid =\"50dfb652-ca6a-4c5d-827d-212d7904000e\">");
                         foreach (var f in stylesXbf)
                         {
-                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Styles\\{f.Name}\" /> ");
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Styles\\{f.Name}\" Vital=\"true\" PatchWholeFile=\"yes\"/> ");
                         }
                         writer.WriteLine("    </Component>");
 
@@ -949,7 +952,7 @@ class Build : NukeBuild
                         writer.WriteLine("    <Component Id=\"ThemesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_THEMES_FOLDER\" Guid =\"47f1c6b9-4dca-40ac-8fe8-57d02336ea6d\">");
                         foreach (var f in themesXbf)
                         {
-                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Themes\\{f.Name}\" /> ");
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Themes\\{f.Name}\" Vital=\"true\" PatchWholeFile=\"yes\"/> ");
                         }
                         writer.WriteLine("    </Component>");
 
@@ -957,7 +960,7 @@ class Build : NukeBuild
                         writer.WriteLine("    <Component Id=\"ViewsCorePagesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_VIEWS_CORE_PAGES_FOLDER\" Guid =\"78e8fba4-5e7b-45c6-a353-302bb4cfc923\">");
                         foreach (var f in viewsCorePagesXbf)
                         {
-                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Core Pages\\{f.Name}\" /> ");
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Core Pages\\{f.Name}\" Vital=\"true\" PatchWholeFile=\"yes\"/> ");
                         }
                         writer.WriteLine("    </Component>");
 
@@ -965,7 +968,7 @@ class Build : NukeBuild
                         writer.WriteLine("    <Component Id=\"ViewsEndpointManagementPagesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_VIEWS_ENDPOINT_MANAGEMENT_PAGES_FOLDER\" Guid =\"ca35002b-b144-4d55-b28c-0a90685f9340\">");
                         foreach (var f in viewsEndpointManagementPagesXbf)
                         {
-                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Endpoint Management Pages\\{f.Name}\" /> ");
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Endpoint Management Pages\\{f.Name}\" Vital=\"true\" PatchWholeFile=\"yes\"/> ");
                         }
                         writer.WriteLine("    </Component>");
 
@@ -973,7 +976,7 @@ class Build : NukeBuild
                         writer.WriteLine("    <Component Id=\"ViewsToolsPagesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_VIEWS_TOOLS_PAGES_FOLDER\" Guid =\"f83a3ae0-b76c-4437-a4d5-443d25c9ea65\">");
                         foreach (var f in viewsToolsPagesXbf)
                         {
-                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Tools Pages\\{f.Name}\" /> ");
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Tools Pages\\{f.Name}\" Vital=\"true\" PatchWholeFile=\"yes\"/> ");
                         }
                         writer.WriteLine("    </Component>");
 
@@ -981,7 +984,7 @@ class Build : NukeBuild
                         writer.WriteLine("    <Component Id=\"ViewsTransportSetupPagesXBF\" Bitness=\"always64\" Directory=\"SETTINGSAPP_VIEWS_TRANSPORT_SETUP_PAGES_FOLDER\" Guid =\"8ab2aeab-88b5-4075-816f-50a32ce18eef\">");
                         foreach (var f in viewsTransportSetupPagesXbf)
                         {
-                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Transport Setup Pages\\{f.Name}\" /> ");
+                            writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\Views\\Transport Setup Pages\\{f.Name}\" Vital=\"true\" PatchWholeFile=\"yes\"/> ");
                         }
                         writer.WriteLine("    </Component>");
 

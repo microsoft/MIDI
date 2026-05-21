@@ -23,7 +23,6 @@ namespace Microsoft.Midi.Settings.Services;
 // https://github.com/microsoft/TemplateStudio/blob/main/docs/WinUI/navigation.md
 public class NavigationService : INavigationService
 {
-    private readonly IPageService _pageService;
     private object? _lastParameterUsed;
     private Frame? _frame;
 
@@ -53,9 +52,14 @@ public class NavigationService : INavigationService
     [MemberNotNullWhen(true, nameof(Frame), nameof(_frame))]
     public bool CanGoBack => Frame != null && Frame.CanGoBack;
 
-    public NavigationService(IPageService pageService)
+
+    private readonly IPageService _pageService;
+    private readonly ILoggingService _loggingService;
+
+    public NavigationService(IPageService pageService, ILoggingService loggingService)
     {
         _pageService = pageService;
+        _loggingService = loggingService;
     }
 
     private void RegisterFrameEvents()
@@ -76,6 +80,8 @@ public class NavigationService : INavigationService
 
     public bool GoBack()
     {
+        _loggingService.LogInfo("Enter");
+
         if (CanGoBack)
         {
             var vmBeforeNavigation = _frame.GetPageViewModel();
@@ -93,6 +99,8 @@ public class NavigationService : INavigationService
 
     public bool NavigateTo(string pageKey, object? parameter = null, bool clearNavigation = false)
     {
+        _loggingService.LogInfo(pageKey);
+
         var pageType = _pageService.GetPageType(pageKey);
 
         if (_frame != null && (_frame.Content?.GetType() != pageType || (parameter != null && !parameter.Equals(_lastParameterUsed))))
@@ -117,6 +125,8 @@ public class NavigationService : INavigationService
 
     private void OnNavigated(object sender, NavigationEventArgs e)
     {
+        _loggingService.LogInfo("Enter");
+
         if (sender is Frame frame)
         {
             var clearNavigation = (bool)frame.Tag;

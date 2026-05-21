@@ -53,17 +53,22 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private readonly IMidiConfigFileService _configFileService;
         private readonly IMessageBoxService _messageBoxService;
+        private readonly ILoggingService _loggingService;
 
         public MidiBasicLoopbackEndpoint(
             IMidiConfigFileService configFileService, 
-            IMessageBoxService messageBoxService)
+            IMessageBoxService messageBoxService,
+            ILoggingService loggingService)
         {
+            _loggingService = loggingService;
             _configFileService = configFileService;
             _messageBoxService = messageBoxService;
 
             RemoveCommand = new RelayCommand(
                 () =>
                 {
+                    _loggingService.LogInfo($"Enter");
+
                     if (!_messageBoxService.ShowMessageWithOkCancel("Message_QuestionContinueRemovingLoopbackEndpoint".GetLocalized()))
                     {
                         return;
@@ -105,6 +110,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             MuteCommand = new RelayCommand(
                 () =>
                 {
+                    _loggingService.LogInfo($"Enter");
+
                     var associationId = MidiBasicLoopbackEndpointManager.GetAssociationId(Loop!.DeviceInformation);
 
                     if (associationId != Guid.Empty)
@@ -136,6 +143,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             UnmuteCommand = new RelayCommand(
                 () =>
                 {
+                    _loggingService.LogInfo($"Enter");
+
                     var associationId = MidiBasicLoopbackEndpointManager.GetAssociationId(Loop!.DeviceInformation);
 
                     if (associationId != Guid.Empty)
@@ -301,6 +310,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private string CleanupUniqueId(string source)
         {
+            _loggingService.LogInfo($"Enter");
+
             string result = string.Empty;
 
             foreach (char ch in source.ToCharArray())
@@ -399,7 +410,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
                 else
                 {
-                    App.GetService<ILoggingService>().LogError($"Unable to create basic loopback. Error '{result.ErrorInformation}'");
+                    _loggingService.LogError($"Unable to create basic loopback. Error '{result.ErrorInformation}'");
 
                     // these message boxes are ugly, but it's the fastest way to get this out right now
                     _messageBoxService.ShowError("Error_UnableToCreateLoopbackWithMessage".GetLocalized());
@@ -422,13 +433,13 @@ namespace Microsoft.Midi.Settings.ViewModels
         
         private void LoadExistingEndpoints()
         {
-            App.GetService<ILoggingService>().LogInfo($"Enter");
+            _loggingService.LogInfo($"Enter");
 
             _contextService.GetUIContext().Post(_ =>
             {
                 lock (MidiBasicLoopbackEndpoints)
                 {
-                    App.GetService<ILoggingService>().LogInfo($"Acquired lock. Updating endpoints");
+                    _loggingService.LogInfo($"Acquired lock. Updating endpoints");
 
                     var endpoints = _enumerationService.GetEndpointsForTransportId(MidiBasicLoopbackEndpointManager.TransportId);
 
@@ -439,7 +450,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     foreach (var endpoint in endpoints)
                     {
-                        var ep = new MidiBasicLoopbackEndpoint(_configFileService, _messageBoxService);
+                        var ep = new MidiBasicLoopbackEndpoint(_configFileService, _messageBoxService, _loggingService);
 
                         ep.Loop = endpoint;
 
@@ -456,7 +467,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         DefaultLoopbackExists = false;
                     }
 
-                    App.GetService<ILoggingService>().LogInfo($"Completed");
+                    _loggingService.LogInfo($"Completed");
                 }
 
             }, null);
@@ -471,7 +482,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly INavigationService _navigationService;
         private readonly IMidiEndpointEnumerationService _enumerationService;
         private readonly IMessageBoxService _messageBoxService;
-
+        private readonly ILoggingService _loggingService;
 
         public EndpointsBasicLoopViewModel(
                         INavigationService navigationService, 
@@ -479,10 +490,11 @@ namespace Microsoft.Midi.Settings.ViewModels
                         IMidiEndpointEnumerationService enumerationService,
                         IMidiDefaultsService defaultsService,
                         ISynchronizationContextService contextService,
-                        IMessageBoxService messageBoxService
-
+                        IMessageBoxService messageBoxService,
+                        ILoggingService loggingService
             )
         {
+            _loggingService = loggingService;
             _configFileService = configFileService;
             _defaultsService = defaultsService;
             _contextService = contextService;
@@ -515,7 +527,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             CreateDefaultLoopbackCommand = new RelayCommand(
                 () =>
                 {
-                    App.GetService<ILoggingService>().LogInfo($"Enter");
+                    _loggingService.LogInfo($"Enter");
 
                     var creationConfig = _defaultsService.GetDefaultBasicLoopbackCreationConfig();
 
@@ -525,13 +537,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     if (result.Success)
                     {
-                        App.GetService<ILoggingService>().LogInfo($"Service reports success");
+                        _loggingService.LogInfo($"Service reports success");
 
                         if (_configFileService.CurrentConfig != null)
                         {
                             if (_configFileService.CurrentConfig.StoreBasicLoopbackEndpoint(creationConfig))
                             {
-                                App.GetService<ILoggingService>().LogInfo($"Loopback endpoint stored");
+                                _loggingService.LogInfo($"Loopback endpoint stored");
 
                                 LoadExistingEndpoints();
                             }
@@ -545,7 +557,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     }
                     else
                     {
-                        App.GetService<ILoggingService>().LogError("Service reports failure creating default loopback. '{result.ErrorInformation}'");
+                        _loggingService.LogError("Service reports failure creating default loopback. '{result.ErrorInformation}'");
 
                         _messageBoxService.ShowError("Error_ServiceReportsFailureCreatingDefaultLoopback".GetLocalized() + $" '{result.ErrorInformation}'");
 

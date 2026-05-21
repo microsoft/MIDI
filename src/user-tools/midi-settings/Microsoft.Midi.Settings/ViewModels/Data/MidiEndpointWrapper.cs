@@ -154,6 +154,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshData()
         {
+            _loggingService.LogInfo($"Enter");
+
             // Property updates need to happen on UI thread
             var context = _synchronizationContextService.GetUIContext();
 
@@ -307,21 +309,27 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 Image = App.GetService<IMidiEndpointImageService>().GetImageSource(imagePath);
 
-                // function blocks
-                FunctionBlocks.Clear();
-                foreach (var fb in DeviceInformation.GetDeclaredFunctionBlocks())
+                lock (FunctionBlocks)
                 {
-                    FunctionBlocks.Add(fb);
+                    // function blocks
+                    FunctionBlocks.Clear();
+                    foreach (var fb in DeviceInformation.GetDeclaredFunctionBlocks())
+                    {
+                        FunctionBlocks.Add(fb);
+                    }
+                    HasFunctionBlocks = FunctionBlocks.Count > 0;
                 }
-                HasFunctionBlocks = FunctionBlocks.Count > 0;
 
-                // group terminal blocks
-                GroupTerminalBlocks.Clear();
-                foreach (var gtb in DeviceInformation.GetGroupTerminalBlocks())
+                lock (GroupTerminalBlocks)
                 {
-                    GroupTerminalBlocks.Add(gtb);
+                    // group terminal blocks
+                    GroupTerminalBlocks.Clear();
+                    foreach (var gtb in DeviceInformation.GetGroupTerminalBlocks())
+                    {
+                        GroupTerminalBlocks.Add(gtb);
+                    }
+                    HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
                 }
-                HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
 
                 // parent device info
                 ParentDeviceInformation = DeviceInformation.GetParentDeviceInformation();
@@ -333,6 +341,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             Task.Run(() =>
             {
+                _loggingService.LogInfo($"Enter");
+
                 System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Getting MIDI 1.0 Ports");
 
                 // MIDI 1.0 Input Ports / Sources
@@ -344,37 +354,39 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 context.Post(_ =>
                 {
-
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread to update MIDI 1 port list");
 
-                    Midi1InputPorts.Clear();
-                    Midi1OutputPorts.Clear();
-
-                    foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
+                    lock (Midi1InputPorts)
                     {
-                        Midi1InputPorts.Add(source);
+                        Midi1InputPorts.Clear();
+                        foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
+                        {
+                            Midi1InputPorts.Add(source);
+                        }
+                        CountMidi1InputPorts = Midi1InputPorts.Count;
+                        HasSingleInputPort = CountMidi1InputPorts == 1;
+
+                        if (HasSingleInputPort)
+                        {
+                            SingleInputPortName = inputPorts[0].PortName;
+                        }
                     }
 
-                    // MIDI 1.0 Output Ports / Destinations
-                    foreach (var destination in outputPorts.OrderBy((p) => p.PortNumber))
+                    lock (Midi1OutputPorts)
                     {
-                        Midi1OutputPorts.Add(destination);
-                    }
+                        Midi1OutputPorts.Clear();
+                        // MIDI 1.0 Output Ports / Destinations
+                        foreach (var destination in outputPorts.OrderBy((p) => p.PortNumber))
+                        {
+                            Midi1OutputPorts.Add(destination);
+                        }
+                        CountMidi1OutputPorts = Midi1OutputPorts.Count;
+                        HasSingleOutputPort = CountMidi1OutputPorts == 1;
 
-                    CountMidi1InputPorts = Midi1InputPorts.Count;
-                    CountMidi1OutputPorts = Midi1OutputPorts.Count;
-
-                    HasSingleInputPort = CountMidi1InputPorts == 1;
-                    HasSingleOutputPort = CountMidi1OutputPorts == 1;
-
-                    if (HasSingleInputPort)
-                    {
-                        SingleInputPortName = inputPorts[0].PortName;
-                    }
-
-                    if (HasSingleOutputPort)
-                    {
-                        SingleOutputPortName = outputPorts[0].PortName;
+                        if (HasSingleOutputPort)
+                        {
+                            SingleOutputPortName = outputPorts[0].PortName;
+                        }
                     }
 
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Completed posting to UI Thread");
@@ -390,14 +402,18 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiPanicService _panicService;
         private readonly IMidiTransportInfoService _transportInfoService;
         private readonly IMidiConsoleToolsService _consoleToolsService;
+        private readonly ILoggingService _loggingService;
 
         public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,
             IMidiTransportInfoService transportInfoService,
             INavigationService navigationService,
             ISynchronizationContextService synchronizationContextService,
             IMidiConsoleToolsService consoleToolsService,
-            IMidiPanicService panicService)
+            IMidiPanicService panicService,
+            ILoggingService loggingService)
         {
+            _loggingService = loggingService;
+
             System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Constructing");
 
             _navigationService = navigationService;
@@ -427,6 +443,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendPanicCommand = new RelayCommand(
                 () =>
                 {
+                    _loggingService.LogInfo($"Enter");
+
                     System.Diagnostics.Debug.WriteLine("Sending panic");
 
                     // TODO: Could make this a bit faster by sending only for valid groups
@@ -438,9 +456,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             MonitorEndpointCommand = new RelayCommand(
                 () =>
                 {
+                    _loggingService.LogInfo($"Enter");
+
                     System.Diagnostics.Debug.WriteLine("Monitor");
 
-                    _consoleToolsService.MonitorEndpoint(DeviceInformation.EndpointDeviceId);                   
+                    _consoleToolsService.MonitorEndpoint(DeviceInformation);                   
 
                 });
 

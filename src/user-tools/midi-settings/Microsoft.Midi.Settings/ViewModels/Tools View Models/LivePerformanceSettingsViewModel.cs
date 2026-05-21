@@ -52,16 +52,19 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiEndpointEnumerationService _enumerationService;
         private readonly IMidiTransportInfoService _transportInfoService;
         private readonly ISynchronizationContextService _synchronizationContextService;
-
+        private readonly ILoggingService _loggingService;
 
 
         public LivePerformanceSettingsViewModel(
             INavigationService navigationService,
             IMidiEndpointEnumerationService enumerationService,
             IMidiTransportInfoService transportInfoService,
-            ISynchronizationContextService synchronizationContextService
+            ISynchronizationContextService synchronizationContextService,
+            ILoggingService loggingService
             )
         {
+            _loggingService = loggingService;
+
             _navigationService = navigationService;
             _enumerationService = enumerationService;
             _transportInfoService = transportInfoService;

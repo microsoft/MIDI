@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Microsoft.UI.Xaml.Markup;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.Midi.Settings.Contracts.Services;

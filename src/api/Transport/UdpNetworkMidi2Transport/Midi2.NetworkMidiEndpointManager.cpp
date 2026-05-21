@@ -264,7 +264,6 @@ CMidi2NetworkMidiEndpointManager::StartBackgroundEndpointCreator()
 
 
     m_backgroundEndpointCreatorThread = std::jthread(std::bind_front(&CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker, this));
-    m_backgroundEndpointCreatorThread.detach();
 
 
     TraceLoggingWrite(

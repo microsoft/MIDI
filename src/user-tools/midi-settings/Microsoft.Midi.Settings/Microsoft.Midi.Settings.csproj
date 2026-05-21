@@ -178,6 +178,12 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\Bridge Pages\BluetoothBridgesPage.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Bridge Pages\EndpointBridgesPage.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\Core Pages\LoadingPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -59,6 +59,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private async void SendSysEx()
         {
+            _loggingService.LogInfo($"Enter");
+
             if (SelectedEndpoint == null)
             {
                 // TODO: Set error display
@@ -99,6 +101,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             await Task.Run(async () =>
             {
+                _loggingService.LogInfo($"Enter");
+
                 var connection = _sessionService.GetConnection(SelectedEndpoint.Id);
 
                 if (connection == null)
@@ -173,15 +177,18 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
         private readonly IMidiSessionService _sessionService;
         private readonly ISynchronizationContextService _synchronizationContextService;
-
+        private readonly ILoggingService _loggingService;
 
         public ToolsSysExViewModel(
             IMidiSdkService sdkService,
             IMidiSessionService sessionService,
             IMidiEndpointEnumerationService endpointEnumerationService,
-            ISynchronizationContextService synchronizationContextService
+            ISynchronizationContextService synchronizationContextService,
+            ILoggingService loggingService
             )
         {
+            _loggingService = loggingService;
+
             _sessionService = sessionService;
             _sdkService = sdkService;
             _endpointEnumerationService = endpointEnumerationService;
@@ -237,6 +244,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshDeviceCollection()
         {
+            _loggingService.LogInfo($"Enter");
+
             _synchronizationContextService.GetUIContext().Post( _ =>
             {
                 MidiEndpoints.Clear();

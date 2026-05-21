@@ -48,15 +48,24 @@ namespace Microsoft.Midi.Settings.Views
         }
 
 
+        private readonly ILoggingService _loggingService;
+
         public NetworkMidi2SetupPage()
         {
+            _loggingService = App.GetService<ILoggingService>();
+
             ViewModel = App.GetService<NetworkMidi2SetupViewModel>();
-            //_loggingService = App.GetService<ILoggingService>();
 
             Loaded += Page_Loaded;
 
-
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError("Error initializing page", ex);
+            }
         }
 
         private void UpdateDialogSize(ContentDialog dialog)

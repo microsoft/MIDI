@@ -8,6 +8,11 @@
 
 
 using CommunityToolkit.WinUI.Animations;
+using global::Windows.Win32;
+using global::Windows.Win32.Foundation;
+using global::Windows.Win32.UI.Shell;
+using global::Windows.Win32.UI.Shell.Common;
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -26,11 +31,6 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage.Pickers;
 
-using global::Windows.Win32.Foundation;
-using global::Windows.Win32;
-using global::Windows.Win32.UI.Shell;
-using global::Windows.Win32.UI.Shell.Common;
-
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -46,13 +46,23 @@ namespace Microsoft.Midi.Settings.Views
         {
             get;
         }
+        private readonly ILoggingService _loggingService;
+        
         public ToolsSysExPage()
         {
+            _loggingService = App.GetService<ILoggingService>();
             ViewModel = App.GetService<ToolsSysExViewModel>();
 
             this.Loaded += Page_Loaded;
 
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError("Error initializing page", ex);
+            }
 
         }
 

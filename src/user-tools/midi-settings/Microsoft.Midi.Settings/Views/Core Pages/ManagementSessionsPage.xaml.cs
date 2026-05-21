@@ -34,7 +34,7 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class ManagementSessionsPage : Page
     {
-        private ILoggingService _loggingService;
+        private readonly ILoggingService _loggingService;
 
         public ManagementSessionsViewModel ViewModel
         {
@@ -43,9 +43,16 @@ namespace Microsoft.Midi.Settings.Views
         public ManagementSessionsPage()
         {
             _loggingService = App.GetService<ILoggingService>();
-
             ViewModel = App.GetService<ManagementSessionsViewModel>();
-            InitializeComponent();
+
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError("Error initializing page", ex);
+            }
 
 
             ViewModel.RefreshSessions();

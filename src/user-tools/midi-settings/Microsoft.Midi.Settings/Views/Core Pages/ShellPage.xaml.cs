@@ -28,10 +28,20 @@ public sealed partial class ShellPage : Page
         get;
     }
 
+    private readonly ILoggingService _loggingService;
     public ShellPage(ShellViewModel viewModel)
     {
+        _loggingService = App.GetService<ILoggingService>();
         ViewModel = viewModel;
-        InitializeComponent();
+
+        try
+        {
+            InitializeComponent();
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error initializing page", ex);
+        }
 
         AppTitleBarControl.Title = App.MainWindow.Title;
 
@@ -52,7 +62,7 @@ public sealed partial class ShellPage : Page
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.GoBack));
 
         // prime the endpoint data
-        App.GetService<IMidiEndpointEnumerationService>().GetEndpoints();
+   //     App.GetService<IMidiEndpointEnumerationService>().GetEndpoints();
 
     }
 

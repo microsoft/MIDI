@@ -24,6 +24,91 @@
     <Grid  x:Name="ContentArea">
         <ScrollViewer >
             <StackPanel Orientation="Vertical" Spacing="8">
+
+                <controls:SettingsCard x:Uid="TroubleshootingSettingsCard_SystemInformation">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xEC4E;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Content>
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock x:Uid="TroubleshootingLabel_WindowsVersion"
+                                       Style="{StaticResource SmallPropertyLabel}"
+                                       Grid.Column="0"
+                                       Grid.Row="0"/>
+                            <TextBlock x:Uid="TroubleshootingLabel_WindowsArchitecture"
+                                       Style="{StaticResource SmallPropertyLabel}"
+                                       Grid.Column="0"
+                                       Grid.Row="1"/>
+                            <TextBlock x:Uid="TroubleshootingLabel_WindowsCultureInfo"
+                                       Style="{StaticResource SmallPropertyLabel}"
+                                       Grid.Column="0"
+                                       Grid.Row="2"/>
+
+                            <TextBlock Text="{x:Bind ViewModel.WindowsVersion}"
+                                       Style="{StaticResource SmallEmphasizedPropertyValue}"
+                                       IsTextSelectionEnabled="True"
+                                       Grid.Column="1"
+                                       Grid.Row="0"/>
+                            <TextBlock Text="{x:Bind ViewModel.WindowsArchitecture}"
+                                       Style="{StaticResource SmallEmphasizedPropertyValue}"
+                                       IsTextSelectionEnabled="True"
+                                       Grid.Column="1"
+                                       Grid.Row="1"/>
+                            <TextBlock Text="{x:Bind ViewModel.WindowsCultureInfo}"
+                                       Style="{StaticResource SmallEmphasizedPropertyValue}"
+                                       IsTextSelectionEnabled="True"
+                                       Grid.Column="1"
+                                       Grid.Row="2"/>
+
+
+                            <TextBlock x:Uid="TroubleshootingLabel_WindowsAppSdkVersion"
+                                       Style="{StaticResource SmallPropertyLabel}"
+                                       Grid.Column="2"
+                                       Grid.Row="0"/>
+                            <TextBlock x:Uid="TroubleshootingLabel_DotNetRuntimeVersion"
+                                       Style="{StaticResource SmallPropertyLabel}"
+                                       Grid.Column="2"
+                                       Grid.Row="1"/>
+                            <TextBlock x:Uid="TroubleshootingLabel_MidiSdkVersion"
+                                       Style="{StaticResource SmallPropertyLabel}"
+                                       Grid.Column="2"
+                                       Grid.Row="2"/>
+
+                            <TextBlock Text="{x:Bind ViewModel.WindowsAppSdkVersion}"
+                                       Style="{StaticResource SmallEmphasizedPropertyValue}"
+                                       IsTextSelectionEnabled="True"
+                                       Grid.Column="3"
+                                       Grid.Row="0"/>
+                            <TextBlock Text="{x:Bind ViewModel.DotNetRuntimeVersion}"
+                                       Style="{StaticResource SmallEmphasizedPropertyValue}"
+                                       IsTextSelectionEnabled="True"
+                                       Grid.Column="3"
+                                       Grid.Row="1"/>
+                            <TextBlock Text="{x:Bind ViewModel.MidiSdkVersion}"
+                                       Style="{StaticResource SmallEmphasizedPropertyValue}"
+                                       IsTextSelectionEnabled="True"
+                                       Grid.Column="3"
+                                       Grid.Row="2"/>
+
+
+                        </Grid>
+                    </controls:SettingsCard.Content>
+                </controls:SettingsCard>
+
+
                 <!--<TextBlock TextWrapping="Wrap" 
                            Margin="1,0,0,8" 
                            x:Uid="TroubleshootingMainHeader"/> -->

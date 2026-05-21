@@ -6,6 +6,10 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
+using Microsoft.Windows.Devices.Midi2.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,9 +17,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Midi.Settings.Contracts.ViewModels;
-using Microsoft.Windows.Devices.Midi2.Diagnostics;
 using WinUIEx;
 
 
@@ -41,14 +42,19 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ObservableCollection<MidiServiceSessionInformationWrapper> Sessions { get; private set; } = [];
 
-        public ManagementSessionsViewModel()
+        private readonly ILoggingService _loggingService;
+        public ManagementSessionsViewModel(ILoggingService loggingService)
         {
+            _loggingService = loggingService;
+
             RefreshSessions();
         }
 
 
         public void RefreshSessions()
         {
+            _loggingService.LogInfo($"Enter");
+
             Sessions.Clear();
 
             var sessions = MidiReporting.GetActiveSessions();

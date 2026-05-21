@@ -9,20 +9,26 @@
 #include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
+import "MidiNetworkClientConnectResultErrorCodeEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiNetworkClientConnectResult
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientConnectResult")]
+    runtimeclass MidiNetworkClientConnectResult
     {
-        Guid ClientId;
+        Guid ClientId{ get; };
 
-		Boolean Success;
-        String ErrorInformation;
+		Boolean Success{ get; };
+
+        MidiNetworkClientConnectResultErrorCode ErrorCode{ get; };
+
+        String ErrorInformation{ get; };
 
 		// we won't have the endpoint device id yet, so cannot return it here
 
 
-    };
+    }
 }
 

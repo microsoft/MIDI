@@ -116,8 +116,16 @@ public partial class ShellViewModel : ObservableRecipient
     [ObservableProperty]
     private bool showToolsScratchPadInLeftNav = false;
 
+    [ObservableProperty]
+    private bool showEndpointBridgeInLeftNav = false;
+
+    [ObservableProperty]
+    private bool showBluetoothBridgeInLeftNav = false;
+
     private void UpdateVisibilityOfLeftNavSections()
     {
+        _loggingService.LogInfo($"Enter");
+
         var transports = App.GetService<IMidiTransportInfoService>().GetAllTransports();
 
         foreach (var transport in transports)
@@ -156,11 +164,15 @@ public partial class ShellViewModel : ObservableRecipient
         {
             ShowSysExToolsInLeftNav = IsServiceAvailable;
             //ShowToolsTestInLeftNav = true;
+
+            ShowEndpointBridgeInLeftNav = IsServiceAvailable;
+            ShowBluetoothBridgeInLeftNav= IsServiceAvailable;
         }
 
 
     }
 
+    private readonly ILoggingService _loggingService;
 
     public ShellViewModel(
         INavigationService navigationService, 
@@ -168,9 +180,10 @@ public partial class ShellViewModel : ObservableRecipient
         IGeneralSettingsService generalSettingsService,
         IMidiConfigFileService midiConfigFileService,
         IMidiSdkService sdkService,
-        IMidiSettingsSearchService settingsSearchService
-        )
+        IMidiSettingsSearchService settingsSearchService,
+        ILoggingService loggingService)
     {
+        _loggingService = loggingService;
         _settingsSearchService = settingsSearchService;
         _sdkService = sdkService;
         _configFileService = midiConfigFileService;
@@ -196,6 +209,8 @@ public partial class ShellViewModel : ObservableRecipient
 
     private void OnNavigated(object sender, NavigationEventArgs e)
     {
+        _loggingService.LogInfo($"Enter");
+
         IsBackEnabled = NavigationService.CanGoBack;
 
         if (e.SourcePageType == typeof(SettingsPage))

@@ -140,8 +140,7 @@ class Build : NukeBuild
     
     string[] ServiceAndApiPlatforms => new string[] { "x64", "Arm64" };
     string[] InstallerPlatforms => new string[] { "x64", "Arm64" };
-
-
+    string[] ServiceAndApiPlatformsAll => new string[] { "x64", "Arm64", "Arm64EC" };   // the order here matters because the dependencies in the solution aren't perfect
 
     Dictionary<string, string> BuiltNetworkMidiInstallers = new Dictionary<string, string>();
     Dictionary<string, string> BuiltVirtualPatchBayInstallers = new Dictionary<string, string>();
@@ -321,7 +320,42 @@ class Build : NukeBuild
                 {
                     file.CopyToDirectory(ApiStagingFolder / servicePlatform, ExistsPolicy.FileOverwrite);
                 }
+
             }
+
+
+            var intermediateFolder = ApiSolutionFolder / "vsfiles" / "intermediate";
+            var apiReleaseFolder = ApiSolutionFolder / "vsfiles";
+            var apiIncludeFolder = ApiSolutionFolder / "inc";
+            var networkTransportFolder = ApiSolutionFolder / "Transport" / "UdpNetworkMidi2Transport";
+
+            foreach (var platform in ServiceAndApiPlatformsAll)
+            {
+                var referenceFiles = new List<AbsolutePath>();
+
+                // for the destination platform, we use x64 files here since they're not
+                // binaries anyway
+                //string sourcePlatform = (platform == "Arm64EC" ? "x64" : platform);
+                string sourcePlatform = platform;
+
+                referenceFiles.Add(apiIncludeFolder / "hstring_util.h");
+                referenceFiles.Add(apiIncludeFolder / "wstring_util.h");
+                referenceFiles.Add(apiIncludeFolder / "json_defs.h");
+                referenceFiles.Add(apiIncludeFolder / "json_helpers.h");
+                referenceFiles.Add(apiIncludeFolder / "loopback_ids.h");
+
+                // transport-specific include file
+                referenceFiles.Add(networkTransportFolder / "network_json_defs.h");
+                //referenceFiles.Add(ble1TransportFolder / "ble1_json_defs.h");
+
+                // copy the files over to the reference location
+                foreach (var file in referenceFiles)
+                {
+                    file.CopyToDirectory(ApiReferenceFolder / platform, ExistsPolicy.FileOverwrite);
+                }
+
+            }
+
         });
 
 

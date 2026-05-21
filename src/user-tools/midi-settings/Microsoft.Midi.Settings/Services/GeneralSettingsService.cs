@@ -14,8 +14,6 @@ namespace Microsoft.Midi.Settings.Services;
 
 class GeneralSettingsService : IGeneralSettingsService
 {
-    private readonly ILocalSettingsService _localSettingsService;
-
 
     //private const string ShowDeveloperOptions_SettingsKey = "ShowDeveloperOptions";
     private const string MainWindowPositionAndSize_SettingsKey = "MainWindowPositionAndSize";
@@ -23,14 +21,17 @@ class GeneralSettingsService : IGeneralSettingsService
     private const string PreviewToolsEnabled_SettingsKey = "PreviewToolsEnabled";
 
 
-    
-    //private bool _showDeveloperOptions;
+    private readonly ILocalSettingsService _localSettingsService;
+    private readonly ILoggingService _loggingService;
 
-    //    public event EventHandler? SettingsChanged;
 
-    public GeneralSettingsService(ILocalSettingsService localSettingsService)
+    public GeneralSettingsService(
+        ILocalSettingsService localSettingsService,
+        ILoggingService loggingService
+        )
     {
         _localSettingsService = localSettingsService;
+        _loggingService = loggingService;
     }
 
     public void SetMainWindowPositionAndSize(WindowRect value)
@@ -40,6 +41,8 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public WindowRect? GetMainWindowPositionAndSize()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             return _localSettingsService.ReadSetting<WindowRect>(MainWindowPositionAndSize_SettingsKey);
@@ -47,7 +50,7 @@ class GeneralSettingsService : IGeneralSettingsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error getting main window position and size", ex);
+            _loggingService.LogError("Error getting main window position and size", ex);
 
         }
 
@@ -57,6 +60,8 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public EndpointListView GetEndpointListLastUsedView()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             return _localSettingsService.ReadSetting<EndpointListView>(EndpointListLastUsedView_SettingsKey);
@@ -64,7 +69,7 @@ class GeneralSettingsService : IGeneralSettingsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error getting Endpoint List last used view", ex);
+            _loggingService.LogError("Error getting Endpoint List last used view", ex);
 
             return EndpointListView.Default;
         }
@@ -79,6 +84,8 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public bool GetPreviewToolsEnabled()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             return _localSettingsService.ReadSetting<bool>(PreviewToolsEnabled_SettingsKey);
@@ -86,7 +93,7 @@ class GeneralSettingsService : IGeneralSettingsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error getting preview tools enabled/disabled", ex);
+            _loggingService.LogError("Error getting preview tools enabled/disabled", ex);
 
             return false;
         }
@@ -121,7 +128,9 @@ class GeneralSettingsService : IGeneralSettingsService
 
     public async Task InitializeAsync()
     {
-     //   _showDeveloperOptions = await LoadShowDeveloperOptionsFromSettingsAsync();
+        _loggingService.LogInfo($"Enter");
+
+        //   _showDeveloperOptions = await LoadShowDeveloperOptionsFromSettingsAsync();
 
         await Task.CompletedTask;
     }

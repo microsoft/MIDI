@@ -34,16 +34,6 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
         get; private set;
     }
 
-    //public ICommand OpenRegEdit64BitDrivers32
-    //{
-    //    get; private set;
-    //}
-
-    //public ICommand OpenRegEdit32BitDrivers32
-    //{
-    //    get; private set;
-    //}
-
     public ICommand MidiDiagCommand
     {
         get; private set;
@@ -65,6 +55,7 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
     }
 
 
+
     public bool IsUserRunningAsAdmin
     {
         get { return UserHelper.CurrentUserHasAdminRights(); }
@@ -76,11 +67,51 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
     [ObservableProperty]
     private List<FoundRegistryEntry> drivers32WOWMidiEntries;
 
+    [ObservableProperty]
+    private string settingsAppVersion;
+
+    [ObservableProperty]
+    private string windowsVersion;
+
+    [ObservableProperty]
+    private string windowsArchitecture;
+
+    [ObservableProperty]
+    private string windowsCultureInfo;
+
+    [ObservableProperty]
+    private string settingsAppArchitecture;
+
+    [ObservableProperty]
+    private string midiSdkVersion;
+
+    [ObservableProperty]
+    private string windowsAppSdkVersion;
+
+    [ObservableProperty]
+    private string dotNetRuntimeVersion;
+
+
     public void RefreshRegistryValues()
     {
         Drivers32MidiEntries = _diagnosticsService.GetDrivers32MidiEntries();
 
         Drivers32WOWMidiEntries = _diagnosticsService.GetDrivers32WOWMidiEntries();
+    }
+
+
+    void LoadWindowsProperties()
+    {
+        WindowsCultureInfo = System.Globalization.CultureInfo.CurrentCulture.ToString();
+        WindowsVersion = RuntimeInformation.OSDescription;
+        WindowsArchitecture = RuntimeInformation.OSArchitecture.ToString();
+
+        SettingsAppArchitecture = RuntimeInformation.ProcessArchitecture.ToString();
+        MidiSdkVersion = _sdkService.InstalledRuntimeDetailedVersionString;
+
+        DotNetRuntimeVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
+
+        WindowsAppSdkVersion = Windows.ApplicationModel.WindowsAppRuntime.RuntimeInfo.AsString;
     }
 
 
@@ -90,17 +121,20 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
     private readonly IMidiConsoleToolsService _consoleToolsService;
     private readonly IMidiDiagnosticsService _diagnosticsService;
     private readonly IMessageBoxService _messageBoxService;
+    private readonly IMidiSdkService _sdkService;
 
     public TroubleshootingViewModel(
         INavigationService navigationService,
         IMidiConsoleToolsService consoleToolsService,
         IMidiDiagnosticsService diagnosticsService,
-        IMessageBoxService messageBoxService)
+        IMessageBoxService messageBoxService,
+        IMidiSdkService sdkService)
     {
         _consoleToolsService = consoleToolsService;
         _navigationService = navigationService;
         _diagnosticsService = diagnosticsService;
         _messageBoxService = messageBoxService;
+        _sdkService = sdkService;
 
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
@@ -173,28 +207,7 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
 
             });
 
-        //OpenRegEdit64BitDrivers32 = new RelayCommand(
-        //    () => 
-        //    {
-        //        var success = _diagnosticsService.LaunchRegeditWithDrivers32Location();
-
-        //        if (!success)
-        //        {
-        //            _messageBoxService.ShowError("Error_UnableToLaunchRegedit".GetLocalized());
-        //        }
-        //    });
-
-        //OpenRegEdit32BitDrivers32 = new RelayCommand(
-        //    () =>
-        //    {
-        //        var success = _diagnosticsService.LaunchRegeditWithDrivers32WOWLocation();
-
-        //        if (!success)
-        //        {
-        //            _messageBoxService.ShowError("Error_UnableToLaunchRegedit".GetLocalized());
-        //        }
-        //    });
-
+        LoadWindowsProperties();
     }
 
 

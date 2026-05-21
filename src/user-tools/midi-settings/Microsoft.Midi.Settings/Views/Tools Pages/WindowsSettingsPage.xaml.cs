@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -31,9 +32,20 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class WindowsSettingsPage : Page
     {
+        private readonly ILoggingService _loggingService;
+
         public WindowsSettingsPage()
         {
-            InitializeComponent();
+            _loggingService = App.GetService<ILoggingService>();
+
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError("Error initializing page", ex);
+            }
         }
     }
 }

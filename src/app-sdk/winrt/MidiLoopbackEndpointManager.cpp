@@ -65,12 +65,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         definitionA.Description = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Description);
         //definitionA.IsMuted = creationConfig.EndpointDefinitionA().IsMuted;
         definitionA.Name = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Name);
-        definitionA.UniqueId = internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId.c_str());
+        definitionA.UniqueId = internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId.c_str()).c_str(), MAXPNAMELEN);
 
         definitionB.Description = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Description);
         //definitionB.IsMuted = creationConfig.EndpointDefinitionB().IsMuted;
         definitionB.Name = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Name);
-        definitionB.UniqueId = internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId.c_str());
+        definitionB.UniqueId = internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId.c_str()).c_str(), MAXPNAMELEN);
 
 
         if (definitionA.UniqueId.empty())

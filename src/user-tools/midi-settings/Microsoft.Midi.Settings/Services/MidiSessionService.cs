@@ -13,9 +13,12 @@ namespace Microsoft.Midi.Settings.Services;
 
 public class MidiSessionService : IMidiSessionService
 {
-    public MidiSessionService()
+    private readonly ILoggingService _loggingService;
+
+    public MidiSessionService(ILoggingService loggingService)
     {
         _session = MidiSession.Create("AppSessionName".GetLocalized());
+        _loggingService = loggingService;
     }
 
     private MidiSession? _session;
@@ -24,6 +27,8 @@ public class MidiSessionService : IMidiSessionService
 
     public MidiEndpointConnection? GetConnection(string endpointDeviceId)
     {
+        _loggingService.LogInfo(endpointDeviceId);
+
         var cleanId = endpointDeviceId.ToLower().Trim();
 
         if (string.IsNullOrEmpty(cleanId))

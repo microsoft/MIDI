@@ -157,6 +157,10 @@ namespace Microsoft.Windows.Devices.Midi2.Messages
             String hexByteString
         );
 
+        static IVector<UInt32> ConvertMidi1MessageToUmpWords(
+            Microsoft.Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.IMidiMessage originalMessage
+        );
 
     };
 }

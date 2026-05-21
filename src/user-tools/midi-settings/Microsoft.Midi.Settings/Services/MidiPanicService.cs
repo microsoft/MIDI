@@ -17,9 +17,13 @@ public class MidiPanicService : IMidiPanicService
     public static readonly List<MidiChannel> AllChannels = [];
 
     private readonly IMidiSessionService _sessionService;
+    private readonly ILoggingService _loggingService;
 
-    public MidiPanicService(IMidiSessionService sessionService)
+    public MidiPanicService(
+        IMidiSessionService sessionService, 
+        ILoggingService loggingService)
     {
+        _loggingService = loggingService;
         _sessionService = sessionService;
 
         for (int i = 0; i < 16; i++)
@@ -32,17 +36,23 @@ public class MidiPanicService : IMidiPanicService
 
     public bool SendMidiPanic(string endpointDeviceId)
     {
+        _loggingService.LogInfo($"Enter SendMidiPanic(string endpointDeviceId)");
+
         return SendMidiPanic(endpointDeviceId, AllGroups);
     }
 
     public bool SendMidiPanic(string endpointDeviceId, IList<MidiGroup> groups)
     {
+        _loggingService.LogInfo($"Enter SendMidiPanic(string endpointDeviceId, IList<MidiGroup> groups)");
+
         return SendMidiPanic(endpointDeviceId, groups, AllChannels);
     }
 
 
     public bool SendMidiPanic(string endpointDeviceId, IList<MidiGroup> groups, IList<MidiChannel> channels)
     {
+        _loggingService.LogInfo($"Enter SendMidiPanic(string endpointDeviceId, IList<MidiGroup> groups, IList<MidiChannel> channels)");
+
         var connection = _sessionService.GetConnection(endpointDeviceId.Trim().ToLower());
 
         if (connection == null)
@@ -56,17 +66,23 @@ public class MidiPanicService : IMidiPanicService
 
     public bool SendMidiPanic(MidiEndpointConnection connection)
     {
+        _loggingService.LogInfo($"Enter SendMidiPanic(MidiEndpointConnection connection)");
+
         return SendMidiPanic(connection, AllGroups);
     }
 
     public bool SendMidiPanic(MidiEndpointConnection connection, IList<MidiGroup> groups)
     {
+        _loggingService.LogInfo($"Enter SendMidiPanic(MidiEndpointConnection connection, IList<MidiGroup> groups)");
+
         return SendMidiPanic(connection, groups, AllChannels);
     }
 
 
     public bool SendMidiPanic(MidiEndpointConnection connection, IList<MidiGroup> groups, IList<MidiChannel> channels)
     {
+        _loggingService.LogInfo($"Enter SendMidiPanic(MidiEndpointConnection connection, IList<MidiGroup> groups, IList<MidiChannel> channels)");
+
         if (!connection.IsOpen)
         {
             return false;

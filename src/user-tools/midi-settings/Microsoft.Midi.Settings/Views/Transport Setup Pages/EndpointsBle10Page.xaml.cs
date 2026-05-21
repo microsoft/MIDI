@@ -34,7 +34,7 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class EndpointsBle10Page : Page
     {
-        private ILoggingService _loggingService;
+        private readonly ILoggingService _loggingService;
 
 
         public EndpointsBle10ViewModel ViewModel
@@ -50,7 +50,14 @@ namespace Microsoft.Midi.Settings.Views
 
             Loaded += DevicesPage_Loaded;
 
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError("Error initializing page", ex);
+            }
         }
 
         private void DevicesPage_Loaded(object sender, RoutedEventArgs e)

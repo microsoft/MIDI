@@ -18,8 +18,8 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Markup;
 using System.Runtime.InteropServices;
-using Windows.UI.Popups;
 
 namespace Microsoft.Midi.Settings;
 
@@ -68,8 +68,6 @@ public partial class App : Application
 
     // this is set from the splashscreen handling in the activation service
     public static Window MainWindow { get; } = new MainWindow();
-
-    public static MidiServiceInitializationProgressWindow Splash { get; } = new MidiServiceInitializationProgressWindow();
 
     public App()
     {
@@ -139,7 +137,7 @@ public partial class App : Application
                     services.AddSingleton<IMessageBoxService, MessageBoxService>();
                     services.AddSingleton<IMidiEndpointImageService, MidiEndpointImageService>();
 
-                    
+                    services.AddSingleton<IMidiWinRTMidi1PortEnumerationService, MidiWinRTMidi1PortEnumerationService>();
 
 
                     // Views and ViewModels
@@ -208,11 +206,17 @@ public partial class App : Application
                     services.AddTransient<MidiVirtualPatchBaySetupPage>();
                     services.AddTransient<MidiVirtualPatchBaySetupViewModel>();
 
+                    services.AddTransient<EndpointBridgesPage>();
+                    services.AddTransient<EndpointBridgeViewModel>();
+
+                    services.AddTransient<BluetoothBridgesPage>();
+                    services.AddTransient<BluetoothBridgeViewModel>();
+
+
                     // Configuration
                     services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
                 }).
                 Build();
-
 
             App.GetService<ILoggingService>().LogInfo("Starting up: Services registered.");
 
@@ -221,15 +225,30 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            MessageBox(
-                (IntPtr)0,
-                "Error_ExceptionThrownDuringSdkInitialization".GetLocalized() + ex.ToString(),
-                "Error_StartupMessageBoxTitle".GetLocalized(),
-                0);
+            try
+            {
+                MessageBox(
+                    (IntPtr)0,
+                    "Error_ExceptionThrownDuringSdkInitialization".GetLocalized() + ex.ToString(),
+                    "Error_StartupMessageBoxTitle".GetLocalized(),
+                    0);
 
-            App.GetService<ILoggingService>().LogError("Error registering services, pages, and viewmodels", ex);
-
-            Exit();
+                App.GetService<ILoggingService>().LogError("Error registering services, pages, and viewmodels", ex);
+            }
+            catch
+            {
+                // we're SOL here at this point, but don't want to bomb out, so hard-code hte strings
+                // in case localization was the issue
+                MessageBox(
+                    (IntPtr)0,
+                    "Couldn't handle exception." + ex.ToString(),
+                    "MIDI Settings Startup Failure",
+                    0);
+            }
+            finally
+            {
+                Exit();
+            }
         }
     }
 
@@ -240,12 +259,16 @@ public partial class App : Application
 
         try
         {
-            App.GetService<ILoggingService>().LogError(e.Message);
+            string errorMessage = string.Empty;
 
-            MessageBox((IntPtr)0, e.Message, "Unhandled Error", 0);
+            errorMessage = $"{e.Message}\n\n{e.Exception.ToString()}";
+
+            App.GetService<ILoggingService>().LogError(e.Message, e.Exception);
+
+            MessageBox((IntPtr)0, errorMessage, "Unhandled Error", 0);
 
             // try not to completely abort
-            e.Handled = true;
+            //e.Handled = true;
         }
         catch (Exception)
         {
@@ -254,12 +277,6 @@ public partial class App : Application
         }
 
     }
-
-    //private MidiDesktopAppSdkInitializer? _midiInitializer = null;
-
-    //public MidiDesktopAppSdkInitializer? MidiInitializer => _midiInitializer;
-
-    public SynchronizationContext UIThreadSynchronizationContext;
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
@@ -282,6 +299,9 @@ public partial class App : Application
             if (!success)
             {
                 App.GetService<ILoggingService>().LogError("Unable to startup app. Exiting.");
+
+                MessageBox((IntPtr)0, "Unable to start up MIDI Settings app. Closing.", "Unhandled Error", 0);
+
                 Exit();
             }
         }

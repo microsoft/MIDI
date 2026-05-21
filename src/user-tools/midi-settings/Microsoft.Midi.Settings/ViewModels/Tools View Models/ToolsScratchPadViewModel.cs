@@ -159,6 +159,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         private byte selectedControllerValue;
 
 
+        [ObservableProperty]
+        private UInt32 byteCount;
+
 
         [ObservableProperty]
         private string allScratchPadText;
@@ -241,6 +244,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private bool SendMidi1TextWithValidation(string text)
         {
+            _loggingService.LogInfo($"Enter");
+
             if (string.IsNullOrWhiteSpace(AllScratchPadText))
             {
                 _messageBoxService.ShowInfo("No message bytes to send");
@@ -258,6 +263,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             Busy = true;
 
             var bytes = MidiMessageConverter.ConvertHexByteStringToByteArray(text);
+
+            ByteCount = (uint)bytes.Count;
 
             bool success = false;
 
@@ -361,15 +368,18 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
         private readonly IMidiSessionService _sessionService;
         private readonly ISynchronizationContextService _synchronizationContextService;
+        private readonly ILoggingService _loggingService;
 
         public ToolsScratchPadViewModel(
             IMidiSdkService sdkService,
             IMidiSessionService sessionService,
             IMidiEndpointEnumerationService endpointEnumerationService,
             ISynchronizationContextService synchronizationContextService,
-            IMessageBoxService messageBoxService
+            IMessageBoxService messageBoxService,
+            ILoggingService loggingService
             )
         {
+            _loggingService = loggingService;
             _messageBoxService = messageBoxService;
             _sessionService = sessionService;
             _sdkService = sdkService;
@@ -412,6 +422,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendAllCommand = new RelayCommand(
             () =>
             {
+                _loggingService.LogInfo($"Enter");
+
                 var success = SendMidi1TextWithValidation(AllScratchPadText);
 
                 // TODO: Update UI to show that messages were sent
@@ -420,6 +432,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             SendSelectedCommand = new RelayCommand(
             () =>
             {
+                _loggingService.LogInfo($"Enter");
+
                 var success = SendMidi1TextWithValidation(SelectedScratchPadText);
 
                 // TODO: Update UI to show that messages were sent
@@ -458,6 +472,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshDeviceCollection()
         {
+            _loggingService.LogInfo($"Enter");
+
             _synchronizationContextService.GetUIContext().Post(_ =>
             {
                 MidiEndpoints.Clear();

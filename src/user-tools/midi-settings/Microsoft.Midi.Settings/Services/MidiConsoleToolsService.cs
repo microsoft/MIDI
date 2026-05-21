@@ -9,6 +9,7 @@
 using Microsoft.Midi.Settings.Contracts.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,8 +22,17 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
     private const string MidiSdkRootRegKey = MidiRootRegKey + @"\Desktop App SDK Runtime";
     private const string MidiConsolePathRegValue = "MidiConsole";
 
-    private static string GetMidiConsolePath()
+    private readonly ILoggingService _loggingService;
+
+    public MidiConsoleToolsService(ILoggingService loggingService)
     {
+        _loggingService = loggingService;
+    }
+
+    private string GetMidiConsolePath()
+    {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Windows MIDI Services\Tools\Console\midi.exe";
@@ -49,7 +59,7 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError($"Exception getting MIDI Console Path", ex);
+            _loggingService.LogError($"Exception getting MIDI Console Path", ex);
 
             return string.Empty;
         }
@@ -58,18 +68,20 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool IsMidiConsolePresent()
     {
+        _loggingService.LogInfo($"Enter");
+
         var path = GetMidiConsolePath();
 
         if (string.IsNullOrEmpty(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Console path is blank.");
+            _loggingService.LogError($"MIDI Console path is blank.");
 
             return false;
         }
 
         if (!File.Exists(path))
         {
-            App.GetService<ILoggingService>().LogError($"MIDI Console does not exist in path '{path}' ");
+            _loggingService.LogError($"MIDI Console does not exist in path '{path}' ");
 
             return false;
         }
@@ -79,23 +91,35 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool OpenMidiConsole()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             if (IsMidiConsolePresent())
             {
                 var consoleExe = GetMidiConsolePath();
 
-                string arguments =
-                    " new-tab --title \"Windows MIDI Services Console\"" +
-                    $" cmd /k \"{consoleExe}\"";
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "wt",
+                    UseShellExecute = false,
+                };
 
-                var consoleProcess = new System.Diagnostics.Process();
+                startInfo.ArgumentList.Add("--useApplicationTitle");
+                startInfo.ArgumentList.Add("--window");
+                startInfo.ArgumentList.Add("new");
 
-                consoleProcess.StartInfo.FileName = "wt";
-                consoleProcess.StartInfo.Arguments = arguments;
-                consoleProcess.StartInfo.UseShellExecute = false;
+                startInfo.ArgumentList.Add($@"cmd");
+                startInfo.ArgumentList.Add($@"/k");
+                startInfo.ArgumentList.Add($@"{consoleExe}");
 
-                return consoleProcess.Start();
+
+                var process = new Process
+                {
+                    StartInfo = startInfo
+                };
+
+                return process.Start();
             }
             else
             {
@@ -104,7 +128,7 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error opening MIDI console", ex);
+            _loggingService.LogError("Error opening MIDI console", ex);
 
             return false;
         }
@@ -112,25 +136,46 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
 
 
-    public bool MonitorEndpoint(string endpointDeviceId)
+    public bool MonitorEndpoint(MidiEndpointDeviceInformation deviceInformation)
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             if (IsMidiConsolePresent())
             {
                 var consoleExe = GetMidiConsolePath();
 
-                string arguments =
-                    " new-tab --title \"Windows MIDI Services Console\"" +
-                    $" cmd /k \"{consoleExe}\" endpoint {endpointDeviceId} monitor";
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "wt.exe",
+                    UseShellExecute = false,
+                };
 
-                var consoleProcess = new System.Diagnostics.Process();
+                startInfo.ArgumentList.Add("--useApplicationTitle");
 
-                consoleProcess.StartInfo.FileName = "wt";
-                consoleProcess.StartInfo.Arguments = arguments;
-                consoleProcess.StartInfo.UseShellExecute = false;
+                startInfo.ArgumentList.Add("--size");
+                startInfo.ArgumentList.Add("150,40");
 
-                return consoleProcess.Start();
+                startInfo.ArgumentList.Add("--window");
+                startInfo.ArgumentList.Add("new");
+
+                startInfo.ArgumentList.Add("--title");
+                startInfo.ArgumentList.Add($"{deviceInformation.Name}");
+
+                startInfo.ArgumentList.Add("cmd");
+                startInfo.ArgumentList.Add("/k");
+                startInfo.ArgumentList.Add($"{consoleExe}");
+                startInfo.ArgumentList.Add("endpoint");
+                startInfo.ArgumentList.Add($"{deviceInformation.EndpointDeviceId}");
+                startInfo.ArgumentList.Add("monitor");
+
+                var process = new Process
+                {
+                    StartInfo = startInfo
+                };
+
+                return process.Start();
             }
             else
             {
@@ -139,7 +184,7 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error monitoring endpoint", ex);
+            _loggingService.LogError("Error monitoring endpoint", ex);
 
             return false;
         }
@@ -149,6 +194,8 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool RestartMidiService()
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             if (IsMidiConsolePresent())
@@ -173,7 +220,7 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error restarting MIDI service", ex);
+            _loggingService.LogError("Error restarting MIDI service", ex);
 
             return false;
         }
@@ -181,6 +228,8 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
 
     public bool OpenExplorerWithFile(string filePath)
     {
+        _loggingService.LogInfo($"Enter");
+
         try
         {
             string arguments = $"/select,\"{filePath}\"";
@@ -195,7 +244,7 @@ public class MidiConsoleToolsService : IMidiConsoleToolsService
         }
         catch (Exception ex)
         {
-            App.GetService<ILoggingService>().LogError("Error restarting MIDI service", ex);
+            _loggingService.LogError("Error restarting MIDI service", ex);
 
             return false;
         }

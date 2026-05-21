@@ -148,6 +148,21 @@
     <ClCompile Include="MidiBasicLoopbackEndpointCreationResult.cpp">
       <Filter>SDK\Endpoints\Loopback-Basic</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkClientConnectResult.cpp">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkClientDisconnectResult.cpp">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkHostCreationResult.cpp">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkHostRemovalResult.cpp">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkHostUpdateResult.cpp">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -310,6 +325,21 @@
     </ClInclude>
     <ClInclude Include="MidiBasicLoopbackEndpointCreationResult.h">
       <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClientConnectResult.h">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClientDisconnectResult.h">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostCreationResult.h">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostRemovalResult.h">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostUpdateResult.h">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -685,9 +715,6 @@
     <Midl Include="MidiNetworkConfiguredHost.idl">
       <Filter>SDK\Endpoints\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientConnectionResult.idl">
-      <Filter>SDK\Endpoints\Network\Client</Filter>
-    </Midl>
     <Midl Include="MidiVirtualPatchBayManager.idl">
       <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </Midl>
@@ -738,6 +765,21 @@
     </Midl>
     <Midl Include="MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl">
       <Filter>SDK\Endpoints\Loopback-Basic</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostUpdateResultErrorCodeEnum.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostRemovalResultErrorCodeEnum.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostCreationResultErrorCodeEnum.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientConnectResultErrorCodeEnum.idl">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientDisconnectResultErrorCodeEnum.idl">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

@@ -105,6 +105,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void CompleteFirstRunSetup()
         {
+            _loggingService.LogInfo($"Enter");
+
             bool needServiceRestart = false;
             bool serviceRestarted = false;
 
@@ -131,7 +133,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     needServiceRestart = true;
 
-                    var config = new MidiConfigFile(ConfigFileName);
+                    var config = new MidiConfigFile(ConfigFileName, _loggingService);
                     config.Load();
 
                     _configFileService.CurrentConfig = config;
@@ -290,19 +292,22 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
+        private readonly ILoggingService _loggingService;
 
         public FirstRunExperienceViewModel(
             INavigationService navigationService,
             IMidiConfigFileService configService, 
             IMidiDefaultsService defaultsService,
             IMidiServiceRegistrySettingsService registryService,
-            IMessageBoxService messageBoxService)
+            IMessageBoxService messageBoxService,
+            ILoggingService loggingService)
         {
             _navigationService = navigationService;
             _defaultsService = defaultsService;
             _configFileService = configService;
             _registryService = registryService;
             _messageBoxService = messageBoxService;
+            _loggingService = loggingService;
 
             CreateConfigurationFile = true;
             CreateDefaultLoopbackEndpoints = true;
@@ -320,7 +325,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     CompleteFirstRunSetup();
                 });
-            _registryService = registryService;
+
         }
     }
 }

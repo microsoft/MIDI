@@ -75,6 +75,7 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="SPEC_REVIEW.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h">

@@ -165,6 +165,7 @@
     <Midl>
       <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -174,6 +175,7 @@
     <Midl>
       <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -183,6 +185,7 @@
     <Midl>
       <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -192,6 +195,7 @@
     <Midl>
       <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -201,6 +205,7 @@
     <Midl>
       <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -210,6 +215,7 @@
     <Midl>
       <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -219,6 +225,7 @@
     <Midl>
       <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -228,6 +235,7 @@
     <Midl>
       <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
