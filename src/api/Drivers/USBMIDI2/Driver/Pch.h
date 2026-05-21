@@ -75,6 +75,7 @@ extern "C" {
 #endif
 
 #include <wil\resource.h>
+#include "Feature_Servicing_MIDI2FillReadCrash.h"
 
 #include "Driver.h"
 #include "Device.h"

@@ -90,6 +90,7 @@ public:
 private:
 
     wil::srwlock m_lock;
+    bool m_destructing {false};
     wil::unique_handle m_handle;
     std::wstring m_filterName;
     HCMNOTIFICATION m_notifyContext = nullptr;

@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include <Feature_Servicing_MIDI2IsUniqueIdLock.h>
 
 HRESULT MidiEndpointTable::Shutdown()
 {
@@ -502,11 +503,26 @@ bool MidiEndpointTable::IsUniqueIdInUse(std::wstring const uniqueId) noexcept
 {
     auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueId);
 
-    for (auto const& it : m_endpoints)
+    if (Feature_Servicing_MIDI2IsUniqueIdLock::IsEnabled())
     {
-        if (it.second.ShortUniqueId == cleanId)
+        auto lock = m_entriesLock.lock();
+
+        for (auto const& it : m_endpoints)
         {
-            return true;
+            if (it.second.ShortUniqueId == cleanId)
+            {
+                return true;
+            }
+        }
+    }
+    else
+    {
+        for (auto const& it : m_endpoints)
+        {
+            if (it.second.ShortUniqueId == cleanId)
+            {
+                return true;
+            }
         }
     }
 

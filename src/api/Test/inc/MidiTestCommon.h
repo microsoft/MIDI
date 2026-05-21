@@ -48,6 +48,7 @@ extern MIDI_MESSAGE g_MidiTestMessage;
 void PrintMidiMessage(_In_ PVOID, _In_ UINT32, _In_ UINT32, _In_ LONGLONG);
 void PrintStagingStates();
 
+bool IsLegacyMode();
 HRESULT StartMIDIService();
 HRESULT StopMIDIService();
 HRESULT SetMidiDiscovery(bool requestedState);

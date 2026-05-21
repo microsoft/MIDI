@@ -594,6 +594,16 @@ StreamEngine::Pause()
         KeWaitForSingleObject(m_WorkerThread, Executive, KernelMode, FALSE, nullptr);
         ObDereferenceObject(m_WorkerThread);
         m_WorkerThread = nullptr;
+
+        if (Feature_Servicing_MIDI2FillReadCrash_IsEnabled())
+        {
+            WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
+            PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+            if (pDevCtx)
+            {
+                pDevCtx->pStreamEngine = nullptr;
+            }
+        }
     }
     else
     {

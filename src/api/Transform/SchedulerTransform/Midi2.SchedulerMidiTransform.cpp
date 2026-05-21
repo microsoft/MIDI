@@ -10,7 +10,7 @@
 #include "pch.h"
 #include "midi2.Schedulertransform.h"
 
-
+#include <Feature_Servicing_MIDI2SchedulerDetach.h>
 
 
 
@@ -56,8 +56,11 @@ CMidi2SchedulerMidiTransform::Initialize(
     m_queueWorkerThread = std::move(workerThread);
     m_queueWorkerThreadStopToken = m_queueWorkerThread.get_stop_token();
 
-    // start up the worker thread
-    m_queueWorkerThread.detach();
+    if (!Feature_Servicing_MIDI2SchedulerDetach::IsEnabled())
+    {
+        // start up the worker thread
+        m_queueWorkerThread.detach();
+    }
 
 
     TraceLoggingWrite(
