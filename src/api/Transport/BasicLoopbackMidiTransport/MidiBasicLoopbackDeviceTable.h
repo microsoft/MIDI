@@ -28,4 +28,7 @@ public:
 
     bool IsUniqueIdentifierInUseForLoopback(_In_ std::wstring const& uniqueIdentifier);
 
+    HRESULT Shutdown();
+
+
 };

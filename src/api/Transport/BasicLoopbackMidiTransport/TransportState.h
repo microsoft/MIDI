@@ -46,6 +46,11 @@ public:
         m_endpointManager.reset();
         m_configurationManager.reset();
 
+        if (m_endpointTable)
+        {
+            LOG_IF_FAILED(m_endpointTable->Shutdown());
+        }
+
         return S_OK;
     }
 

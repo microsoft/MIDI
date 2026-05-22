@@ -265,9 +265,6 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
 
     std::wstring transportCode(TRANSPORT_CODE);
 
-    //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-
     std::wstring endpointName = definition->EndpointName;
     std::wstring endpointDescription = definition->EndpointDescription;
 
