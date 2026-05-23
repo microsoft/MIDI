@@ -33,7 +33,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
 
     private:
         bool m_success{ false };
-        bloop::MidiBasicLoopbackEndpointCreationResultErrorCode m_errorCode { bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::NoErrorInformationAvailable };
+        bloop::MidiBasicLoopbackEndpointCreationResultErrorCode m_errorCode { bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::UnknownOrUnspecified };
         winrt::hstring m_errorInformation{ };
         winrt::hstring m_endpointDeviceId{ };
         winrt::guid m_associationId{ };

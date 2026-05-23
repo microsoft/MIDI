@@ -11,6 +11,8 @@
 #include "MidiBasicLoopbackEndpointManager.h"
 #include "Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.g.cpp"
 
+#include "..\..\api\Transport\BasicLoopbackMidiTransport\basic_loopback_transport_error_codes.h"
+
 #define MIDI_BLOOP_INSTANCE_ID_PREFIX L"MIDIU_BLOOP_"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementation
@@ -49,7 +51,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::BasicLoopback::i
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name).empty())
         {
             result->ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME));
-            result->ErrorCode(bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::InvalidOrMissingName);
+            result->ErrorCode(bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::MissingEndpointName);
             return *result;
         }
 

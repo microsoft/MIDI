@@ -103,7 +103,7 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 
     if (definition.EntryIdentifier.empty())
     {
-        errorMessage = L"Missing Entry Identifier";
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_ENTRY_IDENTIFIER);
         return E_INVALIDARG;
     }
 
@@ -112,7 +112,7 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 
     if (definition.UmpEndpointName.empty())
     {
-        errorMessage = L"Missing Endpoint Name";
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_NAME);
         return E_INVALIDARG;
     }
 

@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#pragma once
+
 namespace WindowsMidiServicesInternal
 {
     inline HMODULE GetCurrentModule()

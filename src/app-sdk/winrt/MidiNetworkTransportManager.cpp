@@ -10,7 +10,7 @@
 #include "MidiNetworkTransportManager.h"
 #include "Endpoints.Network.MidiNetworkTransportManager.g.cpp"
 
-#include "network_json_defs.h"
+#include "..\..\api\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
 //#include <pplawait.h>
 

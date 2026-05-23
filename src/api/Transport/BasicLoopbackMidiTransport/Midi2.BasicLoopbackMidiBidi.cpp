@@ -53,7 +53,7 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
         m_device = TransportState::Current().GetEndpointTable()->GetDeviceById(endpointId);
         RETURN_HR_IF_NULL(E_INVALIDARG, m_device);
 
-        m_device->RegisterEndpoint(Callback);
+        RETURN_IF_FAILED(m_device->Initialize(Callback));
     }
     else
     {
@@ -99,6 +99,7 @@ CMidi2BasicLoopbackMidiBidi::Shutdown()
 
     if (m_device)
     {
+        LOG_IF_FAILED(m_device->Shutdown());
         m_device.reset();
     }
 

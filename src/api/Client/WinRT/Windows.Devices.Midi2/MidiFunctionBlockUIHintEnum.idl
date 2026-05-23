@@ -1,0 +1,24 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    enum MidiFunctionBlockUIHint
+    {
+        Unknown =       0x0,
+        Receiver =      0x1,
+        Sender =        0x2,
+        Bidirectional = 0x3
+    };
+}

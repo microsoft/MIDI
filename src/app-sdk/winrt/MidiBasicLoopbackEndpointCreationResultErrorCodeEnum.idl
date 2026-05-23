@@ -16,13 +16,20 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback
     [contract(MidiEndpointsBasicLoopbackApiContract, 1)]
     enum MidiBasicLoopbackEndpointCreationResultErrorCode
     {
-        NoErrorInformationAvailable = 0,
+        UnknownOrUnspecified =      0x00000000,
+        UnrecognizedCommand =       0x00000001,
 
-        InvalidOrMissingUniqueId = 1000,
-        UniqueIdInUse = 1010,
+        InvalidJson =               0x00000011,
 
-        InvalidOrMissingName = 2000,
-        NameInUse = 2010,
+        EndpointCreationFailed =    0x00000021,
 
+        DuplicateUniqueId =         0x00000031,
+        MissingUniqueId =           0x00000032,
+        MissingEndpointName =       0x00000033,
+        MissingAssociationId =      0x00000034,
+        EndpointNotFound =          0x00000035,
+
+        // checked by SDK not service
+        NameInUse =                 0x00002010,
     };
 }

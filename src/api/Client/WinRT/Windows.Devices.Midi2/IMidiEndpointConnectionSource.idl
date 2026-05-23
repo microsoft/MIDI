@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiEndpointConnectionSettings.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [contract(MidiSessionAndConnectionApiContract, 1)]
+    [uuid(UUID_IMidiEndpointConnectionSource), version(1.0)]
+    interface IMidiEndpointConnectionSource
+    {
+        event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceDisconnected;
+        event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceReconnected;
+
+        IInspectable Tag;
+
+        Guid ConnectionId{ get; };
+        String ConnectedEndpointDeviceId{ get; };
+
+        //Boolean IsAutoReconnectEnabled{ get; };
+        IMidiEndpointConnectionSettings Settings{ get; };
+
+        Boolean IsOpen{ get; };
+    }
+}

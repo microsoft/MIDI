@@ -20,17 +20,14 @@ class MidiBasicLoopbackDevice
 public:
     std::shared_ptr<MidiBasicLoopbackDeviceDefinition> Definition;
 
-    void Shutdown()
+
+    HRESULT Initialize(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
-        m_callback = nullptr;
-        Definition.reset();
-    }
+        RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
-
-
-    void RegisterEndpoint(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
-    {
         m_callback = callback;
+
+        return S_OK;
     }
 
     HRESULT SendMessage(_In_ MessageOptionFlags optionFlags, _In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
@@ -45,6 +42,13 @@ public:
         return S_OK;
     }
 
+    HRESULT Shutdown()
+    {
+        m_callback = nullptr;
+        Definition.reset();
+
+        return S_OK;
+    }
 
     ~MidiBasicLoopbackDevice()
     {

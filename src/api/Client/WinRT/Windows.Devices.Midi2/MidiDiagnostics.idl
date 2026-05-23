@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiServicePingResponseSummary.idl";
+
+namespace Windows.Devices.Midi2.Diagnostics
+{
+    [contract(MidiDiagnosticsApiContract, 1)]
+    [static_name("Windows.Devices.Midi2.Diagnostics.IMidiDiagnosticsStatics", UUID_IMidiDiagnosticsStatics)]
+    static runtimeclass MidiDiagnostics
+    {
+        static String DiagnosticsLoopbackAEndpointDeviceId{ get; };
+        static String DiagnosticsLoopbackBEndpointDeviceId{ get; };
+
+        static MidiServicePingResponseSummary PingService(UInt8 pingCount);
+        static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
+    }
+}
+
+
+
+
+
+
+
+
+
