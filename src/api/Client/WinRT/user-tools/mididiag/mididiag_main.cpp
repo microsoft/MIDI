@@ -1211,48 +1211,6 @@ bool DoSectionClock(_In_ bool const verbose)
 
 
 
-init::MidiDesktopAppSdkInitializer initializer{ };
-
-bool DoSectionSdkStatus(_In_ bool const verbose)
-{
-    UNREFERENCED_PARAMETER(verbose);
-
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SDK_STATUS);
-
-    
-    // next, try to init the SDK
-    bool initialized = initializer.InitializeSdkRuntime();
-
-    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SDK_INITIALIZED, initialized);
-
-    if (!initialized)
-    {
-        OutputError("Failed to initialize Windows MIDI Services SDK runtime. Is it installed?");
-    }
-
-    return initialized;
-}
-
-bool DoSectionServiceStatus(_In_ bool const verbose)
-{
-    UNREFERENCED_PARAMETER(verbose);
-
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS);
-
-    // this needs to be done before any other service calls
-
-    bool available = initializer.EnsureServiceAvailable();
-
-    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, available);
-
-    if (!available)
-    {
-        OutputError("Failed to start MIDI Service");
-    }
-
-    return available;
-}
-
 
 std::wstring GetOSVersion()
 {
@@ -1611,22 +1569,6 @@ int __cdecl main()
         DoSectionWinMMMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 
         DoSectionMidi2RegistryEntries(verbose);     // don't bail if fails
-
-        // check the service and SDK installs. Do SDK first because
-        // the service status uses the SDK initializer to try to start
-        // the windows service and verify the presence of the SDK runtime
-        if (!DoSectionSdkStatus(verbose)) goto abort_run;
-
-        // we've made it past initializing the SDK, so make sure we shut it down
-        // when we exit. The initializer also has a destructor to do this, but 
-        // I like being explicit
-        auto cleanup = wil::scope_exit([&]
-            {
-                initializer.ShutdownSdkRuntime();
-            });
-
-
-        if (!DoSectionServiceStatus(verbose)) goto abort_run;
 
         // only show midi clock info if the sdk init has worked
         if (midiClock)
