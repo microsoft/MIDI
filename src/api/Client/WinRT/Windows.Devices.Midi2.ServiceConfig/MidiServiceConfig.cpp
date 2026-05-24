@@ -9,7 +9,7 @@
 
 #include "pch.h"
 
-#include "ServiceConfig.MidiServiceConfig.g.cpp"
+#include "MidiServiceConfig.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {

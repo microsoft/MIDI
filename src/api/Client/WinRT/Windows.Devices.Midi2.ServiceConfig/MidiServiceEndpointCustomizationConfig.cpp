@@ -17,7 +17,7 @@
 #include "MidiEndpointCustomProperties.h"
 
 #include "MidiServiceEndpointCustomizationConfig.h"
-#include "ServiceConfig.MidiServiceEndpointCustomizationConfig.g.cpp"
+#include "MidiServiceEndpointCustomizationConfig.g.cpp"
 
 
 

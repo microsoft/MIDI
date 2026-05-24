@@ -7,7 +7,7 @@
 // ============================================================================
 
 #pragma once
-#include "ServiceConfig.MidiServiceEndpointCustomizationConfig.g.h"
+#include "MidiServiceEndpointCustomizationConfig.g.h"
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {

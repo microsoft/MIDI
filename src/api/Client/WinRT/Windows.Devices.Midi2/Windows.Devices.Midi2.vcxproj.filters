@@ -11,6 +11,7 @@
     <ClCompile Include="MidiEndpointConnection_ComExtensions.cpp">
       <Filter>SDK\Session</Filter>
     </ClCompile>
+    <ClCompile Include="midi_function_block_prop_util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -18,15 +19,9 @@
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
+    <ClInclude Include="midi_function_block_prop_util.h" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiClockDestination.idl" />
-    <Midl Include="MidiClockGenerator.idl" />
-    <Midl Include="IMidiServiceTransportPluginConfig.idl" />
-    <Midl Include="MidiSystemExclusiveDataFormatEnum.idl" />
-    <Midl Include="MidiSystemExclusiveDataReaderFormatEnum.idl" />
-    <Midl Include="MidiSystemExclusiveSender.idl" />
-    <Midl Include="MidiSystemExclusiveSendProgress.idl" />
     <Midl Include="MidiApiContracts.idl">
       <Filter>Contracts</Filter>
     </Midl>
@@ -44,93 +39,6 @@
     </Midl>
     <Midl Include="MidiSystemTimerSettings.idl">
       <Filter>SDK\Common</Filter>
-    </Midl>
-    <Midl Include="Midi1PortNamingApproachEnum.idl">
-      <Filter>SDK\Enumeration\Device Info</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceIdHelper.idl">
-      <Filter>SDK\Enumeration\Device Info</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformation.idl">
-      <Filter>SDK\Enumeration\Device Info</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
-      <Filter>SDK\Enumeration\Device Info</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
-      <Filter>SDK\Enumeration\Device Info</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
-      <Filter>SDK\Enumeration\Watcher</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
-      <Filter>SDK\Enumeration\Watcher</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
-      <Filter>SDK\Enumeration\Watcher</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceWatcher.idl">
-      <Filter>SDK\Enumeration\Watcher</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlock.idl">
-      <Filter>SDK\Enumeration\Metadata\Function Blocks</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Function Blocks</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Function Blocks</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Function Blocks</Filter>
-    </Midl>
-    <Midl Include="MidiGroupTerminalBlock.idl">
-      <Filter>SDK\Enumeration\Metadata\Group Terminal Blocks</Filter>
-    </Midl>
-    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Group Terminal Blocks</Filter>
-    </Midl>
-    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Group Terminal Blocks</Filter>
-    </Midl>
-    <Midl Include="MidiDeclaredDeviceIdentity.idl">
-      <Filter>SDK\Enumeration\Metadata\Other Discovery</Filter>
-    </Midl>
-    <Midl Include="MidiDeclaredEndpointInfo.idl">
-      <Filter>SDK\Enumeration\Metadata\Other Discovery</Filter>
-    </Midl>
-    <Midl Include="MidiDeclaredStreamConfiguration.idl">
-      <Filter>SDK\Enumeration\Metadata\Other Discovery</Filter>
-    </Midl>
-    <Midl Include="MidiProtocolEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Other Discovery</Filter>
-    </Midl>
-    <Midl Include="Midi1PortFlowEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Windows\MIDI 1</Filter>
-    </Midl>
-    <Midl Include="Midi1PortNameTableEntry.idl">
-      <Filter>SDK\Enumeration\Metadata\Windows\MIDI 1</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl">
-      <Filter>SDK\Enumeration\Metadata\Windows\MIDI 1</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDevicePropertyHelper.idl">
-      <Filter>SDK\Enumeration\Metadata\Windows</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Windows</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
-      <Filter>SDK\Enumeration\Metadata\Windows</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointTransportSuppliedInfo.idl">
-      <Filter>SDK\Enumeration\Metadata\Windows</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointUserSuppliedInfo.idl">
-      <Filter>SDK\Enumeration\Metadata\Windows</Filter>
-    </Midl>
-    <Midl Include="MidiImageAssetHelper.idl">
-      <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiSession.idl">
       <Filter>SDK\Session</Filter>
@@ -198,33 +106,6 @@
     </Filter>
     <Filter Include="SDK\Common">
       <UniqueIdentifier>{9f2bc877-37b4-4351-ba08-6c81554a73d6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration">
-      <UniqueIdentifier>{3680f73c-73e7-4a8a-b865-c717905aaf71}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration\Device Info">
-      <UniqueIdentifier>{94b68da4-cbce-48d9-8fae-241733cedf6d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration\Watcher">
-      <UniqueIdentifier>{f8440958-e1e5-40b7-bbb6-66eafc048125}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration\Metadata">
-      <UniqueIdentifier>{09569c2b-6c05-4fba-851b-183f1dc4cec9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration\Metadata\Function Blocks">
-      <UniqueIdentifier>{cd37aee7-807e-428e-8c30-8ab0946bd6df}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration\Metadata\Group Terminal Blocks">
-      <UniqueIdentifier>{596c8688-187b-4238-b6ef-4ae81a42b5bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration\Metadata\Other Discovery">
-      <UniqueIdentifier>{95b7671b-348f-4965-b84e-d8da100f6878}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration\Metadata\Windows">
-      <UniqueIdentifier>{748be50f-7f2d-4ee8-8a54-51f4e1821cae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Enumeration\Metadata\Windows\MIDI 1">
-      <UniqueIdentifier>{b95a3a12-2fd9-4fb0-bf56-2fa1f70d841c}</UniqueIdentifier>
     </Filter>
     <Filter Include="SDK\Messages">
       <UniqueIdentifier>{8e60c7e3-0fb8-4ebf-9eca-780318fddde1}</UniqueIdentifier>

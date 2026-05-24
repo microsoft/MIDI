@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "Diagnostics.MidiServicePingResponseSummary.g.h"
+#include "MidiServicePingResponseSummary.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation

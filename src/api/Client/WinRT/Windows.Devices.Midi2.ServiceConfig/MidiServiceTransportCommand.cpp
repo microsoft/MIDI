@@ -8,7 +8,7 @@
 
 #include "pch.h"
 #include "MidiServiceTransportCommand.h"
-#include "ServiceConfig.MidiServiceTransportCommand.g.cpp"
+#include "MidiServiceTransportCommand.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation

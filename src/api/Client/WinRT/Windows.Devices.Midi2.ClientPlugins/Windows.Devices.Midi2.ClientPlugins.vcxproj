@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2.ClientPlugins</ProjectName>
-    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2.ClientPlugins</RootNamespace>
     <ProjectGuid>{79730DE5-CDD0-47FF-AA5B-BAA64EBE83A1}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
@@ -324,6 +324,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="MidiApiContracts.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
@@ -337,6 +338,11 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Windows.Devices.Midi2\Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

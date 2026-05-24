@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2.Utilities.SysExTransfer</ProjectName>
-    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2.Utilities.SysExTransfer</RootNamespace>
     <ProjectGuid>{A74866AF-8296-4C34-AB1C-D774920E8F68}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>

@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "Diagnostics.MidiDiagnostics.g.h"
+#include "MidiDiagnostics.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation

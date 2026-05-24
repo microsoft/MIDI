@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="midi_function_block_prop_util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="midi_stream_message_defs.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_function_block_prop_util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiApiContracts.idl">
+      <Filter>Contracts</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNamingApproachEnum.idl">
+      <Filter>SDK\Device Info</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceIdHelper.idl">
+      <Filter>SDK\Device Info</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformation.idl">
+      <Filter>SDK\Device Info</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
+      <Filter>SDK\Device Info</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
+      <Filter>SDK\Device Info</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
+      <Filter>SDK\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
+      <Filter>SDK\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
+      <Filter>SDK\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceWatcher.idl">
+      <Filter>SDK\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlock.idl">
+      <Filter>SDK\Metadata\Function Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
+      <Filter>SDK\Metadata\Function Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl">
+      <Filter>SDK\Metadata\Function Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
+      <Filter>SDK\Metadata\Function Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlock.idl">
+      <Filter>SDK\Metadata\Group Terminal Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
+      <Filter>SDK\Metadata\Group Terminal Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
+      <Filter>SDK\Metadata\Group Terminal Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredDeviceIdentity.idl">
+      <Filter>SDK\Metadata\Other Discovery</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredEndpointInfo.idl">
+      <Filter>SDK\Metadata\Other Discovery</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredStreamConfiguration.idl">
+      <Filter>SDK\Metadata\Other Discovery</Filter>
+    </Midl>
+    <Midl Include="MidiProtocolEnum.idl">
+      <Filter>SDK\Metadata\Other Discovery</Filter>
+    </Midl>
+    <Midl Include="Midi1PortFlowEnum.idl">
+      <Filter>SDK\Metadata\Windows\MIDI 1</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNameTableEntry.idl">
+      <Filter>SDK\Metadata\Windows\MIDI 1</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl">
+      <Filter>SDK\Metadata\Windows\MIDI 1</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePropertyHelper.idl">
+      <Filter>SDK\Metadata\Windows</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
+      <Filter>SDK\Metadata\Windows</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
+      <Filter>SDK\Metadata\Windows</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointTransportSuppliedInfo.idl">
+      <Filter>SDK\Metadata\Windows</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointUserSuppliedInfo.idl">
+      <Filter>SDK\Metadata\Windows</Filter>
+    </Midl>
+    <Midl Include="MidiImageAssetHelper.idl">
+      <Filter>SDK\Metadata\Windows</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-winrt-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Contracts">
+      <UniqueIdentifier>{7efaa032-8652-43d2-92b1-2560daa13cd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{3777e50a-7535-4b4a-ac5b-ccc15a6a9c70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{d55cebca-71a4-4cd8-8d02-02b45119248b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Device Info">
+      <UniqueIdentifier>{94b68da4-cbce-48d9-8fae-241733cedf6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Metadata">
+      <UniqueIdentifier>{09569c2b-6c05-4fba-851b-183f1dc4cec9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Metadata\Function Blocks">
+      <UniqueIdentifier>{cd37aee7-807e-428e-8c30-8ab0946bd6df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Metadata\Group Terminal Blocks">
+      <UniqueIdentifier>{596c8688-187b-4238-b6ef-4ae81a42b5bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Metadata\Other Discovery">
+      <UniqueIdentifier>{95b7671b-348f-4965-b84e-d8da100f6878}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Metadata\Windows">
+      <UniqueIdentifier>{748be50f-7f2d-4ee8-8a54-51f4e1821cae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Metadata\Windows\MIDI 1">
+      <UniqueIdentifier>{b95a3a12-2fd9-4fb0-bf56-2fa1f70d841c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Watcher">
+      <UniqueIdentifier>{f8440958-e1e5-40b7-bbb6-66eafc048125}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

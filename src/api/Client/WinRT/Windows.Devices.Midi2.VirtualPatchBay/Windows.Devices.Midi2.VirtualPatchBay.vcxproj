@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2.VirtualPatchBay</ProjectName>
-    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2.VirtualPatchBay</RootNamespace>
     <ProjectGuid>{D626DE1A-93C3-4911-A130-444A7DD49BAC}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>

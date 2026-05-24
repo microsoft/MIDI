@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiGroupEndpointListener.h"
-#include "ClientPlugins.MidiGroupEndpointListener.g.cpp"
+#include "MidiGroupEndpointListener.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation

@@ -28,15 +28,6 @@
     <Midl Include="MidiServicePingResponseSummary.idl">
       <Filter>SDK</Filter>
     </Midl>
-    <Midl Include="MidiServiceSessionConnectionInfo.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiServiceSessionInfo.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiServiceTransportPluginInfo.idl">
-      <Filter>SDK</Filter>
-    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

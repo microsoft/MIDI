@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiBasicLoopbackEndpointManager.h"
-#include "Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.g.cpp"
+#include "MidiBasicLoopbackEndpointManager.g.cpp"
 
 #include "..\..\api\Transport\BasicLoopbackMidiTransport\basic_loopback_transport_error_codes.h"
 

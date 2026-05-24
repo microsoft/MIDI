@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2.Reporting</ProjectName>
-    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2.Reporting</RootNamespace>
     <ProjectGuid>{E165EF50-E4CE-4765-8388-4DF4F9D03B57}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
@@ -295,14 +295,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiDiagnostics.h">
-      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiReporting.h">
       <DependentUpon>MidiReporting.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServicePingResponseSummary.h">
-      <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiServiceSessionInfo.h">
       <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
@@ -312,14 +306,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiDiagnostics.cpp">
-      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiReporting.cpp">
       <DependentUpon>MidiReporting.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServicePingResponseSummary.cpp">
-      <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiServiceSessionInfo.cpp">
       <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
@@ -332,10 +320,7 @@
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
     <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
-    <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiReporting.idl" />
-    <Midl Include="MidiServicePingResponse.idl" />
-    <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiServiceSessionConnectionInfo.idl" />
     <Midl Include="MidiServiceSessionInfo.idl" />
     <Midl Include="MidiServiceTransportPluginInfo.idl" />

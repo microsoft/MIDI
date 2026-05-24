@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2.Endpoints.Loopback</ProjectName>
-    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2.Endpoints.Loopback</RootNamespace>
     <ProjectGuid>{E1437C07-6B22-4D30-9E03-8FD2666F72D1}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>

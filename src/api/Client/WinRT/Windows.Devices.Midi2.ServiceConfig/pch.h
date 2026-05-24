@@ -58,6 +58,12 @@ namespace collections =     ::winrt::Windows::Foundation::Collections;
 namespace streams =         ::winrt::Windows::Storage::Streams;
 namespace coreapp =         ::winrt::Windows::ApplicationModel::Core;
 
+#include <winrt/Windows.Devices.Midi2.h>
+namespace winrt::Windows::Devices::Midi2 {};
+
+#include <winrt/Windows.Devices.Midi2.Enumeration.h>
+namespace winrt::Windows::Devices::Midi2::Enumeration {};
+
 // pre-declare namespaces
 namespace WindowsMidiServicesInternal {};
 namespace internal =        ::WindowsMidiServicesInternal;
@@ -84,8 +90,6 @@ namespace internal =        ::WindowsMidiServicesInternal;
 #include <swd_helpers.h>
 #include <midi_ump_message_defs.h>
 
-#include "date_util.h"
-
 // service interface
 #include <WindowsMidiServices.h>
 #include <WindowsMidiServices_i.c>
@@ -96,41 +100,11 @@ namespace internal =        ::WindowsMidiServicesInternal;
 
 // Project-local ------------------------------------------------
 
-namespace winrt::Windows::Devices::Midi2 {};
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
-namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback {};
-namespace loop = ::winrt::Windows::Devices::Midi2::Endpoints::Loopback;
-
-namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback {};
-namespace bloop = ::winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback;
-
-namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual {};
-namespace virt = ::winrt::Windows::Devices::Midi2::Endpoints::Virtual;
-
-namespace winrt::Windows::Devices::Midi2::VirtualPatchBay {};
-namespace vpb = ::winrt::Windows::Devices::Midi2::VirtualPatchBay;
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig {};
 namespace svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
-
-namespace winrt::Windows::Devices::Midi2::Diagnostics {};
-namespace diag = ::winrt::Windows::Devices::Midi2::Diagnostics;
-
-namespace winrt::Windows::Devices::Midi2::Reporting {};
-namespace rept = ::winrt::Windows::Devices::Midi2::Reporting;
-
-namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer {};
-namespace sysex = ::winrt::Windows::Devices::Midi2::Utilities::SysExTransfer;
-
-namespace winrt::Windows::Devices::Midi2::Messages {};
-namespace msgs = ::winrt::Windows::Devices::Midi2::Messages;
-
-namespace winrt::Windows::Devices::Midi2::CapabilityInquiry {};
-namespace ci = ::winrt::Windows::Devices::Midi2::CapabilityInquiry;
-
-namespace winrt::Windows::Devices::Midi2::Endpoints::Network {};
-namespace network = ::winrt::Windows::Devices::Midi2::Endpoints::Network;
 
 
 #define SAFE_COTASKMEMFREE(p) \
@@ -140,168 +114,13 @@ namespace network = ::winrt::Windows::Devices::Midi2::Endpoints::Network;
     }
 
 
-// libmidi2
-
-#pragma warning(push)
-#pragma warning(disable: 4996)
-#include <libmidi2/bytestreamToUMP.h>
-#include <libmidi2/umpToBytestream.h>
-#pragma warning(pop)
-
-
-
 //#include <WindowsMidiServicesSdkRuntimeVersion.h>
 
 #include "resource.h"
 
-#include "midi_stream_message_defs.h"
-#include "midi_function_block_prop_util.h"
-#include "endpoint_device_interface_helpers.h"
-#include "enumeration_prop_util.h"
-#include "MidiEndpointNametable.h"
-
-
-#include "memory_buffer.h"
-
-#include "MidiGroup.h"
-#include "MidiChannel.h"
-#include "MidiUniqueId.h"
-#include "MidiUniversalSystemExclusiveChannel.h"
-
-#include "MidiClock.h"
-
-#include "MidiMessage32.h"
-#include "MidiMessage64.h"
-#include "MidiMessage96.h"
-#include "MidiMessage128.h"
-
-#include "MidiStreamMessageBuilder.h"
-#include "MidiMessageBuilder.h"
-#include "MidiMessageHelper.h"
-
-#include "MidiFunctionBlock.h"
-#include "MidiGroupTerminalBlock.h"
-
-#include "MidiEndpointConnectionBasicSettings.h"
-#include "MidiEndpointConnection.h"
-
-#include "MidiMessageReceivedEventArgs.h"
-
-#include "MidiEndpointAssociatedPortDeviceInformation.h"
-
-#include "MidiEndpointDeviceInformation.h"
-#include "MidiEndpointDeviceInformationAddedEventArgs.h"
-#include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
-#include "MidiEndpointDeviceInformationRemovedEventArgs.h"
-#include "MidiEndpointDeviceWatcher.h"
-
-#include "MidiSession.h"
-
-#include "MidiLoopbackEndpointManager.h"
-#include "MidiLoopbackEndpointCreationConfig.h"
-#include "MidiLoopbackEndpointRemovalConfig.h"
-#include "MidiLoopbackEndpointCreationResult.h"
-
-#include "MidiBasicLoopbackEndpointManager.h"
-#include "MidiBasicLoopbackEndpointCreationConfig.h"
-#include "MidiBasicLoopbackEndpointRemovalConfig.h"
-#include "MidiBasicLoopbackEndpointCreationResult.h"
-
-#include "MidiStreamConfigRequestReceivedEventArgs.h"
-#include "MidiVirtualDevice.h"
-#include "MidiVirtualDeviceCreationConfig.h"
-#include "MidiVirtualDeviceManager.h"
-
-#include "midi_network_defs.h"
-
-#include "MidiNetworkHostCreationResult.h"
-#include "MidiNetworkHostRemovalResult.h"
-#include "MidiNetworkHostUpdateResult.h"
-
-#include "MidiNetworkClientConnectResult.h"
-#include "MidiNetworkClientDisconnectResult.h"
-
-#include "MidiNetworkHostCreationConfig.h"
-#include "MidiNetworkHostRemovalConfig.h"
-#include "MidiNetworkClientConnectConfig.h"
-#include "MidiNetworkClientDisconnectConfig.h"
-
-#include "MidiNetworkClientMatchCriteria.h"
-
-#include "MidiNetworkTransportManager.h"
-
-#include "MidiNetworkAdvertisedHost.h"
-
-
-#include "MidiNetworkAdvertisedHostAddedEventArgs.h"
-#include "MidiNetworkAdvertisedHostUpdatedEventArgs.h"
-#include "MidiNetworkAdvertisedHostRemovedEventArgs.h"
-#include "MidiNetworkAdvertisedHostWatcher.h"
-
-
-
-#include "MidiDiagnostics.h"
-#include "MidiServicePingResponseSummary.h"
-
-#include "MidiServiceSessionInfo.h"
-#include "MidiReporting.h"
-
-#include "MidiSystemExclusiveMessageHelper.h"
-#include "MidiSystemExclusiveSender.h"
-
 #include "MidiServiceConfig.h"
+#include "MidiServiceConfigEndpointMatchCriteria.h"
+#include "MidiServiceEndpointCustomizationConfig.h"
+#include "MidiServiceTransportCommand.h"
+#include "MidiServiceTransportCommonCommands.h"
 
-#include "MidiEndpointDevicePropertyHelper.h"
-
-// Initialization-specific
-
-#include <combaseapi.h>
-//#include <comdef.h>
-#include <ctxtcall.h>
-#include <hstring.h>
-#include <roapi.h>
-#include <activationregistration.h>
-#include <activation.h>
-#include <Appmodel.h>
-#include <RoMetadataApi.h>
-#include <RoMetadata.h>
-//#include "../undocked-reg-free-winrt/detours/detours.h"
-
-//#include <wrl/module.h>
-//#include <wrl/event.h>
-
-//#include "Initialization/MidiAppSdkManifest.h"
-//#include "Initialization/MidiAppSdkRuntimeComponent.h"
-//#include "Initialization/MidiAppSdkRuntimeComponentCatalog.h"
-//#include "Initialization/MidiAppSdkRuntimeTypeResolution.h"
-//#include "Initialization/MidiRoDetours.h"
-
-#include <shared_mutex>
-//#include "ComSingleton.h"
-//#include "Initialization/MidiClientInitializer.h"
-//#include "MidiClientInitializerSingleton.h"
-//#include "MidiClientInitializerFactory.h"
-
-//#include "MidiRuntimeVersion.h"
-//#include "MidiRuntimeRelease.h"
-//#include "MidiRuntimeUpdateUtility.h"
-//#include "MidiRuntimeInformation.h"
-
-#include "MidiClockDestination.h"
-#include "MidiClockGenerator.h"
-
-#include "MidiImageAssetHelper.h"
-
-
-
-#include "MidiVirtualPatchBayDestinationDefinition.h"
-#include "MidiVirtualPatchBaySourceDefinition.h"
-#include "MidiVirtualPatchBayRouteDefinition.h"
-
-
-#include "MidiVirtualPatchBayRouteCreationConfig.h"
-#include "MidiVirtualPatchBayRouteRemovalConfig.h"
-#include "MidiVirtualPatchBayRouteUpdateConfig.h"
-
-//#include "MidiVirtualPatchBayRouteStatus.h"
-#include "MidiVirtualPatchBayManager.h"

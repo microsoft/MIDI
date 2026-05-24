@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiServicePingResponseSummary.h"
-#include "Diagnostics.MidiServicePingResponseSummary.g.cpp"
+#include "MidiServicePingResponseSummary.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
 {

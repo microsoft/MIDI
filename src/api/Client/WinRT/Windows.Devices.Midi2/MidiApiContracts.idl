@@ -13,4 +13,5 @@ namespace Windows.Devices.Midi2
 {
     [contractversion(1)]
     apicontract MidiCoreApiContract { };
+
 }

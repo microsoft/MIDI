@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2.Endpoints.BasicLoopback</ProjectName>
-    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2.Endpoints.BasicLoopback</RootNamespace>
     <ProjectGuid>{3D4545AA-AF7E-4CBA-B0ED-7A82312C330A}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
@@ -331,6 +331,17 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Windows.Devices.Midi2.Reporting\Windows.Devices.Midi2.Reporting.vcxproj">
+      <Project>{e165ef50-e4ce-4765-8388-4df4f9d03b57}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Windows.Devices.Midi2.ServiceConfig\Windows.Devices.Midi2.ServiceConfig.vcxproj">
+      <Project>{0d921d5f-ffa3-4937-b171-ae4363fdf143}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Windows.Devices.Midi2\Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

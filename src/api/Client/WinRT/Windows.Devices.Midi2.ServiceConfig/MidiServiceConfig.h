@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "ServiceConfig.MidiServiceConfig.g.h"
+#include "MidiServiceConfig.g.h"
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {

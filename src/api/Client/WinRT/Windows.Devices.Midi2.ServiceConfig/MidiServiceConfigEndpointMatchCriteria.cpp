@@ -8,7 +8,7 @@
 
 #include "pch.h"
 #include "MidiServiceConfigEndpointMatchCriteria.h"
-#include "ServiceConfig.MidiServiceConfigEndpointMatchCriteria.g.cpp"
+#include "MidiServiceConfigEndpointMatchCriteria.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {

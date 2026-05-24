@@ -9,13 +9,6 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
-
-import "MidiMessageTypeEnum.idl";
-import "IMidiEndpointMessageProcessingPlugin.idl";
-import "IMidiMessageReceivedEventSource.idl";
-
-
 namespace Windows.Devices.Midi2.ClientPlugins
 {
     [contract(MidiClientPluginsApiContract, 1)]

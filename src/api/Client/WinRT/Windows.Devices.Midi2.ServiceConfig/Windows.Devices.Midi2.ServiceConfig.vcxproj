@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2.ServiceConfig</ProjectName>
-    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2.ServiceConfig</RootNamespace>
     <ProjectGuid>{0D921D5F-FFA3-4937-B171-AE4363FDF143}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
@@ -337,9 +337,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="IMidiServiceTransportPluginConfig.idl" />
     <Midl Include="MidiApiContracts.idl" />
     <Midl Include="MidiServiceConfigEndpointMatchCriteria.idl" />
-    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
     <Midl Include="MidiServiceTransportCommonCommands.idl" />
     <Midl Include="MidiServiceEndpointCustomizationConfig.idl" />
     <Midl Include="MidiServiceTransportCommand.idl" />
@@ -356,6 +356,14 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Windows.Devices.Midi2.Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
+      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Windows.Devices.Midi2\Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

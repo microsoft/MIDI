@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiBasicLoopbackEndpointRemovalConfig.h"
-#include "Endpoints.BasicLoopback.MidiBasicLoopbackEndpointRemovalConfig.g.cpp"
+#include "MidiBasicLoopbackEndpointRemovalConfig.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementation

@@ -1,0 +1,63 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#pragma once
+#include "MidiEndpointDeviceInformationUpdatedEventArgs.g.h"
+
+namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
+{
+    struct MidiEndpointDeviceInformationUpdatedEventArgs : MidiEndpointDeviceInformationUpdatedEventArgsT<MidiEndpointDeviceInformationUpdatedEventArgs>
+    {
+        MidiEndpointDeviceInformationUpdatedEventArgs() = default;
+
+        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+
+        bool IsNameUpdated() const noexcept { return m_updatedName; }
+        bool IsEndpointInformationUpdated() const noexcept { return m_updatedInProtocolEndpointInformation; }
+        bool IsDeviceIdentityUpdated() const noexcept { return m_updatedDeviceIdentity; }
+        bool IsStreamConfigurationUpdated() const noexcept { return m_updatedStreamConfiguration; }
+        bool AreFunctionBlocksUpdated() const noexcept { return m_updatedFunctionBlocks; }
+        bool IsUserMetadataUpdated() const noexcept { return m_updatedUserMetadata; }
+        bool AreAdditionalCapabilitiesUpdated() const noexcept { return m_updatedAdditionalCapabilities; }
+        bool AreUniqueIdsUpdated() const noexcept { return m_updatedUniqueIds; }
+
+        bool AreGroupTerminalBlocksUpdated() const noexcept { return m_updatedGroupTerminalBlocks; }
+
+        enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
+
+        void InternalInitialize(
+            _In_ winrt::hstring const endpointDeviceId,
+            _In_ enumeration::DeviceInformationUpdate const& deviceInformationUpdate,
+            _In_ bool const updatedName,
+            _In_ bool const updatedInProtocolEndpointInformation,
+            _In_ bool const updatedDeviceIdentity,
+            _In_ bool const updatedStreamConfiguration,
+            _In_ bool const updatedFunctionBlocks,
+            _In_ bool const updatedUserMetadata,
+            _In_ bool const updatedAdditionalCapabilities,
+            _In_ bool const updatedUniqueIds,
+            _In_ bool const updatedGroupTerminalBlocks
+        ) noexcept;
+
+    private:
+        bool m_updatedName{ false };
+        bool m_updatedInProtocolEndpointInformation{ false };
+        bool m_updatedDeviceIdentity{ false };
+        bool m_updatedStreamConfiguration{ false };
+        bool m_updatedFunctionBlocks{ false };
+        bool m_updatedUserMetadata{ false };
+        bool m_updatedAdditionalCapabilities{ false };
+        bool m_updatedUniqueIds{ false };
+
+        bool m_updatedGroupTerminalBlocks{ false };
+
+        winrt::hstring m_endpointDeviceId{};
+        enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
+    };
+}

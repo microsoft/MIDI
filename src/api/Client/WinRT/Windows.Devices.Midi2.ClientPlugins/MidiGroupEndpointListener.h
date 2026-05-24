@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "ClientPlugins.MidiGroupEndpointListener.g.h"
+#include "MidiGroupEndpointListener.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation

@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2.Diagnostics</ProjectName>
-    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2.Diagnostics</RootNamespace>
     <ProjectGuid>{C24CC839-6D54-4F78-AC5B-C5B3E90B0DAB}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
@@ -301,9 +301,6 @@
     <ClInclude Include="MidiServicePingResponseSummary.h">
       <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceSessionInfo.h">
-      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -315,9 +312,6 @@
     <ClCompile Include="MidiServicePingResponseSummary.cpp">
       <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiServiceSessionInfo.cpp">
-      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -328,9 +322,6 @@
     <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />
-    <Midl Include="MidiServiceSessionConnectionInfo.idl" />
-    <Midl Include="MidiServiceSessionInfo.idl" />
-    <Midl Include="MidiServiceTransportPluginInfo.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -341,6 +332,11 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Windows.Devices.Midi2\Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

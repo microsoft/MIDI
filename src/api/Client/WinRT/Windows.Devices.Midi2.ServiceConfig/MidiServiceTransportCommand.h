@@ -7,7 +7,7 @@
 // ============================================================================
 
 #pragma once
-#include "ServiceConfig.MidiServiceTransportCommand.g.h"
+#include "MidiServiceTransportCommand.g.h"
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {

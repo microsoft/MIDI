@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "ClientPlugins.MidiChannelEndpointListener.g.h"
+#include "MidiChannelEndpointListener.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation

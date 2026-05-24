@@ -7,7 +7,7 @@
 // ============================================================================
 
 #pragma once
-#include "ServiceConfig.MidiServiceConfigEndpointMatchCriteria.g.h"
+#include "MidiServiceConfigEndpointMatchCriteria.g.h"
 
 #include "MidiEndpointMatchCriteria.h"
 

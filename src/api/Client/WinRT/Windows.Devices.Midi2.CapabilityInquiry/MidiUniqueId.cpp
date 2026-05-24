@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiUniqueId.h"
-#include "CapabilityInquiry.MidiUniqueId.g.cpp"
+#include "MidiUniqueId.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 {

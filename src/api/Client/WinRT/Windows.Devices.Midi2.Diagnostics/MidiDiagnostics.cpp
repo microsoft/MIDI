@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiDiagnostics.h"
-#include "Diagnostics.MidiDiagnostics.g.cpp"
+#include "MidiDiagnostics.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
 {

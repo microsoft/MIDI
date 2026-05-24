@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "CapabilityInquiry.MidiUniqueId.g.h"
+#include "MidiUniqueId.g.h"
 
 #define MIDI_MUID_BROADCAST         (uint32_t)0x0FFFFFFF
 

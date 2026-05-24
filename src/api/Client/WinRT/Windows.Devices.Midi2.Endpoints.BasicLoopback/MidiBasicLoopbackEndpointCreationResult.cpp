@@ -8,7 +8,7 @@
 
 #include "pch.h"
 #include "MidiBasicLoopbackEndpointCreationResult.h"
-#include "Endpoints.BasicLoopback.MidiBasicLoopbackEndpointCreationResult.g.cpp"
+#include "MidiBasicLoopbackEndpointCreationResult.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementation
 {
