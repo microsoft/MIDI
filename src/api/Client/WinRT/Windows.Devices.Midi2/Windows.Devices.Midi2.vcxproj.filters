@@ -129,23 +129,8 @@
     <Midl Include="MidiEndpointUserSuppliedInfo.idl">
       <Filter>SDK\Enumeration\Metadata\Windows</Filter>
     </Midl>
-    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
     <Midl Include="MidiImageAssetHelper.idl">
       <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiSystemExclusive8StatusEnum.idl">
-      <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiSession.idl">
       <Filter>SDK\Session</Filter>
@@ -174,47 +159,29 @@
     <Midl Include="MidiEndpointConnectionBasicSettings.idl">
       <Filter>SDK\Session</Filter>
     </Midl>
-    <Midl Include="MidiMessageHelper.idl">
-      <Filter>SDK\Messages\Utilities</Filter>
-    </Midl>
-    <Midl Include="MidiMessageBuilder.idl">
-      <Filter>SDK\Messages\Utilities</Filter>
-    </Midl>
-    <Midl Include="MidiMessageConverter.idl">
-      <Filter>SDK\Messages\Utilities</Filter>
-    </Midl>
-    <Midl Include="MidiStreamMessageBuilder.idl">
-      <Filter>SDK\Messages\Utilities</Filter>
-    </Midl>
-    <Midl Include="MidiSystemExclusiveMessageHelper.idl">
-      <Filter>SDK\Messages\Utilities</Filter>
-    </Midl>
-    <Midl Include="MidiUniversalSystemExclusiveMessageBuilder.idl">
-      <Filter>SDK\Messages\Utilities</Filter>
+    <Midl Include="IMidiUniversalPacket.idl">
+      <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiMessage32.idl">
-      <Filter>SDK\Messages\UMP</Filter>
+      <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiMessage64.idl">
-      <Filter>SDK\Messages\UMP</Filter>
+      <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiMessage96.idl">
-      <Filter>SDK\Messages\UMP</Filter>
+      <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiMessage128.idl">
-      <Filter>SDK\Messages\UMP</Filter>
+      <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiMessageStruct.idl">
-      <Filter>SDK\Messages\UMP</Filter>
-    </Midl>
-    <Midl Include="MidiPacketTypeEnum.idl">
-      <Filter>SDK\Messages\UMP</Filter>
-    </Midl>
-    <Midl Include="IMidiUniversalPacket.idl">
-      <Filter>SDK\Messages\UMP</Filter>
+      <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiMessageTypeEnum.idl">
-      <Filter>SDK\Messages\UMP</Filter>
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiPacketTypeEnum.idl">
+      <Filter>SDK\Messages</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -267,12 +234,6 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{d55cebca-71a4-4cd8-8d02-02b45119248b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Messages\Utilities">
-      <UniqueIdentifier>{159cf26f-91f2-4a4f-83f3-c62e11e984f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Messages\UMP">
-      <UniqueIdentifier>{944a54de-79aa-4d9a-a26a-30413ec02f19}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

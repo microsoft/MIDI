@@ -304,9 +304,6 @@
     <ClInclude Include="MidiEndpointDeviceIdHelper.h">
       <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h">
-      <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiEndpointDevicePropertyHelper.h">
       <DependentUpon>MidiEndpointDevicePropertyHelper.idl</DependentUpon>
     </ClInclude>
@@ -361,21 +358,6 @@
     <ClInclude Include="MidiUniversalSystemExclusiveChannel.h">
       <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageBuilder.h">
-      <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiMessageConverter.h">
-      <DependentUpon>MidiMessageConverter.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiStreamMessageBuilder.h">
-      <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiMessageHelper.h">
-      <DependentUpon>MidiMessageHelper.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiSystemExclusiveMessageHelper.h">
-      <DependentUpon>MidiSystemExclusiveMessageHelper.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiSystemExclusiveSender.h">
       <DependentUpon>MidiSystemExclusiveSender.idl</DependentUpon>
     </ClInclude>
@@ -406,9 +388,6 @@
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
       <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp">
-      <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointDevicePropertyHelper.cpp">
       <DependentUpon>MidiEndpointDevicePropertyHelper.idl</DependentUpon>
@@ -492,21 +471,6 @@
     <ClCompile Include="MidiUniversalSystemExclusiveChannel.cpp">
       <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageBuilder.cpp">
-      <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiMessageConverter.cpp">
-      <DependentUpon>MidiMessageConverter.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiStreamMessageBuilder.cpp">
-      <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiMessageHelper.cpp">
-      <DependentUpon>MidiMessageHelper.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSystemExclusiveMessageHelper.cpp">
-      <DependentUpon>MidiSystemExclusiveMessageHelper.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSender.cpp">
       <DependentUpon>MidiSystemExclusiveSender.idl</DependentUpon>
     </ClCompile>
@@ -578,20 +542,9 @@
     <Midl Include="MidiPacketTypeEnum.idl" />
     <Midl Include="MidiSystemTimerSettings.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
-    <Midl Include="MidiUniversalSystemExclusiveMessageBuilder.idl" />
-    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
-    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
-    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />
-    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl" />
-    <Midl Include="MidiMessageConverter.idl" />
-    <Midl Include="MidiMessageBuilder.idl" />
-    <Midl Include="MidiStreamMessageBuilder.idl" />
-    <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
-    <Midl Include="MidiMessageHelper.idl" />
     <Midl Include="IMidiServiceTransportPluginConfig.idl" />
     <Midl Include="MidiSystemExclusiveDataFormatEnum.idl" />
     <Midl Include="MidiSystemExclusiveDataReaderFormatEnum.idl" />
-    <Midl Include="MidiSystemExclusiveMessageHelper.idl" />
     <Midl Include="MidiSystemExclusiveSender.idl" />
     <Midl Include="MidiSystemExclusiveSendProgress.idl" />
   </ItemGroup>
