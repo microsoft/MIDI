@@ -9,13 +9,8 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
-import "IMidiUniversalPacket.idl";
 import "MidiEndpointDiscoveryRequestsEnum.idl";
 import "MidiFunctionBlockDiscoveryRequestsEnum.idl";
-import "MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl";
-import "MidiFunctionBlockDirectionEnum.idl";
-import "MidiFunctionBlockUIHintEnum.idl";
 
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
@@ -104,9 +99,9 @@ namespace Windows.Devices.Midi2.Utilities.Messages
             UInt64 timestamp,
             Boolean active,
             UInt8 functionBlockNumber,
-            Windows.Devices.Midi2.MidiFunctionBlockUIHint uiHint,
-            Windows.Devices.Midi2.MidiFunctionBlockRepresentsMidi10Connection midi10,
-            Windows.Devices.Midi2.MidiFunctionBlockDirection direction,
+            Windows.Devices.Midi2.Enumeration.MidiFunctionBlockUIHint uiHint,
+            Windows.Devices.Midi2.Enumeration.MidiFunctionBlockRepresentsMidi10Connection midi10,
+            Windows.Devices.Midi2.Enumeration.MidiFunctionBlockDirection direction,
             UInt8 firstGroup,
             UInt8 numberOfGroups,
             UInt8 midiCIVersionFormat,

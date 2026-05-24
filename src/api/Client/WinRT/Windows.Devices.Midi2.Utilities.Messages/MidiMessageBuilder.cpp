@@ -9,12 +9,12 @@
 
 #include "pch.h"
 #include "MidiMessageBuilder.h"
-#include "Messages.MidiMessageBuilder.g.cpp"
+#include "MidiMessageBuilder.g.cpp"
 
 #include "ump_helpers.h"
 #include "midi_ump.h"
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageBuilder::BuildUtilityMessage(

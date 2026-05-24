@@ -9,18 +9,6 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
-import "IMidiUniversalPacket.idl";
-import "MidiMessage32.idl";
-import "MidiMessage64.idl";
-import "MidiMessage96.idl";
-import "MidiMessage128.idl";
-import "MidiGroup.idl";
-import "MidiChannel.idl";
-import "MidiUniversalSystemExclusiveChannel.idl";
-import "MidiDeclaredDeviceIdentity.idl";
-
-
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [experimental]
@@ -35,7 +23,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
 
         static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildIdentityRequestReply(
             UInt64 timestamp,
-            Windows.Devices.Midi2.MidiDeclaredDeviceIdentity identity
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity identity
             );
 
         static Windows.Devices.Midi2.MidiMessage64 BuildWait(

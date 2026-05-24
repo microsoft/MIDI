@@ -12,7 +12,7 @@
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
     <CppWinRTLibs>true</CppWinRTLibs>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformMinVersion>10.0.22621.0</WindowsTargetPlatformMinVersion>
+    <WindowsTargetPlatformMinVersion>10.0.26100.0</WindowsTargetPlatformMinVersion>
     <MinimalCoreWin>true</MinimalCoreWin>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -341,6 +341,20 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Windows.Devices.Midi2.Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
+      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Windows.Devices.Midi2.ServiceConfig\Windows.Devices.Midi2.ServiceConfig.vcxproj">
+      <Project>{0d921d5f-ffa3-4937-b171-ae4363fdf143}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Windows.Devices.Midi2.Utilities.Messages\Windows.Devices.Midi2.Utilities.Messages.vcxproj">
+      <Project>{d2bc7e5c-09e5-4fbb-84de-26c9e6984a28}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Windows.Devices.Midi2\Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

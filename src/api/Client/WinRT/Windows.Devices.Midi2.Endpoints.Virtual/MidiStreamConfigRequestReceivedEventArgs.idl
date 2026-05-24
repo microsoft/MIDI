@@ -9,8 +9,6 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-import "MidiProtocolEnum.idl";
-
 namespace Windows.Devices.Midi2.Endpoints.Virtual
 {
     [contract(MidiEndpointsVirtualApiContract, 1)]
@@ -19,7 +17,7 @@ namespace Windows.Devices.Midi2.Endpoints.Virtual
     {
         UInt64 Timestamp{ get; };
 
-        Windows.Devices.Midi2.MidiProtocol PreferredMidiProtocol{ get; };
+        Windows.Devices.Midi2.Enumeration.MidiProtocol PreferredMidiProtocol{ get; };
 
         Boolean RequestEndpointTransmitJitterReductionTimestamps{ get; };
         Boolean RequestEndpointReceiveJitterReductionTimestamps{ get; };

@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "Endpoints.Virtual.MidiVirtualDeviceCreationConfig.g.h"
+#include "MidiVirtualDeviceCreationConfig.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
@@ -21,24 +21,24 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
             _In_ winrt::hstring name,
             _In_ winrt::hstring description,
             _In_ winrt::hstring manufacturer,
-            midi2::MidiDeclaredEndpointInfo declaredEndpointInfo
+            midi2enum::MidiDeclaredEndpointInfo declaredEndpointInfo
         );
 
         MidiVirtualDeviceCreationConfig(
             _In_ winrt::hstring name,
             _In_ winrt::hstring description,
             _In_ winrt::hstring manufacturer,
-            midi2::MidiDeclaredEndpointInfo declaredEndpointInfo,
-            midi2::MidiDeclaredDeviceIdentity declaredDeviceIdentity
+            midi2enum::MidiDeclaredEndpointInfo declaredEndpointInfo,
+            midi2enum::MidiDeclaredDeviceIdentity declaredDeviceIdentity
             );
 
         MidiVirtualDeviceCreationConfig(
             _In_ winrt::hstring name,
             _In_ winrt::hstring description,
             _In_ winrt::hstring manufacturer,
-            midi2::MidiDeclaredEndpointInfo declaredEndpointInfo,
-            midi2::MidiDeclaredDeviceIdentity declaredDeviceIdentity,
-            midi2::MidiEndpointUserSuppliedInfo userSuppliedInfo
+            midi2enum::MidiDeclaredEndpointInfo declaredEndpointInfo,
+            midi2enum::MidiDeclaredDeviceIdentity declaredDeviceIdentity,
+            midi2enum::MidiEndpointUserSuppliedInfo userSuppliedInfo
         );
 
         bool IsFromCurrentConfigFile() const noexcept { return false; }
@@ -59,16 +59,16 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
         void CreateOnlyUmpEndpoints(_In_ bool const value) { m_umpOnly = value; }
 
 
-        midi2::MidiDeclaredDeviceIdentity DeclaredDeviceIdentity() const noexcept { return m_declaredDeviceIdentity; }
-        void DeclaredDeviceIdentity(_In_ midi2::MidiDeclaredDeviceIdentity const& value) noexcept { m_declaredDeviceIdentity = value; }
+        midi2enum::MidiDeclaredDeviceIdentity DeclaredDeviceIdentity() const noexcept { return m_declaredDeviceIdentity; }
+        void DeclaredDeviceIdentity(_In_ midi2enum::MidiDeclaredDeviceIdentity const& value) noexcept { m_declaredDeviceIdentity = value; }
 
-        midi2::MidiDeclaredEndpointInfo DeclaredEndpointInfo() const noexcept { return m_declaredEndpointInfo; }
-        void DeclaredEndpointInfo(_In_ midi2::MidiDeclaredEndpointInfo const& value) noexcept { m_declaredEndpointInfo = value; }
+        midi2enum::MidiDeclaredEndpointInfo DeclaredEndpointInfo() const noexcept { return m_declaredEndpointInfo; }
+        void DeclaredEndpointInfo(_In_ midi2enum::MidiDeclaredEndpointInfo const& value) noexcept { m_declaredEndpointInfo = value; }
 
-        midi2::MidiEndpointUserSuppliedInfo UserSuppliedInfo() const noexcept { return m_userSuppliedInfo; }
-        void UserSuppliedInfo(_In_ midi2::MidiEndpointUserSuppliedInfo const& value) noexcept { m_userSuppliedInfo = value; }
+        midi2enum::MidiEndpointUserSuppliedInfo UserSuppliedInfo() const noexcept { return m_userSuppliedInfo; }
+        void UserSuppliedInfo(_In_ midi2enum::MidiEndpointUserSuppliedInfo const& value) noexcept { m_userSuppliedInfo = value; }
 
-        collections::IVector<midi2::MidiFunctionBlock> FunctionBlocks() { return m_functionBlocks; }
+        collections::IVector<midi2enum::MidiFunctionBlock> FunctionBlocks() { return m_functionBlocks; }
 
         winrt::guid AssociationId() const noexcept { return m_associationId; }
 
@@ -81,12 +81,12 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 
         winrt::guid m_associationId{ foundation::GuidHelper::CreateNewGuid() };
 
-        midi2::MidiDeclaredDeviceIdentity m_declaredDeviceIdentity{};
-        midi2::MidiDeclaredEndpointInfo m_declaredEndpointInfo{};
-        midi2::MidiEndpointUserSuppliedInfo m_userSuppliedInfo{};
+        midi2enum::MidiDeclaredDeviceIdentity m_declaredDeviceIdentity{};
+        midi2enum::MidiDeclaredEndpointInfo m_declaredEndpointInfo{};
+        midi2enum::MidiEndpointUserSuppliedInfo m_userSuppliedInfo{};
 
-        collections::IVector<midi2::MidiFunctionBlock>
-            m_functionBlocks{ winrt::multi_threaded_vector<midi2::MidiFunctionBlock>() };
+        collections::IVector<midi2enum::MidiFunctionBlock>
+            m_functionBlocks{ winrt::multi_threaded_vector<midi2enum::MidiFunctionBlock>() };
 
     };
 }

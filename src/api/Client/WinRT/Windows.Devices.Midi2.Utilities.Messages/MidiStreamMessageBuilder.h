@@ -8,10 +8,10 @@
 
 
 #pragma once
-#include "Messages.MidiStreamMessageBuilder.g.h"
+#include "MidiStreamMessageBuilder.g.h"
 
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     struct MidiStreamMessageBuilder
     {
@@ -97,9 +97,9 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
             _In_ internal::MidiTimestamp const timestamp,
             _In_ bool const active,
             _In_ uint8_t const functionBlockNumber,
-            _In_ midi2::MidiFunctionBlockUIHint const& uiHint,
-            _In_ midi2::MidiFunctionBlockRepresentsMidi10Connection const& midi10,
-            _In_ midi2::MidiFunctionBlockDirection const& direction,
+            _In_ midi2enum::MidiFunctionBlockUIHint const& uiHint,
+            _In_ midi2enum::MidiFunctionBlockRepresentsMidi10Connection const& midi10,
+            _In_ midi2enum::MidiFunctionBlockDirection const& direction,
             _In_ uint8_t const firstGroup,
             _In_ uint8_t const numberOfGroups,
             _In_ uint8_t const midiCIVersionFormat,
@@ -143,7 +143,7 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
     };
 }
 
-namespace winrt::Windows::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::factory_implementation
 {
     struct MidiStreamMessageBuilder : MidiStreamMessageBuilderT<MidiStreamMessageBuilder, implementation::MidiStreamMessageBuilder, winrt::static_lifetime>
     {

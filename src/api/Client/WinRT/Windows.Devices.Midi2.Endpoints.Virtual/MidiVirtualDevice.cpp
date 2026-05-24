@@ -10,7 +10,7 @@
 
 #include "pch.h"
 #include "MidiVirtualDevice.h"
-#include "Endpoints.Virtual.MidiVirtualDevice.g.cpp"
+#include "MidiVirtualDevice.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
@@ -39,7 +39,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 
 
     _Use_decl_annotations_
-    bool MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& updatedBlock) noexcept
+    bool MidiVirtualDevice::UpdateFunctionBlock(midi2enum::MidiFunctionBlock const& updatedBlock) noexcept
     {
         // If blocks are static, return false. By spec, they are not allowed to be updated.
         if (m_declaredEndpointInfo.HasStaticFunctionBlocks)
@@ -180,7 +180,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiVirtualDevice::SendFunctionBlockInfoNotificationMessage(midi2::MidiFunctionBlock const& fb) noexcept
+    bool MidiVirtualDevice::SendFunctionBlockInfoNotificationMessage(midi2enum::MidiFunctionBlock const& fb) noexcept
     {
         if (m_endpointConnection == nullptr || !m_endpointConnection.IsOpen())
         {

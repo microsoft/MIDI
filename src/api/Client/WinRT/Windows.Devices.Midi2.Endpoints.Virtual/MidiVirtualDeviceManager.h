@@ -9,7 +9,7 @@
 
 
 #pragma once
-#include "Endpoints.Virtual.MidiVirtualDeviceManager.g.h"
+#include "MidiVirtualDeviceManager.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {

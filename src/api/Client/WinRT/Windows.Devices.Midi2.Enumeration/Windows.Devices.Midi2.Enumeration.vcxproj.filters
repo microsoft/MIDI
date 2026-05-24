@@ -106,9 +106,6 @@
     <Midl Include="MidiEndpointUserSuppliedInfo.idl">
       <Filter>SDK\Metadata\Windows</Filter>
     </Midl>
-    <Midl Include="MidiImageAssetHelper.idl">
-      <Filter>SDK\Metadata\Windows</Filter>
-    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

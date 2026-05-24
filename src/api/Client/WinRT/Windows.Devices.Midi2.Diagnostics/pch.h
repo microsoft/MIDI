@@ -100,15 +100,8 @@ namespace internal =        ::WindowsMidiServicesInternal;
 namespace winrt::Windows::Devices::Midi2::Diagnostics {};
 namespace diag = ::winrt::Windows::Devices::Midi2::Diagnostics;
 
+#include <safe_cotaskmemfree.h>
 
-#define SAFE_COTASKMEMFREE(p) \
-    if (NULL != p) { \
-        CoTaskMemFree(p); \
-        (p) = NULL; \
-    }
-
-
-//#include <WindowsMidiServicesSdkRuntimeVersion.h>
 
 #include "resource.h"
 

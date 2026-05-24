@@ -10,7 +10,7 @@
 
 #include "pch.h"
 #include "MidiVirtualDeviceManager.h"
-#include "Endpoints.Virtual.MidiVirtualDeviceManager.g.cpp"
+#include "MidiVirtualDeviceManager.g.cpp"
 
 
 // TODO: Should just reference the source file from the service plugin
@@ -37,7 +37,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
         // we can't include custom properties in the selector, so we need to get all
         // the midi interfaces and run through them, checking the associator
         auto devices = enumeration::DeviceInformation::FindAllAsync(
-            MidiEndpointConnection::GetDeviceSelector(),
+            midi2::MidiEndpointConnection::GetDeviceSelector(),
             additionalProperties,
             enumeration::DeviceInformationKind::DeviceInterface
         ).get();

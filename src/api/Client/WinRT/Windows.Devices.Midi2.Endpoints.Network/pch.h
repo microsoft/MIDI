@@ -84,7 +84,6 @@ namespace internal =        ::WindowsMidiServicesInternal;
 #include <swd_helpers.h>
 #include <midi_ump_message_defs.h>
 
-#include "date_util.h"
 
 // service interface
 #include <WindowsMidiServices.h>
@@ -133,11 +132,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Network {};
 namespace network = ::winrt::Windows::Devices::Midi2::Endpoints::Network;
 
 
-#define SAFE_COTASKMEMFREE(p) \
-    if (NULL != p) { \
-        CoTaskMemFree(p); \
-        (p) = NULL; \
-    }
+#include <safe_cotaskmemfree.h>
 
 
 // libmidi2

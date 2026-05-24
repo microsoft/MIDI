@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "Reporting.MidiServiceSessionInfo.g.h"
+#include "MidiServiceSessionInfo.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::Reporting::implementation

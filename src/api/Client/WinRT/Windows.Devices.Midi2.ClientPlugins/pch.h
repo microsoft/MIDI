@@ -99,11 +99,8 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins {};
 namespace plugs = ::winrt::Windows::Devices::Midi2::ClientPlugins;
 
 
-#define SAFE_COTASKMEMFREE(p) \
-    if (NULL != p) { \
-        CoTaskMemFree(p); \
-        (p) = NULL; \
-    }
+#include <safe_cotaskmemfree.h>
+
 
 #include "resource.h"
 

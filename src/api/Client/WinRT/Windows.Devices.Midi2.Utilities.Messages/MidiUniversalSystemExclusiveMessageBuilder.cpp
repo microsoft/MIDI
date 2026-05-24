@@ -8,9 +8,9 @@
 
 #include "pch.h"
 #include "MidiUniversalSystemExclusiveMessageBuilder.h"
-#include "Messages.MidiUniversalSystemExclusiveMessageBuilder.g.cpp"
+#include "MidiUniversalSystemExclusiveMessageBuilder.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage64 MidiUniversalSystemExclusiveMessageBuilder::BuildIdentityRequest(
@@ -26,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
     _Use_decl_annotations_
     collections::IVector<midi2::MidiMessage64> MidiUniversalSystemExclusiveMessageBuilder::BuildIdentityRequestReply(
         uint64_t timestamp, 
-        midi2::MidiDeclaredDeviceIdentity const& identity)
+        midi2enum::MidiDeclaredDeviceIdentity const& identity)
     {
         UNREFERENCED_PARAMETER(timestamp);
         UNREFERENCED_PARAMETER(identity);

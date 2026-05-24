@@ -87,8 +87,8 @@ namespace WindowsMidiServicesPluginConfigurationLib
 
     struct MidiEndpointCustomMidi1PortProperties
     {
-        uint8_t GroupIndex;
-        winrt::hstring Name;
+        uint8_t GroupIndex{ 0 };
+        winrt::hstring Name{};
     };
 
     //enum MidiEndpointCustomMidi1NamingApproach

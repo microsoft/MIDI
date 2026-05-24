@@ -59,10 +59,11 @@ namespace streams =         ::winrt::Windows::Storage::Streams;
 namespace coreapp =         ::winrt::Windows::ApplicationModel::Core;
 
 #include <winrt/Windows.Devices.Midi2.h>
-namespace winrt::Windows::Devices::Midi2 {};
+namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
-namespace winrt::Windows::Devices::Midi2::Enumeration {};
+namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
+
 
 // pre-declare namespaces
 namespace WindowsMidiServicesInternal {};
@@ -100,18 +101,14 @@ namespace internal =        ::WindowsMidiServicesInternal;
 
 // Project-local ------------------------------------------------
 
-namespace midi2 = ::winrt::Windows::Devices::Midi2;
-
-
 namespace winrt::Windows::Devices::Midi2::ServiceConfig {};
 namespace svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
 
 
-#define SAFE_COTASKMEMFREE(p) \
-    if (NULL != p) { \
-        CoTaskMemFree(p); \
-        (p) = NULL; \
-    }
+#include <safe_cotaskmemfree.h>
+#include "MidiEndpointCustomProperties.h"
+#include "MidiEndpointCustomPropertiesCache.h"
+#include "MidiEndpointMatchCriteria.h"
 
 
 //#include <WindowsMidiServicesSdkRuntimeVersion.h>

@@ -44,7 +44,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         winrt::hstring m_parentDeviceInstanceId{};
         winrt::hstring m_parentEndpointDeviceId{};
         midi2::MidiGroup m_group{ nullptr };
-        midi2enum::Midi1PortFlow m_portFlow;
+        midi2enum::Midi1PortFlow m_portFlow {};
         winrt::hstring m_portName{};
         winrt::hstring m_portDeviceId{};
         uint32_t m_portNumber{};

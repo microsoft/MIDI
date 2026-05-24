@@ -8,9 +8,9 @@
 
 
 #pragma once
-#include "Messages.MidiMessageBuilder.g.h"
+#include "MidiMessageBuilder.g.h"
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     struct MidiMessageBuilder
     {
@@ -130,7 +130,7 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
             _In_ uint32_t const word3Data) noexcept;
     };
 }
-namespace winrt::Windows::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::factory_implementation
 {
     struct MidiMessageBuilder : MidiMessageBuilderT<MidiMessageBuilder, implementation::MidiMessageBuilder, winrt::static_lifetime>
     {

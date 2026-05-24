@@ -145,39 +145,39 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
 
 
-    midi2::Midi1PortNamingApproach MidiServiceEndpointCustomizationConfig::Midi1PortNamingApproach() const noexcept
+    midi2enum::Midi1PortNamingApproach MidiServiceEndpointCustomizationConfig::Midi1PortNamingApproach() const noexcept
     {
         switch (m_props->Midi1NamingApproach)
         {
         case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault:
-            return midi2::Midi1PortNamingApproach::Default;
+            return midi2enum::Midi1PortNamingApproach::Default;
 
         case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM:
-            return midi2::Midi1PortNamingApproach::UseClassicCompatible;
+            return midi2enum::Midi1PortNamingApproach::UseClassicCompatible;
 
         case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName:
-            return midi2::Midi1PortNamingApproach::UseNewStyle;
+            return midi2enum::Midi1PortNamingApproach::UseNewStyle;
 
         default:
-            return midi2::Midi1PortNamingApproach::Default;
+            return midi2enum::Midi1PortNamingApproach::Default;
 
         }
     }
     
     _Use_decl_annotations_
-    void MidiServiceEndpointCustomizationConfig::Midi1PortNamingApproach(_In_ midi2::Midi1PortNamingApproach const value) noexcept
+    void MidiServiceEndpointCustomizationConfig::Midi1PortNamingApproach(_In_ midi2enum::Midi1PortNamingApproach const value) noexcept
     {
         switch (value)
         {
-        case midi2::Midi1PortNamingApproach::Default:
+        case midi2enum::Midi1PortNamingApproach::Default:
             m_props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault;
             break;
 
-        case midi2::Midi1PortNamingApproach::UseClassicCompatible:
+        case midi2enum::Midi1PortNamingApproach::UseClassicCompatible:
             m_props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM;
             break;
 
-        case midi2::Midi1PortNamingApproach::UseNewStyle:
+        case midi2enum::Midi1PortNamingApproach::UseNewStyle:
             m_props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName;
             break;
         default:

@@ -335,6 +335,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi2.Utilities.Sequencing", "Client\WinRT\Windows.Devices.Midi2.Utilities.Sequencing\Windows.Devices.Midi2.Utilities.Sequencing.vcxproj", "{F4D45C9E-9B74-4DC9-ADDA-9D732E45DC18}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi2.Enumeration", "Client\WinRT\Windows.Devices.Midi2.Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj", "{001D0DAF-53D0-47F9-BECC-E7A481181912}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A631658B-3552-48E3-9DF1-EEA3E5016257} = {A631658B-3552-48E3-9DF1-EEA3E5016257}
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E} = {FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

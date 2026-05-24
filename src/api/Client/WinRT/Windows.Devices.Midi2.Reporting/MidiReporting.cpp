@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiReporting.h"
-#include "Reporting.MidiReporting.g.cpp"
+#include "MidiReporting.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Reporting::implementation
 {

@@ -10,17 +10,6 @@
 import "MidiApiContracts.idl";
 
 
-import "IMidiServiceTransportPluginConfig.idl";
-import "MidiDeclaredEndpointInfo.idl";
-import "MidiDeclaredDeviceIdentity.idl";
-import "MidiEndpointUserSuppliedInfo.idl";
-import "MidiDeclaredDeviceIdentity.idl";
-import "MidiDeclaredEndpointInfo.idl";
-import "MidiEndpointUserSuppliedInfo.idl";
-import "MidiFunctionBlock.idl";
-
-
-
 namespace Windows.Devices.Midi2.Endpoints.Virtual
 {
     [contract(MidiEndpointsVirtualApiContract, 1)]
@@ -31,24 +20,24 @@ namespace Windows.Devices.Midi2.Endpoints.Virtual
             String name,
             String description,
             String manufacturer,
-            Windows.Devices.Midi2.MidiDeclaredEndpointInfo declaredEndpointInfo
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo declaredEndpointInfo
         );
 
         MidiVirtualDeviceCreationConfig(
             String name,
             String description, 
             String manufacturer,
-            Windows.Devices.Midi2.MidiDeclaredEndpointInfo declaredEndpointInfo,
-            Windows.Devices.Midi2.MidiDeclaredDeviceIdentity declaredDeviceIdentity
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo declaredEndpointInfo,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity declaredDeviceIdentity
         );
 
         MidiVirtualDeviceCreationConfig(
             String name,
             String description,
             String manufacturer,
-            Windows.Devices.Midi2.MidiDeclaredEndpointInfo declaredEndpointInfo,
-            Windows.Devices.Midi2.MidiDeclaredDeviceIdentity declaredDeviceIdentity,
-            Windows.Devices.Midi2.MidiEndpointUserSuppliedInfo userSuppliedInfo
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo declaredEndpointInfo,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity declaredDeviceIdentity,
+            Windows.Devices.Midi2.Enumeration.MidiEndpointUserSuppliedInfo userSuppliedInfo
         );
 
 
@@ -64,10 +53,10 @@ namespace Windows.Devices.Midi2.Endpoints.Virtual
 
         Guid AssociationId{ get; };
 
-        Windows.Devices.Midi2.MidiDeclaredDeviceIdentity DeclaredDeviceIdentity;
-        Windows.Devices.Midi2.MidiDeclaredEndpointInfo DeclaredEndpointInfo;
-        Windows.Devices.Midi2.MidiEndpointUserSuppliedInfo UserSuppliedInfo;
+        Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity DeclaredDeviceIdentity;
+        Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo DeclaredEndpointInfo;
+        Windows.Devices.Midi2.Enumeration.MidiEndpointUserSuppliedInfo UserSuppliedInfo;
 
-        IVector<Windows.Devices.Midi2.MidiFunctionBlock> FunctionBlocks{ get; };
+        IVector<Windows.Devices.Midi2.Enumeration.MidiFunctionBlock> FunctionBlocks{ get; };
     }
 }

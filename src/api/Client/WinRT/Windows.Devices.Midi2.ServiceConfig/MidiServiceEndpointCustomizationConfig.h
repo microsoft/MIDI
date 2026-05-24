@@ -64,8 +64,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         void AddMidi1SourcePortCustomName(_In_ midi2::MidiGroup const& group, _In_ winrt::hstring const& name) noexcept;
         void AddMidi1DestinationPortCustomName(_In_ midi2::MidiGroup const& group, _In_ winrt::hstring const& name) noexcept;
 
-        midi2::Midi1PortNamingApproach Midi1PortNamingApproach() const noexcept;
-        void Midi1PortNamingApproach(_In_ midi2::Midi1PortNamingApproach const value) noexcept;
+        midi2enum::Midi1PortNamingApproach Midi1PortNamingApproach() const noexcept;
+        void Midi1PortNamingApproach(_In_ midi2enum::Midi1PortNamingApproach const value) noexcept;
 
         json::JsonObject GetConfigJson() const noexcept;
 

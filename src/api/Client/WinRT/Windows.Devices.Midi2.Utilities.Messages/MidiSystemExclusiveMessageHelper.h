@@ -7,9 +7,9 @@
 // ============================================================================
 
 #pragma once
-#include "Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper.g.h"
+#include "MidiSystemExclusiveMessageHelper.g.h"
 
-namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     struct MidiSystemExclusiveMessageHelper
     {
@@ -39,7 +39,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementati
         static bool MessageIsSystemExclusive7Message(_In_ uint32_t word0) noexcept;
     };
 }
-namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::factory_implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::factory_implementation
 {
     struct MidiSystemExclusiveMessageHelper : MidiSystemExclusiveMessageHelperT<MidiSystemExclusiveMessageHelper, implementation::MidiSystemExclusiveMessageHelper, winrt::static_lifetime>
     {

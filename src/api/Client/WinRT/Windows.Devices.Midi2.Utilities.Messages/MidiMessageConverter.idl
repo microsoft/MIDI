@@ -9,14 +9,6 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
-
-import "Midi1ChannelVoiceMessageStatusEnum.idl";
-import "Midi2ChannelVoiceMessageStatusEnum.idl";
-import "MidiGroup.idl";
-import "MidiChannel.idl";
-import "MidiMessage32.idl";
-
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [contract(MidiMessageUtilityApiContract,1)]

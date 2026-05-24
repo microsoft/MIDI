@@ -7,9 +7,9 @@
 // ============================================================================
 
 #pragma once
-#include "Messages.MidiUniversalSystemExclusiveMessageBuilder.g.h"
+#include "MidiUniversalSystemExclusiveMessageBuilder.g.h"
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     struct MidiUniversalSystemExclusiveMessageBuilder
     {
@@ -22,7 +22,7 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
 
         static collections::IVector<midi2::MidiMessage64> BuildIdentityRequestReply(
             _In_ uint64_t timestamp,
-            _In_ midi2::MidiDeclaredDeviceIdentity const& identity
+            _In_ midi2enum::MidiDeclaredDeviceIdentity const& identity
         );
 
         static midi2::MidiMessage64 BuildWait(_In_ uint64_t const timestamp);
@@ -31,7 +31,7 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
         static midi2::MidiMessage64 BuildACK(_In_ uint64_t const timestamp);
     };
 }
-namespace winrt::Windows::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::factory_implementation
 {
     struct MidiUniversalSystemExclusiveMessageBuilder : MidiUniversalSystemExclusiveMessageBuilderT<MidiUniversalSystemExclusiveMessageBuilder, implementation::MidiUniversalSystemExclusiveMessageBuilder, winrt::static_lifetime>
     {

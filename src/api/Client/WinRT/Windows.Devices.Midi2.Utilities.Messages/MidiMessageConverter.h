@@ -8,9 +8,9 @@
 
 
 #pragma once
-#include "Messages.MidiMessageConverter.g.h"
+#include "MidiMessageConverter.g.h"
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     struct MidiMessageConverter
     {
@@ -169,7 +169,7 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::factory_implementation
 {
     struct MidiMessageConverter : MidiMessageConverterT<MidiMessageConverter, implementation::MidiMessageConverter, winrt::static_lifetime>
     {

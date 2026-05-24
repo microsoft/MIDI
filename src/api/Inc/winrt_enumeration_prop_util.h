@@ -33,7 +33,8 @@ namespace WindowsMidiServicesInternal
         }
     }
 
-
+#pragma warning(push)
+#pragma warning(suppress: 26816)    // stack-allocated return value is fine for inline function like this.
     // IMapView version
     template<typename T>
     inline T GetDeviceInfoProperty(
@@ -56,6 +57,6 @@ namespace WindowsMidiServicesInternal
             return opt.value();
         }
     }
-
+#pragma warning(pop)
 
 }

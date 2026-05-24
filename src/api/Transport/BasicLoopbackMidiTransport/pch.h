@@ -91,6 +91,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "MidiXProc.h"
 
 #include "basic_loopback_transport_defs.h"
+#include "basic_loopback_transport_error_codes.h"
 
 #include "Midi2BasicLoopbackMidiTransport_i.c"
 #include "Midi2BasicLoopbackMidiTransport.h"

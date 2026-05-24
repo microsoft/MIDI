@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiVirtualDeviceCreationConfig.h"
-#include "Endpoints.Virtual.MidiVirtualDeviceCreationConfig.g.cpp"
+#include "MidiVirtualDeviceCreationConfig.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {

@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "Reporting.MidiReporting.g.h"
+#include "MidiReporting.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Reporting::implementation
 {

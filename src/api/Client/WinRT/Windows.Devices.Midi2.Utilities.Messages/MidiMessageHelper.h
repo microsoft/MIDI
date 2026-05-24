@@ -8,9 +8,9 @@
 
 
 #pragma once
-#include "Messages.MidiMessageHelper.g.h"
+#include "MidiMessageHelper.g.h"
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     struct MidiMessageHelper
     {
@@ -74,7 +74,7 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::factory_implementation
 {
     struct MidiMessageHelper : MidiMessageHelperT<MidiMessageHelper, implementation::MidiMessageHelper, winrt::static_lifetime>
     {

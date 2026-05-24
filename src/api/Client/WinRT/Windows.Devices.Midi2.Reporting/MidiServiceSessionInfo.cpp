@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiServiceSessionInfo.h"
-#include "Reporting.MidiServiceSessionInfo.g.cpp"
+#include "MidiServiceSessionInfo.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Reporting::implementation
 {

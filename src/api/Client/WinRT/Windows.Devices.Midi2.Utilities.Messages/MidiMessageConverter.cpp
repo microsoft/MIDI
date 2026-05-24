@@ -9,11 +9,11 @@
 
 #include "pch.h"
 #include "MidiMessageConverter.h"
-#include "Messages.MidiMessageConverter.g.cpp"
+#include "MidiMessageConverter.g.cpp"
 
 #include "midi1_message_defs.h"
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1Message(

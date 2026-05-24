@@ -79,12 +79,6 @@ namespace internal =        ::WindowsMidiServicesInternal;
 #include <resource_util.h>
 #include <ump_helpers.h>
 
-
-// service interface
-//#include <WindowsMidiServices.h>
-//#include <WindowsMidiServices_i.c>
-//#include <Midi2MidiSrvTransport.h>
-
 // SDK shared
 #include <SdkTraceLogging.h>
 
@@ -99,22 +93,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry {};
 namespace ci = ::winrt::Windows::Devices::Midi2::CapabilityInquiry;
 
 
-#define SAFE_COTASKMEMFREE(p) \
-    if (NULL != p) { \
-        CoTaskMemFree(p); \
-        (p) = NULL; \
-    }
-
-
-// libmidi2
-
-//#pragma warning(push)
-//#pragma warning(disable: 4996)
-//#include <libmidi2/bytestreamToUMP.h>
-//#include <libmidi2/umpToBytestream.h>
-//#pragma warning(pop)
-
-//#include <WindowsMidiServicesSdkRuntimeVersion.h>
+#include <safe_cotaskmemfree.h>
 
 #include "resource.h"
 

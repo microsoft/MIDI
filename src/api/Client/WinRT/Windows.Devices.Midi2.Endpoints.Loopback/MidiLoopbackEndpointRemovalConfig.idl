@@ -11,8 +11,6 @@ import "MidiApiContracts.idl";
 
 
 import "MidiLoopbackEndpointDefinition.idl";
-import "IMidiServiceTransportPluginConfig.idl";
-
 
 namespace Windows.Devices.Midi2.Endpoints.Loopback
 {

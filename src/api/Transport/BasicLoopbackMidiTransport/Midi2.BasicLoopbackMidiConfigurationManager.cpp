@@ -120,7 +120,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject, 
-                    BasicLoopbackTransportErrorCodes::EndpointNotFound, 
+                    BasicLoopbackTransportServiceErrorCode::EndpointNotFound,
                     internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
             }
             else if (SUCCEEDED(hr))
@@ -137,7 +137,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
             // no association id
             internal::SetConfigurationResponseObjectFailWithErrorCode(
                 responseObject, 
-                BasicLoopbackTransportErrorCodes::MissingAssociationId,
+                BasicLoopbackTransportServiceErrorCode::MissingAssociationId,
                 internal::ResourceGetWString(IDS_ERROR_MISSING_ASSOCIATION_ID));
         }
 
@@ -146,7 +146,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
     {
         internal::SetConfigurationResponseObjectFailWithErrorCode(
             responseObject, 
-            BasicLoopbackTransportErrorCodes::UnrecognizedCommand,
+            BasicLoopbackTransportServiceErrorCode::UnrecognizedCommand,
             internal::ResourceGetWString(IDS_ERROR_UNRECOGNIZED_COMMAND));
     }
 
@@ -264,7 +264,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::SetConfigurationResponseObjectFailWithErrorCode(
                                 responseObject,
-                                BasicLoopbackTransportErrorCodes::MissingEndpointName,
+                                BasicLoopbackTransportServiceErrorCode::MissingEndpointName,
                                 internal::ResourceGetWString(IDS_ERROR_MISSING_NAME));
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
@@ -286,7 +286,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::SetConfigurationResponseObjectFailWithErrorCode(
                                 responseObject,
-                                BasicLoopbackTransportErrorCodes::MissingUniqueId,
+                                BasicLoopbackTransportServiceErrorCode::MissingUniqueId,
                                 internal::ResourceGetWString(IDS_ERROR_MISSING_UNIQUE_ID));
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
@@ -312,7 +312,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::SetConfigurationResponseObjectFailWithErrorCode(
                                 responseObject, 
-                                BasicLoopbackTransportErrorCodes::DuplicateUniqueId, 
+                                BasicLoopbackTransportServiceErrorCode::DuplicateUniqueId,
                                 internal::ResourceGetWString(IDS_ERROR_DUPLICATE_UNIQUE_ID));
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
@@ -362,7 +362,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                                     responseObject,
-                                    BasicLoopbackTransportErrorCodes::EndpointCreationFailed,
+                                    BasicLoopbackTransportServiceErrorCode::EndpointCreationFailed,
                                     internal::ResourceGetWString(IDS_ERROR_CREATION_FAILED));
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
@@ -397,7 +397,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                         internal::SetConfigurationResponseObjectFailWithErrorCode(
                             responseObject,
-                            BasicLoopbackTransportErrorCodes::InvalidJson,
+                            BasicLoopbackTransportServiceErrorCode::InvalidJson,
                             internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
 
                         internal::JsonStringifyObjectToOutParam(responseObject, response);
@@ -419,7 +419,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                     internal::SetConfigurationResponseObjectFailWithErrorCode(
                         responseObject,
-                        BasicLoopbackTransportErrorCodes::InvalidJson,
+                        BasicLoopbackTransportServiceErrorCode::InvalidJson,
                         internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
 
                     internal::JsonStringifyObjectToOutParam(responseObject, response);

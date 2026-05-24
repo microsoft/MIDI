@@ -10,14 +10,14 @@
 
 #include "pch.h"
 #include "MidiStreamConfigRequestReceivedEventArgs.h"
-#include "Endpoints.Virtual.MidiStreamConfigRequestReceivedEventArgs.g.cpp"
+#include "MidiStreamConfigRequestReceivedEventArgs.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
     _Use_decl_annotations_
     void MidiStreamConfigRequestReceivedEventArgs::InternalInitialize(
         internal::MidiTimestamp timestamp,
-        midi2::MidiProtocol protocol,
+        midi2enum::MidiProtocol protocol,
         bool requestReceiveJRTimestamps,
         bool requestTransmitJRTimestamps
         )

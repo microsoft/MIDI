@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "Endpoints.Loopback.MidiLoopbackEndpointManager.g.h"
+#include "MidiLoopbackEndpointManager.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
@@ -26,20 +26,20 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         static bool RemoveTransientLoopbackEndpoints(
             _In_ loop::MidiLoopbackEndpointRemovalConfig deletionConfig);
 
-        static midi2::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
+        static midi2enum::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
             _In_ winrt::hstring loopbackEndpointId);
 
-        static midi2::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
-            _In_ midi2::MidiEndpointDeviceInformation const& loopbackEndpoint,
-            _In_ collections::IIterable<midi2::MidiEndpointDeviceInformation> endpointsToSearch);
+        static midi2enum::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            _In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint,
+            _In_ collections::IIterable<midi2enum::MidiEndpointDeviceInformation> endpointsToSearch);
 
-        static midi2::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
-            _In_ midi2::MidiEndpointDeviceInformation const& loopbackEndpoint);
+        static midi2enum::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            _In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint);
 
         static bool DoesLoopbackAExist(_In_ winrt::hstring const& uniqueIdentifier);
         static bool DoesLoopbackBExist(_In_ winrt::hstring const& uniqueIdentifier);
 
-        static winrt::guid GetAssociationId(_In_ midi2::MidiEndpointDeviceInformation const& loopbackEndpoint);
+        static winrt::guid GetAssociationId(_In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint);
     };
 }
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::factory_implementation

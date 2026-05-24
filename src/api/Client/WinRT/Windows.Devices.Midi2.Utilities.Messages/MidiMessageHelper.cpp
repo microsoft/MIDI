@@ -9,9 +9,9 @@
 
 #include "pch.h"
 #include "MidiMessageHelper.h"
-#include "Messages.MidiMessageHelper.g.cpp"
+#include "MidiMessageHelper.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     _Use_decl_annotations_
     collections::IVector<midi2::IMidiUniversalPacket> MidiMessageHelper::GetPacketListFromWordList(

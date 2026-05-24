@@ -10,8 +10,6 @@
 import "MidiApiContracts.idl";
 
 
-import "MidiMessage64.idl";
-
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [experimental]

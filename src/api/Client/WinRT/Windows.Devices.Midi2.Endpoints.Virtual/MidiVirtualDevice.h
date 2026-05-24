@@ -9,7 +9,7 @@
 
 
 #pragma once
-#include "Endpoints.Virtual.MidiVirtualDevice.g.h"
+#include "MidiVirtualDevice.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
@@ -53,9 +53,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
         winrt::hstring EndpointProductInstanceId() const noexcept { return m_declaredEndpointInfo.ProductInstanceId; }
 
         bool AreFunctionBlocksStatic() { return m_declaredEndpointInfo.HasStaticFunctionBlocks; }
-        collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks() noexcept { return m_functionBlocks.GetView(); }
+        collections::IMapView<uint8_t, midi2enum::MidiFunctionBlock> FunctionBlocks() noexcept { return m_functionBlocks.GetView(); }
 
-        bool UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& updatedBlock) noexcept;
+        bool UpdateFunctionBlock(_In_ midi2enum::MidiFunctionBlock const& updatedBlock) noexcept;
         bool UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
 
         winrt::guid AssociationId() const noexcept { return m_associationId; }
@@ -84,11 +84,11 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
     private:
         //virt::IMidiVirtualDeviceCreationConfiguration m_virtualDeviceConfiguration{ nullptr };
 
-        midi2::MidiDeclaredEndpointInfo m_declaredEndpointInfo{};
-        midi2::MidiDeclaredDeviceIdentity m_declaredDeviceIdentity{};
+        midi2enum::MidiDeclaredEndpointInfo m_declaredEndpointInfo{};
+        midi2enum::MidiDeclaredDeviceIdentity m_declaredDeviceIdentity{};
 
-        bool SendFunctionBlockInfoNotificationMessage(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
-        bool SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
+        bool SendFunctionBlockInfoNotificationMessage(_In_ midi2enum::MidiFunctionBlock const& fb) noexcept;
+        bool SendFunctionBlockNameNotificationMessages(_In_ midi2enum::MidiFunctionBlock const& fb) noexcept;
         bool SendEndpointNameNotificationMessages(_In_ winrt::hstring const& name) noexcept;
 
         //void MidiVirtualEndpointDevice::QueueWorker();
@@ -121,7 +121,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 
         bool m_suppressHandledMessages{ true };
 
-        collections::IMap<uint8_t, midi2::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2::MidiFunctionBlock>() };
+        collections::IMap<uint8_t, midi2enum::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2enum::MidiFunctionBlock>() };
 
         winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
     };

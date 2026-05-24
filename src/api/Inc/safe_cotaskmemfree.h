@@ -6,11 +6,16 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
-#include "MidiServiceTransportCommonCommands.h"
-#include "MidiServiceTransportCommonCommands.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
-{
+#pragma once
 
-}
+#ifndef SAFE_COTASKMEMFREE_H
+#define SAFE_COTASKMEMFREE_H
+
+#define SAFE_COTASKMEMFREE(p) \
+    if (NULL != p) { \
+        CoTaskMemFree(p); \
+        (p) = NULL; \
+    }
+
+#endif // SAFE_COTASKMEMFREE_H

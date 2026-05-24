@@ -9,9 +9,6 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
-import "MidiFunctionBlock.idl";
-import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiStreamConfigRequestReceivedEventArgs.idl";
 
 namespace Windows.Devices.Midi2.Endpoints.Virtual
@@ -24,9 +21,9 @@ namespace Windows.Devices.Midi2.Endpoints.Virtual
         //String ClientEndpointDeviceId{ get; };    // this is not available at initial creation time
         Guid AssociationId{ get; };
 
-        IMapView<UInt8, Windows.Devices.Midi2.MidiFunctionBlock> FunctionBlocks{ get; };
+        IMapView<UInt8, Windows.Devices.Midi2.Enumeration.MidiFunctionBlock> FunctionBlocks{ get; };
         
-        Boolean UpdateFunctionBlock(Windows.Devices.Midi2.MidiFunctionBlock block);
+        Boolean UpdateFunctionBlock(Windows.Devices.Midi2.Enumeration.MidiFunctionBlock block);
         Boolean UpdateEndpointName(String name);
 
         Boolean SuppressHandledMessages;

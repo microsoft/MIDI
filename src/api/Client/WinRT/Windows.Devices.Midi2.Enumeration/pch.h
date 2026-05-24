@@ -101,12 +101,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 namespace winrt::Windows::Devices::Midi2::Enumeration {};
 namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
 
-#define SAFE_COTASKMEMFREE(p) \
-    if (NULL != p) { \
-        CoTaskMemFree(p); \
-        (p) = NULL; \
-    }
-
+#include <safe_cotaskmemfree.h>
 
 
 #include "resource.h"

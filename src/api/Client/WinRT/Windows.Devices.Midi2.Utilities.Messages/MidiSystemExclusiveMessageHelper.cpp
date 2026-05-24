@@ -8,10 +8,10 @@
 
 #include "pch.h"
 #include "MidiSystemExclusiveMessageHelper.h"
-#include "Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper.g.cpp"
+#include "MidiSystemExclusiveMessageHelper.g.cpp"
 
 
-namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
 
 

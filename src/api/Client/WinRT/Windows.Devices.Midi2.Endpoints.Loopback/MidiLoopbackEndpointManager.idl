@@ -13,7 +13,6 @@ import "MidiApiContracts.idl";
 import "MidiLoopbackEndpointCreationResult.idl";
 import "MidiLoopbackEndpointCreationConfig.idl";
 import "MidiLoopbackEndpointRemovalConfig.idl";
-import "MidiEndpointDeviceInformation.idl";
 
 namespace Windows.Devices.Midi2.Endpoints.Loopback
 {
@@ -31,20 +30,20 @@ namespace Windows.Devices.Midi2.Endpoints.Loopback
         static Boolean RemoveTransientLoopbackEndpoints(
             MidiLoopbackEndpointRemovalConfig removalConfig);
 
-        static Windows.Devices.Midi2.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
+        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
             String loopbackEndpointId);
 
-        static Windows.Devices.Midi2.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
-            Windows.Devices.Midi2.MidiEndpointDeviceInformation loopbackEndpoint,
-            IIterable<Windows.Devices.Midi2.MidiEndpointDeviceInformation> endpointsToSearch);
+        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint,
+            IIterable<Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation> endpointsToSearch);
 
-        static Windows.Devices.Midi2.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
-            Windows.Devices.Midi2.MidiEndpointDeviceInformation loopbackEndpoint);
+        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint);
 
         static Boolean DoesLoopbackAExist(String uniqueIdentifier);
         static Boolean DoesLoopbackBExist(String uniqueIdentifier);
 
-        static Guid GetAssociationId(Windows.Devices.Midi2.MidiEndpointDeviceInformation loopbackEndpoint);
+        static Guid GetAssociationId(Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint);
     }
 }
 

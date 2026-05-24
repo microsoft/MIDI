@@ -9,13 +9,13 @@
 
 #include "pch.h"
 #include "MidiStreamMessageBuilder.h"
-#include "Messages.MidiStreamMessageBuilder.g.cpp"
+#include "MidiStreamMessageBuilder.g.cpp"
 
 
 
 
 
-namespace winrt::Windows::Devices::Midi2::Messages::implementation
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(
@@ -388,9 +388,9 @@ namespace winrt::Windows::Devices::Midi2::Messages::implementation
         internal::MidiTimestamp const timestamp,
         bool const active,
         uint8_t const functionBlockNumber,
-        midi2::MidiFunctionBlockUIHint const& uiHint,
-        midi2::MidiFunctionBlockRepresentsMidi10Connection const& midi10,
-        midi2::MidiFunctionBlockDirection const& direction,
+        midi2enum::MidiFunctionBlockUIHint const& uiHint,
+        midi2enum::MidiFunctionBlockRepresentsMidi10Connection const& midi10,
+        midi2enum::MidiFunctionBlockDirection const& direction,
         uint8_t const firstGroup,
         uint8_t const numberOfGroups,
         uint8_t const midiCIVersionFormat,
