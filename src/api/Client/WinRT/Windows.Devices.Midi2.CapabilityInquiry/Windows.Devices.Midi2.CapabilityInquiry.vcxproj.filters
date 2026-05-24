@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiApiContracts.idl">
+      <Filter>Contracts</Filter>
+    </Midl>
+    <Midl Include="MidiUniqueId.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-winrt-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{20136c57-6c5c-4380-b44b-0432479736b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Contracts">
+      <UniqueIdentifier>{b788e267-4f25-48c1-b185-a71a638d2be7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{1aec1ecb-6319-44a8-94a1-f3c8a7b5cbc1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

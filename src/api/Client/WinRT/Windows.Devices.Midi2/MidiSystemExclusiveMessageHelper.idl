@@ -12,7 +12,7 @@ import "MidiApiContracts.idl";
 
 import "MidiMessage64.idl";
 
-namespace Windows.Devices.Midi2.Utilities.SysExTransfer
+namespace Windows.Devices.Midi2.Messages
 {
     [experimental]
     [static_name("IMidiSystemExclusiveMessageHelperStatics")]

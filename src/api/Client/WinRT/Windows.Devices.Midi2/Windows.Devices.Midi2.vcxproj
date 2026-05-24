@@ -295,45 +295,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="date_util.h" />
-    <ClInclude Include="MidiNetworkClientConnectResult.h" />
-    <ClInclude Include="MidiNetworkClientDisconnectResult.h" />
-    <ClInclude Include="MidiNetworkHostCreationResult.h" />
-    <ClInclude Include="MidiNetworkHostRemovalResult.h" />
-    <ClInclude Include="MidiNetworkHostUpdateResult.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointCreationResult.h" />
-    <ClInclude Include="MidiLoopbackEndpointCreationResult.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointManager.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h" />
     <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
       <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualPatchBayDestinationDefinition.h">
-      <DependentUpon>MidiVirtualPatchBayDestinationDefinition.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualPatchBayManager.h">
-      <DependentUpon>MidiVirtualPatchBayManager.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualPatchBayRouteCreationConfig.h">
-      <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualPatchBayRouteDefinition.h" />
-    <ClInclude Include="MidiVirtualPatchBayRouteRemovalConfig.h">
-      <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualPatchBayRouteUpdateConfig.h">
-      <DependentUpon>MidiVirtualPatchBayRouteUpdateConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualPatchBaySourceDefinition.h">
-      <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="midi_sdk_idl_defs.h" />
-    <ClInclude Include="MidiNetworkAdvertisedHost.h">
-      <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkClientMatchCriteria.h">
-      <DependentUpon>MidiNetworkClientMatchCriteria.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
@@ -344,38 +307,9 @@
     <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h">
       <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkAdvertisedHostAddedEventArgs.h">
-      <DependentUpon>MidiNetworkAdvertisedHostAddedEventArgs.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkAdvertisedHostRemovedEventArgs.h">
-      <DependentUpon>MidiNetworkAdvertisedHostRemovedEventArgs.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkAdvertisedHostUpdatedEventArgs.h">
-      <DependentUpon>MidiNetworkAdvertisedHostUpdatedEventArgs.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkAdvertisedHostWatcher.h">
-      <DependentUpon>MidiNetworkAdvertisedHostWatcher.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="endpoint_device_interface_helpers.h" />
     <ClInclude Include="MidiEndpointDevicePropertyHelper.h">
       <DependentUpon>MidiEndpointDevicePropertyHelper.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkClientConnectConfig.h">
-      <DependentUpon>MidiNetworkClientConnectConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkClientDisconnectConfig.h">
-      <DependentUpon>MidiNetworkClientDisconnectConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkTransportManager.h">
-      <DependentUpon>MidiNetworkTransportManager.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkHostCreationConfig.h">
-      <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkHostRemovalConfig.h">
-      <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="memory_buffer.h" />
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -424,53 +358,8 @@
     <ClInclude Include="MidiMessage96.h">
       <DependentUpon>MidiMessage96.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiChannelEndpointListener.h">
-      <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiGroupEndpointListener.h">
-      <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiMessageTypeEndpointListener.h">
-      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiDiagnostics.h">
-      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiReporting.h">
-      <DependentUpon>MidiReporting.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServicePingResponseSummary.h">
-      <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServiceSessionInfo.h">
-      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointRemovalConfig.h">
-      <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointManager.h">
-      <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointCreationConfig.h">
-      <DependentUpon>MidiLoopbackEndpointCreationConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiStreamConfigRequestReceivedEventArgs.h">
-      <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiUniqueId.h">
-      <DependentUpon>MidiUniqueId.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiUniversalSystemExclusiveChannel.h">
       <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualDevice.h">
-      <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualDeviceCreationConfig.h">
-      <DependentUpon>MidiVirtualDeviceCreationConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualDeviceManager.h">
-      <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
@@ -484,19 +373,13 @@
     <ClInclude Include="MidiMessageHelper.h">
       <DependentUpon>MidiMessageHelper.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceConfig.h">
-      <DependentUpon>MidiServiceConfig.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiSystemExclusiveMessageHelper.h">
       <DependentUpon>MidiSystemExclusiveMessageHelper.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiSystemExclusiveSender.h">
       <DependentUpon>MidiSystemExclusiveSender.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="midi_function_block_prop_util.h" />
-    <ClInclude Include="midi_network_defs.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
-    <ClInclude Include="enumeration_prop_util.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
@@ -511,42 +394,13 @@
     <ClInclude Include="MidiImageAssetHelper.h">
       <DependentUpon>MidiImageAssetHelper.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceEndpointCustomizationConfig.h">
-      <DependentUpon>MidiServiceEndpointCustomizationConfig.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServiceTransportCommand.h">
-      <DependentUpon>MidiServiceTransportCommand.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServiceTransportCommonCommands.h">
-      <DependentUpon>MidiServiceTransportCommonCommands.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
-      <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualPatchBayRouteStatus.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiNetworkClientConnectResult.cpp" />
-    <ClCompile Include="MidiNetworkClientDisconnectResult.cpp" />
-    <ClCompile Include="MidiNetworkHostCreationResult.cpp" />
-    <ClCompile Include="MidiNetworkHostRemovalResult.cpp" />
-    <ClCompile Include="MidiNetworkHostUpdateResult.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointCreationResult.cpp" />
-    <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointManager.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp" />
     <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
       <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointConnection_ComExtensions.cpp" />
-    <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
-      <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkClientMatchCriteria.cpp">
-      <DependentUpon>MidiNetworkClientMatchCriteria.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClCompile>
@@ -556,56 +410,8 @@
     <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp">
       <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkAdvertisedHostAddedEventArgs.cpp">
-      <DependentUpon>MidiNetworkAdvertisedHostAddedEventArgs.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkAdvertisedHostRemovedEventArgs.cpp">
-      <DependentUpon>MidiNetworkAdvertisedHostRemovedEventArgs.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkAdvertisedHostUpdatedEventArgs.cpp">
-      <DependentUpon>MidiNetworkAdvertisedHostUpdatedEventArgs.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkAdvertisedHostWatcher.cpp">
-      <DependentUpon>MidiNetworkAdvertisedHostWatcher.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiEndpointDevicePropertyHelper.cpp">
       <DependentUpon>MidiEndpointDevicePropertyHelper.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkClientConnectConfig.cpp">
-      <DependentUpon>MidiNetworkClientConnectConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkClientDisconnectConfig.cpp">
-      <DependentUpon>MidiNetworkClientDisconnectConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkTransportManager.cpp">
-      <DependentUpon>MidiNetworkTransportManager.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkHostCreationConfig.cpp">
-      <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
-      <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiChannelEndpointListener.cpp">
-      <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiGroupEndpointListener.cpp">
-      <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
-      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiDiagnostics.cpp">
-      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiReporting.cpp">
-      <DependentUpon>MidiReporting.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServicePingResponseSummary.cpp">
-      <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServiceSessionInfo.cpp">
-      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiEndpointConnection.cpp">
@@ -683,32 +489,8 @@
     <ClCompile Include="MidiMessage96.cpp">
       <DependentUpon>MidiMessage96.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackEndpointRemovalConfig.cpp">
-      <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiLoopbackEndpointManager.cpp">
-      <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiLoopbackEndpointCreationConfig.cpp">
-      <DependentUpon>MidiLoopbackEndpointCreationConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiStreamConfigRequestReceivedEventArgs.cpp">
-      <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiUniqueId.cpp">
-      <DependentUpon>MidiUniqueId.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiUniversalSystemExclusiveChannel.cpp">
       <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualDevice.cpp">
-      <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualDeviceCreationConfig.cpp">
-      <DependentUpon>MidiVirtualDeviceCreationConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualDeviceManager.cpp">
-      <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessageBuilder.cpp">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
@@ -722,35 +504,12 @@
     <ClCompile Include="MidiMessageHelper.cpp">
       <DependentUpon>MidiMessageHelper.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiServiceConfig.cpp">
-      <DependentUpon>MidiServiceConfig.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveMessageHelper.cpp">
       <DependentUpon>MidiSystemExclusiveMessageHelper.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSender.cpp">
       <DependentUpon>MidiSystemExclusiveSender.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiVirtualPatchBayDestinationDefinition.cpp">
-      <DependentUpon>MidiVirtualPatchBayDestinationDefinition.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualPatchBayManager.cpp">
-      <DependentUpon>MidiVirtualPatchBayManager.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualPatchBayRouteCreationConfig.cpp">
-      <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualPatchBayRouteDefinition.cpp" />
-    <ClCompile Include="MidiVirtualPatchBayRouteRemovalConfig.cpp">
-      <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualPatchBayRouteUpdateConfig.cpp">
-      <DependentUpon>MidiVirtualPatchBayRouteUpdateConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualPatchBaySourceDefinition.cpp">
-      <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -763,24 +522,10 @@
     <ClCompile Include="MidiImageAssetHelper.cpp">
       <DependentUpon>MidiImageAssetHelper.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiServiceEndpointCustomizationConfig.cpp">
-      <DependentUpon>MidiServiceEndpointCustomizationConfig.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServiceTransportCommand.cpp">
-      <DependentUpon>MidiServiceTransportCommand.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServiceTransportCommonCommands.cpp">
-      <DependentUpon>MidiServiceTransportCommonCommands.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
-      <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualPatchBayRouteStatus.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi1PortNamingApproachEnum.idl" />
     <Midl Include="MidiApiContracts.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl" />
     <Midl Include="MidiImageAssetHelper.idl" />
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
@@ -791,9 +536,6 @@
     <Midl Include="MidiEndpointConnectionBasicSettings.idl" />
     <Midl Include="MidiEndpointDeviceIdHelper.idl" />
     <Midl Include="Midi1PortNameTableEntry.idl" />
-    <Midl Include="MidiLoopbackEndpointCreationResultErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkAdvertisedHost.idl" />
-    <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiDeclaredEndpointInfo.idl" />
     <Midl Include="MidiDeclaredDeviceIdentity.idl" />
     <Midl Include="MidiDeclaredStreamConfiguration.idl" />
@@ -815,7 +557,6 @@
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
-    <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
@@ -824,39 +565,9 @@
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="IMidiEndpointConnectionSettings.idl" />
-    <Midl Include="MidiMessageTypeEndpointListener.idl" />
-    <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />
-    <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl" />
-    <Midl Include="MidiNetworkAdvertisedHostUpdatedEventArgs.idl" />
-    <Midl Include="MidiNetworkAdvertisedHostWatcher.idl" />
-    <Midl Include="MidiNetworkAuthenticationTypeEnum.idl" />
-    <Midl Include="MidiNetworkClientConnectConfig.idl" />
-    <Midl Include="MidiNetworkClientConnectResultErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkClientConnectResult.idl" />
-    <Midl Include="MidiNetworkClientDisconnectConfig.idl" />
-    <Midl Include="MidiNetworkClientDisconnectResult.idl" />
-    <Midl Include="MidiNetworkClientDisconnectResultErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkClientMatchCriteria.idl" />
-    <Midl Include="MidiNetworkConfiguredClient.idl" />
-    <Midl Include="MidiNetworkConfiguredHost.idl" />
-    <Midl Include="MidiNetworkHostCreationResultErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkHostRemovalResultErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkHostUpdateResult.idl" />
-    <Midl Include="MidiNetworkHostUpdateResultErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkTransportManager.idl" />
-    <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
-    <Midl Include="MidiNetworkHostCreationConfig.idl" />
-    <Midl Include="MidiNetworkHostCreationResult.idl" />
-    <Midl Include="MidiNetworkHostRemovalConfig.idl" />
-    <Midl Include="MidiNetworkHostRemovalResult.idl" />
     <Midl Include="Midi1PortFlowEnum.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
-    <Midl Include="MidiServiceConfigEndpointMatchCriteria.idl" />
-    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
-    <Midl Include="MidiServiceTransportCommonCommands.idl" />
-    <Midl Include="MidiServiceEndpointCustomizationConfig.idl" />
-    <Midl Include="MidiServiceTransportCommand.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiMessage128.idl" />
@@ -865,31 +576,9 @@
     <Midl Include="MidiMessage96.idl" />
     <Midl Include="MidiMessageTypeEnum.idl" />
     <Midl Include="MidiPacketTypeEnum.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointCreationConfig.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointCreationResult.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointDefinition.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointManager.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl" />
     <Midl Include="MidiSystemTimerSettings.idl" />
-    <Midl Include="MidiDiagnostics.idl" />
-    <Midl Include="MidiReporting.idl" />
-    <Midl Include="MidiServicePingResponse.idl" />
-    <Midl Include="MidiServicePingResponseSummary.idl" />
-    <Midl Include="MidiServiceSessionConnectionInfo.idl" />
-    <Midl Include="MidiServiceSessionInfo.idl" />
-    <Midl Include="MidiServiceTransportPluginInfo.idl" />
-    <Midl Include="MidiLoopbackEndpointRemovalConfig.idl" />
-    <Midl Include="MidiLoopbackEndpointManager.idl" />
-    <Midl Include="MidiLoopbackEndpointDefinition.idl" />
-    <Midl Include="MidiLoopbackEndpointCreationResult.idl" />
-    <Midl Include="MidiLoopbackEndpointCreationConfig.idl" />
-    <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl" />
-    <Midl Include="MidiUniqueId.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
     <Midl Include="MidiUniversalSystemExclusiveMessageBuilder.idl" />
-    <Midl Include="MidiVirtualDevice.idl" />
-    <Midl Include="MidiVirtualDeviceCreationConfig.idl" />
-    <Midl Include="MidiVirtualDeviceManager.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />
@@ -899,25 +588,12 @@
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
     <Midl Include="MidiMessageHelper.idl" />
-    <Midl Include="MidiServiceConfigResponse.idl" />
     <Midl Include="IMidiServiceTransportPluginConfig.idl" />
-    <Midl Include="MidiServiceConfigResponseStatusEnum.idl" />
-    <Midl Include="MidiServiceConfig.idl" />
     <Midl Include="MidiSystemExclusiveDataFormatEnum.idl" />
     <Midl Include="MidiSystemExclusiveDataReaderFormatEnum.idl" />
     <Midl Include="MidiSystemExclusiveMessageHelper.idl" />
     <Midl Include="MidiSystemExclusiveSender.idl" />
     <Midl Include="MidiSystemExclusiveSendProgress.idl" />
-    <Midl Include="MidiVirtualPatchBayDestinationDefinition.idl" />
-    <Midl Include="MidiVirtualPatchBayManager.idl" />
-    <Midl Include="MidiVirtualPatchBayRouteCreationConfig.idl" />
-    <Midl Include="MidiVirtualPatchBayRouteCreationResult.idl" />
-    <Midl Include="MidiVirtualPatchBayRouteDefinition.idl" />
-    <Midl Include="MidiVirtualPatchBayRouteRemovalConfig.idl" />
-    <Midl Include="MidiVirtualPatchBayRouteStatus.idl" />
-    <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl" />
-    <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl" />
-    <Midl Include="MidiVirtualPatchBaySourceDefinition.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

@@ -14,7 +14,7 @@ import "IMidiUniversalPacket.idl";
 import "MidiMessageStruct.idl";
 
 
-namespace Windows.Devices.Midi2
+namespace Windows.Devices.Midi2.Messages
 {
     [contract(MidiCoreApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.IMidiMessage128", UUID_IMidiMessage128)]

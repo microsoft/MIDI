@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiChannelEndpointListener.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiGroupEndpointListener.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTypeEndpointListener.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-winrt-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{05804d9a-7989-4b54-ade8-048f3bda6b67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Contracts">
+      <UniqueIdentifier>{ff4dad86-0cba-4cd5-887c-6d667c1f21a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{ba462cc8-9013-4edb-96c6-cd5c544931e6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
