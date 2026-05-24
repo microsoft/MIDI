@@ -11,14 +11,17 @@ import "MidiApiContracts.idl";
 
 
 
-namespace Windows.Devices.Midi2.Messages
+namespace Windows.Devices.Midi2.Utilities.Messages
 {
-    [contract(MidiCoreApiContract,1)]
+    [contract(MidiMessageUtilityApiContract,1)]
     [flags]
-    enum MidiFunctionBlockDiscoveryRequests
+    enum MidiEndpointDiscoveryRequests
     {
-        None =                      0x00000000,
-        RequestFunctionBlockInfo =  0x00000001,
-        RequestFunctionBlockName =  0x00000002,
+        None =                          0x00000000,
+        RequestEndpointInfo =           0x00000001,
+        RequestDeviceIdentity =         0x00000002,
+        RequestEndpointName =           0x00000004,
+        RequestProductInstanceId =      0x00000008,
+        RequestStreamConfiguration =    0x00000010,
     };
 }

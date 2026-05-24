@@ -12,11 +12,11 @@ import "MidiApiContracts.idl";
 
 import "MidiMessage64.idl";
 
-namespace Windows.Devices.Midi2.Messages
+namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [experimental]
-    [static_name("IMidiSystemExclusiveMessageHelperStatics")]
-    [contract(MidiCoreApiContract,1)]
+    //[static_name("IMidiSystemExclusiveMessageHelperStatics")]
+    [contract(MidiMessageUtilityApiContract,1)]
     static runtimeclass MidiSystemExclusiveMessageHelper
     {
         // System Exclusive 7 handling

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation and Contributors.
+﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of the Windows MIDI Services App SDK and should be used
@@ -6,11 +6,5 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "..\shared\midi_sdk_idl_defs.h"
 
-
-namespace Windows.Devices.Midi2
-{
-    [contractversion(1)]
-    apicontract MidiCoreApiContract { };
-}
+#include "pch.h"

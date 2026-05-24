@@ -13,7 +13,7 @@ import "IMidiEndpointConnectionSettings.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [contract(MidiSessionAndConnectionApiContract, 1)]
+    [contract(MidiCoreApiContract,1)]
     [uuid(UUID_IMidiEndpointConnectionSource), version(1.0)]
     interface IMidiEndpointConnectionSource
     {

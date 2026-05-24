@@ -7,18 +7,10 @@
 // ============================================================================
 
 #include "..\shared\midi_sdk_idl_defs.h"
-import "MidiApiContracts.idl";
 
 
-
-namespace Windows.Devices.Midi2.Messages
+namespace Windows.Devices.Midi2.Utilities.Messages
 {
-    [contract(MidiCoreApiContract,1)]
-    [flags]
-    enum MidiFunctionBlockDiscoveryRequests
-    {
-        None =                      0x00000000,
-        RequestFunctionBlockInfo =  0x00000001,
-        RequestFunctionBlockName =  0x00000002,
-    };
+    [contractversion(1)]
+    apicontract MidiMessageUtilityApiContract { };
 }

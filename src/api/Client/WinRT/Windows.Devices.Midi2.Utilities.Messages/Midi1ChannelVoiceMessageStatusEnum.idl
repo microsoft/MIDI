@@ -11,14 +11,17 @@ import "MidiApiContracts.idl";
 
 
 
-namespace Windows.Devices.Midi2.Messages
+namespace Windows.Devices.Midi2.Utilities.Messages
 {
-    [contract(MidiCoreApiContract,1)]
-    [flags]
-    enum MidiFunctionBlockDiscoveryRequests
+    [contract(MidiMessageUtilityApiContract,1)]
+    enum Midi1ChannelVoiceMessageStatus
     {
-        None =                      0x00000000,
-        RequestFunctionBlockInfo =  0x00000001,
-        RequestFunctionBlockName =  0x00000002,
+        NoteOff =           0x8,
+        NoteOn =            0x9,
+        PolyPressure =      0xA,
+        ControlChange =     0xB,
+        ProgramChange =     0xC,
+        ChannelPressure =   0xD,
+        PitchBend =         0xE,
     };
 }

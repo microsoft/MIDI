@@ -20,10 +20,10 @@ import "MidiGroup.idl";
 import "MidiChannel.idl";
 
 
-namespace Windows.Devices.Midi2.Messages
+namespace Windows.Devices.Midi2.Utilities.Messages
 {
-    [contract(MidiCoreApiContract,1)]
-    [static_name("Windows.Devices.Midi2.Messages.IMidiMessageHelperStatics", UUID_IMidiMessageHelperStatics)]
+    [contract(MidiMessageUtilityApiContract,1)]
+    [static_name("Windows.Devices.Midi2.Utilities.Messages.IMidiMessageHelperStatics", UUID_IMidiMessageHelperStatics)]
     static runtimeclass MidiMessageHelper
     {
         static Boolean ValidateMessage32MessageType(UInt32 word0);

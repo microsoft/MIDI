@@ -17,10 +17,10 @@ import "MidiGroup.idl";
 import "MidiChannel.idl";
 import "MidiMessage32.idl";
 
-namespace Windows.Devices.Midi2.Messages
+namespace Windows.Devices.Midi2.Utilities.Messages
 {
-    [contract(MidiCoreApiContract,1)]
-    [static_name("Windows.Devices.Midi2.Messages.IMidiMessageConverterStatics", UUID_IMidiMessageConverterStatics)]
+    [contract(MidiMessageUtilityApiContract,1)]
+    [static_name("Windows.Devices.Midi2.Utilities.Messages.IMidiMessageConverterStatics", UUID_IMidiMessageConverterStatics)]
     static runtimeclass MidiMessageConverter
     {
         static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1Message(

@@ -21,11 +21,11 @@ import "MidiUniversalSystemExclusiveChannel.idl";
 import "MidiDeclaredDeviceIdentity.idl";
 
 
-namespace Windows.Devices.Midi2.Messages
+namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [experimental]
     //[static_name("IMidiUniversalSystemExclusiveMessageBuilderStatics", UUID_IMidiUniversalSystemExclusiveMessageBuilderStatics)]
-    [contract(MidiCoreApiContract,1)]
+    [contract(MidiMessageUtilityApiContract,1)]
     static runtimeclass MidiUniversalSystemExclusiveMessageBuilder
     {
         static Windows.Devices.Midi2.MidiMessage64 BuildIdentityRequest(

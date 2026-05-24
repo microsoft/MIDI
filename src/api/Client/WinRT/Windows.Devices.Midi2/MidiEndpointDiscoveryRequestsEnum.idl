@@ -13,7 +13,7 @@ import "MidiApiContracts.idl";
 
 namespace Windows.Devices.Midi2.Messages
 {
-    [contract(MidiMessageUtilitiesApiContract, 1)]
+    [contract(MidiCoreApiContract,1)]
     [flags]
     enum MidiEndpointDiscoveryRequests
     {

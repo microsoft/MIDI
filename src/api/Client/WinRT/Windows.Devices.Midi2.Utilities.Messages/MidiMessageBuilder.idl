@@ -22,10 +22,10 @@ import "MidiSystemExclusive8StatusEnum.idl";
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
-namespace Windows.Devices.Midi2.Messages
+namespace Windows.Devices.Midi2.Utilities.Messages
 {
-    [contract(MidiCoreApiContract,1)]
-    [static_name("Windows.Devices.Midi2.Messages.IMidiMessageBuilderStatics", UUID_IMidiMessageBuilderStatics)]
+    [contract(MidiMessageUtilityApiContract,1)]
+    [static_name(Windows.Devices.Midi2.Utilities.Messages.IMidiMessageBuilderStatics", UUID_IMidiMessageBuilderStatics)]
     static runtimeclass MidiMessageBuilder
     {
         static Windows.Devices.Midi2.MidiMessage32 BuildUtilityMessage(
