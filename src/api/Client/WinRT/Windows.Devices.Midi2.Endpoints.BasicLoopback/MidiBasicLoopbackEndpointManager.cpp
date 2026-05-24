@@ -19,7 +19,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 {
     bool MidiBasicLoopbackEndpointManager::IsTransportAvailable() noexcept
     {
-        auto transports = rept::MidiReporting::GetInstalledTransportPlugins();
+        auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
 
         for (auto const& transport : transports)
         {
@@ -211,7 +211,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
     _Use_decl_annotations_
     winrt::guid MidiBasicLoopbackEndpointManager::GetAssociationId(
-        midi2::MidiEndpointDeviceInformation const& basicLoopbackEndpoint) noexcept
+        midi2enum::MidiEndpointDeviceInformation const& basicLoopbackEndpoint) noexcept
     {
         if (basicLoopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
             basicLoopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)

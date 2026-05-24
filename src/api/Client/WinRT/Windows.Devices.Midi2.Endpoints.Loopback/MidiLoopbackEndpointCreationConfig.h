@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "Endpoints.Loopback.MidiLoopbackEndpointCreationConfig.g.h"
+#include "MidiLoopbackEndpointCreationConfig.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {

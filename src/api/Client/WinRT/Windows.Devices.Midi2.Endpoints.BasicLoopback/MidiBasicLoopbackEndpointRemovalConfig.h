@@ -19,7 +19,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
         MidiBasicLoopbackEndpointRemovalConfig(_In_ winrt::guid const& associationId);
 
-        winrt::guid TransportId() { return loop::MidiLoopbackEndpointManager::TransportId(); }
+        winrt::guid TransportId() { return bloop::MidiBasicLoopbackEndpointManager::TransportId(); }
 
         bool IsFromCurrentConfigFile() { return false; }
         json::JsonObject GetConfigJson();

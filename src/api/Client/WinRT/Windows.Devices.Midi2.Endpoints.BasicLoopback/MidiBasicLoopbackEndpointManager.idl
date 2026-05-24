@@ -14,8 +14,6 @@ import "MidiBasicLoopbackEndpointCreationResult.idl";
 import "MidiBasicLoopbackEndpointCreationConfig.idl";
 import "MidiBasicLoopbackEndpointRemovalConfig.idl";
 
-import "MidiEndpointDeviceInformation.idl";
-
 namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
 {
     [contract(MidiEndpointsBasicLoopbackApiContract, 1)]
@@ -32,7 +30,8 @@ namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
         static Boolean RemoveTransientLoopbackEndpoint(
             MidiBasicLoopbackEndpointRemovalConfig removalConfig);
 
-        static Guid GetAssociationId(Windows.Devices.Midi2.MidiEndpointDeviceInformation basicLoopbackEndpoint);
+        static Guid GetAssociationId(
+            Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation basicLoopbackEndpoint);
 
         static Boolean DoesLoopbackExist(String uniqueIdentifier);
 

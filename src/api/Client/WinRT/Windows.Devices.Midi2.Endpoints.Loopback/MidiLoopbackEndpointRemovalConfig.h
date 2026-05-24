@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig.g.h"
+#include "MidiLoopbackEndpointRemovalConfig.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {

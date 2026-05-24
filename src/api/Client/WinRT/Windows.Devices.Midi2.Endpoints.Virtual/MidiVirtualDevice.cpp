@@ -220,7 +220,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiVirtualDevice::SendFunctionBlockNameNotificationMessages(midi2::MidiFunctionBlock const& fb) noexcept
+    bool MidiVirtualDevice::SendFunctionBlockNameNotificationMessages(midi2enum::MidiFunctionBlock const& fb) noexcept
     {
         if (m_endpointConnection == nullptr || !m_endpointConnection.IsOpen())
         {
@@ -455,11 +455,11 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 
                     if (internal::EndpointDiscoveryFilterRequestsStreamConfigurationNotification(filterFlags))
                     {
-                        uint8_t protocol{ (uint8_t)midi2::MidiProtocol::Midi1 };
+                        uint8_t protocol{ (uint8_t)midi2enum::MidiProtocol::Midi1 };
 
                         if (m_declaredEndpointInfo.SupportsMidi20Protocol)
                         {
-                            protocol = (uint8_t)midi2::MidiProtocol::Midi2;
+                            protocol = (uint8_t)midi2enum::MidiProtocol::Midi2;
                         }
 
                         auto streamConfigurationNotification = msgs::MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
@@ -577,7 +577,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
                     // raise stream configuration request message
                     auto reqArgs = winrt::make_self<implementation::MidiStreamConfigRequestReceivedEventArgs>();
 
-                    auto protocol = (midi2::MidiProtocol)MIDIWORDBYTE3(message.Word0());
+                    auto protocol = (midi2enum::MidiProtocol)MIDIWORDBYTE3(message.Word0());
                     bool rxjr = (bool)((message.Word0() & 0x00000002) == 0x00000002);
                     bool txjr = (bool)((message.Word0() & 0x00000001) == 0x00000001);
 

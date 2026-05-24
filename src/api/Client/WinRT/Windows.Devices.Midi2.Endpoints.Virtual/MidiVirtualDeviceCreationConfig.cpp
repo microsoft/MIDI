@@ -17,7 +17,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
         _In_ winrt::hstring name,
         _In_ winrt::hstring description,
         _In_ winrt::hstring manufacturer,
-        midi2::MidiDeclaredEndpointInfo declaredEndpointInfo
+        midi2enum::MidiDeclaredEndpointInfo declaredEndpointInfo
     )
     {
         Name(name);
@@ -31,8 +31,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
         _In_ winrt::hstring name,
         _In_ winrt::hstring description,
         _In_ winrt::hstring manufacturer,
-        midi2::MidiDeclaredEndpointInfo declaredEndpointInfo,
-        midi2::MidiDeclaredDeviceIdentity declaredDeviceIdentity
+        midi2enum::MidiDeclaredEndpointInfo declaredEndpointInfo,
+        midi2enum::MidiDeclaredDeviceIdentity declaredDeviceIdentity
         ) : MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo)
     {
         m_declaredDeviceIdentity = declaredDeviceIdentity;
@@ -42,9 +42,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Virtual::implementation
         _In_ winrt::hstring name,
         _In_ winrt::hstring description,
         _In_ winrt::hstring manufacturer,
-        midi2::MidiDeclaredEndpointInfo declaredEndpointInfo,
-        midi2::MidiDeclaredDeviceIdentity declaredDeviceIdentity,
-        midi2::MidiEndpointUserSuppliedInfo userSuppliedInfo
+        midi2enum::MidiDeclaredEndpointInfo declaredEndpointInfo,
+        midi2enum::MidiDeclaredDeviceIdentity declaredDeviceIdentity,
+        midi2enum::MidiEndpointUserSuppliedInfo userSuppliedInfo
     ) : MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity)
     {
         m_userSuppliedInfo = userSuppliedInfo;

@@ -484,19 +484,19 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
 
 
 
-std::wstring GetDisplayValueFromNamingSelection(midi2::Midi1PortNamingApproach namingSelection)
+std::wstring GetDisplayValueFromNamingSelection(midi2enum::Midi1PortNamingApproach namingSelection)
 {
     std::wstring namingSelectionDisplayString{};
 
     switch (namingSelection)
     {
-    case midi2::Midi1PortNamingApproach::Default:
+    case midi2enum::Midi1PortNamingApproach::Default:
         namingSelectionDisplayString = L"Use global default from registry";
         break;
-    case midi2::Midi1PortNamingApproach::UseClassicCompatible:
+    case midi2enum::Midi1PortNamingApproach::UseClassicCompatible:
         namingSelectionDisplayString = L"Use legacy WinMM-compatible names";
         break;
-    case midi2::Midi1PortNamingApproach::UseNewStyle:
+    case midi2enum::Midi1PortNamingApproach::UseNewStyle:
         namingSelectionDisplayString = L"Use new-style names";
         break;
     default:
@@ -724,18 +724,18 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
     // list devices
 
-    collections::IVectorView<midi2::MidiEndpointDeviceInformation> devices{ nullptr };
+    collections::IVectorView<midi2enum::MidiEndpointDeviceInformation> devices{ nullptr };
 
     try
     {
         // list all devices
-        devices = midi2::MidiEndpointDeviceInformation::FindAll(
-            midi2::MidiEndpointDeviceInformationSortOrder::Name,
-            midi2::MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat |
-            midi2::MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat |
-            midi2::MidiEndpointDeviceInformationFilters::DiagnosticLoopback |
-            midi2::MidiEndpointDeviceInformationFilters::DiagnosticPing |
-            midi2::MidiEndpointDeviceInformationFilters::VirtualDeviceResponder
+        devices = midi2enum::MidiEndpointDeviceInformation::FindAll(
+            midi2enum::MidiEndpointDeviceInformationSortOrder::Name,
+            midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat |
+            midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat |
+            midi2enum::MidiEndpointDeviceInformationFilters::DiagnosticLoopback |
+            midi2enum::MidiEndpointDeviceInformationFilters::DiagnosticPing |
+            midi2enum::MidiEndpointDeviceInformationFilters::VirtualDeviceResponder
         );
     }
     catch (...)
@@ -783,15 +783,15 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
                 std::wstring gtbDirection{};
 
-                if (gtb.Direction() == midi2::MidiGroupTerminalBlockDirection::Bidirectional)
+                if (gtb.Direction() == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional)
                 {
                     gtbDirection = L"Bidirectional";
                 }
-                else if (gtb.Direction() == midi2::MidiGroupTerminalBlockDirection::BlockInput)
+                else if (gtb.Direction() == midi2enum::MidiGroupTerminalBlockDirection::BlockInput)
                 {
                     gtbDirection = L"Message Destination";
                 }
-                else if (gtb.Direction() == midi2::MidiGroupTerminalBlockDirection::BlockOutput)
+                else if (gtb.Direction() == midi2enum::MidiGroupTerminalBlockDirection::BlockOutput)
                 {
                     gtbDirection = L"Message Source";
                 }
@@ -808,14 +808,14 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             // Show associated MIDI 1.0 endpoints
 
             // MIDI 1.0 outputs
-            for (auto const& port : device.FindAllAssociatedMidi1PortsForThisEndpoint(midi2::Midi1PortFlow::MidiMessageDestination))
+            for (auto const& port : device.FindAllAssociatedMidi1PortsForThisEndpoint(midi2enum::Midi1PortFlow::MidiMessageDestination))
             {
                 // temp
                 OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT, std::to_wstring(port.PortNumber()) + L": " + port.PortName());
             }
 
             // MIDI 1.0 inputs
-            for (auto const& port : device.FindAllAssociatedMidi1PortsForThisEndpoint(midi2::Midi1PortFlow::MidiMessageSource))
+            for (auto const& port : device.FindAllAssociatedMidi1PortsForThisEndpoint(midi2enum::Midi1PortFlow::MidiMessageSource))
             {
                 // temp
                 OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN, std::to_wstring(port.PortNumber()) + L": " + port.PortName());

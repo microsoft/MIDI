@@ -63,16 +63,16 @@ namespace WindowsMidiServicesInternal {};
 namespace internal =        ::WindowsMidiServicesInternal;
 
 #include <winrt/Windows.Devices.Midi2.h>
-namespace winrt::Windows::Devices::Midi2 {};
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
-namespace winrt::Windows::Devices::Midi2::Enumeration {};
 namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
 
 #include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
-namespace winrt::Windows::Devices::Midi2::ServiceConfig {};
 namespace svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
+
+#include <winrt/Windows.Devices.Midi2.Reporting.h>
+namespace rept = ::winrt::Windows::Devices::Midi2::Reporting;
 
 
 #include <mmsyscom.h>   // needed for MAXPNAMELEN
@@ -95,12 +95,6 @@ namespace svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
 #include <resource_util.h>
 #include <swd_helpers.h>
 #include <midi_ump_message_defs.h>
-
-
-// service interface
-#include <WindowsMidiServices.h>
-#include <WindowsMidiServices_i.c>
-#include <Midi2MidiSrvTransport.h>
 
 // SDK shared
 #include <SdkTraceLogging.h>

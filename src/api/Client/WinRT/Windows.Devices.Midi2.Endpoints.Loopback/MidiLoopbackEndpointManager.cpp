@@ -9,7 +9,7 @@
 
 #include "pch.h"
 #include "MidiLoopbackEndpointManager.h"
-#include "Endpoints.Loopback.MidiLoopbackEndpointManager.g.cpp"
+#include "MidiLoopbackEndpointManager.g.cpp"
 
 #include <algorithm>
 
@@ -246,7 +246,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     }
 
     _Use_decl_annotations_
-    winrt::guid MidiLoopbackEndpointManager::GetAssociationId(midi2::MidiEndpointDeviceInformation const& loopbackEndpoint)
+    winrt::guid MidiLoopbackEndpointManager::GetAssociationId(midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint)
     {
         if (loopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
             loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
@@ -261,33 +261,33 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
-        midi2::MidiEndpointDeviceInformation const& loopbackEndpoint
+    midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
+        midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint
     )
     {
-        auto domain = midi2::MidiEndpointDeviceInformation::FindAll();
+        auto domain = midi2enum::MidiEndpointDeviceInformation::FindAll();
 
         return GetAssociatedLoopbackEndpoint(loopbackEndpoint, domain);
     }
 
 
     _Use_decl_annotations_
-        midi2::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpointForId(
+    midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpointForId(
         winrt::hstring loopbackEndpointId
     )
     {
         auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(loopbackEndpointId);
 
-        auto info = midi2::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(cleanId);
+        auto info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(cleanId);
 
         return GetAssociatedLoopbackEndpoint(info);
     }
 
 
     _Use_decl_annotations_
-    midi2::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
-        midi2::MidiEndpointDeviceInformation const& loopbackEndpoint,
-        collections::IIterable<midi2::MidiEndpointDeviceInformation> endpointsToSearch)
+    midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
+        midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint,
+        collections::IIterable<midi2enum::MidiEndpointDeviceInformation> endpointsToSearch)
     {
         try
         {

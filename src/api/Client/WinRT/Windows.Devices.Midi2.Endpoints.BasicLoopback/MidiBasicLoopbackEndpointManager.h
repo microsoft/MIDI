@@ -26,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         static bool RemoveTransientLoopbackEndpoint(
             _In_ bloop::MidiBasicLoopbackEndpointRemovalConfig const& removalConfig) noexcept;
 
-        static winrt::guid GetAssociationId(_In_ midi2::MidiEndpointDeviceInformation const& basicLoopbackEndpoint) noexcept;
+        static winrt::guid GetAssociationId(_In_ midi2enum::MidiEndpointDeviceInformation const& basicLoopbackEndpoint) noexcept;
 
         static bool DoesLoopbackExist(_In_ winrt::hstring const& uniqueIdentifier);
 

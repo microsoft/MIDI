@@ -86,11 +86,6 @@ namespace internal =        ::WindowsMidiServicesInternal;
 #include <swd_helpers.h>
 #include <midi_ump_message_defs.h>
 
-// service interface
-#include <WindowsMidiServices.h>
-#include <WindowsMidiServices_i.c>
-#include <Midi2MidiSrvTransport.h>
-
 // SDK shared
 #include <SdkTraceLogging.h>
 
