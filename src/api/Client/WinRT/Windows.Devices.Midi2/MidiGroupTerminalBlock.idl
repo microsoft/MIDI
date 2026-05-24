@@ -17,7 +17,7 @@ import "MidiFunctionBlock.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [contract(MidiEnumerationApiContract, 1)]
+    [contract(MidiCoreApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.IMidiGroupTerminalBlock", UUID_IMidiGroupTerminalBlock)]
     [static_name("Windows.Devices.Midi2.IMidiGroupTerminalBlockStatics", UUID_IMidiGroupTerminalBlockStatics)]
     runtimeclass MidiGroupTerminalBlock : Windows.Foundation.IStringable

@@ -10,13 +10,14 @@
 import "MidiApiContracts.idl";
 
 
-namespace Windows.Devices.Midi2
+namespace Windows.Devices.Midi2.Utilities.SysExTransfer
 {
-    [contract(MidiCoreApiContract, 1)]
-    enum MidiGroupTerminalBlockDirection
+    [experimental]
+    enum MidiSystemExclusiveDataFormat
     {
-        Bidirectional = 0x0,
-        BlockInput =    0x1,
-        BlockOutput =   0x2,
+        InferFromData,
+        ByteFormatSystemExclusive7,
+        UniversalMidiPacketFormatSystemExclusive7,
+        UniversalMidiPacketFormatSystemExclusive8,
     };
 }

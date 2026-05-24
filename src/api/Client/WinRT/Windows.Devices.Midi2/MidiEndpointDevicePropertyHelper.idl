@@ -13,7 +13,7 @@ import "MidiApiContracts.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [contract(MidiEnumerationApiContract, 1)]
+    [contract(MidiCoreApiContract, 1)]
     [static_name("Windows.Devices.Midi2.IMidiEndpointDevicePropertyHelperStatics", UUID_IMidiEndpointDevicePropertyHelperStatics)]
     static runtimeclass MidiEndpointDevicePropertyHelper
     {

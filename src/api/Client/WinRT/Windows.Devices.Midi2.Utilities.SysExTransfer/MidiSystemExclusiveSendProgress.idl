@@ -10,13 +10,13 @@
 import "MidiApiContracts.idl";
 
 
-namespace Windows.Devices.Midi2
+namespace Windows.Devices.Midi2.Utilities.SysExTransfer
 {
-    [contract(MidiCoreApiContract, 1)]
-    enum MidiGroupTerminalBlockDirection
+    [experimental]
+    struct MidiSystemExclusiveSendProgress
     {
-        Bidirectional = 0x0,
-        BlockInput =    0x1,
-        BlockOutput =   0x2,
+        UInt64 BytesRead;
+        UInt64 MessagesSent;
+        String LastErrorMessage;
     };
 }

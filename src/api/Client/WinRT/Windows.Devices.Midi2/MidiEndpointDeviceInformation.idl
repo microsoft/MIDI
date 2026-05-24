@@ -34,28 +34,10 @@ import "Midi1PortNameTableEntry.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [contract(MidiEnumerationApiContract, 1)]
-    [uuid(UUID_IMidiEndpointDeviceInformation3), version(1.0)]
-    interface IMidiEndpointDeviceInformation3
-    {
-        Boolean IsMidi1PortCreationEnabled{ get; };
-
-        // TODO: Should I add a "Has MIDI1 Port Creation Completed" flag? (may want to add to watcher updated enum as well)
-        // TODO: Should I add the "Has MIDI2 Discovery Completed" flag? There's a property for this already.
-    };
-
-    [contract(MidiEnumerationApiContract, 1)]
-    [uuid(UUID_IMidiEndpointDeviceInformation2), version(1.0)]
-    interface IMidiEndpointDeviceInformation2
-    {
-        Boolean IsMuted{ get; };
-    };
-
-
-    [contract(MidiEnumerationApiContract, 1)]
+    [contract(MidiCoreApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.IMidiEndpointDeviceInformation", UUID_IMidiEndpointDeviceInformation)]
     [static_name("Windows.Devices.Midi2.IMidiEndpointDeviceInformationStatics", UUID_IMidiEndpointDeviceInformationStatics)]
-    runtimeclass MidiEndpointDeviceInformation : Windows.Foundation.IStringable, IMidiEndpointDeviceInformation2, IMidiEndpointDeviceInformation3
+    runtimeclass MidiEndpointDeviceInformation : Windows.Foundation.IStringable
     {
         static MidiEndpointDeviceInformation CreateFromEndpointDeviceId(String endpointDeviceId);
 
@@ -124,5 +106,11 @@ namespace Windows.Devices.Midi2
         MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(MidiGroup group, Midi1PortFlow portFlow, Boolean useCachedPortInformationIfAvailable);
 
         Midi1PortNamingApproach Midi1PortNamingApproach{ get; };
+
+
+        Boolean IsMidi1PortCreationEnabled{ get; };
+        Boolean IsMuted{ get; };
+
+
     }
 }

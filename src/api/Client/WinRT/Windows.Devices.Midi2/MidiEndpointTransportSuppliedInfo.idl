@@ -14,7 +14,7 @@ import "MidiEndpointNativeDataFormatEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [contract(MidiEnumerationApiContract, 1)]
+    [contract(MidiCoreApiContract, 1)]
     struct MidiEndpointTransportSuppliedInfo
     {
         String Name;

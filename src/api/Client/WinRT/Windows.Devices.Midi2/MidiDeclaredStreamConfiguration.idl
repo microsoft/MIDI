@@ -14,7 +14,7 @@ import "MidiProtocolEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [contract(MidiEnumerationApiContract, 1)]
+    [contract(MidiCoreApiContract, 1)]
     struct MidiDeclaredStreamConfiguration
     {
         MidiProtocol Protocol;

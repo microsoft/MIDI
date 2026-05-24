@@ -6,30 +6,22 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
 
+import "MidiProtocolEnum.idl";
 
-namespace Windows.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
-    [contract(MidiCoreApiContract, 1)]
-    struct MidiDeclaredEndpointInfo
+    [contract(MidiEndpointsVirtualApiContract, 1)]
+    struct MidiStreamConfigRequestedSettings
     {
-        String Name;
-        String ProductInstanceId;
-
-
-        Boolean SupportsMidi10Protocol;
-        Boolean SupportsMidi20Protocol;
-        Boolean SupportsReceivingJitterReductionTimestamps;
-        Boolean SupportsSendingJitterReductionTimestamps;
-
-        Boolean HasStaticFunctionBlocks;
-        UInt8 DeclaredFunctionBlockCount;
-
         UInt8 SpecificationVersionMajor;
         UInt8 SpecificationVersionMinor;
 
-    };
+        Microsoft.Windows.Devices.Midi2.MidiProtocol PreferredMidiProtocol;
+
+        Boolean RequestEndpointTransmitJitterReductionTimestamps;
+        Boolean RequestEndpointReceiveJitterReductionTimestamps;
+   };
 }

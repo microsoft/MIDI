@@ -14,7 +14,7 @@ import "MidiGroup.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [contract(MidiEnumerationApiContract, 1)]
+    [contract(MidiCoreApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.IMidiEndpointAssociatedPortDeviceInformation", UUID_IMidiEndpointAssociatedPortDeviceInformation)]
     runtimeclass MidiEndpointAssociatedPortDeviceInformation : Windows.Foundation.IStringable
     {
