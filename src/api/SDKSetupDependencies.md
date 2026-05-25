@@ -59,4 +59,3 @@ Installing this guarantees a set of user and app-visible loopback endpoints. The
 | `CurrentConfig` | REG_SZ | contains just the name (not full path) of the configuration file. User has full permissions for this |
 | `DefaultMidi1PortNaming` | REG_DWORD | `1` this signifies to use the default backwards-compatible port naming for MIDI 1.0 devices. User has full permissions to this value. |
 | `UseLegacyMidi` | REG_DWORD | `0` Flag for the type of MIDI support to make available on the system|
-
