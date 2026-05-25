@@ -8,25 +8,22 @@
 
 
 #pragma once
-#include "MidiServiceConfig.g.h"
+#include "MidiServiceTransportPluginConfigManager.g.h"
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {
-    struct MidiServiceConfig
+    struct MidiServiceTransportPluginConfigManager
     {
         //MidiServiceConfig() = default;
 
-        static svc::MidiServiceConfigResponse UpdateTransportPluginConfig(
+        static svc::MidiServiceConfigResponse SendUpdate(
             _In_ svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept;
 
-        //static svc::MidiServiceConfigResponse UpdateProcessingPluginConfig(
-        //    _In_ svc::IMidiServiceMessageProcessingPluginConfig const& configUpdate) noexcept;
-
-        static svc::MidiServiceConfigResponse UpdateTransportPluginConfig(
+        static svc::MidiServiceConfigResponse SendUpdate(
             _In_ winrt::guid const& transportId,
             _In_ json::JsonObject const& fullConfigObject) noexcept;
 
-        static svc::MidiServiceConfigResponse SendTransportCommand(
+        static svc::MidiServiceConfigResponse SendCommand(
             _In_ svc::MidiServiceTransportCommand const& command) noexcept;
 
     private:
@@ -39,7 +36,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 }
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::factory_implementation
 {
-    struct MidiServiceConfig : MidiServiceConfigT<MidiServiceConfig, implementation::MidiServiceConfig, winrt::static_lifetime>
+    struct MidiServiceTransportPluginConfigManager : MidiServiceTransportPluginConfigManagerT<MidiServiceTransportPluginConfigManager, implementation::MidiServiceTransportPluginConfigManager, winrt::static_lifetime>
     {
     };
 }

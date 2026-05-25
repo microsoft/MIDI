@@ -37,31 +37,26 @@
 #include <wil\registry.h>
 
 #include <winrt/Windows.Foundation.h>
-namespace foundation = ::winrt::Windows::Foundation;
-
 #include <winrt/Windows.Foundation.Collections.h>
-namespace collections = ::winrt::Windows::Foundation::Collections;
-
 #include <winrt/Windows.ApplicationModel.h>
 #include <winrt/Windows.ApplicationModel.Core.h>
-namespace coreapp = ::winrt::Windows::ApplicationModel::Core;
-
 #include <winrt/Windows.Devices.Enumeration.h>
-namespace enumeration = ::winrt::Windows::Devices::Enumeration;
-
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>
-namespace streams = ::winrt::Windows::Storage::Streams;
-
 #include <winrt/Windows.Devices.Midi.h>
-namespace midi1 = ::winrt::Windows::Devices::Midi;
-
 #undef GetObject
 #include <winrt/Windows.Data.Json.h>
+
+namespace foundation = ::winrt::Windows::Foundation;
+namespace collections = ::winrt::Windows::Foundation::Collections;
+namespace coreapp = ::winrt::Windows::ApplicationModel::Core;
+namespace enumeration = ::winrt::Windows::Devices::Enumeration;
+namespace streams = ::winrt::Windows::Storage::Streams;
+namespace midi1 = ::winrt::Windows::Devices::Midi;
 namespace json = ::winrt::Windows::Data::Json;
 
 
-// pre-declare namespaces
+// namespaces for other MIDI2 SDK components and internal utilities
 namespace WindowsMidiServicesInternal {};
 namespace internal = ::WindowsMidiServicesInternal;
 
@@ -70,16 +65,6 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
-
-//#include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
-//namespace svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
-
-#include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
-namespace msgs = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
-
-// pre-declare namespaces
-namespace WindowsMidiServicesInternal {};
-namespace internal =        ::WindowsMidiServicesInternal;
 
 
 #include <mmsyscom.h>   // needed for MAXPNAMELEN
@@ -90,7 +75,7 @@ namespace internal =        ::WindowsMidiServicesInternal;
 #include <midi_group_terminal_blocks.h>
 
 // shared
-#include <midi_ump.h>   // general shared
+#include <midi_ump.h>
 #include <loopback_ids.h>
 #include <midi_timestamp.h>
 #include <json_defs.h>
@@ -129,6 +114,9 @@ namespace msgs = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
 #include "MidiEndpointNametable.h"
 
 // headers for this project
-#include "MidiStreamMessageBuilder.h"
 #include "MidiMessageBuilder.h"
+#include "MidiMessageConverter.h"
 #include "MidiMessageHelper.h"
+#include "MidiStreamMessageBuilder.h"
+#include "MidiSystemExclusive7MessageHelper.h"
+#include "MidiUniversalSystemExclusive7MessageBuilder.h"

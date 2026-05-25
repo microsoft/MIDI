@@ -36,7 +36,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         winrt::guid TransportId() const noexcept { return m_transportId; }
         void TransportId(_In_ winrt::guid const& value) noexcept { m_transportId = value; }
 
-        json::JsonObject GetConfigJson() const noexcept;
+        json::JsonObject ConfigJson() const noexcept;
 
     private:
         winrt::hstring m_verb{};

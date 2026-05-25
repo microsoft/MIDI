@@ -14,8 +14,12 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    struct MidiLoopbackEndpointDefinition
+    runtimeclass MidiLoopbackEndpointDefinition
     {
+        MidiLoopbackEndpointDefinition();
+        MidiLoopbackEndpointDefinition(String name, String uniqueId);
+        MidiLoopbackEndpointDefinition(String name, String uniqueId, String description);
+
         String Name;
         String UniqueId;
         String Description;

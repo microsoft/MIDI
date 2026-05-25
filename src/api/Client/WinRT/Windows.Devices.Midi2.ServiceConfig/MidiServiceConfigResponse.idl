@@ -10,19 +10,18 @@
 import "MidiApiContracts.idl";
 
 
-
 import "MidiServiceConfigResponseStatusEnum.idl";
 
 namespace Windows.Devices.Midi2.ServiceConfig
 {
     [contract(MidiServiceConfigApiContract, 1)]
-    struct MidiServiceConfigResponse
+    runtimeclass MidiServiceConfigResponse
     {
-        MidiServiceConfigResponseStatus Status;
+        MidiServiceConfigResponseStatus Status {get; };
 
-        UInt32 ServiceCode;
-        String ServiceMessage;
+        UInt32 ServiceErrorCode{ get; };
+        String ServiceErrorMessage{ get; };
 
-        String ResponseJson;
-    };
+        Windows.Data.Json.JsonObject  ResponseJson {get;};
+    }
 }

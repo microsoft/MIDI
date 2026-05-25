@@ -9,12 +9,12 @@
 
 #include "pch.h"
 
-#include "MidiServiceConfig.g.cpp"
+#include "MidiServiceTransportPluginConfigManager.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {
     _Use_decl_annotations_
-    json::JsonObject MidiServiceConfig::InternalSendConfigJsonAndGetResponse(
+    json::JsonObject MidiServiceTransportPluginConfigManager::InternalSendConfigJsonAndGetResponse(
         winrt::guid const& transportId, 
         json::JsonObject const& configObject
     ) noexcept
@@ -201,11 +201,10 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
 
     _Use_decl_annotations_
-    svc::MidiServiceConfigResponse MidiServiceConfig::UpdateTransportPluginConfig(
+    svc::MidiServiceConfigResponse MidiServiceTransportPluginConfigManager::SendUpdate(
         svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept
     {
-        // this initializes to a failure state, so we can just return it when we have a fail
-        svc::MidiServiceConfigResponse response;
+        auto response = winrt::make_self<MidiServiceConfigResponse>();
 
         if (configUpdate == nullptr)
         {
@@ -220,16 +219,16 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                 TraceLoggingWideString(L"Configuration object is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            response.Status = svc::MidiServiceConfigResponseStatus::ErrorConfigJsonNullOrEmpty;
-            return response;
+            response->InternalSetStatus(svc::MidiServiceConfigResponseStatus::ErrorConfigJsonNullOrEmpty);
+            return *response;
         }
 
-        return UpdateTransportPluginConfig(configUpdate.TransportId(), configUpdate.GetConfigJson());
+        return SendUpdate(configUpdate.TransportId(), configUpdate.ConfigJson());
 
     }
 
     _Use_decl_annotations_
-    svc::MidiServiceConfigResponse MidiServiceConfig::UpdateTransportPluginConfig(
+    svc::MidiServiceConfigResponse MidiServiceTransportPluginConfigManager::SendUpdate(
         winrt::guid const& transportId,
         json::JsonObject const& fullConfigObject) noexcept
     {
@@ -243,8 +242,21 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             TraceLoggingGuid(transportId, "transport id")
         );
 
-        // this initializes to a failure state, so we can just return it when we have a fail
-        svc::MidiServiceConfigResponse response;
+        auto response = winrt::make_self<MidiServiceConfigResponse>();
+
+        if (response == nullptr)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to create response object", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(transportId, "transport id")
+            );
+            return nullptr;
+        }
 
         try
         {
@@ -262,8 +274,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                     TraceLoggingGuid(transportId, "transport id")
                 );
 
-                response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson;
-                return response;
+                response->InternalSetStatus(svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson);
+                return *response;
             }
 
             auto responseJsonObject = InternalSendConfigJsonAndGetResponse(
@@ -273,7 +285,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
             if (responseJsonObject == nullptr)
             {
-                response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson;
+                response->InternalSetStatus(svc::MidiServiceConfigResponseStatus::ErrorProcessingConfigJson);
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -285,17 +297,15 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                     TraceLoggingGuid(transportId, "transport id")
                 );
 
-                return response;
+                return *response;
             }
 
             auto success = responseJsonObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
-            response.ServiceMessage = responseJsonObject.GetNamedString(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, L"");
-            response.ResponseJson = responseJsonObject.Stringify();
 
             if (success)
             {
-                response.Status = svc::MidiServiceConfigResponseStatus::Success;
+                response->InternalSetServiceSuccess(responseJsonObject);
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -307,11 +317,15 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                     TraceLoggingGuid(transportId, "transport id")
                 );
 
-                return response;
+                return *response;
             }
             else
             {
-                response.Status = svc::MidiServiceConfigResponseStatus::ErrorFromService;
+                response->InternalSetServiceError(
+                    static_cast<uint32_t>(responseJsonObject.GetNamedNumber(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_ERROR_CODE_PROPERTY_KEY, 0)),
+                    responseJsonObject.GetNamedString(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, L""),
+                    responseJsonObject
+                );
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -320,11 +334,12 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                     TraceLoggingWideString(L"Failed to update transport. Error from service", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(response.ServiceMessage.c_str(), "service message"),
+                    TraceLoggingUInt32(response->ServiceErrorCode(), "service error code"),
+                    TraceLoggingWideString(response->ServiceErrorMessage().c_str(), "service message"),
                     TraceLoggingGuid(transportId, "transport id")
                 );
 
-                return response;
+                return *response;
             }
         }
         catch (winrt::hresult_error ex)
@@ -341,38 +356,15 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                 TraceLoggingGuid(transportId, "transport id")
             );
 
-            return response;
+            return *response;
         }
     }
 
     _Use_decl_annotations_
-    svc::MidiServiceConfigResponse MidiServiceConfig::SendTransportCommand(
+    svc::MidiServiceConfigResponse MidiServiceTransportPluginConfigManager::SendCommand(
         svc::MidiServiceTransportCommand const& command) noexcept
     {
-        return UpdateTransportPluginConfig(command.TransportId(), command.GetConfigJson());
+        return SendUpdate(command.TransportId(), command.ConfigJson());
     }
-
-
-    //_Use_decl_annotations_
-    //svc::MidiServiceConfigResponse MidiServiceConfig::UpdateProcessingPluginConfig(
-    //    svc::IMidiServiceMessageProcessingPluginConfig const& configurationUpdate) noexcept
-    //{
-    //    UNREFERENCED_PARAMETER(configurationUpdate);
-    //    // initializes to a failed value
-    //    //auto response = winrt::make_self<implementation::MidiServiceConfigurationResponse>();
-
-    //    svc::MidiServiceConfigResponse response;
-    //    response.Status = svc::MidiServiceConfigResponseStatus::ErrorNotImplemented;
-
-
-    //    // TODO: Implement this in service and API
-
-
-
-
-
-    //    return response;
-    //}
-
 
 }

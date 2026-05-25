@@ -295,19 +295,35 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiBasicLoopbackEndpointCreationResult.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointManager.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h" />
+    <ClInclude Include="MidiBasicLoopbackEndpointCreationResult.h">
+      <DependentUpon>MidiBasicLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h">
+      <DependentUpon>MidiBasicLoopbackEndpointCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointManager.h">
+      <DependentUpon>MidiBasicLoopbackEndpointManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h">
+      <DependentUpon>MidiBasicLoopbackEndpointRemovalConfig.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointCreationResult.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointManager.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEndpointCreationResult.cpp">
+      <DependentUpon>MidiBasicLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp">
+      <DependentUpon>MidiBasicLoopbackEndpointCreationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointManager.cpp">
+      <DependentUpon>MidiBasicLoopbackEndpointManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp">
+      <DependentUpon>MidiBasicLoopbackEndpointRemovalConfig.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -321,6 +337,7 @@
     <Midl Include="MidiBasicLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiBasicLoopbackEndpointManager.idl" />
     <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl" />
+    <Midl Include="MidiBasicLoopbackEntry.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

@@ -11,10 +11,9 @@ import "MidiApiContracts.idl";
 
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
-    [experimental]
-    //[static_name("IMidiUniversalSystemExclusiveMessageBuilderStatics", UUID_IMidiUniversalSystemExclusiveMessageBuilderStatics)]
     [contract(MidiMessageUtilityApiContract,1)]
-    static runtimeclass MidiUniversalSystemExclusiveMessageBuilder
+    [static_name("IMidiUniversalSystemExclusive7MessageBuilderStatics", UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics)]
+    static runtimeclass MidiUniversalSystemExclusive7MessageBuilder
     {
         static Windows.Devices.Midi2.MidiMessage64 BuildIdentityRequest(
             UInt64 timestamp,
@@ -41,9 +40,6 @@ namespace Windows.Devices.Midi2.Utilities.Messages
         static Windows.Devices.Midi2.MidiMessage64 BuildACK(
             UInt64 timestamp
             );
-
-        // TODO: MIDI CI requests / responses, unless we want to package them in a different class
-
 
     }
 }

@@ -295,8 +295,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h">
-      <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
+    <ClInclude Include="MidiUniversalSystemExclusive7MessageBuilder.h">
+      <DependentUpon>MidiUniversalSystemExclusive7MessageBuilder.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
@@ -310,8 +310,8 @@
     <ClInclude Include="MidiMessageHelper.h">
       <DependentUpon>MidiMessageHelper.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiSystemExclusiveMessageHelper.h">
-      <DependentUpon>MidiSystemExclusiveMessageHelper.idl</DependentUpon>
+    <ClInclude Include="MidiSystemExclusive7MessageHelper.h">
+      <DependentUpon>MidiSystemExclusive7MessageHelper.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="resource.h" />
@@ -319,8 +319,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp">
-      <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
+    <ClCompile Include="MidiUniversalSystemExclusive7MessageBuilder.cpp">
+      <DependentUpon>MidiUniversalSystemExclusive7MessageBuilder.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiMessageBuilder.cpp">
@@ -335,8 +335,8 @@
     <ClCompile Include="MidiMessageHelper.cpp">
       <DependentUpon>MidiMessageHelper.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiSystemExclusiveMessageHelper.cpp">
-      <DependentUpon>MidiSystemExclusiveMessageHelper.idl</DependentUpon>
+    <ClCompile Include="MidiSystemExclusive7MessageHelper.cpp">
+      <DependentUpon>MidiSystemExclusive7MessageHelper.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -344,7 +344,7 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
-    <Midl Include="MidiUniversalSystemExclusiveMessageBuilder.idl" />
+    <Midl Include="MidiUniversalSystemExclusive7MessageBuilder.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />
@@ -354,7 +354,7 @@
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
     <Midl Include="MidiMessageHelper.idl" />
-    <Midl Include="MidiSystemExclusiveMessageHelper.idl" />
+    <Midl Include="MidiSystemExclusive7MessageHelper.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

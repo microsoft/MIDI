@@ -16,21 +16,18 @@ import "MidiServiceTransportCommand.idl";
 namespace Windows.Devices.Midi2.ServiceConfig
 {
     [contract(MidiServiceConfigApiContract, 1)]
-    [static_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigStatics", UUID_IMidiServiceConfigStatics)]
-    static runtimeclass MidiServiceConfig
+    [static_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfigManagerStatics", UUID_IMidiServiceTransportPluginConfigManagerStatics)]
+    static runtimeclass MidiServiceTransportPluginConfigManager
     {
-        static MidiServiceConfigResponse UpdateTransportPluginConfig(
+        static MidiServiceConfigResponse SendUpdate(
             IMidiServiceTransportPluginConfig configUpdate);
 
-        static MidiServiceConfigResponse UpdateTransportPluginConfig(
+        static MidiServiceConfigResponse SendUpdate(
             Guid transportId,
             Windows.Data.Json.JsonObject fullConfigObject);
 
-        static MidiServiceConfigResponse SendTransportCommand(
+        static MidiServiceConfigResponse SendCommand(
             MidiServiceTransportCommand command);
-
-        //static MidiServiceConfigResponse UpdateProcessingPluginConfig(
-        //    IMidiServiceMessageProcessingPluginConfig configUpdate);
     }
 }
 

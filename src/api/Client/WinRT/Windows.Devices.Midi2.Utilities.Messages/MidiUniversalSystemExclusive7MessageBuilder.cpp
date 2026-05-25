@@ -7,13 +7,13 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiUniversalSystemExclusiveMessageBuilder.h"
-#include "MidiUniversalSystemExclusiveMessageBuilder.g.cpp"
+#include "MidiUniversalSystemExclusive7MessageBuilder.h"
+#include "MidiUniversalSystemExclusive7MessageBuilder.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
     _Use_decl_annotations_
-    midi2::MidiMessage64 MidiUniversalSystemExclusiveMessageBuilder::BuildIdentityRequest(
+    midi2::MidiMessage64 MidiUniversalSystemExclusive7MessageBuilder::BuildIdentityRequest(
         uint64_t timestamp, 
         midi2::MidiUniversalSystemExclusiveChannel const& systemExclusiveChannel)
     {
@@ -24,7 +24,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     }
 
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiMessage64> MidiUniversalSystemExclusiveMessageBuilder::BuildIdentityRequestReply(
+    collections::IVector<midi2::MidiMessage64> MidiUniversalSystemExclusive7MessageBuilder::BuildIdentityRequestReply(
         uint64_t timestamp, 
         midi2enum::MidiDeclaredDeviceIdentity const& identity)
     {
@@ -35,7 +35,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage64 MidiUniversalSystemExclusiveMessageBuilder::BuildWait(
+    midi2::MidiMessage64 MidiUniversalSystemExclusive7MessageBuilder::BuildWait(
         uint64_t timestamp)
     {
         UNREFERENCED_PARAMETER(timestamp);
@@ -44,7 +44,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage64 MidiUniversalSystemExclusiveMessageBuilder::BuildCancel(
+    midi2::MidiMessage64 MidiUniversalSystemExclusive7MessageBuilder::BuildCancel(
         uint64_t timestamp)
     {
         UNREFERENCED_PARAMETER(timestamp);
@@ -53,7 +53,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage64 MidiUniversalSystemExclusiveMessageBuilder::BuildNAK(
+    midi2::MidiMessage64 MidiUniversalSystemExclusive7MessageBuilder::BuildNAK(
         uint64_t timestamp)
     {
         UNREFERENCED_PARAMETER(timestamp);
@@ -62,7 +62,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage64 MidiUniversalSystemExclusiveMessageBuilder::BuildACK(
+    midi2::MidiMessage64 MidiUniversalSystemExclusive7MessageBuilder::BuildACK(
         uint64_t timestamp)
     {
         UNREFERENCED_PARAMETER(timestamp);

@@ -7,13 +7,13 @@
 // ============================================================================
 
 #pragma once
-#include "MidiUniversalSystemExclusiveMessageBuilder.g.h"
+#include "MidiUniversalSystemExclusive7MessageBuilder.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
-    struct MidiUniversalSystemExclusiveMessageBuilder
+    struct MidiUniversalSystemExclusive7MessageBuilder
     {
-        MidiUniversalSystemExclusiveMessageBuilder() = default;
+        //MidiUniversalSystemExclusive7MessageBuilder() = default;
 
         static midi2::MidiMessage64 BuildIdentityRequest(
             _In_ uint64_t const timestamp, 
@@ -33,7 +33,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 }
 namespace winrt::Windows::Devices::Midi2::Utilities::Messages::factory_implementation
 {
-    struct MidiUniversalSystemExclusiveMessageBuilder : MidiUniversalSystemExclusiveMessageBuilderT<MidiUniversalSystemExclusiveMessageBuilder, implementation::MidiUniversalSystemExclusiveMessageBuilder, winrt::static_lifetime>
+    struct MidiUniversalSystemExclusive7MessageBuilder : MidiUniversalSystemExclusive7MessageBuilderT<MidiUniversalSystemExclusive7MessageBuilder, implementation::MidiUniversalSystemExclusive7MessageBuilder, winrt::static_lifetime>
     {
     };
 }

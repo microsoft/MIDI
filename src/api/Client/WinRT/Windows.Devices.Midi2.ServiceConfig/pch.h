@@ -46,10 +46,9 @@
 #include <winrt/Windows.Devices.Midi.h>
 #include <winrt/Windows.Web.Http.h>
 
-
 #undef GetObject
-
 #include <winrt/Windows.Data.Json.h>
+
 namespace json =            ::winrt::Windows::Data::Json;
 namespace enumeration =     ::winrt::Windows::Devices::Enumeration;
 namespace midi1 =           ::winrt::Windows::Devices::Midi;
@@ -114,7 +113,8 @@ namespace svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
 
 #include "resource.h"
 
-#include "MidiServiceConfig.h"
+#include "MidiServiceConfigResponse.h"
+#include "MidiServiceTransportPluginConfigManager.h"
 #include "MidiServiceConfigEndpointMatchCriteria.h"
 #include "MidiServiceEndpointCustomizationConfig.h"
 #include "MidiServiceTransportCommand.h"

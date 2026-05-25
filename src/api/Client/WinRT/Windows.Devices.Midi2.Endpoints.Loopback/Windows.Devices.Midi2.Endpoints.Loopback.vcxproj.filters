@@ -9,16 +9,16 @@
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp">
-      <Filter>SDK</Filter>
+      <Filter>SDK\Create</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="MidiLoopbackEndpointCreationResult.h">
-      <Filter>SDK</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointCreationResult.h">
+      <Filter>SDK\Create</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -26,22 +26,28 @@
       <Filter>Contracts</Filter>
     </Midl>
     <Midl Include="MidiLoopbackEndpointCreationConfig.idl">
-      <Filter>SDK</Filter>
+      <Filter>SDK\Create</Filter>
     </Midl>
     <Midl Include="MidiLoopbackEndpointCreationResult.idl">
-      <Filter>SDK</Filter>
+      <Filter>SDK\Create</Filter>
     </Midl>
     <Midl Include="MidiLoopbackEndpointCreationResultErrorCodeEnum.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiLoopbackEndpointDefinition.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiLoopbackEndpointManager.idl">
-      <Filter>SDK</Filter>
+      <Filter>SDK\Create</Filter>
     </Midl>
     <Midl Include="MidiLoopbackEndpointRemovalConfig.idl">
-      <Filter>SDK</Filter>
+      <Filter>SDK\Remove</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointDefinition.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointManager.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEntry.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointEntry.idl">
+      <Filter>SDK\Shared</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -58,6 +64,15 @@
     </Filter>
     <Filter Include="SDK">
       <UniqueIdentifier>{f6108d18-82f7-4161-955f-e6cc14584ef5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Create">
+      <UniqueIdentifier>{999780c9-5776-4b02-a1e1-913bcebad8f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Remove">
+      <UniqueIdentifier>{14403df7-3feb-4992-a23c-631b65a0870c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Shared">
+      <UniqueIdentifier>{07de60a5-6132-4c29-a2d5-a7b84630739a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

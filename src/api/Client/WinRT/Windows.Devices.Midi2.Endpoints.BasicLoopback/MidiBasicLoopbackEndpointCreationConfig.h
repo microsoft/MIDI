@@ -20,22 +20,23 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             _In_ winrt::guid const& associationId, 
             _In_ bloop::MidiBasicLoopbackEndpointDefinition const& endpointDefinition);
 
-        winrt::guid TransportId() { return bloop::MidiBasicLoopbackEndpointManager::TransportId(); }
-        bool IsFromCurrentConfigFile() { return false; }
-        json::JsonObject GetConfigJson();
+        winrt::guid TransportId() const noexcept { return bloop::MidiBasicLoopbackEndpointManager::TransportId(); }
+        json::JsonObject ConfigJson() const noexcept;
 
+        bool IsMuted() const noexcept { return m_isMuted; }
+        void IsMuted(bool value) { m_isMuted = value; }
 
-        winrt::guid AssociationId() { return m_associationId; }
+        winrt::guid AssociationId() const noexcept { return m_associationId; }
         void AssociationId(_In_ winrt::guid const& value) { m_associationId = value; }
 
-        bloop::MidiBasicLoopbackEndpointDefinition EndpointDefinition() { return m_definition; }
+        bloop::MidiBasicLoopbackEndpointDefinition EndpointDefinition() const noexcept { return m_definition; }
         void EndpointDefinition(_In_ bloop::MidiBasicLoopbackEndpointDefinition const& value) { m_definition = value; }
 
 
     private:
         winrt::guid m_associationId{};
-
         bloop::MidiBasicLoopbackEndpointDefinition m_definition{};
+        bool m_isMuted{ false };
     };
 }
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::factory_implementation

@@ -24,9 +24,10 @@ namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
             MidiBasicLoopbackEndpointDefinition endpointDefinition
         );
 
-
         Guid AssociationId;
 
         MidiBasicLoopbackEndpointDefinition EndpointDefinition;
+
+        Boolean IsMuted;
     }
 }

@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiLoopbackEndpointCreationResultErrorCodeEnum.idl";
+import "MidiLoopbackEntry.idl";
 
 namespace Windows.Devices.Midi2.Endpoints.Loopback
 {
@@ -20,11 +21,8 @@ namespace Windows.Devices.Midi2.Endpoints.Loopback
         Boolean Success { get; };
 
         MidiLoopbackEndpointCreationResultErrorCode ErrorCode{ get; };
-        String ErrorInformation{ get; };
+        String ErrorMessage{ get; };
 
-        Guid AssociationId{ get; };
-
-        String EndpointDeviceIdA{ get; };
-        String EndpointDeviceIdB{ get; };
+        MidiLoopbackEntry CreatedLoopbackEntry{ get; };
     };
 }

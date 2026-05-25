@@ -295,9 +295,11 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="date_util.h" />
-    <ClInclude Include="MidiServiceConfig.h">
-      <DependentUpon>MidiServiceConfig.idl</DependentUpon>
+    <ClInclude Include="MidiServiceConfigResponse.h">
+      <DependentUpon>MidiServiceConfigResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportPluginConfigManager.h">
+      <DependentUpon>MidiServiceTransportPluginConfigManager.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
@@ -317,8 +319,11 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiServiceConfig.cpp">
-      <DependentUpon>MidiServiceConfig.idl</DependentUpon>
+    <ClCompile Include="MidiServiceConfigResponse.cpp">
+      <DependentUpon>MidiServiceConfigResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportPluginConfigManager.cpp">
+      <DependentUpon>MidiServiceTransportPluginConfigManager.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -345,7 +350,7 @@
     <Midl Include="MidiServiceTransportCommand.idl" />
     <Midl Include="MidiServiceConfigResponse.idl" />
     <Midl Include="MidiServiceConfigResponseStatusEnum.idl" />
-    <Midl Include="MidiServiceConfig.idl" />
+    <Midl Include="MidiServiceTransportPluginConfigManager.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

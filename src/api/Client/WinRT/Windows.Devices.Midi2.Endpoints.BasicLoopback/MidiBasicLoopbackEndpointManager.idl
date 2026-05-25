@@ -38,5 +38,7 @@ namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
         static Boolean MuteLoopback(Guid associationId);
         static Boolean UnmuteLoopback(Guid associationId);
 
+        static IVector<MidiBasicLoopbackEntry> GetActiveLoopbackEntries();
+
     }
 }

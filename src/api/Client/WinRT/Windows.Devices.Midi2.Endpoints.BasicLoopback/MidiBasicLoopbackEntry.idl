@@ -9,19 +9,19 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
-
 namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
 {
     [contract(MidiEndpointsBasicLoopbackApiContract, 1)]
-    runtimeclass MidiBasicLoopbackEndpointDefinition
+    [interface_name("Windows.Devices.Midi2.Endpoints.BasicLoopback.IMidiBasicLoopbackEntry", UUID_IMidiBasicLoopbackEntry)]
+    runtimeclass MidiBasicLoopbackEntry
     {
-        MidiBasicLoopbackEndpointDefinition();
-        MidiBasicLoopbackEndpointDefinition(String name, String uniqueId);
-        MidiBasicLoopbackEndpointDefinition(String name, String uniqueId, String description);
+        Guid AssociationId{ get; };
 
-        String Name;
-        String UniqueId;
-        String Description;
+        String EndpointDeviceId{ get; };
+
+        String Name{ get; };
+        String Description{ get; };
+
+        Boolean IsMuted{ get;};
     };
 }

@@ -23,9 +23,10 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
             );
 
         winrt::guid TransportId() { return loop::MidiLoopbackEndpointManager::TransportId(); }
-        bool IsFromCurrentConfigFile() { return false; }
-        json::JsonObject GetConfigJson();
+        json::JsonObject ConfigJson();
 
+        bool IsMuted() const noexcept { return m_isMuted; }
+        void IsMuted(bool value) { m_isMuted = value; }
 
         winrt::guid AssociationId() { return m_associationId; }
         void AssociationId(_In_ winrt::guid const& value) { m_associationId = value; }
@@ -38,9 +39,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
     private:
         winrt::guid m_associationId{};
-
+        bool m_isMuted{ false };
         loop::MidiLoopbackEndpointDefinition m_definitionA{};
-        loop::MidiLoopbackEndpointDefinition m_definitionB{};
+        loop::MidiLoopbackEndpointDefinition m_definitionB{};   
 
     };
 }

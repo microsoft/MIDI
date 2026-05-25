@@ -10,18 +10,14 @@
 import "MidiApiContracts.idl";
 
 
-
-namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
+namespace Windows.Devices.Midi2.Endpoints.Loopback
 {
-    [contract(MidiEndpointsBasicLoopbackApiContract, 1)]
-    runtimeclass MidiBasicLoopbackEndpointDefinition
+    [contract(MidiEndpointsLoopbackApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointEntry", UUID_IMidiLoopbackEndpointEntry)]
+    runtimeclass MidiLoopbackEndpointEntry
     {
-        MidiBasicLoopbackEndpointDefinition();
-        MidiBasicLoopbackEndpointDefinition(String name, String uniqueId);
-        MidiBasicLoopbackEndpointDefinition(String name, String uniqueId, String description);
-
-        String Name;
-        String UniqueId;
-        String Description;
+        String EndpointDeviceId{ get; };
+        String Name{ get; };
+        String Description{ get; };
     };
 }

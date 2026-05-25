@@ -295,7 +295,9 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiLoopbackEndpointCreationResult.h" />
+    <ClInclude Include="MidiLoopbackEndpointCreationResult.h">
+      <DependentUpon>MidiLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiLoopbackEndpointRemovalConfig.h">
       <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
     </ClInclude>
@@ -310,7 +312,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp" />
+    <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp">
+      <DependentUpon>MidiLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiLoopbackEndpointRemovalConfig.cpp">
       <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
@@ -328,11 +332,13 @@
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
     <Midl Include="MidiLoopbackEndpointCreationResultErrorCodeEnum.idl" />
+    <Midl Include="MidiLoopbackEndpointEntry.idl" />
     <Midl Include="MidiLoopbackEndpointRemovalConfig.idl" />
     <Midl Include="MidiLoopbackEndpointManager.idl" />
     <Midl Include="MidiLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiLoopbackEndpointCreationResult.idl" />
     <Midl Include="MidiLoopbackEndpointCreationConfig.idl" />
+    <Midl Include="MidiLoopbackEntry.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

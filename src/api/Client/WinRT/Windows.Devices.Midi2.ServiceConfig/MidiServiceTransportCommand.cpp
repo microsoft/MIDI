@@ -41,7 +41,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
 
 
-    json::JsonObject MidiServiceTransportCommand::GetConfigJson() const noexcept
+    json::JsonObject MidiServiceTransportCommand::ConfigJson() const noexcept
     {
         json::JsonObject outerWrapper;
         json::JsonObject transportObject;

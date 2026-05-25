@@ -40,26 +40,29 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiBasicLoopbackEndpointCreationConfig.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointCreationResult.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointDefinition.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointManager.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl">
-      <Filter>SDK</Filter>
-    </Midl>
     <Midl Include="MidiApiContracts.idl">
       <Filter>Contracts</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointCreationConfig.idl">
+      <Filter>SDK\Create</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointCreationResult.idl">
+      <Filter>SDK\Create</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl">
+      <Filter>SDK\Create</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl">
+      <Filter>SDK\Remove</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointDefinition.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointManager.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEntry.idl">
+      <Filter>SDK\Shared</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +79,15 @@
     </Filter>
     <Filter Include="SDK">
       <UniqueIdentifier>{1c46f3ba-db9d-4334-900a-d2ea1ec3e3fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Create">
+      <UniqueIdentifier>{81320ae0-686b-4f08-b1c8-aa68246116ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Remove">
+      <UniqueIdentifier>{0cdd7d12-edcc-4398-b89d-52edccf23a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Shared">
+      <UniqueIdentifier>{e15d1379-f102-40a6-b066-d6121c6617a5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

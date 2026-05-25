@@ -42,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
     //   }
     // }    
      
-    json::JsonObject MidiBasicLoopbackEndpointCreationConfig::GetConfigJson()
+    json::JsonObject MidiBasicLoopbackEndpointCreationConfig::ConfigJson() const noexcept
     {
         json::JsonObject endpointAssociationObject;
         json::JsonObject endpointDeviceObject;
@@ -68,7 +68,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
         endpointDeviceObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
-            json::JsonValue::CreateBooleanValue(m_definition.IsMuted));
+            json::JsonValue::CreateBooleanValue(IsMuted()));
 
         // create the association object (this is here just to keep the structure apx the same as the main loopback types, for simplicity
 

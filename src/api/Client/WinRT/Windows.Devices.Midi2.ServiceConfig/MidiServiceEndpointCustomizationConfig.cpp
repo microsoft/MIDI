@@ -70,7 +70,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     }
 
 
-    json::JsonObject MidiServiceEndpointCustomizationConfig::GetConfigJson() const noexcept
+    json::JsonObject MidiServiceEndpointCustomizationConfig::ConfigJson() const noexcept
     {
         json::JsonObject matchObject;
         json::JsonObject customPropertiesObject;

@@ -21,8 +21,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         bloop::MidiBasicLoopbackEndpointCreationResultErrorCode ErrorCode() const noexcept { return m_errorCode; }
         void ErrorCode(_In_ bloop::MidiBasicLoopbackEndpointCreationResultErrorCode const& value) noexcept { m_errorCode = value; }
 
-        winrt::hstring ErrorInformation() const noexcept { return m_errorInformation; }
-        void ErrorInformation(_In_ winrt::hstring const& value) noexcept { m_errorInformation = value; }
+        winrt::hstring ErrorMessage() const noexcept { return m_errorMessage; }
+        void ErrorMessage(_In_ winrt::hstring const& value) noexcept { m_errorMessage = value; }
 
         winrt::guid AssociationId() const noexcept { return m_associationId; }
         void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }
@@ -34,7 +34,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
     private:
         bool m_success{ false };
         bloop::MidiBasicLoopbackEndpointCreationResultErrorCode m_errorCode { bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::UnknownOrUnspecified };
-        winrt::hstring m_errorInformation{ };
+        winrt::hstring m_errorMessage{ };
         winrt::hstring m_endpointDeviceId{ };
         winrt::guid m_associationId{ };
 

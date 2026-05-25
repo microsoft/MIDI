@@ -49,7 +49,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     //   }
     // }
 
-    json::JsonObject MidiLoopbackEndpointCreationConfig::GetConfigJson()
+    json::JsonObject MidiLoopbackEndpointCreationConfig::ConfigJson()
     {
         json::JsonObject endpointAssociationObject;
         json::JsonObject endpointDeviceAObject;
@@ -97,6 +97,10 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         endpointAssociationObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY,
             endpointDeviceBObject);
+
+        endpointAssociationObject.SetNamedValue(
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
+            json::JsonValue::CreateBooleanValue(IsMuted()));
 
         // create the creation node with the association object as the child property
 

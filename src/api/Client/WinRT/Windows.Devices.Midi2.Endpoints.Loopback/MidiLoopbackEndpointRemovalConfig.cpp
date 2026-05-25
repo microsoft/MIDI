@@ -29,7 +29,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     //     }
     //   }
     // }
-    json::JsonObject MidiLoopbackEndpointRemovalConfig::GetConfigJson()
+    json::JsonObject MidiLoopbackEndpointRemovalConfig::ConfigJson()
     {
         json::JsonArray endpointDeletionArray;
         json::JsonObject transportObject;

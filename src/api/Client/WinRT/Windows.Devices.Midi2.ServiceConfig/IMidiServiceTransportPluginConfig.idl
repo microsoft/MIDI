@@ -17,8 +17,7 @@ namespace Windows.Devices.Midi2.ServiceConfig
     interface IMidiServiceTransportPluginConfig
     {
         Guid TransportId { get; };
-        //Boolean IsFromCurrentConfigFile{ get; };
 
-        Windows.Data.Json.JsonObject GetConfigJson();
+        Windows.Data.Json.JsonObject ConfigJson{ get; };
     }
 }
