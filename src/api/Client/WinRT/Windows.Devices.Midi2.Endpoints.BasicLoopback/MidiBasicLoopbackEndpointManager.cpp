@@ -43,82 +43,44 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             return nullptr;
         }
 
-        result->AssociationId(creationConfig.AssociationId());
-        result->Success(false);
+        // default to error
+        result->InternalSetError(creationConfig.AssociationId(), bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::UnknownOrUnspecified, L"");
 
-        winrt::hstring endpointUniqueId{ internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId) };
 
-        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name).empty())
+        // validate the name
+        if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name()).empty())
         {
-            result->ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME));
-            result->ErrorCode(bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::MissingEndpointName);
+            result->InternalSetError(
+                creationConfig.AssociationId(), 
+                bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::MissingEndpointName,
+                internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME));
+
             return *result;
         }
 
-        // we have to do all this so we don't change the method signature, but
-        // can provide a default value when the uniqueId is missing. The 
-        // endpoint definition is just a structure, with no constructor
-        bloop::MidiBasicLoopbackEndpointDefinition definition;
-        definition.Description = creationConfig.EndpointDefinition().Description;
-        definition.IsMuted = creationConfig.EndpointDefinition().IsMuted;
-        definition.Name = creationConfig.EndpointDefinition().Name;
-        definition.UniqueId = internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinition().UniqueId.c_str()).c_str(), MAXPNAMELEN);
-
-
-        if (definition.UniqueId.empty())
+        // provide a unique id if none was specified
+        winrt::hstring endpointUniqueId{ internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId()) };
+        if (endpointUniqueId.empty())
         {
             std::wstring id{ internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid()) };
             internal::InPlaceToLower(id);
 
-            definition.UniqueId = id;
+            creationConfig.EndpointDefinition().UniqueId(id);
         }
-
-        bloop::MidiBasicLoopbackEndpointCreationConfig updatedCreationConfig(creationConfig.AssociationId(), definition);
-
 
         try
         {
-            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(updatedCreationConfig);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(creationConfig);
 
-            // parse the results
-            auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
+            // grab the results
+            auto successResult = serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success;
 
-
-            if (successResult)
+            if (!successResult)
             {
-                json::JsonObject serviceResponseJson;
-
-                if (json::JsonObject::TryParse(serviceResponse.ResponseJson, serviceResponseJson))
-                {
-                    auto deviceId = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY, L"");
-
-                    if (!deviceId.empty())
-                    {
-                        // update the response object with the new ids
-                        result->EndpointDeviceId(deviceId);
-                        result->Success(true);
-                    }
-                    else
-                    {
-                        TraceLoggingWrite(
-                            Midi2SdkTelemetryProvider::Provider(),
-                            MIDI_SDK_TRACE_EVENT_ERROR,
-                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                            TraceLoggingWideString(L"Device creation succeeded but returned device id is empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                            TraceLoggingGuid(creationConfig.AssociationId(), "association id")
-                        );
-                    }
-                }
-            }
-            else
-            {
-                result->ErrorInformation(serviceResponse.ServiceMessage);
-
-                // TODO: Get error code from service response
-
-                //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
+                result->InternalSetError(
+                    creationConfig.AssociationId(),
+                    static_cast<bloop::MidiBasicLoopbackEndpointCreationResultErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -129,11 +91,60 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                     TraceLoggingWideString(L"Device creation failed (payload has false success value)", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingGuid(creationConfig.AssociationId(), "association id")
                 );
+
+                return *result;
+            }
+
+            if (successResult)
+            {
+                if (serviceResponse.ResponseJson() == nullptr)
+                {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Device creation succeeded but returned response json is empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                    );
+
+                    return *result;
+                }
+
+                auto deviceId = serviceResponse.ResponseJson().GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY, L"");
+
+                if (!deviceId.empty())
+                {
+                    // TODO:
+                    // 
+            //        result->InternalSetSuccess(deviceId);
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Device creation succeeded but returned device id is empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                    );
+                }
+            }
+            else
+            {
             }
         }
         catch (winrt::hresult_error ex)
         {
-            result->ErrorInformation(ex.message());
+            result->InternalSetError(
+                creationConfig.AssociationId(),
+                bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::ClientApiException,
+                ex.message()
+            );
+
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -148,7 +159,11 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         }
         catch (...)
         {
-            result->ErrorInformation(L"General exception / error.");
+            result->InternalSetError(
+                creationConfig.AssociationId(),
+                bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::ClientApiException,
+                internal::ResourceGetHString(IDS_ERROR_UNKNOWN)
+            );
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -176,9 +191,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         {
             // the success code in this defaults to False
 
-            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(removalConfig);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(removalConfig);
 
-            result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
+            result = (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success);
         }
         catch (winrt::hresult_error ex)
         {
@@ -251,9 +266,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
             cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
 
-            auto result = svc::MidiServiceConfig::SendTransportCommand(cmd);
+            auto result = svc::MidiServiceTransportPluginConfigManager::SendUpdate(cmd);
 
-            if (result.Status == svc::MidiServiceConfigResponseStatus::Success)
+            if (result.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
                 return true;
             }
@@ -266,7 +281,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                     TraceLoggingWideString(L"Failed to mute loopback. Service returned a failure result.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(result.ServiceMessage.c_str()),
+                    TraceLoggingWideString(result.ServiceErrorMessage().c_str()),
                     TraceLoggingGuid(associationId, "association id")
                 );
             }
@@ -312,9 +327,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
             cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT);
 
-            auto result = svc::MidiServiceConfig::SendTransportCommand(cmd);
+            auto result = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
 
-            if (result.Status == svc::MidiServiceConfigResponseStatus::Success)
+            if (result.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
                 return true;
             }
@@ -327,7 +342,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                     TraceLoggingWideString(L"Failed to unmute loopback", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(result.ServiceMessage.c_str()),
+                    TraceLoggingWideString(result.ServiceErrorMessage().c_str(), "error message"),
                     TraceLoggingGuid(associationId, "association id")
                 );
             }
@@ -362,5 +377,17 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
         return false;
     }
+
+
+    collections::IVector<bloop::MidiBasicLoopbackEntry> MidiBasicLoopbackEndpointManager::GetActiveLoopbackEntries()
+    {
+
+
+
+
+
+        return nullptr;
+    }
+
 
 }

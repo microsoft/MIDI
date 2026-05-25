@@ -33,6 +33,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
         static bool MuteLoopback(_In_ winrt::guid const& associationId);
         static bool UnmuteLoopback(_In_ winrt::guid const& associationId);
+
+
+        static collections::IVector<bloop::MidiBasicLoopbackEntry> GetActiveLoopbackEntries();
     };
 }
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::factory_implementation

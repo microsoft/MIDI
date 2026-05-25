@@ -56,15 +56,15 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
         endpointDeviceObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definition.Name).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definition.Name()).c_str()));
 
         endpointDeviceObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definition.Description).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definition.Description()).c_str()));
 
         endpointDeviceObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definition.UniqueId).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definition.UniqueId()).c_str()));
 
         endpointDeviceObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,

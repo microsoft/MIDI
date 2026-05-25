@@ -20,6 +20,9 @@
     <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp">
       <Filter>SDK</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointDefinition.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -37,6 +40,9 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointDefinition.h">
+      <Filter>SDK\Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

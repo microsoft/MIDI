@@ -301,6 +301,7 @@
     <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h">
       <DependentUpon>MidiBasicLoopbackEndpointCreationConfig.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointDefinition.h" />
     <ClInclude Include="MidiBasicLoopbackEndpointManager.h">
       <DependentUpon>MidiBasicLoopbackEndpointManager.idl</DependentUpon>
     </ClInclude>
@@ -318,6 +319,7 @@
     <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp">
       <DependentUpon>MidiBasicLoopbackEndpointCreationConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointDefinition.cpp" />
     <ClCompile Include="MidiBasicLoopbackEndpointManager.cpp">
       <DependentUpon>MidiBasicLoopbackEndpointManager.idl</DependentUpon>
     </ClCompile>

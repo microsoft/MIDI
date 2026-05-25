@@ -7,24 +7,18 @@
 // ============================================================================
 
 #pragma once
-#include <cstdint>
 
-enum BasicLoopbackTransportServiceErrorCode : uint32_t
-{
-    UnknownOrUnspecified =     0x00000000,
-    UnrecognizedCommand =      0x00000001,
+// this file is shared with the client SDK IDL file and so must contain
+// defines that are valid in C++ and MIDL
 
-    InvalidJson =              0x00000011,
+#define BASIC_LOOPBACK_ERROR_CODE_UNKNOWN_ERROR             0x00000000
+#define BASIC_LOOPBACK_ERROR_CODE_UNRECOGNIZED_COMMAND      0x00000001
+#define BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON              0x00000011
 
-    EndpointCreationFailed =   0x00000021,
+#define BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_CREATION_FAILED  0x00000021
 
-    DuplicateUniqueId =        0x00000031,
-    MissingUniqueId =          0x00000032, 
-    MissingEndpointName =      0x00000033,
-    MissingAssociationId =     0x00000034,
-    EndpointNotFound =         0x00000035,
-
-};
-
-
-
+#define BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID       0x00000031
+#define BASIC_LOOPBACK_ERROR_CODE_MISSING_UNIQUE_ID         0x00000032
+#define BASIC_LOOPBACK_ERROR_CODE_MISSING_ENDPOINT_NAME     0x00000033
+#define BASIC_LOOPBACK_ERROR_CODE_MISSING_ASSOCIATION_ID    0x00000034
+#define BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND        0x00000035

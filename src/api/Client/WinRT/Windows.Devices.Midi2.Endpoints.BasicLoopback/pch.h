@@ -124,7 +124,7 @@ namespace bloop = ::winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback;
 
 #include "resource.h"
 
-
+#include "MidiBasicLoopbackEndpointDefinition.h"
 #include "MidiBasicLoopbackEndpointManager.h"
 #include "MidiBasicLoopbackEndpointCreationConfig.h"
 #include "MidiBasicLoopbackEndpointRemovalConfig.h"

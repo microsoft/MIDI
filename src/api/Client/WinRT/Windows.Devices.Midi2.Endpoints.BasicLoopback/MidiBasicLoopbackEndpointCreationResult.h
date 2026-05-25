@@ -16,20 +16,14 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         MidiBasicLoopbackEndpointCreationResult() = default;
 
         bool Success() const noexcept { return m_success; };
-        void Success(_In_ bool const value) noexcept { m_success = value; }
-
         bloop::MidiBasicLoopbackEndpointCreationResultErrorCode ErrorCode() const noexcept { return m_errorCode; }
-        void ErrorCode(_In_ bloop::MidiBasicLoopbackEndpointCreationResultErrorCode const& value) noexcept { m_errorCode = value; }
-
         winrt::hstring ErrorMessage() const noexcept { return m_errorMessage; }
-        void ErrorMessage(_In_ winrt::hstring const& value) noexcept { m_errorMessage = value; }
-
         winrt::guid AssociationId() const noexcept { return m_associationId; }
-        void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }
-
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
-        void EndpointDeviceId(_In_ winrt::hstring const& value) noexcept { m_endpointDeviceId = value; };
+        bloop::MidiBasicLoopbackEntry CreatedLoopbackEntry() const noexcept { return m_createdLoopbackEntry; }
 
+        void InternalSetSuccess(_In_ winrt::guid associationId, _In_ bloop::MidiBasicLoopbackEntry& entry) noexcept;
+        void InternalSetError(_In_ winrt::guid associationId, _In_ bloop::MidiBasicLoopbackEndpointCreationResultErrorCode errorCode, _In_ winrt::hstring const& errorMessage) noexcept;
 
     private:
         bool m_success{ false };
@@ -37,6 +31,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         winrt::hstring m_errorMessage{ };
         winrt::hstring m_endpointDeviceId{ };
         winrt::guid m_associationId{ };
+        bloop::MidiBasicLoopbackEntry m_createdLoopbackEntry{ nullptr };
 
     };
 }
