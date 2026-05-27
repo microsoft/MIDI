@@ -23,5 +23,10 @@ namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
         String Description{ get; };
 
         Boolean IsMuted{ get;};
-    };
+
+        // if the basic loopback endpoint is made the parent of the legacy ports, the query should be fast.
+        // but ideally get this from the server. Only do a lookup if empty.
+        // Need to see if service call can hold until the MIDI 1 endpoints are generated
+        IVector<Windows.Devices.Midi2.Enumeration.MidiEndpointAssociatedPortDeviceInformation> AssociatedLegacyPorts{ get; };
+    }
 }

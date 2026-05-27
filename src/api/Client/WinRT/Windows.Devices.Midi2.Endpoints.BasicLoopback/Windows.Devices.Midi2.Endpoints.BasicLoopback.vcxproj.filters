@@ -23,6 +23,9 @@
     <ClCompile Include="MidiBasicLoopbackEndpointDefinition.cpp">
       <Filter>SDK\Shared</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEntry.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -42,6 +45,9 @@
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="MidiBasicLoopbackEndpointDefinition.h">
+      <Filter>SDK\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEntry.h">
       <Filter>SDK\Shared</Filter>
     </ClInclude>
   </ItemGroup>

@@ -18,17 +18,17 @@ namespace Windows.Devices.Midi2.Enumeration
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointAssociatedPortDeviceInformation", UUID_IMidiEndpointAssociatedPortDeviceInformation)]
     runtimeclass MidiEndpointAssociatedPortDeviceInformation : Windows.Foundation.IStringable
     {
-        Guid ContainerId{ get; };                   // container this exists in. It will be the same as the parent endpoint's. Here for convenience.
-        String ParentDeviceInstanceId{ get; };      // device instance id of the endpoint (which is the id of its parent)
-        String ParentEndpointDeviceId{ get; };      // device id of the owning Windows MIDI Services endpoint
+        Guid ContainerId{ get; };                       // container this exists in. It will be the same as the parent endpoint's. Here for convenience.
+        String ParentDeviceInstanceId{ get; };          // device instance id of the endpoint (which is the id of its parent)
+        String ParentEndpointDeviceId{ get; };          // device id of the owning Windows MIDI Services endpoint
 
-        Windows.Devices.Midi2.MidiGroup Group{ get; };    // the single group this MIDI 1.0 port is associated with
+        Windows.Devices.Midi2.MidiGroup Group{ get; };  // the single group this MIDI 1.0 port is associated with
 
-        Midi1PortFlow PortFlow{ get; };             // source (midi input) or destination (midi output)
-        String PortName{ get; };                    // friendly name (this is the WinMM port name)
+        Midi1PortFlow PortFlow{ get; };                 // source (midi input) or destination (midi output)
+        String PortName{ get; };                        // friendly name (this is the WinMM port name)
 
-        String PortDeviceId{ get; };                // device id in our tree (also used directly in WinRT MIDI 1.0)
-        UInt32 PortNumber{ get; };                  // current winmm port number (0..n)
+        String PortDeviceId{ get; };                    // device id in our tree (also used directly in WinRT MIDI 1.0)
+        UInt32 PortNumber{ get; };                      // current winmm port number (0..n). This can change if devices are added/removed.
 
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };    // the base WinRT Device Information object for this port
     }

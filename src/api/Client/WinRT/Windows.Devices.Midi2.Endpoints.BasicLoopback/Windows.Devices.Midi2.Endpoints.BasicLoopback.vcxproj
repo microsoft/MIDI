@@ -308,6 +308,7 @@
     <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h">
       <DependentUpon>MidiBasicLoopbackEndpointRemovalConfig.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEntry.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -327,6 +328,7 @@
       <DependentUpon>MidiBasicLoopbackEndpointRemovalConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEntry.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
