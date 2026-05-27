@@ -65,6 +65,8 @@
 
 #include "strsafe.h"
 
+#include <mmdeviceapi.h>    // for GUID definitions for MIDI Input/Output
+
 
 //#pragma push_macro("GetObject")
 #undef GetObject

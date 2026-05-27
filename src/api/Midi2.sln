@@ -268,7 +268,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{8799F8
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WinRT", "WinRT", "{52E133B2-5F9B-4F79-9E62-070612BA9286}"
 	ProjectSection(SolutionItems) = preProject
-		SDKSetupDependencies.md = SDKSetupDependencies.md
+		WinRT API and Tools README.md = WinRT API and Tools README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{3DE838E3-3D20-43E3-84EB-3347E3AC11FF}"

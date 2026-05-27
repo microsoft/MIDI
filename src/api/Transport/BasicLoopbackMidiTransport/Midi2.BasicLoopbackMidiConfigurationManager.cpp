@@ -120,7 +120,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                     responseObject, 
-                    BasicLoopbackTransportServiceErrorCode::EndpointNotFound,
+                    BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
                     internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
             }
             else if (SUCCEEDED(hr))
@@ -137,7 +137,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
             // no association id
             internal::SetConfigurationResponseObjectFailWithErrorCode(
                 responseObject, 
-                BasicLoopbackTransportServiceErrorCode::MissingAssociationId,
+                BASIC_LOOPBACK_ERROR_CODE_MISSING_ASSOCIATION_ID,
                 internal::ResourceGetWString(IDS_ERROR_MISSING_ASSOCIATION_ID));
         }
 
@@ -146,7 +146,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
     {
         internal::SetConfigurationResponseObjectFailWithErrorCode(
             responseObject, 
-            BasicLoopbackTransportServiceErrorCode::UnrecognizedCommand,
+            BASIC_LOOPBACK_ERROR_CODE_UNRECOGNIZED_COMMAND,
             internal::ResourceGetWString(IDS_ERROR_UNRECOGNIZED_COMMAND));
     }
 
@@ -216,13 +216,21 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
         std::wstring instanceIdPrefix = MIDI_BASIC_LOOP_INSTANCE_ID_PREFIX;
 
         // we should probably set a property based on this as well.
-
         auto createObject = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
 
         // Create ----------------------------------
 
         if (createObject != nullptr && createObject.Size() > 0)
         {
+            bool processingMultipleCreates { false };
+
+            // this should only happen when working from a config file. The return result object is not
+            // important in that case.
+            if (createObject.Size() > 1)
+            {
+                processingMultipleCreates = true;
+            }
+
             auto o = createObject.First();
 
             while (o.HasCurrent())
@@ -262,14 +270,22 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingWideString(L"Endpoint name missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
-                            internal::SetConfigurationResponseObjectFailWithErrorCode(
-                                responseObject,
-                                BasicLoopbackTransportServiceErrorCode::MissingEndpointName,
-                                internal::ResourceGetWString(IDS_ERROR_MISSING_NAME));
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_MISSING_ENDPOINT_NAME,
+                                    internal::ResourceGetWString(IDS_ERROR_MISSING_NAME));
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                o.MoveNext();
+                                continue;
+                            }
                         }
 
 
@@ -281,17 +297,26 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unique identifier missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                                TraceLoggingWideString(L"Skipping endpoint with missing or empty unique identifier", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
-                            internal::SetConfigurationResponseObjectFailWithErrorCode(
-                                responseObject,
-                                BasicLoopbackTransportServiceErrorCode::MissingUniqueId,
-                                internal::ResourceGetWString(IDS_ERROR_MISSING_UNIQUE_ID));
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_MISSING_UNIQUE_ID,
+                                    internal::ResourceGetWString(IDS_ERROR_MISSING_UNIQUE_ID));
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                // skip this one and keep going. Don't return an error for the whole batch just because of one bad entry.
+                                o.MoveNext();
+                                continue;
+                            }
                         }
 
 
@@ -306,19 +331,29 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unique identifier for Loopback Definition A already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(L"Unique identifier for Loopback Definition already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier")
                             );
 
-                            internal::SetConfigurationResponseObjectFailWithErrorCode(
-                                responseObject, 
-                                BasicLoopbackTransportServiceErrorCode::DuplicateUniqueId,
-                                internal::ResourceGetWString(IDS_ERROR_DUPLICATE_UNIQUE_ID));
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID,
+                                    internal::ResourceGetWString(IDS_ERROR_DUPLICATE_UNIQUE_ID));
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                // skip this one and keep going. Don't return an error for the whole batch just because of one bad entry.
+                                o.MoveNext();
+                                continue;
+                            }
                         }
+
                         allocatedUniqueIds.emplace(definition->EndpointUniqueIdentifier, true);
 
                         if (TransportState::Current().GetEndpointManager() != nullptr && 
@@ -347,6 +382,42 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                     MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY,
                                     endpointIdAVal);
 
+
+                                // if we're not processing the config file, go ahead and return the created MIDI 1 ports.
+                                if (!processingMultipleCreates)
+                                {
+                                    // get the associated MIDI 1 ports and add them to the results
+
+                                    if (definition->CreatedMidi1DestinationPorts.size() > 0)
+                                    {
+                                        json::JsonArray midi1PortsJsonArray;
+
+                                        for (const auto& portId : definition->CreatedMidi1DestinationPorts)
+                                        {
+                                            auto portIdVal = json::JsonValue::CreateStringValue(portId);
+                                            midi1PortsJsonArray.Append(portIdVal);
+                                        }
+
+                                        responseObject.SetNamedValue(
+                                            MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_CREATED_MIDI1_DESTINATION_PORTS_ARRAY_KEY,
+                                            midi1PortsJsonArray);
+                                    }
+
+                                    if (definition->CreatedMidi1SourcePorts.size() > 0)
+                                    {
+                                        json::JsonArray midi1PortsJsonArray;
+
+                                        for (const auto& portId : definition->CreatedMidi1SourcePorts)
+                                        {
+                                            auto portIdVal = json::JsonValue::CreateStringValue(portId);
+                                            midi1PortsJsonArray.Append(portIdVal);
+                                        }
+
+                                        responseObject.SetNamedValue(
+                                            MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_CREATED_MIDI1_SOURCE_PORTS_ARRAY_KEY,
+                                            midi1PortsJsonArray);
+                                    }
+                                }
                             }
                             else
                             {
@@ -362,12 +433,12 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                                     responseObject,
-                                    BasicLoopbackTransportServiceErrorCode::EndpointCreationFailed,
+                                    BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_CREATION_FAILED,
                                     internal::ResourceGetWString(IDS_ERROR_CREATION_FAILED));
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                return E_FAIL;
+                                return S_FALSE;
                             }
 
                         }
@@ -397,12 +468,12 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                         internal::SetConfigurationResponseObjectFailWithErrorCode(
                             responseObject,
-                            BasicLoopbackTransportServiceErrorCode::InvalidJson,
+                            BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON,
                             internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
 
                         internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                        return E_FAIL;
+                        return S_FALSE;
                     }
                 }
                 else
@@ -419,14 +490,17 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                     internal::SetConfigurationResponseObjectFailWithErrorCode(
                         responseObject,
-                        BasicLoopbackTransportServiceErrorCode::InvalidJson,
+                        BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON,
                         internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
 
                     internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                    return E_FAIL;
+                    return S_FALSE;
                 }
 
+
+                // Only config file-generated entries have more than one create. If this is sent at
+                // runtime, we only create one endpoint at a time.
                 o.MoveNext();
             }
         }
