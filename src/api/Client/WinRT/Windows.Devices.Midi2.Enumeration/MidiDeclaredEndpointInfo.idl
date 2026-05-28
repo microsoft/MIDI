@@ -14,11 +14,13 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
-    struct MidiDeclaredEndpointInfo
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredEndpointInfo", UUID_IMidiDeclaredEndpointInfo)]
+    runtimeclass MidiDeclaredEndpointInfo
     {
+        Boolean IsReadOnly { get; };
+
         String Name;
         String ProductInstanceId;
-
 
         Boolean SupportsMidi10Protocol;
         Boolean SupportsMidi20Protocol;

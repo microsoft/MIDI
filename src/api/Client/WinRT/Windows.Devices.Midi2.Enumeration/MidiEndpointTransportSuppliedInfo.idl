@@ -15,8 +15,11 @@ import "MidiEndpointNativeDataFormatEnum.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
-    struct MidiEndpointTransportSuppliedInfo
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointTransportSuppliedInfo", UUID_IMidiEndpointTransportSuppliedInfo)]
+    runtimeclass MidiEndpointTransportSuppliedInfo
     {
+        Boolean IsReadOnly { get; };
+
         String Name;
         String Description;
 
@@ -32,6 +35,9 @@ namespace Windows.Devices.Midi2.Enumeration
         MidiEndpointNativeDataFormat NativeDataFormat;
 
         Guid TransportId;
-        String TransportCode;   // formerly called 'Mnemonic'
+        String TransportCode;
+
+        String DriverDeviceInterface;
+
     };
 }

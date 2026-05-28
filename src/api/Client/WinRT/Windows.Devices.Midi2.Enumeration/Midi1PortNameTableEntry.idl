@@ -16,13 +16,14 @@ namespace Windows.Devices.Midi2.Enumeration
     // this needs to be kept in sync with Midi1PortNameEntry in service
 
     [contract(MidiEnumerationApiContract, 1)]
-    struct Midi1PortNameTableEntry
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidi1PortNameTableEntry", UUID_IMidi1PortNameTableEntry)]
+    runtimeclass Midi1PortNameTableEntry
     {
-        UInt8 GroupIndex;               // can't use MidiGroup here unless we're going to make a runtimeclass of this
-        Midi1PortFlow Flow;
+        Windows.Devices.Midi2.MidiGroup Group { get; };
+        Midi1PortFlow Flow{ get; };
 
-        String CustomName;              // user-supplied name. Blank if not provided.
-        String LegacyCompatibleName;    // WinMM MIDI 1.0 compatible port name
-        String NewStyleName;            // New-style port name
+        String CustomName{ get; };              // user-supplied name. Blank if not provided.
+        String LegacyCompatibleName{ get; };    // WinMM MIDI 1.0 compatible port name
+        String NewStyleName{ get; };            // New-style port name
     };
 }

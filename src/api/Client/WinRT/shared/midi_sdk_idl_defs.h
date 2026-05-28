@@ -87,11 +87,19 @@
 #define UUID_IMidiGroupTerminalBlock						        8087b303-0519-31d1-c0de-dd0000010000
 #define UUID_IMidiGroupTerminalBlockStatics					        8087b303-0519-31d1-c0de-ee0000010000
 
-#define UUID_IMidiEndpointAssociatedPortDeviceInformation	        8087b303-0519-31d1-c0de-dd0000020000
+#define UUID_IMidiDeclaredDeviceIdentity						    8087b303-0519-31d1-c0de-dd0000020001
+#define UUID_IMidiDeclaredEndpointInfo                              8087b303-0519-31d1-c0de-dd0000020002
+#define UUID_IMidiDeclaredStreamConfiguration                       8087b303-0519-31d1-c0de-dd0000020003
+#define UUID_IMidiEndpointTransportSuppliedInfo                     8087b303-0519-31d1-c0de-dd0000020004
+#define UUID_IMidiEndpointUserSuppliedInfo                          8087b303-0519-31d1-c0de-dd0000020005
 
-#define UUID_IMidiEndpointDevicePropertyHelperStatics		        8087b303-0519-31d1-c0de-ee0000030000
+#define UUID_IMidi1PortNameTableEntry                               8087b303-0519-31d1-c0de-dd0000030001
 
-#define UUID_IMidiEndpointDeviceIdHelperStatics				        8087b303-0519-31d1-c0de-ee0000009000
+#define UUID_IMidiEndpointAssociatedPortDeviceInformation	        8087b303-0519-31d1-c0de-dd0000030100
+
+#define UUID_IMidiEndpointDevicePropertyHelperStatics		        8087b303-0519-31d1-c0de-ee0000030200
+
+#define UUID_IMidiEndpointDeviceIdHelperStatics				        8087b303-0519-31d1-c0de-ee0000030300
 
 
 // ============================================================================

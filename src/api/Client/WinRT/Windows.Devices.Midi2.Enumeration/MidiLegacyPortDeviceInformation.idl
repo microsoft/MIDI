@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "Midi1PortFlowEnum.idl";
+import "MidiEndpointNativeDataFormat.idl";
+
+
+namespace Windows.Devices.Midi2.Enumeration.Legacy
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiLegacyPortDeviceInformation", UUID_IMidiLegacyPortDeviceInformation )]
+    runtimeclass MidiLegacyPortDeviceInformation : Windows.Foundation.IStringable
+    {
+        String PortDeviceId{ get; };                    // device id in our tree (also used directly in WinRT MIDI 1.0)
+        String Name{ get; };                            // friendly name (this is the WinMM port name)
+
+        Guid ContainerId{ get; };                       // container this exists in. It will be the same as the parent endpoint's. Here for convenience.
+        String ParentDeviceInstanceId{ get; };          // device instance id of the endpoint (which is the id of its parent)
+        String ParentEndpointDeviceId{ get; };          // device id of the owning Windows MIDI Services endpoint
+
+        Windows.Devices.Midi2.MidiGroup Group{ get; };  // the single group this MIDI 1.0 port is associated with
+
+        Midi1PortFlow PortFlow{ get; };                 // source (midi input) or destination (midi output)
+
+        UInt32 WinMMPortNumber{ get; };                      // current winmm port number (0..n). This can change if devices are added/removed.
+
+        MidiEndpointNativeDataFormat NativeDataFormat{ get; };   // the native data format of the port, which is needed to know in order to use the port with WinMM APIs. This is the same as the parent endpoint's native data format. Here for convenience.
+        Guid TransportId;
+        String TransportCode;
+
+
+        Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };    // the base WinRT Device Information object for this port
+    }
+}

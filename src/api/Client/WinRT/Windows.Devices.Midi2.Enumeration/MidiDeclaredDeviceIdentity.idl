@@ -10,29 +10,29 @@
 import "MidiApiContracts.idl";
 
 
+// TODO: Now that this is a runtimeclass, change the fields into fixed-size arrays
+
 
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
-    struct MidiDeclaredDeviceIdentity
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredDeviceIdentity", UUID_IMidiDeclaredDeviceIdentity)]
+    runtimeclass MidiDeclaredDeviceIdentity
     {
-        // can't declare fixed-size arrays in MIDL 3.0
-    
-        UInt8 SystemExclusiveIdByte1;   // if this value is zero, the actual identity is in bytes 2 and 3
-        UInt8 SystemExclusiveIdByte2;
-        UInt8 SystemExclusiveIdByte3;
+        Boolean IsReadOnly { get; };
 
-        UInt8 DeviceFamilyLsb;
-        UInt8 DeviceFamilyMsb;
+        UInt8[] SystemExclusiveIdBytes;
+        void SetSystemExclusiveIdBytes(UInt8 byte1, UInt8 byte2, UInt8 byte3);
 
-        UInt8 DeviceFamilyModelNumberLsb;
-        UInt8 DeviceFamilyModelNumberMsb;
+        UInt8 DeviceFamilyLsb{ get; };
+        UInt8 DeviceFamilyMsb{ get; };
+        void SetDeviceFamily(UInt8 deviceFamilyLsb, UInt8 deviceFamilyMsb);
 
-        // can't declare fixed-sized arrays in a MIDL 3 struct, so 
-        // just keeping these as discrete fields. Same with SysEx.
-        UInt8 SoftwareRevisionLevelByte1;
-        UInt8 SoftwareRevisionLevelByte2;
-        UInt8 SoftwareRevisionLevelByte3;
-        UInt8 SoftwareRevisionLevelByte4;
-};
+        UInt8 DeviceFamilyModelNumberLsb{ get; };
+        UInt8 DeviceFamilyModelNumberMsb{ get; };
+        void SetDeviceFamilyModelNumber(UInt8 deviceFamilyModelNumberLsb, UInt8 deviceFamilyModelNumberMsb);
+
+        UInt8[] SoftwareRevisionLevelBytes;
+        void SetSoftwareRevisionLevelBytes(UInt8 byte1, UInt8 byte2, UInt8 byte3, UInt8 byte4);
+    }
 }

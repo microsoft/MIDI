@@ -14,8 +14,11 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
-    struct MidiEndpointUserSuppliedInfo
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointUserSuppliedInfo", UUID_IMidiEndpointUserSuppliedInfo)]
+    runtimeclass MidiEndpointUserSuppliedInfo
     {
+        Boolean IsReadOnly { get; };
+
         String Name;
         String Description;
 
@@ -24,5 +27,8 @@ namespace Windows.Devices.Midi2.Enumeration
         Boolean RequiresNoteOffTranslation;
         UInt16 RecommendedControlChangeAutomationIntervalMilliseconds;
         Boolean SupportsMidiPolyphonicExpression;
+
+        UInt64 CustomMidiOutgoingLatencyTicks;
+        Boolean UseCustomMidiOutgoingLatencyTicksForScheduling;
     };
 }

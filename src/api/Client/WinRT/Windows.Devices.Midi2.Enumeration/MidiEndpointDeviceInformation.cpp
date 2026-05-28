@@ -341,7 +341,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         // check if normal client MIDI 1.0 / bytestream
         else if ((deviceInformation.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat))
+            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat))
         {
             if ((endpointFilters & midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat) ==
                 midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat)
@@ -352,8 +352,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         // check if normal client MIDI 2.0 / UMP 
         else if ((deviceInformation.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat ||
-                deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == midi2enum::MidiEndpointNativeDataFormat::Unknown))
+            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat ||
+                deviceInformation.GetTransportSuppliedInfo().NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::Unknown))
         {
             if ((endpointFilters & midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat) ==
                 midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat)
@@ -482,10 +482,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {
-                    if (device1.GetTransportSuppliedInfo().TransportCode == device2.GetTransportSuppliedInfo().TransportCode)
+                    if (device1.GetTransportSuppliedInfo().TransportCode() == device2.GetTransportSuppliedInfo().TransportCode())
                         return device1.Name() < device2.Name();
 
-                    return device1.GetTransportSuppliedInfo().TransportCode < device2.GetTransportSuppliedInfo().TransportCode;
+                    return device1.GetTransportSuppliedInfo().TransportCode() < device2.GetTransportSuppliedInfo().TransportCode();
                 });
             break;
 
@@ -493,10 +493,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {
-                    if (device1.GetTransportSuppliedInfo().TransportCode == device2.GetTransportSuppliedInfo().TransportCode)
+                    if (device1.GetTransportSuppliedInfo().TransportCode() == device2.GetTransportSuppliedInfo().TransportCode())
                         return device1.EndpointDeviceId() < device2.EndpointDeviceId();
 
-                    return device1.GetTransportSuppliedInfo().TransportCode < device2.GetTransportSuppliedInfo().TransportCode;
+                    return device1.GetTransportSuppliedInfo().TransportCode() < device2.GetTransportSuppliedInfo().TransportCode();
                 });
             break;
 
@@ -504,10 +504,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {
-                    if (device1.GetTransportSuppliedInfo().TransportCode == device2.GetTransportSuppliedInfo().TransportCode)
+                    if (device1.GetTransportSuppliedInfo().TransportCode() == device2.GetTransportSuppliedInfo().TransportCode())
                         return device1.DeviceInstanceId() < device2.DeviceInstanceId();
 
-                    return device1.GetTransportSuppliedInfo().TransportCode < device2.GetTransportSuppliedInfo().TransportCode;
+                    return device1.GetTransportSuppliedInfo().TransportCode() < device2.GetTransportSuppliedInfo().TransportCode();
                 });
             break;
 
@@ -641,13 +641,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     winrt::hstring MidiEndpointDeviceInformation::Name() const noexcept
     {
         // user-supplied name overrides all others
-        if (GetUserSuppliedInfo().Name != L"") return GetUserSuppliedInfo().Name;
+        if (GetUserSuppliedInfo().Name() != L"") return GetUserSuppliedInfo().Name();
 
         // endpoint name discovered in-protocol is next highest
-        if (GetDeclaredEndpointInfo().Name != L"") return GetDeclaredEndpointInfo().Name;
+        if (GetDeclaredEndpointInfo().Name() != L"") return GetDeclaredEndpointInfo().Name();
 
         // transport-supplied name is last
-        if (GetTransportSuppliedInfo().Name != L"") return GetTransportSuppliedInfo().Name;
+        if (GetTransportSuppliedInfo().Name() != L"") return GetTransportSuppliedInfo().Name();
 
         return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.ItemNameDisplay", L"(Unknown)");
     }
@@ -668,7 +668,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         try
         {
-            auto functionBlockCount = GetDeclaredEndpointInfo().DeclaredFunctionBlockCount;
+            auto functionBlockCount = GetDeclaredEndpointInfo().DeclaredFunctionBlockCount();
 
             for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < functionBlockCount; fb++)
             {
@@ -695,6 +695,24 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                     blocks.Append(*block);
                 }
             }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading function blocks.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(ex.code(), "exception hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "exception message")
+            );
+
+            // we let the blocks get returned outside the handler
         }
         catch (...)
         {
@@ -725,107 +743,270 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     midi2enum::MidiEndpointUserSuppliedInfo MidiEndpointDeviceInformation::GetUserSuppliedInfo() const noexcept
     {
-        midi2enum::MidiEndpointUserSuppliedInfo info{};
+        auto info = winrt::make_self<MidiEndpointUserSuppliedInfo>();
 
-        info.Name = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomEndpointName, L"");
-        info.Description = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomDescription, L"");
+        if (info == nullptr)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to allocate memory for return type.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            return nullptr;
+        }
+
+        try
+        {
+            info->Name(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomEndpointName, L""));
+            info->Description(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomDescription, L""));
         
-        info.ImageFileName = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomImagePath, L"");
+            info->ImageFileName(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomImagePath, L""));
 
-        info.RequiresNoteOffTranslation = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_RequiresNoteOffTranslation, false);
-        info.SupportsMidiPolyphonicExpression = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false);
-        info.RecommendedControlChangeAutomationIntervalMilliseconds = internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0);
+            info->RequiresNoteOffTranslation(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_RequiresNoteOffTranslation, false));
+            info->SupportsMidiPolyphonicExpression(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false));
+            info->RecommendedControlChangeAutomationIntervalMilliseconds(internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0));
 
-        return info;
+            info->CustomMidiOutgoingLatencyTicks(internal::GetDeviceInfoProperty<uint64_t>(m_properties, STRING_PKEY_MIDI_MidiOutCustomLatencyTicks, 0));
+            info->UseCustomMidiLatencyTicksForScheduling(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride, false));
+
+            info->IsReadOnly(true);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(ex.code(), "exception hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "exception message")
+            );
+
+            // we let the data get returned outside the handler
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            // we let the data get returned outside the handler
+        }
+
+        return *info;
     }
 
     midi2enum::MidiEndpointTransportSuppliedInfo MidiEndpointDeviceInformation::GetTransportSuppliedInfo() const noexcept
     {
-        midi2enum::MidiEndpointTransportSuppliedInfo info{};
+        auto info = winrt::make_self<MidiEndpointTransportSuppliedInfo>();
 
-        info.Name = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointName, L"");
-        info.Description = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_Description, L"");
+        if (info == nullptr)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to allocate memory for return type.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
-//        info.LargeImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedLargeImagePath, L"");
-//        info.SmallImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedSmallImagePath, L"");
+            return nullptr;
+        }
 
-        info.TransportId = internal::GetDeviceInfoProperty<winrt::guid>(m_properties, STRING_PKEY_MIDI_TransportLayer, winrt::guid{});
-        info.TransportCode = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_TransportCode, L"");
-        info.SupportsMultiClient = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMulticlient, true);
+        try
+        {
+            info->Name(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointName, L""));
+            info->Description(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_Description, L""));
 
-        info.VendorId = internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_UsbVID, 0);
-        info.ProductId = internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_UsbPID, 0);
-        info.SerialNumber = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_SerialNumber, L"");
-        info.ManufacturerName = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_ManufacturerName, L"");
+            info->TransportId(internal::GetDeviceInfoProperty<winrt::guid>(m_properties, STRING_PKEY_MIDI_TransportLayer, winrt::guid{}));
+            info->TransportCode(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_TransportCode, L""));
+            info->SupportsMultiClient(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMulticlient, true));
 
-        auto formatProperty = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_NativeDataFormat, 0);
+            info->VendorId(internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_UsbVID, 0));
+            info->ProductId(internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_UsbPID, 0));
+            info->SerialNumber(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_SerialNumber, L""));
+            info->ManufacturerName(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_ManufacturerName, L""));
 
-        if (formatProperty == MidiDataFormats::MidiDataFormats_ByteStream)
-            info.NativeDataFormat = midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat;
-        else if (formatProperty == MidiDataFormats::MidiDataFormats_UMP)
-            info.NativeDataFormat = midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat;
-        else
-            info.NativeDataFormat = midi2enum::MidiEndpointNativeDataFormat::Unknown;
+            auto formatProperty = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_NativeDataFormat, 0);
+
+            if (formatProperty == MidiDataFormats::MidiDataFormats_ByteStream)
+                info->NativeDataFormat(midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat);
+            else if (formatProperty == MidiDataFormats::MidiDataFormats_UMP)
+                info->NativeDataFormat(midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat);
+            else
+                info->NativeDataFormat(midi2enum::MidiEndpointNativeDataFormat::Unknown);
         
-        return info;
+
+            info->DriverName(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverName, L""));
+            info->DriverDeviceInterface(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverDeviceInterface, L""));
+
+
+            info->IsReadOnly(true);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(ex.code(), "exception hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "exception message")
+            );
+
+            // we let the data get returned outside the handler
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            // we let the data get returned outside the handler
+        }
+
+        return *info;
     }
 
     midi2enum::MidiDeclaredStreamConfiguration MidiEndpointDeviceInformation::GetDeclaredStreamConfiguration() const noexcept
     {
-        midi2enum::MidiDeclaredStreamConfiguration config{};
+        auto config = winrt::make_self<MidiDeclaredStreamConfiguration>();
 
-        auto protocolProperty = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredProtocol, (uint8_t)MidiProtocol::Default);
+        if (config == nullptr)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to allocate memory for return type.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
-        if (protocolProperty == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1)
-            config.Protocol = midi2enum::MidiProtocol::Midi1;
-        else if (protocolProperty == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2)
-            config.Protocol = midi2enum::MidiProtocol::Midi2;
-        else
-            config.Protocol = midi2enum::MidiProtocol::Default;
+            return nullptr;
+        }
 
-        config.ReceiveJitterReductionTimestamps = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, false);
-        config.SendJitterReductionTimestamps = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, false);
+        try
+        {
+            auto protocolProperty = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredProtocol, (uint8_t)MidiProtocol::Default);
 
-        return config;
+            if (protocolProperty == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1)
+                config->Protocol(midi2enum::MidiProtocol::Midi1);
+            else if (protocolProperty == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2)
+                config->Protocol(midi2enum::MidiProtocol::Midi2);
+            else
+                config->Protocol(midi2enum::MidiProtocol::Default);
+
+            config->ReceiveJitterReductionTimestamps(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, false));
+            config->SendJitterReductionTimestamps(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, false));
+
+            config->IsReadOnly(true);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(ex.code(), "exception hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "exception message")
+            );
+
+            // we let the data get returned outside the handler
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            // we let the data get returned outside the handler
+        }
+
+        return *config;
     }
 
 
 
     midi2enum::MidiDeclaredDeviceIdentity MidiEndpointDeviceInformation::GetDeclaredDeviceIdentity() const noexcept
     {
-        auto key = STRING_PKEY_MIDI_DeviceIdentity;
+        auto di = winrt::make_self<MidiDeclaredDeviceIdentity>();
 
-        midi2enum::MidiDeclaredDeviceIdentity di{};
+        auto key = STRING_PKEY_MIDI_DeviceIdentity;
 
         auto refArray = GetBinaryProperty(key);
 
-        if (refArray != nullptr)
+        if (refArray == nullptr || di == nullptr)
         {
-            auto data = refArray.Value();
-            auto arraySize = data.size();
+            return nullptr;
+        }
 
+        auto data = refArray.Value();
+        auto arraySize = data.size();
+
+        try
+        {
             if (arraySize == sizeof(MidiDeviceIdentityProperty))
             {
                 MidiDeviceIdentityProperty identity;
 
                 memcpy(&identity, data.data(), arraySize);
 
-                di.DeviceFamilyLsb = identity.DeviceFamilyLsb;
-                di.DeviceFamilyMsb = identity.DeviceFamilyMsb;
+                di->SetDeviceFamily(identity.DeviceFamilyLsb, identity.DeviceFamilyMsb);
+                di->SetDeviceFamilyModel(identity.DeviceFamilyModelLsb, identity.DeviceFamilyModelMsb);
+                di->SetDeviceFamilyModelNumber(identity.DeviceFamilyModelNumberLsb, identity.DeviceFamilyModelNumberMsb);
+                di->SetSoftwareRevisionLevel(identity.SoftwareRevisionLevelByte1, identity.SoftwareRevisionLevelByte2, identity.SoftwareRevisionLevelByte3, identity.SoftwareRevisionLevelByte4);
+                di->SetSystemExclusiveId(identity.ManufacturerSysExIdByte1, identity.ManufacturerSysExIdByte2, identity.ManufacturerSysExIdByte3);
 
-                di.DeviceFamilyModelNumberLsb = identity.DeviceFamilyModelNumberLsb;
-                di.DeviceFamilyModelNumberMsb = identity.DeviceFamilyModelNumberMsb;
-
-                di.SoftwareRevisionLevelByte1 = identity.SoftwareRevisionLevelByte1;
-                di.SoftwareRevisionLevelByte2 = identity.SoftwareRevisionLevelByte2;
-                di.SoftwareRevisionLevelByte3 = identity.SoftwareRevisionLevelByte3;
-                di.SoftwareRevisionLevelByte4 = identity.SoftwareRevisionLevelByte4;
-
-                di.SystemExclusiveIdByte1 = identity.ManufacturerSysExIdByte1;
-                di.SystemExclusiveIdByte2 = identity.ManufacturerSysExIdByte2;
-                di.SystemExclusiveIdByte3 = identity.ManufacturerSysExIdByte3;
-
-                return di;
+                di->IsReadOnly(true);
             }
             else
             {
@@ -841,39 +1022,127 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                     TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
 
+                return nullptr;
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
 
-        return di;
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(ex.code(), "exception hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "exception message")
+            );
+
+            // we let the data get returned outside the handler
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            // we let the data get returned outside the handler
+        }
+
+        return *di;
     }
 
 
     midi2enum::MidiDeclaredEndpointInfo MidiEndpointDeviceInformation::GetDeclaredEndpointInfo() const noexcept
     {
-        midi2enum::MidiDeclaredEndpointInfo info;
+        auto info = winrt::make_self<MidiDeclaredEndpointInfo>();
 
-        info.Name = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointProvidedName, L"");
-        info.ProductInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointProvidedProductInstanceId, L"");
+        if (info == nullptr)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to allocate memory for return type.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
-        info.SupportsMidi10Protocol = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol, false);
-        info.SupportsMidi20Protocol = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol, false);
-        info.SupportsReceivingJitterReductionTimestamps = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false);
-        info.SupportsSendingJitterReductionTimestamps = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false);
+            return nullptr;
+        }
 
-        info.SpecificationVersionMajor = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0);
-        info.SpecificationVersionMinor = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0);
+        try
+        {
+            info->Name(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointProvidedName, L""));
+            info->ProductInstanceId(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointProvidedProductInstanceId, L""));
 
-        info.HasStaticFunctionBlocks = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
-        info.DeclaredFunctionBlockCount = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_FunctionBlockDeclaredCount, (uint8_t)0);
+            info->SupportsMidi10Protocol(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol, false));
+            info->SupportsMidi20Protocol(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol, false));
+            info->SupportsReceivingJitterReductionTimestamps(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false));
+            info->SupportsSendingJitterReductionTimestamps(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false));
 
-        return info;
+            info->SpecificationVersionMajor(internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0));
+            info->SpecificationVersionMinor(internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0));
+
+            info->HasStaticFunctionBlocks(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_FunctionBlocksAreStatic, false));
+            info->DeclaredFunctionBlockCount(internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_FunctionBlockDeclaredCount, (uint8_t)0));
+
+            info->IsReadOnly(true);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(ex.code(), "exception hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "exception message")
+            );
+
+            // we let the data get returned outside the handler
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            // we let the data get returned outside the handler
+        }
+        return *info;
     }
 
 
 
     _Use_decl_annotations_
     void MidiEndpointDeviceInformation::InternalUpdateFromDeviceInformation(
-        winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
+        enumeration::DeviceInformation const& deviceInformation) noexcept
     {
         if (deviceInformation == nullptr) return;
 
@@ -894,7 +1163,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     _Use_decl_annotations_
     bool MidiEndpointDeviceInformation::UpdateFromDeviceInformation(
-        winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
+        enumeration::DeviceInformation const& deviceInformation) noexcept
     {
         if (deviceInformation == nullptr) return false;
 
@@ -909,7 +1178,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     _Use_decl_annotations_
     bool MidiEndpointDeviceInformation::UpdateFromDeviceInformationUpdate(
-        winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
+        enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
     {
         if (deviceInformationUpdate == nullptr) return false;
 
@@ -971,8 +1240,38 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 return nullptr;
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(ex.code(), "exception hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "exception message")
+            );
+
+            return nullptr;
+        }
         catch (...)
         {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
             return nullptr;
         }
         
@@ -1008,6 +1307,23 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 }
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(ex.code(), "exception hresult"),
+                TraceLoggingWideString(ex.message().c_str(), "exception message")
+            );
+
+        }
         catch (...)
         {
             LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
@@ -1018,9 +1334,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception processing endpoint GTB property.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Exception reading properties.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
         }
     }
 
@@ -1067,27 +1384,29 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             {
                 for (auto const& nameTableInternalEntry : internalTable)
                 {
-                    midi2enum::Midi1PortNameTableEntry entry{};
+                    auto entry = winrt::make_self<Midi1PortNameTableEntry>();
 
-                    entry.GroupIndex = nameTableInternalEntry.GroupIndex;
-                    entry.CustomName = nameTableInternalEntry.CustomName;
-                    entry.LegacyCompatibleName = nameTableInternalEntry.LegacyWinMMName;
-                    entry.NewStyleName = nameTableInternalEntry.NewStyleName;
+                    entry->GroupIndex(nameTableInternalEntry.GroupIndex);
+                    entry->CustomName(nameTableInternalEntry.CustomName);
+                    entry->LegacyCompatibleName(nameTableInternalEntry.LegacyWinMMName);
+                    entry->NewStyleName(nameTableInternalEntry.NewStyleName);
 
                     switch (nameTableInternalEntry.DataFlowFromUserPerspective)
                     {
                     case MidiFlow::MidiFlowIn:
-                        entry.Flow = Midi1PortFlow::MidiMessageSource;
+                        entry.Flow(Midi1PortFlow::MidiMessageSource);
                         break;
                     case MidiFlow::MidiFlowOut:
-                        entry.Flow = Midi1PortFlow::MidiMessageDestination;
+                        entry.Flow(Midi1PortFlow::MidiMessageDestination);
                         break;
                     default:
                         // this should not happen
                         break;
                     }
 
-                    nameTable.Append(entry);
+                    entry->IsReadOnly(true);
+
+                    nameTable.Append(*entry);
                 }
             }
         }
@@ -1315,6 +1634,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
 
             auto searchResults = enumeration::DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
+
+
+            // TODO: The selector should be able to be filtered by the parent device id to greatly speed this up.
+
+
+
+
+
 
             if (searchResults != nullptr)
             {

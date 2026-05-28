@@ -1,0 +1,45 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiPortDeviceInformation.idl";
+
+import "MidiLegacyPortDeviceInformationAddedEventArgs.idl";
+import "MidiLegacyPortDeviceInformationUpdatedEventArgs.idl";
+import "MidiLegacyPortDeviceInformationRemovedEventArgs.idl";
+
+import "Midi1PortFlowEnum.idl";
+
+namespace Windows.Devices.Midi2.Enumeration.Legacy
+{
+    [contract(MidiEnumerationLegacyApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceWatcher", UUID_IMidiLegacyPortDeviceWatcher)]
+    [static_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceWatcherStatics", UUID_IMidiLegacyPortDeviceWatcherStatics)]
+    runtimeclass MidiLegacyPortDeviceWatcher
+    {
+        static MidiLegacyPortDeviceWatcher Create();
+        static MidiLegacyPortDeviceWatcher Create(Midi1PortFlow flow);
+
+        void Start();
+        void Stop();
+
+        Windows.Foundation.Collections.IMapView<String, MidiPortDeviceInformation> EnumeratedEndpointDevices{ get; };
+
+        Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
+
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, MidiLegacyPortDeviceInformationAddedEventArgs> Added;
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, MidiLegacyPortDeviceInformationUpdatedEventArgs> Updated;
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, MidiLegacyPortDeviceInformationRemovedEventArgs> Removed;
+
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, IInspectable> EnumerationCompleted;
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, IInspectable> Stopped;
+    }
+}

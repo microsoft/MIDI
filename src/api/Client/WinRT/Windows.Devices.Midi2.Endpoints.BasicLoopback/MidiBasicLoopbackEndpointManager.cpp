@@ -119,6 +119,19 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                     // TODO:
                     // 
             //        result->InternalSetSuccess(deviceId);
+
+
+
+
+                    // get created midi1 ports
+
+
+
+
+
+
+
+
                 }
                 else
                 {

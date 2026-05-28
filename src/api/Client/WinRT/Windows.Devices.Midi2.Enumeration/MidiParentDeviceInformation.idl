@@ -1,0 +1,43 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiParentDeviceInformation", UUID_IMidiParentDeviceInformation)]
+    [static_name("Windows.Devices.Midi2.Enumeration.IMidiParentDeviceInformationStatics", UUID_IMidiParentDeviceInformationStatics)]
+    runtimeclass MidiParentDeviceInformation : Windows.Foundation.IStringable
+    {
+        static MidiParentDeviceInformation CreateFromId(String deviceId);
+
+        static MidiParentDeviceInformation CreateFromEndpointDeviceId(String deviceId);
+        static MidiParentDeviceInformation CreateFromEndpointDeviceInformation(MidiEndpointDeviceInformation deviceInfo);
+
+        static MidiParentDeviceInformation CreateFromLegacyPortId(String deviceId);
+        static MidiParentDeviceInformation CreateFromLegacyPortDeviceInformation(MidiLegacyPortDeviceInformation deviceInfo);
+
+
+        String Id { get; };
+        String Name{ get; };
+        Guid ContainerId{ get; };
+        String DeviceInstanceId{ get; };
+
+        String DriverInfName{ get; };
+        String DriverServiceName{ get; };
+        String DriverVersion{ get; };
+
+
+
+        Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; }
+    }
+}

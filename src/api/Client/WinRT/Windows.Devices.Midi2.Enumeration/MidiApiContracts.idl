@@ -17,4 +17,10 @@ namespace Windows.Devices.Midi2
         apicontract MidiEnumerationApiContract{ };
     }
 
+    namespace Enumeration.Legacy
+    {
+        [contractversion(1)]
+        apicontract MidiEnumerationLegacyApiContract{ };
+    }
+
 }

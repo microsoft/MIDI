@@ -397,6 +397,12 @@
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="Midi1PortFlowEnum.idl" />
+    <Midl Include="MidiLegacyPortDeviceInformation.idl" />
+    <Midl Include="MidiLegacyPortDeviceInformationAddedEventArgs.idl" />
+    <Midl Include="MidiLegacyPortDeviceInformationRemovedEventArgs.idl" />
+    <Midl Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.idl" />
+    <Midl Include="MidiLegacyPortDeviceWatcher.idl" />
+    <Midl Include="MidiParentDeviceInformation.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
   </ItemGroup>
   <ItemGroup>

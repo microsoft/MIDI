@@ -13,7 +13,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         winrt::hstring Description() const noexcept { return m_description; }
         bool IsMuted() const noexcept { return m_isMuted; }
 
-        collections::IVector<midi2enum::MidiEndpointAssociatedPortDeviceInformation> AssociatedLegacyPorts() const noexcept { return m_associatedLegacyPorts; }
+        collections::IVector<midi2enum::MidiEndpointAssociatedPortDeviceInformation> AssociatedLegacyApiPorts() const noexcept { return m_associatedLegacyPorts; }
 
         void InternalInitialize(
             _In_ winrt::guid const& associationId, 

@@ -23,88 +23,106 @@
       <Filter>Contracts</Filter>
     </Midl>
     <Midl Include="Midi1PortNamingApproachEnum.idl">
-      <Filter>SDK\Device Info</Filter>
+      <Filter>SDK\UMP\Device Info</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceIdHelper.idl">
-      <Filter>SDK\Device Info</Filter>
+      <Filter>SDK\UMP\Device Info</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceInformation.idl">
-      <Filter>SDK\Device Info</Filter>
+      <Filter>SDK\UMP\Device Info</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
-      <Filter>SDK\Device Info</Filter>
+      <Filter>SDK\UMP\Device Info</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
-      <Filter>SDK\Device Info</Filter>
+      <Filter>SDK\UMP\Device Info</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
-      <Filter>SDK\Watcher</Filter>
+      <Filter>SDK\UMP\Watcher</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
-      <Filter>SDK\Watcher</Filter>
+      <Filter>SDK\UMP\Watcher</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
-      <Filter>SDK\Watcher</Filter>
+      <Filter>SDK\UMP\Watcher</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceWatcher.idl">
-      <Filter>SDK\Watcher</Filter>
+      <Filter>SDK\UMP\Watcher</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlock.idl">
-      <Filter>SDK\Metadata\Function Blocks</Filter>
+      <Filter>SDK\UMP\Metadata\Function Blocks</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlockDirectionEnum.idl">
-      <Filter>SDK\Metadata\Function Blocks</Filter>
+      <Filter>SDK\UMP\Metadata\Function Blocks</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl">
-      <Filter>SDK\Metadata\Function Blocks</Filter>
+      <Filter>SDK\UMP\Metadata\Function Blocks</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlockUIHintEnum.idl">
-      <Filter>SDK\Metadata\Function Blocks</Filter>
+      <Filter>SDK\UMP\Metadata\Function Blocks</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlock.idl">
-      <Filter>SDK\Metadata\Group Terminal Blocks</Filter>
+      <Filter>SDK\UMP\Metadata\Group Terminal Blocks</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
-      <Filter>SDK\Metadata\Group Terminal Blocks</Filter>
+      <Filter>SDK\UMP\Metadata\Group Terminal Blocks</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
-      <Filter>SDK\Metadata\Group Terminal Blocks</Filter>
+      <Filter>SDK\UMP\Metadata\Group Terminal Blocks</Filter>
     </Midl>
     <Midl Include="MidiDeclaredDeviceIdentity.idl">
-      <Filter>SDK\Metadata\Other Discovery</Filter>
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
     </Midl>
     <Midl Include="MidiDeclaredEndpointInfo.idl">
-      <Filter>SDK\Metadata\Other Discovery</Filter>
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
     </Midl>
     <Midl Include="MidiDeclaredStreamConfiguration.idl">
-      <Filter>SDK\Metadata\Other Discovery</Filter>
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
     </Midl>
     <Midl Include="MidiProtocolEnum.idl">
-      <Filter>SDK\Metadata\Other Discovery</Filter>
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
     </Midl>
     <Midl Include="Midi1PortFlowEnum.idl">
-      <Filter>SDK\Metadata\Windows\MIDI 1</Filter>
+      <Filter>SDK\UMP\Metadata\Windows\MIDI 1</Filter>
     </Midl>
     <Midl Include="Midi1PortNameTableEntry.idl">
-      <Filter>SDK\Metadata\Windows\MIDI 1</Filter>
+      <Filter>SDK\UMP\Metadata\Windows\MIDI 1</Filter>
     </Midl>
     <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl">
-      <Filter>SDK\Metadata\Windows\MIDI 1</Filter>
+      <Filter>SDK\UMP\Metadata\Windows\MIDI 1</Filter>
     </Midl>
     <Midl Include="MidiEndpointDevicePropertyHelper.idl">
-      <Filter>SDK\Metadata\Windows</Filter>
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
     </Midl>
     <Midl Include="MidiEndpointDevicePurposeEnum.idl">
-      <Filter>SDK\Metadata\Windows</Filter>
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
     </Midl>
     <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
-      <Filter>SDK\Metadata\Windows</Filter>
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
     </Midl>
     <Midl Include="MidiEndpointTransportSuppliedInfo.idl">
-      <Filter>SDK\Metadata\Windows</Filter>
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
     </Midl>
     <Midl Include="MidiEndpointUserSuppliedInfo.idl">
-      <Filter>SDK\Metadata\Windows</Filter>
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceWatcher.idl">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceInformationAddedEventArgs.idl">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.idl">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceInformationRemovedEventArgs.idl">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceInformation.idl">
+      <Filter>SDK\Legacy\Device Info</Filter>
+    </Midl>
+    <Midl Include="MidiParentDeviceInformation.idl">
+      <Filter>SDK</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -122,29 +140,41 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{d55cebca-71a4-4cd8-8d02-02b45119248b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Device Info">
+    <Filter Include="SDK\Legacy">
+      <UniqueIdentifier>{a5163268-ff30-4e64-8346-75f944cc40cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\UMP">
+      <UniqueIdentifier>{1a3b9c98-8b81-4ec2-9fc5-28e01af8411a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\UMP\Device Info">
       <UniqueIdentifier>{94b68da4-cbce-48d9-8fae-241733cedf6d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Metadata">
+    <Filter Include="SDK\UMP\Metadata">
       <UniqueIdentifier>{09569c2b-6c05-4fba-851b-183f1dc4cec9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Metadata\Function Blocks">
+    <Filter Include="SDK\UMP\Metadata\Function Blocks">
       <UniqueIdentifier>{cd37aee7-807e-428e-8c30-8ab0946bd6df}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Metadata\Group Terminal Blocks">
+    <Filter Include="SDK\UMP\Metadata\Group Terminal Blocks">
       <UniqueIdentifier>{596c8688-187b-4238-b6ef-4ae81a42b5bc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Metadata\Other Discovery">
+    <Filter Include="SDK\UMP\Metadata\Other Discovery">
       <UniqueIdentifier>{95b7671b-348f-4965-b84e-d8da100f6878}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Metadata\Windows">
+    <Filter Include="SDK\UMP\Metadata\Windows">
       <UniqueIdentifier>{748be50f-7f2d-4ee8-8a54-51f4e1821cae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Metadata\Windows\MIDI 1">
+    <Filter Include="SDK\UMP\Metadata\Windows\MIDI 1">
       <UniqueIdentifier>{b95a3a12-2fd9-4fb0-bf56-2fa1f70d841c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Watcher">
+    <Filter Include="SDK\UMP\Watcher">
       <UniqueIdentifier>{f8440958-e1e5-40b7-bbb6-66eafc048125}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Legacy\Watcher">
+      <UniqueIdentifier>{9f3812be-c8a0-4c83-ae27-e20e3908b978}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Legacy\Device Info">
+      <UniqueIdentifier>{8e997fc8-ab52-49c9-b251-e2ea16e2d25c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
