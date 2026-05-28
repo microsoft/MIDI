@@ -35,9 +35,12 @@ std::shared_ptr<MidiBasicLoopbackDevice> MidiBasicLoopbackDeviceTable::GetDevice
 
     for (auto const& [key, device] : m_devices)
     {
-        if (cleanId == internal::NormalizeEndpointInterfaceIdWStringCopy(device->Definition->CreatedEndpointInterfaceId))
+        if (device)
         {
-            return device;
+            if (cleanId == internal::NormalizeEndpointInterfaceIdWStringCopy(device->Definition->CreatedEndpointInterfaceId))
+            {
+                return device;
+            }
         }
     }
 
@@ -69,7 +72,10 @@ void MidiBasicLoopbackDeviceTable::RemoveDevice(
 {
     if (auto device = m_devices.find(associationId); device != m_devices.end())
     {
-        device->second->Shutdown();
+        if (device->second)
+        {
+            device->second->Shutdown();
+        }
 
         m_devices.erase(associationId);
     }
@@ -97,7 +103,10 @@ HRESULT MidiBasicLoopbackDeviceTable::Shutdown()
 {
     for (auto& [key, device] : m_devices)
     {
-        device->Shutdown();
+        if (device)
+        {
+            device->Shutdown();
+        }
     }
 
     m_devices.clear();

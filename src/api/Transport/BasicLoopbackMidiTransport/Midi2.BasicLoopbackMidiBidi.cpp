@@ -30,11 +30,12 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
         );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, Callback);
+    RETURN_HR_IF_NULL(E_INVALIDARG, endpointId);
 
     m_callbackContext = Context;
     m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
-    HRESULT hr = S_OK;
+    RETURN_HR_IF(E_INVALIDARG, m_endpointId.empty());
 
     // TODO: This should use SWD properties and not a string search
 
@@ -69,7 +70,7 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-        return E_FAIL;
+        return E_INVALIDARG;
     }
 
     TraceLoggingWrite(
@@ -82,7 +83,7 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
     );
 
-    return hr;
+    return S_OK;
 }
 
 HRESULT
@@ -149,7 +150,7 @@ CMidi2BasicLoopbackMidiBidi::Callback(
 )
 {
 
-    // we are a bidi, but because this is a MIDI 1.0-style loopback device, 
+    // we are a bidi to be compatible with the API, but because this is a MIDI 1.0-style loopback device, 
     // there's no need to implement the callback. Instead, to save one indirection,
     // we directly wire up to the provided callback in Initialize
 
