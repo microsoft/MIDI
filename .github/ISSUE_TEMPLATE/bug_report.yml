@@ -21,7 +21,7 @@ body:
   validations:
     required: true
 
-- type: dropdown
+- type: checkboxes
   id: bug-type
   attributes:
     label: Type of bug
@@ -44,7 +44,7 @@ body:
   validations:
     required: true
 
-- type: dropdown
+- type: checkboxes
   id: bug-location
   attributes:
     label: Location
