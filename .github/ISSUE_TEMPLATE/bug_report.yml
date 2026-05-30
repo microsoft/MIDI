@@ -55,11 +55,12 @@ body:
       - label: MIDI device is recognized, but cannot send or receive messages
       - label: Sent or received MIDI messages are corrupted
       - label: Application not working as expected
+      - label: MIDI 1.0 ports not named as expected
       - label: Performance not as expected
       - label: Localization issue (incorrect or missing language for Windows running something other than en-US)
       - label: General application crash or hang
       - label: MIDI Service crash or hang requiring Windows reboot
-      - label: Windows bugcheck / BSOD (please include device id from Windows Settings About page)
+      - label: Windows bugcheck / BSOD (please include in the areas below the device id from Windows Settings About page or a link to your crash dump uploaded to a sharing service)
       - label: Other or Unsure (please indicate in additional notes section below)
 
 - type: checkboxes
