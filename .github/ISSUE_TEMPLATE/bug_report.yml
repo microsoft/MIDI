@@ -11,53 +11,15 @@ projects: microsoft/339
 body:
 - type: markdown
   attributes:
-    value: Thank you for filing a bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug.
+    value: Thank you for filing a bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug. If you are a user and not a developer, and are seeking support, please go to the Discord server https://aka.ms/mididiscord. If you are not up to date with your Windows Updates, we recommend you do that first. If you have uninstalled Windows Updates, we recommend you fix that situation first.
 
 - type: input
   id: windows-version
   attributes:
     label: Windows Version
-    description: For Insider builds, this is at the bottom right of the screen. Example 27788.rs_prerelease
+    description: In Windows Settings > System > About. For Insider builds, this is at the bottom right of the screen. Example 27788.rs_prerelease
   validations:
     required: true
-
-- type: dropdown
-  id: service-install-method
-  attributes:
-    label: Service Installation Method
-    description: How was the MIDI Service and components installed?
-    multiple: false
-    options:
-      - In-box In Insider Build
-      - GitHub
-      - Other (please indicate below)
-  validations:
-    required: true
-
-- type: input
-  id: sdk-version
-  attributes:
-    label: SDK version, if appropriate
-    description: Version of the SDK installed. You can find this in the Home page of the MIDI Settings app, or by typeing "midi" at the command line
-
-- type: dropdown
-  id: bug-location
-  attributes:
-    label: Location
-    description: Where did you discover this bug?
-    multiple: false
-    options:
-      - Application using WinMM MIDI 1.0 (Classic API)
-      - Application using WinRT MIDI 1.0 (Windows 10 MIDI)
-      - Application using Windows MIDI Services SDK (MIDI 2.0)
-      - Windows MIDI Services Settings App
-      - Windows MIDI Services Console App
-      - Windows MIDI Services PowerShell Components
-      - Other Windows MIDI Services Tools (midiksinfo, midi1monitor, etc.)
-      - Directly in Windows MIDI Services SDK
-      - Other or Unsure (please indicate in additional notes section below)
-  validations:
-    required: true   
 
 - type: dropdown
   id: bug-type
@@ -66,27 +28,74 @@ body:
     description: How would you classify this bug report?
     multiple: true
     options:
-      - Application Crash
-      - Windows Crash (please include device id from Windows Settings About page)
-      - Cannot receive messages from MIDI 1.0 device
-      - Cannot send messages to MIDI 1.0 device
-      - Cannot receive messages from MIDI 2.0 device
-      - Cannot send messages to MIDI 2.0 device
+      - "Windows doesn't recognize MIDI device (doesn't show in device manager)"
+      - "Application doesn't recognize MIDI device"
+      - Cannot update firmware on MIDI device (specify device, app, and firmware info)
+      - Cannot send or receive messages with MIDI 1.0 device
+      - Cannot send or receive messages with MIDI 2.0 device
       - MIDI messages corrupted
       - Application not working as expected
       - Performance not as expected
-      - Windows MIDI Services SDK feature issue
+      - Localization issue (incorrect or missing language for Windows running something other than en-US)
+      - General application crash or hang
+      - MIDI Service crash or hang requiring Windows reboot
+      - "Windows bugcheck / BSOD (please include device id from Windows Settings About page)"
       - Other or Unsure (please indicate in additional notes section below)
   validations:
-    required: true   
+    required: true
 
+- type: dropdown
+  id: bug-location
+  attributes:
+    label: Location
+    description: Where did you discover this bug?
+    multiple: false
+    options:
+      - Application using WinMM MIDI 1.0 (Classic API). Name provided below.
+      - Application using WinRT MIDI 1.0 (Windows 10 MIDI). Name provided below.
+      - Application using Windows MIDI Services SDK (MIDI 2.0). Name provided below.
+      - "Other app/DAW/tool. Not sure about which API or SDK it uses. Name provided below."
+      - Windows MIDI Services tools like MIDI Settings, Console, etc.
+      - Directly in Windows MIDI Services SDK (for Developers only, please provide repro code)
+      - General Windows shell (Device Manager, Settings, Services, etc.). Name provided below.
+      - "Windows MIDI 2.0 Class Driver (usbmidi2-acx)"
+      - "Windows MIDI 1.0 Class Driver (usbaudio)"
+      - Vendor-provided MIDI driver (please provide details below)
+      - Other or Unsure (please indicate in additional notes section below)
+  validations:
+    required: true
+
+- type: input
+  id: app-name
+  attributes:
+    label: Application Name
+    description: Name of the application where you noticed the error, if applicable
+  validations:
+    required: false
+
+- type: input
+  id: midi-device-name
+  attributes:
+    label: MIDI Device Name
+    description: Name of the MIDI device (or virtual device provider) used
+  validations:
+    required: false
+
+- type: textarea
+  id: mididiag-output
+  attributes:
+    label: Output from the MIDI Diagnostics Tool
+    description: Use the MIDI settings app from https://aka.ms/midi, open the MIDI Settings app, and go to the troubleshooting page. Capture the resulting MIDI system information and paste the entire text here.
+    placeholder: mididiag output
+  validations:
+    required: true
     
 - type: textarea
   id: repro-steps
   attributes:
     label: Steps to reproduce
     description: Please include screenshots when possible
-    placeholder: Detailed steps to reproduct the bug
+    placeholder: Detailed steps to reproduce the bug or issue
   validations:
     required: true
 
@@ -94,9 +103,9 @@ body:
   id: expected-behavior
   attributes:
     label: Expected behavior            
-    placeholder: What were you expecting to happen?
+    placeholder: What were you expecting to have happen?
   validations:
-    required: false   
+    required: false
 
 - type: textarea
   id: additional-notes
