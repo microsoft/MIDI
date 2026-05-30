@@ -110,7 +110,6 @@ body:
   attributes:
     label: Repro
     description: DAWs and DJ and other apps are complex, and can have their own bugs.
-    multiple: false
     options:
     - label: I confirm that I was able to reproduce this issue using a simple app like `midi.exe`, `midi1monitor.exe` or `Pocket MIDI`
       required: false
