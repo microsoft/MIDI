@@ -19,7 +19,7 @@ body:
   options:
   - label: I have searched this repo for existing issues to confirm this is not a duplicate
   - label: I have confirmed through a simple app like Pocket MIDI or midi1monitor that the issue reproduces
-  - label: "I agree to follow this project's Code of Conduct"
+  - label: I agree to follow this project's Code of Conduct
 
 - type: input
   id: windows-version
@@ -34,8 +34,8 @@ body:
     label: Type of bug
     description: How would you classify this bug report?
     options:
-      - label: "Windows doesn't recognize MIDI device (doesn't show in device manager)"
-      - label: "Application doesn't recognize MIDI device"
+      - label: Windows doesn't recognize MIDI device (doesn't show in device manager)
+      - label: Application doesn't recognize MIDI device
       - label: Cannot update firmware on MIDI device (specify device, app, and firmware info)
       - label: Cannot send or receive messages with MIDI 1.0 device
       - label: Cannot send or receive messages with MIDI 2.0 device
@@ -45,7 +45,7 @@ body:
       - label: Localization issue (incorrect or missing language for Windows running something other than en-US)
       - label: General application crash or hang
       - label: MIDI Service crash or hang requiring Windows reboot
-      - label: "Windows bugcheck / BSOD (please include device id from Windows Settings About page)"
+      - label: Windows bugcheck / BSOD (please include device id from Windows Settings About page)
       - label: Other or Unsure (please indicate in additional notes section below)
 
 - type: checkboxes
@@ -57,12 +57,12 @@ body:
       - label: Application using WinMM MIDI 1.0 (Classic API). Name provided below.
       - label: Application using WinRT MIDI 1.0 (Windows 10 MIDI). Name provided below.
       - label: Application using Windows MIDI Services SDK (MIDI 2.0). Name provided below.
-      - label: "Other app/DAW/tool. Not sure about which API or SDK it uses. Name provided below."
+      - label: Other app/DAW/tool. Not sure about which API or SDK it uses. Name provided below.
       - label: Windows MIDI Services tools like MIDI Settings, Console, etc.
       - label: Directly in Windows MIDI Services SDK (for Developers only, please provide repro code)
       - label: General Windows shell (Device Manager, Settings, Services, etc.). Name provided below.
-      - label: "Windows MIDI 2.0 Class Driver (usbmidi2-acx)"
-      - label: "Windows MIDI 1.0 Class Driver (usbaudio)"
+      - label: Windows MIDI 2.0 Class Driver (usbmidi2-acx)
+      - label: Windows MIDI 1.0 Class Driver (usbaudio)
       - label: Vendor-provided MIDI driver (please provide details below)
       - label: Other or Unsure (please indicate in additional notes section below)
 
