@@ -28,6 +28,7 @@ body:
   attributes:
     label: Windows Version
     description: In Windows Settings > System > About. For Insider builds, this is at the bottom right of the screen. Example 27788.rs_prerelease
+  validations:
     required: true
 
 - type: checkboxes
