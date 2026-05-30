@@ -14,12 +14,14 @@ body:
     value: Thank you for filing a bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug. If you are a user and not a developer, and are seeking support, please go to the Discord server https://aka.ms/mididiscord. If you are not up to date with your Windows Updates, we recommend you do that first. If you have uninstalled Windows Updates, we recommend you fix that situation first.
 
 - type: checkboxes
-  id: Steps Completed
-  description: Please select all the steps you have completed prior to filling out this issue form
-  options:
-  - label: I have searched this repo for existing issues to confirm this is not a duplicate
-  - label: I have confirmed through a simple app like Pocket MIDI or midi1monitor that the issue reproduces
-  - label: I agree to follow this project's Code of Conduct
+  id: steps-completed
+  attributes:
+    label: Steps Completed
+    description: Please select all the steps you have completed prior to filling out this issue form
+    options:
+    - label: I have searched this repo for existing issues to confirm this is not a duplicate
+    - label: I have confirmed through a simple app like Pocket MIDI or midi1monitor that the issue reproduces
+    - label: I agree to follow this project's Code of Conduct
 
 - type: input
   id: windows-version
