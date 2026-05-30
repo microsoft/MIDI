@@ -30,13 +30,10 @@ body:
     label: Clarity and Disclosure
     description: These steps must be completed before filing a bug report
     options:
-    - label: I confirm that any AI analysis included in this report is clearly called out / tagged as AI-generated with "AI Generated Content"
-      required: true
-    - label: I confirm that I have personally observed 100% of what I am reporting
+    - label: I confirm that any AI analysis included in this report is clearly called out / tagged as AI-generated with "AI Generated Content". Reports with suspected AI content may be closed if not disclosed.
       required: true
     - label: I confirm that I will quickly follow-up to questions or requests for additional detail, otherwise the issue may be closed
       required: true
-    - label: I have confirmed that the issue can be reproduced through a simple app like `Pocket MIDI`, `midi1monitor`, or `midi.exe`, not just my DAW or DJ app.
 
 - type: input
   id: windows-version
@@ -53,7 +50,7 @@ body:
     description: How would you classify this bug report?
     options:
       - label: Windows doesn't recognize MIDI device (doesn't show in device manager)
-      - label: Application doesn't recognize MIDI device
+      - label: Application doesn't recognize MIDI device or ports
       - label: Cannot update firmware on MIDI device (specify device, app, and firmware info)
       - label: MIDI device is recognized, but cannot send or receive messages
       - label: Sent or received MIDI messages are corrupted
@@ -86,8 +83,8 @@ body:
 - type: input
   id: app-name
   attributes:
-    label: Application Name
-    description: Name of the application where you noticed the error, if applicable
+    label: Application Name and Version
+    description: Name and version of the application where you noticed the error, if applicable
   validations:
     required: false
 
@@ -107,7 +104,19 @@ body:
     placeholder: mididiag output
   validations:
     required: true
-    
+
+- type: checkboxes
+  id: repro-disclosure
+  attributes:
+    label: Repro
+    description: DAWs and DJ and other apps are complex, and can have their own bugs.
+    multiple: false
+    options:
+    - label: I confirm that I was able to reproduce this issue using a simple app like `midi.exe`, `midi1monitor.exe` or `Pocket MIDI`
+      required: false
+    - label: I tried but was unable to reproduce this issue using a simple application
+      required: false
+      
 - type: textarea
   id: repro-steps
   attributes:
