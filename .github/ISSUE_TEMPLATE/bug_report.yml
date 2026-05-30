@@ -20,14 +20,12 @@ body:
   - label: I have searched this repo for existing issues to confirm this is not a duplicate
   - label: I have confirmed through a simple app like Pocket MIDI or midi1monitor that the issue reproduces
   - label: "I agree to follow this project's Code of Conduct"
-  required: true
 
 - type: input
   id: windows-version
   attributes:
     label: Windows Version
     description: In Windows Settings > System > About. For Insider builds, this is at the bottom right of the screen. Example 27788.rs_prerelease
-  validations:
     required: true
 
 - type: checkboxes
@@ -35,7 +33,6 @@ body:
   attributes:
     label: Type of bug
     description: How would you classify this bug report?
-    multiple: true
     options:
       - label: "Windows doesn't recognize MIDI device (doesn't show in device manager)"
       - label: "Application doesn't recognize MIDI device"
@@ -50,15 +47,12 @@ body:
       - label: MIDI Service crash or hang requiring Windows reboot
       - label: "Windows bugcheck / BSOD (please include device id from Windows Settings About page)"
       - label: Other or Unsure (please indicate in additional notes section below)
-  validations:
-    required: true
 
 - type: checkboxes
   id: bug-location
   attributes:
     label: Location
     description: Where did you discover this bug?
-    multiple: true
     options:
       - label: Application using WinMM MIDI 1.0 (Classic API). Name provided below.
       - label: Application using WinRT MIDI 1.0 (Windows 10 MIDI). Name provided below.
@@ -71,8 +65,6 @@ body:
       - label: "Windows MIDI 1.0 Class Driver (usbaudio)"
       - label: Vendor-provided MIDI driver (please provide details below)
       - label: Other or Unsure (please indicate in additional notes section below)
-  validations:
-    required: true
 
 - type: input
   id: app-name
