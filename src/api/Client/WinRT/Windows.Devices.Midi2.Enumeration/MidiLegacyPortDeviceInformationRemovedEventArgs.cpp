@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "pch.h"
+#include "MidiLegacyPortDeviceInformationRemovedEventArgs.h"
+#include "Legacy.MidiLegacyPortDeviceInformationRemovedEventArgs.g.cpp"
+
+namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
+{
+    hstring MidiLegacyPortDeviceInformationRemovedEventArgs::PortDeviceId()
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Windows::Devices::Enumeration::DeviceInformationUpdate MidiLegacyPortDeviceInformationRemovedEventArgs::DeviceInformationUpdate()
+    {
+        throw hresult_not_implemented();
+    }
+}

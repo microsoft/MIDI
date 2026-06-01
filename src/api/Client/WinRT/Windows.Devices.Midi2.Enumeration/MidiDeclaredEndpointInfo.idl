@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -17,6 +17,21 @@ namespace Windows.Devices.Midi2.Enumeration
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredEndpointInfo", UUID_IMidiDeclaredEndpointInfo)]
     runtimeclass MidiDeclaredEndpointInfo
     {
+        MidiDeclaredEndpointInfo();
+        MidiDeclaredEndpointInfo(
+            String name,
+            String productInstanceId,
+            Boolean supportsMidi10Protocol,
+            Boolean supportsMidi20Protocol,
+            Boolean supportsReceivingJitterReductionTimestamps,
+            Boolean supportsSendingJitterReductionTimestamps,
+            Boolean hasStaticFunctionBlocks,
+            UInt8 declaredFunctionBlockCount,
+            UInt8 specificationVersionMajor,
+            UInt8 specificationVersionMinor
+        );
+
+
         Boolean IsReadOnly { get; };
 
         String Name;

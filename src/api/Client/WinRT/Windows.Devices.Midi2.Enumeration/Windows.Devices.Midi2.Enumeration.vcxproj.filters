@@ -9,6 +9,42 @@
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="midi_function_block_prop_util.cpp" />
+    <ClCompile Include="MidiEndpointTransportSuppliedInfo.cpp">
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointUserSuppliedInfo.cpp">
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformation.cpp">
+      <Filter>SDK\Legacy\Device Info</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationAddedEventArgs.cpp">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationRemovedEventArgs.cpp">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.cpp">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceWatcher.cpp">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1PortNameTableEntry.cpp">
+      <Filter>SDK\UMP\Metadata\Windows\MIDI 1</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredDeviceIdentity.cpp">
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredEndpointInfo.cpp">
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredStreamConfiguration.cpp">
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiParentDeviceInformation.cpp">
+      <Filter>SDK\Parent Device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -17,6 +53,43 @@
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="MidiEndpointTransportSuppliedInfo.h">
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointUserSuppliedInfo.h">
+      <Filter>SDK\UMP\Metadata\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformation.h">
+      <Filter>SDK\Legacy\Device Info</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationAddedEventArgs.h">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationRemovedEventArgs.h">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.h">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceWatcher.h">
+      <Filter>SDK\Legacy\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi1PortNameTableEntry.h">
+      <Filter>SDK\UMP\Metadata\Windows\MIDI 1</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredDeviceIdentity.h">
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredEndpointInfo.h">
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredStreamConfiguration.h">
+      <Filter>SDK\UMP\Metadata\Other Discovery</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiParentDeviceInformation.h">
+      <Filter>SDK\Parent Device</Filter>
+    </ClInclude>
+    <ClInclude Include="winrt_devpkey_util.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
@@ -122,7 +195,7 @@
       <Filter>SDK\Legacy\Device Info</Filter>
     </Midl>
     <Midl Include="MidiParentDeviceInformation.idl">
-      <Filter>SDK</Filter>
+      <Filter>SDK\Parent Device</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +248,9 @@
     </Filter>
     <Filter Include="SDK\Legacy\Device Info">
       <UniqueIdentifier>{8e997fc8-ab52-49c9-b251-e2ea16e2d25c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Parent Device">
+      <UniqueIdentifier>{ffe841f9-fdea-4da0-bd20-2dbc8f7615c3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

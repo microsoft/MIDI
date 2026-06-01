@@ -295,6 +295,34 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="winrt_devpkey_util.h" />
+    <ClInclude Include="Midi1PortNameTableEntry.h">
+      <DependentUpon>Midi1PortNameTableEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredDeviceIdentity.h">
+      <DependentUpon>MidiDeclaredDeviceIdentity.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredEndpointInfo.h">
+      <DependentUpon>MidiDeclaredEndpointInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredStreamConfiguration.h">
+      <DependentUpon>MidiDeclaredStreamConfiguration.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformation.h">
+      <DependentUpon>MidiLegacyPortDeviceInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationAddedEventArgs.h">
+      <DependentUpon>MidiLegacyPortDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationRemovedEventArgs.h">
+      <DependentUpon>MidiLegacyPortDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.h">
+      <DependentUpon>MidiLegacyPortDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceWatcher.h">
+      <DependentUpon>MidiLegacyPortDeviceWatcher.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClInclude>
@@ -319,12 +347,19 @@
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiEndpointTransportSuppliedInfo.h">
+      <DependentUpon>MidiEndpointTransportSuppliedInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointUserSuppliedInfo.h">
+      <DependentUpon>MidiEndpointUserSuppliedInfo.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiFunctionBlock.h">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiParentDeviceInformation.h" />
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="resource.h" />
@@ -332,6 +367,33 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Midi1PortNameTableEntry.cpp">
+      <DependentUpon>Midi1PortNameTableEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredDeviceIdentity.cpp">
+      <DependentUpon>MidiDeclaredDeviceIdentity.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredEndpointInfo.cpp">
+      <DependentUpon>MidiDeclaredEndpointInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredStreamConfiguration.cpp">
+      <DependentUpon>MidiDeclaredStreamConfiguration.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformation.cpp">
+      <DependentUpon>MidiLegacyPortDeviceInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationAddedEventArgs.cpp">
+      <DependentUpon>MidiLegacyPortDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationRemovedEventArgs.cpp">
+      <DependentUpon>MidiLegacyPortDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.cpp">
+      <DependentUpon>MidiLegacyPortDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceWatcher.cpp">
+      <DependentUpon>MidiLegacyPortDeviceWatcher.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClCompile>
@@ -357,12 +419,19 @@
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiEndpointTransportSuppliedInfo.cpp">
+      <DependentUpon>MidiEndpointTransportSuppliedInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointUserSuppliedInfo.cpp">
+      <DependentUpon>MidiEndpointUserSuppliedInfo.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiGroupTerminalBlock.cpp">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiFunctionBlock.cpp">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiParentDeviceInformation.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

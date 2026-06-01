@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -87,6 +87,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include <midi_ump_message_defs.h>
 
 #include "winrt_date_util.h"
+#include "winrt_devpkey_util.h"
 
 // service interface
 //#include <WindowsMidiServices.h>
@@ -101,6 +102,9 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 namespace winrt::Windows::Devices::Midi2::Enumeration {};
 namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
 
+namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy {};
+namespace legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
+
 #include <safe_cotaskmemfree.h>
 
 
@@ -114,6 +118,12 @@ namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
 
 #include "MidiFunctionBlock.h"
 #include "MidiGroupTerminalBlock.h"
+#include "MidiEndpointTransportSuppliedInfo.h"
+#include "MidiEndpointUserSuppliedInfo.h"
+#include "MidiDeclaredDeviceIdentity.h"
+#include "MidiDeclaredEndpointInfo.h"
+#include "MidiDeclaredStreamConfiguration.h"
+#include "Midi1PortNameTableEntry.h"
 
 #include "MidiEndpointAssociatedPortDeviceInformation.h"
 
@@ -122,6 +132,15 @@ namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
 #include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
 #include "MidiEndpointDeviceInformationRemovedEventArgs.h"
 #include "MidiEndpointDeviceWatcher.h"
+
+#include "MidiLegacyPortDeviceInformation.h"
+#include "MidiLegacyPortDeviceInformationAddedEventArgs.h"
+#include "MidiLegacyPortDeviceInformationUpdatedEventArgs.h"
+#include "MidiLegacyPortDeviceInformationRemovedEventArgs.h"
+#include "MidiLegacyPortDeviceWatcher.h"
+
+
+
 
 #include "MidiEndpointDevicePropertyHelper.h"
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -24,52 +24,22 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         void Start();
         void Stop();
 
-        winrt::Windows::Devices::Enumeration::DeviceWatcherStatus Status();
+        enumeration::DeviceWatcherStatus Status();
 
-        winrt::event_token Added(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher, midi2enum::MidiEndpointDeviceInformationAddedEventArgs> const& handler)
-        {
-            return m_deviceAddedEvent.add(handler);
-        }
-        void Added(_In_ winrt::event_token const& token) noexcept
-        {
-            if (m_deviceAddedEvent) m_deviceAddedEvent.remove(token);
-        }
+        winrt::event_token Added(_In_ foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher, midi2enum::MidiEndpointDeviceInformationAddedEventArgs> const& handler);
+        void Added(_In_ winrt::event_token const& token) noexcept;
 
-        winrt::event_token Removed(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher, midi2enum::MidiEndpointDeviceInformationRemovedEventArgs> const& handler)
-        {
-            return m_deviceRemovedEvent.add(handler);
-        }
-        void Removed(_In_ winrt::event_token const& token) noexcept
-        {
-            if (m_deviceRemovedEvent) m_deviceRemovedEvent.remove(token);
-        }
+        winrt::event_token Removed(_In_ foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher, midi2enum::MidiEndpointDeviceInformationRemovedEventArgs> const& handler);
+        void Removed(_In_ winrt::event_token const& token) noexcept;
 
-        winrt::event_token Updated(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher, midi2enum::MidiEndpointDeviceInformationUpdatedEventArgs> const& handler)
-        {
-            return m_deviceUpdatedEvent.add(handler);
-        }
-        void Updated(_In_ winrt::event_token const& token) noexcept
-        {
-            if (m_deviceUpdatedEvent) m_deviceUpdatedEvent.remove(token);
-        }
+        winrt::event_token Updated(_In_ foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher, midi2enum::MidiEndpointDeviceInformationUpdatedEventArgs> const& handler);
+        void Updated(_In_ winrt::event_token const& token) noexcept;
 
-        winrt::event_token EnumerationCompleted(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher,foundation::IInspectable> const& handler)
-        {
-            return m_enumerationCompletedEvent.add(handler);
-        }
-        void EnumerationCompleted(_In_ winrt::event_token const& token) noexcept
-        {
-            if (m_enumerationCompletedEvent) m_enumerationCompletedEvent.remove(token);
-        }
+        winrt::event_token EnumerationCompleted(_In_ foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher,foundation::IInspectable> const& handler);
+        void EnumerationCompleted(_In_ winrt::event_token const& token) noexcept;
 
-        winrt::event_token Stopped(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher, foundation::IInspectable> const& handler)
-        {
-            return m_stoppedEvent.add(handler);
-        }
-        void Stopped(_In_ winrt::event_token const& token) noexcept
-        {
-            if (m_stoppedEvent) m_stoppedEvent.remove(token);
-        }
+        winrt::event_token Stopped(_In_ foundation::TypedEventHandler<midi2enum::MidiEndpointDeviceWatcher, foundation::IInspectable> const& handler);
+        void Stopped(_In_ winrt::event_token const& token) noexcept;
 
 
         collections::IMapView<winrt::hstring, midi2enum::MidiEndpointDeviceInformation> EnumeratedEndpointDevices()

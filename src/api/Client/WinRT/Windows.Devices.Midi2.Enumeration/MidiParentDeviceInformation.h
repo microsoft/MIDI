@@ -1,0 +1,71 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+#include "MidiParentDeviceInformation.g.h"
+
+#define STRING_DEVPKEY_Device_DriverDesc        L"{0a8b865dd-2e3d-4094-ad97-e593a7c75d6},4"
+#define STRING_     L"{0a8b865dd-2e3d-4094-ad97-e593a7c75d6},5"
+#define STRING_DEVPKEY_Device_DriverProvider    L"{0a8b865dd-2e3d-4094-ad97-e593a7c75d6},9"
+
+#define STRING_DEVPKEY_Device_EnumeratorName    L"{a45c254e-df1c-4efd-8020-67d146a850e0},24"
+
+#include <devpkey.h>
+
+namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
+{
+    struct MidiParentDeviceInformation : MidiParentDeviceInformationT<MidiParentDeviceInformation>
+    {
+        MidiParentDeviceInformation() = default;
+
+        static midi2enum::MidiParentDeviceInformation CreateFromId(_In_ winrt::hstring const& deviceInstanceId) noexcept;
+        static midi2enum::MidiParentDeviceInformation CreateFromChildEndpointDeviceInformation(_In_ midi2enum::MidiEndpointDeviceInformation const& deviceInfo) noexcept;
+        static collections::IVectorView<hstring> GetAdditionalPropertiesList() noexcept;
+
+        enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
+
+        winrt::hstring Id() const noexcept { return m_deviceInformation != nullptr ? internal::NormalizeDeviceInstanceIdHStringCopy(m_deviceInformation.Id()) : L""; }
+        winrt::hstring Name() const noexcept { return m_deviceInformation != nullptr ? m_deviceInformation.Name() : L""; }
+        
+        winrt::guid ContainerId() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(L"System.Devices.ContainerId", m_deviceInformation, winrt::guid()); }
+        winrt::hstring DeviceInstanceId() const noexcept { return internal::NormalizeDeviceInstanceIdHStringCopy(internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceInstanceId", m_deviceInformation, L"")); }
+
+        winrt::hstring DriverInfPath() const noexcept { return GetStringProperty(DEVPKEY_Device_DriverInfPath); }
+        winrt::hstring DriverKey() const noexcept { return GetStringProperty(DEVPKEY_Device_Driver); }
+        winrt::hstring DriverProvider() const noexcept { return GetStringProperty(DEVPKEY_Device_DriverProvider); }
+        winrt::hstring ServiceName() const noexcept { return GetStringProperty(DEVPKEY_Device_Service); }
+        winrt::hstring DriverVersion() const noexcept { return GetStringProperty(DEVPKEY_Device_DriverVersion); }
+        winrt::hstring EnumeratorName() const noexcept { return GetStringProperty(DEVPKEY_Device_EnumeratorName); }
+
+        winrt::hstring ModelName() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.ModelName", m_deviceInformation, L""); }
+        winrt::hstring Manufacturer() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Manufacturer", m_deviceInformation, L""); }
+
+        winrt::hstring ToString() const noexcept;
+
+        void InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation)
+        {
+            m_deviceInformation = deviceInformation;
+        }
+
+    private:
+        enumeration::DeviceInformation m_deviceInformation{ nullptr };
+
+        winrt::hstring GetStringProperty(_In_ DEVPROPKEY const& key) const noexcept
+        {
+            return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(internal::DevPropKeyToWinRTPropertyHString(key), m_deviceInformation, L"");
+        }
+
+
+    };
+}
+namespace winrt::Windows::Devices::Midi2::Enumeration::factory_implementation
+{
+    struct MidiParentDeviceInformation : MidiParentDeviceInformationT<MidiParentDeviceInformation, implementation::MidiParentDeviceInformation>
+    {
+    };
+}

@@ -12,6 +12,9 @@
       <Filter>SDK\Session</Filter>
     </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
+    <ClCompile Include="MidiService.cpp">
+      <Filter>SDK\Init</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -20,6 +23,9 @@
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="MidiService.h">
+      <Filter>SDK\Init</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
@@ -91,6 +97,9 @@
     <Midl Include="MidiPacketTypeEnum.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
+    <Midl Include="MidiService.idl">
+      <Filter>SDK\Init</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -115,6 +124,9 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{d55cebca-71a4-4cd8-8d02-02b45119248b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Init">
+      <UniqueIdentifier>{db47925e-c34c-4f67-adc5-fc7746041a0d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

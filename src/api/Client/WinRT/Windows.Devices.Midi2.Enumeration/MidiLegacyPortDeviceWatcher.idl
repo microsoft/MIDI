@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -10,7 +10,7 @@
 import "MidiApiContracts.idl";
 
 
-import "MidiPortDeviceInformation.idl";
+import "MidiLegacyPortDeviceInformation.idl";
 
 import "MidiLegacyPortDeviceInformationAddedEventArgs.idl";
 import "MidiLegacyPortDeviceInformationUpdatedEventArgs.idl";
@@ -26,12 +26,13 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
     runtimeclass MidiLegacyPortDeviceWatcher
     {
         static MidiLegacyPortDeviceWatcher Create();
-        static MidiLegacyPortDeviceWatcher Create(Midi1PortFlow flow);
+        static MidiLegacyPortDeviceWatcher Create(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+        static MidiLegacyPortDeviceWatcher CreateForEndpoint(String endpointDeviceId);
 
         void Start();
         void Stop();
 
-        Windows.Foundation.Collections.IMapView<String, MidiPortDeviceInformation> EnumeratedEndpointDevices{ get; };
+        Windows.Foundation.Collections.IMapView<String, MidiLegacyPortDeviceInformation> EnumeratedPorts{ get; };
 
         Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
 

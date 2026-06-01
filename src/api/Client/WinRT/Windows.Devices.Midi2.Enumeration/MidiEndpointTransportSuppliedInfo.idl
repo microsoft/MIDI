@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -18,6 +18,21 @@ namespace Windows.Devices.Midi2.Enumeration
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointTransportSuppliedInfo", UUID_IMidiEndpointTransportSuppliedInfo)]
     runtimeclass MidiEndpointTransportSuppliedInfo
     {
+        MidiEndpointTransportSuppliedInfo();
+        MidiEndpointTransportSuppliedInfo(
+            String name,
+            String description,
+            String serialNumber,
+            UInt16 vendorId,
+            UInt16 productId,
+            String manufacturerName,
+            Boolean supportsMultiClient,
+            MidiEndpointNativeDataFormat nativeDataFormat,
+            Guid transportId,
+            String transportCode,
+            String driverDeviceInterfaceId
+        );
+
         Boolean IsReadOnly { get; };
 
         String Name;
@@ -37,7 +52,7 @@ namespace Windows.Devices.Midi2.Enumeration
         Guid TransportId;
         String TransportCode;
 
-        String DriverDeviceInterface;
+        String DriverDeviceInterfaceId;
 
     };
 }

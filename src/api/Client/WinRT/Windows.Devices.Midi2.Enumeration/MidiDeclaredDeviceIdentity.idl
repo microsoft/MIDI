@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -19,10 +19,18 @@ namespace Windows.Devices.Midi2.Enumeration
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredDeviceIdentity", UUID_IMidiDeclaredDeviceIdentity)]
     runtimeclass MidiDeclaredDeviceIdentity
     {
+        MidiDeclaredDeviceIdentity();
+        MidiDeclaredDeviceIdentity(
+            UInt8 sysexIdByte1, UInt8 sysexIdByte2, UInt8 sysexIdByte3,
+            UInt8 deviceFamilyLsb, UInt8 deviceFamilyMsb,
+            UInt8 deviceFamilyModelNumberLsb, UInt8 deviceFamilyModelNumberMsb,
+            UInt8 softwareRevisionLevelByte1, UInt8 softwareRevisionLevelByte2, UInt8 softwareRevisionLevelByte3, UInt8 softwareRevisionLevelByte4);
+
+
         Boolean IsReadOnly { get; };
 
-        UInt8[] SystemExclusiveIdBytes;
-        void SetSystemExclusiveIdBytes(UInt8 byte1, UInt8 byte2, UInt8 byte3);
+        UInt8[] SystemExclusiveId{ get; };
+        void SetSystemExclusiveId(UInt8 byte1, UInt8 byte2, UInt8 byte3);
 
         UInt8 DeviceFamilyLsb{ get; };
         UInt8 DeviceFamilyMsb{ get; };
@@ -32,7 +40,7 @@ namespace Windows.Devices.Midi2.Enumeration
         UInt8 DeviceFamilyModelNumberMsb{ get; };
         void SetDeviceFamilyModelNumber(UInt8 deviceFamilyModelNumberLsb, UInt8 deviceFamilyModelNumberMsb);
 
-        UInt8[] SoftwareRevisionLevelBytes;
-        void SetSoftwareRevisionLevelBytes(UInt8 byte1, UInt8 byte2, UInt8 byte3, UInt8 byte4);
+        UInt8[] SoftwareRevisionLevel{ get; };
+        void SetSoftwareRevisionLevel(UInt8 byte1, UInt8 byte2, UInt8 byte3, UInt8 byte4);
     }
 }

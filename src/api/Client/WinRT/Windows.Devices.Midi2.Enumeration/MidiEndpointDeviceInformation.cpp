@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -20,7 +20,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
     winrt::hstring MidiEndpointDeviceInformation::ToString()
     {
-        winrt::hstring baseName{ };
+        winrt::hstring baseName{ L"MidiEndpointDeviceInformation: " };
 
         if (Name().empty())
         {
@@ -37,13 +37,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
 #define MIDI_DEVICE_PARENT_PROPERTY_KEY L"System.Devices.Parent"
 
-    winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerDeviceInformation() const noexcept
+    enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerDeviceInformation() const noexcept
     {
         // find the container with the same container ID and DeviceInstanceId as us.
 
         if (ContainerId() == winrt::guid{}) return nullptr;
 
-        auto container = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+        auto container = enumeration::DeviceInformation::CreateFromIdAsync(
             internal::GuidToString(ContainerId()),
             {
                 L"System.Devices.DeviceInstanceId",
@@ -51,7 +51,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 L"System.Devices.Manufacturer",
                 L"System.Devices.ModelName"
             },
-            winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceContainer).get();
+            enumeration::DeviceInformationKind::DeviceContainer).get();
 
         return container;
     }
@@ -61,7 +61,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     // even when you specify it. So instead, you have to find the container, then find the child of the container 
     // that matches this device, then call the FindAllAsync to get the actual device object. That object then
     // has the parent id, whcih you can use to find the parent.
-    winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetParentDeviceInformation() const noexcept
+    enumeration::DeviceInformation MidiEndpointDeviceInformation::GetParentDeviceInformation() const noexcept
     {
         try
         {
@@ -82,7 +82,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             //).get();
 
 
-            auto myDevice = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+            auto myDevice = enumeration::DeviceInformation::CreateFromIdAsync(
                 DeviceInstanceId(),
                 {
                     MIDI_DEVICE_PARENT_PROPERTY_KEY,
@@ -91,7 +91,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                     L"System.Devices.HardwareIds",
                     L"System.Devices.InterfaceClassGuid",
                 },
-                winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device
+                enumeration::DeviceInformationKind::Device
             ).get();
 
 
@@ -109,7 +109,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                     // if the parent is the system root, don't bother trying to resolve that 
                     if (parentId != rootParent)
                     {
-                        auto parents = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+                        auto parents = enumeration::DeviceInformation::FindAllAsync(
                             L"System.Devices.DeviceInstanceId:=\"" + parentId + L"\"",
                             {
                                 MIDI_DEVICE_PARENT_PROPERTY_KEY,
@@ -127,7 +127,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                                 L"System.Devices.ClassGuid",
                                 L"System.Devices.DeviceHasProblem",*/
                             },
-                            winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
+                            enumeration::DeviceInformationKind::Device).get();
 
                         if (parents != nullptr && parents.Size() == 1)
                         {
@@ -772,9 +772,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             info->RecommendedControlChangeAutomationIntervalMilliseconds(internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0));
 
             info->CustomMidiOutgoingLatencyTicks(internal::GetDeviceInfoProperty<uint64_t>(m_properties, STRING_PKEY_MIDI_MidiOutCustomLatencyTicks, 0));
-            info->UseCustomMidiLatencyTicksForScheduling(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride, false));
+            info->UseCustomMidiOutgoingLatencyTicksForScheduling(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride, false));
 
-            info->IsReadOnly(true);
+            info->InternalSetReadOnly();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -857,11 +857,11 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 info->NativeDataFormat(midi2enum::MidiEndpointNativeDataFormat::Unknown);
         
 
-            info->DriverName(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverName, L""));
-            info->DriverDeviceInterface(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverDeviceInterface, L""));
+    //        info->DriverName(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverName, L""));
+            info->DriverDeviceInterfaceId(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverDeviceInterface, L""));
 
 
-            info->IsReadOnly(true);
+            info->InternalSetReadOnly();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -934,7 +934,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             config->ReceiveJitterReductionTimestamps(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, false));
             config->SendJitterReductionTimestamps(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, false));
 
-            config->IsReadOnly(true);
+            config->InternalSetReadOnly();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -1001,12 +1001,11 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 memcpy(&identity, data.data(), arraySize);
 
                 di->SetDeviceFamily(identity.DeviceFamilyLsb, identity.DeviceFamilyMsb);
-                di->SetDeviceFamilyModel(identity.DeviceFamilyModelLsb, identity.DeviceFamilyModelMsb);
                 di->SetDeviceFamilyModelNumber(identity.DeviceFamilyModelNumberLsb, identity.DeviceFamilyModelNumberMsb);
                 di->SetSoftwareRevisionLevel(identity.SoftwareRevisionLevelByte1, identity.SoftwareRevisionLevelByte2, identity.SoftwareRevisionLevelByte3, identity.SoftwareRevisionLevelByte4);
                 di->SetSystemExclusiveId(identity.ManufacturerSysExIdByte1, identity.ManufacturerSysExIdByte2, identity.ManufacturerSysExIdByte3);
 
-                di->IsReadOnly(true);
+                di->InternalSetReadOnly();
             }
             else
             {
@@ -1099,7 +1098,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             info->HasStaticFunctionBlocks(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_FunctionBlocksAreStatic, false));
             info->DeclaredFunctionBlockCount(internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_FunctionBlockDeclaredCount, (uint8_t)0));
 
-            info->IsReadOnly(true);
+            info->InternalSetReadOnly();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -1386,25 +1385,29 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 {
                     auto entry = winrt::make_self<Midi1PortNameTableEntry>();
 
-                    entry->GroupIndex(nameTableInternalEntry.GroupIndex);
-                    entry->CustomName(nameTableInternalEntry.CustomName);
-                    entry->LegacyCompatibleName(nameTableInternalEntry.LegacyWinMMName);
-                    entry->NewStyleName(nameTableInternalEntry.NewStyleName);
+                    Midi1PortFlow flow;
 
                     switch (nameTableInternalEntry.DataFlowFromUserPerspective)
                     {
                     case MidiFlow::MidiFlowIn:
-                        entry.Flow(Midi1PortFlow::MidiMessageSource);
+                        flow = Midi1PortFlow::MidiMessageSource;
                         break;
                     case MidiFlow::MidiFlowOut:
-                        entry.Flow(Midi1PortFlow::MidiMessageDestination);
+                        flow = Midi1PortFlow::MidiMessageDestination;
                         break;
                     default:
                         // this should not happen
                         break;
                     }
 
-                    entry->IsReadOnly(true);
+                    entry->InternalInitialize(
+                        midi2::MidiGroup(nameTableInternalEntry.GroupIndex),
+                        flow,
+                        nameTableInternalEntry.CustomName,
+                        nameTableInternalEntry.LegacyWinMMName,
+                        nameTableInternalEntry.NewStyleName
+                    );
+
 
                     nameTable.Append(*entry);
                 }
