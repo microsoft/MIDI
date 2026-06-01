@@ -155,10 +155,73 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         enumeration::DeviceWatcher const& source,
         enumeration::DeviceInformation const& args) noexcept
     {
-
-        // TODO
         UNREFERENCED_PARAMETER(source);
-        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            auto legacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
+
+            legacyPortDeviceInformation->InternalInitialize(args);
+
+            auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(legacyPortDeviceInformation->PortDeviceId());
+
+            if (!m_enumeratedPorts.HasKey(mapKey))
+            {
+                m_enumeratedPorts.Insert(mapKey, *legacyPortDeviceInformation);
+
+                if (m_deviceAddedEvent)
+                {
+                    auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationAddedEventArgs>();
+                    newArgs->InternalInitialize(*legacyPortDeviceInformation);
+
+                    m_deviceAddedEvent(*this, *newArgs);
+                }
+            }
+            else
+            {
+                // duplicate key. This should never happen, but just in case ...
+
+                LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Duplicate port id. This is unexpected", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception in Added event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception in Added event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
 
     }
 
@@ -167,10 +230,72 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         enumeration::DeviceWatcher const& source,
         enumeration::DeviceInformationUpdate const& args) noexcept
     {
-
-        // TODO
         UNREFERENCED_PARAMETER(source);
-        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
+
+            if (m_enumeratedPorts.HasKey(mapKey))
+            {
+                //auto ep = winrt::get_self<MidiLegacyPortDeviceInformation>(m_enumeratedPorts.Lookup(mapKey));
+
+                if (m_deviceUpdatedEvent)
+                {
+                    auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationUpdatedEventArgs>();
+
+                    bool updatedName{ false };
+                    bool updatedPortNumber{ false };
+
+                    if (args.Properties().HasKey(L"System.Devices.FriendlyName"))
+                    {
+                        updatedName = true;
+                    }
+
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_ServiceAssignedPortNumber))
+                    {
+                        updatedPortNumber = true;
+                    }
+
+                    newArgs->InternalInitialize(
+                        args.Id(),
+                        args,
+                        updatedName,
+                        updatedPortNumber
+                    );
+
+                    m_deviceUpdatedEvent(*this, *newArgs);
+                }
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"exception in Updated event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"exception in Updated event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
     }
 
     _Use_decl_annotations_
