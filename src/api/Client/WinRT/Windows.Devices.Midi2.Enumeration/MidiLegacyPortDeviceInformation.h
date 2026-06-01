@@ -9,20 +9,31 @@
 #pragma once
 #include "Legacy.MidiLegacyPortDeviceInformation.g.h"
 
+#include <mmdeviceapi.h>
+
 namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 {
     struct MidiLegacyPortDeviceInformation : MidiLegacyPortDeviceInformationT<MidiLegacyPortDeviceInformation>
     {
         MidiLegacyPortDeviceInformation() = default;
 
+        static winrt::guid Midi1SourcePortClassGuid() noexcept { return DEVINTERFACE_MIDI_INPUT;}
+        static winrt::guid Midi1DestinationPortClassGuid() noexcept { return DEVINTERFACE_MIDI_OUTPUT; }
+
+
         static legacy::MidiLegacyPortDeviceInformation CreateFromPortDeviceId(
-            _In_ winrt::hstring const& portDeviceId, midi2enum::Midi1PortFlow const& flow) noexcept;
+            _In_ winrt::hstring const& portDeviceId) noexcept;
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAll() noexcept;
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAll(
             _In_ midi2enum::Midi1PortFlow const& flow) noexcept;
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForEndpoint(
             _In_ winrt::hstring const& endpointDeviceId) noexcept;
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
+
+        static winrt::hstring InternalGetSelectorForSourceAndDestinationPorts();
+        static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForParentEndpointId(_In_ winrt::hstring const& endpointDeviceId);
+
+
 
         enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
@@ -53,10 +64,25 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         winrt::hstring ToString() const noexcept;
 
-        void InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation, _In_ midi2enum::Midi1PortFlow const flow)
+
+        void InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation)
         {
             m_deviceInformation = deviceInformation;
-            m_portFlow = flow;
+
+            if (deviceInformation.Properties().HasKey(L"System.Devices.InterfaceClassGuid"))
+            {
+                auto interfaceClassGuid = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(L"System.Devices.InterfaceClassGuid", deviceInformation, winrt::guid());
+
+                if (interfaceClassGuid == MidiLegacyPortDeviceInformation::Midi1SourcePortClassGuid())
+                {
+                    m_portFlow = midi2enum::Midi1PortFlow::MidiMessageSource;
+                }
+                else if (interfaceClassGuid == MidiLegacyPortDeviceInformation::Midi1DestinationPortClassGuid())
+                {
+                    m_portFlow = midi2enum::Midi1PortFlow::MidiMessageDestination;
+                }
+            }
+
         }
 
     private:

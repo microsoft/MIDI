@@ -23,7 +23,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         void Start() noexcept;
         void Stop() noexcept;
 
-        enumeration::DeviceWatcherStatus Status() noexcept;
+        enumeration::DeviceWatcherStatus Status() noexcept { return m_watcher ? m_watcher.Status() : enumeration::DeviceWatcherStatus::Created; }
 
         winrt::event_token Added(_In_ foundation::TypedEventHandler<legacy::MidiLegacyPortDeviceWatcher, legacy::MidiLegacyPortDeviceInformationAddedEventArgs> const& handler);
         void Added(winrt::event_token const& token) noexcept;
@@ -45,28 +45,31 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             return m_enumeratedPorts.GetView();
         }
 
+
+        void InternalInitialize(enumeration::DeviceWatcher const& baseWatcher) noexcept;
+
     private:
 
         // internal event handlers for the base device watcher we wrap
         void OnDeviceAdded(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ enumeration::DeviceInformation args) noexcept;
+            _In_ enumeration::DeviceWatcher const& source,
+            _In_ enumeration::DeviceInformation const& args) noexcept;
 
         void OnDeviceUpdated(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ enumeration::DeviceInformationUpdate args) noexcept;
+            _In_ enumeration::DeviceWatcher const& source,
+            _In_ enumeration::DeviceInformationUpdate const& args) noexcept;
 
         void OnDeviceRemoved(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ enumeration::DeviceInformationUpdate args) noexcept;
+            _In_ enumeration::DeviceWatcher const& source,
+            _In_ enumeration::DeviceInformationUpdate const& args) noexcept;
 
         void OnEnumerationCompleted(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ foundation::IInspectable args) noexcept;
+            _In_ enumeration::DeviceWatcher const& source,
+            _In_ foundation::IInspectable const& args) noexcept;
 
         void OnStopped(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ foundation::IInspectable args) noexcept;
+            _In_ enumeration::DeviceWatcher const& source,
+            _In_ foundation::IInspectable const& args) noexcept;
 
 
         winrt::event<foundation::TypedEventHandler<legacy::MidiLegacyPortDeviceWatcher, legacy::MidiLegacyPortDeviceInformationAddedEventArgs>> m_deviceAddedEvent;

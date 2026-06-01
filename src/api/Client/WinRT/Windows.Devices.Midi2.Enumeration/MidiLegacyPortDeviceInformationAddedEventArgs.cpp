@@ -12,10 +12,5 @@
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 {
-    legacy::MidiLegacyPortDeviceInformation MidiLegacyPortDeviceInformationAddedEventArgs::AddedDevice()
-    {
-        // TODO
 
-        throw hresult_not_implemented();
-    }
 }

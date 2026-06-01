@@ -19,13 +19,16 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
     [interface_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceInformation", UUID_IMidiLegacyPortDeviceInformation )]
     runtimeclass MidiLegacyPortDeviceInformation : Windows.Foundation.IStringable
     {
-        static MidiLegacyPortDeviceInformation CreateFromPortDeviceId(String portDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+        static MidiLegacyPortDeviceInformation CreateFromPortDeviceId(String portDeviceId);
 
         static IVectorView<MidiLegacyPortDeviceInformation> FindAll();
         static IVectorView<MidiLegacyPortDeviceInformation> FindAll(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
         static IVectorView<MidiLegacyPortDeviceInformation> FindAllForEndpoint(String endpointDeviceId);
 
         static IVectorView<String> GetAdditionalPropertiesList();
+
+        static Guid Midi1SourcePortClassGuid { get; };
+        static Guid Midi1DestinationPortClassGuid { get; };
 
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };    // the base WinRT Device Information object for this port
 

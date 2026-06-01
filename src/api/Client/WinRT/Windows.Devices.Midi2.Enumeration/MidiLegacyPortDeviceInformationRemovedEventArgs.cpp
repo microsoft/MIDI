@@ -12,12 +12,5 @@
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 {
-    hstring MidiLegacyPortDeviceInformationRemovedEventArgs::PortDeviceId()
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Devices::Enumeration::DeviceInformationUpdate MidiLegacyPortDeviceInformationRemovedEventArgs::DeviceInformationUpdate()
-    {
-        throw hresult_not_implemented();
-    }
+
 }

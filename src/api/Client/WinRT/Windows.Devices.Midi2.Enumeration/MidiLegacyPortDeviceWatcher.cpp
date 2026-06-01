@@ -12,22 +12,117 @@
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 {
+
     legacy::MidiLegacyPortDeviceWatcher MidiLegacyPortDeviceWatcher::Create() noexcept
     {
-        // TODO
+        try
+        {
+            auto watcher = winrt::make_self<MidiLegacyPortDeviceWatcher>();
 
+            auto baseWatcher = enumeration::DeviceInformation::CreateWatcher(
+                MidiLegacyPortDeviceInformation::InternalGetSelectorForSourceAndDestinationPorts(),
+                MidiLegacyPortDeviceInformation::GetAdditionalPropertiesList(),
+                enumeration::DeviceInformationKind::DeviceInterface);
 
-        return nullptr;
+            watcher->InternalInitialize(baseWatcher);
+
+            return *watcher;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception creating MidiLegacyPortDeviceWatcher.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            return nullptr;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception creating MidiLegacyPortDeviceWatcher.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
     legacy::MidiLegacyPortDeviceWatcher MidiLegacyPortDeviceWatcher::Create(midi2enum::Midi1PortFlow const& flow) noexcept
     {
-        // TODO
+        try
+        {
+            winrt::hstring selector;
 
-        UNREFERENCED_PARAMETER(flow);
+            if (flow == midi2enum::Midi1PortFlow::MidiMessageSource)
+            {
+                selector = winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector();
+            }
+            else
+            {
+                selector = winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector();
+            }
 
-        return nullptr;
+
+            auto watcher = winrt::make_self<MidiLegacyPortDeviceWatcher>();
+
+            auto baseWatcher = enumeration::DeviceInformation::CreateWatcher(
+                selector,
+                MidiLegacyPortDeviceInformation::GetAdditionalPropertiesList(),
+                enumeration::DeviceInformationKind::DeviceInterface);
+
+            watcher->InternalInitialize(baseWatcher);
+
+            return *watcher;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(ex.code());   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception creating directional MidiLegacyPortDeviceWatcher.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            return nullptr;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception creating directional MidiLegacyPortDeviceWatcher.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            return nullptr;
+        }
+
     }
 
     _Use_decl_annotations_
@@ -35,11 +130,160 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         // TODO
 
+        //auto sourceClass = internal::GuidToString(DEVINTERFACE_MIDI_INPUT);
+        //auto destinationClass = internal::GuidToString(DEVINTERFACE_MIDI_OUTPUT);
+
+        //// we only want MIDI 1 ports which have the specified endpoing as the parent device
+        //winrt::hstring selector = L"System.Devices.InterfaceClassGuid:=\"" + deviceClass + L"\" AND " +
+        //    L"System.Devices.Parent:=\"" + endpointDeviceId + L"\" AND " +
+        //    L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+
+
+
+
+
+
         UNREFERENCED_PARAMETER(endpointDeviceId);
 
         return nullptr;
     }
 
+
+
+    _Use_decl_annotations_
+    void MidiLegacyPortDeviceWatcher::OnDeviceAdded(
+        enumeration::DeviceWatcher const& source,
+        enumeration::DeviceInformation const& args) noexcept
+    {
+
+        // TODO
+        UNREFERENCED_PARAMETER(source);
+        UNREFERENCED_PARAMETER(args);
+
+    }
+
+    _Use_decl_annotations_
+    void MidiLegacyPortDeviceWatcher::OnDeviceUpdated(
+        enumeration::DeviceWatcher const& source,
+        enumeration::DeviceInformationUpdate const& args) noexcept
+    {
+
+        // TODO
+        UNREFERENCED_PARAMETER(source);
+        UNREFERENCED_PARAMETER(args);
+    }
+
+    _Use_decl_annotations_
+    void MidiLegacyPortDeviceWatcher::OnDeviceRemoved(
+        enumeration::DeviceWatcher const& source,
+        enumeration::DeviceInformationUpdate const& args) noexcept
+    {
+        UNREFERENCED_PARAMETER(source);
+
+        try
+        {
+            auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
+
+            auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationRemovedEventArgs>();
+
+            newArgs->InternalInitialize(args, args.Id());
+
+            if (m_enumeratedPorts.HasKey(mapKey))
+            {
+                m_enumeratedPorts.Remove(mapKey);
+
+                if (m_deviceRemovedEvent)
+                {
+                    m_deviceRemovedEvent(*this, *newArgs);
+                }
+            }
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"exception in Removed event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiLegacyPortDeviceWatcher::OnEnumerationCompleted(
+        enumeration::DeviceWatcher const& source,
+        foundation::IInspectable const& args) noexcept
+    {
+
+        UNREFERENCED_PARAMETER(source);
+
+        try
+        {
+            if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, args);
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception in Enumeration Completed event, likely thrown by the application using this API.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiLegacyPortDeviceWatcher::OnStopped(
+        enumeration::DeviceWatcher const& source,
+        foundation::IInspectable const& args) noexcept
+    {
+        UNREFERENCED_PARAMETER(source);
+
+        try
+        {
+            if (m_stoppedEvent) m_stoppedEvent(*this, args);
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception in Enumeration Stopped event, likely thrown by the application using this API.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
+    }
+
+
+    _Use_decl_annotations_
+    void MidiLegacyPortDeviceWatcher::InternalInitialize(
+        enumeration::DeviceWatcher const& baseWatcher) noexcept
+    {
+        m_watcher = baseWatcher;
+
+        if (m_watcher != nullptr)
+        {
+            m_deviceAddedEventRevokeToken = m_watcher.Added({ this, &MidiLegacyPortDeviceWatcher::OnDeviceAdded });
+            m_deviceUpdatedEventRevokeToken = m_watcher.Updated({ this, &MidiLegacyPortDeviceWatcher::OnDeviceUpdated });
+            m_deviceRemovedEventRevokeToken = m_watcher.Removed({ this, &MidiLegacyPortDeviceWatcher::OnDeviceRemoved });
+            m_enumerationCompletedEventRevokeToken = m_watcher.EnumerationCompleted({ this, &MidiLegacyPortDeviceWatcher::OnEnumerationCompleted });
+            m_stoppedEventRevokeToken = m_watcher.Stopped({ this, &MidiLegacyPortDeviceWatcher::OnStopped });
+        }
+
+    }
 
 
 

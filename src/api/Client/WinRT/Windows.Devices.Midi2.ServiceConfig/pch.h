@@ -70,6 +70,7 @@ namespace internal =        ::WindowsMidiServicesInternal;
 
 
 #include <mmsyscom.h>   // needed for MAXPNAMELEN
+#include <mmdeviceapi.h>    // for the DEVINTERFACE GUIDs for MIDI 1 ports
 
 #include "devpkey.h"
 #include <Devpropdef.h>

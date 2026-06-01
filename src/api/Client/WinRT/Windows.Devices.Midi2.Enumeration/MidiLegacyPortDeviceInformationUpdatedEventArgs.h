@@ -15,10 +15,28 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         MidiLegacyPortDeviceInformationUpdatedEventArgs() = default;
 
-        winrt::hstring PortDeviceId();
-        enumeration::DeviceInformationUpdate DeviceInformationUpdate();
+        winrt::hstring PortDeviceId() const noexcept { return m_portDeviceId; }
+        enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
 
-        bool IsNameUpdated();
-        bool IsPortNumberUpdated();
+        bool IsNameUpdated() const noexcept { return m_isNameUpdated; }
+        bool IsPortNumberUpdated() const noexcept { return m_isPortNumberUpdated; }
+
+        void InternalInitialize(
+            winrt::hstring const& portDeviceId,
+            enumeration::DeviceInformationUpdate const& deviceInformationUpdate,
+            bool isNameUpdated,
+            bool isPortNumberUpdated) noexcept
+        {
+            m_portDeviceId = portDeviceId;
+            m_deviceInformationUpdate = deviceInformationUpdate;
+            m_isNameUpdated = isNameUpdated;
+            m_isPortNumberUpdated = isPortNumberUpdated;
+        }
+
+    private:
+        winrt::hstring m_portDeviceId{ };
+        enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
+        bool m_isNameUpdated{ false };
+        bool m_isPortNumberUpdated{ false };
     };
 }

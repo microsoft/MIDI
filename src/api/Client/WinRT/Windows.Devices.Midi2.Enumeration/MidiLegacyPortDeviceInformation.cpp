@@ -10,14 +10,12 @@
 #include "MidiLegacyPortDeviceInformation.h"
 #include "Legacy.MidiLegacyPortDeviceInformation.g.cpp"
 
-#include <mmdeviceapi.h>    // for the DEVINTERFACE GUIDs for MIDI 1 ports
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 {
     _Use_decl_annotations_
     legacy::MidiLegacyPortDeviceInformation MidiLegacyPortDeviceInformation::CreateFromPortDeviceId(
-        winrt::hstring const& portDeviceId,
-        midi2enum::Midi1PortFlow const& flow) noexcept
+        winrt::hstring const& portDeviceId) noexcept
     {
         try
         {
@@ -28,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             if (midiLegacyPortDeviceInformation == nullptr) return nullptr;
 
             // TODO: Ensure that the return device matches the flow
-            midiLegacyPortDeviceInformation->InternalInitialize(device, flow);
+            midiLegacyPortDeviceInformation->InternalInitialize(device);
 
             return *midiLegacyPortDeviceInformation;
         }
@@ -66,6 +64,26 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
     }
 
+    winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForSourceAndDestinationPorts()
+    {
+        winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortClassGuid()).c_str();
+        winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortClassGuid()).c_str();
+
+
+        winrt::hstring selector =
+            L"(System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\" OR " +
+            L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\") AND " +
+            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+
+        return selector;
+    }
+
+    winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForSourceAndDestinationPortsForParentEndpointId(_In_ winrt::hstring const& endpointDeviceId)
+    {
+        return InternalGetSelectorForSourceAndDestinationPorts() + L" AND System.Devices.Parent:=\"" + endpointDeviceId + L"\"";
+    }
+
+
     collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceInformation::FindAll() noexcept
     {
         auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
@@ -73,33 +91,18 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         try
         {
             // get all sources
-            auto sourceDevices = enumeration::DeviceInformation::FindAllAsync(
-                winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector(), 
-                GetAdditionalPropertiesList()).get();
+            auto devices = enumeration::DeviceInformation::FindAllAsync(
+                InternalGetSelectorForSourceAndDestinationPorts(),
+                GetAdditionalPropertiesList(),
+                enumeration::DeviceInformationKind::DeviceInterface).get();
 
-            for (auto const& device: sourceDevices)
+            for (auto const& device: devices)
             {
                 auto midiLegacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
 
                 if (midiLegacyPortDeviceInformation != nullptr)
                 {
-                    midiLegacyPortDeviceInformation->InternalInitialize(device, midi2enum::Midi1PortFlow::MidiMessageSource);
-                    results.Append(*midiLegacyPortDeviceInformation);
-                }
-            }
-
-            // get all destinations
-            auto destinationDevices = enumeration::DeviceInformation::FindAllAsync(
-                winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector(),
-                GetAdditionalPropertiesList()).get();
-
-            for (auto const& device : destinationDevices)
-            {
-                auto midiLegacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
-
-                if (midiLegacyPortDeviceInformation != nullptr)
-                {
-                    midiLegacyPortDeviceInformation->InternalInitialize(device, midi2enum::Midi1PortFlow::MidiMessageDestination);
+                    midiLegacyPortDeviceInformation->InternalInitialize(device);
                     results.Append(*midiLegacyPortDeviceInformation);
                 }
             }
@@ -146,6 +149,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+
             if (flow == midi2enum::Midi1PortFlow::MidiMessageSource)
             {
                 // get all sources
@@ -159,7 +163,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
                     if (midiLegacyPortDeviceInformation != nullptr)
                     {
-                        midiLegacyPortDeviceInformation->InternalInitialize(device, midi2enum::Midi1PortFlow::MidiMessageSource);
+                        midiLegacyPortDeviceInformation->InternalInitialize(device);
                         results.Append(*midiLegacyPortDeviceInformation);
                     }
                 }
@@ -169,14 +173,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
                 // get all destinations
                 auto destinationDevices = enumeration::DeviceInformation::FindAllAsync(
                     winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector(),
-                    GetAdditionalPropertiesList()).get();
+                    GetAdditionalPropertiesList(),
+                    enumeration::DeviceInformationKind::DeviceInterface).get();
 
                 for (auto const& device : destinationDevices)
                 {
                     auto midiLegacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
                     if (midiLegacyPortDeviceInformation != nullptr)
                     {
-                        midiLegacyPortDeviceInformation->InternalInitialize(device, midi2enum::Midi1PortFlow::MidiMessageDestination);
+                        midiLegacyPortDeviceInformation->InternalInitialize(device);
                         results.Append(*midiLegacyPortDeviceInformation);
                     }
                 }
@@ -224,44 +229,22 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-            auto sourceClass= internal::GuidToString(DEVINTERFACE_MIDI_INPUT);
-            auto destinationClass = internal::GuidToString(DEVINTERFACE_MIDI_OUTPUT);
+            auto devices = enumeration::DeviceInformation::FindAllAsync(
+                InternalGetSelectorForSourceAndDestinationPortsForParentEndpointId(endpointDeviceId),
+                GetAdditionalPropertiesList(),
+                enumeration::DeviceInformationKind::DeviceInterface).get();
 
-            for (auto const& deviceClass : { sourceClass, destinationClass })
+            // now add all the ports
+            for (auto const& device : devices)
             {
-                // we only want MIDI 1 ports which have the specified endpoing as the parent device
-                winrt::hstring selector = L"System.Devices.InterfaceClassGuid:=\"" + deviceClass + L"\" AND " + 
-                    L"System.Devices.Parent:=\"" + endpointDeviceId + L"\" AND " +
-                    L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
-
-                auto devices = enumeration::DeviceInformation::FindAllAsync(
-                    selector,
-                    GetAdditionalPropertiesList()).get();
-
-                midi2enum::Midi1PortFlow flow{};
-
-                // figure out if we're dealing with inputs or outputs
-                if (deviceClass == sourceClass)
+                auto midiLegacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
+                if (midiLegacyPortDeviceInformation != nullptr)
                 {
-                    flow = midi2enum::Midi1PortFlow::MidiMessageSource;
+                    midiLegacyPortDeviceInformation->InternalInitialize(device);
+                    results.Append(*midiLegacyPortDeviceInformation);
                 }
-                else
-                {
-                    flow = midi2enum::Midi1PortFlow::MidiMessageDestination;
-                }
-
-                // now add all the ports
-                for (auto const& device : devices)
-                {
-                    auto midiLegacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
-                    if (midiLegacyPortDeviceInformation != nullptr)
-                    {
-                        midiLegacyPortDeviceInformation->InternalInitialize(device, flow);
-                        results.Append(*midiLegacyPortDeviceInformation);
-                    }
-                }
-
             }
+
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -303,6 +286,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         props.Append(L"System.Devices.ContainerId");
         props.Append(L"System.Devices.Parent");
+        props.Append(L"System.Devices.InterfaceClassGuid");
 
         props.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
         props.Append(STRING_PKEY_MIDI_PortAssignedGroupIndex);

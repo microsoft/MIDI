@@ -15,7 +15,18 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         MidiLegacyPortDeviceInformationRemovedEventArgs() = default;
 
-        winrt::hstring PortDeviceId();
-        enumeration::DeviceInformationUpdate DeviceInformationUpdate();
+        winrt::hstring PortDeviceId() const noexcept { return m_portDeviceId; }
+        enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
+
+        void InternalInitialize(_In_ enumeration::DeviceInformationUpdate const& device, _In_ winrt::hstring const& portDeviceId) noexcept
+        {
+            m_deviceInformationUpdate = device;
+            m_portDeviceId = portDeviceId;
+        }
+
+    private:
+        winrt::hstring m_portDeviceId{ };
+        enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
+
     };
 }
