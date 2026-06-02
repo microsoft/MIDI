@@ -14,18 +14,16 @@ bool MidiEndpointIdHelperTests::ClassSetup()
 {
     std::cout << "MidiEndpointIdHelperTests::ClassSetup" << std::endl;
 
-    winrt::init_apartment();
+    StartWinRTMTA();
 
-    return m_initializer.InitializeSdkRuntime();
+    return true;
 }
 
 bool MidiEndpointIdHelperTests::ClassCleanup()
 {
     std::cout << "MidiEndpointIdHelperTests::ClassCleanup" << std::endl;
 
-    m_initializer.ShutdownSdkRuntime();
-
-    winrt::uninit_apartment();
+    ShutdownWinRT();
 
     return true;
 }

@@ -238,8 +238,30 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
             if (m_enumeratedPorts.HasKey(mapKey))
             {
-                //auto ep = winrt::get_self<MidiLegacyPortDeviceInformation>(m_enumeratedPorts.Lookup(mapKey));
+                auto port = winrt::get_self<MidiLegacyPortDeviceInformation>(m_enumeratedPorts.Lookup(mapKey));
 
+                if (!port)
+                {
+                    // this is unexpected
+
+                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Received an update for a MIDI 1 port that is no longer in our list", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
+
+                    return;
+                }
+
+                // Update the port properties based on what changed
+                port->InternalUpdateFromDeviceInformationUpdate(args);
+
+                // raise an event if the app has subscribed to it
                 if (m_deviceUpdatedEvent)
                 {
                     auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationUpdatedEventArgs>();
@@ -418,6 +440,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         return m_deviceAddedEvent.add(handler);
     }
+
     _Use_decl_annotations_
     void MidiLegacyPortDeviceWatcher::Added(winrt::event_token const& token) noexcept
     {

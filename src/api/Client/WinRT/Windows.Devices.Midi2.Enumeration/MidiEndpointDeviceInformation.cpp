@@ -57,91 +57,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     }
 
 
-    // this has to jump through some hoops because the parent id isn't returned on a normal "CreateFromIdAsync" call
-    // even when you specify it. So instead, you have to find the container, then find the child of the container 
-    // that matches this device, then call the FindAllAsync to get the actual device object. That object then
-    // has the parent id, whcih you can use to find the parent.
-    enumeration::DeviceInformation MidiEndpointDeviceInformation::GetParentDeviceInformation() const noexcept
+    midi2enum::MidiParentDeviceInformation MidiEndpointDeviceInformation::GetParentDeviceInformation() const noexcept
     {
         try
         {
-            const winrt::hstring rootParent = L"HTREE\\ROOT\\0";
+            // TODO: Need to see if this will return parent information for virtual endpoints as well
 
-            auto container = GetContainerDeviceInformation();
+            auto parentId = winrt::unbox_value<winrt::hstring>(m_properties.Lookup(MIDI_DEVICE_PARENT_PROPERTY_KEY));
 
-            // TODO: This approach needs to be verified with USB.
-
-
-            //auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-            //    L"System.Devices.ContainerId:=\"" + container.Id() +  L"\"" + 
-            //    L" AND System.Devices.DeviceInstanceId:=\"" + DeviceInstanceId() + L"\"",
-            //    {
-            //        MIDI_DEVICE_PARENT_PROPERTY_KEY
-            //    },
-            //    winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device
-            //).get();
-
-
-            auto myDevice = enumeration::DeviceInformation::CreateFromIdAsync(
-                DeviceInstanceId(),
-                {
-                    MIDI_DEVICE_PARENT_PROPERTY_KEY,
-                    L"System.Devices.DeviceManufacturer",
-                    L"System.Devices.ModelName",
-                    L"System.Devices.HardwareIds",
-                    L"System.Devices.InterfaceClassGuid",
-                },
-                enumeration::DeviceInformationKind::Device
-            ).get();
-
-
-            // TODO: this code checks too hard. It can end up getting the bus enumerator instead of the
-            // actual parent device, so needs to change.
-
-            if (myDevice != nullptr)
-            {
-                //auto parentDevice = devices.GetAt(0);
-
-                if (myDevice.Properties().HasKey(MIDI_DEVICE_PARENT_PROPERTY_KEY))
-                {
-                    auto parentId = winrt::unbox_value<winrt::hstring>(myDevice.Properties().Lookup(MIDI_DEVICE_PARENT_PROPERTY_KEY));
-
-                    // if the parent is the system root, don't bother trying to resolve that 
-                    if (parentId != rootParent)
-                    {
-                        auto parents = enumeration::DeviceInformation::FindAllAsync(
-                            L"System.Devices.DeviceInstanceId:=\"" + parentId + L"\"",
-                            {
-                                MIDI_DEVICE_PARENT_PROPERTY_KEY,
-                                L"System.Devices.DeviceManufacturer",
-                                L"System.Devices.ModelName",
-                                L"System.Devices.HardwareIds",
-                                L"System.Devices.InterfaceClassGuid",
-                                /*L"System.Devices.Manufacturer"
-                                L"System.Devices.ModelNumber",
-                                L"System.Devices.ModelId",
-                                L"System.Devices.Paired",
-                                L"System.Devices.Present",
-                                L"System.Devices.Connected",
-                                L"System.Devices.Category",
-                                L"System.Devices.ClassGuid",
-                                L"System.Devices.DeviceHasProblem",*/
-                            },
-                            enumeration::DeviceInformationKind::Device).get();
-
-                        if (parents != nullptr && parents.Size() == 1)
-                        {
-                            return parents.GetAt(0);
-                        }
-                    }
-                }
-                else
-                {
-                    // for USB, and some other types, the actual device is the correct parent
-                    return myDevice;
-                }
-
-            }
+            return midi2enum::MidiParentDeviceInformation::CreateFromId(parentId);
         }
         catch (...)
         {
@@ -539,6 +463,37 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
 
     _Use_decl_annotations_
+    collections::IVectorView<midi2enum::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAllForContainer(
+        winrt::guid const& containerId) noexcept
+    {
+        auto midiEndpoints = winrt::single_threaded_vector<midi2enum::MidiEndpointDeviceInformation>();
+
+        auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+            MidiEndpointConnection::GetDeviceSelector() + L" AND System.Devices.ContainerId:=" + winrt::to_hstring(containerId),
+            GetAdditionalPropertiesList(),
+            enumeration::DeviceInformationKind::DeviceInterface
+        ).get();
+
+
+        if (devices != nullptr)
+        {
+            for (auto const& di : devices)
+            {
+                auto midiDevice = winrt::make_self<MidiEndpointDeviceInformation>();
+
+                midiDevice->UpdateFromDeviceInformation(di);
+
+                midiEndpoints.Append(*midiDevice);
+            }
+        }
+
+        return midiEndpoints.GetView();
+    }
+
+
+
+
+    _Use_decl_annotations_
     midi2enum::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
         winrt::hstring const& endpointDeviceId) noexcept
     {
@@ -648,6 +603,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         // transport-supplied name is last
         if (GetTransportSuppliedInfo().Name() != L"") return GetTransportSuppliedInfo().Name();
+
+        if (internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.FriendlyName", L"") != L"") return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.FriendlyName", L"");   
 
         return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.ItemNameDisplay", L"(Unknown)");
     }
@@ -1158,6 +1115,56 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
 
         m_id = internal::NormalizeEndpointInterfaceIdHStringCopy(deviceInformation.Id().c_str());
+
+
+        //// get the parent device id
+        //winrt::hstring deviceInstanceId{};
+
+        //if (deviceInformation.Properties().HasKey(L"System.Devices.DeviceInstanceId"))
+        //{
+        //    deviceInstanceId = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceInstanceId", deviceInformation, winrt::hstring());
+        //}
+
+        //if (!deviceInstanceId.empty())
+        //{
+        //    try
+        //    {
+        //        auto pnpObject = pnp::PnpObject::CreateFromIdAsync(
+        //            pnp::PnpObjectType::Device,
+        //            deviceInstanceId,
+        //            { L"System.Devices.Parent" }).get();
+
+        //        if (pnpObject != nullptr && pnpObject.Properties().HasKey(L"System.Devices.Parent"))
+        //        {
+        //            m_parentDeviceInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(pnpObject.Properties(), L"System.Devices.Parent", winrt::hstring());
+        //        }
+        //    }
+        //    catch (...)
+        //    {
+        //    }
+
+        //    if (m_parentDeviceInstanceId.empty())
+        //    {
+        //        try
+        //        {
+        //            auto pnpObject = pnp::PnpObject::CreateFromIdAsync(
+        //                pnp::PnpObjectType::DeviceInterface,
+        //                deviceInstanceId,
+        //                { L"System.Devices.Parent" }).get();
+
+        //            if (pnpObject != nullptr && pnpObject.Properties().HasKey(L"System.Devices.Parent"))
+        //            {
+        //                m_parentDeviceInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(pnpObject.Properties(), L"System.Devices.Parent", winrt::hstring());
+        //            }
+
+        //        }
+        //        catch (...)
+        //        {
+        //        }
+        //    }
+        //}
+
+
     }
 
     _Use_decl_annotations_
@@ -1396,7 +1403,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                         flow = Midi1PortFlow::MidiMessageDestination;
                         break;
                     default:
-                        // this should not happen
+                        // this should not happen. Assigning destination as a fallback.
+                        flow = Midi1PortFlow::MidiMessageDestination;
                         break;
                     }
 
@@ -1416,360 +1424,5 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         return nameTable.GetView();
     }
-
-
-    // static method
-    _Use_decl_annotations_
-    winrt::hstring MidiEndpointDeviceInformation::FindEndpointDeviceIdForAssociatedMidi1PortNumber(
-        uint32_t const portNumber,
-        midi2enum::Midi1PortFlow const portFlow) noexcept
-    {
-        // Get all active MIDI 1.0 ports for this flow
-        // Look through each until you find the portIndex that matches
-        // get the associated UMP endpoint property and return it
-
-        auto deviceSelector = GetMidi1PortDeviceSelector(portFlow);
-
-        // our internal midi input port Ids are +1 from what we use in WinMM.
-        uint32_t cleanPortNumber{ portNumber };
-        if (portFlow == midi2enum::Midi1PortFlow::MidiMessageSource)
-        {
-            cleanPortNumber = portNumber + 1;
-        }
-        else
-        {
-            if (portNumber == 0)
-            {
-                // we don't return information about the GS synth, which is MIDI Output 0
-                return L"";
-            }
-        }
-
-        // we need some additional properties
-        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-
-        additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
-
-        auto searchResults = enumeration::DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
-
-        if (searchResults != nullptr)
-        {
-            for (auto const& result : searchResults)
-            {
-                auto portIndexPropertyValue = internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_ServiceAssignedPortNumber, result, 0);
-
-                // we start our own numbering with 1 internally, so 0 means invalid. But we checked for that above
-                if (portIndexPropertyValue == cleanPortNumber)
-                {
-                    auto associatedUmpPropertyValue = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_AssociatedUMP, result, L"");
-
-                    return internal::NormalizeEndpointInterfaceIdHStringCopy(associatedUmpPropertyValue);
-                }
-            }
-        }
-
-        return L"";
-    }
-
-    // static method. Returns a vector because there could be multiple ports with the same name
-    _Use_decl_annotations_
-    collections::IVectorView<winrt::hstring> MidiEndpointDeviceInformation::FindAllEndpointDeviceIdsForAssociatedMidi1PortName(
-        winrt::hstring const& portName,
-        midi2enum::Midi1PortFlow const portFlow) noexcept
-    {
-        // Get all active MIDI 1.0 ports where the friendly name matches
-        // return the associated UMP ids from those
-
-        auto portIds = winrt::single_threaded_vector<winrt::hstring>();
-
-        auto deviceSelector = GetMidi1PortDeviceSelector(portFlow);
-
-        // add the name to the device selector
-        deviceSelector = deviceSelector + L" AND ItemNameDisplay:=\"" + portName + L"\"";
-
-        // we need some additional properties
-        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-
-        additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
-
-        auto searchResults = enumeration::DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
-
-        if (searchResults != nullptr)
-        {
-            for (auto const& result : searchResults)
-            {
-                auto associatedUmp = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_AssociatedUMP, result, L"");
-
-                if (!associatedUmp.empty())
-                {
-                    portIds.Append(internal::NormalizeEndpointInterfaceIdHStringCopy(associatedUmp));
-                }
-            }
-        }
-
-        return portIds.GetView();
-    }
-
-
-    // static method to create the parent device from a MIDI 1.0 device
-    _Use_decl_annotations_
-    midi2enum::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromAssociatedMidi1PortDeviceId(
-        winrt::hstring const& deviceId) noexcept
-    {
-        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-        additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
-
-        auto device = enumeration::DeviceInformation::CreateFromIdAsync(deviceId, additionalProperties).get();
-
-        if (device != nullptr)
-        {
-            auto umpEndpointId = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_AssociatedUMP, device, L"");
-
-            if (!umpEndpointId.empty())
-            {
-                return midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(umpEndpointId);
-            }
-        }
-
-        return nullptr;
-    }
-
-
-    // static method
-    _Use_decl_annotations_
-    midi2enum::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromAssociatedMidi1PortNumber(
-        uint32_t const portNumber,
-        midi2enum::Midi1PortFlow const portFlow) noexcept
-    {
-        auto umpEndpointId = FindEndpointDeviceIdForAssociatedMidi1PortNumber(portNumber, portFlow);
-
-        if (!umpEndpointId.empty())
-        {
-            return midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(umpEndpointId);
-        }
-
-        return nullptr;
-    }
-
-
-    // static method that returns for all endpoints
-    _Use_decl_annotations_
-    collections::IVectorView<midi2enum::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAllForAssociatedMidi1PortName(
-        winrt::hstring const& portName,
-        midi2enum::Midi1PortFlow const portFlow) noexcept
-    {
-        // call FindAllEndpointDeviceIdsForMidi1PortName
-        // instantiate those MidiEndpointDeviceInformation objects
-
-        auto matchingEndpoints = winrt::single_threaded_vector<midi2enum::MidiEndpointDeviceInformation>();
-
-        auto umpEndpointIds = FindAllEndpointDeviceIdsForAssociatedMidi1PortName(portName, portFlow);
-
-        if (umpEndpointIds != nullptr && umpEndpointIds.Size() > 0)
-        {
-            for (auto const& umpEndpointId : umpEndpointIds)
-            {
-                auto dp = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(umpEndpointId);
-
-                if (dp != nullptr)
-                {
-                    matchingEndpoints.Append(dp);
-                }
-            }
-        }
-
-        return matchingEndpoints.GetView();
-    }
-
-
-    _Use_decl_annotations_
-    winrt::hstring MidiEndpointDeviceInformation::GetMidi1PortDeviceSelector(midi2enum::Midi1PortFlow const portFlow)
-    {
-        if (portFlow == midi2enum::Midi1PortFlow::MidiMessageDestination)
-        {
-            return winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector();   // could also use DEVINTERFACE_MIDI_OUTPUT
-        }
-        else
-        {
-            return winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector();    // could also use DEVINTERFACE_MIDI_INPUT
-        }
-    }
-
-    _Use_decl_annotations_
-    collections::IVector<midi2enum::MidiEndpointAssociatedPortDeviceInformation>* MidiEndpointDeviceInformation::GetMidi1PortCache(midi2enum::Midi1PortFlow const portFlow)
-    {
-        if (portFlow == midi2enum::Midi1PortFlow::MidiMessageDestination)
-        {
-            return (collections::IVector<midi2enum::MidiEndpointAssociatedPortDeviceInformation>*) &m_midi1DestinationPorts;
-        }
-        else
-        {
-            return (collections::IVector<midi2enum::MidiEndpointAssociatedPortDeviceInformation>*) &m_midi1SourcePorts;
-        }
-    }
-
-
-    _Use_decl_annotations_
-    collections::IVector<midi2enum::MidiEndpointAssociatedPortDeviceInformation>* MidiEndpointDeviceInformation::FindAndCacheAssociatedMidi1PortInformation(
-        midi2enum::Midi1PortFlow const portFlow,
-        bool const refreshCache) noexcept
-    {
-        auto deviceSelector = GetMidi1PortDeviceSelector(portFlow);
-        auto ports = GetMidi1PortCache(portFlow);
-
-        assert(ports != nullptr);
-
-        if (ports->Size() == 0 || refreshCache)
-        {
-            // TODO: Maybe we can filter on a common parent device id? Need to see if that will work in the query
-            // including for software devices, merged devices, etc.
-
-            ports->Clear();
-
-            // either had no previous data, or the caller does not want us to use the cache, so we proceed with a normal lookup
-
-            // we need some additional properties
-            auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-
-            additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
-            additionalProperties.Append(STRING_PKEY_MIDI_PortAssignedGroupIndex);
-            //additionalProperties.Append(STRING_PKEY_MIDI_CustomPortNumber);
-            additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
-
-            auto searchResults = enumeration::DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
-
-
-            // TODO: The selector should be able to be filtered by the parent device id to greatly speed this up.
-
-
-
-
-
-
-            if (searchResults != nullptr)
-            {
-                // unfortunately, with GUID-based properties, you cannot include them
-                // in the search query, so we have to get everything and iterate through
-
-                for (auto const& device : searchResults)
-                {
-                    if (!device.IsEnabled()) continue;
-
-
-                    auto id = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_AssociatedUMP, device, L"");
-
-                    if (internal::NormalizeEndpointInterfaceIdHStringCopy(id) == m_id)
-                    {
-                        // this is one of our child ports, so we add to the results
-
-                        auto group = midi2::MidiGroup((uint8_t)internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_PortAssignedGroupIndex, device, 0));
-                        UINT32 portIndex{ 0 };
-
-                        auto prop = device.Properties().Lookup(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
-                        if (prop)
-                        {
-                            portIndex = winrt::unbox_value<UINT32>(prop);
-                        }
-                        else
-                        {
-                            // no assigned port number value, so skip
-                            continue;
-                        }
-
-                        // for MIDI Input (Source) ports, we have to subtract 1 because we number in the service starting at 1
-                        // For midi Output (Destination) ports, we leave the number as-is, because the GS synth occupies number 0
-
-                        if (portFlow == Midi1PortFlow::MidiMessageSource)
-                        {
-                            portIndex = portIndex - 1;
-                        }
-
-                        auto port = winrt::make_self<MidiEndpointAssociatedPortDeviceInformation>();
-
-                        port->InternalInitialize(
-                            this->ContainerId(),
-                            this->DeviceInstanceId(),
-                            this->EndpointDeviceId(),
-                            group,
-                            portFlow,
-                            device.Name(),
-                            device.Id(),
-                            portIndex,
-                            device
-                        );
-
-                        ports->Append(*port);
-                    }
-                }
-            }
-        }
-
-        return ports;
-    }
-
-
-
-    // this is for this endpoint only, not a static method
-    _Use_decl_annotations_
-    midi2enum::MidiEndpointAssociatedPortDeviceInformation MidiEndpointDeviceInformation::FindAssociatedMidi1PortForGroupForThisEndpoint(
-        midi2::MidiGroup const& group,
-        midi2enum::Midi1PortFlow const portFlow,
-        bool const useCachedPortInformationIfAvailable) noexcept
-    {
-        // get the associated MIDI 1 ports for this endpoint and flow
-        auto ports = FindAndCacheAssociatedMidi1PortInformation(portFlow, !useCachedPortInformationIfAvailable);
-
-        // find the one with a matching group
-        // return that one only
-
-        if (ports != nullptr && ports->Size() > 0)
-        {
-            for (auto const& port : *ports)
-            {
-                if (port.Group().Index() == group.Index())
-                {
-                    return port;
-                }
-            }
-        }
-
-        return nullptr;
-    }
-
-    _Use_decl_annotations_
-    midi2enum::MidiEndpointAssociatedPortDeviceInformation MidiEndpointDeviceInformation::FindAssociatedMidi1PortForGroupForThisEndpoint(
-        midi2::MidiGroup const& group,
-        midi2enum::Midi1PortFlow const portFlow) noexcept
-    {
-        // this call always refreshes the cache
-        return FindAssociatedMidi1PortForGroupForThisEndpoint(group, portFlow, false);
-    }
-
-
-    _Use_decl_annotations_
-    collections::IVectorView<midi2enum::MidiEndpointAssociatedPortDeviceInformation> MidiEndpointDeviceInformation::FindAllAssociatedMidi1PortsForThisEndpoint(
-        midi2enum::Midi1PortFlow const portFlow,
-        bool const useCachedPortInformationIfAvailable
-        ) noexcept
-    {
-        auto ports = FindAndCacheAssociatedMidi1PortInformation(portFlow, !useCachedPortInformationIfAvailable);
-
-        return ports->GetView();
-    }
-
-
-    _Use_decl_annotations_
-    collections::IVectorView<midi2enum::MidiEndpointAssociatedPortDeviceInformation> MidiEndpointDeviceInformation::FindAllAssociatedMidi1PortsForThisEndpoint(
-        midi2enum::Midi1PortFlow const portFlow) noexcept
-    {
-        // calling this refreshes the cache every time
-
-        return FindAllAssociatedMidi1PortsForThisEndpoint(portFlow, false);
-    }
-
-
-
-
-
 
 }

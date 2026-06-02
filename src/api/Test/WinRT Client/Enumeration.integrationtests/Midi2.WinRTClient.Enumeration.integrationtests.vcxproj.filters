@@ -24,6 +24,9 @@
     <ClInclude Include="MidiEndpointIdHelperTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp">
@@ -32,10 +35,17 @@
     <ClCompile Include="MidiEndpointIdHelperTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2ClientTests.rc">
       <Filter>Support</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

@@ -221,6 +221,10 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.Markup(Strings.MonitorMonitoringOnEndpointLabel);
                 AnsiConsole.Markup(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
 
+                // set the console title, leading with the name of the endpoint being monitored
+                Console.Title = endpointName + " - " + Strings.MonitorConsoleTitleSuffix;
+
+
                 if (settings.AutoReconnect)
                 {
                     AnsiConsole.MarkupLine(" with auto-reconnect");

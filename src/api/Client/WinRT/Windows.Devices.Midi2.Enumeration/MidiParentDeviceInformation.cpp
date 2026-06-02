@@ -16,29 +16,31 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     midi2enum::MidiParentDeviceInformation MidiParentDeviceInformation::CreateFromId(
         winrt::hstring const& deviceInstanceId) noexcept
     {
+        enumeration::DeviceInformation device{ nullptr };
+
         try
         {
-            auto device = enumeration::DeviceInformation::CreateFromIdAsync(
+            device = enumeration::DeviceInformation::CreateFromIdAsync(
                 deviceInstanceId,
                 GetAdditionalPropertiesList(),
                 enumeration::DeviceInformationKind::Device
-                ).get();
-
-            if (device == nullptr)
-            {
-                return nullptr;
-            }
-
-            auto parentDeviceInfo = winrt::make_self<MidiParentDeviceInformation>();
-
-            parentDeviceInfo->InternalInitialize(device);
-
-            return *parentDeviceInfo;
+            ).get();
         }
-        catch (...)
+        catch (winrt::hresult_error const&)
         {
             return nullptr;
         }
+
+        if (!device)
+        {
+            return nullptr;
+        }
+
+        auto parentDeviceInfo = winrt::make_self<MidiParentDeviceInformation>();
+
+        parentDeviceInfo->InternalInitialize(device);
+
+        return *parentDeviceInfo;
     }
 
 
@@ -51,15 +53,26 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             return nullptr;
         }
 
-        if (!deviceInfo.Properties().HasKey(L"System.Devices.Parent"))
+        if (!deviceInfo.Properties().HasKey(STRING_DEVPKEY_Device_LastKnownParent))
         {
             return nullptr;
         }
 
-        auto parentId = winrt::unbox_value<winrt::hstring>(deviceInfo.Properties().Lookup(L"System.Devices.Parent"));
+        auto parentId = winrt::unbox_value<winrt::hstring>(deviceInfo.Properties().Lookup(STRING_DEVPKEY_Device_LastKnownParent));
 
         return CreateFromId(parentId);
     }
+
+    _Use_decl_annotations_
+    collections::IVectorView<midi2enum::MidiParentDeviceInformation> MidiParentDeviceInformation::FindAllForContainer(winrt::guid const& containerId) noexcept
+    {
+        // TODO
+        UNREFERENCED_PARAMETER(containerId);
+
+        return nullptr;
+    }
+
+
 
     collections::IVectorView<winrt::hstring> MidiParentDeviceInformation::GetAdditionalPropertiesList() noexcept
     {

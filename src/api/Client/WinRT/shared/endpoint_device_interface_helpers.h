@@ -11,6 +11,9 @@
 //#include "SetupAPI.h"
 //#include "MidiDefs.h"   // for DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI. Unfortunately, pulls in a lot of other baggage
 
+#define STRING_DEVPKEY_Device_LastKnownParent   L"{83DA6326-97A6-4088-9453-A1923F573B29} 10"
+//#define STRING_DEVPKEY_Device_Parent            L"{4340A6C5-93FA-4706-972C-7B648008A5A7} 8"
+
 namespace WindowsMidiServicesInternal
 {
     inline bool IsValidWindowsMidiServicesEndpointId(_In_ winrt::hstring endpointDeviceId)

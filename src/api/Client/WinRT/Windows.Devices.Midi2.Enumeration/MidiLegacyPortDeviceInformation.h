@@ -17,8 +17,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         MidiLegacyPortDeviceInformation() = default;
 
-        static winrt::guid Midi1SourcePortClassGuid() noexcept { return DEVINTERFACE_MIDI_INPUT;}
-        static winrt::guid Midi1DestinationPortClassGuid() noexcept { return DEVINTERFACE_MIDI_OUTPUT; }
+        static winrt::guid Midi1SourcePortInterfaceClass() noexcept { return DEVINTERFACE_MIDI_INPUT;}
+        static winrt::guid Midi1DestinationPortInterfaceClass() noexcept { return DEVINTERFACE_MIDI_OUTPUT; }
 
 
         static legacy::MidiLegacyPortDeviceInformation CreateFromPortDeviceId(
@@ -26,30 +26,34 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAll() noexcept;
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAll(
             _In_ midi2enum::Midi1PortFlow const& flow) noexcept;
-        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForEndpoint(
-            _In_ winrt::hstring const& endpointDeviceId) noexcept;
+        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForParentDevice(
+            _In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
+        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForParentDevice(
+            _In_ winrt::hstring const& parentDeviceInstanceId,
+            _In_ midi2enum::Midi1PortFlow const& flow) noexcept;
+
+        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForName(
+            _In_ winrt::hstring const& portName) noexcept;
+        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForContainer(
+            _In_ winrt::guid const& containerId) noexcept;
+
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
-        static winrt::hstring InternalGetSelectorForSourceAndDestinationPorts();
-        static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForParentEndpointId(_In_ winrt::hstring const& endpointDeviceId);
-
-
-
-        enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
-
-        winrt::hstring PortDeviceId() const noexcept { return m_deviceInformation != nullptr ? internal::NormalizeEndpointInterfaceIdHStringCopy(m_deviceInformation.Id()) : L""; }
-        winrt::hstring Name() const noexcept { return m_deviceInformation != nullptr ? m_deviceInformation.Name() : L""; }
-        winrt::guid ContainerId() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(L"System.Devices.ContainerId", m_deviceInformation, winrt::guid()); }
-        winrt::hstring EndpointDeviceId()  const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Parent", m_deviceInformation, L"")); }
-        winrt::hstring DriverDeviceInterfaceId() const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_DriverDeviceInterface, m_deviceInformation, L"")); }
+        winrt::hstring PortDeviceId() const noexcept { return m_id; }
+        winrt::hstring PortDeviceInstanceId() const noexcept { return internal::NormalizeDeviceInstanceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.DeviceInstanceId", L"")); }
+        winrt::hstring Name() const noexcept { return m_name; }
+        winrt::guid ContainerId() const noexcept { return internal::GetDeviceInfoProperty<winrt::guid>(m_properties, L"System.Devices.ContainerId", winrt::guid()); }
+        winrt::hstring EndpointDeviceId()  const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_AssociatedUMP, L"")); }
+        winrt::hstring ParentDeviceInstanceId() const noexcept { return m_parentDeviceInstanceId; }
+        winrt::hstring DriverDeviceInterfaceId() const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverDeviceInterface, L"")); }
         midi2enum::Midi1PortFlow PortFlow() const noexcept { return m_portFlow; }
-        uint32_t WinMMPortNumber() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(STRING_PKEY_MIDI_ServiceAssignedPortNumber, m_deviceInformation, 0); }
+        uint32_t WinMMPortNumber() const noexcept { return m_portNumber; }
 
-        midi2::MidiGroup Group() const noexcept { return MidiGroup(internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(STRING_PKEY_MIDI_PortAssignedGroupIndex, m_deviceInformation, 0)); }
+        midi2::MidiGroup Group() const noexcept { return MidiGroup(internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_PortAssignedGroupIndex, 0)); }
 
         midi2enum::MidiEndpointNativeDataFormat NativeDataFormat() const noexcept
         {
-            auto dataFormat = internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(STRING_PKEY_MIDI_NativeDataFormat, m_deviceInformation, 0);
+            auto dataFormat = internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_NativeDataFormat, 0);
 
             switch (dataFormat)
             {
@@ -64,35 +68,34 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         winrt::hstring ToString() const noexcept;
 
+        collections::IMapView<winrt::hstring, foundation::IInspectable> Properties() { return m_properties.GetView(); }
 
-        void InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation)
-        {
-            m_deviceInformation = deviceInformation;
 
-            if (deviceInformation.Properties().HasKey(L"System.Devices.InterfaceClassGuid"))
-            {
-                auto interfaceClassGuid = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(L"System.Devices.InterfaceClassGuid", deviceInformation, winrt::guid());
+        bool InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation) noexcept;
+        bool InternalUpdateFromDeviceInformationUpdate(_In_ enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept;
 
-                if (interfaceClassGuid == MidiLegacyPortDeviceInformation::Midi1SourcePortClassGuid())
-                {
-                    m_portFlow = midi2enum::Midi1PortFlow::MidiMessageSource;
-                }
-                else if (interfaceClassGuid == MidiLegacyPortDeviceInformation::Midi1DestinationPortClassGuid())
-                {
-                    m_portFlow = midi2enum::Midi1PortFlow::MidiMessageDestination;
-                }
-            }
+        static winrt::hstring InternalGetSelectorForSourceAndDestinationPorts() noexcept;
+        static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
+        static winrt::hstring InternalGetSelectorForSourcePortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
+        static winrt::hstring InternalGetSelectorForDestinationPortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
+        static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForContainer(_In_ winrt::guid const& containerId) noexcept;
 
-        }
 
     private:
-        enumeration::DeviceInformation m_deviceInformation{ nullptr };
+        winrt::hstring m_parentDeviceInstanceId{};
+
+        winrt::hstring m_name{};
+        winrt::hstring m_id{};
+        uint32_t m_portNumber{ 0 };
         midi2enum::Midi1PortFlow m_portFlow{ };
 
-        winrt::hstring GetStringProperty(_In_ DEVPROPKEY const& key) const noexcept
-        {
-            return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(internal::DevPropKeyToWinRTPropertyHString(key), m_deviceInformation, L"");
-        }
+        collections::IMap<winrt::hstring, foundation::IInspectable> m_properties
+            { winrt::multi_threaded_map<winrt::hstring, foundation::IInspectable>() };
+
+        //winrt::hstring GetStringProperty(_In_ DEVPROPKEY const& key) const noexcept
+        //{
+        //    return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(internal::DevPropKeyToWinRTPropertyHString(key), m_deviceInformation, L"");
+        //}
 
 
     };

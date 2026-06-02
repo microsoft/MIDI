@@ -25,10 +25,11 @@ import "Midi1PortNamingApproachEnum.idl";
 import "MidiEndpointDeviceInformationSortOrderEnum.idl";
 import "MidiEndpointDeviceInformationFiltersEnum.idl";
 
-import "MidiEndpointAssociatedPortDeviceInformation.idl";
+import "MidiLegacyPortDeviceInformation.idl";
 
 import "Midi1PortFlowEnum.idl";
 import "Midi1PortNameTableEntry.idl";
+import "MidiParentDeviceInformation.idl";
 
 
 namespace Windows.Devices.Midi2.Enumeration
@@ -44,14 +45,7 @@ namespace Windows.Devices.Midi2.Enumeration
         static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
         static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
 
-        
-        static MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortDeviceId(String deviceId);
-        static MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortNumber(UInt32 portNumber, Midi1PortFlow portFlow);
-        static String FindEndpointDeviceIdForAssociatedMidi1PortNumber(UInt32 portNumber, Midi1PortFlow portFlow);
-
-        static IVectorView<MidiEndpointDeviceInformation> FindAllForAssociatedMidi1PortName(String portName, Midi1PortFlow portFlow);
-        static IVectorView<String> FindAllEndpointDeviceIdsForAssociatedMidi1PortName(String portName, Midi1PortFlow portFlow);
-
+        static IVectorView<MidiEndpointDeviceInformation> FindAllForContainer(Guid containerId);
 
         static Guid EndpointInterfaceClass{ get; };
 
@@ -89,20 +83,14 @@ namespace Windows.Devices.Midi2.Enumeration
 
         MidiEndpointTransportSuppliedInfo GetTransportSuppliedInfo();
 
+        String ParentDeviceInstanceId{ get; };          // device instance id of the parent device
 
-        Windows.Devices.Enumeration.DeviceInformation GetParentDeviceInformation();
+        MidiParentDeviceInformation GetParentDeviceInformation();
         Windows.Devices.Enumeration.DeviceInformation GetContainerDeviceInformation();
 
         Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
 
         IVectorView<Midi1PortNameTableEntry> GetNameTable();
-
-        // these are for finding the MIDI 1.0 (WinMM and WinRT 1.0) ports which were created from this UMP endpoint
-        IVectorView<MidiEndpointAssociatedPortDeviceInformation> FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow portFlow);
-        IVectorView<MidiEndpointAssociatedPortDeviceInformation> FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow portFlow, Boolean useCachedPortInformationIfAvailable);
-
-        MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(Windows.Devices.Midi2.MidiGroup group, Midi1PortFlow portFlow);
-        MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(Windows.Devices.Midi2.MidiGroup group, Midi1PortFlow portFlow, Boolean useCachedPortInformationIfAvailable);
 
         Midi1PortNamingApproach Midi1PortNamingApproach{ get; };
 

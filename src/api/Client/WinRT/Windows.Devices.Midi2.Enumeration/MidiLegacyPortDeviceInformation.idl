@@ -23,20 +23,24 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
 
         static IVectorView<MidiLegacyPortDeviceInformation> FindAll();
         static IVectorView<MidiLegacyPortDeviceInformation> FindAll(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
-        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForEndpoint(String endpointDeviceId);
+        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForParentDevice(String parentDeviceInstanceId);
+        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForParentDevice(String parentDeviceInstanceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForName(String portName);
+        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForContainer(Guid containerId);
+
 
         static IVectorView<String> GetAdditionalPropertiesList();
 
-        static Guid Midi1SourcePortClassGuid { get; };
-        static Guid Midi1DestinationPortClassGuid { get; };
-
-        Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };    // the base WinRT Device Information object for this port
+        static Guid Midi1SourcePortInterfaceClass { get; };
+        static Guid Midi1DestinationPortInterfaceClass { get; };
 
         String PortDeviceId{ get; };                    // device id in our tree (also used directly in WinRT MIDI 1.0)
+        String PortDeviceInstanceId{ get; };            // device instance id 
         String Name{ get; };                            // friendly name (this is the current WinMM port name). Get other names from the parent 
 
         Guid ContainerId{ get; };                       // container this exists in. It will be the same as the parent endpoint's. Here for convenience.
         String EndpointDeviceId{ get; };                // device id of the owning Windows MIDI Services endpoint
+        String ParentDeviceInstanceId{ get; };          // device instance id of the parent device
 
         String DriverDeviceInterfaceId{ get; };         // the device interface id that the WinMM API exposes via DRV_QUERYDEVICEINTERFACE
         Windows.Devices.Midi2.MidiGroup Group{ get; };  // the single group this MIDI 1.0 port is associated with
@@ -46,9 +50,7 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         UInt32 WinMMPortNumber{ get; };                 // current winmm port number (0..n). This can change if devices are added/removed.
 
         Windows.Devices.Midi2.Enumeration.MidiEndpointNativeDataFormat NativeDataFormat{ get; };   // the native data format of the port, which is needed to know in order to use the port with WinMM APIs. This is the same as the parent endpoint's native data format. Here for convenience.
-     //   Guid TransportId;
-     //   String TransportCode;
 
-
+        Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
     }
 }

@@ -323,9 +323,6 @@
     <ClInclude Include="MidiLegacyPortDeviceWatcher.h">
       <DependentUpon>MidiLegacyPortDeviceWatcher.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
-      <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiEndpointDeviceIdHelper.h">
       <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
     </ClInclude>
@@ -394,9 +391,6 @@
     <ClCompile Include="MidiLegacyPortDeviceWatcher.cpp">
       <DependentUpon>MidiLegacyPortDeviceWatcher.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
-      <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
       <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
     </ClCompile>
@@ -440,7 +434,6 @@
   <ItemGroup>
     <Midl Include="Midi1PortNamingApproachEnum.idl" />
     <Midl Include="MidiApiContracts.idl" />
-    <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl" />
     <Midl Include="MidiEndpointDeviceIdHelper.idl" />
     <Midl Include="Midi1PortNameTableEntry.idl" />
     <Midl Include="MidiDeclaredEndpointInfo.idl" />

@@ -161,9 +161,6 @@
     <Midl Include="Midi1PortNameTableEntry.idl">
       <Filter>SDK\UMP\Metadata\Windows\MIDI 1</Filter>
     </Midl>
-    <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl">
-      <Filter>SDK\UMP\Metadata\Windows\MIDI 1</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDevicePropertyHelper.idl">
       <Filter>SDK\UMP\Metadata\Windows</Filter>
     </Midl>

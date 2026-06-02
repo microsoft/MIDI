@@ -46,6 +46,8 @@
 #include <winrt/Windows.Devices.Midi.h>
 #include <winrt/Windows.Web.Http.h>
 
+#include <winrt/Windows.Devices.Enumeration.Pnp.h>
+
 
 #undef GetObject
 
@@ -57,6 +59,7 @@ namespace foundation =      ::winrt::Windows::Foundation;
 namespace collections =     ::winrt::Windows::Foundation::Collections;
 namespace streams =         ::winrt::Windows::Storage::Streams;
 namespace coreapp =         ::winrt::Windows::ApplicationModel::Core;
+namespace pnp =             ::winrt::Windows::Devices::Enumeration::Pnp;        // needed to get the parent device id for an interface. Normal enum doesn't project it.
 
 // pre-declare namespaces
 namespace WindowsMidiServicesInternal {};
@@ -125,19 +128,17 @@ namespace legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 #include "MidiDeclaredStreamConfiguration.h"
 #include "Midi1PortNameTableEntry.h"
 
-#include "MidiEndpointAssociatedPortDeviceInformation.h"
+#include "MidiLegacyPortDeviceInformation.h"
+#include "MidiLegacyPortDeviceInformationAddedEventArgs.h"
+#include "MidiLegacyPortDeviceInformationUpdatedEventArgs.h"
+#include "MidiLegacyPortDeviceInformationRemovedEventArgs.h"
+#include "MidiLegacyPortDeviceWatcher.h"
 
 #include "MidiEndpointDeviceInformation.h"
 #include "MidiEndpointDeviceInformationAddedEventArgs.h"
 #include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
 #include "MidiEndpointDeviceInformationRemovedEventArgs.h"
 #include "MidiEndpointDeviceWatcher.h"
-
-#include "MidiLegacyPortDeviceInformation.h"
-#include "MidiLegacyPortDeviceInformationAddedEventArgs.h"
-#include "MidiLegacyPortDeviceInformationUpdatedEventArgs.h"
-#include "MidiLegacyPortDeviceInformationRemovedEventArgs.h"
-#include "MidiLegacyPortDeviceWatcher.h"
 
 
 

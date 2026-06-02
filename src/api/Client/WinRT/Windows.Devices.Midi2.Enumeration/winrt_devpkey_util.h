@@ -21,8 +21,8 @@ namespace WindowsMidiServicesInternal
 {
     inline winrt::hstring DevPropKeyToWinRTPropertyHString(_In_ DEVPROPKEY const& key)
     {
-        return std::format(
-            L"{{{:#08x}-{:#04x}-{:#04x}-{:#02x}{:#02x}-{:#02x}{:#02x}{:#02x}{:#02x}{:#02x}{:#02x}}},{}", 
+        winrt::hstring formatted = std::format(
+            L"{{{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}}} {}", 
             key.fmtid.Data1, 
             key.fmtid.Data2, 
             key.fmtid.Data3, 
@@ -37,6 +37,9 @@ namespace WindowsMidiServicesInternal
             key.pid
         ).c_str();
 
+       // OutputDebugString(formatted.c_str());
+
+        return formatted;
     }
 
 

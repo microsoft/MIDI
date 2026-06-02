@@ -13,11 +13,11 @@
 _Use_decl_annotations_
 void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceInformationFilters filter, uint32_t numEndpointsExpected)
 {
-    auto initializer = InitWinRTAndSDK_MTA();
+    StartWinRTMTA();
 
     auto cleanup = wil::scope_exit([&]
         {
-            ShutdownSDKAndWinRT(initializer);
+            ShutdownWinRT();
         });
 
 

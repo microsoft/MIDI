@@ -26,19 +26,19 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         enumeration::DeviceWatcherStatus Status() noexcept { return m_watcher ? m_watcher.Status() : enumeration::DeviceWatcherStatus::Created; }
 
         winrt::event_token Added(_In_ foundation::TypedEventHandler<legacy::MidiLegacyPortDeviceWatcher, legacy::MidiLegacyPortDeviceInformationAddedEventArgs> const& handler);
-        void Added(winrt::event_token const& token) noexcept;
+        void Added(_In_ winrt::event_token const& token) noexcept;
 
         winrt::event_token Updated(_In_ foundation::TypedEventHandler<legacy::MidiLegacyPortDeviceWatcher, legacy::MidiLegacyPortDeviceInformationUpdatedEventArgs> const& handler);
-        void Updated(winrt::event_token const& token) noexcept;
+        void Updated(_In_ winrt::event_token const& token) noexcept;
 
         winrt::event_token Removed(_In_ foundation::TypedEventHandler<legacy::MidiLegacyPortDeviceWatcher, legacy::MidiLegacyPortDeviceInformationRemovedEventArgs> const& handler);
-        void Removed(winrt::event_token const& token) noexcept;
+        void Removed(_In_ winrt::event_token const& token) noexcept;
 
         winrt::event_token EnumerationCompleted(_In_ foundation::TypedEventHandler<legacy::MidiLegacyPortDeviceWatcher, foundation::IInspectable> const& handler);
-        void EnumerationCompleted(winrt::event_token const& token) noexcept;
+        void EnumerationCompleted(_In_ winrt::event_token const& token) noexcept;
 
         winrt::event_token Stopped(_In_ foundation::TypedEventHandler<legacy::MidiLegacyPortDeviceWatcher, foundation::IInspectable> const& handler);
-        void Stopped(winrt::event_token const& token) noexcept;
+        void Stopped(_In_ winrt::event_token const& token) noexcept;
 
         collections::IMapView<winrt::hstring, legacy::MidiLegacyPortDeviceInformation> EnumeratedPorts()
         {
@@ -46,7 +46,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
 
-        void InternalInitialize(enumeration::DeviceWatcher const& baseWatcher) noexcept;
+        void InternalInitialize(_In_ enumeration::DeviceWatcher const& baseWatcher) noexcept;
 
     private:
 

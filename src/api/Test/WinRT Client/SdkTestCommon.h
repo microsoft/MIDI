@@ -11,39 +11,30 @@
 
 
 
-inline std::shared_ptr<init::MidiDesktopAppSdkInitializer> StartSDK()
+inline void StartWinRTMTA()
 {
-    auto initializer = std::make_shared<init::MidiDesktopAppSdkInitializer>();
-
-    VERIFY_IS_TRUE(initializer->InitializeSdkRuntime());
-    VERIFY_IS_TRUE(initializer->EnsureServiceAvailable());
-
-    return initializer;
-}
-
-inline std::shared_ptr<init::MidiDesktopAppSdkInitializer> InitWinRTAndSDK_MTA()
-{
+    std::cout << "Initializing apartment (MTA)" << std::endl;
     winrt::init_apartment(winrt::apartment_type::multi_threaded);
-
-    return StartSDK();
 }
 
-inline std::shared_ptr<init::MidiDesktopAppSdkInitializer> InitWinRTAndSDK_STA()
+inline void StartWinRTSTA()
 {
+    std::cout << "Initializing apartment (STA)" << std::endl;
     winrt::init_apartment(winrt::apartment_type::single_threaded);
-
-    return StartSDK();
 }
 
 
-inline void ShutdownSDKAndWinRT(std::shared_ptr<init::MidiDesktopAppSdkInitializer>& initializer)
+inline void ShutdownWinRT()
 {
-    std::cout << "Shutting down SDK runtime" << std::endl;
-    initializer->ShutdownSdkRuntime();
-
-    std::cout << "Resetting initializer pointer" << std::endl;
-    initializer.reset();
-
+ 
     std::cout << "Uninitializing apartment" << std::endl;
     winrt::uninit_apartment();
 }
+
+
+
+inline bool HStringsAreCaseInsensitiveEqual(const winrt::hstring& lhs, const winrt::hstring& rhs)
+{
+    return CompareStringOrdinal(lhs.c_str(), -1, rhs.c_str(), -1, TRUE) == CSTR_EQUAL;
+}
+

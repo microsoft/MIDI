@@ -25,7 +25,12 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         static midi2enum::MidiParentDeviceInformation CreateFromId(_In_ winrt::hstring const& deviceInstanceId) noexcept;
         static midi2enum::MidiParentDeviceInformation CreateFromChildEndpointDeviceInformation(_In_ midi2enum::MidiEndpointDeviceInformation const& deviceInfo) noexcept;
+        
+        static collections::IVectorView<midi2enum::MidiParentDeviceInformation> FindAllForContainer(_In_ winrt::guid const& containerId) noexcept;
+        
         static collections::IVectorView<hstring> GetAdditionalPropertiesList() noexcept;
+
+
 
         enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
@@ -46,6 +51,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         winrt::hstring Manufacturer() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Manufacturer", m_deviceInformation, L""); }
 
         winrt::hstring ToString() const noexcept;
+
+
+        //collections::IMapView<winrt::hstring, foundation::IInspectable> Properties() { return m_properties.GetView(); }
 
         void InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation)
         {

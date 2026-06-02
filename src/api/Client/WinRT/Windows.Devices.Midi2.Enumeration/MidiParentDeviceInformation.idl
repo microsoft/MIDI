@@ -21,6 +21,7 @@ namespace Windows.Devices.Midi2.Enumeration
     {
         static MidiParentDeviceInformation CreateFromId(String deviceInstanceId);
         static MidiParentDeviceInformation CreateFromChildEndpointDeviceInformation(MidiEndpointDeviceInformation deviceInfo);
+        static IVectorView<MidiParentDeviceInformation> FindAllForContainer(Guid containerId);
 
         static IVectorView<String> GetAdditionalPropertiesList();
 
