@@ -505,6 +505,45 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         return results.GetView();
     }
 
+
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceInformation::FindAllForEndpoint(
+         winrt::hstring const& endpointDeviceId) noexcept
+    {
+        // TODO
+
+        UNREFERENCED_PARAMETER(endpointDeviceId);
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceInformation::FindAllForEndpoint(
+        winrt::hstring const& endpointDeviceId,
+        midi2enum::Midi1PortFlow const& flow) noexcept
+    {
+        // TODO
+
+        UNREFERENCED_PARAMETER(endpointDeviceId);
+        UNREFERENCED_PARAMETER(flow);
+
+        return nullptr;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     _Use_decl_annotations_
     bool MidiLegacyPortDeviceInformation::InternalInitialize(enumeration::DeviceInformation const& deviceInformation) noexcept
     {

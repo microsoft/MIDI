@@ -152,7 +152,9 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
                 VERIFY_IS_NOT_NULL(parentDevice);
 
                 std::wcout << L" - Parent Device:      " << parentDevice.Name().c_str() << std::endl;
-                std::wcout << L" - Parent Container:   " << winrt::to_hstring(parentDevice.ContainerId()).c_str() << std::endl;
+                std::wcout << L" - Manufacturer:       " << parentDevice.Manufacturer().c_str() << std::endl;
+                std::wcout << L" - Model:              " << parentDevice.ModelName().c_str() << std::endl;
+                std::wcout << L" - Container:          " << winrt::to_hstring(parentDevice.ContainerId()).c_str() << std::endl;
                 std::wcout << L" - Driver Inf Path:    " << parentDevice.DriverInfPath().c_str() << std::endl;
                 std::wcout << L" - Driver Provider:    " << parentDevice.DriverProvider().c_str() << std::endl;
                 std::wcout << L" - Driver Version:     " << parentDevice.DriverVersion().c_str() << std::endl;
@@ -215,13 +217,33 @@ void MidiLegacyPortDeviceInformationTests::TestFindAll()
 
 void MidiLegacyPortDeviceInformationTests::TestFindAllInputs()
 {
+    auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll(Midi1PortFlow::MidiMessageSource);
+
+    for (const auto& port : ports)
+    {
+        VERIFY_IS_TRUE(port.PortFlow() == Midi1PortFlow::MidiMessageSource);
+    }
 }
 
 void MidiLegacyPortDeviceInformationTests::TestFindAllOutputs()
 {
+    auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll(Midi1PortFlow::MidiMessageDestination);
+
+    for (const auto& port : ports)
+    {
+        VERIFY_IS_TRUE(port.PortFlow() == Midi1PortFlow::MidiMessageDestination);
+    }
 }
 
 void MidiLegacyPortDeviceInformationTests::TestFindAllForEndpoint()
 {
+    // TODO
+    // find some endpoints
 
+
+    // find the child ports for each endpoint. 
+    // Time these calls to find the children
+
+
+    VERIFY_FAIL();
 }

@@ -24,7 +24,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         MidiParentDeviceInformation() = default;
 
         static midi2enum::MidiParentDeviceInformation CreateFromId(_In_ winrt::hstring const& deviceInstanceId) noexcept;
-        static midi2enum::MidiParentDeviceInformation CreateFromChildEndpointDeviceInformation(_In_ midi2enum::MidiEndpointDeviceInformation const& deviceInfo) noexcept;
         
         static collections::IVectorView<midi2enum::MidiParentDeviceInformation> FindAllForContainer(_In_ winrt::guid const& containerId) noexcept;
         
@@ -47,8 +46,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         winrt::hstring DriverVersion() const noexcept { return GetStringProperty(DEVPKEY_Device_DriverVersion); }
         winrt::hstring EnumeratorName() const noexcept { return GetStringProperty(DEVPKEY_Device_EnumeratorName); }
 
-        winrt::hstring ModelName() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.ModelName", m_deviceInformation, L""); }
-        winrt::hstring Manufacturer() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Manufacturer", m_deviceInformation, L""); }
+        //winrt::hstring ModelName() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.ModelName", m_deviceInformation, L""); }
+        //winrt::hstring Manufacturer() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Manufacturer", m_deviceInformation, L""); }
 
         winrt::hstring ToString() const noexcept;
 

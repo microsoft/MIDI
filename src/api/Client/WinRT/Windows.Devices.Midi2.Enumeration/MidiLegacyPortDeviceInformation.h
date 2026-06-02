@@ -37,6 +37,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForContainer(
             _In_ winrt::guid const& containerId) noexcept;
 
+        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForEndpoint(
+            _In_ winrt::hstring const& endpointDeviceId) noexcept;
+        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForEndpoint(
+            _In_ winrt::hstring const& endpointDeviceId,
+            _In_ midi2enum::Midi1PortFlow const& flow) noexcept;
+
+
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
         winrt::hstring PortDeviceId() const noexcept { return m_id; }

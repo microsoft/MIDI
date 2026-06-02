@@ -43,26 +43,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         return *parentDeviceInfo;
     }
 
-
-    _Use_decl_annotations_
-    midi2enum::MidiParentDeviceInformation MidiParentDeviceInformation::CreateFromChildEndpointDeviceInformation(
-        midi2enum::MidiEndpointDeviceInformation const& deviceInfo) noexcept
-    {
-        if (deviceInfo == nullptr)
-        {
-            return nullptr;
-        }
-
-        if (!deviceInfo.Properties().HasKey(STRING_DEVPKEY_Device_LastKnownParent))
-        {
-            return nullptr;
-        }
-
-        auto parentId = winrt::unbox_value<winrt::hstring>(deviceInfo.Properties().Lookup(STRING_DEVPKEY_Device_LastKnownParent));
-
-        return CreateFromId(parentId);
-    }
-
     _Use_decl_annotations_
     collections::IVectorView<midi2enum::MidiParentDeviceInformation> MidiParentDeviceInformation::FindAllForContainer(winrt::guid const& containerId) noexcept
     {
@@ -80,8 +60,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         props.Append(L"System.Devices.ContainerId");
         props.Append(L"System.Devices.DeviceInstanceId");
-        props.Append(L"System.Devices.Manufacturer");
-        props.Append(L"System.Devices.ModelName");
+       // props.Append(L"System.Devices.Manufacturer");
+       // props.Append(L"System.Devices.ModelName");
 
         props.Append(internal::DevPropKeyToWinRTPropertyHString(DEVPKEY_Device_DriverInfPath));
         props.Append(internal::DevPropKeyToWinRTPropertyHString(DEVPKEY_Device_Driver));
