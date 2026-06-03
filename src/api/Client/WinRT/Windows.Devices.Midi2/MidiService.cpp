@@ -10,8 +10,47 @@
 #include "MidiService.h"
 #include "MidiService.g.cpp"
 
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    MidiApiMode MidiService::GetCurrentApiMode() noexcept
+    {
+        DWORD midiMode = MIDI_USE_MIDISRV;
+
+        auto hr = wil::reg::get_value_nothrow<DWORD>(HKEY_CURRENT_USER, MIDI_DRIVERS32_REG_KEY, MIDI_USE_LEGACY_REG_KEY, &midiMode);
+
+        if (FAILED(hr))
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"HRESULT indicates failure checking reg entry. It may not exist, which is ok.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(hr), MIDI_SDK_TRACE_HRESULT_FIELD)
+            );
+
+            // If the registry value doesn't exist or can't be read, default to full, which is also what the service code does.
+            return MidiApiMode::FullWindowsMidiServicesMode;
+        }
+
+        switch (midiMode)
+        {
+        case MIDI_USE_LEGACY:
+            return MidiApiMode::LegacyMode;
+        case MIDI_USE_MIDISRV:
+            return MidiApiMode::FullWindowsMidiServicesMode;
+        case MIDI_USE_HYBRID_LEGACY:
+            return MidiApiMode::HybridLegacyMode;
+        default:
+            return MidiApiMode::FullWindowsMidiServicesMode;        // todo: need to verify the service defaults to full if bad data
+
+        }
+        
+
+    }
+
     bool MidiService::EnsureAvailable()
     {
         try

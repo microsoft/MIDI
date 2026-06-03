@@ -26,6 +26,9 @@
     <ClInclude Include="MidiService.h">
       <Filter>SDK\Init</Filter>
     </ClInclude>
+    <ClInclude Include="midi_api_mode_defs.h">
+      <Filter>SDK\Init</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
@@ -98,6 +101,9 @@
       <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiService.idl">
+      <Filter>SDK\Init</Filter>
+    </Midl>
+    <Midl Include="MidiApiModeEnum.idl">
       <Filter>SDK\Init</Filter>
     </Midl>
   </ItemGroup>

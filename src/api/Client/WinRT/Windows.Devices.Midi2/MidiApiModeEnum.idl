@@ -9,16 +9,15 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-import "MidiApiModeEnum.idl";
+#include "midi_api_mode_defs.h"
 
 namespace Windows.Devices.Midi2
 {
-    [contract(MidiCoreApiContract,1)]
-    [static_name("Windows.Devices.Midi2.IMidiServiceStatics", UUID_IMidiServiceStatics)]
-    static runtimeclass MidiService
+    [contract(MidiCoreApiContract, 1)]
+    enum MidiApiMode
     {
-        static Boolean EnsureAvailable();
-
-        static MidiApiMode GetCurrentApiMode();
-    }
+        FullWindowsMidiServicesMode = MIDI_USE_MIDISRV,
+        LegacyMode = MIDI_USE_LEGACY,
+        HybridLegacyMode = MIDI_USE_HYBRID_LEGACY,
+    };
 }

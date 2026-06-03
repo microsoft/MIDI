@@ -6,19 +6,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "..\shared\midi_sdk_idl_defs.h"
-import "MidiApiContracts.idl";
+#pragma once
 
-import "MidiApiModeEnum.idl";
+// HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32\
+// UseLegacyMidi REG_DWORD
+// we can't pull in the full MidiDefs file here because it includes a lot of 
+// MIDL-incompatible stuff. So instead re-defining these
 
-namespace Windows.Devices.Midi2
-{
-    [contract(MidiCoreApiContract,1)]
-    [static_name("Windows.Devices.Midi2.IMidiServiceStatics", UUID_IMidiServiceStatics)]
-    static runtimeclass MidiService
-    {
-        static Boolean EnsureAvailable();
+#define MIDI_USE_MIDISRV 0
+#define MIDI_USE_LEGACY 1
+#define MIDI_USE_HYBRID_LEGACY 2
 
-        static MidiApiMode GetCurrentApiMode();
-    }
-}

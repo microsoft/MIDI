@@ -16,6 +16,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiService() = default;
 
         static bool EnsureAvailable();
+
+
+        static MidiApiMode GetCurrentApiMode() noexcept;
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
