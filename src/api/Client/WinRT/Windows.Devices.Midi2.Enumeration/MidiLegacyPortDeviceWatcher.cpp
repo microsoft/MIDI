@@ -161,7 +161,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         {
             auto legacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
 
-            legacyPortDeviceInformation->InternalInitialize(args);
+            legacyPortDeviceInformation->InternalInitialize(args.Name(), args.Id(), args.Properties());
 
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(legacyPortDeviceInformation->PortDeviceId());
 

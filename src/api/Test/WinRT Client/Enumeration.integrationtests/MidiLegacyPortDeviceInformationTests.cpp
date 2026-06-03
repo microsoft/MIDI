@@ -152,8 +152,6 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
                 VERIFY_IS_NOT_NULL(parentDevice);
 
                 std::wcout << L" - Parent Device:      " << parentDevice.Name().c_str() << std::endl;
-                std::wcout << L" - Manufacturer:       " << parentDevice.Manufacturer().c_str() << std::endl;
-                std::wcout << L" - Model:              " << parentDevice.ModelName().c_str() << std::endl;
                 std::wcout << L" - Container:          " << winrt::to_hstring(parentDevice.ContainerId()).c_str() << std::endl;
                 std::wcout << L" - Driver Inf Path:    " << parentDevice.DriverInfPath().c_str() << std::endl;
                 std::wcout << L" - Driver Provider:    " << parentDevice.DriverProvider().c_str() << std::endl;
@@ -175,10 +173,51 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
 }
 
 
+void MidiLegacyPortDeviceInformationTests::TestFindAllForName()
+{
+    auto devices = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll();
+
+    for (auto const& device : devices)
+    {
+        std::wcout << L"Port: " << device.Name().c_str() << L" Id: " << device.PortDeviceId().c_str() << std::endl;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAllForName(device.Name());
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+        std::wcout << L"Found " << ports.Size() << L" legacy ports. (Time taken: " << duration << L" ms)" << std::endl;
+        VERIFY_IS_TRUE(ports.Size() > 0);
+
+        for (auto const& port: ports)
+        {
+            if (port.PortFlow() == winrt::Windows::Devices::Midi2::Enumeration::Midi1PortFlow::MidiMessageDestination)
+            {
+                std::wcout << L" -- Destination: " << port.PortDeviceId() << std::endl;
+            }
+            else
+            {
+                std::wcout << L" -- Source:      " << port.PortDeviceId() << std::endl;
+            }
+        }
+
+        std::wcout << std::endl;
+
+    }
+}
+
 
 void MidiLegacyPortDeviceInformationTests::TestFindAll()
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll();
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    std::wcout << L"Found " << ports.Size() << L" legacy ports. (Time taken: " << duration << L" ms)" << std::endl;
+
 
     uint32_t sourcePortCount{ 0 };
     uint32_t destinationPortCount{ 0 };
@@ -217,7 +256,15 @@ void MidiLegacyPortDeviceInformationTests::TestFindAll()
 
 void MidiLegacyPortDeviceInformationTests::TestFindAllInputs()
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll(Midi1PortFlow::MidiMessageSource);
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    std::wcout << L"Found " << ports.Size() << L" legacy ports. (Time taken: " << duration << L" ms)" << std::endl;
+
 
     for (const auto& port : ports)
     {
@@ -227,7 +274,15 @@ void MidiLegacyPortDeviceInformationTests::TestFindAllInputs()
 
 void MidiLegacyPortDeviceInformationTests::TestFindAllOutputs()
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll(Midi1PortFlow::MidiMessageDestination);
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    std::wcout << L"Found " << ports.Size() << L" legacy ports. (Time taken: " << duration << L" ms)" << std::endl;
+
 
     for (const auto& port : ports)
     {
@@ -237,13 +292,62 @@ void MidiLegacyPortDeviceInformationTests::TestFindAllOutputs()
 
 void MidiLegacyPortDeviceInformationTests::TestFindAllForEndpoint()
 {
-    // TODO
     // find some endpoints
 
+    auto eps = winrt::Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceInformation::FindAll();
 
-    // find the child ports for each endpoint. 
-    // Time these calls to find the children
+    for (auto const& ep: eps)
+    {
+        // find the child ports for each endpoint. 
 
+        auto start = std::chrono::high_resolution_clock::now();
 
-    VERIFY_FAIL();
+        auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAllForEndpoint(ep.EndpointDeviceId());
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+        std::wcout << L"Endpoint: " << ep.Name().c_str() << L" has " << ports.Size() << L" legacy ports. (Time taken: " << duration << L" ms)" << std::endl;
+
+        for (auto const& port : ports)
+        {
+            std::wcout << L" - Port: " << port.Name().c_str() << L" Flow: " << (uint32_t)port.PortFlow() << std::endl;
+        }
+    }
+
 }
+
+
+//void MidiLegacyPortDeviceInformationTests::TestFindAllForParentId()
+//{
+//    // build up a list of parent ids
+//    std::set<std::wstring> parentIds;
+//    auto devices = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll();
+//
+//    for (auto const& device: devices)
+//    {
+//        parentIds.insert(std::wstring{ device.ParentDeviceInstanceId().c_str() });
+//    }
+//
+//
+//    for (auto const& parentId : parentIds)
+//    {
+//        // find the child ports for each parent ID. 
+//
+//        auto start = std::chrono::high_resolution_clock::now();
+//        auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAllForParentDevice(parentId);
+//        auto end = std::chrono::high_resolution_clock::now();
+//        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+//
+//        std::wcout << L"Parent ID: " << parentId.c_str() << L" has " << ports.Size() << L" legacy ports. (Time taken: " << duration << L" ms)" << std::endl;
+//
+//        // we already know there are ports for this parent, so it needs to return more than 0
+//        VERIFY_IS_TRUE(ports.Size() > 0);
+//
+//        for (auto const& port : ports)
+//        {
+//            std::wcout << L" - Port: " << port.Name().c_str() << L" Flow: " << (uint32_t)port.PortFlow() << std::endl;
+//        }
+//    }
+//
+//}

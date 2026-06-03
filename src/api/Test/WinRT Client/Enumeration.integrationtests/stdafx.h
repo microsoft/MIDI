@@ -29,6 +29,7 @@ using namespace winrt::Windows::Devices::Midi2::Enumeration;
 using namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 
 #include <iostream>
+#include <set>
 
 #include <avrt.h>
 #include <wil\winrt.h>

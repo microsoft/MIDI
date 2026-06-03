@@ -10,9 +10,11 @@
 
 namespace WindowsMidiServicesInternal
 {
+#pragma warning(push)
+#pragma warning(disable: 26816, justification: "stack-allocated return value is fine for inline function like this.")
     // IMap version
     template<typename T>
-    inline T GetDeviceInfoProperty(
+    __forceinline T GetDeviceInfoProperty(
         winrt::Windows::Foundation::Collections::IMapView<winrt::hstring, winrt::Windows::Foundation::IInspectable> const& properties,
         winrt::hstring const& key,
         T defaultValue
@@ -33,11 +35,9 @@ namespace WindowsMidiServicesInternal
         }
     }
 
-#pragma warning(push)
-#pragma warning(suppress: 26816)    // stack-allocated return value is fine for inline function like this.
     // IMapView version
     template<typename T>
-    inline T GetDeviceInfoProperty(
+    __forceinline T GetDeviceInfoProperty(
         winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable> const& properties,
         winrt::hstring const& key,
         T defaultValue

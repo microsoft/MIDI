@@ -33,6 +33,8 @@ public:
         TEST_METHOD(TestFindAllOutputs);
         TEST_METHOD(TestFindAllForEndpoint);
         TEST_METHOD(TestWalkUpToParent);
+        TEST_METHOD(TestFindAllForName);
+        //TEST_METHOD(TestFindAllForParentId);
 
 private:
 

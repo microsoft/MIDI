@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "Midi1PortFlowEnum.idl";
 import "MidiEndpointNativeDataFormatEnum.idl";
+import "MidiParentDeviceInformation.idl";
 
 
 namespace Windows.Devices.Midi2.Enumeration.Legacy
@@ -23,8 +24,8 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
 
         static IVectorView<MidiLegacyPortDeviceInformation> FindAll();
         static IVectorView<MidiLegacyPortDeviceInformation> FindAll(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
-        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForParentDevice(String parentDeviceInstanceId);
-        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForParentDevice(String parentDeviceInstanceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+        //static IVectorView<MidiLegacyPortDeviceInformation> FindAllForParentDevice(String parentDeviceInstanceId);
+        //static IVectorView<MidiLegacyPortDeviceInformation> FindAllForParentDevice(String parentDeviceInstanceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
         static IVectorView<MidiLegacyPortDeviceInformation> FindAllForEndpoint(String endpointDeviceId);
         static IVectorView<MidiLegacyPortDeviceInformation> FindAllForEndpoint(String endpointDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
         static IVectorView<MidiLegacyPortDeviceInformation> FindAllForName(String portName);

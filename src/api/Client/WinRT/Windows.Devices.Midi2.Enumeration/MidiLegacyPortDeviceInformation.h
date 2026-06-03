@@ -26,11 +26,11 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAll() noexcept;
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAll(
             _In_ midi2enum::Midi1PortFlow const& flow) noexcept;
-        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForParentDevice(
-            _In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
-        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForParentDevice(
-            _In_ winrt::hstring const& parentDeviceInstanceId,
-            _In_ midi2enum::Midi1PortFlow const& flow) noexcept;
+        //static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForParentDevice(
+        //    _In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
+        //static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForParentDevice(
+        //    _In_ winrt::hstring const& parentDeviceInstanceId,
+        //    _In_ midi2enum::Midi1PortFlow const& flow) noexcept;
 
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForName(
             _In_ winrt::hstring const& portName) noexcept;
@@ -52,6 +52,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         winrt::guid ContainerId() const noexcept { return internal::GetDeviceInfoProperty<winrt::guid>(m_properties, L"System.Devices.ContainerId", winrt::guid()); }
         winrt::hstring EndpointDeviceId()  const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_AssociatedUMP, L"")); }
         winrt::hstring ParentDeviceInstanceId() const noexcept { return m_parentDeviceInstanceId; }
+        midi2enum::MidiParentDeviceInformation GetParentDeviceInformation() const noexcept;
         winrt::hstring DriverDeviceInterfaceId() const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverDeviceInterface, L"")); }
         midi2enum::Midi1PortFlow PortFlow() const noexcept { return m_portFlow; }
         uint32_t WinMMPortNumber() const noexcept { return m_portNumber; }
@@ -78,15 +79,24 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         collections::IMapView<winrt::hstring, foundation::IInspectable> Properties() { return m_properties.GetView(); }
 
 
-        bool InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation) noexcept;
+        //bool InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation) noexcept;
+
+        bool InternalInitialize(
+            winrt::hstring name,
+            winrt::hstring id,
+            collections::IMapView<winrt::hstring, IInspectable> const& properties) noexcept;
+
+
         bool InternalUpdateFromDeviceInformationUpdate(_In_ enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept;
 
         static winrt::hstring InternalGetSelectorForSourceAndDestinationPorts() noexcept;
-        static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
+        //static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
         static winrt::hstring InternalGetSelectorForSourcePortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
         static winrt::hstring InternalGetSelectorForDestinationPortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
-        static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForContainer(_In_ winrt::guid const& containerId) noexcept;
 
+        //static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForContainer(_In_ winrt::guid const& containerId) noexcept;
+        static winrt::hstring InternalGetSelectorForSourcePortsForContainer(_In_ winrt::guid const& containerId) noexcept;
+        static winrt::hstring InternalGetSelectorForDestinationPortsForContainer(_In_ winrt::guid const& containerId) noexcept;
 
     private:
         winrt::hstring m_parentDeviceInstanceId{};
