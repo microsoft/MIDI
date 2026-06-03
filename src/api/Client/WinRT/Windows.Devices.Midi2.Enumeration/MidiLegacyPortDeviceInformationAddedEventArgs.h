@@ -15,16 +15,16 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         MidiLegacyPortDeviceInformationAddedEventArgs() = default;
 
-        legacy::MidiLegacyPortDeviceInformation AddedDevice() const noexcept { return m_addedDevice; }
+        legacy::MidiLegacyPortDeviceInformation AddedDevice() const noexcept { return m_device; }
 
 
         void InternalInitialize(_In_ legacy::MidiLegacyPortDeviceInformation const& addedDevice) noexcept
         {
-            m_addedDevice = addedDevice;
+            m_device = addedDevice;
         }
 
     private:
-        legacy::MidiLegacyPortDeviceInformation m_addedDevice{ nullptr };
+        legacy::MidiLegacyPortDeviceInformation m_device{ nullptr };
 
     };
 }

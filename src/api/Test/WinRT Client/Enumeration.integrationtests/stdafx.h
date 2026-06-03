@@ -46,6 +46,7 @@ using namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 #include "MidiEndpointDeviceWatcherTests.h"
 #include "MidiEndpointIdHelperTests.h"
 #include "MidiLegacyPortDeviceInformationTests.h"
+#include "MidiLegacyPortDeviceWatcherTests.h"
 
 #ifndef LOG_OUTPUT
 #define LOG_OUTPUT(fmt, ...)  WEX::Logging::Log::Comment(WEX::Common::String().Format(fmt, __VA_ARGS__))

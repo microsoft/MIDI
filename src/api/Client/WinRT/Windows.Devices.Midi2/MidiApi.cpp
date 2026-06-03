@@ -7,13 +7,13 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiService.h"
-#include "MidiService.g.cpp"
+#include "MidiApi.h"
+#include "MidiApi.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    MidiApiMode MidiService::GetCurrentApiMode() noexcept
+    MidiApiMode MidiApi::GetCurrentApiMode() noexcept
     {
         DWORD midiMode = MIDI_USE_MIDISRV;
 
@@ -39,10 +39,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
         case MIDI_USE_LEGACY:
             return MidiApiMode::LegacyMode;
+
         case MIDI_USE_MIDISRV:
             return MidiApiMode::FullWindowsMidiServicesMode;
+
         case MIDI_USE_HYBRID_LEGACY:
             return MidiApiMode::HybridLegacyMode;
+
         default:
             return MidiApiMode::FullWindowsMidiServicesMode;        // todo: need to verify the service defaults to full if bad data
 
@@ -51,10 +54,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
-    bool MidiService::EnsureAvailable()
+    bool MidiApi::EnsureServiceAvailable() noexcept
     {
+        // short-circuit if we're on legacy mode
+        if (GetCurrentApiMode() == MidiApiMode::LegacyMode)
+        {
+            return false;
+        }
+
         try
         {
+            // if this fails, then the MIDI API is not available.
             auto serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
 
             if (!serviceTransport)
@@ -81,7 +91,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return false;
             }
 
-            // this is what actually checks to see if we can talk to the service.
+            // this is what actually checks to see if we can talk to the service. It will trigger start the service when called
             return sessionTracker->VerifyConnectivity();
         }
         catch (winrt::hresult_error const& ex)

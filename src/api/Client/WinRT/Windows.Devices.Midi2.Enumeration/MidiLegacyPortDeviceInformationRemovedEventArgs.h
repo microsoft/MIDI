@@ -15,18 +15,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         MidiLegacyPortDeviceInformationRemovedEventArgs() = default;
 
-        winrt::hstring PortDeviceId() const noexcept { return m_portDeviceId; }
-        enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
+        legacy::MidiLegacyPortDeviceInformation RemovedDevice() const noexcept { return m_device; }
 
-        void InternalInitialize(_In_ enumeration::DeviceInformationUpdate const& device, _In_ winrt::hstring const& portDeviceId) noexcept
+        void InternalInitialize(_In_ legacy::MidiLegacyPortDeviceInformation const& device) noexcept
         {
-            m_deviceInformationUpdate = device;
-            m_portDeviceId = portDeviceId;
+            m_device = device;
         }
 
     private:
-        winrt::hstring m_portDeviceId{ };
-        enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
+        legacy::MidiLegacyPortDeviceInformation m_device{ nullptr };
 
     };
 }

@@ -325,7 +325,7 @@
     <ClInclude Include="MidiMessage96.h">
       <DependentUpon>MidiMessage96.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiService.h" />
+    <ClInclude Include="MidiApi.h" />
     <ClInclude Include="MidiUniversalSystemExclusiveChannel.h">
       <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
     </ClInclude>
@@ -378,7 +378,7 @@
     <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiService.cpp" />
+    <ClCompile Include="MidiApi.cpp" />
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClCompile>
@@ -422,7 +422,7 @@
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
-    <Midl Include="MidiService.idl" />
+    <Midl Include="MidiApi.idl" />
     <Midl Include="MidiApiModeEnum.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />

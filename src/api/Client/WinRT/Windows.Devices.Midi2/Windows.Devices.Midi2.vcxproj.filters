@@ -12,7 +12,7 @@
       <Filter>SDK\Session</Filter>
     </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
-    <ClCompile Include="MidiService.cpp">
+    <ClCompile Include="MidiApi.cpp">
       <Filter>SDK\Init</Filter>
     </ClCompile>
   </ItemGroup>
@@ -23,7 +23,7 @@
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
-    <ClInclude Include="MidiService.h">
+    <ClInclude Include="MidiApi.h">
       <Filter>SDK\Init</Filter>
     </ClInclude>
     <ClInclude Include="midi_api_mode_defs.h">
@@ -100,7 +100,7 @@
     <Midl Include="MidiPacketTypeEnum.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
-    <Midl Include="MidiService.idl">
+    <Midl Include="MidiApi.idl">
       <Filter>SDK\Init</Filter>
     </Midl>
     <Midl Include="MidiApiModeEnum.idl">

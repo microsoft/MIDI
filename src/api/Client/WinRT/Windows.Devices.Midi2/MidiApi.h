@@ -6,19 +6,24 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "..\shared\midi_sdk_idl_defs.h"
-import "MidiApiContracts.idl";
+#pragma once
+#include "MidiApi.g.h"
 
-import "MidiApiModeEnum.idl";
-
-namespace Windows.Devices.Midi2
+namespace winrt::Windows::Devices::Midi2::implementation
 {
-    [contract(MidiCoreApiContract,1)]
-    [static_name("Windows.Devices.Midi2.IMidiServiceStatics", UUID_IMidiServiceStatics)]
-    static runtimeclass MidiService
+    struct MidiApi
     {
-        static Boolean EnsureAvailable();
+        MidiApi() = default;
 
-        static MidiApiMode GetCurrentApiMode();
-    }
+        static bool EnsureServiceAvailable() noexcept;
+
+
+        static MidiApiMode GetCurrentApiMode() noexcept;
+    };
+}
+namespace winrt::Windows::Devices::Midi2::factory_implementation
+{
+    struct MidiApi : MidiApiT<MidiApi, implementation::MidiApi, winrt::static_lifetime>
+    {
+    };
 }

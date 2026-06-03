@@ -89,12 +89,12 @@ void MidiLegacyPortDeviceInformationTests::TestCreateFromId()
             std::wcout << L"Name:        " << portInfo.Name().c_str() << std::endl;
             std::wcout << L"Id:          " << portInfo.PortDeviceId().c_str() << std::endl;
             std::wcout << L"Instance Id: " << portInfo.PortDeviceInstanceId().c_str() << std::endl;
-            std::wcout << L"WinMM Port:  " << portInfo.WinMMPortNumber() << std::endl;
+            std::wcout << L"WinMM Port:  " << portInfo.Number() << std::endl;
             std::wcout << L"Parent:      " << portInfo.ParentDeviceInstanceId().c_str() << std::endl;
             std::wcout << L"Assoc Ep:    " << portInfo.EndpointDeviceId().c_str() << std::endl;
             std::wcout << L"Group:       " << portInfo.Group().ToString().c_str() << std::endl;
             std::wcout << L"DevDrivIfId: " << portInfo.DriverDeviceInterfaceId().c_str() << std::endl;
-            std::wcout << L"Flow:        " << (uint32_t)portInfo.PortFlow() << std::endl;
+            std::wcout << L"Flow:        " << (uint32_t)portInfo.Flow() << std::endl;
             std::wcout << L"Container:   " << winrt::to_hstring(portInfo.ContainerId()).c_str() << std::endl;
 
             //for (auto const& [key, value] : portInfo.Properties())
@@ -128,7 +128,7 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
 
             std::wcout << L"Name:        " << portInfo.Name().c_str() << std::endl;
             std::wcout << L"Id:          " << portInfo.PortDeviceId().c_str() << std::endl;
-            std::wcout << L"Flow:        " << (uint32_t)portInfo.PortFlow() << std::endl;
+            std::wcout << L"Flow:        " << (uint32_t)portInfo.Flow() << std::endl;
             std::wcout << L"Parent:      " << portInfo.ParentDeviceInstanceId().c_str() << std::endl;
 
             // gs synth has empty endpoint device id, as do any .drv-based ports
@@ -191,7 +191,7 @@ void MidiLegacyPortDeviceInformationTests::TestFindAllForName()
 
         for (auto const& port: ports)
         {
-            if (port.PortFlow() == winrt::Windows::Devices::Midi2::Enumeration::Midi1PortFlow::MidiMessageDestination)
+            if (port.Flow() == winrt::Windows::Devices::Midi2::Enumeration::Midi1PortFlow::MidiMessageDestination)
             {
                 std::wcout << L" -- Destination: " << port.PortDeviceId() << std::endl;
             }
@@ -224,12 +224,12 @@ void MidiLegacyPortDeviceInformationTests::TestFindAll()
 
     for (const auto& port : ports)
     {
-        if (port.PortFlow() == Midi1PortFlow::MidiMessageSource)
+        if (port.Flow() == Midi1PortFlow::MidiMessageSource)
         {
             std::wcout << L"Found Source: " << port.Name().c_str() << std::endl;
             sourcePortCount++;
         }
-        else if (port.PortFlow() == Midi1PortFlow::MidiMessageDestination)
+        else if (port.Flow() == Midi1PortFlow::MidiMessageDestination)
         {
             std::wcout << L"Found Destination: " << port.Name().c_str() << std::endl;
             destinationPortCount++;
@@ -268,7 +268,7 @@ void MidiLegacyPortDeviceInformationTests::TestFindAllInputs()
 
     for (const auto& port : ports)
     {
-        VERIFY_IS_TRUE(port.PortFlow() == Midi1PortFlow::MidiMessageSource);
+        VERIFY_IS_TRUE(port.Flow() == Midi1PortFlow::MidiMessageSource);
     }
 }
 
@@ -286,7 +286,7 @@ void MidiLegacyPortDeviceInformationTests::TestFindAllOutputs()
 
     for (const auto& port : ports)
     {
-        VERIFY_IS_TRUE(port.PortFlow() == Midi1PortFlow::MidiMessageDestination);
+        VERIFY_IS_TRUE(port.Flow() == Midi1PortFlow::MidiMessageDestination);
     }
 }
 
@@ -311,7 +311,7 @@ void MidiLegacyPortDeviceInformationTests::TestFindAllForEndpoint()
 
         for (auto const& port : ports)
         {
-            std::wcout << L" - Port: " << port.Name().c_str() << L" Flow: " << (uint32_t)port.PortFlow() << std::endl;
+            std::wcout << L" - Port: " << port.Name().c_str() << L" Flow: " << (uint32_t)port.Flow() << std::endl;
         }
     }
 

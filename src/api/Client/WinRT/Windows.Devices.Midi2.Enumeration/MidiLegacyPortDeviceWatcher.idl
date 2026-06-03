@@ -26,8 +26,7 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
     runtimeclass MidiLegacyPortDeviceWatcher
     {
         static MidiLegacyPortDeviceWatcher Create();
-        static MidiLegacyPortDeviceWatcher Create(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
-        static MidiLegacyPortDeviceWatcher CreateForEndpoint(String endpointDeviceId);
+        static MidiLegacyPortDeviceWatcher CreateForFlow(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
 
         void Start();
         void Stop();
@@ -42,5 +41,26 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
 
         event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, IInspectable> EnumerationCompleted;
         event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, IInspectable> Stopped;
+
+        // these all operate on the collection of enumerated ports and are a snapshot in time
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForFlow(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        MidiLegacyPortDeviceInformation GetEnumeratedPortForNumber(UInt32 portNumber, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(String parentDeviceInstanceId);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(String parentDeviceInstanceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForEndpoint(String endpointDeviceId);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForEndpoint(String endpointDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(String portName);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(String portName, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForDriverDeviceInterfaceId(String driverDeviceInterfaceId);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForDriverDeviceInterfaceId(String driverDeviceInterfaceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        UInt32 CountSourcePorts {get;};
+        UInt32 CountDestinationPorts {get;};
+
     }
 }

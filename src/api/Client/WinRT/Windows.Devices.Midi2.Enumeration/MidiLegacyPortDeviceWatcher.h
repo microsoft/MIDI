@@ -17,8 +17,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         ~MidiLegacyPortDeviceWatcher();
 
         static legacy::MidiLegacyPortDeviceWatcher Create() noexcept;
-        static legacy::MidiLegacyPortDeviceWatcher Create(_In_ midi2enum::Midi1PortFlow const& flow) noexcept;
-        static legacy::MidiLegacyPortDeviceWatcher CreateForEndpoint(_In_ hstring const& endpointDeviceId) noexcept;
+        static legacy::MidiLegacyPortDeviceWatcher CreateForFlow(_In_ midi2enum::Midi1PortFlow const& flow) noexcept;
 
         void Start() noexcept;
         void Stop() noexcept;
@@ -46,9 +45,32 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
 
+        legacy::MidiLegacyPortDeviceInformation GetEnumeratedPortForNumber(_In_ uint32_t const portNumber, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;
+
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForFlow(_In_ midi2enum::Midi1PortFlow const flow) const noexcept;
+
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(_In_ winrt::hstring const& parentDeviceInstanceId) const noexcept;
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(_In_ winrt::hstring const& parentDeviceInstanceId, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;
+
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForEndpoint(_In_ winrt::hstring const& endpointDeviceId) const noexcept;
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForEndpoint(_In_ winrt::hstring const& endpointDeviceId, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;
+
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(_In_ winrt::hstring const& portName) const noexcept;
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(_In_ winrt::hstring const& portName, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;
+
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForDriverDeviceInterfaceId(_In_ winrt::hstring const& driverDeviceInterfaceId) const noexcept;
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForDriverDeviceInterfaceId(_In_ winrt::hstring const& driverDeviceInterfaceId, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;
+
+
+        uint32_t CountSourcePorts() const noexcept { return m_countSourcePorts; }
+        uint32_t CountDestinationPorts() const noexcept { return m_countDestinationPorts; }
+
         void InternalInitialize(_In_ enumeration::DeviceWatcher const& baseWatcher) noexcept;
 
     private:
+        uint32_t m_countSourcePorts{ 0 };
+        uint32_t m_countDestinationPorts{ 0 };
+
 
         // internal event handlers for the base device watcher we wrap
         void OnDeviceAdded(

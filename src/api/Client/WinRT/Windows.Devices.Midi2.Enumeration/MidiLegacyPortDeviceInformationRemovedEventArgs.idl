@@ -17,8 +17,8 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
     [interface_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceInformationRemovedEventArgs", UUID_IMidiLegacyPortDeviceInformationRemovedEventArgs)]
     runtimeclass MidiLegacyPortDeviceInformationRemovedEventArgs
     {
-        String PortDeviceId { get; };
+        MidiLegacyPortDeviceInformation RemovedDevice{ get; };
 
-        Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
+        //Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
     }
 }

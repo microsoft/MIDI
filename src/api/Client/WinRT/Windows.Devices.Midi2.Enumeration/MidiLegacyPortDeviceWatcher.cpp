@@ -18,11 +18,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         try
         {
             auto watcher = winrt::make_self<MidiLegacyPortDeviceWatcher>();
+            if (watcher == nullptr) return nullptr;
 
             auto baseWatcher = enumeration::DeviceInformation::CreateWatcher(
                 MidiLegacyPortDeviceInformation::InternalGetSelectorForSourceAndDestinationPorts(),
                 MidiLegacyPortDeviceInformation::GetAdditionalPropertiesList(),
                 enumeration::DeviceInformationKind::DeviceInterface);
+
+            if (baseWatcher == nullptr) return nullptr;
 
             watcher->InternalInitialize(baseWatcher);
 
@@ -63,7 +66,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     }
 
     _Use_decl_annotations_
-    legacy::MidiLegacyPortDeviceWatcher MidiLegacyPortDeviceWatcher::Create(midi2enum::Midi1PortFlow const& flow) noexcept
+    legacy::MidiLegacyPortDeviceWatcher MidiLegacyPortDeviceWatcher::CreateForFlow(midi2enum::Midi1PortFlow const& flow) noexcept
     {
         try
         {
@@ -125,30 +128,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
     }
 
-    _Use_decl_annotations_
-    legacy::MidiLegacyPortDeviceWatcher MidiLegacyPortDeviceWatcher::CreateForEndpoint(winrt::hstring const& endpointDeviceId) noexcept
-    {
-        // TODO
-
-        //auto sourceClass = internal::GuidToString(DEVINTERFACE_MIDI_INPUT);
-        //auto destinationClass = internal::GuidToString(DEVINTERFACE_MIDI_OUTPUT);
-
-        //// we only want MIDI 1 ports which have the specified endpoing as the parent device
-        //winrt::hstring selector = L"System.Devices.InterfaceClassGuid:=\"" + deviceClass + L"\" AND " +
-        //    L"System.Devices.Parent:=\"" + endpointDeviceId + L"\" AND " +
-        //    L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
-
-
-
-
-
-
-        UNREFERENCED_PARAMETER(endpointDeviceId);
-
-        return nullptr;
-    }
-
-
 
     _Use_decl_annotations_
     void MidiLegacyPortDeviceWatcher::OnDeviceAdded(
@@ -169,11 +148,21 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             {
                 m_enumeratedPorts.Insert(mapKey, *legacyPortDeviceInformation);
 
+                auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationAddedEventArgs>();
+                newArgs->InternalInitialize(*legacyPortDeviceInformation);
+
+                if (newArgs->AddedDevice().Flow() == Midi1PortFlow::MidiMessageSource)
+                {
+                    m_countSourcePorts++;
+                }
+                else
+                {
+                    m_countDestinationPorts++;
+                }
+
+                // raise the event
                 if (m_deviceAddedEvent)
                 {
-                    auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationAddedEventArgs>();
-                    newArgs->InternalInitialize(*legacyPortDeviceInformation);
-
                     m_deviceAddedEvent(*this, *newArgs);
                 }
             }
@@ -280,8 +269,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
                     }
 
                     newArgs->InternalInitialize(
-                        args.Id(),
-                        args,
+                        *port,
                         updatedName,
                         updatedPortNumber
                     );
@@ -331,18 +319,46 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
-            auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationRemovedEventArgs>();
-
-            newArgs->InternalInitialize(args, args.Id());
-
             if (m_enumeratedPorts.HasKey(mapKey))
             {
-                m_enumeratedPorts.Remove(mapKey);
+                auto port = m_enumeratedPorts.Lookup(mapKey);
 
-                if (m_deviceRemovedEvent)
+                if (port != nullptr)
                 {
-                    m_deviceRemovedEvent(*this, *newArgs);
+                    if (port.Flow() == Midi1PortFlow::MidiMessageSource)
+                    {
+                        m_countSourcePorts++;
+                    }
+                    else
+                    {
+                        m_countDestinationPorts++;
+                    }
+
+                    m_enumeratedPorts.Remove(mapKey);
+
+                    // raise the event
+                    if (m_deviceRemovedEvent)
+                    {
+                        auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationRemovedEventArgs>();
+                        newArgs->InternalInitialize(port);
+
+                        m_deviceRemovedEvent(*this, *newArgs);
+                    }
                 }
+            }
+            else
+            {
+                LOG_IF_FAILED(E_NOTFOUND);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Unexpected. Port removed event, but port was not in map", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(mapKey.c_str(), "port id")
+                );
             }
         }
         catch (...)
@@ -566,6 +582,200 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             );
         }
     }
+
+
+    _Use_decl_annotations_
+    legacy::MidiLegacyPortDeviceInformation MidiLegacyPortDeviceWatcher::GetEnumeratedPortForNumber(
+        uint32_t const portNumber, 
+        midi2enum::Midi1PortFlow const flow) const noexcept
+    {
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.Flow() == flow && port.Number() == portNumber)
+            {
+                return port;
+            }
+        }
+
+        return nullptr;
+    }
+
+    
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForFlow(
+        midi2enum::Midi1PortFlow const flow) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.Flow() == flow)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+
+
+
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForParent(
+        winrt::hstring const& parentDeviceInstanceId) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(parentDeviceInstanceId);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForParent(
+        winrt::hstring const& parentDeviceInstanceId, 
+        midi2enum::Midi1PortFlow const flow) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(parentDeviceInstanceId);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.Flow() == flow && port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForEndpoint(
+        winrt::hstring const& endpointDeviceId) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.EndpointDeviceId() == cleanEndpointDeviceId)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+    
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForEndpoint(
+        winrt::hstring const& endpointDeviceId, 
+        midi2enum::Midi1PortFlow const flow) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.Flow() == flow && port.EndpointDeviceId() == cleanEndpointDeviceId)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+    
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForName(
+        winrt::hstring const& portName) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanPortName = internal::ToLowerTrimmedHStringCopy(portName);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+    
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForName(
+        winrt::hstring const& portName, 
+        midi2enum::Midi1PortFlow const flow) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanPortName = internal::ToLowerTrimmedHStringCopy(portName);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.Flow() == flow && internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+    
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForDriverDeviceInterfaceId(
+        winrt::hstring const& driverDeviceInterfaceId) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanDriverDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdHStringCopy(driverDeviceInterfaceId);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+    
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForDriverDeviceInterfaceId(
+        winrt::hstring const& driverDeviceInterfaceId, 
+        midi2enum::Midi1PortFlow const flow) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanDriverDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdHStringCopy(driverDeviceInterfaceId);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.Flow() == flow && port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+
 
 
 }

@@ -14,7 +14,7 @@
 // ============================================================================
 // Windows.Devices.Midi2
 
-#define UUID_IMidiServiceStatics                                    8087b303-0519-31d1-c0de-ee0000001111
+#define UUID_IMidiApiStatics                                        8087b303-0519-31d1-c0de-ee0000001111
 
 #define UUID_IMidiChannel									        8087b303-0519-31d1-c0de-dd0000005000
 #define UUID_IMidiChannelStatics							        8087b303-0519-31d1-c0de-ee0000005000

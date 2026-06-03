@@ -50,9 +50,9 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         String DriverDeviceInterfaceId{ get; };         // the device interface id that the WinMM API exposes via DRV_QUERYDEVICEINTERFACE
         Windows.Devices.Midi2.MidiGroup Group{ get; };  // the single group this MIDI 1.0 port is associated with
 
-        Windows.Devices.Midi2.Enumeration.Midi1PortFlow PortFlow{ get; };                 // source (midi input) or destination (midi output)
+        Windows.Devices.Midi2.Enumeration.Midi1PortFlow Flow{ get; };                 // source (midi input) or destination (midi output)
 
-        UInt32 WinMMPortNumber{ get; };                 // current winmm port number (0..n). This can change if devices are added/removed.
+        UInt32 Number{ get; };                          // current winmm port number (0..n). This can change if devices are added/removed.
 
         Windows.Devices.Midi2.Enumeration.MidiEndpointNativeDataFormat NativeDataFormat{ get; };   // the native data format of the port, which is needed to know in order to use the port with WinMM APIs. This is the same as the parent endpoint's native data format. Here for convenience.
 

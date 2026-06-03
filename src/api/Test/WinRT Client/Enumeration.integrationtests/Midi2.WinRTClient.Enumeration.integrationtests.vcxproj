@@ -152,11 +152,13 @@
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp" />
     <ClCompile Include="MidiEndpointIdHelperTests.cpp" />
     <ClCompile Include="MidiLegacyPortDeviceInformationTests.cpp" />
+    <ClCompile Include="MidiLegacyPortDeviceWatcherTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h" />
     <ClInclude Include="MidiEndpointIdHelperTests.h" />
     <ClInclude Include="MidiLegacyPortDeviceInformationTests.h" />
+    <ClInclude Include="MidiLegacyPortDeviceWatcherTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

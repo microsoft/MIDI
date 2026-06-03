@@ -54,8 +54,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         winrt::hstring ParentDeviceInstanceId() const noexcept { return m_parentDeviceInstanceId; }
         midi2enum::MidiParentDeviceInformation GetParentDeviceInformation() const noexcept;
         winrt::hstring DriverDeviceInterfaceId() const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverDeviceInterface, L"")); }
-        midi2enum::Midi1PortFlow PortFlow() const noexcept { return m_portFlow; }
-        uint32_t WinMMPortNumber() const noexcept { return m_portNumber; }
+        midi2enum::Midi1PortFlow Flow() const noexcept { return m_portFlow; }
+        uint32_t Number() const noexcept { return m_portNumber; }
 
         midi2::MidiGroup Group() const noexcept { return MidiGroup(internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_PortAssignedGroupIndex, 0)); }
 
@@ -82,9 +82,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         //bool InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation) noexcept;
 
         bool InternalInitialize(
-            winrt::hstring name,
-            winrt::hstring id,
-            collections::IMapView<winrt::hstring, IInspectable> const& properties) noexcept;
+            _In_ winrt::hstring name,
+            _In_ winrt::hstring id,
+            _In_ collections::IMapView<winrt::hstring, IInspectable> const& properties) noexcept;
 
 
         bool InternalUpdateFromDeviceInformationUpdate(_In_ enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept;
