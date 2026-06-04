@@ -43,15 +43,11 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerateForAllFlows()
         wil::unique_event_nothrow allEnumerationCompleted;
         allEnumerationCompleted.create();
 
-        std::cout << "Creating watcher: " << flowName << std::endl;
-
         auto watcher = MidiLegacyPortDeviceWatcher::CreateForFlow(flow);
         VERIFY_IS_NOT_NULL(watcher);
 
         uint32_t countAdded{ 0 };
         uint32_t countRemoved{ 0 };
-
-        std::cout << "Adding event handlers" << std::endl;
 
         auto addedToken = watcher.Added([&](auto const& source, MidiLegacyPortDeviceInformationAddedEventArgs const& args)
             {
@@ -60,9 +56,9 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerateForAllFlows()
                 VERIFY_IS_NOT_NULL(source);
                 VERIFY_IS_NOT_NULL(args);
 
-                std::cout << "Watcher Added event. Flow: " << flowName << ", Port ID: " << winrt::to_string(args.AddedDevice().PortDeviceId()) << std::endl;
-                std::cout << " -- Name:" << winrt::to_string(args.AddedDevice().Name()) << std::endl;
-                std::cout << std::endl;
+                //std::cout << "Watcher Added event. Flow: " << flowName << ", Port ID: " << winrt::to_string(args.AddedDevice().PortDeviceId()) << std::endl;
+                //std::cout << " -- Name:" << winrt::to_string(args.AddedDevice().Name()) << std::endl;
+                //std::cout << std::endl;
             });
 
         auto removedToken = watcher.Removed([&](auto const& source, MidiLegacyPortDeviceInformationRemovedEventArgs  const& args)
@@ -72,8 +68,8 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerateForAllFlows()
                 VERIFY_IS_NOT_NULL(source);
                 VERIFY_IS_NOT_NULL(args);
 
-                std::cout << "Watcher Removed event. Flow: " << flowName << ", Port ID: " << winrt::to_string(args.RemovedDevice().PortDeviceId()) << std::endl;
-                std::cout << std::endl;
+                //std::cout << "Watcher Removed event. Flow: " << flowName << ", Port ID: " << winrt::to_string(args.RemovedDevice().PortDeviceId()) << std::endl;
+                //std::cout << std::endl;
             });
 
         auto updatedToken = watcher.Updated([&](auto const& source, MidiLegacyPortDeviceInformationUpdatedEventArgs const& args)
@@ -81,17 +77,16 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerateForAllFlows()
                 VERIFY_IS_NOT_NULL(source);
                 VERIFY_IS_NOT_NULL(args);
 
-                std::cout << "Watcher Updated event. Flow: " << flowName << ", Port ID: " << winrt::to_string(args.UpdatedDevice().PortDeviceId()) << std::endl;
-                std::cout << " -- Name Updated:   " << args.IsNameUpdated() << std::endl;
-                std::cout << " -- Number Updated: " << args.IsNumberUpdated() << std::endl;
-                std::cout << std::endl;
+                //std::cout << "Watcher Updated event. Flow: " << flowName << ", Port ID: " << winrt::to_string(args.UpdatedDevice().PortDeviceId()) << std::endl;
+                //std::cout << " -- Name Updated:   " << args.IsNameUpdated() << std::endl;
+                //std::cout << " -- Number Updated: " << args.IsNumberUpdated() << std::endl;
+                //std::cout << std::endl;
             });
 
         auto enumerationCompletedToken = watcher.EnumerationCompleted([&](auto const& source, auto const& args)
             {
                 // args are null as is typical for a watcher Enumeration Completed, Started, or Stopped event.
                 UNREFERENCED_PARAMETER(args);
-
                 VERIFY_IS_NOT_NULL(source);
 
                 std::cout << "Enumeration Completed Flow: " << flowName << std::endl;
@@ -117,8 +112,6 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerateForAllFlows()
         std::cout << "Starting watcher" << std::endl;
 
         watcher.Start();
-
-        std::cout << "Waiting..." << std::endl;
 
         // Wait for incoming message
         if (!allEnumerationCompleted.wait(10000))
@@ -174,9 +167,9 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerate()
             VERIFY_IS_NOT_NULL(source);
             VERIFY_IS_NOT_NULL(args);
 
-            std::cout << "Watcher Added event: " << winrt::to_string(args.AddedDevice().PortDeviceId()) << std::endl;
-            std::cout << " -- Name:" << winrt::to_string(args.AddedDevice().Name()) << std::endl;
-            std::cout << std::endl;
+            //std::cout << "Watcher Added event: " << winrt::to_string(args.AddedDevice().PortDeviceId()) << std::endl;
+            //std::cout << " -- Name:" << winrt::to_string(args.AddedDevice().Name()) << std::endl;
+            //std::cout << std::endl;
         });
 
     auto removedToken = watcher.Removed([&](auto const& source, MidiLegacyPortDeviceInformationRemovedEventArgs  const& args)
@@ -186,8 +179,8 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerate()
             VERIFY_IS_NOT_NULL(source);
             VERIFY_IS_NOT_NULL(args);
 
-            std::cout << "Watcher Removed event: " << winrt::to_string(args.RemovedDevice().PortDeviceId()) << std::endl;
-            std::cout << std::endl;
+            //std::cout << "Watcher Removed event: " << winrt::to_string(args.RemovedDevice().PortDeviceId()) << std::endl;
+            //std::cout << std::endl;
         });
 
     auto updatedToken = watcher.Updated([&](auto const& source, MidiLegacyPortDeviceInformationUpdatedEventArgs const& args)
@@ -195,10 +188,10 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerate()
             VERIFY_IS_NOT_NULL(source);
             VERIFY_IS_NOT_NULL(args);
 
-            std::cout << "Watcher Updated event: " << winrt::to_string(args.UpdatedDevice().PortDeviceId()) << std::endl;
-            std::cout << " -- Name Updated:   " << args.IsNameUpdated() << std::endl;
-            std::cout << " -- Number Updated: " << args.IsNumberUpdated() << std::endl;
-            std::cout << std::endl;
+            //std::cout << "Watcher Updated event: " << winrt::to_string(args.UpdatedDevice().PortDeviceId()) << std::endl;
+            //std::cout << " -- Name Updated:   " << args.IsNameUpdated() << std::endl;
+            //std::cout << " -- Number Updated: " << args.IsNumberUpdated() << std::endl;
+            //std::cout << std::endl;
         });
 
     auto enumerationCompletedToken = watcher.EnumerationCompleted([&](auto const& source, auto const& args)
