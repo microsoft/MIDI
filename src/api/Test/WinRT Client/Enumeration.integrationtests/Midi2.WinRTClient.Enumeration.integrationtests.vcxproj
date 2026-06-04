@@ -149,12 +149,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MidiEndpointDeviceInformationTests.cpp" />
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp" />
     <ClCompile Include="MidiEndpointIdHelperTests.cpp" />
     <ClCompile Include="MidiLegacyPortDeviceInformationTests.cpp" />
     <ClCompile Include="MidiLegacyPortDeviceWatcherTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MidiEndpointDeviceInformationTests.h" />
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h" />
     <ClInclude Include="MidiEndpointIdHelperTests.h" />
     <ClInclude Include="MidiLegacyPortDeviceInformationTests.h" />

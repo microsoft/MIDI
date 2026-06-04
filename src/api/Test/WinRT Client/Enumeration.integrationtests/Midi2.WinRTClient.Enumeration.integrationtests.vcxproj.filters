@@ -30,6 +30,9 @@
     <ClInclude Include="MidiLegacyPortDeviceWatcherTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp">
@@ -42,6 +45,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="MidiLegacyPortDeviceWatcherTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

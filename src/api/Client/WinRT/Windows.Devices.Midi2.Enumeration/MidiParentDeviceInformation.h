@@ -31,7 +31,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
 
 
-        enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
+       // enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
         winrt::hstring Id() const noexcept { return m_deviceInformation != nullptr ? internal::NormalizeDeviceInstanceIdHStringCopy(m_deviceInformation.Id()) : L""; }
         winrt::hstring Name() const noexcept { return m_deviceInformation != nullptr ? m_deviceInformation.Name() : L""; }
@@ -51,6 +51,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         winrt::hstring ToString() const noexcept;
 
+        collections::IMapView<winrt::hstring, foundation::IInspectable> Properties() { return m_properties.GetView(); }
+
 
         //collections::IMapView<winrt::hstring, foundation::IInspectable> Properties() { return m_properties.GetView(); }
 
@@ -61,6 +63,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     private:
         enumeration::DeviceInformation m_deviceInformation{ nullptr };
+
+        collections::IMap<winrt::hstring, foundation::IInspectable> m_properties
+        { winrt::multi_threaded_map<winrt::hstring, foundation::IInspectable>() };
+
 
         winrt::hstring GetStringProperty(_In_ DEVPROPKEY const& key) const noexcept
         {

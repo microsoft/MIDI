@@ -24,8 +24,6 @@ namespace Windows.Devices.Midi2.Enumeration
 
         static IVectorView<String> GetAdditionalPropertiesList();
 
-        Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };
-
         String Id { get; };
         String Name{ get; };
         Guid ContainerId{ get; };
@@ -41,5 +39,6 @@ namespace Windows.Devices.Midi2.Enumeration
         String DriverVersion{ get; };           // DEVPKEY_Device_DriverVersion
         String EnumeratorName{ get; };          // DEVPKEY_Device_EnumeratorName
 
+        Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
     }
 }

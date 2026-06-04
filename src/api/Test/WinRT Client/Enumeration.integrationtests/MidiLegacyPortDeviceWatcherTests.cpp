@@ -237,14 +237,94 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerate()
     VERIFY_ARE_EQUAL(watcher.EnumeratedPorts().Size(), countAdded - countRemoved);
     VERIFY_ARE_EQUAL(watcher.EnumeratedPorts().Size(), watcher.CountSourcePorts() + watcher.CountDestinationPorts());
 
-    allEnumerationCompleted.reset();
-
 }
 
 
 void MidiLegacyPortDeviceWatcherTests::TestGetMethods()
 {
 
+    wil::unique_event_nothrow allEnumerationCompleted;
+    allEnumerationCompleted.create();
+
+    auto watcher = MidiLegacyPortDeviceWatcher::Create();
+    VERIFY_IS_NOT_NULL(watcher);
+
+    auto enumerationCompletedToken = watcher.EnumerationCompleted([&](auto const& source, auto const& args)
+        {
+            // args are null as is typical for a watcher Enumeration Completed, Started, or Stopped event.
+            UNREFERENCED_PARAMETER(args);
+
+            VERIFY_IS_NOT_NULL(source);
+
+            std::cout << "Enumeration Completed " << std::endl;
+
+            allEnumerationCompleted.SetEvent();
+        });
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            std::cout << "Cleaning up watcher" << std::endl;
+
+            if (watcher == nullptr) return;
+
+            watcher.Stop();
+
+            // cleanup
+
+            if (enumerationCompletedToken) watcher.EnumerationCompleted(enumerationCompletedToken);
+
+        });
+
+    watcher.Start();
+
+    // Wait for incoming message
+    if (!allEnumerationCompleted.wait(10000))
+    {
+        std::cout << "Failure waiting for enumeration complete, timed out." << std::endl;
+        VERIFY_FAIL();
+    }
+
+    // now that we have all the devices, do some verification on the Get methods.
+
+    auto numDestinations = midiOutGetNumDevs();
+    auto numSources = midiInGetNumDevs();   
+
+    auto allSources = watcher.GetEnumeratedPortsForFlow(Midi1PortFlow::MidiMessageSource);
+    auto allDestinations = watcher.GetEnumeratedPortsForFlow(Midi1PortFlow::MidiMessageDestination);
+
+    // because of .drv-based ports, these numbers are not going to be equal in cases
+    //VERIFY_ARE_EQUAL(numDestinations, allDestinations.Size());
+    //VERIFY_ARE_EQUAL(numSources, allSources.Size());
+
+    std::cout << "Verifying sources by port number." << std::endl;
+
+    for (uint32_t i = 0; i < numSources; i++)
+    {
+        auto port = watcher.GetEnumeratedPortForNumber(i, Midi1PortFlow::MidiMessageSource);
+        
+        if (port == nullptr)
+        {
+            std::cout << "No port found for source number " << i << std::endl;
+            continue;
+        }
+
+        VERIFY_ARE_EQUAL(port.Number(), i);
+    }
+
+    std::cout << "Verifying destinations by port number." << std::endl;
+
+    for (uint32_t i = 0; i < numDestinations; i++)
+    {
+        auto port = watcher.GetEnumeratedPortForNumber(i, Midi1PortFlow::MidiMessageDestination);
+
+        if (port == nullptr)
+        {
+            std::cout << "No port found for destination number " << i << std::endl;
+            continue;
+        }
+
+        VERIFY_ARE_EQUAL(port.Number(), i);
+    }
 
 
 

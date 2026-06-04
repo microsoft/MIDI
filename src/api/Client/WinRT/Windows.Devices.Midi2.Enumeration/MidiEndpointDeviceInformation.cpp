@@ -43,15 +43,22 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         if (ContainerId() == winrt::guid{}) return nullptr;
 
-        auto container = enumeration::DeviceInformation::CreateFromIdAsync(
-            internal::GuidToString(ContainerId()),
+        auto containerId = ContainerId();
+
+        // STA-safe: run the async on the thread pool and wait.
+        auto container = internal::RunOnBackgroundThreadAndWait(
+            [containerId]()
             {
-                L"System.Devices.DeviceInstanceId",
-                MIDI_DEVICE_PARENT_PROPERTY_KEY,
-                L"System.Devices.Manufacturer",
-                L"System.Devices.ModelName"
-            },
-            enumeration::DeviceInformationKind::DeviceContainer).get();
+                return enumeration::DeviceInformation::CreateFromIdAsync(
+                    internal::GuidToString(containerId),
+                    {
+                        L"System.Devices.DeviceInstanceId",
+                        MIDI_DEVICE_PARENT_PROPERTY_KEY,
+                        L"System.Devices.Manufacturer",
+                        L"System.Devices.ModelName"
+                    },
+                    enumeration::DeviceInformationKind::DeviceContainer);
+            });
 
         return container;
     }
@@ -236,7 +243,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         if (deviceInformation.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticLoopback)
         {
             if ((endpointFilters & midi2enum::MidiEndpointDeviceInformationFilters::DiagnosticLoopback) ==
-                midi2enum::MidiEndpointDeviceInformationFilters::DiagnosticLoopback)
+                midi2enum:: MidiEndpointDeviceInformationFilters::DiagnosticLoopback)
             {
                 return true;
             }
@@ -305,11 +312,16 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         try
         {
-            auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-                MidiEndpointConnection::GetDeviceSelector(),
-                GetAdditionalPropertiesList(),
-                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface
-            ).get();
+            // STA-safe: the inner co_await runs on the thread pool, so the
+            // outer .get() never blocks waiting for the caller's apartment.
+            auto devices = internal::RunOnBackgroundThreadAndWait(
+                []()
+                {
+                    return winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+                        MidiEndpointConnection::GetDeviceSelector(),
+                        GetAdditionalPropertiesList(),
+                        winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface);
+                });
 
 
             if (devices != nullptr)
@@ -468,27 +480,55 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         auto midiEndpoints = winrt::single_threaded_vector<midi2enum::MidiEndpointDeviceInformation>();
 
-        auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-            MidiEndpointConnection::GetDeviceSelector() + L" AND System.Devices.ContainerId:=" + winrt::to_hstring(containerId),
-            GetAdditionalPropertiesList(),
-            enumeration::DeviceInformationKind::DeviceInterface
-        ).get();
-
-
-        if (devices != nullptr)
+        try
         {
-            for (auto const& di : devices)
+
+            auto selector = MidiEndpointConnection::GetDeviceSelector()
+                + L" AND System.Devices.ContainerId:="
+                + winrt::to_hstring(containerId);
+
+            // STA-safe enumeration via background-thread continuation.
+            auto devices = internal::RunOnBackgroundThreadAndWait(
+                [selector]()
+                {
+                    return winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+                        selector,
+                        GetAdditionalPropertiesList(),
+                        enumeration::DeviceInformationKind::DeviceInterface);
+                });
+
+
+            if (devices != nullptr)
             {
-                auto midiDevice = winrt::make_self<MidiEndpointDeviceInformation>();
+                for (auto const& di : devices)
+                {
+                    auto midiDevice = winrt::make_self<MidiEndpointDeviceInformation>();
 
-                midiDevice->UpdateFromDeviceInformation(di);
+                    midiDevice->UpdateFromDeviceInformation(di);
 
-                midiEndpoints.Append(*midiDevice);
+                    midiEndpoints.Append(*midiDevice);
+                }
             }
         }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception creating and updating device.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(containerId, "container id")
+            );
+        }
+
 
         return midiEndpoints.GetView();
     }
+
 
 
 
@@ -514,11 +554,16 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             }
 
 
-            auto di = enumeration::DeviceInformation::CreateFromIdAsync(
-                cleanedEndpointDeviceId, 
-                GetAdditionalPropertiesList(),
-                enumeration::DeviceInformationKind::DeviceInterface
-            ).get();
+            // STA-safe: the inner co_await runs on the thread pool.
+            auto di = internal::RunOnBackgroundThreadAndWait(
+                [cleanedEndpointDeviceId]()
+                {
+                    return enumeration::DeviceInformation::CreateFromIdAsync(
+                        cleanedEndpointDeviceId,
+                        GetAdditionalPropertiesList(),
+                        enumeration::DeviceInformationKind::DeviceInterface);
+                });
+
 
             if (di == nullptr)
             {
@@ -1117,54 +1162,39 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         m_id = internal::NormalizeEndpointInterfaceIdHStringCopy(deviceInformation.Id().c_str());
 
 
-        //// get the parent device id
-        //winrt::hstring deviceInstanceId{};
+        // get the parent device id
+        winrt::hstring deviceInstanceId{};
 
-        //if (deviceInformation.Properties().HasKey(L"System.Devices.DeviceInstanceId"))
-        //{
-        //    deviceInstanceId = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceInstanceId", deviceInformation, winrt::hstring());
-        //}
-
-        //if (!deviceInstanceId.empty())
-        //{
-        //    try
-        //    {
-        //        auto pnpObject = pnp::PnpObject::CreateFromIdAsync(
-        //            pnp::PnpObjectType::Device,
-        //            deviceInstanceId,
-        //            { L"System.Devices.Parent" }).get();
-
-        //        if (pnpObject != nullptr && pnpObject.Properties().HasKey(L"System.Devices.Parent"))
-        //        {
-        //            m_parentDeviceInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(pnpObject.Properties(), L"System.Devices.Parent", winrt::hstring());
-        //        }
-        //    }
-        //    catch (...)
-        //    {
-        //    }
-
-        //    if (m_parentDeviceInstanceId.empty())
-        //    {
-        //        try
-        //        {
-        //            auto pnpObject = pnp::PnpObject::CreateFromIdAsync(
-        //                pnp::PnpObjectType::DeviceInterface,
-        //                deviceInstanceId,
-        //                { L"System.Devices.Parent" }).get();
-
-        //            if (pnpObject != nullptr && pnpObject.Properties().HasKey(L"System.Devices.Parent"))
-        //            {
-        //                m_parentDeviceInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(pnpObject.Properties(), L"System.Devices.Parent", winrt::hstring());
-        //            }
-
-        //        }
-        //        catch (...)
-        //        {
-        //        }
-        //    }
-        //}
+        if (deviceInformation.Properties().HasKey(L"System.Devices.DeviceInstanceId"))
+        {
+            deviceInstanceId = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceInstanceId", deviceInformation, winrt::hstring());
+        }
 
 
+        // Resolve the parent device instance id via MidiPnpDeviceInfo
+        // (cfgmgr-backed, synchronous, STA-safe).
+        m_parentDeviceInstanceId = {};
+
+        if (!deviceInstanceId.empty())
+        {
+            if (auto pnpInfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(
+                std::wstring_view{ deviceInstanceId }))
+            {
+                m_parentDeviceInstanceId = pnpInfo->ParentInstanceId();
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"MidiPnpDeviceInfo::CreateFromInstanceId returned no value", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceInstanceId.c_str(), "device instance id")
+                );
+            }
+        }
     }
 
     _Use_decl_annotations_

@@ -12,19 +12,39 @@
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
+
+
     _Use_decl_annotations_
     midi2enum::MidiParentDeviceInformation MidiParentDeviceInformation::CreateFromId(
         winrt::hstring const& deviceInstanceId) noexcept
     {
+        // Fast path: validate the devnode exists via cfgmgr before we pay
+        // for the DeviceInformation async lookup. This also catches gone /
+        // phantom devices without round-tripping to the PnP service.
+        if (!internal::MidiPnpDeviceInfo::CreateFromInstanceId(
+                std::wstring_view{ deviceInstanceId }).has_value())
+        {
+            return nullptr;
+        }
+
         enumeration::DeviceInformation device{ nullptr };
 
         try
         {
-            device = enumeration::DeviceInformation::CreateFromIdAsync(
-                deviceInstanceId,
-                GetAdditionalPropertiesList(),
-                enumeration::DeviceInformationKind::Device
-            ).get();
+            // The public DeviceInformation accessor on this class still
+            // needs a real DeviceInformation, so we keep the async lookup
+            // but run it on the thread pool to stay STA-safe.
+            // TODO: a future change should expose just the data we need
+            // (driver, service, etc.) directly via MidiPnpDeviceInfo and
+            // drop the DeviceInformation accessor from the IDL.
+            device = internal::RunOnBackgroundThreadAndWait(
+                [deviceInstanceId]()
+                {
+                    return enumeration::DeviceInformation::CreateFromIdAsync(
+                        deviceInstanceId,
+                        GetAdditionalPropertiesList(),
+                        enumeration::DeviceInformationKind::Device);
+                });
         }
         catch (winrt::hresult_error const&)
         {
@@ -37,9 +57,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
 
         auto parentDeviceInfo = winrt::make_self<MidiParentDeviceInformation>();
-
         parentDeviceInfo->InternalInitialize(device);
-
         return *parentDeviceInfo;
     }
 

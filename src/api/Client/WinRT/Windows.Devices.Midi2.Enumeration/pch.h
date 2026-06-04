@@ -92,8 +92,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "winrt_date_util.h"
 #include "winrt_devpkey_util.h"
-#include "cfgmgr_helpers.h"
-
+#include "async_helper.h"
 #include "MidiPnpDeviceInfo.h"
 
 // service interface
