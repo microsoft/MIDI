@@ -648,7 +648,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         
             if (ep != nullptr)
             {
-                auto containerId = ep.Properties().Lookup(L"System.Devices.ContainerId").as<winrt::guid>();
+                auto containerId = internal::GetDeviceInfoProperty<winrt::guid>(ep.Properties(), L"System.Devices.ContainerId", winrt::guid());
 
                 for (auto const& selector : { 
                     InternalGetSelectorForSourcePortsForContainer(containerId), 
@@ -662,7 +662,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
                     for (auto const& device : devices)
                     {
-                        auto id = device.Properties().Lookup(STRING_PKEY_MIDI_AssociatedUMP).as<winrt::hstring>();
+                        auto id = internal::GetDeviceInfoProperty<winrt::hstring>(device.Properties(), STRING_PKEY_MIDI_AssociatedUMP, L"");
 
                         if (internal::NormalizeEndpointInterfaceIdHStringCopy(id) == endpointDeviceId)
                         {
@@ -698,7 +698,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
             if (ep != nullptr)
             {
-                auto containerId = ep.Properties().Lookup(L"System.Devices.ContainerId").as<winrt::guid>();
+                auto containerId = internal::GetDeviceInfoProperty<winrt::guid>(ep.Properties(), L"System.Devices.ContainerId", winrt::guid());
 
                 auto selector = flow == midi2enum::Midi1PortFlow::MidiMessageSource ?
                     InternalGetSelectorForSourcePortsForContainer(containerId) :
@@ -712,7 +712,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
                 for (auto const& device : devices)
                 {
-                    auto id = device.Properties().Lookup(STRING_PKEY_MIDI_AssociatedUMP).as<winrt::hstring>();
+                    auto id = internal::GetDeviceInfoProperty<winrt::hstring>(device.Properties(), STRING_PKEY_MIDI_AssociatedUMP, L"");
 
                     if (internal::NormalizeEndpointInterfaceIdHStringCopy(id) == endpointDeviceId)
                     {
@@ -729,14 +729,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         return results.GetView();
 
     }
-
-
-
-
-
-
-
-
 
 
 
@@ -787,22 +779,66 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             deviceInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(properties, L"System.Devices.DeviceInstanceId", winrt::hstring());
         }
 
-        // get the parent. We do this by creating this same port, but as a Device, so we get 
-        // access to the parent device property which is not available on the interface class.
-        // this only works with PnpObject. DeviceInformation will not project the parent device
-        // property -- it's always null.
+        // Resolve the parent device instance id via cfgmgr32.
+        //
+        // We can't get System.Devices.Parent from the interface-level
+        // DeviceInformation (PnP doesn't project it onto interfaces), and
+        // calling PnpObject::CreateFromIdAsync(...).get() here would block
+        // the caller's thread -- which can deadlock if Added events are
+        // dispatched onto an STA. cfgmgr32 is a synchronous, in-process
+        // call against the PnP cache, so it's safe from any apartment.
+        m_parentDeviceInstanceId = {};
+
         if (!deviceInstanceId.empty())
         {
-            auto pnpObject = pnp::PnpObject::CreateFromIdAsync(
-                pnp::PnpObjectType::Device,
-                deviceInstanceId,
-                { L"System.Devices.Parent" }).get();
+            DEVINST devInst{};
+            CONFIGRET cr = CM_Locate_DevNodeW(
+                &devInst,
+                const_cast<DEVINSTID_W>(deviceInstanceId.c_str()),
+                CM_LOCATE_DEVNODE_NORMAL);
 
-            if (pnpObject != nullptr && pnpObject.Properties().HasKey(L"System.Devices.Parent"))
+            // Fall back to phantom (non-present) devnodes if needed.
+            if (cr == CR_NO_SUCH_DEVNODE)
             {
-                m_parentDeviceInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(pnpObject.Properties(), L"System.Devices.Parent", winrt::hstring());
+                cr = CM_Locate_DevNodeW(
+                    &devInst,
+                    const_cast<DEVINSTID_W>(deviceInstanceId.c_str()),
+                    CM_LOCATE_DEVNODE_PHANTOM);
             }
 
+            if (cr == CR_SUCCESS)
+            {
+                CONFIGRET propCr{};
+                m_parentDeviceInstanceId = internal::GetDevNodeStringProperty(
+                    devInst, DEVPKEY_Device_Parent, &propCr);
+
+                if (propCr != CR_SUCCESS && propCr != CR_BUFFER_SMALL)
+                {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"GetDevNodeStringProperty(DEVPKEY_Device_Parent) failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(deviceInstanceId.c_str(), "device instance id"),
+                        TraceLoggingUInt32(static_cast<uint32_t>(propCr), "CONFIGRET")
+                    );
+                }
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"CM_Locate_DevNodeW failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceInstanceId.c_str(), "device instance id"),
+                    TraceLoggingUInt32(static_cast<uint32_t>(cr), "CONFIGRET")
+                );
+            }
         }
 
         return true;
@@ -834,21 +870,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             {
                 m_portNumber = winrt::unbox_value<uint32_t>(value);
             }
-            else
-            {
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Unexpected changed property", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(key.c_str(), "property key")
-                );
-            }
-
         }
 
         return true;

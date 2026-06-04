@@ -214,19 +214,19 @@
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">MachineARM64</TargetMachine>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">MachineARM64X</TargetMachine>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -272,9 +272,9 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;uuid.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MachineARM64</TargetMachine>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">MachineARM64X</TargetMachine>
     </Link>

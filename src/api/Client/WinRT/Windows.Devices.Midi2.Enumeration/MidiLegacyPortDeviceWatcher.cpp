@@ -330,11 +330,11 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
                 {
                     if (port.Flow() == Midi1PortFlow::MidiMessageSource)
                     {
-                        m_countSourcePorts++;
+                        if (m_countSourcePorts > 0) m_countSourcePorts--;
                     }
                     else
                     {
-                        m_countDestinationPorts++;
+                        if (m_countDestinationPorts > 0) m_countDestinationPorts--;
                     }
 
                     m_enumeratedPorts.Remove(mapKey);

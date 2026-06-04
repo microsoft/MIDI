@@ -72,6 +72,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "devpkey.h"
 #include <Devpropdef.h>
+#include <cfgmgr32.h>   // needed for CM_Locate_DevNodeW / CM_Get_DevNode_PropertyW (parent lookup)
 #include <MidiDefs.h>
 #include <midi_group_terminal_blocks.h>
 
@@ -91,6 +92,9 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "winrt_date_util.h"
 #include "winrt_devpkey_util.h"
+#include "cfgmgr_helpers.h"
+
+#include "MidiPnpDeviceInfo.h"
 
 // service interface
 //#include <WindowsMidiServices.h>
