@@ -24,7 +24,7 @@ public:
     TEST_CLASS_CLEANUP(ClassCleanup);
 
     TEST_METHOD(TestCreateAndEnumerate);
-    TEST_METHOD(TestCreateAndEnumerateForFlow);
+    TEST_METHOD(TestCreateAndEnumerateForAllFlows);
 
     TEST_METHOD(TestGetMethods);
 

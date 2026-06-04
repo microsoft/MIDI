@@ -90,6 +90,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         bool InternalUpdateFromDeviceInformationUpdate(_In_ enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept;
 
         static winrt::hstring InternalGetSelectorForSourceAndDestinationPorts() noexcept;
+        static winrt::hstring InternalGetSelectorForDestinationPorts() noexcept;
+        static winrt::hstring InternalGetSelectorForSourcePorts() noexcept;
+
+
         //static winrt::hstring InternalGetSelectorForSourceAndDestinationPortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
         static winrt::hstring InternalGetSelectorForSourcePortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;
         static winrt::hstring InternalGetSelectorForDestinationPortsForParentDeviceInstanceId(_In_ winrt::hstring const& parentDeviceInstanceId) noexcept;

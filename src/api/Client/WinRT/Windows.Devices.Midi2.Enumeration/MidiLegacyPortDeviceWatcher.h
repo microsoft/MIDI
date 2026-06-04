@@ -17,7 +17,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         ~MidiLegacyPortDeviceWatcher();
 
         static legacy::MidiLegacyPortDeviceWatcher Create() noexcept;
-        static legacy::MidiLegacyPortDeviceWatcher CreateForFlow(_In_ midi2enum::Midi1PortFlow const& flow) noexcept;
+        static legacy::MidiLegacyPortDeviceWatcher CreateForFlow(_In_ midi2enum::Midi1PortFlow const flow) noexcept;
 
         void Start() noexcept;
         void Stop() noexcept;

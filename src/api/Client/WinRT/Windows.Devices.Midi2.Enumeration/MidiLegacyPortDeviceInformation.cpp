@@ -177,6 +177,33 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         return selector;
     }
 
+    winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForSourcePorts() noexcept
+    {
+        winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
+        winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
+
+
+        winrt::hstring selector =
+            L"System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\" AND " +
+            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+
+        return selector;
+    }
+
+    winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForDestinationPorts() noexcept
+    {
+        winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
+        winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
+
+
+        winrt::hstring selector =
+            L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\" AND " +
+            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+
+        return selector;
+    }
+
+
     //_Use_decl_annotations_
     //winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForSourceAndDestinationPortsForParentDeviceInstanceId(winrt::hstring const& parentDeviceInstanceId) noexcept
     //{

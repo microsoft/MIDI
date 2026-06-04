@@ -65,29 +65,32 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
     }
 
+
     _Use_decl_annotations_
-    legacy::MidiLegacyPortDeviceWatcher MidiLegacyPortDeviceWatcher::CreateForFlow(midi2enum::Midi1PortFlow const& flow) noexcept
+    legacy::MidiLegacyPortDeviceWatcher MidiLegacyPortDeviceWatcher::CreateForFlow(
+        midi2enum::Midi1PortFlow const flow) noexcept
     {
         try
         {
-            winrt::hstring selector;
+            winrt::hstring selector{};
 
             if (flow == midi2enum::Midi1PortFlow::MidiMessageSource)
             {
-                selector = winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector();
+                selector = MidiLegacyPortDeviceInformation::InternalGetSelectorForSourcePorts();
             }
             else
             {
-                selector = winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector();
+                selector = MidiLegacyPortDeviceInformation::InternalGetSelectorForDestinationPorts();
             }
 
-
             auto watcher = winrt::make_self<MidiLegacyPortDeviceWatcher>();
+            if (watcher == nullptr) return nullptr;
 
             auto baseWatcher = enumeration::DeviceInformation::CreateWatcher(
                 selector,
                 MidiLegacyPortDeviceInformation::GetAdditionalPropertiesList(),
                 enumeration::DeviceInformationKind::DeviceInterface);
+            if (baseWatcher == nullptr) return nullptr;
 
             watcher->InternalInitialize(baseWatcher);
 

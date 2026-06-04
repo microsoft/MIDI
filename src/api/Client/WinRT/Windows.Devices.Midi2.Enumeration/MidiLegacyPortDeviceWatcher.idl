@@ -59,8 +59,8 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForDriverDeviceInterfaceId(String driverDeviceInterfaceId);
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForDriverDeviceInterfaceId(String driverDeviceInterfaceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
 
-        UInt32 CountSourcePorts {get;};
-        UInt32 CountDestinationPorts {get;};
+        UInt32 CountSourcePorts { get;};
+        UInt32 CountDestinationPorts { get;};
 
     }
 }
