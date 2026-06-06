@@ -11,19 +11,6 @@
 #include "stdafx.h"
 
 
-bool MidiEndpointDeviceInformationTests::ClassSetup()
-{
-
-    StartWinRTMTA();
-    return true;
-}
-
-bool MidiEndpointDeviceInformationTests::ClassCleanup()
-{
-    ShutdownWinRT();
-    return true;
-}
-
 #pragma warning(disable : 4702)
 void MidiEndpointDeviceInformationTests::TestCreateFromId()
 {

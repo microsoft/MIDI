@@ -9,10 +9,7 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
-
 import "MidiServiceTransportPluginInfo.idl";
-import "MidiServiceMessageProcessingPluginInfo.idl";
 import "MidiServiceSessionInfo.idl";
 
 namespace Windows.Devices.Midi2.Reporting
@@ -22,7 +19,6 @@ namespace Windows.Devices.Midi2.Reporting
     static runtimeclass MidiReporting
     {
         static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
-        //static IVector<MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
 
         static IVector<MidiServiceSessionInfo> GetActiveSessions();
     }

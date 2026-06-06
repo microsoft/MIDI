@@ -298,6 +298,7 @@
     <ClInclude Include="MidiDiagnostics.h">
       <DependentUpon>MidiDiagnostics.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiServicePingResponse.h" />
     <ClInclude Include="MidiServicePingResponseSummary.h">
       <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
     </ClInclude>
@@ -309,6 +310,7 @@
     <ClCompile Include="MidiDiagnostics.cpp">
       <DependentUpon>MidiDiagnostics.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiServicePingResponse.cpp" />
     <ClCompile Include="MidiServicePingResponseSummary.cpp">
       <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
     </ClCompile>

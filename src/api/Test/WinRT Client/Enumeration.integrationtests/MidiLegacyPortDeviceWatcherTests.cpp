@@ -9,20 +9,6 @@
 
 #include "stdafx.h"
 
-
-bool MidiLegacyPortDeviceWatcherTests::ClassSetup()
-{
-    StartWinRTMTA();
-    return true;
-}
-
-bool MidiLegacyPortDeviceWatcherTests::ClassCleanup()
-{
-    ShutdownWinRT();
-    return true;
-}
-
-
 void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerateForAllFlows()
 {
     std::string flowName;
@@ -242,7 +228,6 @@ void MidiLegacyPortDeviceWatcherTests::TestCreateAndEnumerate()
 
 void MidiLegacyPortDeviceWatcherTests::TestGetMethods()
 {
-
     wil::unique_event_nothrow allEnumerationCompleted;
     allEnumerationCompleted.create();
 
@@ -296,7 +281,11 @@ void MidiLegacyPortDeviceWatcherTests::TestGetMethods()
     //VERIFY_ARE_EQUAL(numDestinations, allDestinations.Size());
     //VERIFY_ARE_EQUAL(numSources, allSources.Size());
 
-    std::cout << "Verifying sources by port number." << std::endl;
+
+
+    // Test GetEnumeratedPortForNumber
+
+    std::cout << "GetEnumeratedPortForNumber: Verifying sources by port number." << std::endl;
 
     for (uint32_t i = 0; i < numSources; i++)
     {
@@ -311,7 +300,7 @@ void MidiLegacyPortDeviceWatcherTests::TestGetMethods()
         VERIFY_ARE_EQUAL(port.Number(), i);
     }
 
-    std::cout << "Verifying destinations by port number." << std::endl;
+    std::cout << "GetEnumeratedPortForNumber: Verifying destinations by port number." << std::endl;
 
     for (uint32_t i = 0; i < numDestinations; i++)
     {
@@ -327,6 +316,62 @@ void MidiLegacyPortDeviceWatcherTests::TestGetMethods()
     }
 
 
+    // Test GetEnumeratedPortsForFlow
+
+    for (auto const& flow : { Midi1PortFlow::MidiMessageSource, Midi1PortFlow::MidiMessageDestination })
+    {
+        std::cout << "GetEnumeratedPortsForFlow: " << (flow == Midi1PortFlow::MidiMessageSource ? "Source" : "Destination")  << std::endl;
+
+        auto ports = watcher.GetEnumeratedPortsForFlow(flow);
+        VERIFY_IS_NOT_NULL(ports);
+        VERIFY_IS_TRUE(ports.Size() > 0);
+    }
+
+    // these next tests verify against the list of all ports. We 
+    // get it a slightly different way just to validate. We could also
+    // get it using midiIn/OutGetDevCaps but the .drv-based ports mess
+    // this up. So instead, we check for internal consistency.
+
+    auto allPorts = MidiLegacyPortDeviceInformation::FindAll();
+    VERIFY_IS_NOT_NULL(allPorts);
+    VERIFY_IS_TRUE(allPorts.Size() > 0);
+
+    uint32_t missingDeviceInterfaceIdCount{ 0 };
+
+    for (auto const& port : allPorts)
+    {
+        std::wcout << L"Verifying Get methods for port: " << port.Name().c_str() << L", Number: " << port.Number() << std::endl;
+
+        // Test GetEnumeratedPortsForName
+        VERIFY_IS_FALSE(port.Name().empty());
+        auto foundPortsByName = watcher.GetEnumeratedPortsForName(port.Name());
+        VERIFY_IS_NOT_NULL(foundPortsByName);
+        VERIFY_IS_TRUE(foundPortsByName.Size() > 0);
+
+        // Test GetEnumeratedPortsForParent
+        VERIFY_IS_FALSE(port.ParentDeviceInstanceId().empty());
+        auto foundPortsByParent = watcher.GetEnumeratedPortsForParent(port.ParentDeviceInstanceId());
+        VERIFY_IS_NOT_NULL(foundPortsByParent);
+        VERIFY_IS_TRUE(foundPortsByParent.Size() > 0);
+
+        // Test GetEnumeratedPortsForDriverDeviceInterfaceId
+
+        if (port.DriverDeviceInterfaceId().empty())
+        {
+            // this is valid for the GS wavetable synth and likely for shoe-horned replacements for it
+            // so don't want to check for specific strings in the id or anything. 
+            std::wcout << L" *** Port " << port.Name().c_str() << L" has empty DriverDeviceInterfaceId, skipping GetEnumeratedPortsForDriverDeviceInterfaceId test." << std::endl;
+            missingDeviceInterfaceIdCount++;
+            continue;
+        }
+
+        auto foundPortsByDriverDeviceInterfaceId = watcher.GetEnumeratedPortsForDriverDeviceInterfaceId(port.DriverDeviceInterfaceId());
+        VERIFY_IS_NOT_NULL(foundPortsByDriverDeviceInterfaceId);
+        VERIFY_IS_TRUE(foundPortsByDriverDeviceInterfaceId.Size() > 0);
+    }
+
+    // at least some ports should have a driver device interface id to be valid.
+    VERIFY_IS_TRUE(missingDeviceInterfaceIdCount < allPorts.Size()); 
 
 }
 

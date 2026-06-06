@@ -10,25 +10,6 @@
 
 #include "stdafx.h"
 
-bool MidiEndpointIdHelperTests::ClassSetup()
-{
-    std::cout << "MidiEndpointIdHelperTests::ClassSetup" << std::endl;
-
-    StartWinRTMTA();
-
-    return true;
-}
-
-bool MidiEndpointIdHelperTests::ClassCleanup()
-{
-    std::cout << "MidiEndpointIdHelperTests::ClassCleanup" << std::endl;
-
-    ShutdownWinRT();
-
-    return true;
-}
-
-
 void MidiEndpointIdHelperTests::TestCreateShortIdFromFullId()
 {
     winrt::hstring result{};

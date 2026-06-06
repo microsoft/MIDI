@@ -31,6 +31,7 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         void Start();
         void Stop();
 
+        // Cached list of ports
         Windows.Foundation.Collections.IMapView<String, MidiLegacyPortDeviceInformation> EnumeratedPorts{ get; };
 
         Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
@@ -42,7 +43,8 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, IInspectable> EnumerationCompleted;
         event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, IInspectable> Stopped;
 
-        // these all operate on the collection of enumerated ports and are a snapshot in time
+        // these all operate on the collection of enumerated ports and are a snapshot in time.They do not re-query
+
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForFlow(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
 
         MidiLegacyPortDeviceInformation GetEnumeratedPortForNumber(UInt32 portNumber, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);

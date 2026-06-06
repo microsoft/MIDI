@@ -266,7 +266,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             // turns out, having an OR in the AQS query is much slower than just making two passes
             // I was seeing 147 ms for the OR query, vs 43ms for two separate queries + merge
             
-            for (auto const& selector: { winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector() , winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector() })
+            for (auto const& selector: { InternalGetSelectorForSourcePorts(), InternalGetSelectorForDestinationPorts() })
             {
                 // STA-safe enumeration via background-thread continuation.
                 auto devices = internal::RunOnBackgroundThreadAndWait(
@@ -818,7 +818,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             if (auto pnpInfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(
                     std::wstring_view{ deviceInstanceId }))
             {
-                m_parentDeviceInstanceId = pnpInfo->ParentInstanceId();
+                m_parentDeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(pnpInfo->ParentInstanceId());
             }
             else
             {

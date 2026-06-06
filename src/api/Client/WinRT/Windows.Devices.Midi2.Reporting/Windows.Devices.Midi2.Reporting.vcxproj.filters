@@ -8,11 +8,23 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiServiceSessionConnectionInfo.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportPluginInfo.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceSessionConnectionInfo.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportPluginInfo.h">
+      <Filter>SDK</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -20,9 +32,6 @@
       <Filter>Contracts</Filter>
     </Midl>
     <Midl Include="MidiReporting.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl">
       <Filter>SDK</Filter>
     </Midl>
     <Midl Include="MidiServiceSessionConnectionInfo.idl">

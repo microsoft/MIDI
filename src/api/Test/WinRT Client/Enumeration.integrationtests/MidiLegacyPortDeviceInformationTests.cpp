@@ -10,20 +10,6 @@
 #include "stdafx.h"
 
 
-bool MidiLegacyPortDeviceInformationTests::ClassSetup()
-{
-
-    StartWinRTMTA();
-    return true;
-}
-
-bool MidiLegacyPortDeviceInformationTests::ClassCleanup() 
-{
-    ShutdownWinRT();
-    return true;
-}
-
-
 winrt::hstring GetStringVersionOfPropertyValue(foundation::IInspectable const& value)
 {
     if (value)
@@ -67,7 +53,7 @@ winrt::hstring GetStringVersionOfPropertyValue(foundation::IInspectable const& v
     return L"(null)";
 }
 
-#pragma warning(disable : 4702)
+//#pragma warning(disable : 4702)
 void MidiLegacyPortDeviceInformationTests::TestCreateFromId()
 {
     // use basic WinRT device support to find a MIDI Device id

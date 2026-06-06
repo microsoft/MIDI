@@ -298,9 +298,11 @@
     <ClInclude Include="MidiReporting.h">
       <DependentUpon>MidiReporting.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiServiceSessionConnectionInfo.h" />
     <ClInclude Include="MidiServiceSessionInfo.h">
       <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiServiceTransportPluginInfo.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -309,17 +311,18 @@
     <ClCompile Include="MidiReporting.cpp">
       <DependentUpon>MidiReporting.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiServiceSessionConnectionInfo.cpp" />
     <ClCompile Include="MidiServiceSessionInfo.cpp">
       <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="MidiServiceTransportPluginInfo.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
-    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
     <Midl Include="MidiReporting.idl" />
     <Midl Include="MidiServiceSessionConnectionInfo.idl" />
     <Midl Include="MidiServiceSessionInfo.idl" />

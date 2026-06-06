@@ -109,6 +109,8 @@ namespace rept = ::winrt::Windows::Devices::Midi2::Reporting;
 
 #include "resource.h"
 
+#include "MidiServiceSessionConnectionInfo.h"
 #include "MidiServiceSessionInfo.h"
+#include "MidiServiceTransportPluginInfo.h"
 #include "MidiReporting.h"
 

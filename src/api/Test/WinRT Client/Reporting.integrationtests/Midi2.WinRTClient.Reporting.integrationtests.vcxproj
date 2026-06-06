@@ -21,7 +21,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{23F704E2-F0B4-4794-8080-817E9F906938}</ProjectGuid>
+    <ProjectGuid>{34A32D26-0BA0-44D4-8F3F-3BEB1D83246C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <CppWinRTOptimized>true</CppWinRTOptimized>
@@ -30,7 +30,7 @@
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
     <CppWinRTLibs>true</CppWinRTLibs>
     <MinimalCoreWin>true</MinimalCoreWin>
-    <ProjectName>Midi2.WinRTClient.Diagnostics.integrationtests</ProjectName>
+    <ProjectName>Midi2.WinRTClient.Reporting.integrationtests</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -149,12 +149,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MidiDiagnosticLoopbackEndpointTests.cpp" />
-    <ClCompile Include="MidiPingTests.cpp" />
+    <ClCompile Include="MidiReportingTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MidiDiagnosticLoopbackEndpointTests.h" />
-    <ClInclude Include="MidiPingTests.h" />
+    <ClInclude Include="MidiReportingTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -164,13 +162,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Diagnostics\Windows.Devices.Midi2.Diagnostics.vcxproj">
-      <Project>{c24cc839-6d54-4f78-ac5b-c5b3e90b0dab}</Project>
+    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
+      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
       <Private>true</Private>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
-      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
+    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Reporting\Windows.Devices.Midi2.Reporting.vcxproj">
+      <Project>{e165ef50-e4ce-4765-8388-4df4f9d03b57}</Project>
       <Private>true</Private>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>

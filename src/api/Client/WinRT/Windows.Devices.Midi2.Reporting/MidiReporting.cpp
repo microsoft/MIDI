@@ -50,25 +50,25 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                         {
                             for (auto const& transportKV : jsonObject)
                             {
-                                rept::MidiServiceTransportPluginInfo info;
+                                auto transportResult = winrt::make_self<MidiServiceTransportPluginInfo>();
 
                                 auto transport = transportKV.Value().GetObject();
 
-                                info.Id = internal::StringToGuid(transportKV.Key().c_str());
-                                info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
-                                info.TransportCode = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L"");
-                                info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
-                                info.ImageFileName = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IMAGE_FILENAME_PROPERTY_KEY, L"");
-                                info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
-                                info.Version = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY, L"");
-                                info.IsSystemManaged = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false);
-                                info.IsRuntimeCreatableByApps = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false);
-                                info.IsRuntimeCreatableBySettings = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false);
-                                info.CanConfigure = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false);
+                                transportResult->InternalInitialize(
+                                    internal::StringToGuid(transportKV.Key().c_str()),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IMAGE_FILENAME_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY, L""),
+                                    transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false),
+                                    transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false),
+                                    transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false),
+                                    transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false)
+                                );
 
-                                //transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, L"");
-
-                                transportList.Append(std::move(info));
+                                transportList.Append(*transportResult);
                             }
                         }
                     }
@@ -217,15 +217,17 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                             for (uint32_t j = 0; j < connectionsJsonArray.Size(); j++)
                             {
                                 auto connectionJson = connectionsJsonArray.GetObjectAt(j);
-                                rept::MidiServiceSessionConnectionInfo connectionObject;
+                                auto connectionObject = winrt::make_self<MidiServiceSessionConnectionInfo>();
 
                                 auto earliestConnectionTime = internal::JsonGetDateTimeProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, noTime);
 
-                                connectionObject.EndpointDeviceId = connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L"");
-                                connectionObject.InstanceCount = (uint16_t)(connectionJson.GetNamedNumber(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0));
-                                connectionObject.EarliestConnectionTime = winrt::clock::from_sys(earliestConnectionTime);
+                                connectionObject->InternalInitialize(
+                                    connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L""),
+                                    (uint16_t)(connectionJson.GetNamedNumber(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0)),
+                                    winrt::clock::from_sys(earliestConnectionTime)
+                                );
 
-                                sessionObject->InternalAddConnection(connectionObject);
+                                sessionObject->InternalAddConnection(*connectionObject);
                             }
                         }
 

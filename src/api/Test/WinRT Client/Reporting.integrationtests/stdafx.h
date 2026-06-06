@@ -13,18 +13,29 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+#include <winrt/Windows.Devices.Midi.h>
+
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
 
 #include <winrt/Windows.Devices.Midi2.h>
-#include <winrt/Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
+#include <winrt/Windows.Devices.Midi2.Reporting.h>
+
 
 using namespace winrt::Windows::Devices::Midi2;
-using namespace winrt::Windows::Devices::Midi2::Diagnostics;
+using namespace winrt::Windows::Devices::Midi2::Enumeration;
+using namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy;
+using namespace winrt::Windows::Devices::Midi2::Reporting;
+
+
 
 #include <iostream>
+#include <set>
 
 #include <avrt.h>
+#include <wil\winrt.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <ppltasks.h>
@@ -35,11 +46,7 @@ using namespace winrt::Windows::Devices::Midi2::Diagnostics;
 
 #include "..\SdkTestCommon.h"
 
-#include "MidiPingTests.h"
-#include "MidiDiagnosticLoopbackEndpointTests.h"
-
-
-
+#include "MidiReportingTests.h"
 
 #ifndef LOG_OUTPUT
 #define LOG_OUTPUT(fmt, ...)  WEX::Logging::Log::Comment(WEX::Common::String().Format(fmt, __VA_ARGS__))

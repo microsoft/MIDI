@@ -11,199 +11,212 @@
 #ifndef MIDI_SDK_IDL_DEFS
 #define MIDI_SDK_IDL_DEFS
 
-// ============================================================================
-// Windows.Devices.Midi2
 
-#define UUID_IMidiApiStatics                                        8087b303-0519-31d1-c0de-ee0000001111
-
-#define UUID_IMidiChannel									        8087b303-0519-31d1-c0de-dd0000005000
-#define UUID_IMidiChannelStatics							        8087b303-0519-31d1-c0de-ee0000005000
-
-#define UUID_IMidiGroup										        8087b303-0519-31d1-c0de-dd0000007000
-#define UUID_IMidiGroupStatics								        8087b303-0519-31d1-c0de-ee0000007000
-
-#define UUID_IMidiClockStatics								        8087b303-0519-31d1-c0de-ee0000006000
-
-#define UUID_IMidiMessage32									        8087b303-0519-31d1-c0de-dd0000040032
-#define UUID_IMidiMessage32Statics							        8087b303-0519-31d1-c0de-ee0000040032
-#define UUID_IMidiMessage64									        8087b303-0519-31d1-c0de-dd0000040064
-#define UUID_IMidiMessage64Statics							        8087b303-0519-31d1-c0de-ee0000040064
-#define UUID_IMidiMessage96									        8087b303-0519-31d1-c0de-dd0000040096
-#define UUID_IMidiMessage96Statics							        8087b303-0519-31d1-c0de-ee0000040096
-#define UUID_IMidiMessage128								        8087b303-0519-31d1-c0de-dd0000040128
-#define UUID_IMidiMessage128Statics							        8087b303-0519-31d1-c0de-ee0000040128
-
-#define UUID_IMidiEndpointConnection						        8087b303-0519-31d1-c0de-dd0000050000
-#define UUID_IMidiEndpointConnectionStatics					        8087b303-0519-31d1-c0de-ee0000050000
-
-#define UUID_IMidiEndpointConnectionBasicSettings			        8087b303-0519-31d1-c0de-dd0000060000
-
-#define UUID_IMidiMessageReceivedEventArgs					        8087b303-0519-31d1-c0de-dd0000070000
-
-#define UUID_IMidiSession									        8087b303-0519-31d1-c0de-dd0000080000
-#define UUID_IMidiSessionStatics							        8087b303-0519-31d1-c0de-ee0000080000
-
-#define UUID_IMidiUniversalPacket							        "8087b303-0519-31d1-c0de-ff0000000010"
-#define UUID_IMidiEndpointConnectionSettings				        "8087b303-0519-31d1-c0de-ff0000000020"
-#define UUID_IMidiEndpointConnectionSource					        "8087b303-0519-31d1-c0de-ff0000000030"
-#define UUID_IMidiEndpointMessageProcessingPlugin			        "8087b303-0519-31d1-c0de-ff0000000040"
-#define UUID_IMidiMessageReceivedEventSource				        "8087b303-0519-31d1-c0de-ff0000000050"
+// Windows MIDI Services Client API UUID format
+// Standard first four fields 8087b303-0519-31d1-c0de
+// last field format ddxxxxxxxxxx for exclusive-to non-static interfaces
+// last field format eexxxxxxxxxx for exclusive-to static interfaces
+// last field format ffxxxxxxxxxx for stand-alone interfaces
 
 
 // ============================================================================
-// Windows.Devices.Midi2.CapabilityInquiry
+// Windows.Devices.Midi2 : Interface number 001
 
-#define UUID_IMidiUniqueId									        8087b303-0519-31d1-c0de-dd0000001000
-#define UUID_IMidiUniqueIdStatics							        8087b303-0519-31d1-c0de-ee0000001000
+#define UUID_IMidiApiStatics                                        8087b303-0519-31d1-c0de-ee0010000000
 
-// ============================================================================
-// Windows.Devices.Midi2.ClientPlugins
+#define UUID_IMidiChannel									        8087b303-0519-31d1-c0de-dd0010001000
+#define UUID_IMidiChannelStatics							        8087b303-0519-31d1-c0de-ee0010001000
 
-#define UUID_IMidiChannelEndpointListener					        8087b303-0519-31d1-c0de-dd0000002000
-#define UUID_IMidiGroupEndpointListener						        8087b303-0519-31d1-c0de-dd0000003000
-#define UUID_IMidiMessageTypeEndpointListener				        8087b303-0519-31d1-c0de-dd0000004000
+#define UUID_IMidiGroup										        8087b303-0519-31d1-c0de-dd0010002000
+#define UUID_IMidiGroupStatics								        8087b303-0519-31d1-c0de-ee0010002000
 
+#define UUID_IMidiClockStatics								        8087b303-0519-31d1-c0de-ee0010003000
 
-// ============================================================================
-// Windows.Devices.Midi2.Diagnostics
+#define UUID_IMidiMessage32									        8087b303-0519-31d1-c0de-dd0010004032
+#define UUID_IMidiMessage32Statics							        8087b303-0519-31d1-c0de-ee0010004032
+#define UUID_IMidiMessage64									        8087b303-0519-31d1-c0de-dd0010004064
+#define UUID_IMidiMessage64Statics							        8087b303-0519-31d1-c0de-ee0010004064
+#define UUID_IMidiMessage96									        8087b303-0519-31d1-c0de-dd0010004096
+#define UUID_IMidiMessage96Statics							        8087b303-0519-31d1-c0de-ee0010004096
+#define UUID_IMidiMessage128								        8087b303-0519-31d1-c0de-dd0010004128
+#define UUID_IMidiMessage128Statics							        8087b303-0519-31d1-c0de-ee0010004128
 
-#define UUID_IMidiDiagnosticsStatics						        8087b303-0519-31d1-c0de-ee0020001000
-#define UUID_IMidiServicePingResponseSummary				        8087b303-0519-31d1-c0de-dd0020002000
+#define UUID_IMidiEndpointConnection						        8087b303-0519-31d1-c0de-dd0010005000
+#define UUID_IMidiEndpointConnectionStatics					        8087b303-0519-31d1-c0de-ee0010005000
 
-// ============================================================================
-// Windows.Devices.Midi2.Enumeration
+#define UUID_IMidiEndpointConnectionBasicSettings			        8087b303-0519-31d1-c0de-dd0010006000
 
-#define UUID_IMidiEndpointDeviceInformation					        8087b303-0519-31d1-c0de-dd000000a000
-#define UUID_IMidiEndpointDeviceInformationStatics			        8087b303-0519-31d1-c0de-ee000000a000
+#define UUID_IMidiMessageReceivedEventArgs					        8087b303-0519-31d1-c0de-dd0010007000
 
-#define UUID_IMidiEndpointDeviceInformationAddedEventArgs	        8087b303-0519-31d1-c0de-dd000000b000
-#define UUID_IMidiEndpointDeviceInformationRemovedEventArgs	        8087b303-0519-31d1-c0de-dd000000c000
-#define UUID_IMidiEndpointDeviceInformationUpdatedEventArgs	        8087b303-0519-31d1-c0de-dd000000d000
+#define UUID_IMidiSession									        8087b303-0519-31d1-c0de-dd0010008000
+#define UUID_IMidiSessionStatics							        8087b303-0519-31d1-c0de-ee0010009000
 
-#define UUID_IMidiEndpointDeviceWatcher						        8087b303-0519-31d1-c0de-dd000000e000
-#define UUID_IMidiEndpointDeviceWatcherStatics				        8087b303-0519-31d1-c0de-ee000000e000
-
-#define UUID_IMidiFunctionBlock								        8087b303-0519-31d1-c0de-dd000000f000
-#define UUID_IMidiFunctionBlockStatics						        8087b303-0519-31d1-c0de-ee000000f000
-
-#define UUID_IMidiGroupTerminalBlock						        8087b303-0519-31d1-c0de-dd0000010000
-#define UUID_IMidiGroupTerminalBlockStatics					        8087b303-0519-31d1-c0de-ee0000010000
-
-#define UUID_IMidiDeclaredDeviceIdentity						    8087b303-0519-31d1-c0de-dd0000020001
-#define UUID_IMidiDeclaredEndpointInfo                              8087b303-0519-31d1-c0de-dd0000020002
-#define UUID_IMidiDeclaredStreamConfiguration                       8087b303-0519-31d1-c0de-dd0000020003
-#define UUID_IMidiEndpointTransportSuppliedInfo                     8087b303-0519-31d1-c0de-dd0000020004
-#define UUID_IMidiEndpointUserSuppliedInfo                          8087b303-0519-31d1-c0de-dd0000020005
-
-#define UUID_IMidi1PortNameTableEntry                               8087b303-0519-31d1-c0de-dd0000030001
-
-#define UUID_IMidiEndpointAssociatedPortDeviceInformation	        8087b303-0519-31d1-c0de-dd0000030100
-
-#define UUID_IMidiEndpointDevicePropertyHelperStatics		        8087b303-0519-31d1-c0de-ee0000030200
-
-#define UUID_IMidiEndpointDeviceIdHelperStatics				        8087b303-0519-31d1-c0de-ee0000030300
-
-#define UUID_IMidiLegacyPortDeviceInformation					    8087b303-0519-31d1-c0de-dd0000030400
-
-
-#define UUID_IMidiLegacyPortDeviceInformationAddedEventArgs	        8087b303-0519-31d1-c0de-dd000033b001
-#define UUID_IMidiLegacyPortDeviceInformationRemovedEventArgs	    8087b303-0519-31d1-c0de-dd000033c001
-#define UUID_IMidiLegacyPortDeviceInformationUpdatedEventArgs	    8087b303-0519-31d1-c0de-dd000033d001
-
-#define UUID_IMidiLegacyPortDeviceWatcher                           8087b303-0519-31d1-c0de-dd000033e001
-#define UUID_IMidiLegacyPortDeviceWatcherStatics				    8087b303-0519-31d1-c0de-ee000033e001
-
-#define UUID_IMidiParentDeviceInformation                           8087b303-0519-31d1-c0de-dd000044a002
-#define UUID_IMidiParentDeviceInformationStatics                    8087b303-0519-31d1-c0de-ee000044a002
-
+#define UUID_IMidiUniversalPacket							        "8087b303-0519-31d1-c0de-ff001000F010"
+#define UUID_IMidiEndpointConnectionSettings				        "8087b303-0519-31d1-c0de-ff001000F020"
+#define UUID_IMidiEndpointConnectionSource					        "8087b303-0519-31d1-c0de-ff001000F030"
+#define UUID_IMidiEndpointMessageProcessingPlugin			        "8087b303-0519-31d1-c0de-ff001000F040"
+#define UUID_IMidiMessageReceivedEventSource				        "8087b303-0519-31d1-c0de-ff001000F050"
 
 
 // ============================================================================
-// Windows.Devices.Midi2.Reporting
+// Windows.Devices.Midi2.ClientPlugins : Interface number 002
 
-#define UUID_IMidiReportingStatics							        8087b303-0519-31d1-c0de-ee0040001000
-#define UUID_IMidiServiceSessionInfo						        8087b303-0519-31d1-c0de-dd0040002000
-
-
-// ============================================================================
-// Windows.Devices.Midi2.ServiceConfig
-
-#define UUID_IMidiServiceTransportPluginConfigManagerStatics        8087b303-0519-31d1-c0de-ee0010000000
-#define UUID_IMidiServiceMidiServiceEndpointCustomizationConfig     8087b303-0519-31d1-c0de-dd0011000000
-#define UUID_IMidiServiceTransportCommand                           8087b303-0519-31d1-c0de-dd0012000000
-#define UUID_IMidiServiceTransportCommonCommandsStatics             8087b303-0519-31d1-c0de-ee0013000000
-
-#define UUID_IMidiServiceConfigEndpointMatchCriteria                8087b303-0519-31d1-c0de-dd0014000000
-#define UUID_IMidiServiceConfigEndpointMatchCriteriaStatics         8087b303-0519-31d1-c0de-ee0014000000
-
-#define UUID_IMidiServiceTransportPluginConfig				        "8087b303-0519-31d1-c0de-ff0000000060"
+#define UUID_IMidiChannelEndpointListener					        8087b303-0519-31d1-c0de-dd0020001000
+#define UUID_IMidiGroupEndpointListener						        8087b303-0519-31d1-c0de-dd0020002000
+#define UUID_IMidiMessageTypeEndpointListener				        8087b303-0519-31d1-c0de-dd0020003000
 
 
 // ============================================================================
-// Windows.Devices.Midi2.Utilities.Message
+// Windows.Devices.Midi2.Diagnostics  : Interface number 003
 
-#define UUID_IMidiMessageBuilderStatics						        8087b303-0519-31d1-c0de-ee0040001000
-#define UUID_IMidiMessageConverterStatics					        8087b303-0519-31d1-c0de-ee0040002000
-#define UUID_IMidiMessageHelperStatics						        8087b303-0519-31d1-c0de-ee0040003000
-#define UUID_IMidiStreamMessageBuilderStatics				        8087b303-0519-31d1-c0de-ee0040004000
-#define UUID_IMidiSystemExclusive7MessageHelperStatics              8087b303-0519-31d1-c0de-dd0040005000
-#define UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics    8087b303-0519-31d1-c0de-dd0040006000
+#define UUID_IMidiDiagnosticsStatics						        8087b303-0519-31d1-c0de-ee0030001000
+#define UUID_IMidiServicePingResponse                               8087b303-0519-31d1-c0de-dd0030002000
+#define UUID_IMidiServicePingResponseSummary				        8087b303-0519-31d1-c0de-dd0030003000
+
+// ============================================================================
+// Windows.Devices.Midi2.Enumeration : Interface number 004
+
+#define UUID_IMidiEndpointDeviceInformation					        8087b303-0519-31d1-c0de-dd004000a000
+#define UUID_IMidiEndpointDeviceInformationStatics			        8087b303-0519-31d1-c0de-ee004000a000
+
+#define UUID_IMidiEndpointDeviceInformationAddedEventArgs	        8087b303-0519-31d1-c0de-dd004000b000
+#define UUID_IMidiEndpointDeviceInformationRemovedEventArgs	        8087b303-0519-31d1-c0de-dd004000c000
+#define UUID_IMidiEndpointDeviceInformationUpdatedEventArgs	        8087b303-0519-31d1-c0de-dd004000d000
+
+#define UUID_IMidiEndpointDeviceWatcher						        8087b303-0519-31d1-c0de-dd004000e000
+#define UUID_IMidiEndpointDeviceWatcherStatics				        8087b303-0519-31d1-c0de-ee004000e000
+
+#define UUID_IMidiFunctionBlock								        8087b303-0519-31d1-c0de-dd004000f000
+#define UUID_IMidiFunctionBlockStatics						        8087b303-0519-31d1-c0de-ee004000f000
+
+#define UUID_IMidiGroupTerminalBlock						        8087b303-0519-31d1-c0de-dd0040010000
+#define UUID_IMidiGroupTerminalBlockStatics					        8087b303-0519-31d1-c0de-ee0040010000
+
+#define UUID_IMidiDeclaredDeviceIdentity						    8087b303-0519-31d1-c0de-dd0040011000
+#define UUID_IMidiDeclaredEndpointInfo                              8087b303-0519-31d1-c0de-dd0040012000
+#define UUID_IMidiDeclaredStreamConfiguration                       8087b303-0519-31d1-c0de-dd0040013000
+#define UUID_IMidiEndpointTransportSuppliedInfo                     8087b303-0519-31d1-c0de-dd0040014000
+#define UUID_IMidiEndpointUserSuppliedInfo                          8087b303-0519-31d1-c0de-dd0040015000
+
+#define UUID_IMidi1PortNameTableEntry                               8087b303-0519-31d1-c0de-dd0040016000
+#define UUID_IMidiEndpointAssociatedPortDeviceInformation	        8087b303-0519-31d1-c0de-dd0040017000
+#define UUID_IMidiEndpointDevicePropertyHelperStatics		        8087b303-0519-31d1-c0de-ee0040018000
+#define UUID_IMidiEndpointDeviceIdHelperStatics				        8087b303-0519-31d1-c0de-ee0040019000
+#define UUID_IMidiLegacyPortDeviceInformation					    8087b303-0519-31d1-c0de-dd004001A000
 
 
-#define UUID_IMidiUniversalSystemExclusiveChannel			        8087b303-0519-31d1-c0de-dd0000008000
-#define UUID_IMidiUniversalSystemExclusiveChannelStatics	        8087b303-0519-31d1-c0de-ee0000008000
+#define UUID_IMidiLegacyPortDeviceInformationAddedEventArgs	        8087b303-0519-31d1-c0de-dd004001B000
+#define UUID_IMidiLegacyPortDeviceInformationRemovedEventArgs	    8087b303-0519-31d1-c0de-dd004001C000
+#define UUID_IMidiLegacyPortDeviceInformationUpdatedEventArgs	    8087b303-0519-31d1-c0de-dd004001D000
+
+#define UUID_IMidiLegacyPortDeviceWatcher                           8087b303-0519-31d1-c0de-dd004001E000
+#define UUID_IMidiLegacyPortDeviceWatcherStatics				    8087b303-0519-31d1-c0de-ee004001E000
+
+#define UUID_IMidiParentDeviceInformation                           8087b303-0519-31d1-c0de-dd004001F000
+#define UUID_IMidiParentDeviceInformationStatics                    8087b303-0519-31d1-c0de-ee004001F000
 
 
 
 // ============================================================================
-// Windows.Devices.Midi2.Utilities.Sequencing
+// Windows.Devices.Midi2.Reporting : Interface number 005
+
+#define UUID_IMidiReportingStatics							        8087b303-0519-31d1-c0de-ee0050001000
+#define UUID_IMidiServiceSessionInfo						        8087b303-0519-31d1-c0de-dd0050002000
+#define UUID_IMidiServiceSessionConnectionInfo                      8087b303-0519-31d1-c0de-dd0050003000
+#define UUID_IMidiServiceTransportPluginInfo                        8087b303-0519-31d1-c0de-dd0050004000
 
 // ============================================================================
-// Windows.Devices.Midi2.Utilities.SysExTransfer
+// Windows.Devices.Midi2.ServiceConfig : Interface number 006
+
+#define UUID_IMidiServiceTransportPluginConfigManagerStatics        8087b303-0519-31d1-c0de-ee0060001000
+#define UUID_IMidiServiceMidiServiceEndpointCustomizationConfig     8087b303-0519-31d1-c0de-dd0060002000
+
+#define UUID_IMidiServiceTransportCommand                           8087b303-0519-31d1-c0de-dd0060003000
+#define UUID_IMidiServiceTransportCommonCommandsStatics             8087b303-0519-31d1-c0de-ee0060003000
+
+#define UUID_IMidiServiceConfigEndpointMatchCriteria                8087b303-0519-31d1-c0de-dd0060004000
+#define UUID_IMidiServiceConfigEndpointMatchCriteriaStatics         8087b303-0519-31d1-c0de-ee0060004000
+
+#define UUID_IMidiServiceTransportPluginConfig				        "8087b303-0519-31d1-c0de-ff0060005000"
+
+
+// ============================================================================
+// Windows.Devices.Midi2.CapabilityInquiry : Interface number 007
+
+#define UUID_IMidiUniqueId									        8087b303-0519-31d1-c0de-dd0070001000
+#define UUID_IMidiUniqueIdStatics							        8087b303-0519-31d1-c0de-ee0070001000
+
+
+
+// ========== Utilities : Interface number 0E ========================================================================
+
+
+// ============================================================================
+// Windows.Devices.Midi2.Utilities.Message : Interface number 00E01
+
+#define UUID_IMidiMessageBuilderStatics						        8087b303-0519-31d1-c0de-ee00E0101000
+#define UUID_IMidiMessageConverterStatics					        8087b303-0519-31d1-c0de-ee00E0102000
+#define UUID_IMidiMessageHelperStatics						        8087b303-0519-31d1-c0de-ee00E0103000
+#define UUID_IMidiStreamMessageBuilderStatics				        8087b303-0519-31d1-c0de-ee00E0104000
+#define UUID_IMidiSystemExclusive7MessageHelperStatics              8087b303-0519-31d1-c0de-dd00E0105000
+#define UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics    8087b303-0519-31d1-c0de-dd00E0106000
+
+#define UUID_IMidiUniversalSystemExclusiveChannel			        8087b303-0519-31d1-c0de-dd00E0107000
+#define UUID_IMidiUniversalSystemExclusiveChannelStatics	        8087b303-0519-31d1-c0de-ee00E0107000
+
+
+
+// ============================================================================
+// Windows.Devices.Midi2.Utilities.Sequencing : Interface number 00E02
+
+
+// ============================================================================
+// Windows.Devices.Midi2.Utilities.SysExTransfer : Interface number 00E03
+
+
+
+// ========== Transports : Interface number 0F ========================================================================
+
+
+// ============================================================================
+// Windows.Devices.Midi2.Endpoints.BasicLoopback  : Interface number 00F01
+
+#define UUID_IMidiBasicLoopbackEndpointCreationConfig		8087b303-0519-31d1-c0de-dd00F0101000
+#define UUID_IMidiBasicLoopbackEndpointRemovalConfig		8087b303-0519-31d1-c0de-dd00F0102000
+#define UUID_IMidiBasicLoopbackEndpointManagerStatics		8087b303-0519-31d1-c0de-ee00F0103000
+#define UUID_IMidiBasicLoopbackEndpointCreationResult       8087b303-0519-31d1-c0de-dd00F0104000
+#define UUID_IMidiBasicLoopbackEntry                        8087b303-0519-31d1-c0de-dd00F0105000   
+
+
+
+// ============================================================================
+// Windows.Devices.Midi2.Endpoints.Loopback : Interface number 00F02
+
+#define UUID_IMidiLoopbackEndpointCreationConfig			8087b303-0519-31d1-c0de-dd00F0201000
+#define UUID_IMidiLoopbackEndpointRemovalConfig				8087b303-0519-31d1-c0de-dd00F0202000
+#define UUID_IMidiLoopbackEndpointManagerStatics			8087b303-0519-31d1-c0de-ee00F0203000
+#define UUID_IMidiLoopbackEndpointCreationResult            8087b303-0519-31d1-c0de-dd00F0204000
+#define UUID_IMidiLoopbackEntry                             8087b303-0519-31d1-c0de-dd00F0205000
+#define UUID_IMidiLoopbackEndpointEntry                     8087b303-0519-31d1-c0de-dd00F0206000
+
+
+
+// ============================================================================
+// Windows.Devices.Midi2.Endpoints.Network : Interface number 00F03
+
+// ============================================================================
+// Windows.Devices.Midi2.Endpoints.Virtual : Interface number 00F04
+
+#define UUID_IMidiStreamConfigRequestReceivedEventArgs		8087b303-0519-31d1-c0de-dd00F0401000
+#define UUID_IMidiVirtualDevice								8087b303-0519-31d1-c0de-dd00F0402000
+#define UUID_IMidiVirtualDeviceCreationConfig				8087b303-0519-31d1-c0de-dd00F0403000
+#define UUID_IMidiVirtualDeviceManagerStatics				8087b303-0519-31d1-c0de-ee00F0404000
 
 
 
 
 // ============================================================================
 // Windows.Devices.Midi2.VirtualPatchBay
-
-
-
-
-// ============================================================================
-// Windows.Devices.Midi2.Endpoints.BasicLoopback
-
-#define UUID_IMidiBasicLoopbackEndpointCreationConfig		8087b303-0519-31d1-c0de-dd0000390000
-#define UUID_IMidiBasicLoopbackEndpointRemovalConfig		8087b303-0519-31d1-c0de-dd00003a0000
-#define UUID_IMidiBasicLoopbackEndpointManagerStatics		8087b303-0519-31d1-c0de-ee00003b0000
-#define UUID_IMidiBasicLoopbackEndpointCreationResult       8087b303-0519-31d1-c0de-dd00003c0000
-#define UUID_IMidiBasicLoopbackEntry                        8087b303-0519-31d1-c0de-dd00003d0000   
-
-
-
-// ============================================================================
-// Windows.Devices.Midi2.Endpoints.Loopback
-
-#define UUID_IMidiLoopbackEndpointCreationConfig			8087b303-0519-31d1-c0de-dd0000190000
-#define UUID_IMidiLoopbackEndpointRemovalConfig				8087b303-0519-31d1-c0de-dd00001a0000
-#define UUID_IMidiLoopbackEndpointManagerStatics			8087b303-0519-31d1-c0de-ee00001b0000
-#define UUID_IMidiLoopbackEndpointCreationResult            8087b303-0519-31d1-c0de-dd00001c0000
-#define UUID_IMidiLoopbackEntry                             8087b303-0519-31d1-c0de-dd00001d0000
-#define UUID_IMidiLoopbackEndpointEntry                     8087b303-0519-31d1-c0de-dd00001e0000
-
-
-
-// ============================================================================
-// Windows.Devices.Midi2.Endpoints.Network
-
-// ============================================================================
-// Windows.Devices.Midi2.Endpoints.Virtual
-
-#define UUID_IMidiStreamConfigRequestReceivedEventArgs		8087b303-0519-31d1-c0de-dd00002a0000
-#define UUID_IMidiVirtualDevice								8087b303-0519-31d1-c0de-dd00002b0000
-#define UUID_IMidiVirtualDeviceCreationConfig				8087b303-0519-31d1-c0de-dd00002c0000
-#define UUID_IMidiVirtualDeviceManagerStatics				8087b303-0519-31d1-c0de-ee00002d0000
-
 
 
 

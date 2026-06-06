@@ -9,22 +9,27 @@
 
 #pragma once
 
-class MidiEndpointIdHelperTests
-    : public WEX::TestClass<MidiEndpointIdHelperTests>
+class MidiReportingTests
+    : public WEX::TestClass<MidiReportingTests>
 {
 public:
 
-    BEGIN_TEST_CLASS(MidiEndpointIdHelperTests)
-        TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
+    BEGIN_TEST_CLASS(MidiReportingTests)
+        TEST_CLASS_PROPERTY(L"TestClassification", L"Integration")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.Enumeration.dll")
-        END_TEST_CLASS()
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.Reporting.dll")
+    END_TEST_CLASS()
 
-    TEST_METHOD(TestCreateShortIdFromFullId);
-    TEST_METHOD(TestCreateFullIdFromShortId);
-    TEST_METHOD(TestIsWindowsMidiServicesId);
-    TEST_METHOD(TestNormalizeId);
+    TEST_CLASS_SETUP(ClassSetup);
+    TEST_CLASS_CLEANUP(ClassCleanup);
 
+    TEST_METHOD(TestEnumerateTransports);
+    TEST_METHOD(TestEnumerateSessions);
+
+
+private:
 
 
 };
+
+

@@ -18,18 +18,12 @@
     <ClInclude Include="stdafx.h">
       <Filter>Support</Filter>
     </ClInclude>
-    <ClInclude Include="MidiDiagnosticLoopbackEndpointTests.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiPingTests.h">
+    <ClInclude Include="MidiReportingTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiDiagnosticLoopbackEndpointTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiPingTests.cpp">
+    <ClCompile Include="MidiReportingTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

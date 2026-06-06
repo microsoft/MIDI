@@ -63,7 +63,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                 return *responseSummary;
             }
 
-            std::vector<diag::MidiServicePingResponse> pings{};
+            std::vector<winrt::com_ptr<MidiServicePingResponse>> pings;
             pings.resize(pingCount);
 
             if (timeoutMilliseconds == 0)
@@ -144,10 +144,10 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                 {
                     internal::MidiTimestamp actualReceiveEventTimestamp = MidiClock::Now();
 
-                    uint32_t word0;
-                    uint32_t word1;
-                    uint32_t word2;
-                    uint32_t word3;
+                    uint32_t word0{};
+                    uint32_t word1{};
+                    uint32_t word2{};
+                    uint32_t word3{};
 
                     args.FillWords(word0, word1, word2, word3);
 
@@ -161,11 +161,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
 
                             auto ping = pings[word2];
 
-                            ping.ClientReceiveMidiTimestamp = actualReceiveEventTimestamp;
-                            ping.ServiceReportedMidiTimestamp = args.Timestamp();
-                            ping.ClientDeltaTimestamp = ping.ClientReceiveMidiTimestamp - ping.ClientSendMidiTimestamp;
-
-                            pings[word2] = std::move(ping);
+                            ping->InternalSetResponseData(args.Timestamp(), actualReceiveEventTimestamp);
 
                             receivedCount++;
 
@@ -236,18 +232,17 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
             {
                 internal::PackedPingRequestUmp request;
 
-                diag::MidiServicePingResponse response;
+                auto response = winrt::make_self<MidiServicePingResponse>();
 
                 internal::MidiTimestamp timestamp = MidiClock::Now();
 
                 // Add this info to the tracking before we send, so no race condition
                 // granted that this adds a few ticks to add this to the collection and build the object
 
-                response.SourceId = pingSourceId;
-                response.Index = pingIndex;
-                response.ClientSendMidiTimestamp = timestamp;
+                auto ping = winrt::make_self<MidiServicePingResponse>();
+                ping->InternalInitialize(pingSourceId, pingIndex, timestamp);
 
-                pings[pingIndex] = std::move(response);
+                pings[pingIndex] = response;
 
                 // send the ping
 
@@ -315,9 +310,9 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                 {
                     // internal::LogInfo(__FUNCTION__, L"Calculating total ping");
 
-                    totalPing += response.ClientDeltaTimestamp;
+                    totalPing += response->ClientDeltaTimestamp();
 
-                    responseSummary->InternalAddResponse(response);
+                    responseSummary->InternalAddResponse(*response);
 
                     // does I need to remove the com_ptr ref or will going out of scope be sufficient?
                 }

@@ -104,7 +104,5 @@ namespace diag = ::winrt::Windows::Devices::Midi2::Diagnostics;
 
 
 #include "MidiDiagnostics.h"
-//#include "MidiServicePingResponse.h"
+#include "MidiServicePingResponse.h"
 #include "MidiServicePingResponseSummary.h"
-//#include "MidiServiceSessionConnectionInfo.h"
-//#include "MidiServiceTransportPluginInfo.h"

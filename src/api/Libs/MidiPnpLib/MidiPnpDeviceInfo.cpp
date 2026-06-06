@@ -22,6 +22,7 @@
 
 #include "MidiPnpDeviceInfo.h"
 
+
 namespace WindowsMidiServicesInternal
 {
     // ============================================================

@@ -13,26 +13,26 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Reporting
 {
     [contract(MidiReportingApiContract, 1)]
-    struct MidiServiceTransportPluginInfo
+    [interface_name("Windows.Devices.Midi2.Reporting.IMidiServiceTransportPluginInfo", UUID_IMidiServiceTransportPluginInfo)]
+    runtimeclass MidiServiceTransportPluginInfo
     {
-        Guid Id;
+        Guid TransportId{ get; };
 
-        String Name;
-        String TransportCode;
-        String Description;
+        String Name{ get; };
+        String TransportCode{ get; };
+        String Description{ get; };
 
-        String ImageFileName;
+        String ImageFileName{ get; };
 
-        String Author;
+        String Author{ get; };
 
-        String Version;
+        String Version{ get; };
 
-        Boolean IsRuntimeCreatableByApps;
-        Boolean IsRuntimeCreatableBySettings;
+        Boolean IsRuntimeCreatableByApps{ get; };
+        Boolean IsRuntimeCreatableBySettings{ get; };
 
-        Boolean IsSystemManaged;
-        Boolean CanConfigure;
+        Boolean IsSystemManaged{ get; };
+        Boolean CanConfigure{ get; };
 
-        //     String ClientConfigurationAssemblyName{ get; };
-         };
+    };
 }

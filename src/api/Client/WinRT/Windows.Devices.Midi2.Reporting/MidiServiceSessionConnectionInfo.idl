@@ -15,12 +15,13 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Reporting
 {
     [contract(MidiReportingApiContract, 1)]
-    struct MidiServiceSessionConnectionInfo
+    [interface_name("Windows.Devices.Midi2.Reporting.IMidiServiceSessionConnectionInfo", UUID_IMidiServiceSessionConnectionInfo)]
+    runtimeclass MidiServiceSessionConnectionInfo
     {
-        String EndpointDeviceId;
+        String EndpointDeviceId{ get; };
 
-        UInt16 InstanceCount;
+        UInt16 InstanceCount{ get; };
 
-        Windows.Foundation.DateTime EarliestConnectionTime;
+        Windows.Foundation.DateTime EarliestConnectionTime{ get; };
     };
 }
