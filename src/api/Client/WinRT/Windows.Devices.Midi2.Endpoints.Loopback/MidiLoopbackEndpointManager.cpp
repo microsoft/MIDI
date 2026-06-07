@@ -38,20 +38,39 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
 
 
+    collections::IVectorView<loop::MidiLoopbackEntry> MidiLoopbackEndpointManager::GetActiveLoopbackEntries() noexcept
+    {
+        // TODO ===============================
+
+        return nullptr;
+    }
+
+
+
+
+
+
 
     _Use_decl_annotations_
     loop::MidiLoopbackEndpointCreationResult MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(
-        loop::MidiLoopbackEndpointCreationConfig creationConfig)
+        loop::MidiLoopbackEndpointCreationConfig const& creationConfig) noexcept
     {
         // the success code in this defaults to False
-        auto result = winrt::make_self<implementation::MidiLoopbackEndpointCreationResult>();
+        auto result = winrt::make_self<MidiLoopbackEndpointCreationResult>();
         if (result == nullptr)
         {
             return nullptr;
         }
         
         result->Success(false);
-        result->AssociationId(creationConfig.AssociationId());
+
+        auto createdLoopbackEntry = winrt::make_self<MidiLoopbackEntry>();
+        if (createdLoopbackEntry == nullptr)
+        {
+            return nullptr;
+        }
+
+        createdLoopbackEntry->AssociationId(creationConfig.AssociationId());
 
         // TODO: Result error code
 
@@ -204,7 +223,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
     _Use_decl_annotations_
     bool MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(
-        loop::MidiLoopbackEndpointRemovalConfig removalConfig)
+        loop::MidiLoopbackEndpointRemovalConfig const& removalConfig) noexcept
     {
         // the success code in this defaults to False
         bool result = false;
@@ -246,7 +265,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     }
 
     _Use_decl_annotations_
-    winrt::guid MidiLoopbackEndpointManager::GetAssociationId(midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint)
+    winrt::guid MidiLoopbackEndpointManager::GetAssociationId(
+        midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint) noexcept
     {
         if (loopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
             loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
@@ -263,7 +283,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     _Use_decl_annotations_
     midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
         midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint
-    )
+    ) noexcept
     {
         auto domain = midi2enum::MidiEndpointDeviceInformation::FindAll();
 
@@ -273,8 +293,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
     _Use_decl_annotations_
     midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpointForId(
-        winrt::hstring loopbackEndpointId
-    )
+        winrt::hstring const& const& loopbackEndpointId
+    ) noexcept
     {
         auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(loopbackEndpointId);
 
@@ -287,7 +307,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     _Use_decl_annotations_
     midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
         midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint,
-        collections::IIterable<midi2enum::MidiEndpointDeviceInformation> endpointsToSearch)
+        collections::IIterable<midi2enum::MidiEndpointDeviceInformation> endpointsToSearch) noexcept
     {
         try
         {

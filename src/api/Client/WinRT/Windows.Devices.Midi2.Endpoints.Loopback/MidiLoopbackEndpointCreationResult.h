@@ -24,22 +24,15 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         winrt::hstring ErrorMessage() const noexcept { return m_errorMessage; }
         void ErrorMessage(_In_ winrt::hstring const& value) noexcept { m_errorMessage = value; }
 
-        winrt::guid AssociationId() const noexcept { return m_associationId; }
-        void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }
-
-        winrt::hstring EndpointDeviceIdA() const noexcept { return m_endpointDeviceIdA; }
-        void EndpointDeviceIdA(_In_ winrt::hstring const& value) noexcept { m_endpointDeviceIdA = value; };
-
-        winrt::hstring EndpointDeviceIdB() const noexcept { return m_endpointDeviceIdB; }
-        void EndpointDeviceIdB(_In_ winrt::hstring const& value) noexcept { m_endpointDeviceIdB = value; };
+        loop::MidiLoopbackEntry CreatedLoopbackEntry() const noexcept { return m_createdLoopbackEntry; }
+        void CreatedLoopbackEntry(_In_ loop::MidiLoopbackEntry const& value) noexcept { m_createdLoopbackEntry = value; };
 
 
     private:
         bool m_success{ false };
         loop::MidiLoopbackEndpointCreationResultErrorCode m_errorCode{ loop::MidiLoopbackEndpointCreationResultErrorCode::NoErrorInformationAvailable };
         winrt::hstring m_errorMessage{ };
-        winrt::hstring m_endpointDeviceIdA{ };
-        winrt::hstring m_endpointDeviceIdB{ };
-        winrt::guid m_associationId{ };
+
+        loop::MidiLoopbackEntry m_createdLoopbackEntry{ nullptr };
     };
 }

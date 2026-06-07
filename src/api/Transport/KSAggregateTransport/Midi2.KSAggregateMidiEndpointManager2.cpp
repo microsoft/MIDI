@@ -16,6 +16,7 @@
 #include "Feature_Servicing_MIDI2FilterCreations.h"
 #include "Feature_Servicing_MIDI2KSATVSFix.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
+#include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;

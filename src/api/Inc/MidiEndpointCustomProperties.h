@@ -124,6 +124,7 @@ namespace WindowsMidiServicesPluginConfigurationLib
         bool RequiresNoteOffTranslation{};
         bool SupportsMidiPolyphonicExpression{};
         uint16_t RecommendedControlChangeIntervalMilliseconds{};
+        uint64_t OutgoingLatencyTicks{};
 
      //   bool UmpOnly{ false };
         WindowsMidiServicesNamingLib::Midi1PortNameSelection Midi1NamingApproach{ WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault };

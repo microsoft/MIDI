@@ -37,6 +37,9 @@ namespace Windows.Devices.Midi2.ServiceConfig
         Boolean SupportsMidiPolyphonicExpression;
         UInt16 RecommendedControlChangeIntervalMilliseconds;
 
+        UInt64 OutgoingLatencyTicks;
+
+
         Windows.Devices.Midi2.Enumeration.Midi1PortNamingApproach Midi1PortNamingApproach;
 
         void AddMidi1SourcePortCustomName(Windows.Devices.Midi2.MidiGroup group, String name);

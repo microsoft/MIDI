@@ -150,6 +150,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <VcpkgHostTriplet>
@@ -298,6 +299,12 @@
     <ClInclude Include="MidiLoopbackEndpointCreationResult.h">
       <DependentUpon>MidiLoopbackEndpointCreationResult.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointDefinition.h">
+      <DependentUpon>MidiLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointEntry.h">
+      <DependentUpon>MidiLoopbackEndpointEntry.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiLoopbackEndpointRemovalConfig.h">
       <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
     </ClInclude>
@@ -306,6 +313,9 @@
     </ClInclude>
     <ClInclude Include="MidiLoopbackEndpointCreationConfig.h">
       <DependentUpon>MidiLoopbackEndpointCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEntry.h">
+      <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
@@ -316,6 +326,12 @@
       <DependentUpon>MidiLoopbackEndpointCreationResult.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="MidiLoopbackEndpointDefinition.cpp">
+      <DependentUpon>MidiLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointEntry.cpp">
+      <DependentUpon>MidiLoopbackEndpointEntry.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiLoopbackEndpointRemovalConfig.cpp">
       <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
     </ClCompile>
@@ -324,6 +340,9 @@
     </ClCompile>
     <ClCompile Include="MidiLoopbackEndpointCreationConfig.cpp">
       <DependentUpon>MidiLoopbackEndpointCreationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEntry.cpp">
+      <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

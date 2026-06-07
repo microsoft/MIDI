@@ -139,6 +139,7 @@
 
 #define UUID_IMidiServiceTransportPluginConfig				        "8087b303-0519-31d1-c0de-ff0060005000"
 
+#define UUID_IMidiServiceConfigResponse                             8087b303-0519-31d1-c0de-ee0060005000
 
 // ============================================================================
 // Windows.Devices.Midi2.CapabilityInquiry : Interface number 007
@@ -198,7 +199,7 @@
 #define UUID_IMidiLoopbackEndpointCreationResult            8087b303-0519-31d1-c0de-dd00F0204000
 #define UUID_IMidiLoopbackEntry                             8087b303-0519-31d1-c0de-dd00F0205000
 #define UUID_IMidiLoopbackEndpointEntry                     8087b303-0519-31d1-c0de-dd00F0206000
-
+#define UUID_IMidiLoopbackEndpointDefinition                8087b303-0519-31d1-c0de-dd00F0207000
 
 
 // ============================================================================

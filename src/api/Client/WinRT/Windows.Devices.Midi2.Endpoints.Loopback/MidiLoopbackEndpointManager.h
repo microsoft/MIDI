@@ -21,25 +21,29 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}"); }
 
         static loop::MidiLoopbackEndpointCreationResult CreateTransientLoopbackEndpoints(
-            _In_ loop::MidiLoopbackEndpointCreationConfig creationConfig);
+            _In_ loop::MidiLoopbackEndpointCreationConfig const& creationConfig) noexcept;
 
         static bool RemoveTransientLoopbackEndpoints(
-            _In_ loop::MidiLoopbackEndpointRemovalConfig deletionConfig);
+            _In_ loop::MidiLoopbackEndpointRemovalConfig const& deletionConfig) noexcept;
 
         static midi2enum::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
-            _In_ winrt::hstring loopbackEndpointId);
+            _In_ winrt::hstring const& loopbackEndpointId) noexcept;
 
         static midi2enum::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
             _In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint,
-            _In_ collections::IIterable<midi2enum::MidiEndpointDeviceInformation> endpointsToSearch);
+            _In_ collections::IIterable<midi2enum::MidiEndpointDeviceInformation> const& endpointsToSearch) noexcept;
 
         static midi2enum::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
-            _In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint);
+            _In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint) noexcept;
 
-        static bool DoesLoopbackAExist(_In_ winrt::hstring const& uniqueIdentifier);
-        static bool DoesLoopbackBExist(_In_ winrt::hstring const& uniqueIdentifier);
+        static bool DoesLoopbackAExist(_In_ winrt::hstring const& uniqueIdentifier) noexcept;
+        static bool DoesLoopbackBExist(_In_ winrt::hstring const& uniqueIdentifier) noexcept;
 
         static winrt::guid GetAssociationId(_In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint);
+
+        static collections::IVectorView<loop::MidiLoopbackEntry> GetActiveLoopbackEntries() noexcept;
+
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::factory_implementation

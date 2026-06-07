@@ -11,6 +11,15 @@
     <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp">
       <Filter>SDK\Create</Filter>
     </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointDefinition.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointEntry.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEntry.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -19,6 +28,15 @@
     </ClInclude>
     <ClInclude Include="MidiLoopbackEndpointCreationResult.h">
       <Filter>SDK\Create</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointDefinition.h">
+      <Filter>SDK\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointEntry.h">
+      <Filter>SDK\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEntry.h">
+      <Filter>SDK\Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

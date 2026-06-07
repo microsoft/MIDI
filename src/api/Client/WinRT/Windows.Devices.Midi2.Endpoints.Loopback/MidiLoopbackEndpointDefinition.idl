@@ -14,6 +14,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointDefinition", UUID_IMidiLoopbackEndpointDefinition)]
     runtimeclass MidiLoopbackEndpointDefinition
     {
         MidiLoopbackEndpointDefinition();

@@ -12,14 +12,6 @@
 
 void MidiLoopbackEndpointTests::TestCreateLoopbackEndpoints()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
     {
 
         winrt::hstring endpointAId{};

@@ -105,14 +105,6 @@ namespace loop = ::winrt::Windows::Devices::Midi2::Endpoints::Loopback;
 
 #include <safe_cotaskmemfree.h>
 
-// libmidi2
-
-#pragma warning(push)
-#pragma warning(disable: 4996)
-#include <libmidi2/bytestreamToUMP.h>
-#include <libmidi2/umpToBytestream.h>
-#pragma warning(pop)
-
 
 
 //#include <WindowsMidiServicesSdkRuntimeVersion.h>
