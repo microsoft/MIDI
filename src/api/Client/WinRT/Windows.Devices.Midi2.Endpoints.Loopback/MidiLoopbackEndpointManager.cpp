@@ -127,7 +127,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
                 if (!deviceIdA.empty() && !deviceIdB.empty())
                 {
                     // update the response object with the new ids
-                    result->EndpointDeviceIdA(deviceIdA);
+                    result-> EndpointDeviceIdA(deviceIdA);
                     result->EndpointDeviceIdB(deviceIdB);
                     result->Success(true);
                 }
