@@ -68,8 +68,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         void Midi1PortNamingApproach(_In_ midi2enum::Midi1PortNamingApproach const value) noexcept;
 
 
-        uint32_t OutgoingLatencyTicks() const noexcept { return m_props->OutgoingLatencyTicks; }
-        void OutgoingLatencyTicks(_In_ uint32_t const value) noexcept { m_props->OutgoingLatencyTicks = value; }
+        uint64_t OutgoingLatencyTicks() const noexcept { return m_props->OutgoingLatencyTicks; }
+        void OutgoingLatencyTicks(_In_ uint64_t const value) noexcept { m_props->OutgoingLatencyTicks = value; }
 
         json::JsonObject ConfigJson() const noexcept;
 

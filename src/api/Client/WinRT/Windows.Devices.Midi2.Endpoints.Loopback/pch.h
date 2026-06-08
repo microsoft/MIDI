@@ -95,6 +95,7 @@ namespace rept = ::winrt::Windows::Devices::Midi2::Reporting;
 #include <resource_util.h>
 #include <swd_helpers.h>
 #include <midi_ump_message_defs.h>
+#include "winrt_enumeration_prop_util.h"
 
 // SDK shared
 #include <SdkTraceLogging.h>
@@ -114,8 +115,13 @@ namespace loop = ::winrt::Windows::Devices::Midi2::Endpoints::Loopback;
 #include "endpoint_device_interface_helpers.h"
 #include "MidiEndpointNametable.h"
 
+#include "MidiLoopbackEndpointDefinition.h"
+#include "MidiLoopbackEndpointEntry.h"
+#include "MidiLoopbackEntry.h"
+#include "MidiLoopbackEndpointCreationResult.h"
 
-#include "MidiLoopbackEndpointManager.h"
 #include "MidiLoopbackEndpointCreationConfig.h"
 #include "MidiLoopbackEndpointRemovalConfig.h"
 #include "MidiLoopbackEndpointCreationResult.h"
+
+#include "MidiLoopbackEndpointManager.h"

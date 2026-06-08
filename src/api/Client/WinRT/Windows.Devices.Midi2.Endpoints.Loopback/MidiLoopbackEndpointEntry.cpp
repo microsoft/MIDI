@@ -12,16 +12,5 @@
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    hstring MidiLoopbackEndpointEntry::EndpointDeviceId()
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiLoopbackEndpointEntry::Name()
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiLoopbackEndpointEntry::Description()
-    {
-        throw hresult_not_implemented();
-    }
+
 }

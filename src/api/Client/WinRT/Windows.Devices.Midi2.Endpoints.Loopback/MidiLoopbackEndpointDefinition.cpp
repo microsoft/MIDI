@@ -12,36 +12,5 @@
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    MidiLoopbackEndpointDefinition::MidiLoopbackEndpointDefinition(hstring const& name, hstring const& uniqueId)
-    {
-        throw hresult_not_implemented();
-    }
-    MidiLoopbackEndpointDefinition::MidiLoopbackEndpointDefinition(hstring const& name, hstring const& uniqueId, hstring const& description)
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiLoopbackEndpointDefinition::Name()
-    {
-        throw hresult_not_implemented();
-    }
-    void MidiLoopbackEndpointDefinition::Name(hstring const& value)
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiLoopbackEndpointDefinition::UniqueId()
-    {
-        throw hresult_not_implemented();
-    }
-    void MidiLoopbackEndpointDefinition::UniqueId(hstring const& value)
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiLoopbackEndpointDefinition::Description()
-    {
-        throw hresult_not_implemented();
-    }
-    void MidiLoopbackEndpointDefinition::Description(hstring const& value)
-    {
-        throw hresult_not_implemented();
-    }
+
 }

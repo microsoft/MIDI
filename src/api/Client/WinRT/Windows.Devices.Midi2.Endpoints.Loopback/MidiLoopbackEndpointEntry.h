@@ -15,8 +15,27 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     {
         MidiLoopbackEndpointEntry() = default;
 
-        hstring EndpointDeviceId();
-        hstring Name();
-        hstring Description();
+        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+        winrt::hstring Name() const noexcept { return m_name; }
+        winrt::hstring Description() const noexcept { return m_description; }
+
+        bool InternalInitialize(
+            _In_ winrt::hstring const& endpointDeviceId, 
+            _In_ winrt::hstring const& name, 
+            _In_ winrt::hstring const& description) noexcept
+        {
+            m_endpointDeviceId = internal::TrimmedHStringCopy(endpointDeviceId);
+            m_name = internal::TrimmedHStringCopy(name);
+            m_description = internal::TrimmedHStringCopy(description);
+
+            return true;
+        }
+
+
+    private:
+        winrt::hstring m_endpointDeviceId{ };
+        winrt::hstring m_name{ };
+        winrt::hstring m_description{ };
+
     };
 }

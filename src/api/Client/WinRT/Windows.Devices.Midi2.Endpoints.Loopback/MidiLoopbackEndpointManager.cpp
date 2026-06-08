@@ -27,7 +27,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
         for (auto const& transport : transports)
         {
-            if (transport.Id == TransportId())
+            if (transport.TransportId() == TransportId())
             {
                 return true;
             }
@@ -70,57 +70,39 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
             return nullptr;
         }
 
-        createdLoopbackEntry->AssociationId(creationConfig.AssociationId());
+        createdLoopbackEntry->InternalSetAssociationId(creationConfig.AssociationId());
 
         // TODO: Result error code
 
-
-        loop::MidiLoopbackEndpointDefinition definitionA;
-        loop::MidiLoopbackEndpointDefinition definitionB;
-
-        // we have to do all this so we don't change the method signature, but
-        // can provide a default value when the uniqueId is missing. The 
-        // endpoint definition is just a structure, with no constructor
-        definitionA.Description = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Description);
-        //definitionA.IsMuted = creationConfig.EndpointDefinitionA().IsMuted;
-        definitionA.Name = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionA().Name);
-        definitionA.UniqueId = internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId.c_str()).c_str(), MAXPNAMELEN);
-
-        definitionB.Description = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Description);
-        //definitionB.IsMuted = creationConfig.EndpointDefinitionB().IsMuted;
-        definitionB.Name = internal::TrimmedHStringCopy(creationConfig.EndpointDefinitionB().Name);
-        definitionB.UniqueId = internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId.c_str()).c_str(), MAXPNAMELEN);
+        creationConfig.EndpointDefinitionA().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId().c_str()).c_str(), MAXPNAMELEN));
+        creationConfig.EndpointDefinitionB().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId().c_str()).c_str(), MAXPNAMELEN));
 
 
-        if (definitionA.UniqueId.empty())
+        if (creationConfig.EndpointDefinitionA().UniqueId().empty())
         {
             // generate a unique id if one has not been provided
             std::wstring id{ internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid()) };
             internal::InPlaceToLower(id);
 
-            definitionA.UniqueId = id;
-
+            creationConfig.EndpointDefinitionA().UniqueId(id);
         }
 
-        if (definitionB.UniqueId.empty())
+        if (creationConfig.EndpointDefinitionB().UniqueId().empty())
         {
-            definitionB.UniqueId = definitionA.UniqueId;
+            creationConfig.EndpointDefinitionB().UniqueId(creationConfig.EndpointDefinitionA().UniqueId());
         }
 
-        loop::MidiLoopbackEndpointCreationConfig updatedCreationConfig(creationConfig.AssociationId(), definitionA, definitionB);
-        
 
-
-        if (internal::TrimmedHStringCopy(updatedCreationConfig.EndpointDefinitionA().Name).empty())
+        if (creationConfig.EndpointDefinitionA().Name().empty())
         {
-            result->ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A));
+            result->ErrorMessage(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A));
             result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::InvalidOrMissingNameA);
             return *result;
         }
 
-        if (internal::TrimmedHStringCopy(updatedCreationConfig.EndpointDefinitionB().Name).empty())
+        if (creationConfig.EndpointDefinitionB().Name().empty())
         {
-            result->ErrorInformation(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B));
+            result->ErrorMessage(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B));
             result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::InvalidOrMissingNameB);
             return *result;
         }
@@ -130,45 +112,42 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
         try
         {
-            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(updatedCreationConfig);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(creationConfig);
 
             // parse the results
-            auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
+            auto successResult = serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success;
 
             if (successResult)
             {
-                json::JsonObject serviceResponseJson;
+                json::JsonObject serviceResponseJson = serviceResponse.ResponseJson();
 
-                if (json::JsonObject::TryParse(serviceResponse.ResponseJson, serviceResponseJson))
+                auto deviceIdA = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
+                auto deviceIdB = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
+
+                if (!deviceIdA.empty() && !deviceIdB.empty())
                 {
-                    auto deviceIdA = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
-                    auto deviceIdB = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
-
-                    if (!deviceIdA.empty() && !deviceIdB.empty())
-                    {
-                        // update the response object with the new ids
-                        result->EndpointDeviceIdA(deviceIdA);
-                        result->EndpointDeviceIdB(deviceIdB);
-                        result->Success(true);
-                    }
-                    else
-                    {
-                        TraceLoggingWrite(
-                            Midi2SdkTelemetryProvider::Provider(),
-                            MIDI_SDK_TRACE_EVENT_ERROR,
-                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                            TraceLoggingWideString(L"Device creation succeeded but returned device ids are empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                            TraceLoggingGuid(creationConfig.AssociationId(), "association id")
-                        );
-                    }
-
+                    // update the response object with the new ids
+                    result->EndpointDeviceIdA(deviceIdA);
+                    result->EndpointDeviceIdB(deviceIdB);
+                    result->Success(true);
                 }
+                else
+                {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Device creation succeeded but returned device ids are empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                    );
+                }
+
             }
             else
             {
-                result->ErrorInformation(serviceResponse.ServiceMessage);
+                result->ErrorMessage(serviceResponse.ServiceErrorMessage());
 
                 // TODO: Need to get error code from the service response
 
@@ -189,7 +168,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         }
         catch (winrt::hresult_error ex)
         {
-            result->ErrorInformation(ex.message());
+            result->ErrorMessage(ex.message());
+            result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::ExceptionThrown);
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -205,7 +185,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         }
         catch (...)
         {
-            result->ErrorInformation(L"General exception/error.");
+            result->ErrorMessage(L"General exception/error.");
+            result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::ExceptionThrown);
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -230,9 +211,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
         try
         {
-            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(removalConfig);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(removalConfig);
 
-            result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
+            result = (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success);
         }
         catch (winrt::hresult_error ex)
         {
@@ -293,7 +274,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
     _Use_decl_annotations_
     midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpointForId(
-        winrt::hstring const& const& loopbackEndpointId
+        winrt::hstring const& loopbackEndpointId
     ) noexcept
     {
         auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(loopbackEndpointId);
@@ -307,7 +288,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     _Use_decl_annotations_
     midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
         midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint,
-        collections::IIterable<midi2enum::MidiEndpointDeviceInformation> endpointsToSearch) noexcept
+        collections::IIterable<midi2enum::MidiEndpointDeviceInformation> const& endpointsToSearch) noexcept
     {
         try
         {
@@ -321,7 +302,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
                 return nullptr;
             }
 
-            auto transportId = loopbackEndpoint.GetTransportSuppliedInfo().TransportId;
+            auto transportId = loopbackEndpoint.GetTransportSuppliedInfo().TransportId();
 
             if (transportId != TransportId())
             {
@@ -334,7 +315,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
             if (loopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) && 
                 loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
             {
-                auto associator = winrt::unbox_value<winrt::hstring>(loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
+                auto associator = internal::GetDeviceInfoProperty<winrt::hstring>(loopbackEndpoint.Properties(), STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, L"");
 
                 // find the other endpoint that has this associator
                 // this is wasteful to get everything and then iterate, but there's 
@@ -342,7 +323,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
                 for (auto const& ep : endpointsToSearch)
                 {
-                    if (ep.GetTransportSuppliedInfo().TransportId != TransportId()) continue;
+                    if (ep.GetTransportSuppliedInfo().TransportId() != TransportId()) continue;
                     if (ep.EndpointDeviceId() == loopbackEndpoint.EndpointDeviceId()) continue;
 
 
@@ -350,7 +331,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
                         ep.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
                     {
                         // we treat it as a guid, but the property itself is a string
-                        auto thisAssociator = winrt::unbox_value<winrt::hstring>(ep.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
+                        auto thisAssociator = internal::GetDeviceInfoProperty<winrt::hstring>(ep.Properties(), STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, L"");
 
                         // return the endpoint if it has the matching association id
                         if (thisAssociator == associator)

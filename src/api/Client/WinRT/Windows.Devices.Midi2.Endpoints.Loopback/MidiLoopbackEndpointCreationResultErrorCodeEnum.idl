@@ -30,5 +30,7 @@ namespace Windows.Devices.Midi2.Endpoints.Loopback
         InvalidOrMissingNameB = 5000,
         NameBInUse = 5010,
 
+        ExceptionThrown = 9001,
+
     };
 }

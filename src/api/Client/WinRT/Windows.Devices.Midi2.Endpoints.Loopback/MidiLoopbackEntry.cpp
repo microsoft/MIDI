@@ -12,20 +12,5 @@
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    winrt::guid MidiLoopbackEntry::AssociationId()
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Devices::Midi2::Endpoints::Loopback::MidiLoopbackEndpointEntry MidiLoopbackEntry::EndpointA()
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Devices::Midi2::Endpoints::Loopback::MidiLoopbackEndpointEntry MidiLoopbackEntry::EndpointB()
-    {
-        throw hresult_not_implemented();
-    }
-    bool MidiLoopbackEntry::IsMuted()
-    {
-        throw hresult_not_implemented();
-    }
+
 }
