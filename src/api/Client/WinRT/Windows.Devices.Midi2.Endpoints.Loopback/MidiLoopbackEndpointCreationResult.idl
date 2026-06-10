@@ -18,7 +18,7 @@ namespace Windows.Devices.Midi2.Endpoints.Loopback
     [interface_name("Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointCreationResult", UUID_IMidiLoopbackEndpointCreationResult)]
     runtimeclass MidiLoopbackEndpointCreationResult
     {
-        Boolean Success { get; };
+        Boolean Success{ get; };
 
         MidiLoopbackEndpointCreationResultErrorCode ErrorCode{ get; };
         String ErrorMessage{ get; };
