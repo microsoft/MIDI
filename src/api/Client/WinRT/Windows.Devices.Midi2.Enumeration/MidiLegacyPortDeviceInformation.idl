@@ -44,7 +44,7 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         Guid ContainerId{ get; };                       // container this exists in. It will be the same as the parent endpoint's. Here for convenience.
         String EndpointDeviceId{ get; };                // device id of the owning Windows MIDI Services endpoint
 
-        String ParentDeviceInstanceId{ get; };          // device instance id of the parent device
+        String ParentDeviceInstanceId{ get; };          // device instance id of the (resolved) parent device
         Windows.Devices.Midi2.Enumeration.MidiParentDeviceInformation GetParentDeviceInformation();
 
         String DriverDeviceInterfaceId{ get; };         // the device interface id that the WinMM API exposes via DRV_QUERYDEVICEINTERFACE

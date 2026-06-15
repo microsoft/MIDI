@@ -22,6 +22,7 @@
 
 #include "MidiPnpDeviceInfo.h"
 
+#include <devguid.h>
 
 namespace WindowsMidiServicesInternal
 {
@@ -544,6 +545,21 @@ namespace WindowsMidiServicesInternal
     // Convenience accessors
     // ============================================================
 
+    winrt::hstring MidiPnpDeviceInfo::NamePreferringBusDescription() const noexcept
+    {
+        auto busName = GetDeviceString(DEVPKEY_Device_BusReportedDeviceDesc);
+        if (!busName.empty()) return busName;
+
+        // Friendliest name first.
+        auto friendly = GetDeviceString(DEVPKEY_Device_FriendlyName);
+        if (!friendly.empty()) return friendly;
+
+        auto name = GetDeviceString(DEVPKEY_NAME);
+        if (!name.empty()) return name;
+
+        return GetDeviceString(DEVPKEY_Device_DeviceDesc);
+    }
+
     winrt::hstring MidiPnpDeviceInfo::Name() const noexcept
     {
         // Friendliest name first.
@@ -570,6 +586,23 @@ namespace WindowsMidiServicesInternal
     {
         return GetInterfaceGuid(DEVPKEY_DeviceInterface_ClassGuid);
     }
+
+
+    bool MidiPnpDeviceInfo::IsMediaDeviceClass() const noexcept
+    {
+        auto id = GetDeviceGuid(DEVPKEY_Device_ClassGuid);
+
+        if (id)
+        {
+            return id.value() == winrt::guid(GUID_DEVCLASS_MEDIA);
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+
 
     bool MidiPnpDeviceInfo::IsInterfaceEnabled() const noexcept
     {

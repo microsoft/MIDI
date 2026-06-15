@@ -265,9 +265,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(SolutionDir)Inc\MidiPnpDeviceInfo.h" />
+    <ClInclude Include="..\..\Inc\MidiPnpUtilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiPnpDeviceInfo.cpp" />
+    <ClCompile Include="MidiPnpUtilities.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

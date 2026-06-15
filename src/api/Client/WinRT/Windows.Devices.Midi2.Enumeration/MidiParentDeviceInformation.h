@@ -34,7 +34,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
        // enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
         winrt::hstring Id() const noexcept { return m_deviceInformation != nullptr ? internal::NormalizeDeviceInstanceIdHStringCopy(m_deviceInformation.Id()) : L""; }
-        winrt::hstring Name() const noexcept { return m_deviceInformation != nullptr ? m_deviceInformation.Name() : L""; }
+        winrt::hstring Name() const noexcept { return m_name; }
         
         winrt::guid ContainerId() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(L"System.Devices.ContainerId", m_deviceInformation, winrt::guid()); }
         winrt::hstring DeviceInstanceId() const noexcept { return internal::NormalizeDeviceInstanceIdHStringCopy(internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceInstanceId", m_deviceInformation, L"")); }
@@ -45,23 +45,34 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         winrt::hstring ServiceName() const noexcept { return GetStringProperty(DEVPKEY_Device_Service); }
         winrt::hstring DriverVersion() const noexcept { return GetStringProperty(DEVPKEY_Device_DriverVersion); }
         winrt::hstring EnumeratorName() const noexcept { return GetStringProperty(DEVPKEY_Device_EnumeratorName); }
+        winrt::hstring ParentDeviceInstanceId() const noexcept { return internal::NormalizeDeviceInstanceIdHStringCopy(internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Parent", m_deviceInformation, L"")); }
+        winrt::hstring RelatedParentDeviceMediaInstanceId() const noexcept { return internal::NormalizeDeviceInstanceIdHStringCopy(m_relatedParentDeviceMediaInstanceId); }
 
         //winrt::hstring ModelName() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.ModelName", m_deviceInformation, L""); }
         //winrt::hstring Manufacturer() const noexcept { return internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Manufacturer", m_deviceInformation, L""); }
 
         winrt::hstring ToString() const noexcept;
 
+        uint16_t UsbVendorId() const noexcept { return m_usbVendorId; }
+        uint16_t UsbProductId() const noexcept { return m_usbProductId; }
+        winrt::hstring UsbSerialNumber() const noexcept { return m_usbSerialNumber; }
+
         collections::IMapView<winrt::hstring, foundation::IInspectable> Properties() { return m_properties.GetView(); }
 
 
         //collections::IMapView<winrt::hstring, foundation::IInspectable> Properties() { return m_properties.GetView(); }
 
-        void InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation)
-        {
-            m_deviceInformation = deviceInformation;
-        }
+        void InternalInitialize(_In_ enumeration::DeviceInformation const& deviceInformation) noexcept;
 
     private:
+        // TODO: We need to actually parse and provide these
+        uint16_t m_usbVendorId{};
+        uint16_t m_usbProductId{};
+        winrt::hstring m_usbSerialNumber{};
+
+        winrt::hstring m_name{};
+        winrt::hstring m_relatedParentDeviceMediaInstanceId{};      // this is the device associated with the MIDI driver itself, so it has the right driver info
+
         enumeration::DeviceInformation m_deviceInformation{ nullptr };
 
         collections::IMap<winrt::hstring, foundation::IInspectable> m_properties

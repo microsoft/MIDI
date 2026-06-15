@@ -13,6 +13,54 @@
 namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
 
+    // VID, PID, and Serial number, and a proper name all come from the actual hardware parent device, 
+    // which is often a composite device. But the driver properties come from the media 
+    // interface device with the &MI_xx (xx is a number, usually 00) in the name
+
+    _Use_decl_annotations_
+    void MidiParentDeviceInformation::InternalInitialize(enumeration::DeviceInformation const& deviceInformation) noexcept
+    {
+        m_deviceInformation = deviceInformation;
+
+        // Get vid/pid/serial
+
+        if (internal::IsStandardUsbDeviceInstanceId(DeviceInstanceId().c_str()))
+        {
+            uint16_t vid{ 0 };
+            uint16_t pid{ 0 };
+            std::wstring serial{ };
+
+            auto hr = internal::ParseDeviceInstanceIntoVidPidSerial(DeviceInstanceId().c_str(), vid, pid, serial);
+
+            if (SUCCEEDED(hr))
+            {
+                m_usbVendorId = vid;
+                m_usbProductId = pid;
+                m_usbSerialNumber = winrt::hstring(serial);
+            }
+        }
+
+
+        auto pnpinfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(DeviceInstanceId());
+
+        if (pnpinfo)
+        {
+            if (EnumeratorName() == L"PCI")
+            {
+                m_name = pnpinfo->Name();
+            }
+            else
+            {
+                m_name = pnpinfo->NamePreferringBusDescription();
+            }
+        }
+        else
+        {
+            m_name = deviceInformation.Name();
+        }
+
+
+    }
 
     _Use_decl_annotations_
     midi2enum::MidiParentDeviceInformation MidiParentDeviceInformation::CreateFromId(
@@ -78,7 +126,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         props.Append(L"System.Devices.ContainerId");
         props.Append(L"System.Devices.DeviceInstanceId");
-       // props.Append(L"System.Devices.Manufacturer");
+        props.Append(L"System.Devices.Parent");
+        // props.Append(L"System.Devices.Manufacturer");
        // props.Append(L"System.Devices.ModelName");
 
         props.Append(internal::DevPropKeyToWinRTPropertyHString(DEVPKEY_Device_DriverInfPath));

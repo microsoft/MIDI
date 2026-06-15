@@ -94,6 +94,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "winrt_devpkey_util.h"
 #include "async_helper.h"
 #include "MidiPnpDeviceInfo.h"
+#include "MidiPnpUtilities.h"
 
 // service interface
 //#include <WindowsMidiServices.h>

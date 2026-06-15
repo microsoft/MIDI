@@ -89,6 +89,7 @@ namespace WindowsMidiServicesInternal
         std::optional<winrt::guid>  GetDeviceGuid      (_In_ DEVPROPKEY const& key) const noexcept;
         std::optional<uint32_t>     GetDeviceUInt32    (_In_ DEVPROPKEY const& key) const noexcept;
         std::optional<bool>         GetDeviceBoolean   (_In_ DEVPROPKEY const& key) const noexcept;
+        
 
         // ---- Interface property accessors ----
 
@@ -103,6 +104,9 @@ namespace WindowsMidiServicesInternal
         // FriendlyName -> NAME -> DeviceDesc, first non-empty wins.
         winrt::hstring              Name() const noexcept;
 
+        // Bus-Reported Name -> FriendlyName -> NAME, first non-empty wins.
+        winrt::hstring              NamePreferringBusDescription() const noexcept;
+
         // DEVPKEY_Device_Parent on the devnode.
         winrt::hstring              ParentInstanceId() const noexcept;
 
@@ -115,6 +119,8 @@ namespace WindowsMidiServicesInternal
         // DEVPKEY_DeviceInterface_Enabled on the interface. Defaults to false
         // for instance-only instances or when the property is missing.
         bool                        IsInterfaceEnabled() const noexcept;
+
+        bool IsMediaDeviceClass() const noexcept;
 
     private:
         winrt::hstring m_interfaceId;   // SymbolicLink, empty if constructed from instance id

@@ -66,7 +66,7 @@ void MidiLegacyPortDeviceInformationTests::TestCreateFromId()
 
         for (const auto& device : devices)
         {
-            std::wcout << L"----- Checking device: " << device.Name().c_str() << std::endl;
+            std::wcout << L"\n----- Checking device: " << device.Name().c_str() << std::endl;
 
             auto portInfo = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::CreateFromPortDeviceId(device.Id());
 
@@ -107,7 +107,7 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
 
         for (const auto& device : devices)
         {
-            std::wcout << L"----- Checking device: " << device.Name().c_str() << std::endl;
+            std::wcout << L"\n----- Checking device: " << device.Name().c_str() << std::endl;
 
             auto portInfo = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::CreateFromPortDeviceId(device.Id());
             VERIFY_IS_NOT_NULL(portInfo);
@@ -144,6 +144,10 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
                 std::wcout << L" - Driver Version:     " << parentDevice.DriverVersion().c_str() << std::endl;
                 std::wcout << L" - Enumerator Name:    " << parentDevice.EnumeratorName().c_str() << std::endl;
                 std::wcout << L" - Service Name:       " << parentDevice.ServiceName().c_str() << std::endl;
+                std::wcout << L" - Parent Device Id:   " << parentDevice.ParentDeviceInstanceId().c_str() << std::endl;
+                std::wcout << L" - USB VID:            " << std::setw(4) << std::setfill(L'0') << std::hex << parentDevice.UsbVendorId() << std::endl;
+                std::wcout << L" - USB PID:            " << std::setw(4) << std::setfill(L'0') << std::hex << parentDevice.UsbProductId() << std::endl;
+                std::wcout << L" - USB Serial Number:  " << parentDevice.UsbSerialNumber().c_str() << std::endl;
             }
             else
             {

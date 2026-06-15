@@ -809,28 +809,21 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             deviceInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(properties, L"System.Devices.DeviceInstanceId", winrt::hstring());
         }
 
-        // Resolve the parent device instance id via MidiPnpDeviceInfo
-        // (cfgmgr-backed, synchronous, STA-safe).
+        // Resolve the parent device instance id
         m_parentDeviceInstanceId = {};
+        m_pseudoMidiParentDeviceInstanceId = {};
 
         if (!deviceInstanceId.empty())
         {
-            if (auto pnpInfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(
-                    std::wstring_view{ deviceInstanceId }))
+            std::wstring parentDevice{};
+            std::wstring pseudoParentDevice{};
+
+            bool found = internal::FindActualParentDeviceInstanceId(deviceInstanceId.c_str(), parentDevice, pseudoParentDevice);
+
+            if (found)
             {
-                m_parentDeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(pnpInfo->ParentInstanceId());
-            }
-            else
-            {
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"MidiPnpDeviceInfo::CreateFromInstanceId returned no value", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(deviceInstanceId.c_str(), "device instance id")
-                );
+                m_parentDeviceInstanceId = parentDevice;
+                m_pseudoMidiParentDeviceInstanceId = pseudoParentDevice;
             }
         }
 
