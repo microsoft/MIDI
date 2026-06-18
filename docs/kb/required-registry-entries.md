@@ -25,7 +25,7 @@ Windows MIDI Services does not load drivers from the registry. Instead, it relie
 | ----- | ---- | ----- | ----------- |
 | `midi`  | String | `wdmaud.drv` | This is required for loading the in-box MIDI synthesizer |
 | `midi1` | String |  `wdmaud2.drv` | This sends control of the rest of enumeration to the midisrv service. |
-| `MidiSrvTransferComplete` | DWORD | `1` | Indicates that AudioEndpointBuilder should not enumerate MIDI devices. Instead, the Windows MIDI Service will handle that. |
+| `MidisrvTransferComplete` | DWORD | `1` | Indicates that AudioEndpointBuilder should not enumerate MIDI devices. Instead, the Windows MIDI Service will handle that. |
 
 ## Tool to fix the registry entries
 
