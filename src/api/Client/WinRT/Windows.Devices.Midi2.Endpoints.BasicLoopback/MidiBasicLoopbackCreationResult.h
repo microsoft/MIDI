@@ -22,14 +22,14 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
         bloop::MidiBasicLoopbackEntry CreatedLoopbackEntry() const noexcept { return m_createdLoopbackEntry; }
 
-        void InternalSetSuccess(_In_ winrt::guid associationId, _In_ bloop::MidiBasicLoopbackEntry& entry) noexcept
+        void InternalSetSuccess(_In_ winrt::guid const& associationId, _In_ MidiBasicLoopbackEntry const& entry) noexcept
         {
             m_success = true;
             m_associationId = associationId;
             m_createdLoopbackEntry = entry;
         }
 
-        void InternalSetFailure(_In_ winrt::guid associationId, _In_ bloop::MidiBasicLoopbackErrorCode errorCode, _In_ winrt::hstring const& errorMessage) noexcept
+        void InternalSetFailure(_In_ winrt::guid const& associationId, _In_ bloop::MidiBasicLoopbackErrorCode errorCode, _In_ winrt::hstring const& errorMessage) noexcept
         {
             m_success = false;
             m_associationId = associationId;

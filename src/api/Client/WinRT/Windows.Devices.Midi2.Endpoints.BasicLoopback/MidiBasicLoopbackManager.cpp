@@ -32,6 +32,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         return false;
     }
 
+
     _Use_decl_annotations_
     bloop::MidiBasicLoopbackCreationResult MidiBasicLoopbackManager::CreateTransientLoopback(
         bloop::MidiBasicLoopbackCreationConfig const& creationConfig) noexcept
@@ -115,20 +116,19 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                 auto deviceId = serviceResponse.ResponseJson().GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY, L"");
 
                 if (!deviceId.empty())
-                {
-                    // TODO:
-                    // 
-            //        result->InternalSetSuccess(deviceId);
+                {                   
+                    auto entry = winrt::make_self<MidiBasicLoopbackEntry>();
+
+                    entry->InternalInitialize(creationConfig.AssociationId(),
+                        deviceId,
+                        creationConfig.EndpointDefinition().Name(),
+                        creationConfig.EndpointDefinition().Description(),
+                        creationConfig.IsMuted());
+
+                    result->InternalSetSuccess(creationConfig.AssociationId(), *entry);
 
 
-
-
-                    // get created midi1 ports
-
-
-
-
-
+                    // TODO: get created midi1 ports
 
 
 
