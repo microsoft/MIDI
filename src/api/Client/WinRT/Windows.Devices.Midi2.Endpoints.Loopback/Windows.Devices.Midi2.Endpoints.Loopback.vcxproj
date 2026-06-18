@@ -296,8 +296,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiLoopbackEndpointCreationResult.h">
-      <DependentUpon>MidiLoopbackEndpointCreationResult.idl</DependentUpon>
+    <ClInclude Include="MidiLoopbackCreationResult.h">
+      <DependentUpon>MidiLoopbackCreationResult.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiLoopbackEndpointDefinition.h">
       <DependentUpon>MidiLoopbackEndpointDefinition.idl</DependentUpon>
@@ -305,25 +305,27 @@
     <ClInclude Include="MidiLoopbackEndpointEntry.h">
       <DependentUpon>MidiLoopbackEndpointEntry.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointRemovalConfig.h">
-      <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
+    <ClInclude Include="MidiLoopbackRemovalConfig.h">
+      <DependentUpon>MidiLoopbackRemovalConfig.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointManager.h">
-      <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
+    <ClInclude Include="MidiLoopbackManager.h">
+      <DependentUpon>MidiLoopbackManager.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointCreationConfig.h">
-      <DependentUpon>MidiLoopbackEndpointCreationConfig.idl</DependentUpon>
+    <ClInclude Include="MidiLoopbackCreationConfig.h">
+      <DependentUpon>MidiLoopbackCreationConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiLoopbackEntry.h">
       <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiLoopbackRemovalResult.h" />
+    <ClInclude Include="MidiLoopbackUpdateResult.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiLoopbackEndpointCreationResult.cpp">
-      <DependentUpon>MidiLoopbackEndpointCreationResult.idl</DependentUpon>
+    <ClCompile Include="MidiLoopbackCreationResult.cpp">
+      <DependentUpon>MidiLoopbackCreationResult.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiLoopbackEndpointDefinition.cpp">
@@ -332,31 +334,35 @@
     <ClCompile Include="MidiLoopbackEndpointEntry.cpp">
       <DependentUpon>MidiLoopbackEndpointEntry.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackEndpointRemovalConfig.cpp">
-      <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
+    <ClCompile Include="MidiLoopbackRemovalConfig.cpp">
+      <DependentUpon>MidiLoopbackRemovalConfig.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackEndpointManager.cpp">
-      <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
+    <ClCompile Include="MidiLoopbackManager.cpp">
+      <DependentUpon>MidiLoopbackManager.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackEndpointCreationConfig.cpp">
-      <DependentUpon>MidiLoopbackEndpointCreationConfig.idl</DependentUpon>
+    <ClCompile Include="MidiLoopbackCreationConfig.cpp">
+      <DependentUpon>MidiLoopbackCreationConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiLoopbackEntry.cpp">
       <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiLoopbackRemovalResult.cpp" />
+    <ClCompile Include="MidiLoopbackUpdateResult.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
-    <Midl Include="MidiLoopbackEndpointCreationResultErrorCodeEnum.idl" />
+    <Midl Include="MidiLoopbackUpdateResult.idl" />
+    <Midl Include="MidiLoopbackErrorCodeEnum.idl" />
     <Midl Include="MidiLoopbackEndpointEntry.idl" />
-    <Midl Include="MidiLoopbackEndpointRemovalConfig.idl" />
-    <Midl Include="MidiLoopbackEndpointManager.idl" />
+    <Midl Include="MidiLoopbackRemovalConfig.idl" />
+    <Midl Include="MidiLoopbackManager.idl" />
     <Midl Include="MidiLoopbackEndpointDefinition.idl" />
-    <Midl Include="MidiLoopbackEndpointCreationResult.idl" />
-    <Midl Include="MidiLoopbackEndpointCreationConfig.idl" />
+    <Midl Include="MidiLoopbackCreationResult.idl" />
+    <Midl Include="MidiLoopbackCreationConfig.idl" />
+    <Midl Include="MidiLoopbackRemovalResult.idl" />
     <Midl Include="MidiLoopbackEntry.idl" />
   </ItemGroup>
   <ItemGroup>

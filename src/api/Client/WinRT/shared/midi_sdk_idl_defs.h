@@ -182,24 +182,34 @@
 // ============================================================================
 // Windows.Devices.Midi2.Endpoints.BasicLoopback  : Interface number 00F01
 
-#define UUID_IMidiBasicLoopbackEndpointCreationConfig		8087b303-0519-c0de-31d1-dd00F0101000
-#define UUID_IMidiBasicLoopbackEndpointRemovalConfig		8087b303-0519-c0de-31d1-dd00F0102000
-#define UUID_IMidiBasicLoopbackEndpointManagerStatics		8087b303-0519-c0de-31d1-ee00F0103000
-#define UUID_IMidiBasicLoopbackEndpointCreationResult       8087b303-0519-c0de-31d1-dd00F0104000
-#define UUID_IMidiBasicLoopbackEntry                        8087b303-0519-c0de-31d1-dd00F0105000   
+#define UUID_IMidiBasicLoopbackManagerStatics		8087b303-0519-c0de-31d1-ee00F0101000
+
+#define UUID_IMidiBasicLoopbackCreationConfig		8087b303-0519-c0de-31d1-dd00F0102000
+#define UUID_IMidiBasicLoopbackRemovalConfig		8087b303-0519-c0de-31d1-dd00F0103000
+
+#define UUID_IMidiBasicLoopbackCreationResult       8087b303-0519-c0de-31d1-dd00F0104000
+#define UUID_IMidiBasicLoopbackRemovalResult        8087b303-0519-c0de-31d1-dd00F0105000
+#define UUID_IMidiBasicLoopbackUpdateResult         8087b303-0519-c0de-31d1-dd00F0106000
+
+#define UUID_IMidiBasicLoopbackEntry                8087b303-0519-c0de-31d1-dd00F0107000   
 
 
 
 // ============================================================================
 // Windows.Devices.Midi2.Endpoints.Loopback : Interface number 00F02
 
-#define UUID_IMidiLoopbackEndpointCreationConfig			8087b303-0519-c0de-31d1-dd00F0201000
-#define UUID_IMidiLoopbackEndpointRemovalConfig				8087b303-0519-c0de-31d1-dd00F0202000
-#define UUID_IMidiLoopbackEndpointManagerStatics			8087b303-0519-c0de-31d1-ee00F0203000
-#define UUID_IMidiLoopbackEndpointCreationResult            8087b303-0519-c0de-31d1-dd00F0204000
-#define UUID_IMidiLoopbackEntry                             8087b303-0519-c0de-31d1-dd00F0205000
-#define UUID_IMidiLoopbackEndpointEntry                     8087b303-0519-c0de-31d1-dd00F0206000
-#define UUID_IMidiLoopbackEndpointDefinition                8087b303-0519-c0de-31d1-dd00F0207000
+#define UUID_IMidiLoopbackManagerStatics			8087b303-0519-c0de-31d1-ee00F0201000
+
+#define UUID_IMidiLoopbackCreationConfig			8087b303-0519-c0de-31d1-dd00F0202000
+#define UUID_IMidiLoopbackRemovalConfig				8087b303-0519-c0de-31d1-dd00F0203000
+
+#define UUID_IMidiLoopbackCreationResult            8087b303-0519-c0de-31d1-dd00F0204000
+#define UUID_IMidiLoopbackRemovalResult             8087b303-0519-c0de-31d1-dd00F0205000
+#define UUID_IMidiLoopbackUpdateResult              8087b303-0519-c0de-31d1-dd00F0206000
+
+#define UUID_IMidiLoopbackEntry                     8087b303-0519-c0de-31d1-dd00F0207000
+#define UUID_IMidiLoopbackEndpointEntry             8087b303-0519-c0de-31d1-dd00F0208000
+#define UUID_IMidiLoopbackEndpointDefinition        8087b303-0519-c0de-31d1-dd00F0209000
 
 
 // ============================================================================

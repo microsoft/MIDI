@@ -8,11 +8,11 @@
 
 
 #pragma once
-#include "MidiLoopbackEndpointManager.g.h"
+#include "MidiLoopbackManager.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    struct MidiLoopbackEndpointManager
+    struct MidiLoopbackManager
     {
         //MidiLoopbackEndpointManager() = default;
 
@@ -20,11 +20,11 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}"); }
 
-        static loop::MidiLoopbackEndpointCreationResult CreateTransientLoopbackEndpoints(
-            _In_ loop::MidiLoopbackEndpointCreationConfig const& creationConfig) noexcept;
+        static loop::MidiLoopbackCreationResult CreateTransientLoopback(
+            _In_ loop::MidiLoopbackCreationConfig const& creationConfig) noexcept;
 
-        static bool RemoveTransientLoopbackEndpoints(
-            _In_ loop::MidiLoopbackEndpointRemovalConfig const& deletionConfig) noexcept;
+        static loop::MidiLoopbackRemovalResult RemoveTransientLoopback(
+            _In_ loop::MidiLoopbackRemovalConfig const& deletionConfig) noexcept;
 
         static midi2enum::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
             _In_ winrt::hstring const& loopbackEndpointId) noexcept;
@@ -39,16 +39,20 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         static bool DoesLoopbackAExist(_In_ winrt::hstring const& uniqueIdentifier) noexcept;
         static bool DoesLoopbackBExist(_In_ winrt::hstring const& uniqueIdentifier) noexcept;
 
-        static winrt::guid GetAssociationId(_In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint);
+        static winrt::guid GetAssociationId(_In_ midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint) noexcept;
 
         static collections::IVectorView<loop::MidiLoopbackEntry> GetActiveLoopbackEntries() noexcept;
 
+
+
+        static loop::MidiLoopbackUpdateResult MuteLoopback(_In_ winrt::guid const& associationId) noexcept;
+        static loop::MidiLoopbackUpdateResult UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept;
 
     };
 }
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::factory_implementation
 {
-    struct MidiLoopbackEndpointManager : MidiLoopbackEndpointManagerT<MidiLoopbackEndpointManager, implementation::MidiLoopbackEndpointManager, winrt::static_lifetime>
+    struct MidiLoopbackManager : MidiLoopbackManagerT<MidiLoopbackManager, implementation::MidiLoopbackManager, winrt::static_lifetime>
     {
     };
 }

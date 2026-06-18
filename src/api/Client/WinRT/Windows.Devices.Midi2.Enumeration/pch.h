@@ -132,6 +132,8 @@ namespace legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 #include "MidiDeclaredStreamConfiguration.h"
 #include "Midi1PortNameTableEntry.h"
 
+#include "MidiParentDeviceInformation.h"
+
 #include "MidiLegacyPortDeviceInformation.h"
 #include "MidiLegacyPortDeviceInformationAddedEventArgs.h"
 #include "MidiLegacyPortDeviceInformationUpdatedEventArgs.h"
@@ -143,8 +145,6 @@ namespace legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 #include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
 #include "MidiEndpointDeviceInformationRemovedEventArgs.h"
 #include "MidiEndpointDeviceWatcher.h"
-
-
 
 
 #include "MidiEndpointDevicePropertyHelper.h"

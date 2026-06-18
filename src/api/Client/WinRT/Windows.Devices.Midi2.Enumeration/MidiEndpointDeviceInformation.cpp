@@ -68,11 +68,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-            // TODO: Need to see if this will return parent information for virtual endpoints as well
-
-            auto parentId = winrt::unbox_value<winrt::hstring>(m_properties.Lookup(MIDI_DEVICE_PARENT_PROPERTY_KEY));
-
-            return midi2enum::MidiParentDeviceInformation::CreateFromId(parentId);
+            return midi2enum::implementation::MidiParentDeviceInformation::InternalCreateFromIds(m_parentDeviceInstanceId, m_mediaDriverParentDeviceInstanceId);
         }
         catch (...)
         {
@@ -1175,25 +1171,20 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         // (cfgmgr-backed, synchronous, STA-safe).
         m_parentDeviceInstanceId = {};
 
+
         if (!deviceInstanceId.empty())
         {
-            if (auto pnpInfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(
-                std::wstring_view{ deviceInstanceId }))
+            std::wstring parentDevice{};
+            std::wstring mediaDriverParentDevice{};
+
+            bool found = internal::FindActualParentDeviceInstanceId(deviceInstanceId.c_str(), parentDevice, mediaDriverParentDevice);
+
+            if (found)
             {
-                m_parentDeviceInstanceId = pnpInfo->ParentInstanceId();
+                m_parentDeviceInstanceId = parentDevice;
+                m_mediaDriverParentDeviceInstanceId = mediaDriverParentDevice;
             }
-            else
-            {
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"MidiPnpDeviceInfo::CreateFromInstanceId returned no value", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(deviceInstanceId.c_str(), "device instance id")
-                );
-            }
+
         }
     }
 

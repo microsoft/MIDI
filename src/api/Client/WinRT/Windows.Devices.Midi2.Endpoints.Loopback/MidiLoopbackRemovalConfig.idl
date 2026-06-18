@@ -10,27 +10,16 @@
 import "MidiApiContracts.idl";
 
 
+import "MidiLoopbackEndpointDefinition.idl";
 
 namespace Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    enum MidiLoopbackEndpointCreationResultErrorCode
+    [interface_name("Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackRemovalConfig", UUID_IMidiLoopbackRemovalConfig)]
+    runtimeclass MidiLoopbackRemovalConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
-        NoErrorInformationAvailable = 0,
+        MidiLoopbackRemovalConfig(Guid associationId);
 
-        InvalidOrMissingUniqueIdA = 1000,
-        UniqueIdAInUse = 1010,
-        
-        InvalidOrMissingUniqueIdB = 2000,
-        UniqueIdBInUse = 2020,
-
-        InvalidOrMissingNameA = 4000,
-        NameAInUse = 4010,
-
-        InvalidOrMissingNameB = 5000,
-        NameBInUse = 5010,
-
-        ExceptionThrown = 9001,
-
-    };
+        Guid AssociationId;
+    }
 }

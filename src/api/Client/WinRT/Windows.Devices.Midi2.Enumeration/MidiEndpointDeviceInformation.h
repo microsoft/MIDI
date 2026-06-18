@@ -92,6 +92,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     private:
         winrt::hstring m_parentDeviceInstanceId{};
+        winrt::hstring m_mediaDriverParentDeviceInstanceId{};
 
    //     static winrt::hstring GetMidi1PortDeviceSelector(_In_ midi2enum::Midi1PortFlow const portFlow);
 

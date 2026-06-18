@@ -8,13 +8,13 @@
 
 
 #include "pch.h"
-#include "MidiLoopbackEndpointRemovalConfig.h"
-#include "MidiLoopbackEndpointRemovalConfig.g.cpp"
+#include "MidiLoopbackRemovalConfig.h"
+#include "MidiLoopbackRemovalConfig.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
     _Use_decl_annotations_
-    MidiLoopbackEndpointRemovalConfig::MidiLoopbackEndpointRemovalConfig(winrt::guid const& associationId)
+    MidiLoopbackRemovalConfig::MidiLoopbackRemovalConfig(winrt::guid const& associationId)
     {
         m_associationId = associationId;
     }
@@ -29,7 +29,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     //     }
     //   }
     // }
-    json::JsonObject MidiLoopbackEndpointRemovalConfig::ConfigJson()
+    json::JsonObject MidiLoopbackRemovalConfig::ConfigJson()
     {
         json::JsonArray endpointDeletionArray;
         json::JsonObject transportObject;
@@ -48,7 +48,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         // create the main node
 
         topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(loop::MidiLoopbackEndpointManager::TransportId()),
+            internal::GuidToString(loop::MidiLoopbackManager::TransportId()),
             transportObject);
 
         // wrap it all up so the json is valid

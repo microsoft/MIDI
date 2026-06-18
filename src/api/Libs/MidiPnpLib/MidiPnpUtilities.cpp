@@ -12,6 +12,16 @@
 #include <sstream>
 #include "wstring_util.h"
 
+#define BUS_ENUMERATOR_PCI      L"PCI"
+#define BUS_ENUMERATOR_USB      L"USB"
+#define BUS_ENUMERATOR_SWD      L"SWD"
+
+// these are hard-coded due to how these drivers enumerate
+#define BUS_ENUMERATOR_MOTU     L"MOTUUSB64"
+#define BUS_ENUMERATOR_BOME     L"BOMEBUS"
+
+#define INSTANCE_ID_USB_VID_PREFIX  L"VID_"
+#define INSTANCE_ID_USB_PID_PREFIX  L"PID_"
 
 #undef max
 
@@ -20,28 +30,74 @@ namespace internal = WindowsMidiServicesInternal;
 namespace WindowsMidiServicesInternal
 {
     _Use_decl_annotations_
-    bool IsMidiInterfacePseudoParent(std::wstring const& deviceInstanceId) noexcept
+    bool IsMediaDriverDeviceParent(std::wstring const& deviceInstanceId) noexcept
     {
-        return internal::ToUpperTrimmedWStringCopy(deviceInstanceId).find(L"&MI_") == std::wstring::npos;
+        // this is a magic string. Usually it's &MI_00.
+        return internal::ToUpperTrimmedWStringCopy(deviceInstanceId).find(L"&MI_") != std::wstring::npos;
     }
 
     _Use_decl_annotations_
     bool IsPnpRootNode(std::wstring const& deviceInstanceId) noexcept
     {
+        // this has to handle all types of devices, including USB, PNP, BLE, etc.
+        auto cleanId = internal::ToUpperTrimmedWStringCopy(deviceInstanceId);
+
         return 
-            internal::ToUpperTrimmedWStringCopy(deviceInstanceId).starts_with(L"HTREE\\ROOT\\") ||
-       /*   internal::ToUpperTrimmedWStringCopy(deviceInstanceId).starts_with(L"ROOT\\") || */
-            internal::ToUpperTrimmedWStringCopy(deviceInstanceId).starts_with(L"ACPI_HAL\\") || 
-            internal::ToUpperTrimmedWStringCopy(deviceInstanceId).starts_with(L"ACPI\\");
+            cleanId.starts_with(L"HTREE\\ROOT\\") ||
+       /*   cleanId.starts_with(L"ROOT\\") || */
+            cleanId.starts_with(L"ACPI_HAL\\") ||
+            cleanId.starts_with(L"ACPI\\");
     }
 
 
     _Use_decl_annotations_
     bool IsStandardUsbDeviceInstanceId(std::wstring const& deviceInstanceId) noexcept
     {
-        auto id = internal::ToUpperTrimmedWStringCopy(deviceInstanceId);
-        return id.starts_with(L"USB\\") && !id.starts_with(L"USB\\ROOT_HUB");
+        auto cleanId = internal::ToUpperTrimmedWStringCopy(deviceInstanceId);
+
+        return cleanId.starts_with(L"USB\\") && !cleanId.starts_with(L"USB\\ROOT_HUB");
     }
+
+
+    _Use_decl_annotations_
+    bool DeviceInstanceIdsHaveSameUsbVidPid(
+        std::wstring const& deviceInstanceId1,
+        std::wstring const& deviceInstanceId2) noexcept
+    {
+        uint16_t vid{ 0 };
+        uint16_t pid{ 0 };
+        std::wstring serial {};
+
+        auto hr = ParseUsbDeviceInstanceIntoVidPidSerial(deviceInstanceId1, vid, pid, serial);
+
+        if (FAILED(hr))
+        {
+            return false;
+        }
+
+        return DeviceInstanceIdHasUsbVidPid(deviceInstanceId2, vid, pid);
+    }
+
+    _Use_decl_annotations_
+    bool DeviceInstanceIdHasUsbVidPid(
+        std::wstring const& deviceInstanceId,
+        uint16_t const expectedVid,
+        uint16_t const expectedPid) noexcept
+    {
+        uint16_t vid { 0 };
+        uint16_t pid { 0 };
+        std::wstring serial{};
+
+        auto hr = ParseUsbDeviceInstanceIntoVidPidSerial(deviceInstanceId, vid, pid, serial);
+
+        if (FAILED(hr))
+        {
+            return false;
+        }
+
+        return vid == expectedVid && pid == expectedPid;
+    }
+
 
 
 
@@ -62,7 +118,7 @@ namespace WindowsMidiServicesInternal
     //                               MotuUSB64\MotuMidi64\0300
     //                               USB\VID_7104&PID_1600&MI_00\8&20e633b&0&0000    
     _Use_decl_annotations_
-    HRESULT ParseDeviceInstanceIntoVidPidSerial(
+    HRESULT ParseUsbDeviceInstanceIntoVidPidSerial(
         _In_ std::wstring const& deviceInstanceId,
         _Inout_ uint16_t& vendorId,
         _Inout_ uint16_t& productId,
@@ -117,12 +173,12 @@ namespace WindowsMidiServicesInternal
         std::wstring pidString;
 
         // find the VID and PID strings.
-        if (vidPidString1.starts_with(L"VID_"))
+        if (vidPidString1.starts_with(INSTANCE_ID_USB_VID_PREFIX))
         {
             vidString = vidPidString1.substr(4);
             pidString = vidPidString2.substr(4);
         }
-        else if (vidPidString2.starts_with(L"VID_"))
+        else if (vidPidString2.starts_with(INSTANCE_ID_USB_VID_PREFIX))
         {
             vidString = vidPidString2.substr(4);
             pidString = vidPidString1.substr(4);
@@ -172,93 +228,113 @@ namespace WindowsMidiServicesInternal
     }
 
 
+    _Use_decl_annotations_
+    std::wstring ParseBusEnumeratorFromInstanceId(std::wstring const& deviceInstanceId) noexcept
+    {
+        auto pos = deviceInstanceId.find(L'\\');
+
+        // only if found, and not in the first position in the string.
+        // we're looking for things like USB\ and PCI\ or SWD\ but only return
+        // USB, PCI, SWD without the backslash
+        
+        if (pos == std::wstring::npos || pos == 0)
+        {
+            return L"";
+        }
+        
+        // return everything up until the backslash
+        return internal::ToUpperTrimmedWStringCopy(deviceInstanceId.substr(0,pos));
+    }
+
+
 
     _Use_decl_annotations_
     bool FindActualParentDeviceInstanceId(
         std::wstring const& startingParentInstanceId, 
         std::wstring& actualParentInstanceId,
-        std::wstring& relatedMidiPseudoParentInstanceId
+        std::wstring& relatedMediaDriverDeviceParentInstanceId
         ) noexcept
     {
-        std::wstring currentParentCandidate;
-        std::wstring previousCandidate = startingParentInstanceId.c_str();
+        std::wstring currentParentCandidate = internal::ToUpperTrimmedWStringCopy(startingParentInstanceId);
+        std::wstring previousCandidate = internal::ToUpperTrimmedWStringCopy(startingParentInstanceId);
 
-        bool searchComplete { false };
+        bool haveStartingVidPid{ false };
+        uint16_t startingVendorId{}; 
+        uint16_t startingProductId{};
+        std::wstring startingSerialNumber{}; // needed, but typically empty
+        //std::wstring startingEnumerator{};
 
-
-        // we need to get the container first
-        auto pnpInfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(startingParentInstanceId);
-
-        winrt::guid containerId{};
-
-        if (pnpInfo)
+        while (!currentParentCandidate.empty() && !internal::IsPnpRootNode(currentParentCandidate))
         {
-            containerId = pnpInfo->ContainerId().value();
-        }
+            // check to see if we're already at the &MI_00 or similar parent device
+            if (internal::IsMediaDriverDeviceParent(currentParentCandidate))
+            {
+                relatedMediaDriverDeviceParentInstanceId = currentParentCandidate;
+            }
 
-        currentParentCandidate = startingParentInstanceId;
+            auto enumerator = internal::ParseBusEnumeratorFromInstanceId(currentParentCandidate);
 
-        std::wstring enumerator = currentParentCandidate.substr(0, 3);
-
-
-        // This fails for PCIe devices, returning the PCI to PCI bridge as the parent instead
-        // of the actual device. In those cases, we short circuit a bunch of the logic
-        // and just return the first parent we find
-        if (enumerator == L"PCI")
-        {
-            actualParentInstanceId = currentParentCandidate;
-            relatedMidiPseudoParentInstanceId = L"";
-
-            return true;
-        }
+            // the parent info for PCI is much more complex, so just stick with the parent provided
+            // same with BOME virtual, and also MOTUBUS devices. I fully expect to find more examples
+            // from vendor drivers which need to be added to this over time.
+            if (enumerator == BUS_ENUMERATOR_PCI || enumerator == BUS_ENUMERATOR_MOTU || enumerator == BUS_ENUMERATOR_BOME)
+            {
+                actualParentInstanceId = currentParentCandidate;
+                return true;
+            }
 
 
-        while (!searchComplete && !internal::IsPnpRootNode(currentParentCandidate))
-        {
-            pnpInfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(currentParentCandidate);
+            // see if we're on a regular USB node.
+            if (!haveStartingVidPid && internal::IsStandardUsbDeviceInstanceId(currentParentCandidate))
+            {
+                haveStartingVidPid = (SUCCEEDED(internal::ParseUsbDeviceInstanceIntoVidPidSerial(
+                    currentParentCandidate,
+                    startingVendorId,
+                    startingProductId,
+                    startingSerialNumber)
+                ));
+            }
+
+            auto pnpInfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(currentParentCandidate);
 
             if (pnpInfo)
-            {               
-                // check to see if we've found the interface with all the driver info
-                // we'll find this before the hardware parent is found
-                if (internal::IsMidiInterfacePseudoParent(currentParentCandidate))
+            {   
+                std::wstring nextParent = internal::ToUpperTrimmedWStringCopy(pnpInfo->ParentInstanceId().c_str());
+
+                // check to see if next device up is a different actual device
+                if (haveStartingVidPid)
                 {
-                    relatedMidiPseudoParentInstanceId = currentParentCandidate;
+                    // validate that the node we're at has same vid/pid. If it doesn't, it's a hub or something.
+                    // and we need to bail because we've gone too far.
+                    if (!internal::DeviceInstanceIdHasUsbVidPid(nextParent, startingVendorId, startingProductId))
+                    {
+                        actualParentInstanceId = currentParentCandidate;
+                        return true;
+                    }
                 }
 
-
-                if (internal::IsPnpRootNode(pnpInfo->ParentInstanceId().c_str()))
+                // check to see if we're one level down from the top of the tree
+                if (internal::IsPnpRootNode(nextParent))
                 {
-                    // parent is root, so we're done. Current candidate is as high up as we go.
+                    // next parent is root, so we're done. Current candidate is as high up as we go.
                     actualParentInstanceId = currentParentCandidate;
-                    searchComplete = true;
+                    return true;
                 }
 
-                // check to see if the device is in the same container or not. If same container
-                // than it's still part of the same logical device. If not, then we've gone too far
-                else if (pnpInfo->ContainerId() != containerId)
-                {
-                    actualParentInstanceId = previousCandidate;
-
-                    searchComplete = true;
-                }
-                else
-                {
-                    // move up to the next parent
-                    previousCandidate = currentParentCandidate;
-                    currentParentCandidate = pnpInfo->ParentInstanceId().c_str();
-                }
+                // move up to the next parent
+                previousCandidate = currentParentCandidate;
+                currentParentCandidate = nextParent;
             }
             else
             {
                 // pnp info is null. we just return where we stopped
                 actualParentInstanceId = previousCandidate;
 
-                searchComplete = true;
+                return true;
             }
         }
 
-        return true;
+        return false;
 
     }
 

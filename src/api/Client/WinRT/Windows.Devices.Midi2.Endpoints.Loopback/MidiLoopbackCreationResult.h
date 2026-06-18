@@ -7,30 +7,35 @@
 // ============================================================================
 
 #pragma once
-#include "MidiLoopbackEndpointCreationResult.g.h"
+#include "MidiLoopbackCreationResult.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    struct MidiLoopbackEndpointCreationResult : MidiLoopbackEndpointCreationResultT<MidiLoopbackEndpointCreationResult>
+    struct MidiLoopbackCreationResult : MidiLoopbackCreationResultT<MidiLoopbackCreationResult>
     {
-        MidiLoopbackEndpointCreationResult() = default;
+        MidiLoopbackCreationResult() = default;
 
         bool Success() const noexcept { return m_success; };
-        void Success(_In_ bool const value) noexcept { m_success = value; }
-
-        loop::MidiLoopbackEndpointCreationResultErrorCode ErrorCode() const noexcept { return m_errorCode; }
-        void ErrorCode(_In_ loop::MidiLoopbackEndpointCreationResultErrorCode const& value) noexcept { m_errorCode = value; }
-
+        loop::MidiLoopbackErrorCode ErrorCode() const noexcept { return m_errorCode; }
         winrt::hstring ErrorMessage() const noexcept { return m_errorMessage; }
-        void ErrorMessage(_In_ winrt::hstring const& value) noexcept { m_errorMessage = value; }
-
         loop::MidiLoopbackEntry CreatedLoopbackEntry() const noexcept { return m_createdLoopbackEntry; }
-        void CreatedLoopbackEntry(_In_ loop::MidiLoopbackEntry const& value) noexcept { m_createdLoopbackEntry = value; };
 
+        void InternalSetSuccess(_In_ loop::MidiLoopbackEntry const& createdLoopbackEntry) 
+        { 
+            m_success = true; 
+            m_createdLoopbackEntry = createdLoopbackEntry; 
+        }
+
+        void InternalSetFailure(_In_ loop::MidiLoopbackErrorCode const errorCode, _In_ winrt::hstring const& errorMessage)
+        {
+            m_success = false;
+            m_errorCode = errorCode;
+            m_errorMessage = errorMessage;
+        }
 
     private:
         bool m_success{ false };
-        loop::MidiLoopbackEndpointCreationResultErrorCode m_errorCode{ loop::MidiLoopbackEndpointCreationResultErrorCode::NoErrorInformationAvailable };
+        loop::MidiLoopbackErrorCode m_errorCode{ loop::MidiLoopbackErrorCode::NoErrorInformationAvailable };
         winrt::hstring m_errorMessage{ };
 
         loop::MidiLoopbackEntry m_createdLoopbackEntry{ nullptr };

@@ -10,25 +10,28 @@
 import "MidiApiContracts.idl";
 
 
-import "MidiLoopbackEndpointCreationResult.idl";
-import "MidiLoopbackEndpointCreationConfig.idl";
-import "MidiLoopbackEndpointRemovalConfig.idl";
+import "MidiLoopbackCreationResult.idl";
+import "MidiLoopbackRemovalResult.idl";
+import "MidiLoopbackUpdateResult.idl";
+
+import "MidiLoopbackCreationConfig.idl";
+import "MidiLoopbackRemovalConfig.idl";
 
 namespace Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    [static_name("Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointManagerStatics", UUID_IMidiLoopbackEndpointManagerStatics)]
-    static runtimeclass MidiLoopbackEndpointManager
+    [static_name("Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackManagerStatics", UUID_IMidiLoopbackManagerStatics)]
+    static runtimeclass MidiLoopbackManager
     {
         static Boolean IsTransportAvailable{ get; };
 
         static Guid TransportId{ get; };
 
-        static MidiLoopbackEndpointCreationResult CreateTransientLoopbackEndpoints(
-            MidiLoopbackEndpointCreationConfig creationConfig);
+        static MidiLoopbackCreationResult CreateTransientLoopback(
+            MidiLoopbackCreationConfig creationConfig);
 
-        static Boolean RemoveTransientLoopbackEndpoints(
-            MidiLoopbackEndpointRemovalConfig removalConfig);
+        static MidiLoopbackRemovalResult RemoveTransientLoopback(
+            MidiLoopbackRemovalConfig removalConfig);
 
         static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
             String loopbackEndpointId);
@@ -45,8 +48,8 @@ namespace Windows.Devices.Midi2.Endpoints.Loopback
 
         static Guid GetAssociationId(Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint);
 
-        static Boolean MuteLoopback(Guid associationId);
-        static Boolean UnmuteLoopback(Guid associationId);
+        static MidiLoopbackUpdateResult MuteLoopback(Guid associationId);
+        static MidiLoopbackUpdateResult UnmuteLoopback(Guid associationId);
 
 
         static IVectorView<MidiLoopbackEntry> GetActiveLoopbackEntries();

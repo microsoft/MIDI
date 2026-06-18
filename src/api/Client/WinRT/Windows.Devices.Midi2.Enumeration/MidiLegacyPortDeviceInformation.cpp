@@ -642,7 +642,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
     midi2enum::MidiParentDeviceInformation MidiLegacyPortDeviceInformation::GetParentDeviceInformation() const noexcept
     {
-        return midi2enum::MidiParentDeviceInformation::CreateFromId(m_parentDeviceInstanceId);
+        return midi2enum::implementation::MidiParentDeviceInformation::InternalCreateFromIds(m_parentDeviceInstanceId, m_mediaDriverParentDeviceInstanceId);
     }
 
 
@@ -811,19 +811,19 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         // Resolve the parent device instance id
         m_parentDeviceInstanceId = {};
-        m_pseudoMidiParentDeviceInstanceId = {};
+        m_mediaDriverParentDeviceInstanceId = {};
 
         if (!deviceInstanceId.empty())
         {
             std::wstring parentDevice{};
-            std::wstring pseudoParentDevice{};
+            std::wstring mediaDriverParentDevice{};
 
-            bool found = internal::FindActualParentDeviceInstanceId(deviceInstanceId.c_str(), parentDevice, pseudoParentDevice);
+            bool found = internal::FindActualParentDeviceInstanceId(deviceInstanceId.c_str(), parentDevice, mediaDriverParentDevice);
 
             if (found)
             {
                 m_parentDeviceInstanceId = parentDevice;
-                m_pseudoMidiParentDeviceInstanceId = pseudoParentDevice;
+                m_mediaDriverParentDeviceInstanceId = mediaDriverParentDevice;
             }
         }
 

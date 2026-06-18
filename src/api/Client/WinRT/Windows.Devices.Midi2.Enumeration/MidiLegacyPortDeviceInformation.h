@@ -104,7 +104,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
     private:
         winrt::hstring m_parentDeviceInstanceId{};
-        winrt::hstring m_pseudoMidiParentDeviceInstanceId{};
+        winrt::hstring m_mediaDriverParentDeviceInstanceId{};
 
         winrt::hstring m_name{};
         winrt::hstring m_id{};

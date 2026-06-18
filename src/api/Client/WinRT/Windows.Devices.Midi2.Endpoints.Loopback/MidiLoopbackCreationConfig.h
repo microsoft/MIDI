@@ -8,21 +8,21 @@
 
 
 #pragma once
-#include "MidiLoopbackEndpointCreationConfig.g.h"
+#include "MidiLoopbackCreationConfig.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    struct MidiLoopbackEndpointCreationConfig : MidiLoopbackEndpointCreationConfigT<MidiLoopbackEndpointCreationConfig>
+    struct MidiLoopbackCreationConfig : MidiLoopbackCreationConfigT<MidiLoopbackCreationConfig>
     {
-        MidiLoopbackEndpointCreationConfig() = default;
+        MidiLoopbackCreationConfig() = default;
 
-        MidiLoopbackEndpointCreationConfig(
+        MidiLoopbackCreationConfig(
             _In_ winrt::guid associationId,
             _In_ loop::MidiLoopbackEndpointDefinition endpointDefinitionA,
             _In_ loop::MidiLoopbackEndpointDefinition endpointDefinitionB
             );
 
-        winrt::guid TransportId() { return loop::MidiLoopbackEndpointManager::TransportId(); }
+        winrt::guid TransportId() { return loop::MidiLoopbackManager::TransportId(); }
         json::JsonObject ConfigJson();
 
         bool IsMuted() const noexcept { return m_isMuted; }
@@ -47,7 +47,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 }
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::factory_implementation
 {
-    struct MidiLoopbackEndpointCreationConfig : MidiLoopbackEndpointCreationConfigT<MidiLoopbackEndpointCreationConfig, implementation::MidiLoopbackEndpointCreationConfig>
+    struct MidiLoopbackCreationConfig : MidiLoopbackCreationConfigT<MidiLoopbackCreationConfig, implementation::MidiLoopbackCreationConfig>
     {
     };
 }

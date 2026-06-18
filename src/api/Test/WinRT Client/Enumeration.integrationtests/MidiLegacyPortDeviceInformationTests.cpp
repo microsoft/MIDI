@@ -107,53 +107,56 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
 
         for (const auto& device : devices)
         {
-            std::wcout << L"\n---------------------------------------- Checking port: " << device.Name().c_str() << std::endl;
+            std::wcout << L"\n---------------------------------------- Checking MIDI 1 port: " << device.Name().c_str() << std::endl;
 
             auto portInfo = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::CreateFromPortDeviceId(device.Id());
             VERIFY_IS_NOT_NULL(portInfo);
 
             std::wcout << L" - Port Name:            " << portInfo.Name().c_str() << std::endl;
             std::wcout << L" - Id:                   " << portInfo.PortDeviceId().c_str() << std::endl;
-            std::wcout << L" - Flow:                 " << (uint32_t)portInfo.Flow() << std::endl;
+            std::wcout << L" - Flow:                 " << (portInfo.Flow() == Midi1PortFlow::MidiMessageSource ? L"Source/Input" : L"Destination/Output") << std::endl;
+            std::wcout << L" - Number:               " << std::setw(0) << std::dec << portInfo.Number() << std::endl;
             std::wcout << L" - Parent Id:            " << portInfo.ParentDeviceInstanceId().c_str() << std::endl;
             std::wcout << L" - DrivDevIface:         " << portInfo.DriverDeviceInterfaceId().c_str() << std::endl << std::endl;
 
             // gs synth has empty endpoint device id, as do any .drv-based ports
-            std::wcout << L" Parent Endpoint ----------------" << std::endl;
+            std::wcout << L" Related UMP Endpoint -----------------------------------" << std::endl;
             if (!portInfo.EndpointDeviceId().empty())
             {
                 auto endpointDevice = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(portInfo.EndpointDeviceId());
                 VERIFY_IS_NOT_NULL(endpointDevice);
 
-                std::wcout << L" - Endpoint Name:        " << endpointDevice.Name().c_str() << std::endl;
-                std::wcout << L" - Endpoint Id:          " << endpointDevice.EndpointDeviceId().c_str() << std::endl;
-                std::wcout << L" - Endpoint Container:   " << winrt::to_hstring(endpointDevice.ContainerId()).c_str() << std::endl;
-                std::wcout << L" - Endpoint Parent Id:   " << endpointDevice.ParentDeviceInstanceId().c_str() << std::endl;
+                std::wcout << L" - Name:                 " << endpointDevice.Name().c_str() << std::endl;
+                std::wcout << L" - Id:                   " << endpointDevice.EndpointDeviceId().c_str() << std::endl;
+                std::wcout << L" - Container:            " << winrt::to_hstring(endpointDevice.ContainerId()).c_str() << std::endl;
+                std::wcout << L" - Parent Id:            " << endpointDevice.ParentDeviceInstanceId().c_str() << std::endl;
             }
             else
             {
                 std::wcout << L"** NO ASSOCIATED MIDISRV ENDPOINT." << std::endl;
             }
 
-            std::wcout << L" Port's Parent Device -----------" << std::endl;
+            std::wcout << L" Port's Parent Device -----------------------------------" << std::endl;
 
             if (!portInfo.ParentDeviceInstanceId().empty())
             {
                 auto parentDevice = portInfo.GetParentDeviceInformation();
-                //auto parentDevice = MidiParentDeviceInformation::CreateFromId(portInfo.ParentDeviceInstanceId());
                 VERIFY_IS_NOT_NULL(parentDevice);
 
-                std::wcout << L" - Device Name:          " << parentDevice.Name().c_str() << std::endl;
+                std::wcout << L" - This Parent Id:       " << parentDevice.Id().c_str() << std::endl;
+                std::wcout << L" - Media Driver Parent:  " << parentDevice.RelatedParentMediaDriverDeviceInstanceId().c_str() << std::endl;
+                std::wcout << L" - Name:                 " << parentDevice.Name().c_str() << std::endl;
                 std::wcout << L" - Container:            " << winrt::to_hstring(parentDevice.ContainerId()).c_str() << std::endl;
                 std::wcout << L" - Driver Inf Path:      " << parentDevice.DriverInfPath().c_str() << std::endl;
                 std::wcout << L" - Driver Provider:      " << parentDevice.DriverProvider().c_str() << std::endl;
                 std::wcout << L" - Driver Version:       " << parentDevice.DriverVersion().c_str() << std::endl;
                 std::wcout << L" - Enumerator Name:      " << parentDevice.EnumeratorName().c_str() << std::endl;
                 std::wcout << L" - Service Name:         " << parentDevice.ServiceName().c_str() << std::endl;
-                std::wcout << L" - Parent Device Id:     " << parentDevice.ParentDeviceInstanceId().c_str() << std::endl;
                 std::wcout << L" - USB VID:              " << std::setw(4) << std::setfill(L'0') << std::hex << parentDevice.UsbVendorId() << std::endl;
                 std::wcout << L" - USB PID:              " << std::setw(4) << std::setfill(L'0') << std::hex << parentDevice.UsbProductId() << std::endl;
                 std::wcout << L" - USB Serial Number:    " << parentDevice.UsbSerialNumber().c_str() << std::endl;
+                std::wcout << L" - Parent Device Id:     " << parentDevice.ParentDeviceInstanceId().c_str() << std::endl;
+                std::wcout << L" - Reported Ids Hash:    " << std::setw(8) << std::setfill(L'0') << std::hex << parentDevice.ReportedDeviceIdsHash() << std::endl;
             }
             else
             {

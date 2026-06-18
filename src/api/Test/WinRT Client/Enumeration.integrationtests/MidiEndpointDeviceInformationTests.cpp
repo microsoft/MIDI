@@ -56,16 +56,19 @@ void MidiEndpointDeviceInformationTests::TestWalkUpToParent()
 
         if (!endpointInfo.ParentDeviceInstanceId().empty())
         {
-            auto parentDevice = MidiParentDeviceInformation::CreateFromId(endpointInfo.ParentDeviceInstanceId());
+            auto parentDevice = endpointInfo.GetParentDeviceInformation();
             VERIFY_IS_NOT_NULL(parentDevice);
 
-            std::wcout << L" - Parent Device:      " << parentDevice.Name().c_str() << std::endl;
-            std::wcout << L" - Container:          " << winrt::to_hstring(parentDevice.ContainerId()).c_str() << std::endl;
-            std::wcout << L" - Driver Inf Path:    " << parentDevice.DriverInfPath().c_str() << std::endl;
-            std::wcout << L" - Driver Provider:    " << parentDevice.DriverProvider().c_str() << std::endl;
-            std::wcout << L" - Driver Version:     " << parentDevice.DriverVersion().c_str() << std::endl;
-            std::wcout << L" - Enumerator Name:    " << parentDevice.EnumeratorName().c_str() << std::endl;
-            std::wcout << L" - Service Name:       " << parentDevice.ServiceName().c_str() << std::endl;
+            if (parentDevice)
+            {
+                std::wcout << L" - Parent Device:      " << parentDevice.Name().c_str() << std::endl;
+                std::wcout << L" - Container:          " << winrt::to_hstring(parentDevice.ContainerId()).c_str() << std::endl;
+                std::wcout << L" - Driver Inf Path:    " << parentDevice.DriverInfPath().c_str() << std::endl;
+                std::wcout << L" - Driver Provider:    " << parentDevice.DriverProvider().c_str() << std::endl;
+                std::wcout << L" - Driver Version:     " << parentDevice.DriverVersion().c_str() << std::endl;
+                std::wcout << L" - Enumerator Name:    " << parentDevice.EnumeratorName().c_str() << std::endl;
+                std::wcout << L" - Service Name:       " << parentDevice.ServiceName().c_str() << std::endl;
+            }
         }
         else
         {

@@ -8,13 +8,13 @@
 
 
 #include "pch.h"
-#include "MidiLoopbackEndpointCreationConfig.h"
-#include "MidiLoopbackEndpointCreationConfig.g.cpp"
+#include "MidiLoopbackCreationConfig.h"
+#include "MidiLoopbackCreationConfig.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
     _Use_decl_annotations_
-    MidiLoopbackEndpointCreationConfig::MidiLoopbackEndpointCreationConfig(
+    MidiLoopbackCreationConfig::MidiLoopbackCreationConfig(
         winrt::guid associationId,
         loop::MidiLoopbackEndpointDefinition endpointDefinitionA,
         loop::MidiLoopbackEndpointDefinition endpointDefinitionB
@@ -49,7 +49,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     //   }
     // }
 
-    json::JsonObject MidiLoopbackEndpointCreationConfig::ConfigJson()
+    json::JsonObject MidiLoopbackCreationConfig::ConfigJson()
     {
         json::JsonObject endpointAssociationObject;
         json::JsonObject endpointDeviceAObject;
@@ -64,29 +64,29 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
         endpointDeviceAObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.Name).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.Name()).c_str()));
 
         endpointDeviceAObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.Description).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.Description()).c_str()));
 
         endpointDeviceAObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.UniqueId).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.UniqueId()).c_str()));
 
         // build Endpoint B
 
         endpointDeviceBObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.Name).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.Name()).c_str()));
 
         endpointDeviceBObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.Description).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.Description()).c_str()));
 
         endpointDeviceBObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.UniqueId).c_str()));
+            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.UniqueId()).c_str()));
 
         // create the association object with the two devices as children
 
@@ -117,7 +117,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         // create the main node
 
         topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(loop::MidiLoopbackEndpointManager::TransportId()),
+            internal::GuidToString(loop::MidiLoopbackManager::TransportId()),
             transportObject);
 
         // wrap it all up so the json is valid

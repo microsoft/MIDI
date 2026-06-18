@@ -24,7 +24,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
             _In_ winrt::hstring const& name, 
             _In_ winrt::hstring const& description) noexcept
         {
-            m_endpointDeviceId = internal::TrimmedHStringCopy(endpointDeviceId);
+            m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
             m_name = internal::TrimmedHStringCopy(name);
             m_description = internal::TrimmedHStringCopy(description);
 

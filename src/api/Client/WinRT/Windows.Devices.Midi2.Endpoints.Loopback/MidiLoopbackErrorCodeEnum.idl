@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.Endpoints.Loopback
+{
+    [contract(MidiEndpointsLoopbackApiContract, 1)]
+    enum MidiLoopbackErrorCode
+    {
+        NoErrorInformationAvailable = 0,
+
+        InvalidOrMissingAssociationId = 200,
+
+        InvalidOrMissingUniqueIdA = 1000,
+        UniqueIdAInUse = 1010,
+        
+        InvalidOrMissingUniqueIdB = 2000,
+        UniqueIdBInUse = 2020,
+
+        InvalidOrMissingNameA = 4000,
+        NameAInUse = 4010,
+
+        InvalidOrMissingNameB = 5000,
+        NameBInUse = 5010,
+
+        ExceptionThrown = 9001,
+
+    };
+}

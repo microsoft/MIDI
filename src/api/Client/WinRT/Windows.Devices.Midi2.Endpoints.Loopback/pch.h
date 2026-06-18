@@ -118,10 +118,13 @@ namespace loop = ::winrt::Windows::Devices::Midi2::Endpoints::Loopback;
 #include "MidiLoopbackEndpointDefinition.h"
 #include "MidiLoopbackEndpointEntry.h"
 #include "MidiLoopbackEntry.h"
-#include "MidiLoopbackEndpointCreationResult.h"
 
-#include "MidiLoopbackEndpointCreationConfig.h"
-#include "MidiLoopbackEndpointRemovalConfig.h"
-#include "MidiLoopbackEndpointCreationResult.h"
+#include "MidiLoopbackCreationResult.h"
+#include "MidiLoopbackRemovalResult.h"
+#include "MidiLoopbackUpdateResult.h"
 
-#include "MidiLoopbackEndpointManager.h"
+#include "MidiLoopbackCreationConfig.h"
+#include "MidiLoopbackRemovalConfig.h"
+#include "MidiLoopbackCreationResult.h"
+
+#include "MidiLoopbackManager.h"

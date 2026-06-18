@@ -8,8 +8,8 @@
 
 
 #include "pch.h"
-#include "MidiLoopbackEndpointManager.h"
-#include "MidiLoopbackEndpointManager.g.cpp"
+#include "MidiLoopbackManager.h"
+#include "MidiLoopbackManager.g.cpp"
 
 #include <algorithm>
 
@@ -21,7 +21,7 @@
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    bool MidiLoopbackEndpointManager::IsTransportAvailable() noexcept
+    bool MidiLoopbackManager::IsTransportAvailable() noexcept
     {
         auto transports = rept::MidiReporting::GetInstalledTransportPlugins();
 
@@ -37,8 +37,28 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     }
 
 
+    _Use_decl_annotations_
+    loop::MidiLoopbackUpdateResult MidiLoopbackManager::MuteLoopback(_In_ winrt::guid const& associationId) noexcept
+    {
+        // TODO ===============================
+        UNREFERENCED_PARAMETER(associationId);
 
-    collections::IVectorView<loop::MidiLoopbackEntry> MidiLoopbackEndpointManager::GetActiveLoopbackEntries() noexcept
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    loop::MidiLoopbackUpdateResult MidiLoopbackManager::UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept
+    {
+        // TODO ===============================
+        UNREFERENCED_PARAMETER(associationId);
+
+
+        return nullptr;
+    }
+
+
+
+    collections::IVectorView<loop::MidiLoopbackEntry> MidiLoopbackManager::GetActiveLoopbackEntries() noexcept
     {
         // TODO ===============================
 
@@ -52,18 +72,16 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
 
     _Use_decl_annotations_
-    loop::MidiLoopbackEndpointCreationResult MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(
-        loop::MidiLoopbackEndpointCreationConfig const& creationConfig) noexcept
+    loop::MidiLoopbackCreationResult MidiLoopbackManager::CreateTransientLoopback(
+        loop::MidiLoopbackCreationConfig const& creationConfig) noexcept
     {
         // the success code in this defaults to False
-        auto result = winrt::make_self<MidiLoopbackEndpointCreationResult>();
+        auto result = winrt::make_self<MidiLoopbackCreationResult>();
         if (result == nullptr)
         {
             return nullptr;
         }
         
-        result->Success(false);
-
         auto createdLoopbackEntry = winrt::make_self<MidiLoopbackEntry>();
         if (createdLoopbackEntry == nullptr)
         {
@@ -95,15 +113,21 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
         if (creationConfig.EndpointDefinitionA().Name().empty())
         {
-            result->ErrorMessage(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A));
-            result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::InvalidOrMissingNameA);
+            result->InternalSetFailure(
+                loop::MidiLoopbackErrorCode::InvalidOrMissingNameA,
+                internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A)
+            );
+
             return *result;
         }
 
         if (creationConfig.EndpointDefinitionB().Name().empty())
         {
-            result->ErrorMessage(internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B));
-            result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::InvalidOrMissingNameB);
+            result->InternalSetFailure(
+                loop::MidiLoopbackErrorCode::InvalidOrMissingNameB,
+                internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B)
+            );
+
             return *result;
         }
 
@@ -126,10 +150,36 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
                 if (!deviceIdA.empty() && !deviceIdB.empty())
                 {
-                    // update the response object with the new ids
-                    result-> EndpointDeviceIdA(deviceIdA);
-                    result->EndpointDeviceIdB(deviceIdB);
-                    result->Success(true);
+                    auto entryA = winrt::make_self<MidiLoopbackEndpointEntry>();
+                    if (entryA != nullptr)
+                    {
+                        entryA->InternalInitialize(
+                            deviceIdA, 
+                            creationConfig.EndpointDefinitionA().Name(),
+                            creationConfig.EndpointDefinitionA().Description()
+                        );
+                    }
+
+                    auto entryB = winrt::make_self<MidiLoopbackEndpointEntry>();
+                    if (entryB != nullptr)
+                    {
+                        entryB->InternalInitialize(
+                            deviceIdB,
+                            creationConfig.EndpointDefinitionB().Name(),
+                            creationConfig.EndpointDefinitionB().Description()
+                        );
+                    }
+
+                    if (entryA != nullptr && entryB != nullptr)
+                    {
+                        createdLoopbackEntry->InternalSetEndpointEntries(*entryA, *entryB);
+                    }
+
+
+                    // TODO: get the associated MIDI 1.0 port ids and add them to the list in the entry info ?
+
+
+
                 }
                 else
                 {
@@ -147,11 +197,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
             }
             else
             {
-                result->ErrorMessage(serviceResponse.ServiceErrorMessage());
-
                 // TODO: Need to get error code from the service response
-
-
+                result->InternalSetFailure(MidiLoopbackErrorCode::NoErrorInformationAvailable, serviceResponse.ServiceErrorMessage());
 
                 //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
 
@@ -168,8 +215,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         }
         catch (winrt::hresult_error ex)
         {
-            result->ErrorMessage(ex.message());
-            result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::ExceptionThrown);
+            result->InternalSetFailure(MidiLoopbackErrorCode::ExceptionThrown, ex.message());
+
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -185,8 +232,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         }
         catch (...)
         {
-            result->ErrorMessage(L"General exception/error.");
-            result->ErrorCode(loop::MidiLoopbackEndpointCreationResultErrorCode::ExceptionThrown);
+            result->InternalSetFailure(MidiLoopbackErrorCode::ExceptionThrown, L"General exception/error.");
+
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -203,17 +250,28 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(
-        loop::MidiLoopbackEndpointRemovalConfig const& removalConfig) noexcept
+    loop::MidiLoopbackRemovalResult MidiLoopbackManager::RemoveTransientLoopback(
+        loop::MidiLoopbackRemovalConfig const& removalConfig) noexcept
     {
         // the success code in this defaults to False
-        bool result = false;
+        auto result = winrt::make_self<MidiLoopbackRemovalResult>();
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
 
         try
         {
             auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(removalConfig);
 
-            result = (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success);
+            if (serviceResponse.Status() != svc::MidiServiceConfigResponseStatus::Success)
+            {
+                //result->InternalSetFailure();
+            }
+            else
+            {
+                //result->InternalSetSuccess();
+            }
         }
         catch (winrt::hresult_error ex)
         {
@@ -242,11 +300,12 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
             );
         }
 
-        return result;
+        return *result;
     }
 
+
     _Use_decl_annotations_
-    winrt::guid MidiLoopbackEndpointManager::GetAssociationId(
+    winrt::guid MidiLoopbackManager::GetAssociationId(
         midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint) noexcept
     {
         if (loopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
@@ -262,7 +321,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     }
 
     _Use_decl_annotations_
-    midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
+    midi2enum::MidiEndpointDeviceInformation MidiLoopbackManager::GetAssociatedLoopbackEndpoint(
         midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint
     ) noexcept
     {
@@ -273,7 +332,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
 
     _Use_decl_annotations_
-    midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpointForId(
+    midi2enum::MidiEndpointDeviceInformation MidiLoopbackManager::GetAssociatedLoopbackEndpointForId(
         winrt::hstring const& loopbackEndpointId
     ) noexcept
     {
@@ -286,7 +345,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
 
     _Use_decl_annotations_
-    midi2enum::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
+    midi2enum::MidiEndpointDeviceInformation MidiLoopbackManager::GetAssociatedLoopbackEndpoint(
         midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint,
         collections::IIterable<midi2enum::MidiEndpointDeviceInformation> const& endpointsToSearch) noexcept
     {
@@ -379,14 +438,14 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         return internal::NormalizeEndpointInterfaceIdHStringCopy(winrt::hstring{ std::format(L"\\\\?\\swd#midisrv#{}{}#{{e7cce071-3c03-423f-88d3-f1045d02552b}}", prefix, uniqueId) });
     }
 
-    bool MidiLoopbackEndpointManager::DoesLoopbackAExist(_In_ winrt::hstring const& uniqueIdentifier)
+    bool MidiLoopbackManager::DoesLoopbackAExist(_In_ winrt::hstring const& uniqueIdentifier) noexcept
     {
         winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_A_PREFIX, uniqueIdentifier.c_str());
 
         return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
     }
 
-    bool MidiLoopbackEndpointManager::DoesLoopbackBExist(_In_ winrt::hstring const& uniqueIdentifier)
+    bool MidiLoopbackManager::DoesLoopbackBExist(_In_ winrt::hstring const& uniqueIdentifier) noexcept
     {
         winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_B_PREFIX, uniqueIdentifier.c_str());
 
