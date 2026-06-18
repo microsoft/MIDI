@@ -7,27 +7,39 @@
 // ============================================================================
 
 #pragma once
-#include "MidiBasicLoopbackEndpointCreationResult.g.h"
+#include "MidiBasicLoopbackCreationResult.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementation
 {
-    struct MidiBasicLoopbackEndpointCreationResult : MidiBasicLoopbackEndpointCreationResultT<MidiBasicLoopbackEndpointCreationResult>
+    struct MidiBasicLoopbackCreationResult : MidiBasicLoopbackCreationResultT<MidiBasicLoopbackCreationResult>
     {
-        MidiBasicLoopbackEndpointCreationResult() = default;
+        MidiBasicLoopbackCreationResult() = default;
 
         bool Success() const noexcept { return m_success; };
-        bloop::MidiBasicLoopbackEndpointCreationResultErrorCode ErrorCode() const noexcept { return m_errorCode; }
+        bloop::MidiBasicLoopbackErrorCode ErrorCode() const noexcept { return m_errorCode; }
         winrt::hstring ErrorMessage() const noexcept { return m_errorMessage; }
         winrt::guid AssociationId() const noexcept { return m_associationId; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
         bloop::MidiBasicLoopbackEntry CreatedLoopbackEntry() const noexcept { return m_createdLoopbackEntry; }
 
-        void InternalSetSuccess(_In_ winrt::guid associationId, _In_ bloop::MidiBasicLoopbackEntry& entry) noexcept;
-        void InternalSetError(_In_ winrt::guid associationId, _In_ bloop::MidiBasicLoopbackEndpointCreationResultErrorCode errorCode, _In_ winrt::hstring const& errorMessage) noexcept;
+        void InternalSetSuccess(_In_ winrt::guid associationId, _In_ bloop::MidiBasicLoopbackEntry& entry) noexcept
+        {
+            m_success = true;
+            m_associationId = associationId;
+            m_createdLoopbackEntry = entry;
+        }
+
+        void InternalSetFailure(_In_ winrt::guid associationId, _In_ bloop::MidiBasicLoopbackErrorCode errorCode, _In_ winrt::hstring const& errorMessage) noexcept
+        {
+            m_success = false;
+            m_associationId = associationId;
+            m_errorCode = errorCode;
+            m_errorMessage = errorMessage;
+        }
 
     private:
         bool m_success{ false };
-        bloop::MidiBasicLoopbackEndpointCreationResultErrorCode m_errorCode { bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::UnknownOrUnspecified };
+        bloop::MidiBasicLoopbackErrorCode m_errorCode { bloop::MidiBasicLoopbackErrorCode::NoErrorInformationAvailable };
         winrt::hstring m_errorMessage{ };
         winrt::hstring m_endpointDeviceId{ };
         winrt::guid m_associationId{ };

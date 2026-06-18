@@ -26,6 +26,12 @@
     <ClCompile Include="MidiBasicLoopbackEntry.cpp">
       <Filter>SDK\Shared</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackRemovalResult.cpp">
+      <Filter>SDK\Remove</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackUpdateResult.cpp">
+      <Filter>SDK\Update</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -50,31 +56,43 @@
     <ClInclude Include="MidiBasicLoopbackEntry.h">
       <Filter>SDK\Shared</Filter>
     </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackRemovalResult.h">
+      <Filter>SDK\Remove</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackUpdateResult.h">
+      <Filter>SDK\Update</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
       <Filter>Contracts</Filter>
     </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointCreationConfig.idl">
+    <Midl Include="MidiBasicLoopbackCreationConfig.idl">
       <Filter>SDK\Create</Filter>
     </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointCreationResult.idl">
+    <Midl Include="MidiBasicLoopbackCreationResult.idl">
       <Filter>SDK\Create</Filter>
     </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl">
-      <Filter>SDK\Create</Filter>
-    </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl">
+    <Midl Include="MidiBasicLoopbackRemovalConfig.idl">
       <Filter>SDK\Remove</Filter>
     </Midl>
     <Midl Include="MidiBasicLoopbackEndpointDefinition.idl">
       <Filter>SDK\Shared</Filter>
     </Midl>
-    <Midl Include="MidiBasicLoopbackEndpointManager.idl">
+    <Midl Include="MidiBasicLoopbackManager.idl">
       <Filter>SDK\Shared</Filter>
     </Midl>
     <Midl Include="MidiBasicLoopbackEntry.idl">
       <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackErrorCodeEnum.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackUpdateResult.idl">
+      <Filter>SDK\Update</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackRemovalResult.idl">
+      <Filter>SDK\Remove</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +118,9 @@
     </Filter>
     <Filter Include="SDK\Shared">
       <UniqueIdentifier>{e15d1379-f102-40a6-b066-d6121c6617a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Update">
+      <UniqueIdentifier>{65548876-0adb-45d0-ab5d-e255c41e8653}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

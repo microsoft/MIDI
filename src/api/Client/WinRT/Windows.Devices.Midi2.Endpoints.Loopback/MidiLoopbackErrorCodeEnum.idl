@@ -9,30 +9,37 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
+// error codes shared with service
+#include "..\..\..\Transport\LoopbackMidiTransport\loopback_transport_error_codes.h"
 
 namespace Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
     enum MidiLoopbackErrorCode
     {
-        NoErrorInformationAvailable = 0,
+        NoErrorInformationAvailable =       LOOPBACK_ERROR_CODE_UNKNOWN_ERROR,
+        UnrecognizedCommand =               LOOPBACK_ERROR_CODE_UNRECOGNIZED_COMMAND,
 
-        InvalidOrMissingAssociationId = 200,
+        InvalidJson =                       LOOPBACK_ERROR_CODE_INVALID_JSON,
 
-        InvalidOrMissingUniqueIdA = 1000,
-        UniqueIdAInUse = 1010,
+        EndpointCreationFailed =            LOOPBACK_ERROR_CODE_ENDPOINT_CREATION_FAILED,
+        EndpointNotFound =                  LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+
+        InvalidOrMissingAssociationId =     LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+
+        InvalidOrMissingUniqueIdA =         LOOPBACK_ERROR_CODE_INVALID_UNIQUE_ID_A,
+        DuplicateUniqueIdA =                LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID_A,
         
-        InvalidOrMissingUniqueIdB = 2000,
-        UniqueIdBInUse = 2020,
+        InvalidOrMissingUniqueIdB =         LOOPBACK_ERROR_CODE_INVALID_UNIQUE_ID_B,
+        DuplicateUniqueIdB =                LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID_B,
 
-        InvalidOrMissingNameA = 4000,
-        NameAInUse = 4010,
+        InvalidOrMissingEndpointNameA =     LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_A,
+        DuplicateNameA =                    LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_A,
 
-        InvalidOrMissingNameB = 5000,
-        NameBInUse = 5010,
+        InvalidOrMissingEndpointNameB =     LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_B,
+        DuplicateNameB =                    LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_B,
 
-        ExceptionThrown = 9001,
+        ClientApiException =                0x11000035,
 
     };
 }

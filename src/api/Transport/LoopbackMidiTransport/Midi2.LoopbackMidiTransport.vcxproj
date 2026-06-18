@@ -386,6 +386,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="loopback_transport_error_codes.h" />
     <ClInclude Include="TransportState.h" />
     <ClInclude Include="TransportWorkQueue.h" />
     <ClInclude Include="loopback_transport_defs.h" />

@@ -295,53 +295,59 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiBasicLoopbackEndpointCreationResult.h">
-      <DependentUpon>MidiBasicLoopbackEndpointCreationResult.idl</DependentUpon>
+    <ClInclude Include="MidiBasicLoopbackCreationResult.h">
+      <DependentUpon>MidiBasicLoopbackCreationResult.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackEndpointCreationConfig.h">
-      <DependentUpon>MidiBasicLoopbackEndpointCreationConfig.idl</DependentUpon>
+    <ClInclude Include="MidiBasicLoopbackCreationConfig.h">
+      <DependentUpon>MidiBasicLoopbackCreationConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiBasicLoopbackEndpointDefinition.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointManager.h">
-      <DependentUpon>MidiBasicLoopbackEndpointManager.idl</DependentUpon>
+    <ClInclude Include="MidiBasicLoopbackManager.h">
+      <DependentUpon>MidiBasicLoopbackManager.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackEndpointRemovalConfig.h">
-      <DependentUpon>MidiBasicLoopbackEndpointRemovalConfig.idl</DependentUpon>
+    <ClInclude Include="MidiBasicLoopbackRemovalConfig.h">
+      <DependentUpon>MidiBasicLoopbackRemovalConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiBasicLoopbackEntry.h" />
+    <ClInclude Include="MidiBasicLoopbackRemovalResult.h" />
+    <ClInclude Include="MidiBasicLoopbackUpdateResult.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointCreationResult.cpp">
-      <DependentUpon>MidiBasicLoopbackEndpointCreationResult.idl</DependentUpon>
+    <ClCompile Include="MidiBasicLoopbackCreationResult.cpp">
+      <DependentUpon>MidiBasicLoopbackCreationResult.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiBasicLoopbackEndpointCreationConfig.cpp">
-      <DependentUpon>MidiBasicLoopbackEndpointCreationConfig.idl</DependentUpon>
+    <ClCompile Include="MidiBasicLoopbackCreationConfig.cpp">
+      <DependentUpon>MidiBasicLoopbackCreationConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiBasicLoopbackEndpointDefinition.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointManager.cpp">
-      <DependentUpon>MidiBasicLoopbackEndpointManager.idl</DependentUpon>
+    <ClCompile Include="MidiBasicLoopbackManager.cpp">
+      <DependentUpon>MidiBasicLoopbackManager.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiBasicLoopbackEndpointRemovalConfig.cpp">
-      <DependentUpon>MidiBasicLoopbackEndpointRemovalConfig.idl</DependentUpon>
+    <ClCompile Include="MidiBasicLoopbackRemovalConfig.cpp">
+      <DependentUpon>MidiBasicLoopbackRemovalConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiBasicLoopbackEntry.cpp" />
+    <ClCompile Include="MidiBasicLoopbackRemovalResult.cpp" />
+    <ClCompile Include="MidiBasicLoopbackUpdateResult.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointCreationConfig.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointCreationResult.idl" />
+    <Midl Include="MidiBasicLoopbackErrorCodeEnum.idl" />
+    <Midl Include="MidiBasicLoopbackCreationConfig.idl" />
+    <Midl Include="MidiBasicLoopbackCreationResult.idl" />
     <Midl Include="MidiBasicLoopbackEndpointDefinition.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointManager.idl" />
-    <Midl Include="MidiBasicLoopbackEndpointRemovalConfig.idl" />
+    <Midl Include="MidiBasicLoopbackManager.idl" />
+    <Midl Include="MidiBasicLoopbackRemovalConfig.idl" />
     <Midl Include="MidiBasicLoopbackEntry.idl" />
+    <Midl Include="MidiBasicLoopbackRemovalResult.idl" />
+    <Midl Include="MidiBasicLoopbackUpdateResult.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

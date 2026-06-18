@@ -50,8 +50,8 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     loop::MidiLoopbackUpdateResult MidiLoopbackManager::UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept
     {
         // TODO ===============================
-        UNREFERENCED_PARAMETER(associationId);
 
+        UNREFERENCED_PARAMETER(associationId);
 
         return nullptr;
     }

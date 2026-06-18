@@ -8,31 +8,31 @@
 
 
 #pragma once
-#include "MidiBasicLoopbackEndpointManager.g.h"
+#include "MidiBasicLoopbackManager.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementation
 {
-    struct MidiBasicLoopbackEndpointManager
+    struct MidiBasicLoopbackManager
     {
-        MidiBasicLoopbackEndpointManager() = default;
+        MidiBasicLoopbackManager() = default;
 
         static bool IsTransportAvailable() noexcept;
 
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{10088473-9478-4E62-850B-3D2315E135B8}"); }
 
-        static bloop::MidiBasicLoopbackEndpointCreationResult CreateTransientLoopbackEndpoint(
-            _In_ bloop::MidiBasicLoopbackEndpointCreationConfig const& creationConfig) noexcept;
+        static bloop::MidiBasicLoopbackCreationResult CreateTransientLoopback(
+            _In_ bloop::MidiBasicLoopbackCreationConfig const& creationConfig) noexcept;
 
-        static bool RemoveTransientLoopbackEndpoint(
-            _In_ bloop::MidiBasicLoopbackEndpointRemovalConfig const& removalConfig) noexcept;
+        static bloop::MidiBasicLoopbackRemovalResult RemoveTransientLoopback(
+            _In_ bloop::MidiBasicLoopbackRemovalConfig const& removalConfig) noexcept;
 
         static winrt::guid GetAssociationId(_In_ midi2enum::MidiEndpointDeviceInformation const& basicLoopbackEndpoint) noexcept;
 
         static bool DoesLoopbackExist(_In_ winrt::hstring const& uniqueIdentifier);
 
 
-        static bool MuteLoopback(_In_ winrt::guid const& associationId);
-        static bool UnmuteLoopback(_In_ winrt::guid const& associationId);
+        static bloop::MidiBasicLoopbackUpdateResult MuteLoopback(_In_ winrt::guid const& associationId);
+        static bloop::MidiBasicLoopbackUpdateResult UnmuteLoopback(_In_ winrt::guid const& associationId);
 
 
         static collections::IVector<bloop::MidiBasicLoopbackEntry> GetActiveLoopbackEntries();
@@ -40,7 +40,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 }
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::factory_implementation
 {
-    struct MidiBasicLoopbackEndpointManager : MidiBasicLoopbackEndpointManagerT<MidiBasicLoopbackEndpointManager, implementation::MidiBasicLoopbackEndpointManager>
+    struct MidiBasicLoopbackManager : MidiBasicLoopbackManagerT<MidiBasicLoopbackManager, implementation::MidiBasicLoopbackManager>
     {
     };
 }

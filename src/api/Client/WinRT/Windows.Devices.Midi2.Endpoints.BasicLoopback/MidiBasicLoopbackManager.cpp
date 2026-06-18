@@ -8,22 +8,22 @@
 
 
 #include "pch.h"
-#include "MidiBasicLoopbackEndpointManager.h"
-#include "MidiBasicLoopbackEndpointManager.g.cpp"
+#include "MidiBasicLoopbackManager.h"
+#include "MidiBasicLoopbackManager.g.cpp"
 
-#include "..\..\api\Transport\BasicLoopbackMidiTransport\basic_loopback_transport_error_codes.h"
+//#include "..\..\api\Transport\BasicLoopbackMidiTransport\basic_loopback_transport_error_codes.h"
 
 #define MIDI_BLOOP_INSTANCE_ID_PREFIX L"MIDIU_BLOOP_"
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementation
 {
-    bool MidiBasicLoopbackEndpointManager::IsTransportAvailable() noexcept
+    bool MidiBasicLoopbackManager::IsTransportAvailable() noexcept
     {
         auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
 
         for (auto const& transport : transports)
         {
-            if (transport.Id == TransportId())
+            if (transport.TransportId() == TransportId())
             {
                 return true;
             }
@@ -33,26 +33,26 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
     }
 
     _Use_decl_annotations_
-    bloop::MidiBasicLoopbackEndpointCreationResult MidiBasicLoopbackEndpointManager::CreateTransientLoopbackEndpoint(
-        bloop::MidiBasicLoopbackEndpointCreationConfig const& creationConfig) noexcept
+    bloop::MidiBasicLoopbackCreationResult MidiBasicLoopbackManager::CreateTransientLoopback(
+        bloop::MidiBasicLoopbackCreationConfig const& creationConfig) noexcept
     {
         // the success code in this defaults to False
-        auto result = winrt::make_self<implementation::MidiBasicLoopbackEndpointCreationResult>();
+        auto result = winrt::make_self<implementation::MidiBasicLoopbackCreationResult>();
         if (result == nullptr)
         {
             return nullptr;
         }
 
         // default to error
-        result->InternalSetError(creationConfig.AssociationId(), bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::UnknownOrUnspecified, L"");
+        result->InternalSetFailure(creationConfig.AssociationId(), bloop::MidiBasicLoopbackErrorCode::NoErrorInformationAvailable, L"");
 
 
         // validate the name
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name()).empty())
         {
-            result->InternalSetError(
+            result->InternalSetFailure(
                 creationConfig.AssociationId(), 
-                bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::MissingEndpointName,
+                bloop::MidiBasicLoopbackErrorCode::InvalidOrMissingEndpointName,
                 internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME));
 
             return *result;
@@ -77,9 +77,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
             if (!successResult)
             {
-                result->InternalSetError(
+                result->InternalSetFailure(
                     creationConfig.AssociationId(),
-                    static_cast<bloop::MidiBasicLoopbackEndpointCreationResultErrorCode>(serviceResponse.ServiceErrorCode()),
+                    static_cast<bloop::MidiBasicLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
                     serviceResponse.ServiceErrorMessage());
 
                 TraceLoggingWrite(
@@ -152,9 +152,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         }
         catch (winrt::hresult_error ex)
         {
-            result->InternalSetError(
+            result->InternalSetFailure(
                 creationConfig.AssociationId(),
-                bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::ClientApiException,
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
                 ex.message()
             );
 
@@ -172,9 +172,9 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         }
         catch (...)
         {
-            result->InternalSetError(
+            result->InternalSetFailure(
                 creationConfig.AssociationId(),
-                bloop::MidiBasicLoopbackEndpointCreationResultErrorCode::ClientApiException,
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
                 internal::ResourceGetHString(IDS_ERROR_UNKNOWN)
             );
 
@@ -195,10 +195,15 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
 
     _Use_decl_annotations_
-    bool MidiBasicLoopbackEndpointManager::RemoveTransientLoopbackEndpoint(
-        bloop::MidiBasicLoopbackEndpointRemovalConfig const& removalConfig) noexcept
+    bloop::MidiBasicLoopbackRemovalResult MidiBasicLoopbackManager::RemoveTransientLoopback(
+        bloop::MidiBasicLoopbackRemovalConfig const& removalConfig) noexcept
     {
-        bool result = false;
+        auto result = winrt::make_self<MidiBasicLoopbackRemovalResult>();
+
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
 
         try
         {
@@ -206,10 +211,36 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 
             auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(removalConfig);
 
-            result = (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success);
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                result->InternalSetSuccess();
+            }
+            else
+            {
+                result->InternalSetFailure(
+                    static_cast<bloop::MidiBasicLoopbackErrorCode>(serviceResponse.ServiceErrorCode()), 
+                    serviceResponse.ServiceErrorMessage());
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to mute loopback. Service returned a failure result.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingUInt32(serviceResponse.ServiceErrorCode(), "service error code"),
+                    TraceLoggingWideString(serviceResponse.ServiceErrorMessage().c_str(), "service error message")
+                );
+            }
         }
         catch (winrt::hresult_error ex)
         {
+            LOG_IF_FAILED(ex.code());
+
+            result->InternalSetFailure(
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                ex.message());
+
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
                 MIDI_SDK_TRACE_EVENT_ERROR,
@@ -223,6 +254,10 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         }
         catch (...)
         {
+            result->InternalSetFailure(
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                L"General exception.");
+
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
                 MIDI_SDK_TRACE_EVENT_ERROR,
@@ -234,11 +269,11 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             );
         }
 
-        return result;
+        return *result;
     }
 
     _Use_decl_annotations_
-    winrt::guid MidiBasicLoopbackEndpointManager::GetAssociationId(
+    winrt::guid MidiBasicLoopbackManager::GetAssociationId(
         midi2enum::MidiEndpointDeviceInformation const& basicLoopbackEndpoint) noexcept
     {
         if (basicLoopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
@@ -260,7 +295,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
     }
 
     _Use_decl_annotations_
-    bool MidiBasicLoopbackEndpointManager::DoesLoopbackExist(winrt::hstring const& uniqueIdentifier)
+    bool MidiBasicLoopbackManager::DoesLoopbackExist(winrt::hstring const& uniqueIdentifier)
     {
         winrt::hstring cleanId { internal::RemoveInvalidSWDUniqueIdCharacters(uniqueIdentifier.c_str()) };
         cleanId = internal::TruncateHStringCopy(cleanId.c_str(), MAXPNAMELEN);
@@ -270,8 +305,15 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
     }
 
     _Use_decl_annotations_
-    bool MidiBasicLoopbackEndpointManager::MuteLoopback(_In_ winrt::guid const& associationId)
+    bloop::MidiBasicLoopbackUpdateResult MidiBasicLoopbackManager::MuteLoopback(_In_ winrt::guid const& associationId)
     {
+        auto result = winrt::make_self<MidiBasicLoopbackUpdateResult>();
+
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
+
         try
         {
             svc::MidiServiceTransportCommand cmd(TransportId());
@@ -279,14 +321,18 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
             cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
 
-            auto result = svc::MidiServiceTransportPluginConfigManager::SendUpdate(cmd);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(cmd);
 
-            if (result.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
-                return true;
+                result->InternalSetSuccess();
             }
             else
             {
+                result->InternalSetFailure(
+                    static_cast<bloop::MidiBasicLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
+
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
                     MIDI_SDK_TRACE_EVENT_ERROR,
@@ -294,13 +340,20 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                     TraceLoggingWideString(L"Failed to mute loopback. Service returned a failure result.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(result.ServiceErrorMessage().c_str()),
+                    TraceLoggingUInt32(serviceResponse.ServiceErrorCode(), "service error code"),
+                    TraceLoggingWideString(serviceResponse.ServiceErrorMessage().c_str(), "service error message"),
                     TraceLoggingGuid(associationId, "association id")
                 );
             }
         }
         catch (winrt::hresult_error ex)
         {
+            LOG_IF_FAILED(ex.code());
+
+            result->InternalSetFailure(
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                ex.message());
+
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
                 MIDI_SDK_TRACE_EVENT_ERROR,
@@ -316,6 +369,12 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         }
         catch (...)
         {
+            LOG_IF_FAILED(E_FAIL);
+
+            result->InternalSetFailure(
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                L"General exception.");
+
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
                 MIDI_SDK_TRACE_EVENT_ERROR,
@@ -327,12 +386,19 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             );
         }
 
-        return false;
+        return *result;
     }
 
     _Use_decl_annotations_
-    bool MidiBasicLoopbackEndpointManager::UnmuteLoopback(_In_ winrt::guid const& associationId)
+    bloop::MidiBasicLoopbackUpdateResult MidiBasicLoopbackManager::UnmuteLoopback(_In_ winrt::guid const& associationId)
     {
+        auto result = winrt::make_self<MidiBasicLoopbackUpdateResult>();
+
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
+
         try
         {
             svc::MidiServiceTransportCommand cmd(TransportId());
@@ -340,28 +406,39 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
             cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT);
 
-            auto result = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(cmd);
 
-            if (result.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
-                return true;
+                result->InternalSetSuccess();
             }
             else
             {
+                result->InternalSetFailure(
+                    static_cast<bloop::MidiBasicLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
+
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
                     MIDI_SDK_TRACE_EVENT_ERROR,
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to unmute loopback", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(result.ServiceErrorMessage().c_str(), "error message"),
+                    TraceLoggingWideString(L"Failed to unmute loopback. Service returned a failure result.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingUInt32(serviceResponse.ServiceErrorCode(), "service error code"),
+                    TraceLoggingWideString(serviceResponse.ServiceErrorMessage().c_str(), "service error message"),
                     TraceLoggingGuid(associationId, "association id")
                 );
             }
         }
         catch (winrt::hresult_error ex)
         {
+            LOG_IF_FAILED(ex.code());
+
+            result->InternalSetFailure(
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                ex.message());
+
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
                 MIDI_SDK_TRACE_EVENT_ERROR,
@@ -377,6 +454,12 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         }
         catch (...)
         {
+            LOG_IF_FAILED(E_FAIL);
+
+            result->InternalSetFailure(
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                L"General exception.");
+
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
                 MIDI_SDK_TRACE_EVENT_ERROR,
@@ -388,14 +471,14 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
             );
         }
 
-        return false;
+        return *result;
     }
 
 
-    collections::IVector<bloop::MidiBasicLoopbackEntry> MidiBasicLoopbackEndpointManager::GetActiveLoopbackEntries()
+    collections::IVector<bloop::MidiBasicLoopbackEntry> MidiBasicLoopbackManager::GetActiveLoopbackEntries()
     {
 
-
+        // TODO ==============================================
 
 
 

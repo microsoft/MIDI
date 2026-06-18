@@ -8,18 +8,17 @@
 
 
 #pragma once
-#include "MidiBasicLoopbackEndpointRemovalConfig.g.h"
+#include "MidiBasicLoopbackRemovalConfig.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementation
 {
-    struct MidiBasicLoopbackEndpointRemovalConfig : MidiBasicLoopbackEndpointRemovalConfigT<MidiBasicLoopbackEndpointRemovalConfig>
+    struct MidiBasicLoopbackRemovalConfig : MidiBasicLoopbackRemovalConfigT<MidiBasicLoopbackRemovalConfig>
     {
-        MidiBasicLoopbackEndpointRemovalConfig() = default;
+        MidiBasicLoopbackRemovalConfig() = default;
+        MidiBasicLoopbackRemovalConfig(_In_ winrt::guid const& associationId);
 
-        MidiBasicLoopbackEndpointRemovalConfig(_In_ winrt::guid const& associationId);
-
-        winrt::guid TransportId() { return bloop::MidiBasicLoopbackEndpointManager::TransportId(); }
+        winrt::guid TransportId() { return bloop::MidiBasicLoopbackManager::TransportId(); }
 
         json::JsonObject ConfigJson();
 
@@ -32,7 +31,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
 }
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::factory_implementation
 {
-    struct MidiBasicLoopbackEndpointRemovalConfig : MidiBasicLoopbackEndpointRemovalConfigT<MidiBasicLoopbackEndpointRemovalConfig, implementation::MidiBasicLoopbackEndpointRemovalConfig>
+    struct MidiBasicLoopbackRemovalConfig : MidiBasicLoopbackRemovalConfigT<MidiBasicLoopbackRemovalConfig, implementation::MidiBasicLoopbackRemovalConfig>
     {
     };
 }

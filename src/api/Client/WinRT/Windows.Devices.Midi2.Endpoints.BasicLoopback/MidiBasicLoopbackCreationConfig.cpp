@@ -8,14 +8,14 @@
 
 
 #include "pch.h"
-#include "MidiBasicLoopbackEndpointCreationConfig.h"
-#include "MidiBasicLoopbackEndpointCreationConfig.g.cpp"
+#include "MidiBasicLoopbackCreationConfig.h"
+#include "MidiBasicLoopbackCreationConfig.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementation
 {
     _Use_decl_annotations_
-    MidiBasicLoopbackEndpointCreationConfig::MidiBasicLoopbackEndpointCreationConfig(
+    MidiBasicLoopbackCreationConfig::MidiBasicLoopbackCreationConfig(
         winrt::guid const& associationId,
         bloop::MidiBasicLoopbackEndpointDefinition const& endpointDefinition)
     {
@@ -42,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
     //   }
     // }    
      
-    json::JsonObject MidiBasicLoopbackEndpointCreationConfig::ConfigJson() const noexcept
+    json::JsonObject MidiBasicLoopbackCreationConfig::ConfigJson() const noexcept
     {
         json::JsonObject endpointAssociationObject;
         json::JsonObject endpointDeviceObject;
@@ -91,7 +91,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         // create the main node
 
         topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(bloop::MidiBasicLoopbackEndpointManager::TransportId()),
+            internal::GuidToString(bloop::MidiBasicLoopbackManager::TransportId()),
             transportObject);
 
         // wrap it all up so the json is valid

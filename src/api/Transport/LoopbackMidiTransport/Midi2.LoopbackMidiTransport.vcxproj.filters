@@ -97,6 +97,9 @@
     <ClInclude Include="TransportWorkQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="loopback_transport_error_codes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.LoopbackMidiTransport.rc">

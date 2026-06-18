@@ -10,8 +10,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         winrt::hstring const& endpointDeviceId,
         winrt::hstring const& name,
         winrt::hstring const& description,
-        bool const isMuted,
-        collections::IVector<midi2enum::MidiEndpointAssociatedPortDeviceInformation> associatedLegacyPorts) noexcept
+        bool const isMuted) noexcept
     {
         m_associationId = associationId;
         m_endpointDeviceId = endpointDeviceId;
@@ -19,6 +18,5 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         m_description = description;
         m_isMuted = isMuted;
 
-        m_associatedLegacyPorts = associatedLegacyPorts;
     }
 }

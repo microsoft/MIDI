@@ -9,20 +9,17 @@
 #include "..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-import "MidiBasicLoopbackEndpointCreationResultErrorCodeEnum.idl";
-import "MidiBasicLoopbackEntry.idl";
+import "MidiBasicLoopbackErrorCodeEnum.idl";
 
 namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
 {
     [contract(MidiEndpointsBasicLoopbackApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Endpoints.BasicLoopback.IMidiBasicLoopbackEndpointCreationResult", UUID_IMidiBasicLoopbackEndpointCreationResult)]
-    runtimeclass MidiBasicLoopbackEndpointCreationResult
+    [interface_name("Windows.Devices.Midi2.Endpoints.BasicLoopback.IMidiBasicLoopbackUpdateResult", UUID_IMidiBasicLoopbackUpdateResult)]
+    runtimeclass MidiBasicLoopbackUpdateResult
     {
         Boolean Success { get; };
 
-        MidiBasicLoopbackEndpointCreationResultErrorCode ErrorCode{ get; };
+        MidiBasicLoopbackErrorCode ErrorCode{ get; };
         String ErrorMessage{ get; };
-
-        MidiBasicLoopbackEntry CreatedLoopbackEntry{ get; };
     };
 }
