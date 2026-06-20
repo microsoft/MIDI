@@ -13,6 +13,8 @@
 
 void MidiDiagnosticLoopbackEndpointTests::TestLoopbackEndpointConnections()
 {
+//    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+
     std::cout << "Testing loopback endpoint connections..." << std::endl;
 
     wil::unique_event_nothrow allMessagesReceived;

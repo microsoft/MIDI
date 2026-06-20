@@ -26,22 +26,22 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         json::JsonObject ConfigJson();
 
         bool IsMuted() const noexcept { return m_isMuted; }
-        void IsMuted(bool value) { m_isMuted = value; }
+        void IsMuted(bool value) noexcept { m_isMuted = value; }
 
-        winrt::guid AssociationId() { return m_associationId; }
-        void AssociationId(_In_ winrt::guid const& value) { m_associationId = value; }
+        winrt::guid AssociationId() noexcept { return m_associationId; }
+        void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }
 
-        loop::MidiLoopbackEndpointDefinition EndpointDefinitionA() { return m_definitionA; }
-        void EndpointDefinitionA(_In_ loop::MidiLoopbackEndpointDefinition const& value) { m_definitionA = value; }
+        loop::MidiLoopbackEndpointDefinition EndpointDefinitionA() noexcept { return m_definitionA; }
+        void EndpointDefinitionA(_In_ loop::MidiLoopbackEndpointDefinition const& value) noexcept { m_definitionA = value; }
 
-        loop::MidiLoopbackEndpointDefinition EndpointDefinitionB() { return m_definitionB; }
-        void EndpointDefinitionB(_In_ loop::MidiLoopbackEndpointDefinition const& value) { m_definitionB = value; }
+        loop::MidiLoopbackEndpointDefinition EndpointDefinitionB() noexcept { return m_definitionB; }
+        void EndpointDefinitionB(_In_ loop::MidiLoopbackEndpointDefinition const& value) noexcept { m_definitionB = value; }
 
     private:
         winrt::guid m_associationId{};
         bool m_isMuted{ false };
-        loop::MidiLoopbackEndpointDefinition m_definitionA{};
-        loop::MidiLoopbackEndpointDefinition m_definitionB{};   
+        loop::MidiLoopbackEndpointDefinition m_definitionA{ nullptr };
+        loop::MidiLoopbackEndpointDefinition m_definitionB{ nullptr };   
 
     };
 }

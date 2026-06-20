@@ -18,12 +18,12 @@
     <ClInclude Include="stdafx.h">
       <Filter>Support</Filter>
     </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointTests.h">
+    <ClInclude Include="MidiBasicLoopbackEndpointTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiLoopbackEndpointTests.cpp">
+    <ClCompile Include="MidiBasicLoopbackEndpointTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -31,5 +31,9 @@
     <ResourceCompile Include="Midi2ClientTests.rc">
       <Filter>Support</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

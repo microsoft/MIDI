@@ -17,7 +17,11 @@ public:
     BEGIN_TEST_CLASS(MidiLoopbackEndpointTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.Endpoints.Loopback.dll")
-        END_TEST_CLASS()
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.Reporting.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.ServiceConfig.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.Enumeration.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
+    END_TEST_CLASS()
 
         //TEST_CLASS_SETUP(ClassSetup);
         //TEST_CLASS_CLEANUP(ClassCleanup);
@@ -25,7 +29,9 @@ public:
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
 
-        TEST_METHOD(TestCreateLoopbackEndpoints);
+    TEST_METHOD(TestCreateLoopback);
+    TEST_METHOD(TestCreateLegacyPorts);
+    TEST_METHOD(TestUmpSendReceive);
 
 
 private:

@@ -301,16 +301,24 @@
     <ClInclude Include="MidiBasicLoopbackCreationConfig.h">
       <DependentUpon>MidiBasicLoopbackCreationConfig.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackEndpointDefinition.h" />
+    <ClInclude Include="MidiBasicLoopbackEndpointDefinition.h">
+      <DependentUpon>MidiBasicLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiBasicLoopbackManager.h">
       <DependentUpon>MidiBasicLoopbackManager.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiBasicLoopbackRemovalConfig.h">
       <DependentUpon>MidiBasicLoopbackRemovalConfig.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackEntry.h" />
-    <ClInclude Include="MidiBasicLoopbackRemovalResult.h" />
-    <ClInclude Include="MidiBasicLoopbackUpdateResult.h" />
+    <ClInclude Include="MidiBasicLoopbackEntry.h">
+      <DependentUpon>MidiBasicLoopbackEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackRemovalResult.h">
+      <DependentUpon>MidiBasicLoopbackRemovalResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackUpdateResult.h">
+      <DependentUpon>MidiBasicLoopbackUpdateResult.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -322,7 +330,9 @@
     <ClCompile Include="MidiBasicLoopbackCreationConfig.cpp">
       <DependentUpon>MidiBasicLoopbackCreationConfig.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiBasicLoopbackEndpointDefinition.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEndpointDefinition.cpp">
+      <DependentUpon>MidiBasicLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiBasicLoopbackManager.cpp">
       <DependentUpon>MidiBasicLoopbackManager.idl</DependentUpon>
     </ClCompile>
@@ -330,9 +340,15 @@
       <DependentUpon>MidiBasicLoopbackRemovalConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEntry.cpp" />
-    <ClCompile Include="MidiBasicLoopbackRemovalResult.cpp" />
-    <ClCompile Include="MidiBasicLoopbackUpdateResult.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEntry.cpp">
+      <DependentUpon>MidiBasicLoopbackEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackRemovalResult.cpp">
+      <DependentUpon>MidiBasicLoopbackRemovalResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackUpdateResult.cpp">
+      <DependentUpon>MidiBasicLoopbackUpdateResult.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

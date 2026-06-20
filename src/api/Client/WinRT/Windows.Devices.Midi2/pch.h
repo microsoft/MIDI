@@ -90,6 +90,7 @@ namespace internal =        ::WindowsMidiServicesInternal;
 #include <WindowsMidiServices.h>
 #include <WindowsMidiServices_i.c>
 #include <Midi2MidiSrvTransport.h>
+#include <Midi2MidiSrvTransport_i.c>
 
 // SDK shared
 #include <SdkTraceLogging.h>
@@ -130,6 +131,8 @@ namespace msgs = ::winrt::Windows::Devices::Midi2::Messages;
 
 
 #include "winrt_memory_buffer.h"
+
+#include "MidiApi.h"
 
 #include "MidiGroup.h"
 #include "MidiChannel.h"

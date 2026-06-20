@@ -33,5 +33,8 @@ namespace Windows.Devices.Midi2.Endpoints.BasicLoopback
         DuplicateEndpointName =             BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME,
 
         ClientApiException =                0x11002011,
+
+        InvalidArgument =                   0x11000055,
+
     };
 }

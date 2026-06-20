@@ -45,12 +45,25 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
         }
 
         // default to error
-        result->InternalSetFailure(creationConfig.AssociationId(), bloop::MidiBasicLoopbackErrorCode::NoErrorInformationAvailable, L"");
+        result->InternalSetFailure(
+            creationConfig.AssociationId(), 
+            bloop::MidiBasicLoopbackErrorCode::NoErrorInformationAvailable, 
+            L"");
 
 
         // validate the name
         if (internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().Name()).empty())
         {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Missing endpoint name", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+            );
+
             result->InternalSetFailure(
                 creationConfig.AssociationId(), 
                 bloop::MidiBasicLoopbackErrorCode::InvalidOrMissingEndpointName,
@@ -87,7 +100,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                     Midi2SdkTelemetryProvider::Provider(),
                     MIDI_SDK_TRACE_EVENT_ERROR,
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                     TraceLoggingWideString(L"Device creation failed (payload has false success value)", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingGuid(creationConfig.AssociationId(), "association id")
@@ -104,7 +117,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                         Midi2SdkTelemetryProvider::Provider(),
                         MIDI_SDK_TRACE_EVENT_ERROR,
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                         TraceLoggingWideString(L"Device creation succeeded but returned response json is empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingGuid(creationConfig.AssociationId(), "association id")
@@ -131,7 +144,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                     // TODO: get created midi1 ports
 
 
-
+                    return *result;
                 }
                 else
                 {
@@ -139,11 +152,17 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                         Midi2SdkTelemetryProvider::Provider(),
                         MIDI_SDK_TRACE_EVENT_ERROR,
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                         TraceLoggingWideString(L"Device creation succeeded but returned device id is empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingGuid(creationConfig.AssociationId(), "association id")
                     );
+
+                    result->InternalSetFailure(
+                        creationConfig.AssociationId(),
+                        bloop::MidiBasicLoopbackErrorCode::NoErrorInformationAvailable,
+                        L"Device creation succeeded but returned device id is empty");
+
                 }
             }
             else
@@ -163,7 +182,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback::implementati
                 Midi2SdkTelemetryProvider::Provider(),
                 MIDI_SDK_TRACE_EVENT_ERROR,
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
                 TraceLoggingWideString(L"Device creation failed with hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingGuid(creationConfig.AssociationId(), "association id"),

@@ -19,13 +19,14 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         json::JsonObject const& configObject
     ) noexcept
     {
+        // default to failed
+        auto response = internal::BuildConfigurationResponseObject(false);
+
+
         auto iid = __uuidof(IMidiTransportConfigurationManager);
         winrt::com_ptr<IMidiTransportConfigurationManager> configManager;
 
         auto serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
-
-        // default to failed
-        auto response = internal::BuildConfigurationResponseObject(false);
 
         if (serviceTransport)
         {
@@ -130,8 +131,17 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                 // in production,so need to handle it here
 
                 winrt::hstring hstr{ rpcResponseString };
-
                 SAFE_COTASKMEMFREE(rpcResponseString);
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Response received from transport", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(hstr.c_str(), "response string")
+                );
 
                 json::JsonObject responseObject = json::JsonObject::Parse(hstr);
 
@@ -152,7 +162,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Unable to read response object from string", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                        TraceLoggingWideString(L"Unable to read response object from string", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(hstr.c_str(), "response string")
                     );
 
                     return response;

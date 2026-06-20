@@ -75,25 +75,42 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
     loop::MidiLoopbackCreationResult MidiLoopbackManager::CreateTransientLoopback(
         loop::MidiLoopbackCreationConfig const& creationConfig) noexcept
     {
-        // the success code in this defaults to False
         auto result = winrt::make_self<MidiLoopbackCreationResult>();
         if (result == nullptr)
         {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to create instance of MidiLoopbackCreationResult", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+            );
+
             return nullptr;
         }
-        
-        auto createdLoopbackEntry = winrt::make_self<MidiLoopbackEntry>();
-        if (createdLoopbackEntry == nullptr)
+
+        if (creationConfig == nullptr)
         {
-            return nullptr;
+            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, L"Invalid creation argument. Creation Config is null");  // TODO: Localize
+            return *result;
         }
 
-        createdLoopbackEntry->InternalSetAssociationId(creationConfig.AssociationId());
+        if (creationConfig.EndpointDefinitionA() == nullptr)
+        {
+            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, L"Invalid creation argument. Endpoint Definition A is null");  // TODO: Localize
+            return *result;
+        }
 
-        // TODO: Result error code
+        if (creationConfig.EndpointDefinitionB() == nullptr)
+        {
+            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, L"Invalid creation argument. Endpoint Definition B is null");  // TODO: Localize
+            return *result;
+        }
 
-        creationConfig.EndpointDefinitionA().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId().c_str()).c_str(), MAXPNAMELEN));
-        creationConfig.EndpointDefinitionB().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId().c_str()).c_str(), MAXPNAMELEN));
+        creationConfig.EndpointDefinitionA().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId().c_str()).c_str(), MAXPNAMELEN-1));
+        creationConfig.EndpointDefinitionB().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId().c_str()).c_str(), MAXPNAMELEN-1));
 
 
         if (creationConfig.EndpointDefinitionA().UniqueId().empty())
@@ -114,7 +131,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         if (creationConfig.EndpointDefinitionA().Name().empty())
         {
             result->InternalSetFailure(
-                loop::MidiLoopbackErrorCode::InvalidOrMissingNameA,
+                loop::MidiLoopbackErrorCode::InvalidOrMissingEndpointNameA,
                 internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_A)
             );
 
@@ -124,7 +141,7 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         if (creationConfig.EndpointDefinitionB().Name().empty())
         {
             result->InternalSetFailure(
-                loop::MidiLoopbackErrorCode::InvalidOrMissingNameB,
+                loop::MidiLoopbackErrorCode::InvalidOrMissingEndpointNameB,
                 internal::ResourceGetHString(IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_NAME_B)
             );
 
@@ -143,6 +160,16 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
             if (successResult)
             {
+                auto createdLoopbackEntry = winrt::make_self<MidiLoopbackEntry>();
+                if (createdLoopbackEntry == nullptr)
+                {
+                    result->InternalSetFailure(MidiLoopbackErrorCode::ClientApiAllocationFailure, L"Unable to create MidiLoopbackEntry. Value is null.");  // TODO: Localize
+                    return *result;
+                }
+
+                createdLoopbackEntry->InternalSetAssociationId(creationConfig.AssociationId());
+
+
                 json::JsonObject serviceResponseJson = serviceResponse.ResponseJson();
 
                 auto deviceIdA = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
@@ -174,12 +201,30 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
                     {
                         createdLoopbackEntry->InternalSetEndpointEntries(*entryA, *entryB);
                     }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Device creation succeeded but unable to allocate MidiLoopbackEndpointEntry instances", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                        );
 
+                        result->InternalSetFailure(MidiLoopbackErrorCode::ClientApiAllocationFailure, L"Unable to create endpoint entries. Value is null.");  // TODO: Localize
+                        return *result;
+                    }
+
+                    result->InternalSetSuccess(*createdLoopbackEntry);
 
                     // TODO: get the associated MIDI 1.0 port ids and add them to the list in the entry info ?
 
 
 
+
+                    return *result;
                 }
                 else
                 {
@@ -192,15 +237,26 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
                         TraceLoggingWideString(L"Device creation succeeded but returned device ids are empty", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingGuid(creationConfig.AssociationId(), "association id")
                     );
-                }
 
+                    result->InternalSetFailure(
+                        MidiLoopbackErrorCode::EndpointCreationFailed, 
+                        L"Device creation succeeded but returned device ids are empty");  // TODO: Localize
+
+                    return *result;
+                }
             }
             else
             {
-                // TODO: Need to get error code from the service response
-                result->InternalSetFailure(MidiLoopbackErrorCode::NoErrorInformationAvailable, serviceResponse.ServiceErrorMessage());
+                winrt::hstring errorMessage = internal::TrimmedHStringCopy(serviceResponse.ServiceErrorMessage());
 
-                //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
+                if (errorMessage.empty())
+                {
+                    errorMessage = L"Service call failed, but did not return an error message.";    // TODO: Localize
+                }
+
+                result->InternalSetFailure(
+                    static_cast<MidiLoopbackErrorCode>(serviceResponse.ServiceErrorCode()), 
+                    errorMessage);
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -211,11 +267,15 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
                     TraceLoggingWideString(L"Device creation failed (payload has false success value)", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingGuid(creationConfig.AssociationId(), "association id")
                 );
+
+                return *result;
             }
         }
         catch (winrt::hresult_error ex)
         {
-            result->InternalSetFailure(MidiLoopbackErrorCode::ExceptionThrown, ex.message());
+            result->InternalSetFailure(
+                MidiLoopbackErrorCode::ClientApiException, 
+                ex.message());
 
 
             TraceLoggingWrite(
@@ -229,10 +289,14 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
                 TraceLoggingWideString(ex.message().c_str(), "exception message"),
                 TraceLoggingGuid(creationConfig.AssociationId(), "association id")
             );
+
+            return *result;
         }
         catch (...)
         {
-            result->InternalSetFailure(MidiLoopbackErrorCode::ExceptionThrown, L"General exception/error.");
+            result->InternalSetFailure(
+                MidiLoopbackErrorCode::ClientApiException, 
+                L"General exception/error.");
 
 
             TraceLoggingWrite(
@@ -244,9 +308,11 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
                 TraceLoggingWideString(L"Device creation failed with general exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingGuid(creationConfig.AssociationId(), "association id")
             );
+
+            return *result;
+
         }
 
-        return *result;
     }
 
     _Use_decl_annotations_
@@ -257,6 +323,16 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         auto result = winrt::make_self<MidiLoopbackRemovalResult>();
         if (result == nullptr)
         {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to allocate new MidiLoopbackRemovalResult", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(removalConfig.AssociationId(), "association id")
+            );
+
             return nullptr;
         }
 
@@ -266,11 +342,25 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 
             if (serviceResponse.Status() != svc::MidiServiceConfigResponseStatus::Success)
             {
-                //result->InternalSetFailure();
+                result->InternalSetFailure(
+                    static_cast<MidiLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Service response indicates failure", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(removalConfig.AssociationId(), "association id"),
+                    TraceLoggingUInt32(serviceResponse.ServiceErrorCode(), "service error code"),
+                    TraceLoggingWideString(serviceResponse.ServiceErrorMessage().c_str(), "service error message")
+                );
             }
             else
             {
-                //result->InternalSetSuccess();
+                result->InternalSetSuccess();
             }
         }
         catch (winrt::hresult_error ex)

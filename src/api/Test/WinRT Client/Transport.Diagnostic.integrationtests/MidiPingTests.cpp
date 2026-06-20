@@ -12,7 +12,11 @@
 
 void MidiPingTests::TestPing()
 {
+//    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+
     uint8_t pingCount = 100;
+    
+    std::cout << "Pinging service..." << std::endl;
 
     auto summary = MidiDiagnostics::PingService(pingCount);
 

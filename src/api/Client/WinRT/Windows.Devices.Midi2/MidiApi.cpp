@@ -23,11 +23,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
+                MIDI_SDK_TRACE_EVENT_INFO,
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"HRESULT indicates failure checking reg entry. It may not exist, which is ok.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"HRESULT indicates failure checking API Mode reg entry. It may not exist, which is ok. Defaulting to full MIDI Service mode.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(hr), MIDI_SDK_TRACE_HRESULT_FIELD)
             );
 
@@ -38,45 +38,79 @@ namespace winrt::Windows::Devices::Midi2::implementation
         switch (midiMode)
         {
         case MIDI_USE_LEGACY:
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Windows MIDI Services is in Legacy-only mode. No service.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
             return MidiApiMode::LegacyMode;
 
         case MIDI_USE_MIDISRV:
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Windows MIDI Services is in Full MIDI Service mode.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
             return MidiApiMode::FullWindowsMidiServicesMode;
 
         case MIDI_USE_HYBRID_LEGACY:
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Windows MIDI Services is in hybrid MIDI Service mode.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
             return MidiApiMode::HybridLegacyMode;
 
         default:
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Windows MIDI Services unknown mode. Defaulting to Full MIDI Service mode.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
             return MidiApiMode::FullWindowsMidiServicesMode;        // todo: need to verify the service defaults to full if bad data
-
         }
         
 
     }
+
+
 
     bool MidiApi::EnsureServiceAvailable() noexcept
     {
         // short-circuit if we're on legacy mode
         if (GetCurrentApiMode() == MidiApiMode::LegacyMode)
         {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"EnsureServiceAvailable called when Windows MIDI Services is in legacy-only mode.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
         try
         {
             // if this fails, then the MIDI API is not available.
-            auto serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
+            wil::com_ptr_nothrow<IMidiTransport> serviceTransport;
+            auto transportResult = CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport));
 
-            if (!serviceTransport)
-            {
-                return false;
-            }
-
-            winrt::com_ptr<IMidiSessionTracker> sessionTracker { nullptr };
-
-            auto result = serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker);
-
-            if (FAILED(result) || !sessionTracker)
+            if (FAILED(transportResult) || serviceTransport == nullptr)
             {
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -84,15 +118,61 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"HRESULT indicates failure checking connectivity to the service.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingHResult(static_cast<HRESULT>(result), MIDI_SDK_TRACE_HRESULT_FIELD)
+                    TraceLoggingWideString(L"HRESULT indicates failure attempting to create Midi2MidiSrvTransport or serviceTransport is null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingHResult(static_cast<HRESULT>(transportResult), MIDI_SDK_TRACE_HRESULT_FIELD)
+                );
+
+                return false;
+            }
+
+            wil::com_ptr_nothrow<IMidiSessionTracker> sessionTracker;
+            auto sessionTrackerResult = serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker);
+
+            if (FAILED(sessionTrackerResult) || sessionTracker == nullptr)
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"HRESULT indicates failure attempting to activate IMidiSessionTracker or sessionTracker is null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingHResult(static_cast<HRESULT>(sessionTrackerResult), MIDI_SDK_TRACE_HRESULT_FIELD)
                 );
 
                 return false;
             }
 
             // this is what actually checks to see if we can talk to the service. It will trigger start the service when called
-            return sessionTracker->VerifyConnectivity();
+            // return result is Win32 BOOL
+            auto serviceAvailable = sessionTracker->VerifyConnectivity();
+
+            if (serviceAvailable)
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"MIDI Service is available.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return true;
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"MIDI Service is not available.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return false;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {

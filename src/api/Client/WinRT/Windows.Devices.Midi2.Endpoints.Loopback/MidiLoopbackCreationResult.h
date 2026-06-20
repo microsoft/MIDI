@@ -24,10 +24,15 @@ namespace winrt::Windows::Devices::Midi2::Endpoints::Loopback::implementation
         { 
             m_success = true; 
             m_createdLoopbackEntry = createdLoopbackEntry; 
+
+            m_errorCode = MidiLoopbackErrorCode::NoErrorInformationAvailable;
+            m_errorMessage = L"";
         }
 
         void InternalSetFailure(_In_ loop::MidiLoopbackErrorCode const errorCode, _In_ winrt::hstring const& errorMessage)
         {
+            m_createdLoopbackEntry = nullptr;
+
             m_success = false;
             m_errorCode = errorCode;
             m_errorMessage = errorMessage;
