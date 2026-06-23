@@ -10,10 +10,9 @@
 #include "stdafx.h"
 
 
-
 void MidiBasicLoopbackTests::TestCreateLoopback()
 {
-    //    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
 
     VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
 
@@ -76,7 +75,7 @@ void MidiBasicLoopbackTests::TestCreateLoopback()
 
 void MidiBasicLoopbackTests::TestCreateLegacyPorts()
 {
-    //    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
 
     VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
 
@@ -163,7 +162,7 @@ void MidiBasicLoopbackTests::TestCreateLegacyPorts()
 
 void MidiBasicLoopbackTests::TestUmpSendReceive()
 {
-    //    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
 
     VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
 

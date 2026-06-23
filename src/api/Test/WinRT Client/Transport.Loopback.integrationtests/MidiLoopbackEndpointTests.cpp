@@ -13,8 +13,7 @@
 
 void MidiLoopbackEndpointTests::TestCreateLoopback()
 {
-//    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
-
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
     VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
 
     winrt::hstring endpointAId{};
@@ -96,8 +95,7 @@ void MidiLoopbackEndpointTests::TestCreateLoopback()
 
 void MidiLoopbackEndpointTests::TestCreateLegacyPorts()
 {
-    //    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
-
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
     VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
 
     winrt::hstring endpointAId{};
@@ -214,8 +212,7 @@ void MidiLoopbackEndpointTests::TestCreateLegacyPorts()
 
 void MidiLoopbackEndpointTests::TestUmpSendReceive()
 {
-    //    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
-
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
     VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
 
     winrt::hstring endpointAId{};

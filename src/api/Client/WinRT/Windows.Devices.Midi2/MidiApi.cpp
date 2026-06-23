@@ -143,9 +143,28 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return false;
             }
 
+            auto initResult = sessionTracker->Initialize();
+
+            if (FAILED(initResult))
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"HRESULT indicates failure attempting to initialize session tracker.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingHResult(static_cast<HRESULT>(initResult), MIDI_SDK_TRACE_HRESULT_FIELD)
+                );
+
+                return false;
+            }
+
             // this is what actually checks to see if we can talk to the service. It will trigger start the service when called
             // return result is Win32 BOOL
             auto serviceAvailable = sessionTracker->VerifyConnectivity();
+
+            sessionTracker->Shutdown();
 
             if (serviceAvailable)
             {
