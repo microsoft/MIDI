@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Reporting
+{
+    [contract(MidiReportingApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Reporting.IMidiServiceTransportPluginInfo", UUID_IMidiServiceTransportPluginInfo)]
+    runtimeclass MidiServiceTransportPluginInfo
+    {
+        Guid TransportId{ get; };
+
+        String Name{ get; };
+        String TransportCode{ get; };
+        String Description{ get; };
+
+        String ImageFileName{ get; };
+
+        String Author{ get; };
+
+        String Version{ get; };
+
+        Boolean IsRuntimeCreatableByApps{ get; };
+        Boolean IsRuntimeCreatableBySettings{ get; };
+
+        Boolean IsSystemManaged{ get; };
+        Boolean CanConfigure{ get; };
+
+    };
+}

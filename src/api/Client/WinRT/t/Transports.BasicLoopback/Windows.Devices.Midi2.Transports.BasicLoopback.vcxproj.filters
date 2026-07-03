@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiBasicLoopbackEndpointDefinition.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEntry.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackRemovalResult.cpp">
+      <Filter>SDK\Remove</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackUpdateResult.cpp">
+      <Filter>SDK\Update</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointDefinition.h">
+      <Filter>SDK\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEntry.h">
+      <Filter>SDK\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackRemovalResult.h">
+      <Filter>SDK\Remove</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackUpdateResult.h">
+      <Filter>SDK\Update</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiApiContracts.idl">
+      <Filter>Contracts</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackCreationConfig.idl">
+      <Filter>SDK\Create</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackCreationResult.idl">
+      <Filter>SDK\Create</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackRemovalConfig.idl">
+      <Filter>SDK\Remove</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointDefinition.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackManager.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEntry.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackErrorCodeEnum.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackUpdateResult.idl">
+      <Filter>SDK\Update</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackRemovalResult.idl">
+      <Filter>SDK\Remove</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-winrt-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Contracts">
+      <UniqueIdentifier>{2e9ea156-6174-4580-8989-6cdf6e3279dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{b8147d8f-5d4b-419f-84e4-16565aa20fbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{1c46f3ba-db9d-4334-900a-d2ea1ec3e3fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Create">
+      <UniqueIdentifier>{81320ae0-686b-4f08-b1c8-aa68246116ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Remove">
+      <UniqueIdentifier>{0cdd7d12-edcc-4398-b89d-52edccf23a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Shared">
+      <UniqueIdentifier>{e15d1379-f102-40a6-b066-d6121c6617a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Update">
+      <UniqueIdentifier>{65548876-0adb-45d0-ab5d-e255c41e8653}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

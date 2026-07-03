@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+
+#pragma once
+#include "MidiVirtualDeviceManager.g.h"
+
+namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
+{
+    struct MidiVirtualDeviceManager
+    {
+        //MidiVirtualDeviceManager() = default;
+
+        static bool IsTransportAvailable() noexcept;
+        static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{8FEAAD91-70E1-4A19-997A-377720A719C1}"); }
+
+        static virt::MidiVirtualDevice CreateVirtualDevice(_In_ virt::MidiVirtualDeviceCreationConfig creationConfig) noexcept;
+        //static bool RemoveVirtualDevice(_In_ virt::MidiVirtualDeviceRemovalConfig removalConfig) noexcept;
+
+        static winrt::hstring GetAssociatedClientEndpointDeviceId(_In_ winrt::guid associationId) noexcept;
+    };
+}
+namespace winrt::Windows::Devices::Midi2::Transports::Virtual::factory_implementation
+{
+    struct MidiVirtualDeviceManager : MidiVirtualDeviceManagerT<MidiVirtualDeviceManager, implementation::MidiVirtualDeviceManager, winrt::static_lifetime>
+    {
+    };
+}

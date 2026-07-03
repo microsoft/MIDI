@@ -1,0 +1,45 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointUserSuppliedInfo", UUID_IMidiEndpointUserSuppliedInfo)]
+    runtimeclass MidiEndpointUserSuppliedInfo
+    {
+        MidiEndpointUserSuppliedInfo();
+        MidiEndpointUserSuppliedInfo(
+            String name, 
+            String imageFileName, 
+            Boolean requiresNoteOffTranslation,
+            UInt16 recommendedControlChangeAutomationIntervalMilliseconds,
+            Boolean supportsMidiPolyphonicExpression,
+            UInt64 customMidiOutgoingLatencyTicks,
+            Boolean useCustomMidiOutgoingLatencyTicksForScheduling
+        );
+
+        Boolean IsReadOnly { get; };
+
+        String Name;
+        String Description;
+
+        String ImageFileName;
+
+        Boolean RequiresNoteOffTranslation;
+        UInt16 RecommendedControlChangeAutomationIntervalMilliseconds;
+        Boolean SupportsMidiPolyphonicExpression;
+
+        UInt64 CustomMidiOutgoingLatencyTicks;
+        Boolean UseCustomMidiOutgoingLatencyTicksForScheduling;
+    };
+}

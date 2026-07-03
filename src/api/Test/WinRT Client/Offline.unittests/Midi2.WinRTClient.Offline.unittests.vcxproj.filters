@@ -7,9 +7,6 @@
     <ClCompile Include="MidiClockTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointIdHelperTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="MidiGroupTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -40,9 +37,6 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MidiClockTests.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointIdHelperTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MidiGroupTests.h">

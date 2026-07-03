@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    [static_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDevicePropertyHelperStatics", UUID_IMidiEndpointDevicePropertyHelperStatics)]
+    static runtimeclass MidiEndpointDevicePropertyHelper
+    {
+        static String GetMidiPropertyNameFromPropertyKey(Guid fmtid, UInt32 pid);
+        static String GetMidiPropertyNameFromPropertyKey(String key);
+
+        static Boolean IsMidiPropertyKey(String key);
+        static Boolean IsMidiPropertyKey(Guid fmtid, UInt32 pid);
+
+        static IMapView<String, String> GetAllMidiProperties();
+    }
+}
+

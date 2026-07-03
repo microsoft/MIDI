@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiLoopbackEndpointDefinition.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointEntry.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEntry.cpp">
+      <Filter>SDK\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackRemovalResult.cpp">
+      <Filter>SDK\Remove</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackUpdateResult.cpp">
+      <Filter>SDK\Update</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointDefinition.h">
+      <Filter>SDK\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointEntry.h">
+      <Filter>SDK\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEntry.h">
+      <Filter>SDK\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackRemovalResult.h">
+      <Filter>SDK\Remove</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackUpdateResult.h">
+      <Filter>SDK\Update</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiApiContracts.idl">
+      <Filter>Contracts</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackCreationConfig.idl">
+      <Filter>SDK\Create</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackCreationResult.idl">
+      <Filter>SDK\Create</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackRemovalConfig.idl">
+      <Filter>SDK\Remove</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointDefinition.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackManager.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEntry.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointEntry.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackRemovalResult.idl">
+      <Filter>SDK\Remove</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackErrorCodeEnum.idl">
+      <Filter>SDK\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackUpdateResult.idl">
+      <Filter>SDK\Update</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-winrt-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Contracts">
+      <UniqueIdentifier>{8f0953b4-c2cb-4953-b192-1a358d631170}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{b60aded4-b27e-4446-9a7b-eb1f077938db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{f6108d18-82f7-4161-955f-e6cc14584ef5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Create">
+      <UniqueIdentifier>{999780c9-5776-4b02-a1e1-913bcebad8f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Remove">
+      <UniqueIdentifier>{14403df7-3feb-4992-a23c-631b65a0870c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Shared">
+      <UniqueIdentifier>{07de60a5-6132-4c29-a2d5-a7b84630739a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Update">
+      <UniqueIdentifier>{c8092cef-e2cd-4a04-be8e-ebf80c5ff9bc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

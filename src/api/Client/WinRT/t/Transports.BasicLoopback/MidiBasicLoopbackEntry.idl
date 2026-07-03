@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.BasicLoopback
+{
+    [contract(MidiTransportsBasicLoopbackApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackEntry", UUID_IMidiBasicLoopbackEntry)]
+    runtimeclass MidiBasicLoopbackEntry
+    {
+        Guid AssociationId{ get; };
+
+        String EndpointDeviceId{ get; };
+
+        String Name{ get; };
+        String Description{ get; };
+
+        Boolean IsMuted{ get;};
+
+        //// if the basic loopback endpoint is made the parent of the legacy ports, the query should be fast.
+        //// but ideally get this from the server. Only do a lookup if empty.
+        //// Need to see if service call can hold until the MIDI 1 endpoints are generated
+        //IVector<Windows.Devices.Midi2.Enumeration.MidiEndpointAssociatedPortDeviceInformation> AssociatedLegacyApiPorts{ get; };
+    }
+}

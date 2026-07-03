@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+// error codes shared with service
+#include "..\..\..\..\Transport\BasicLoopbackMidiTransport\basic_loopback_transport_error_codes.h"
+
+namespace Windows.Devices.Midi2.Transports.BasicLoopback
+{
+    [contract(MidiTransportsBasicLoopbackApiContract, 1)]
+    enum MidiBasicLoopbackErrorCode
+    {
+        NoErrorInformationAvailable =       BASIC_LOOPBACK_ERROR_CODE_UNKNOWN_ERROR,
+        UnrecognizedCommand =               BASIC_LOOPBACK_ERROR_CODE_UNRECOGNIZED_COMMAND,
+
+        InvalidJson =                       BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON,
+
+        EndpointCreationFailed =            BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_CREATION_FAILED,
+        EndpointNotFound =                  BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+
+        InvalidOrMissingAssociationId =     BASIC_LOOPBACK_ERROR_CODE_MISSING_ASSOCIATION_ID,
+
+        InvalidOrMissingUniqueId =          BASIC_LOOPBACK_ERROR_CODE_MISSING_UNIQUE_ID,
+        DuplicateUniqueId =                 BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID,
+        InvalidOrMissingEndpointName =      BASIC_LOOPBACK_ERROR_CODE_MISSING_ENDPOINT_NAME,
+        DuplicateEndpointName =             BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME,
+
+        ClientApiException =                0x11002011,
+
+        InvalidArgument =                   0x11000055,
+
+    };
+}

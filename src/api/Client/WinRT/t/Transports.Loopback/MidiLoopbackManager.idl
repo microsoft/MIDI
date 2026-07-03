@@ -1,0 +1,59 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiLoopbackCreationResult.idl";
+import "MidiLoopbackRemovalResult.idl";
+import "MidiLoopbackUpdateResult.idl";
+
+import "MidiLoopbackCreationConfig.idl";
+import "MidiLoopbackRemovalConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Loopback
+{
+    [contract(MidiTransportsLoopbackApiContract, 1)]
+    [static_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackManagerStatics", UUID_IMidiLoopbackManagerStatics)]
+    static runtimeclass MidiLoopbackManager
+    {
+        static Boolean IsTransportAvailable{ get; };
+
+        static Guid TransportId{ get; };
+
+        static MidiLoopbackCreationResult CreateTransientLoopback(
+            MidiLoopbackCreationConfig creationConfig);
+
+        static MidiLoopbackRemovalResult RemoveTransientLoopback(
+            MidiLoopbackRemovalConfig removalConfig);
+
+        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
+            String loopbackEndpointId);
+
+        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint,
+            IIterable<Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation> endpointsToSearch);
+
+        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint);
+
+        static Boolean DoesLoopbackAExist(String uniqueIdentifier);
+        static Boolean DoesLoopbackBExist(String uniqueIdentifier);
+
+        static Guid GetAssociationId(Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint);
+
+        static MidiLoopbackUpdateResult MuteLoopback(Guid associationId);
+        static MidiLoopbackUpdateResult UnmuteLoopback(Guid associationId);
+
+
+        static IVectorView<MidiLoopbackEntry> GetActiveLoopbackEntries();
+
+    }
+}
+

@@ -9,27 +9,6 @@
 
 #include "stdafx.h"
 
-bool MidiGroupTests::ClassSetup()
-{
-    std::cout << "MidiEndpointIdHelperTests::ClassSetup" << std::endl;
-
-    winrt::init_apartment();
-
-    return m_initializer.InitializeSdkRuntime();
-}
-
-bool MidiGroupTests::ClassCleanup()
-{
-    std::cout << "MidiEndpointIdHelperTests::ClassCleanup" << std::endl;
-
-    m_initializer.ShutdownSdkRuntime();
-
-    winrt::uninit_apartment();
-
-    return true;
-}
-
-
 void MidiGroupTests::TestBasics()
 {
     uint8_t index{ 0x08 };

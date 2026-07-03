@@ -196,7 +196,7 @@
 
 
 // ============================================================================
-// Windows.Devices.Midi2.Endpoints.Loopback : Interface number 00F02
+// Windows.Devices.Midi2.Transports.Loopback : Interface number 00F02
 
 #define UUID_IMidiLoopbackManagerStatics			8087b303-0519-c0de-31d1-ee00F0201000
 
@@ -213,10 +213,10 @@
 
 
 // ============================================================================
-// Windows.Devices.Midi2.Endpoints.Network : Interface number 00F03
+// Windows.Devices.Midi2.Transports.Network : Interface number 00F03
 
 // ============================================================================
-// Windows.Devices.Midi2.Endpoints.Virtual : Interface number 00F04
+// Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04
 
 #define UUID_IMidiStreamConfigRequestReceivedEventArgs		8087b303-0519-c0de-31d1-dd00F0401000
 #define UUID_IMidiVirtualDevice								8087b303-0519-c0de-31d1-dd00F0402000

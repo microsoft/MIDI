@@ -1,0 +1,48 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+// error codes shared with service
+#include "..\..\..\..\Transport\LoopbackMidiTransport\loopback_transport_error_codes.h"
+
+namespace Windows.Devices.Midi2.Transports.Loopback
+{
+    [contract(MidiTransportsLoopbackApiContract, 1)]
+    enum MidiLoopbackErrorCode
+    {
+        NoErrorInformationAvailable =       LOOPBACK_ERROR_CODE_UNKNOWN_ERROR,
+        UnrecognizedCommand =               LOOPBACK_ERROR_CODE_UNRECOGNIZED_COMMAND,
+
+        InvalidJson =                       LOOPBACK_ERROR_CODE_INVALID_JSON,
+
+        EndpointCreationFailed =            LOOPBACK_ERROR_CODE_ENDPOINT_CREATION_FAILED,
+        EndpointNotFound =                  LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+
+        InvalidOrMissingAssociationId =     LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+
+        InvalidOrMissingUniqueIdA =         LOOPBACK_ERROR_CODE_INVALID_UNIQUE_ID_A,
+        DuplicateUniqueIdA =                LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID_A,
+        
+        InvalidOrMissingUniqueIdB =         LOOPBACK_ERROR_CODE_INVALID_UNIQUE_ID_B,
+        DuplicateUniqueIdB =                LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID_B,
+
+        InvalidOrMissingEndpointNameA =     LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_A,
+        DuplicateNameA =                    LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_A,
+
+        InvalidOrMissingEndpointNameB =     LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_B,
+        DuplicateNameB =                    LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_B,
+
+        ClientApiException =                0x11000035,
+        InvalidArgument =                   0x11000055,
+
+        ClientApiAllocationFailure =        0x11000999,
+
+    };
+}

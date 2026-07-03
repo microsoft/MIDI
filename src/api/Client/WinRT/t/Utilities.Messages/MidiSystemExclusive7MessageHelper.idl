@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Messages
+{
+    [contract(MidiMessageUtilityApiContract,1)]
+    [static_name("Windows.Devices.Midi2.Utilities.Messages.IMidiSystemExclusive7MessageHelperStatics", UUID_IMidiSystemExclusive7MessageHelperStatics)]
+    static runtimeclass MidiSystemExclusive7MessageHelper
+    {
+        // System Exclusive 7 handling
+        static IVector<UInt8> GetDataBytesFromMultipleSystemExclusiveMessages(IIterable<Windows.Devices.Midi2.MidiMessage64> messages);
+
+        static IVector<UInt8> GetDataBytesFromSingleSystemExclusiveMessage(Windows.Devices.Midi2.MidiMessage64 message);
+        static IVector<UInt8> GetDataBytesFromSingleSystemExclusiveMessage(UInt32 word0, UInt32 word1);
+
+        static UInt8 AppendDataBytesFromSingleSystemExclusiveMessage(Windows.Devices.Midi2.MidiMessage64 message, IVector<UInt8> dataBytesToAppendTo);
+        static UInt8 AppendDataBytesFromSingleSystemExclusiveMessage(UInt32 word0, UInt32 word1, IVector<UInt8> dataBytesToAppendTo);
+
+        static UInt8 GetDataByteCountFromSystemExclusiveMessageFirstWord(UInt32 word0);
+        static Boolean MessageIsSystemExclusiveMessage(UInt32 word0);
+
+
+    };
+}

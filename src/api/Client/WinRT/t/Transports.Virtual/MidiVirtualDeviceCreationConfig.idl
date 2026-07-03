@@ -1,0 +1,62 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Transports.Virtual
+{
+    [contract(MidiTransportsVirtualApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Virtual.IMidiVirtualDeviceCreationConfig", UUID_IMidiVirtualDeviceCreationConfig)]
+    runtimeclass MidiVirtualDeviceCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiVirtualDeviceCreationConfig(
+            String name,
+            String description,
+            String manufacturer,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo declaredEndpointInfo
+        );
+
+        MidiVirtualDeviceCreationConfig(
+            String name,
+            String description, 
+            String manufacturer,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo declaredEndpointInfo,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity declaredDeviceIdentity
+        );
+
+        MidiVirtualDeviceCreationConfig(
+            String name,
+            String description,
+            String manufacturer,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo declaredEndpointInfo,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity declaredDeviceIdentity,
+            Windows.Devices.Midi2.Enumeration.MidiEndpointUserSuppliedInfo userSuppliedInfo
+        );
+
+
+        // maps to transport-supplied values. We don't make the rest of the
+        // MidiEndpointTransportSuppliedInfo settings available because some, like 
+        // transport id and data format, need to be set service-side. Also, all 
+        // app-to-app MIDI devices are multi-client
+        String Name;
+        String Description;
+        String Manufacturer;
+
+        Boolean CreateOnlyUmpEndpoints;
+
+        Guid AssociationId{ get; };
+
+        Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity DeclaredDeviceIdentity;
+        Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo DeclaredEndpointInfo;
+        Windows.Devices.Midi2.Enumeration.MidiEndpointUserSuppliedInfo UserSuppliedInfo;
+
+        IVector<Windows.Devices.Midi2.Enumeration.MidiFunctionBlock> FunctionBlocks{ get; };
+    }
+}
