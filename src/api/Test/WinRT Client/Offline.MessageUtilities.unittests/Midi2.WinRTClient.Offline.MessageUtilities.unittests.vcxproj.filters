@@ -4,9 +4,6 @@
     <ClCompile Include="Module.cpp">
       <Filter>Support</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointIdHelperTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -23,9 +20,6 @@
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Support</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointIdHelperTests.h">
-      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h">
       <Filter>Headers</Filter>
@@ -58,5 +52,9 @@
     <ResourceCompile Include="Midi2ClientTests.rc">
       <Filter>Support</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

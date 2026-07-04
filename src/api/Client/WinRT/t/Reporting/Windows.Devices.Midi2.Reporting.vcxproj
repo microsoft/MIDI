@@ -298,11 +298,16 @@
     <ClInclude Include="MidiReporting.h">
       <DependentUpon>MidiReporting.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceSessionConnectionInfo.h" />
+    <ClInclude Include="MidiServiceSessionConnectionInfo.h">
+      <DependentUpon>MidiServiceSessionConnectionInfo.idl</DependentUpon>
+
+    </ClInclude>
     <ClInclude Include="MidiServiceSessionInfo.h">
       <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceTransportPluginInfo.h" />
+    <ClInclude Include="MidiServiceTransportPluginInfo.h">
+      <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -311,12 +316,16 @@
     <ClCompile Include="MidiReporting.cpp">
       <DependentUpon>MidiReporting.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiServiceSessionConnectionInfo.cpp" />
+    <ClCompile Include="MidiServiceSessionConnectionInfo.cpp">
+      <DependentUpon>MidiServiceSessionConnectionInfo.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiServiceSessionInfo.cpp">
       <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiServiceTransportPluginInfo.cpp" />
+    <ClCompile Include="MidiServiceTransportPluginInfo.cpp">
+      <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

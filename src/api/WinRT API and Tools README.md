@@ -25,9 +25,9 @@ The SDK relies on the following to be present on the target system.
 | `Windows.Devices.Midi2.dll` | Core WinRT SDK implementation |
 | `Windows.Devices.Midi2.ClientPlugins.dll` | Client listeners to filter data by channel/group/message type |
 | `Windows.Devices.Midi2.Diagnostics.dll` | Diagnostics functionality used primarily by shipping tools |
-| `Windows.Devices.Midi2.Endpoints.BasicLoopback.dll` | MIDI 1.0 loopback API |
-| `Windows.Devices.Midi2.Endpoints.Loopback.dll` | MIDI 2.0 loopback API |
-| `Windows.Devices.Midi2.Endpoints.Virtual.dll` | Virtual MIDI (app-to-app MIDI) API |
+| `Windows.Devices.Midi2.Transports.BasicLoopback.dll` | MIDI 1.0 loopback API |
+| `Windows.Devices.Midi2.Transports.Loopback.dll` | MIDI 2.0 loopback API |
+| `Windows.Devices.Midi2.Transports.Virtual.dll` | Virtual MIDI (app-to-app MIDI) API |
 | `Windows.Devices.Midi2.Enumeration.dll` | Endpoint enumeration and device watcher support |
 | `Windows.Devices.Midi2.Reporting.dll` | Additional reporting (sessions, transports, etc.) used primarily by shipping tools |
 | `Windows.Devices.Midi2.ServiceConfig.dll` | Core support for formatting and sending service configuration and commands used by transports |

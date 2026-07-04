@@ -25,20 +25,10 @@ public:
     END_TEST_CLASS()
 
 
-    TEST_CLASS_SETUP(ClassSetup);
-    TEST_CLASS_CLEANUP(ClassCleanup);
-
-        //TEST_METHOD_SETUP(TestSetup);
-        //TEST_METHOD_CLEANUP(TestCleanup);
-
         //Generic Tests
     TEST_METHOD(TestBuildFunctionBlockNameNotificationLong);
     TEST_METHOD(TestBuildFunctionBlockNameNotificationMedium);
     TEST_METHOD(TestBuildFunctionBlockInfoNotification);
-
-
-private:
-    init::MidiDesktopAppSdkInitializer m_initializer{};
 
 
 };

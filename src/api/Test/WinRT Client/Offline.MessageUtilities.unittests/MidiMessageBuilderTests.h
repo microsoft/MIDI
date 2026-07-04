@@ -20,12 +20,6 @@ public:
     END_TEST_CLASS()
 
 
-    TEST_CLASS_SETUP(ClassSetup);
-    TEST_CLASS_CLEANUP(ClassCleanup);
-
-    //TEST_METHOD_SETUP(TestSetup);
-    //TEST_METHOD_CLEANUP(TestCleanup);
-
     //Generic Tests
     TEST_METHOD(TestBuildType0UtilityMessages);
     TEST_METHOD(TestBuildType1SystemMessages);
@@ -36,9 +30,6 @@ public:
     TEST_METHOD(TestBuildMixedDatasetHeaderMessage);
     TEST_METHOD(TestBuildMixedDatasetPayloadMessage);
 
-
-private:
-    init::MidiDesktopAppSdkInitializer m_initializer{};
 
 
 };

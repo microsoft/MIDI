@@ -170,13 +170,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
-      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
-      <Private>true</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2\Windows.Devices.Midi2.vcxproj">
+    <ProjectReference Include="..\..\..\Client\WinRT\t\core\Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
-      <Private>true</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Client\WinRT\t\Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
+      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

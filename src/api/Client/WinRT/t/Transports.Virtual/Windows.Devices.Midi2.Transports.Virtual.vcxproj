@@ -296,7 +296,9 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiStreamConfigRequestReceivedEventArgs.h" />
+    <ClInclude Include="MidiStreamConfigRequestReceivedEventArgs.h">
+      <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiVirtualDevice.h">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClInclude>
@@ -312,7 +314,9 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiStreamConfigRequestReceivedEventArgs.cpp" />
+    <ClCompile Include="MidiStreamConfigRequestReceivedEventArgs.cpp">
+      <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiVirtualDevice.cpp">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClCompile>

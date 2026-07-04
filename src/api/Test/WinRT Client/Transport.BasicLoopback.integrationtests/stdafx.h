@@ -19,12 +19,12 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
-#include <winrt/Windows.Devices.Midi2.Endpoints.BasicLoopback.h>
+#include <winrt/Windows.Devices.Midi2.Transports.BasicLoopback.h>
 
 using namespace winrt::Windows::Devices::Midi2;
 using namespace winrt::Windows::Devices::Midi2::Enumeration;
 using namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy;
-using namespace winrt::Windows::Devices::Midi2::Endpoints::BasicLoopback;
+using namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback;
 
 #include <iostream>
 

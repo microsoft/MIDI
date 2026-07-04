@@ -20,12 +20,6 @@ public:
         END_TEST_CLASS()
 
 
-        TEST_CLASS_SETUP(ClassSetup);
-    TEST_CLASS_CLEANUP(ClassCleanup);
-
-    //TEST_METHOD_SETUP(TestSetup);
-    //TEST_METHOD_CLEANUP(TestCleanup);
-
     //Generic Tests
     TEST_METHOD(TestConvertControlChangeMessages);
     TEST_METHOD(TestConvertNoteOnMessages);
@@ -38,11 +32,7 @@ public:
     
     TEST_METHOD(TestConvertUMPToHexBytes);
     TEST_METHOD(TestConvertHexBytesToUMP);
-    
 
-
-private:
-    init::MidiDesktopAppSdkInitializer m_initializer{};
 
 
 };

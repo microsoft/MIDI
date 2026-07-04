@@ -163,28 +163,20 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Endpoints.Loopback\Windows.Devices.Midi2.Endpoints.Loopback.vcxproj">
-      <Project>{e1437c07-6b22-4d30-9e03-8fd2666f72d1}</Project>
-      <Private>true</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
-      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
-      <Private>true</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Reporting\Windows.Devices.Midi2.Reporting.vcxproj">
-      <Project>{e165ef50-e4ce-4765-8388-4df4f9d03b57}</Project>
-      <Private>true</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.ServiceConfig\Windows.Devices.Midi2.ServiceConfig.vcxproj">
-      <Project>{0d921d5f-ffa3-4937-b171-ae4363fdf143}</Project>
-      <Private>true</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Transports.Loopback\Windows.Devices.Midi2.Transports.Loopback.vcxproj">
-      <Project>{1dd0b884-f1e7-4ad0-b060-74e50d217c4a}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2\Windows.Devices.Midi2.vcxproj">
+    <ProjectReference Include="..\..\..\Client\WinRT\t\core\Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
-      <Private>true</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Client\WinRT\t\Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
+      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Client\WinRT\t\Reporting\Windows.Devices.Midi2.Reporting.vcxproj">
+      <Project>{e165ef50-e4ce-4765-8388-4df4f9d03b57}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Client\WinRT\t\ServiceConfig\Windows.Devices.Midi2.ServiceConfig.vcxproj">
+      <Project>{0d921d5f-ffa3-4937-b171-ae4363fdf143}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Client\WinRT\t\Transports.Loopback\Windows.Devices.Midi2.Transports.Loopback.vcxproj">
+      <Project>{1dd0b884-f1e7-4ad0-b060-74e50d217c4a}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

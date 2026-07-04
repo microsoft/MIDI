@@ -9,29 +9,6 @@
 
 #include "stdafx.h"
 
-bool MidiMessageConverterTests::ClassSetup()
-{
-    std::cout << "MidiMessageConverterTests::ClassSetup" << std::endl;
-
-    winrt::init_apartment();
-
-    return m_initializer.InitializeSdkRuntime();
-}
-
-
-bool MidiMessageConverterTests::ClassCleanup()
-{
-    std::cout << "MidiMessageConverterTests::ClassCleanup" << std::endl;
-
-    m_initializer.ShutdownSdkRuntime();
-
-    winrt::uninit_apartment();
-
-    return true;
-}
-
-
-
 
 void MidiMessageConverterTests::TestConvertControlChangeMessages()
 {

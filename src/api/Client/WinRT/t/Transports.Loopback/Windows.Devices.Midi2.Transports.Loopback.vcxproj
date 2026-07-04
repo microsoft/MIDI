@@ -317,8 +317,12 @@
     <ClInclude Include="MidiLoopbackEntry.h">
       <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiLoopbackRemovalResult.h" />
-    <ClInclude Include="MidiLoopbackUpdateResult.h" />
+    <ClInclude Include="MidiLoopbackRemovalResult.h">
+      <DependentUpon>MidiLoopbackRemovalResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackUpdateResult.h">
+      <DependentUpon>MidiLoopbackUpdateResult.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -346,8 +350,12 @@
     <ClCompile Include="MidiLoopbackEntry.cpp">
       <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackRemovalResult.cpp" />
-    <ClCompile Include="MidiLoopbackUpdateResult.cpp" />
+    <ClCompile Include="MidiLoopbackRemovalResult.cpp">
+      <DependentUpon>MidiLoopbackRemovalResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackUpdateResult.cpp">
+      <DependentUpon>MidiLoopbackUpdateResult.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

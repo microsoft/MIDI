@@ -59,13 +59,13 @@ void MidiEndpointIdHelperTests::TestCreateFullIdFromShortId()
 
 void MidiEndpointIdHelperTests::TestIsWindowsMidiServicesId()
 {
-    VERIFY_IS_TRUE(MidiEndpointDeviceIdHelper::IsWindowsMidiServicesEndpointDeviceId(L"\\\\?\\swd#midisrv#midiu_ksa_9447707571394916916#{e7cce071-3c03-423f-88d3-f1045d02552b}"));
+    VERIFY_IS_TRUE(MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(L"\\\\?\\swd#midisrv#midiu_ksa_9447707571394916916#{e7cce071-3c03-423f-88d3-f1045d02552b}"));
 
     // this is an invalid one
-    VERIFY_IS_FALSE(MidiEndpointDeviceIdHelper::IsWindowsMidiServicesEndpointDeviceId(L"\\\\?\\swd#mmdevapi#midiu_ks_0600f00659b80802#{62f9c741-b25a-46ce-b54c-9bccce08b6f2}"));
+    VERIFY_IS_FALSE(MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(L"\\\\?\\swd#mmdevapi#midiu_ks_0600f00659b80802#{62f9c741-b25a-46ce-b54c-9bccce08b6f2}"));
 
     // as is this
-    VERIFY_IS_FALSE(MidiEndpointDeviceIdHelper::IsWindowsMidiServicesEndpointDeviceId(L"this is an invalid id"));
+    VERIFY_IS_FALSE(MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(L"this is an invalid id"));
 }
 
 void MidiEndpointIdHelperTests::TestNormalizeId()
