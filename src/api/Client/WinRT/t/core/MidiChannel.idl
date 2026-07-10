@@ -21,7 +21,6 @@ namespace Windows.Devices.Midi2
         MidiChannel();
         MidiChannel(UInt8 index);
 
-        [noexcept]
         static String ShortLabel{ get; };
         static String ShortLabelPlural{ get; };
         static String LongLabel{ get; };

@@ -146,7 +146,6 @@
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="MidiEndpointProtocolManager-Threading-Review.md" />
     <None Include="packages.config" />
   </ItemGroup>
 </Project>
