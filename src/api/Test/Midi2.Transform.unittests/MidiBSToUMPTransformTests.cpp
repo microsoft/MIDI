@@ -94,6 +94,7 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
     }
     std::cout << std::endl;
 
+    // MessageOptionFlags_None means no running status
     VERIFY_SUCCEEDED(transform->SendMidiMessage(MessageOptionFlags_None, (void*)bytes, byteCount, 0));
 
     // wait
@@ -221,20 +222,38 @@ void MidiBSToUMPTransformTests::TestTimingClock()
     InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
 }
 
-//void MidiBSToUMPTransformTests::TestTimingClockPadded()
-//{
-//    uint8_t groupIndex{ 0 };
-//
-//    uint8_t bytes[] =
-//    {
-//        //0x00, 0x00, 0x00, 0x00, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-//        0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-//    };
-//
-//    std::vector<uint32_t> expectedWords{ 0x10F80000 };
-//
-//    InternalTestBytes(groupIndex, bytes, _countof(bytes), 1, expectedWords);
-//}
+void MidiBSToUMPTransformTests::TestTimingClockPadded()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        // 12 bytes total. This reflects what happens with inMusic drivers
+        0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    std::vector<uint32_t> expectedWords{ 0x10F80000 };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+}
+
+// if this fails, then it means running status is enabled.
+void MidiBSToUMPTransformTests::TestCCPadded()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        // 12 bytes total. This reflects what happens with inMusic drivers
+        0xb0, 0x10, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    std::vector<uint32_t> expectedWords{ 0x20b01007 };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+}
+
+
 
 bool MidiBSToUMPTransformTests::ClassSetup()
 {
