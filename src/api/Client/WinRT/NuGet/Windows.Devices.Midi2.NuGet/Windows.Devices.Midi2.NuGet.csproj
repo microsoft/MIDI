@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <BaseOutputPath>G:\Github\microsoft\midi\src\api\vsfiles-sdk\out\</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

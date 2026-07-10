@@ -120,12 +120,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <OutDir>$(SolutionDir)\VSFiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
-    <OutDir>$(SolutionDir)\VSFiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <ExecutablePath>$(VC_ExecutablePath_ARM64);$(CommonExecutablePath)</ExecutablePath>
     <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64)</LibraryPath>
     <ExcludePath>$(CommonExcludePath);$(VC_ExecutablePath_ARM64);$(VC_LibraryPath_ARM64);</ExcludePath>
@@ -133,20 +133,20 @@
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)\VSFiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)\VSFiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(SolutionDir)\VSFiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
-    <OutDir>$(SolutionDir)\VSFiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <ExecutablePath>$(VC_ExecutablePath_ARM64);$(CommonExecutablePath)</ExecutablePath>
     <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64)</LibraryPath>
     <ExcludePath>$(CommonExcludePath);$(VC_ExecutablePath_ARM64);$(VC_LibraryPath_ARM64);</ExcludePath>
@@ -154,12 +154,12 @@
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)\VSFiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)\VSFiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
