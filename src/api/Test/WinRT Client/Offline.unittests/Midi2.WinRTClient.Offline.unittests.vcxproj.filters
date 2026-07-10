@@ -81,4 +81,8 @@
       <UniqueIdentifier>{c71143bf-87ce-4e43-b6c9-98ddc626e1e0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
 </Project>

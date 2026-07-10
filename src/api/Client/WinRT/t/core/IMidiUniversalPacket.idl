@@ -7,12 +7,12 @@
 // ============================================================================
 
 #include "..\..\shared\midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
-
-
 
 import "MidiPacketTypeEnum.idl";
 import "MidiMessageTypeEnum.idl";
+
 
 namespace Windows.Devices.Midi2
 {

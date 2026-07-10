@@ -8,7 +8,6 @@
 
 #include "..\..\shared\midi_sdk_idl_defs.h"
 
-
 namespace Windows.Devices.Midi2
 {
     [contractversion(1)]

@@ -7,11 +7,10 @@
 // ============================================================================
 
 #include "..\..\shared\midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
-
 import "MidiSystemTimerSettings.idl";
-
 
 
 namespace Windows.Devices.Midi2

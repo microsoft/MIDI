@@ -7,8 +7,8 @@
 // ============================================================================
 
 #include "..\..\shared\midi_sdk_idl_defs.h"
-import "MidiApiContracts.idl";
 
+import "MidiApiContracts.idl";
 
 
 namespace Windows.Devices.Midi2
@@ -21,6 +21,7 @@ namespace Windows.Devices.Midi2
         MidiChannel();
         MidiChannel(UInt8 index);
 
+        [noexcept]
         static String ShortLabel{ get; };
         static String ShortLabelPlural{ get; };
         static String LongLabel{ get; };

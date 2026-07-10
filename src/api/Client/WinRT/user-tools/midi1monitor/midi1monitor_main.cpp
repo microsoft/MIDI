@@ -361,15 +361,12 @@ void MessageDisplayWorker(std::stop_token token)
                 DisplayMidiMessage(msg);
             }
 
-           // Sleep(0);
         }
         else
         {
-         //   Sleep(1);
+            Sleep(0);
         }
-
     }
-
 }
 
 
@@ -379,6 +376,8 @@ void EnqueueMidiDataMessage(
     DWORD dwParam2,
     bool isError)
 {
+    UNREFERENCED_PARAMETER(dwParam2);
+
     byte status = static_cast<byte>(dwParam1 & 0x000000FF);
     byte data1 = static_cast<byte>((dwParam1 & 0x0000FF00) >> 8);
     byte data2 = static_cast<byte>((dwParam1 & 0x00FF0000) >> 16);

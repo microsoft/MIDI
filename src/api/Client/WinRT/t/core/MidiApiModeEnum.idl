@@ -7,9 +7,11 @@
 // ============================================================================
 
 #include "..\..\shared\midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 #include "midi_api_mode_defs.h"
+
 
 namespace Windows.Devices.Midi2
 {
