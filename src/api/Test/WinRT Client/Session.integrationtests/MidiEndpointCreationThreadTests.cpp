@@ -98,13 +98,6 @@ void MidiEndpointCreationThreadTests::SendThreadWorker(MidiSession session, winr
 
 void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     m_receiveComplete.create();
     m_receiverReady.create();
 

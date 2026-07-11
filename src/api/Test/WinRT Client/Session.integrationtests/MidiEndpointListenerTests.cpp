@@ -12,13 +12,6 @@
 
 void MidiEndpointListenerTests::TestMessageTypeListener()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -130,13 +123,6 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
 
 void MidiEndpointListenerTests::TestGroupListener()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -257,14 +243,6 @@ void MidiEndpointListenerTests::TestGroupListener()
 
 void MidiEndpointListenerTests::TestGroupAndChannelListener()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 

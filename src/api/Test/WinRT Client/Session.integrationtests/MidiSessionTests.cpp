@@ -11,14 +11,6 @@
 
 void MidiSessionTests::TestCreateNewSession()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
     winrt::hstring sessionName = L"Test Session Name";
 
     auto session = MidiSession::Create(sessionName);
@@ -39,14 +31,6 @@ void MidiSessionTests::TestCreateNewSession()
 
 void MidiSessionTests::TestSessionList()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
     winrt::hstring session1Name = L"Session 1 Name";
     winrt::hstring session2Name = L"Session 2 Name";
 
@@ -88,14 +72,6 @@ void MidiSessionTests::TestSessionList()
 
 void MidiSessionTests::TestUpdateSessionName()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
     winrt::hstring oldSessionName = L"Test Session Name";
     winrt::hstring newSessionName = L"New Session Name";
 

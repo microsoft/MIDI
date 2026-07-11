@@ -13,8 +13,6 @@
 
 void MidiBenchmarks::BenchmarkSendReceiveWordArray()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
     {
 
         LOG_OUTPUT(L"API Words benchmark **********************************************************************");
@@ -262,16 +260,12 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
 
         session.Close();
     }
-
-    ShutdownSDKAndWinRT(initializer);
 }
 
 
 
 void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
     {
 
         LOG_OUTPUT(L"API UMP benchmark **********************************************************************");
@@ -531,6 +525,5 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
 
     }
 
-    ShutdownSDKAndWinRT(initializer);
 }
 

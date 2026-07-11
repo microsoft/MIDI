@@ -39,6 +39,7 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Diagnostics.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
 #include <winrt/Windows.Devices.Midi2.Reporting.h>
 //#include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
 
@@ -46,6 +47,7 @@ namespace collections = winrt::Windows::Foundation::Collections;
 namespace midi2 = winrt::Windows::Devices::Midi2;
 namespace diag = winrt::Windows::Devices::Midi2::Diagnostics;
 namespace midi2enum = winrt::Windows::Devices::Midi2::Enumeration;
+namespace legacy = winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 namespace rept = winrt::Windows::Devices::Midi2::Reporting;
 //namespace svc = winrt::Windows::Devices::Midi2::ServiceConfig;
 

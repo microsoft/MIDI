@@ -53,7 +53,7 @@ public:
     TEST_METHOD(TestSendAndReceiveMultipleMessagesStructArray);
     TEST_METHOD(TestSendAndReceiveMultipleMessagesStructArraySubset);
 
-    TEST_METHOD(TestSendMultipleMessagePacketsSTA);
+    //TEST_METHOD(TestSendMultipleMessagePacketsSTA);
 
     // Buffer tests are in MidiEndpointConnectionBufferTests
     

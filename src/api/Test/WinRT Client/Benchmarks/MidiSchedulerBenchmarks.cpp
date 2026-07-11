@@ -14,8 +14,6 @@
 _Use_decl_annotations_
 void MidiSchedulerBenchmarks::BenchmarkSendReceiveScheduledMessages(_In_ uint32_t messageCount)
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
     {
 
         LOG_OUTPUT(L"API Scheduling benchmark **********************************************************************");
@@ -216,7 +214,6 @@ void MidiSchedulerBenchmarks::BenchmarkSendReceiveScheduledMessages(_In_ uint32_
         session.Close();
 
     }
-    ShutdownSDKAndWinRT(initializer);
 
 }
 

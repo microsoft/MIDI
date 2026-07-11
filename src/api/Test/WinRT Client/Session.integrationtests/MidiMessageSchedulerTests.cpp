@@ -27,13 +27,6 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTimingLarge()
 _Use_decl_annotations_
 void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messageCount)
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
 
     {
 
@@ -156,13 +149,6 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 
 void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     {
 
         wil::unique_event_nothrow allMessagesReceived;

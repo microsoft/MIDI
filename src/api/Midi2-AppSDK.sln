@@ -75,6 +75,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Default Configuration", "De
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi2.ServiceConfig", "Client\WinRT\t\ServiceConfig\Windows.Devices.Midi2.ServiceConfig.vcxproj", "{0D921D5F-FFA3-4937-B171-AE4363FDF143}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A631658B-3552-48E3-9DF1-EEA3E5016257} = {A631658B-3552-48E3-9DF1-EEA3E5016257}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi2.ClientPlugins", "Client\WinRT\t\ClientPlugins\Windows.Devices.Midi2.ClientPlugins.vcxproj", "{79730DE5-CDD0-47FF-AA5B-BAA64EBE83A1}"
 EndProject
@@ -111,6 +114,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Offline", "Offline", "{2F4DC22F-F5FA-4408-8255-77F6FA4ED589}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Enumeration.integrationtests", "Test\WinRT Client\Enumeration.integrationtests\Midi2.WinRTClient.Enumeration.integrationtests.vcxproj", "{D64CAEFE-A7C7-48D8-9433-C70380E0650E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A631658B-3552-48E3-9DF1-EEA3E5016257} = {A631658B-3552-48E3-9DF1-EEA3E5016257}
+		{B7E4F8D2-9C3A-4F71-9D5B-7E2A1F8B6C4D} = {B7E4F8D2-9C3A-4F71-9D5B-7E2A1F8B6C4D}
+		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E} = {FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Session.integrationtests", "Test\WinRT Client\Session.integrationtests\Midi2.WinRTClient.Session.integrationtests.vcxproj", "{7C9608FE-4AA4-46D8-ACB8-840C6B216A59}"
 EndProject

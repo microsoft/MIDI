@@ -16,28 +16,12 @@
 
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
-//#include <winrt/Windows.Devices.Midi2.CapabilityInquiry.h>
-#include <winrt/Windows.Devices.Midi2.ClientPlugins.h>
-#include <winrt/Windows.Devices.Midi2.Diagnostics.h>
-#include <winrt/Windows.Devices.Midi2.Reporting.h>
-#include <winrt/Windows.Devices.Midi2.Transports.Loopback.h>
-#include <winrt/Windows.Devices.Midi2.Transports.BasicLoopback.h>
-#include <winrt/Windows.Devices.Midi2.Transports.Virtual.h>
 #include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
-#include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
 
 
 using namespace winrt::Windows::Devices::Midi2;
 using namespace winrt::Windows::Devices::Midi2::Enumeration;
-//using namespace winrt::Windows::Devices::Midi2::CapabilityInquiry;
-using namespace winrt::Windows::Devices::Midi2::ClientPlugins;
-using namespace winrt::Windows::Devices::Midi2::Diagnostics;
-using namespace winrt::Windows::Devices::Midi2::Reporting;
-using namespace winrt::Windows::Devices::Midi2::Transports::Loopback;
-using namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback;
-using namespace winrt::Windows::Devices::Midi2::Transports::Virtual;
 using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
-using namespace winrt::Windows::Devices::Midi2::ServiceConfig;
 
 #include <iostream>
 

@@ -18,13 +18,6 @@ struct __declspec(uuid("5b0d3235-4dba-4d44-865e-8f1d0e4fd04d")) __declspec(novta
 
 void MidiEndpointConnectionBufferTests::TestSendBuffer()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     auto session = MidiSession::Create(L"TestSendBuffer");
     VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
@@ -77,13 +70,6 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
 
 void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -216,13 +202,6 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
 
 void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     auto session = MidiSession::Create(L"TestSendBufferBoundsError");
     VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
@@ -279,14 +258,6 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 
 void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 

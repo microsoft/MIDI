@@ -163,9 +163,9 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
-      <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
+      <TypeLibraryName>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -173,9 +173,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
-      <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
+      <TypeLibraryName>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -183,9 +183,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <Midl>
-      <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
+      <TypeLibraryName>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -193,9 +193,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <Midl>
-      <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
+      <TypeLibraryName>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -203,9 +203,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
-      <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
+      <TypeLibraryName>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -213,9 +213,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
-      <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
+      <TypeLibraryName>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -223,9 +223,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <Midl>
-      <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
+      <TypeLibraryName>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -233,9 +233,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <Midl>
-      <OutputDirectory>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
+      <TypeLibraryName>$(SolutionDir)\vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\WindowsMidiServicesComExtensions.tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>

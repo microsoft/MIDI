@@ -9,9 +9,8 @@
 #include "..\..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-import "Windows.Foundation.idl";
-
 import "MidiServicePingResponseSummary.idl";
+
 
 namespace Windows.Devices.Midi2.Diagnostics
 {

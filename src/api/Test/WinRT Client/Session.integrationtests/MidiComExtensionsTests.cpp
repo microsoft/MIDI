@@ -8,19 +8,17 @@
 
 #include "stdafx.h"
 
-#include "winmidi/WindowsMidiServicesAppSdkComExtensions.h"
-#include "winmidi/WindowsMidiServicesAppSdkComExtensions_i.c"
+// these are artifacts of the com-extensions-idl project
+#include "WindowsMidiServicesAppSdkComExtensions.h"
+#include "WindowsMidiServicesAppSdkComExtensions_i.c"
+
+//#include "winmidi/WindowsMidiServicesAppSdkComExtensions.h"
+//#include "winmidi/WindowsMidiServicesAppSdkComExtensions_i.c"
 
 #include "MidiComExtensionsTests.h"
 
 void MidiComExtensionsTests::TestSendReceiveMessages()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();

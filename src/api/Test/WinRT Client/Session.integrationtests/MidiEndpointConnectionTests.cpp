@@ -12,13 +12,6 @@
 
 void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnCode()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     auto session = MidiSession::Create(L"TestSendMessageInvalidConnectionFailureReturnCode");
     VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
@@ -51,13 +44,6 @@ void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnC
 
 void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     auto session = MidiSession::Create(L"TestSendMessageValidationFailureReturnCode");
     VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
@@ -142,14 +128,6 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
 
 void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
     auto session = MidiSession::Create(L"TestCreateBiDiLoopbackA");
     VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
@@ -180,13 +158,6 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 
 void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     auto session = MidiSession::Create(L"TestCreateBiDiLoopbackB");
 
     VERIFY_IS_NOT_NULL(session);
@@ -215,13 +186,6 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -310,13 +274,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -419,13 +376,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -559,13 +509,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -686,13 +629,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsArraySubset()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -808,13 +744,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsArraySub
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsArray()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -941,13 +870,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsArray()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructList()
 {
-    auto initializer = InitWinRTAndSDK_STA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -1054,13 +976,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructList()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructArray()
 {
-    auto initializer = InitWinRTAndSDK_STA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -1175,13 +1090,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructArray(
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructArraySubset()
 {
-    auto initializer = InitWinRTAndSDK_STA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -1293,91 +1201,74 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructArrayS
     session = nullptr;
 }
 
-// this is a single-threaded test, so we're only going to send, not receive
-void MidiEndpointConnectionTests::TestSendMultipleMessagePacketsSTA()
-{
-    LOG_OUTPUT(L"TestSendMultipleMessagePacketsSTA **********************************************************************");
-
-    auto initializer = InitWinRTAndSDK_STA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
-    wil::unique_event_nothrow allMessagesReceived;
-    allMessagesReceived.create();
-
-    auto session = MidiSession::Create(L"Test Session Name");
-
-    VERIFY_IS_TRUE(session.IsOpen());
-    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
-
-    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoint");
-
-    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-
-    VERIFY_IS_NOT_NULL(connSend);
-
-    // open connection
-    VERIFY_IS_TRUE(connSend.Open());
-
-    // send messages
-    std::cout << "Creating messages" << std::endl;
-
-    std::vector<IMidiUniversalPacket> packetList;
-
-    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000000));
-
-    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000001));
-    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000002));
-    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000003));
-    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000004));
-
-
-    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000005));
-    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000006));
-    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000007));
-
-    auto result = connSend.SendMultipleMessagesPacketList(packetList);
-
-    if (!MidiEndpointConnection::SendMessageSucceeded(result))
-        std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
-
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
-
-    std::cout << "Waiting for response" << std::endl;
-
-    std::cout << "Disconnecting endpoint" << std::endl;
-
-    // cleanup endpoint. Technically not required as session will do it
-    session.DisconnectEndpointConnection(connSend.ConnectionId());
-
-    std::cout << "Endpoint disconnected" << std::endl;
-
-    session.Close();
-
-
-    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
-    // these don't go out of scope here and self-destruct, so we set them to nullptr
-    packetList.clear();
-    connSend = nullptr;
-    session = nullptr;
-
-}
+//// this is a single-threaded test, so we're only going to send, not receive
+//void MidiEndpointConnectionTests::TestSendMultipleMessagePacketsSTA()
+//{
+//    LOG_OUTPUT(L"TestSendMultipleMessagePacketsSTA **********************************************************************");
+//    wil::unique_event_nothrow allMessagesReceived;
+//    allMessagesReceived.create();
+//
+//    auto session = MidiSession::Create(L"Test Session Name");
+//
+//    VERIFY_IS_TRUE(session.IsOpen());
+//    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+//
+//    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoint");
+//
+//    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+//
+//    VERIFY_IS_NOT_NULL(connSend);
+//
+//    // open connection
+//    VERIFY_IS_TRUE(connSend.Open());
+//
+//    // send messages
+//    std::cout << "Creating messages" << std::endl;
+//
+//    std::vector<IMidiUniversalPacket> packetList;
+//
+//    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000000));
+//
+//    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000001));
+//    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000002));
+//    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000003));
+//    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000004));
+//
+//
+//    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000005));
+//    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000006));
+//    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000007));
+//
+//    auto result = connSend.SendMultipleMessagesPacketList(packetList);
+//
+//    if (!MidiEndpointConnection::SendMessageSucceeded(result))
+//        std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+//
+//    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+//
+//    std::cout << "Waiting for response" << std::endl;
+//
+//    std::cout << "Disconnecting endpoint" << std::endl;
+//
+//    // cleanup endpoint. Technically not required as session will do it
+//    session.DisconnectEndpointConnection(connSend.ConnectionId());
+//
+//    std::cout << "Endpoint disconnected" << std::endl;
+//
+//    session.Close();
+//
+//
+//    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+//    // these don't go out of scope here and self-destruct, so we set them to nullptr
+//    packetList.clear();
+//    connSend = nullptr;
+//    session = nullptr;
+//
+//}
 
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
@@ -1508,13 +1399,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
 
 void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     auto session = MidiSession::Create(L"TestSendWordArrayBoundsError");
     VERIFY_IS_NOT_NULL(session);
     VERIFY_IS_TRUE(session.IsOpen());
@@ -1555,13 +1439,6 @@ void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 

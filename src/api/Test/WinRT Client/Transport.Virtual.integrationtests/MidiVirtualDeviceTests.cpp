@@ -12,14 +12,6 @@
 
 void MidiVirtualDeviceTests::TestCreateVirtualDevice()
 {
-    auto initializer = InitWinRTAndSDK_MTA();
-
-    auto cleanup = wil::scope_exit([&]
-        {
-            ShutdownSDKAndWinRT(initializer);
-        });
-
-
     {
         winrt::hstring createdClientEndpointId;
         winrt::hstring createdDeviceEndpointId;               
@@ -36,22 +28,22 @@ void MidiVirtualDeviceTests::TestCreateVirtualDevice()
 
         // endpoint information returned from endpoint discovery
         MidiDeclaredEndpointInfo declaredEndpointInfo{ };
-        declaredEndpointInfo.Name = endpointSuppliedName;
-        declaredEndpointInfo.ProductInstanceId = L"TAEF_TEST_3263827";   // must be unique
-        declaredEndpointInfo.SpecificationVersionMajor = 1; // see latest MIDI 2 UMP spec
-        declaredEndpointInfo.SpecificationVersionMinor = 1; // see latest MIDI 2 UMP spec
-        declaredEndpointInfo.SupportsMidi10Protocol = true;
-        declaredEndpointInfo.SupportsMidi20Protocol = true;
-        declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps = false;
-        declaredEndpointInfo.SupportsSendingJitterReductionTimestamps = false;
-        declaredEndpointInfo.HasStaticFunctionBlocks = true;
+        declaredEndpointInfo.Name(endpointSuppliedName);
+        declaredEndpointInfo.ProductInstanceId(L"TAEF_TEST_3263827");   // must be unique
+        declaredEndpointInfo.SpecificationVersionMajor(1); // see latest MIDI 2 UMP spec
+        declaredEndpointInfo.SpecificationVersionMinor(1); // see latest MIDI 2 UMP spec
+        declaredEndpointInfo.SupportsMidi10Protocol(true);
+        declaredEndpointInfo.SupportsMidi20Protocol(true);
+        declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps(false);
+        declaredEndpointInfo.SupportsSendingJitterReductionTimestamps(false);
+        declaredEndpointInfo.HasStaticFunctionBlocks(true);
 
         MidiDeclaredDeviceIdentity declaredDeviceIdentity{ };
         // todo: set any device identity values if you want. This is optional
 
         MidiEndpointUserSuppliedInfo userSuppliedInfo{ };
-        userSuppliedInfo.Name = userSuppliedName;           // for names, this will bubble to the top in priority
-        userSuppliedInfo.Description = userSuppliedDescription;
+        userSuppliedInfo.Name(userSuppliedName);           // for names, this will bubble to the top in priority
+        userSuppliedInfo.Description(userSuppliedDescription);
 
         // create the config type to aggregate all this info
         MidiVirtualDeviceCreationConfig config(

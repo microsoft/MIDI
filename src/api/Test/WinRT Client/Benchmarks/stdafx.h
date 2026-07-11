@@ -15,20 +15,15 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Reporting.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
+#include <winrt/Windows.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.h>
+#include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 
-using namespace winrt::Microsoft::Windows::Devices::Midi2;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
+using namespace winrt::Windows::Devices::Midi2;
+using namespace winrt::Windows::Devices::Midi2::Diagnostics;
+using namespace winrt::Windows::Devices::Midi2::Enumeration;
+using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 
 #include <iostream>
 #include <iomanip>
@@ -45,9 +40,6 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include <Objbase.h>
 #include "loopback_ids.h"
 #include "MidiDefs.h"
-
-#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
-namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 #include "..\SdkTestCommon.h"
 #include "MidiBenchmarks.h"

@@ -9,8 +9,6 @@
 #include "..\..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-import "Windows.Foundation.idl";
-
 namespace Windows.Devices.Midi2.ClientPlugins
 {
     [contract(MidiClientPluginsApiContract, 1)]

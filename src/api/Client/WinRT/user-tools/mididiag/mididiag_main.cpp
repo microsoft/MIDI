@@ -693,12 +693,12 @@ bool DoSectionTransports(_In_ bool const verbose)
         {
             for (auto const& transport : transports)
             {
-                OutputGuidField(MIDIDIAG_FIELD_LABEL_TRANSPORT_ID, transport.Id);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME, transport.Name);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_CODE, transport.TransportCode);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_VERSION, transport.Version);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description);
+                OutputGuidField(MIDIDIAG_FIELD_LABEL_TRANSPORT_ID, transport.TransportId());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME, transport.Name());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_CODE, transport.TransportCode());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_VERSION, transport.Version());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description());
                 OutputItemSeparator();
             }
         }
@@ -758,15 +758,15 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
             OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.EndpointDeviceId());
             OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_NAME, device.Name());
-            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_CODE, transportInfo.TransportCode);
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_CODE, transportInfo.TransportCode());
 
             if (verbose)
             {
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, userInfo.Name);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, endpointInfo.Name);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, transportInfo.Name);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, transportInfo.Description);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, userInfo.Description);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, userInfo.Name());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, endpointInfo.Name());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, transportInfo.Name());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, userInfo.Description());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, transportInfo.Description());
             }
 
 
@@ -807,18 +807,20 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
             // Show associated MIDI 1.0 endpoints
 
+
+
             // MIDI 1.0 outputs
-            for (auto const& port : device.FindAllAssociatedMidi1PortsForThisEndpoint(midi2enum::Midi1PortFlow::MidiMessageDestination))
+            for (auto const& port : legacy::MidiLegacyPortDeviceInformation::FindAllForEndpoint(device.EndpointDeviceId(), midi2enum::Midi1PortFlow::MidiMessageDestination))
             {
                 // temp
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT, std::to_wstring(port.PortNumber()) + L": " + port.PortName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT, std::to_wstring(port.Number()) + L": " + port.Name());
             }
 
             // MIDI 1.0 inputs
-            for (auto const& port : device.FindAllAssociatedMidi1PortsForThisEndpoint(midi2enum::Midi1PortFlow::MidiMessageSource))
+            for (auto const& port : legacy::MidiLegacyPortDeviceInformation::FindAllForEndpoint(device.EndpointDeviceId(), midi2enum::Midi1PortFlow::MidiMessageSource))
             {
                 // temp
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN, std::to_wstring(port.PortNumber()) + L": " + port.PortName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN, std::to_wstring(port.Number()) + L": " + port.Name());
             }
 
 
