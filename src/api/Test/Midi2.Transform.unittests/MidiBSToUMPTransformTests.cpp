@@ -343,7 +343,7 @@ void MidiBSToUMPTransformTests::TestBasicMalformedSysex()
 
         0x30052122, 0x23242500,                             // Scenario 3: SysEx Complete in one message with 5 data bytes
                                                             // Scenario 3: Extra F7 causes data corruption currently. Should just be ignored, but produces a 30350000 - using same data byte count as previous message
-                                                            // Needs fix from Andrew: https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/36
+                                                            // THIS FAILS. Needs fix from Andrew: https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/36
                                                             // prior to any fix, am receiving 0x30350000, (and presumably 0x00000000), which is a SysEx End with 5 extra injected data bytes.
 
         0x30043132, 0x33340000,                             // Scenario 4:  SysEx Complete in one message with 4 data bytes
