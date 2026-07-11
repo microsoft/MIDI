@@ -19,9 +19,7 @@
 
     </metadata>
     
-    <files>
-      
-      
+    <files>          
       <!-- TODO -->
       <!-- Create a coalesce project that has x64 and Arm64x output and use that to source the files -->
       
