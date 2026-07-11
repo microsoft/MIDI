@@ -43,7 +43,8 @@ public:
     TEST_METHOD(TestTimingClockPadded);
     TEST_METHOD(TestCCPadded);
     TEST_METHOD(TestIssueGithub1040CorruptedIncomingSysExIdeal);
-
+    TEST_METHOD(TestBasicMalformedSysex);
+    
     //TEST_METHOD(TestLongSysEx7);
 
 
