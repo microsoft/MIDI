@@ -149,7 +149,7 @@ void MidiVirtualDeviceTests::TestCreateVirtualDevice()
         VERIFY_IS_NOT_NULL(clientEndpointInfo);
 
 
-        // TODO: Should probably do some other virtual device functional tests here
+        // TODO: Should do some other virtual device functional tests here, like send/receive etc.
 
 
     

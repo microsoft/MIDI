@@ -285,13 +285,13 @@ int __cdecl main(int argc, char* argv[])
 
         std::string providedParam(argv[1]);
        
-        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParam.c_str(), static_cast<int>(loopParam.size() + 1), providedParam.c_str(), providedParam.size() + 1)
+        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParam.c_str(), static_cast<int>(loopParam.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
             == CSTR_EQUAL)
         {
             loop = true;
         }
 
-        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParamShort.c_str(), static_cast<int>(loopParamShort.size() + 1), providedParam.c_str(), providedParam.size() + 1)
+        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParamShort.c_str(), static_cast<int>(loopParamShort.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
             == CSTR_EQUAL)
         {
             loop = true;
