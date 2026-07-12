@@ -52,8 +52,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(_In_ winrt::hstring const& parentDeviceInstanceId) const noexcept;
         collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(_In_ winrt::hstring const& parentDeviceInstanceId, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;
 
-        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForEndpoint(_In_ winrt::hstring const& endpointDeviceId) const noexcept;
-        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForEndpoint(_In_ winrt::hstring const& endpointDeviceId, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpoint(_In_ winrt::hstring const& endpointDeviceId) const noexcept;
+        collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpoint(_In_ winrt::hstring const& endpointDeviceId, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;
 
         collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(_In_ winrt::hstring const& portName) const noexcept;
         collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(_In_ winrt::hstring const& portName, _In_ midi2enum::Midi1PortFlow const flow) const noexcept;

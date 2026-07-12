@@ -663,7 +663,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     }
 
     _Use_decl_annotations_
-    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForEndpoint(
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForAssociatedEndpoint(
         winrt::hstring const& endpointDeviceId) const noexcept
     {
         auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
@@ -672,7 +672,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         for (auto const& [key, port] : m_enumeratedPorts)
         {
-            if (port.EndpointDeviceId() == cleanEndpointDeviceId)
+            if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
             {
                 results.Append(port);
             }
@@ -682,7 +682,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     }
     
     _Use_decl_annotations_
-    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForEndpoint(
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForAssociatedEndpoint(
         winrt::hstring const& endpointDeviceId, 
         midi2enum::Midi1PortFlow const flow) const noexcept
     {
@@ -692,7 +692,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         for (auto const& [key, port] : m_enumeratedPorts)
         {
-            if (port.Flow() == flow && port.EndpointDeviceId() == cleanEndpointDeviceId)
+            if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
             {
                 results.Append(port);
             }

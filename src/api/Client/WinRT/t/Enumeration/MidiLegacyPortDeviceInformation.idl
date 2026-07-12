@@ -26,8 +26,8 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         static IVectorView<MidiLegacyPortDeviceInformation> FindAll(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
         //static IVectorView<MidiLegacyPortDeviceInformation> FindAllForParentDevice(String parentDeviceInstanceId);
         //static IVectorView<MidiLegacyPortDeviceInformation> FindAllForParentDevice(String parentDeviceInstanceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
-        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForEndpoint(String endpointDeviceId);
-        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForEndpoint(String endpointDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForAssociatedEndpoint(String endpointDeviceId);
+        static IVectorView<MidiLegacyPortDeviceInformation> FindAllForAssociatedEndpoint(String endpointDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
         static IVectorView<MidiLegacyPortDeviceInformation> FindAllForName(String portName);
         static IVectorView<MidiLegacyPortDeviceInformation> FindAllForContainer(Guid containerId);
 
@@ -42,7 +42,7 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         String Name{ get; };                            // friendly name (this is the current WinMM port name). Get other names from the parent 
 
         Guid ContainerId{ get; };                       // container this exists in. It will be the same as the parent endpoint's. Here for convenience.
-        String EndpointDeviceId{ get; };                // device id of the owning Windows MIDI Services endpoint
+        String AssociatedEndpointDeviceId{ get; };      // device id of the owning Windows MIDI Services endpoint
 
         String ParentDeviceInstanceId{ get; };          // device instance id of the (resolved) parent device
         Windows.Devices.Midi2.Enumeration.MidiParentDeviceInformation GetParentDeviceInformation();

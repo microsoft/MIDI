@@ -52,8 +52,8 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(String parentDeviceInstanceId);
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(String parentDeviceInstanceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
 
-        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForEndpoint(String endpointDeviceId);
-        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForEndpoint(String endpointDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpoint(String endpointDeviceId);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpoint(String endpointDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
 
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(String portName);
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(String portName, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);

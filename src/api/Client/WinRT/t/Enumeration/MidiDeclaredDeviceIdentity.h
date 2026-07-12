@@ -73,8 +73,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         uint8_t m_deviceFamilyMsb{ 0 };
         uint8_t m_deviceFamilyModelNumberLsb{ 0 };
         uint8_t m_deviceFamilyModelNumberMsb{ 0 };
-        winrt::com_array<uint8_t> m_systemExclusiveIdBytes { winrt::com_array<uint8_t>(3) };
-        winrt::com_array<uint8_t> m_softwareRevisionLevelBytes { winrt::com_array<uint8_t>(4) };
+        winrt::com_array<uint8_t> m_systemExclusiveIdBytes { winrt::com_array<uint8_t>({ (uint8_t)0,(uint8_t)0,(uint8_t)0 }) };
+        winrt::com_array<uint8_t> m_softwareRevisionLevelBytes { winrt::com_array<uint8_t>({ (uint8_t)0,(uint8_t)0,(uint8_t)0,(uint8_t)0 }) };
 
     };
 }

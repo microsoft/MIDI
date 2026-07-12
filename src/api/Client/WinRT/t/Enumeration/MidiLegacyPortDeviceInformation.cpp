@@ -648,7 +648,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
 
     _Use_decl_annotations_
-    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceInformation::FindAllForEndpoint(
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
          winrt::hstring const& endpointDeviceId) noexcept
     {
         auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
@@ -706,7 +706,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     }
 
     _Use_decl_annotations_
-    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceInformation::FindAllForEndpoint(
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
         winrt::hstring const& endpointDeviceId,
         midi2enum::Midi1PortFlow const& flow) noexcept
     {

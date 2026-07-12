@@ -37,9 +37,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForContainer(
             _In_ winrt::guid const& containerId) noexcept;
 
-        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForEndpoint(
+        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForAssociatedEndpoint(
             _In_ winrt::hstring const& endpointDeviceId) noexcept;
-        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForEndpoint(
+        static collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> FindAllForAssociatedEndpoint(
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ midi2enum::Midi1PortFlow const& flow) noexcept;
 
@@ -50,7 +50,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         winrt::hstring PortDeviceInstanceId() const noexcept { return internal::NormalizeDeviceInstanceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.DeviceInstanceId", L"")); }
         winrt::hstring Name() const noexcept { return m_name; }
         winrt::guid ContainerId() const noexcept { return internal::GetDeviceInfoProperty<winrt::guid>(m_properties, L"System.Devices.ContainerId", winrt::guid()); }
-        winrt::hstring EndpointDeviceId()  const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_AssociatedUMP, L"")); }
+        winrt::hstring AssociatedEndpointDeviceId()  const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_AssociatedUMP, L"")); }
         winrt::hstring ParentDeviceInstanceId() const noexcept { return m_parentDeviceInstanceId; }
         midi2enum::MidiParentDeviceInformation GetParentDeviceInformation() const noexcept;
         winrt::hstring DriverDeviceInterfaceId() const noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_DriverDeviceInterface, L"")); }

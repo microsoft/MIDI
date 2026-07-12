@@ -400,6 +400,8 @@ void EnqueueMidiLongDataMessage(
     DWORD dwParam2,
     bool isError)
 {
+    UNREFERENCED_PARAMETER(dwParam2);
+
     ReceivedMidiMessage msg{};
 
     auto count = header->dwBytesRecorded;

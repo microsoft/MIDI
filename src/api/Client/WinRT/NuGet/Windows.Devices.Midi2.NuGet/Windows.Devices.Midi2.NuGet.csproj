@@ -42,37 +42,4 @@
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="3.0.0-preview.260319.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\t\ClientPlugins\Windows.Devices.Midi2.ClientPlugins.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\core\Windows.Devices.Midi2.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\Diagnostics\Windows.Devices.Midi2.Diagnostics.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\Reporting\Windows.Devices.Midi2.Reporting.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\ServiceConfig\Windows.Devices.Midi2.ServiceConfig.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\Transports.BasicLoopback\Windows.Devices.Midi2.Transports.BasicLoopback.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\Transports.Loopback\Windows.Devices.Midi2.Transports.Loopback.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\Transports.Virtual\Windows.Devices.Midi2.Transports.Virtual.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\t\Utilities.Messages\Windows.Devices.Midi2.Utilities.Messages.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-
 </Project>
