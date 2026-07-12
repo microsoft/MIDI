@@ -61,7 +61,7 @@ int main()
 
     if (!MidiApi::EnsureServiceAvailable())
     {
-        std::cout << "Could not demand-start the MIDI service" << std::endl;
+        std::wcout << "Could not demand-start the MIDI service" << std::endl;
         return 1;
     }
 
@@ -108,7 +108,7 @@ int main()
     // which will come back asynchronously with responses.
     sendEndpoint.Open();
 
-    std::cout << "Connected to open send endpoint: " << winrt::to_string(endpointId) << std::endl;
+    std::wcout << "Connected to open send endpoint: " << endpointId.c_str() << std::endl;
 
 
     auto ump64 = MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
@@ -363,7 +363,7 @@ int main()
 
     // shut down
 
-    std::cout << std::endl << "Disconnecting UMP Endpoint Connection..." << std::endl;
+    std::wcout << std::endl << "Disconnecting UMP Endpoint Connection..." << std::endl;
 
     session.DisconnectEndpointConnection(sendEndpoint.ConnectionId());
     // close the session, detaching all Windows MIDI Services resources and closing all connections
@@ -371,6 +371,6 @@ int main()
     session.Close();
 
 
-    std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;
+    std::wcout << "Cleaning up WinRT / COM apartment..." << std::endl;
     winrt::uninit_apartment();
 }

@@ -43,10 +43,10 @@ bool CreateLoopbackEndpoints()
     {
         std::wcout << L"Endpoint created successfully" << std::endl << std::endl;
 
-        std::cout
-            << "Loopback Endpoint: " << std::endl 
-            << " - " << winrt::to_string(definition.Name()) << std::endl
-            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointDeviceId()) << std::endl << std::endl;
+        std::wcout
+            << L"Loopback Endpoint: " << std::endl
+            << L" - " << definition.Name().c_str() << std::endl
+            << L" - " << response.CreatedLoopbackEntry().EndpointDeviceId().c_str() << std::endl << std::endl;
 
         m_endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
     }
@@ -56,7 +56,7 @@ bool CreateLoopbackEndpoints()
         std::wcout << L"This can happen if you control-C or crash out of the sample before the loopbacks are removed." << std::endl;
         std::wcout << L"If that's the case, restart MidiSrv, or change the unique Ids above." << std::endl;
         std::wcout << L"Error Code (please see the enum for description) " << static_cast<uint32_t>(response.ErrorCode()) << std::endl;
-        std::wcout << L"Error Message: " << std::wstring{ response.ErrorMessage().c_str() } << std::endl;
+        std::wcout << L"Error Message: " << response.ErrorMessage().c_str() << std::endl;
     }
 
     // Success here is a boolean for success/fail
@@ -125,7 +125,7 @@ int main()
                     // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
                     auto ump32 = ump.as<MidiMessage32>();
 
-                    std::wcout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
+                    std::wcout << L"- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
                 }
 
                 std::wcout << std::endl;

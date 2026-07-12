@@ -28,7 +28,7 @@ winrt::guid m_associationId = winrt::Windows::Foundation::GuidHelper::CreateNewG
 
 bool CreateLoopbackEndpoints()
 {
-    std::cout << "Creating loopback endpoints." << std::endl;
+    std::wcout << L"Creating loopback endpoints." << std::endl;
 
     MidiLoopbackEndpointDefinition definitionA;
     MidiLoopbackEndpointDefinition definitionB;
@@ -49,24 +49,24 @@ bool CreateLoopbackEndpoints()
     {
         std::wcout << L"Endpoints created successfully" << std::endl << std::endl;
 
-        std::cout
-            << "Loopback Endpoint A: " << std::endl 
-            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointA().Name()) << std::endl
-            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId()) << std::endl << std::endl;
+        std::wcout
+            << L"Loopback Endpoint A: " << std::endl
+            << L" - " << response.CreatedLoopbackEntry().EndpointA().Name().c_str() << std::endl
+            << L" - " << response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId().c_str() << std::endl << std::endl;
 
-        std::cout 
-            << "Loopback Endpoint B: "  << std::endl
-            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointB().Name()) << std::endl
-            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId()) << std::endl << std::endl;
+        std::wcout 
+            << L"Loopback Endpoint B: "  << std::endl
+            << L" - " << response.CreatedLoopbackEntry().EndpointB().Name().c_str() << std::endl
+            << L" - " << response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId().c_str() << std::endl << std::endl;
 
         m_endpointAId = response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId();
         m_endpointBId = response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId();
     }
     else
     {
-        std::cout << "Failed to create loopback endpoints." << std::endl; 
-        std::cout << "This can happen if you control-C or crash out of the sample before the loopbacks are removed." << std::endl;
-        std::cout << "If that's the case, restart MidiSrv, or change the unique Ids above." << std::endl;
+        std::wcout << L"Failed to create loopback endpoints." << std::endl;
+        std::wcout << L"This can happen if you control-C or crash out of the sample before the loopbacks are removed." << std::endl;
+        std::wcout << L"If that's the case, restart MidiSrv, or change the unique Ids above." << std::endl;
     }
 
     // Success here is a boolean for success/fail
@@ -86,7 +86,7 @@ int main()
 
     if (!MidiApi::EnsureServiceAvailable())
     {
-        std::cout << "Could not demand-start the MIDI service" << std::endl;
+        std::wcout << L"Could not demand-start the MIDI service" << std::endl;
         return 1;
     }
 
@@ -102,10 +102,10 @@ int main()
     if (CreateLoopbackEndpoints())
     {
         auto sendEndpoint = session.CreateEndpointConnection(m_endpointAId);
-        std::cout << "Connected to sending endpoint: " << winrt::to_string(m_endpointAId) << std::endl;
+        std::wcout << "Connected to sending endpoint: " << m_endpointAId.c_str() << std::endl;
 
         auto receiveEndpoint = session.CreateEndpointConnection(m_endpointBId);
-        std::cout << "Connected to receiving endpoint: " << winrt::to_string(m_endpointBId) << std::endl;
+        std::wcout << "Connected to receiving endpoint: " << m_endpointBId.c_str() << std::endl;
 
         // Wire up an event handler to receive the message. There is a single event handler type, but the
         // MidiMessageReceivedEventArgs class provides the different ways to access the data
@@ -121,13 +121,13 @@ int main()
                 // passed in to the functions.
                 auto ump = args.GetMessagePacket();
 
-                std::cout << std::endl;
-                std::cout << "Received UMP" << std::endl;
-                std::cout << "- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
-                std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
-                std::cout << "- UMP Msg Type:      0x" << std::hex << static_cast<uint32_t>(ump.MessageType()) << std::endl;
-                std::cout << "- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
-                std::cout << "- Message:           " << winrt::to_string(MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())) << std::endl;
+                std::wcout << std::endl;
+                std::wcout << L"Received UMP" << std::endl;
+                std::wcout << L"- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
+                std::wcout << L"- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
+                std::wcout << L"- UMP Msg Type:      0x" << std::hex << static_cast<uint32_t>(ump.MessageType()) << std::endl;
+                std::wcout << L"- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
+                std::wcout << L"- Message:           " << MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord()).c_str() << std::endl;
 
                 // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 
@@ -137,17 +137,17 @@ int main()
                     // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
                     auto ump32 = ump.as<MidiMessage32>();
 
-                    std::cout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
+                    std::wcout << L"- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
                 }
 
-                std::cout << std::endl;
+                std::wcout << std::endl;
 
             };
 
         // the returned token is used to deregister the event later.
         auto eventRevokeToken = receiveEndpoint.MessageReceived(MessageReceivedHandler);
 
-        std::cout << std::endl << "Opening endpoint connection" << std::endl;
+        std::wcout << std::endl << L"Opening endpoint connection" << std::endl;
 
         // once you have wired up all your event handlers, added any filters/listeners, etc.
         // You can open the connection. Doing this will query the cache for the in-protocol 
@@ -157,7 +157,7 @@ int main()
         receiveEndpoint.Open();
 
 
-        std::cout << std::endl << "Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
+        std::wcout << std::endl << L"Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
 
         auto ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
             MidiClock::Now(),                           // use current timestamp
@@ -169,20 +169,20 @@ int main()
 
         // here you would set other values in the UMP word(s)
 
-        std::cout << "Sending single UMP " << std::hex << ump32.Word0() << " ..." << std::endl;
-        std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
+        std::wcout << L"Sending single UMP " << std::hex << ump32.Word0() << " ..." << std::endl;
+        std::wcout << std::endl << L" ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
 
         auto ump = ump32.as<IMidiUniversalPacket>();
         auto sendResult = sendEndpoint.SendSingleMessagePacket(ump);          // could also use the SendWords methods, etc.
 
         if (MidiEndpointConnection::SendMessageFailed(sendResult))
         {
-            std::cout << std::endl << "Send message failed..." << std::endl;
+            std::wcout << std::endl << L"Send message failed..." << std::endl;
         }
 
         system("pause");
 
-        std::cout << std::endl << "Deregistering event handler..." << std::endl;
+        std::wcout << std::endl << L"Deregistering event handler..." << std::endl;
 
         if (eventRevokeToken)
         {
@@ -190,7 +190,7 @@ int main()
             receiveEndpoint.MessageReceived(eventRevokeToken);
         }
 
-        std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
+        std::wcout << L"Disconnecting UMP Endpoint Connection..." << std::endl;
 
 
         session.DisconnectEndpointConnection(sendEndpoint.ConnectionId());
@@ -221,7 +221,7 @@ int main()
         }
     }
 
-    std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;
+    std::wcout << L"Cleaning up WinRT / COM apartment..." << std::endl;
     winrt::uninit_apartment();
 
 }

@@ -20,12 +20,12 @@ using namespace winrt::Windows::Devices::Midi2::Enumeration;     // Devices and 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
 
-std::string BooleanToString(bool value)
+std::wstring BooleanToString(bool value)
 {
     if (value)
-        return "true";
+        return L"true";
     else
-        return "false";
+        return L"false";
 }
 
 int main()
@@ -40,11 +40,11 @@ int main()
 
     if (!MidiApi::EnsureServiceAvailable())
     {
-        std::cout << "Could not demand-start the MIDI service" << std::endl;
+        std::wcout << L"Could not demand-start the MIDI service" << std::endl;
         return 1;
     }
 
-    std::cout << "Enumerating endpoints..." << std::endl;
+    std::wcout << L"Enumerating endpoints..." << std::endl;
 
 
     auto enumerationStartTime = MidiClock::Now();
@@ -62,46 +62,46 @@ int main()
 
     auto enumerationDuration = enumerationEndTime - enumerationStartTime;
 
-    std::cout << "Enumeration took " << MidiClock::ConvertTimestampTicksToMilliseconds(enumerationDuration) << " milliseconds" << std::endl;
+    std::wcout << L"Enumeration took " << MidiClock::ConvertTimestampTicksToMilliseconds(enumerationDuration) << L" milliseconds" << std::endl;
 
-    std::cout << endpoints.Size() << " endpoints returned" << std::endl << std::endl;
+    std::wcout << endpoints.Size() << L" endpoints returned" << std::endl << std::endl;
 
     for (auto const& endpoint : endpoints)
     {
-        std::cout << "Identification" << std::endl;
-        std::cout << "- Name:    " << winrt::to_string(endpoint.Name()) << std::endl;
-        std::cout << "- Id:      " << winrt::to_string(endpoint.EndpointDeviceId()) << std::endl;
+        std::wcout << L"Identification" << std::endl;
+        std::wcout << L"- Name:    " << endpoint.Name().c_str() << std::endl;
+        std::wcout << L"- Id:      " << endpoint.EndpointDeviceId().c_str() << std::endl;
 
         auto parent = endpoint.GetParentDeviceInformation();
 
         if (parent != nullptr)
         {
-            std::cout << "- Parent:  " << winrt::to_string(parent.Id()) << std::endl;
+            std::wcout << L"- Parent:  " << parent.Id().c_str() << std::endl;
         }
         else
         {
-            std::cout << "- Parent:  Unknown" <<std::endl;
+            std::wcout << L"- Parent:  Unknown" <<std::endl;
         }
 
         if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint)
         {
-            std::cout << "- Purpose: Application MIDI Traffic" << std::endl;
+            std::wcout << L"- Purpose: Application MIDI Traffic" << std::endl;
         }
         else if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::VirtualDeviceResponder)
         {
-            std::cout << "- Purpose: Virtual Device Responder" << std::endl;
+            std::wcout << L"- Purpose: Virtual Device Responder" << std::endl;
         }
         else if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticLoopback)
         {
-            std::cout << "- Purpose: Diagnostics use" << std::endl;
+            std::wcout << L"- Purpose: Diagnostics use" << std::endl;
         }
         else if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticPing)
         {
-            std::cout << "- Purpose: Internal Diagnostics Ping" << std::endl;
+            std::wcout << L"- Purpose: Internal Diagnostics Ping" << std::endl;
         }
         else
         {
-            std::cout << "- Purpose: Unknown" << std::endl;
+            std::wcout << L"- Purpose: Unknown" << std::endl;
         }
 
         // Note: Most of these std::cout calls should really be std::wcout due to the format
@@ -112,21 +112,21 @@ int main()
 
         if (declaredEndpointInfo != nullptr)
         {
-            std::cout << std::endl << "Endpoint Metadata" << std::endl;
-            std::cout << "- Product Instance Id:    " << winrt::to_string(declaredEndpointInfo.ProductInstanceId()) << std::endl;
-            std::cout << "- Endpoint-supplied Name: " << winrt::to_string(declaredEndpointInfo.Name()) << std::endl;
+            std::wcout << std::endl << L"Endpoint Metadata" << std::endl;
+            std::wcout << L"- Product Instance Id:    " << declaredEndpointInfo.ProductInstanceId().c_str() << std::endl;
+            std::wcout << L"- Endpoint-supplied Name: " << declaredEndpointInfo.Name().c_str() << std::endl;
 
-            std::cout << std::endl << "Endpoint Supported Capabilities" << std::endl;
-            std::cout << "- UMP Major.Minor:   " << declaredEndpointInfo.SpecificationVersionMajor() << "." << declaredEndpointInfo.SpecificationVersionMinor() << std::endl;
-            std::cout << "- MIDI 1.0 Protocol: " << BooleanToString(declaredEndpointInfo.SupportsMidi10Protocol()) << std::endl;
-            std::cout << "- MIDI 2.0 Protocol: " << BooleanToString(declaredEndpointInfo.SupportsMidi20Protocol()) << std::endl;
-            std::cout << "- Sending JR Time:   " << BooleanToString(declaredEndpointInfo.SupportsSendingJitterReductionTimestamps()) << std::endl;
-            std::cout << "- Receiving JR Time: " << BooleanToString(declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps()) << std::endl;
-            //std::cout << "- Multi-client:      " << BooleanToString(declaredEndpointInfo.SupportsMultiClient) << std::endl;
+            std::wcout << std::endl << "Endpoint Supported Capabilities" << std::endl;
+            std::wcout << L"- UMP Major.Minor:   " << declaredEndpointInfo.SpecificationVersionMajor() << L"." << declaredEndpointInfo.SpecificationVersionMinor() << std::endl;
+            std::wcout << L"- MIDI 1.0 Protocol: " << BooleanToString(declaredEndpointInfo.SupportsMidi10Protocol()) << std::endl;
+            std::wcout << L"- MIDI 2.0 Protocol: " << BooleanToString(declaredEndpointInfo.SupportsMidi20Protocol()) << std::endl;
+            std::wcout << L"- Sending JR Time:   " << BooleanToString(declaredEndpointInfo.SupportsSendingJitterReductionTimestamps()) << std::endl;
+            std::wcout << L"- Receiving JR Time: " << BooleanToString(declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps()) << std::endl;
+            //std::cout << L"- Multi-client:      " << BooleanToString(declaredEndpointInfo.SupportsMultiClient) << std::endl;
         }
         else
         {
-            std::cout << "No declared endpoint info available" << std::endl;
+            std::wcout << L"No declared endpoint info available" << std::endl;
         }
 
         // Device Identity
@@ -214,8 +214,8 @@ int main()
         // Function Blocks
 
         auto functionBlocks = endpoint.GetDeclaredFunctionBlocks();
-        std::cout << "- Static Blocks?:  " << BooleanToString(declaredEndpointInfo.HasStaticFunctionBlocks()) << std::endl;
-        std::cout << "- Block Count:     " << functionBlocks.Size() << std::endl;
+        std::wcout << L"- Static Blocks?:  " << BooleanToString(declaredEndpointInfo.HasStaticFunctionBlocks()) << std::endl;
+        std::wcout << L"- Block Count:     " << functionBlocks.Size() << std::endl;
 
         for (auto const& functionBlock : functionBlocks)
         {
@@ -225,18 +225,18 @@ int main()
         // Group Terminal Blocks
 
         auto groupTerminalBlocks = endpoint.GetGroupTerminalBlocks();
-        std::cout << std::endl << "Group Terminal Blocks" << std::endl;
-        std::cout << "- Block Count:     " << groupTerminalBlocks.Size() << std::endl;
+        std::wcout << std::endl << L"Group Terminal Blocks" << std::endl;
+        std::wcout << L"- Block Count:     " << groupTerminalBlocks.Size() << std::endl;
 
         for (auto const& groupTerminalBlock : groupTerminalBlocks)
         {
-            std::cout << "  - " << int(groupTerminalBlock.Number()) << " : " << winrt::to_string(groupTerminalBlock.Name()) << std::endl;
+            std::wcout << "  - " << int(groupTerminalBlock.Number()) << L" : " << groupTerminalBlock.Name().c_str() << std::endl;
         }
 
-        std::cout << "--------------------------------------------------------------------------" << std::endl << std::endl;
+        std::wcout << L"--------------------------------------------------------------------------" << std::endl << std::endl;
     }
 
-    std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;
+    std::wcout << L"Cleaning up WinRT / COM apartment..." << std::endl;
     winrt::uninit_apartment();
 
 }

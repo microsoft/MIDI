@@ -99,16 +99,16 @@ bool CreateVirtualDevice()
     m_virtualDevice = MidiVirtualDeviceManager::CreateVirtualDevice(creationConfig);
     if (m_virtualDevice == nullptr)
     {
-        std::cout << "Virtual device creation failed." << std::endl;
+        std::wcout << L"Virtual device creation failed." << std::endl;
 
         return false;
     }
 
     std::wcout << L"Virtual Device created successfully" << std::endl << std::endl;
 
-    std::cout
-        << "Device-side Connection Info: " << std::endl 
-        << " " << winrt::to_string(m_virtualDevice.DeviceEndpointDeviceId()) << std::endl << std::endl;
+    std::wcout
+        << L"Device-side Connection Info: " << std::endl
+        << " " << m_virtualDevice.DeviceEndpointDeviceId().c_str() << std::endl << std::endl;
 
     return true;
 }
@@ -131,11 +131,11 @@ void UpdateFunctionBlocks()
 
     if (m_virtualDevice.UpdateFunctionBlock(block))
     {
-        std::cout << "Function Block updated" << std::endl;
+        std::wcout << L"Function Block updated" << std::endl;
     }
     else
     {
-        std::cout << "Function Block failed to update" << std::endl;
+        std::wcout << L"Function Block failed to update" << std::endl;
     }
 }
 
@@ -143,11 +143,11 @@ void UpdateEndpointName()
 {
     if (m_virtualDevice.UpdateEndpointName(L"New Endpoint Name"))
     {
-        std::cout << "Name updated" << std::endl;
+        std::wcout << L"Name updated" << std::endl;
     }
     else
     {
-        std::cout << "Name failed to update" << std::endl;
+        std::wcout << L"Name failed to update" << std::endl;
     }
 }
 
@@ -163,7 +163,7 @@ int main()
 
     if (!MidiApi::EnsureServiceAvailable())
     {
-        std::cout << "Could not demand-start the MIDI service" << std::endl;
+        std::wcout << L"Could not demand-start the MIDI service" << std::endl;
         return 1;
     }
 
@@ -172,13 +172,13 @@ int main()
     // more than one session. If so, the session name should be meaningful to the user, like
     // the name of a browser tab, or a project.
 
-    std::cout << std::endl << "Creating session..." << std::endl;
+    std::wcout << std::endl << L"Creating session..." << std::endl;
 
     auto session = MidiSession::Create(L"Virtual Device C++ Session");
 
     if (session == nullptr)
     {
-        std::cout << "Unable to create session" << std::endl;
+        std::wcout << L"Unable to create session" << std::endl;
         return 1;
     }
 
@@ -188,11 +188,11 @@ int main()
 
         if (deviceEndpoint == nullptr)
         {
-            std::cout << "Unable to create device connection" << std::endl;
+            std::wcout << L"Unable to create device connection" << std::endl;
             return 1;
         }
 
-        std::cout << "Connected to device endpoint: " << winrt::to_string(m_virtualDevice.DeviceEndpointDeviceId()) << std::endl;
+        std::wcout << L"Connected to device endpoint: " << m_virtualDevice.DeviceEndpointDeviceId().c_str() << std::endl;
 
         auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& /*sender*/, MidiMessageReceivedEventArgs const& args)
             {
@@ -204,15 +204,15 @@ int main()
                 // passed in to the functions.
                 auto ump = args.GetMessagePacket();
 
-                std::cout << std::endl;
-                std::cout << "Received UMP" << std::endl;
-                std::cout << "- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
-                std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
-                std::cout << "- UMP Msg Type:      0x" << std::hex << static_cast<uint32_t>(ump.MessageType()) << std::endl;
-                std::cout << "- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
-                std::cout << "- Data               " << winrt::to_string(args.GetMessagePacket().as<foundation::IStringable>().ToString()) << std::endl;
-                std::cout << "- Message:           " << winrt::to_string(MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())) << std::endl;
-                std::cout << std::endl;
+                std::wcout << std::endl;
+                std::wcout << L"Received UMP" << std::endl;
+                std::wcout << L"- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
+                std::wcout << L"- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
+                std::wcout << L"- UMP Msg Type:      0x" << std::hex << static_cast<uint32_t>(ump.MessageType()) << std::endl;
+                std::wcout << L"- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
+                std::wcout << L"- Data               " << args.GetMessagePacket().as<foundation::IStringable>().ToString().c_str() << std::endl;
+                std::wcout << L"- Message:           " << MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord()).c_str() << std::endl;
+                std::wcout << std::endl;
             };
 
         // the returned token is used to deregister the event later.
@@ -221,24 +221,24 @@ int main()
         // this is what associates the virtual device client object with this connection
         deviceEndpoint.AddMessageProcessingPlugin(m_virtualDevice);
 
-        std::cout << std::endl << "Opening device endpoint connection. This will create the client-visible endpoint" << std::endl;
+        std::wcout << std::endl << L"Opening device endpoint connection. This will create the client-visible endpoint" << std::endl;
         deviceEndpoint.Open();
 
-        std::cout << "Press any key to send an endpoint name update" << std::endl;
+        std::wcout << L"Press any key to send an endpoint name update" << std::endl;
         system("pause");
         UpdateEndpointName();
-        std::cout << std::endl;
+        std::wcout << std::endl;
 
-        std::cout << "Press any key to send a function block update" << std::endl;
+        std::wcout << L"Press any key to send a function block update" << std::endl;
         system("pause");
         UpdateFunctionBlocks();
-        std::cout << std::endl;
+        std::wcout << std::endl;
 
-        std::cout << "Press any key to cleanup and exit" << std::endl;
+        std::wcout << L"Press any key to cleanup and exit" << std::endl;
         system("pause");
 
 
-        std::cout << std::endl << "Deregistering event handler..." << std::endl;
+        std::wcout << std::endl << L"Deregistering event handler..." << std::endl;
 
         if (eventRevokeToken)
         {
@@ -246,7 +246,7 @@ int main()
             deviceEndpoint.MessageReceived(eventRevokeToken);
         }
 
-        std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
+        std::wcout << L"Disconnecting UMP Endpoint Connection..." << std::endl;
         session.DisconnectEndpointConnection(deviceEndpoint.ConnectionId());
 
         // close the session, detaching all Windows MIDI Services resources and closing all connections

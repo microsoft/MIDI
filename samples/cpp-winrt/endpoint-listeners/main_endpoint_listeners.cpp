@@ -47,14 +47,14 @@ int main()
     // more than one session. If so, the session name should be meaningful to the user, like
     // the name of a browser tab, or a project.
 
-    std::cout << std::endl << "Creating session..." << std::endl;
+    std::wcout << std::endl << L"Creating session..." << std::endl;
 
     MidiSession session = MidiSession::Create(L"Sample Session");
 
     winrt::hstring endpointBId = MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId();
 
     MidiEndpointConnection receiveEndpoint = session.CreateEndpointConnection(endpointBId);
-    std::cout << "Connected to receiving endpoint: " << winrt::to_string(endpointBId) << std::endl;
+    std::wcout << L"Connected to receiving endpoint: " << endpointBId.c_str() << std::endl;
 
     // Wire up an event handler to receive the message. There is a single event handler type, but the
     // MidiMessageReceivedEventArgs class provides the different ways to access the data
@@ -70,12 +70,12 @@ int main()
             if (sender.try_as<MidiGroupEndpointListener>(plugin))
             {
                 // this requires Customer Preview 3 or later. In Customer Preview 2, the implementation type was always the parent MidiEndpointConnection
-                std::cout << "From: " << winrt::to_string(plugin.PluginName()) << std::endl;
+                std::wcout << "From: " << plugin.PluginName().c_str() << std::endl;
             }
             
             // display message info. All UMP types which implement IMidiUniversalPacket also
             // implement the IStringable interface, enabling ToString()
-            std::cout << winrt::to_string(ump.as<winrt::Windows::Foundation::IStringable>().ToString()) << std::endl;
+            std::wcout << ump.as<winrt::Windows::Foundation::IStringable>().ToString().c_str() << std::endl;
         };
 
 
@@ -129,23 +129,23 @@ int main()
     receiveEndpoint.AddMessageProcessingPlugin(groupListener2);
     receiveEndpoint.AddMessageProcessingPlugin(groupListenerAllOthers);
 
-    std::cout << std::endl << "Opening endpoint connection..." << std::endl;
+    std::wcout << std::endl << L"Opening endpoint connection..." << std::endl;
 
     if (receiveEndpoint.Open())
     {
-        std::cout << std::endl << "Connection opened." << std::endl;
-        std::cout << std::endl << "Send messages to this endpoint from an external program or device and hit enter when done." << std::endl;
+        std::wcout << std::endl << L"Connection opened." << std::endl;
+        std::wcout << std::endl << L"Send messages to this endpoint from an external program or device and hit enter when done." << std::endl;
         system("pause");
     }
     else
     {
-        std::cout << std::endl << "Unable to open endpoint connection." << std::endl;
+        std::wcout << std::endl << L"Unable to open endpoint connection." << std::endl;
     }
 
     // Cleanup code follows =============================================================================
 
     // deregister event handlers
-    std::cout << std::endl << "Deregistering event handlers..." << std::endl;
+    std::wcout << std::endl << L"Deregistering event handlers..." << std::endl;
     for (auto const& plugin : receiveEndpoint.MessageProcessingPlugins())
     {
         if (auto const& iter = revokeTokens.find(plugin.PluginId()); iter != revokeTokens.end())
@@ -162,7 +162,7 @@ int main()
     // you could also remove the endpoint message processing plugins here, but it is not necessary
     // only cleaning up the event handlers is needed
 
-    std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
+    std::wcout << L"Disconnecting UMP Endpoint Connection..." << std::endl;
 
     // if you close the session, this automatically happens. But keeping here to show how to manually handle closing connections
     session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId());
@@ -182,7 +182,7 @@ int main()
     session = nullptr;
 
 
-    std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;
+    std::wcout << L"Cleaning up WinRT / COM apartment..." << std::endl;
     winrt::uninit_apartment();
 
 }
