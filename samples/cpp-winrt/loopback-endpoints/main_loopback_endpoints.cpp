@@ -9,25 +9,17 @@
 
 #include <winrt/Windows.Foundation.h>
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+#include <winrt/Windows.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.Transports.Loopback.h>
+#include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 
-using namespace winrt::Microsoft::Windows::Devices::Midi2;                          // Core SDK
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback;     // For loopback endpoints
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;                // For message utilities and strong types
+using namespace winrt::Windows::Devices::Midi2;                          // Core SDK
+using namespace winrt::Windows::Devices::Midi2::Transports::Loopback;    // For loopback endpoints
+using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;     // For message utilities and strong types
 
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
-
-// This include file has a wrapper for the bootstrapper code. You are welcome to
-// use the .hpp as-is, or work the functionality into your code in whatever way
-// makes the most sense for your application.
-// 
-// The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
-#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
-namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 // we'll use these to keep track of the ids of the created endpoints
 winrt::hstring m_endpointAId{};
@@ -41,17 +33,17 @@ bool CreateLoopbackEndpoints()
     MidiLoopbackEndpointDefinition definitionA;
     MidiLoopbackEndpointDefinition definitionB;
 
-    definitionA.Name = L"Sample App Loopback A";
-    definitionA.Description = L"The first description is optional, but is displayed to users. This becomes the transport-defined description.";
-    definitionA.UniqueId = L"8675309-OU812-5150";
+    definitionA.Name(L"Sample App Loopback A");
+    definitionA.Description(L"The first description is optional, but is displayed to users. This becomes the transport-defined description.");
+    definitionA.UniqueId(L"8675309-OU812-5150");
 
-    definitionB.Name = L"Sample App Loopback B";
-    definitionB.Description = L"The second description is optional, but is displayed to users. This becomes the transport-defined description.";
-    definitionB.UniqueId = L"3263827-OU812-5150"; // can be the same as the first one, but doesn't need to be.
+    definitionB.Name(L"Sample App Loopback B");
+    definitionB.Description(L"The second description is optional, but is displayed to users. This becomes the transport-defined description.");
+    definitionB.UniqueId(L"3263827-OU812-5150"); // can be the same as the first one, but doesn't need to be.
 
-    MidiLoopbackEndpointCreationConfig creationConfig(m_associationId, definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(m_associationId, definitionA, definitionB);
 
-    auto response = MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(creationConfig);
+    auto response = MidiLoopbackManager::CreateTransientLoopback(creationConfig);
 
     if (response.Success())
     {
@@ -59,16 +51,16 @@ bool CreateLoopbackEndpoints()
 
         std::cout
             << "Loopback Endpoint A: " << std::endl 
-            << " - " << winrt::to_string(definitionA.Name) << std::endl
-            << " - " << winrt::to_string(response.EndpointDeviceIdA()) << std::endl << std::endl;
+            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointA().Name()) << std::endl
+            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId()) << std::endl << std::endl;
 
         std::cout 
             << "Loopback Endpoint B: "  << std::endl
-            << " - " << winrt::to_string(definitionB.Name) << std::endl
-            << " - " << winrt::to_string(response.EndpointDeviceIdB()) << std::endl << std::endl;
+            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointB().Name()) << std::endl
+            << " - " << winrt::to_string(response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId()) << std::endl << std::endl;
 
-        m_endpointAId = response.EndpointDeviceIdA();
-        m_endpointBId = response.EndpointDeviceIdB();
+        m_endpointAId = response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId();
+        m_endpointBId = response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId();
     }
     else
     {
@@ -92,29 +84,9 @@ int main()
     // MTA by default
     winrt::init_apartment();
 
-    // this is the initializer in the bootstrapper hpp file
-    std::shared_ptr<init::MidiDesktopAppSdkInitializer> initializer = std::make_shared<init::MidiDesktopAppSdkInitializer>();
-
-    // you can, of course, use guard macros instead of this check
-    if (initializer != nullptr)
+    if (!MidiApi::EnsureServiceAvailable())
     {
-        if (!initializer->InitializeSdkRuntime())
-        {
-            std::cout << "Could not initialize SDK runtime" << std::endl;
-            std::wcout << "Install the latest SDK runtime installer from " << initializer->LatestMidiAppSdkDownloadUrl << std::endl;
-            return 1;
-        }
-
-        if (!initializer->EnsureServiceAvailable())
-        {
-            std::cout << "Could not demand-start the MIDI service" << std::endl;
-            return 1;
-        }
-    }
-    else
-    {
-        // This shouldn't happen, but good to guard
-        std::cout << "Unable to create initializer" << std::endl;
+        std::cout << "Could not demand-start the MIDI service" << std::endl;
         return 1;
     }
 
@@ -233,29 +205,20 @@ int main()
         // If you don't do this, they will stay active, and the next attempt
         // to create them will fail because the unique Ids are already in use
 
-        MidiLoopbackEndpointRemovalConfig removalConfig(m_associationId);
+        MidiLoopbackRemovalConfig removalConfig(m_associationId);
 
-        if (MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(removalConfig))
+        auto removalResponse = MidiLoopbackManager::RemoveTransientLoopback(removalConfig);
+
+        if (removalResponse.Success())
         {
-            std::cout << "Loopback endpoints removed." << std::endl;
+            std::wcout << L"Loopback endpoints removed." << std::endl;
         }
         else
         {
-            std::cout << "There was a problem removing the endpoints. You may want to restart the service." << std::endl;
+            std::wcout << L"There was a problem removing the endpoints." << std::endl;
+            std::wcout << L"Error Code (see enum for description): " << static_cast<uint32_t>(removalResponse.ErrorCode()) << std::endl;
+            std::wcout << L"Error Message: " << std::wstring{ removalResponse.ErrorMessage().c_str() } << std::endl;
         }
-    }
-
-    // ensure we release all the WinRT and COM objects before uninitializing COM
-    // otherwise, you can crash when closing down the apartment. You could just put them all in 
-    // a sub-scope which closes before the uninit_apartment call, or you can set them to nullptr.
-    session = nullptr;
-
-    // clean up the SDK WinRT redirection
-    std::cout << "Cleaning up SDK..." << std::endl;
-    if (initializer != nullptr)
-    {
-        initializer->ShutdownSdkRuntime();
-        initializer.reset();
     }
 
     std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;

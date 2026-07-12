@@ -18,24 +18,16 @@
 // you need to use the versions packaged with the SDK, use the ones in /build/native/include/winmidi/winrt
 #include <winrt/Windows.Foundation.h>
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+#include <winrt/Windows.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 
-using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK Core
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;        // For message utilities and strong types
+using namespace winrt::Windows::Devices::Midi2;                  // SDK Core
+using namespace winrt::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
+using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;        // For message utilities and strong types
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
-
-// This include file has a wrapper for the bootstrapper code. You are welcome to
-// use the .hpp as-is, or work the functionality into your code in whatever way
-// makes the most sense for your application.
-// 
-// The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
-#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
-namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 int main()
 {
@@ -47,31 +39,13 @@ int main()
     // MTA by default
     winrt::init_apartment();
 
-    // this is the initializer in the bootstrapper hpp file
-    std::shared_ptr<init::MidiDesktopAppSdkInitializer> initializer = std::make_shared<init::MidiDesktopAppSdkInitializer>();
 
-    // you can, of course, use guard macros instead of this check
-    if (initializer != nullptr)
+    if (!MidiApi::EnsureServiceAvailable())
     {
-        if (!initializer->InitializeSdkRuntime())
-        {
-            std::cout << "Could not initialize SDK runtime" << std::endl;
-            std::wcout << "Install the latest SDK runtime installer from " << initializer->LatestMidiAppSdkDownloadUrl << std::endl;
-            return 1;
-        }
-
-        if (!initializer->EnsureServiceAvailable())
-        {
-            std::cout << "Could not demand-start the MIDI service" << std::endl;
-            return 1;
-        }
-    }
-    else
-    {
-        // This shouldn't happen, but good to guard
-        std::cout << "Unable to create initializer" << std::endl;
+        std::cout << "Could not demand-start the MIDI service" << std::endl;
         return 1;
     }
+
 
     // create the MIDI session, giving us access to Windows MIDI Services. An app may open 
     // more than one session. If so, the session name should be meaningful to the user, like
@@ -210,14 +184,6 @@ int main()
     sendEndpoint = nullptr;
     receiveEndpoint = nullptr;
     session = nullptr;
-
-    // clean up the SDK WinRT redirection
-    std::cout << "Cleaning up SDK..." << std::endl;
-    if (initializer != nullptr)
-    {
-        initializer->ShutdownSdkRuntime();
-        initializer.reset();
-    }
 
     std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;
     winrt::uninit_apartment();

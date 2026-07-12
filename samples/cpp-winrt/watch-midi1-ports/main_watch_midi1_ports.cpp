@@ -12,11 +12,13 @@
 
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
 #include <winrt/Windows.Devices.Midi2.Diagnostics.h>
 
-using namespace winrt::Windows::Devices::Midi2;                  // SDK Core
-using namespace winrt::Windows::Devices::Midi2::Enumeration;     // Enumeration
-using namespace winrt::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
+using namespace winrt::Windows::Devices::Midi2;                         // SDK Core
+using namespace winrt::Windows::Devices::Midi2::Enumeration;            // Enumeration
+using namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy;    // MIDI 1 Enumeration
+using namespace winrt::Windows::Devices::Midi2::Diagnostics;            // For diagnostics loopback endpoints
 
 
 // where you find types like IAsyncOperation, IInspectable, etc.
@@ -52,69 +54,56 @@ int main()
 
     std::cout << "Enumerating endpoints..." << std::endl;
 
-    auto filter = 
-        MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat |
-        MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat |
-        MidiEndpointDeviceInformationFilters::VirtualDeviceResponder;   // apps normally don't use this type
 
-    // normally, applications should not include diagnostics endpoints unless they are
-    // providing diagnostics functions.
-    if (includeDiagnosticsEndpoints)
-    {
-        filter |= MidiEndpointDeviceInformationFilters::DiagnosticLoopback;
-    }
-
-    auto watcher = MidiEndpointDeviceWatcher::Create(filter);
+    // creates a watcher for both input/source and output/destination ports.
+    // Use CreateForFlow() if you want only one or the other
+    auto watcher = MidiLegacyPortDeviceWatcher::Create();
 
 
     // if the watcher's Stop method is called
-    auto OnWatcherStopped = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
+    auto OnWatcherStopped = [&](MidiLegacyPortDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
         {
-            std::cout << std::endl;
-            std::cout << "Watcher stopped." << std::endl;
+            std::wcout << std::endl;
+            std::wcout << L"Watcher stopped." << std::endl;
         };
 
     // called when initial enumeration has completed. Endpoints can appear or disappear at any time afterwards. For example,
     // a user can plug in a USB device after enumeration has completed.
-    auto OnWatcherEnumerationCompleted = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
+    auto OnWatcherEnumerationCompleted = [&](MidiLegacyPortDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
         {
-            std::cout << std::endl;
-            std::cout << "Initial enumeration completed." << std::endl;
+            std::wcout << std::endl;
+            std::wcout << L"Initial enumeration completed." << std::endl;
         };
 
 
     // Endpoints can be removed at any time, including after enumeration has completed. This event will fire when they are removed
-    auto OnWatcherDeviceRemoved = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationRemovedEventArgs const& args)
+    auto OnWatcherDeviceRemoved = [&](MidiLegacyPortDeviceWatcher const& /*sender*/, MidiLegacyPortDeviceInformationRemovedEventArgs const& args)
         {
-            std::cout << std::endl;
-            std::cout << "Removed: " << winrt::to_string(args.EndpointDeviceId()) << std::endl;
+            std::wcout << std::endl;
+            std::wcout << L"Removed: " << args.RemovedDevice().PortDeviceId().c_str() << std::endl;
         };
 
     // Endpoints can be updated at any time, typically due to protocol negotiation, discovery, or changes the user has made in the settings app
-    auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationUpdatedEventArgs const& args)
+    auto OnWatcherDeviceUpdated = [&](MidiLegacyPortDeviceWatcher const& /*sender*/, MidiLegacyPortDeviceInformationUpdatedEventArgs const& args)
         {
-            std::cout << std::endl;
-            std::cout << "Updated: " << winrt::to_string(args.EndpointDeviceId()) << std::endl;
+            std::wcout << std::endl;
+            std::wcout << "Updated: " << args.UpdatedDevice().PortDeviceId().c_str() << std::endl;
 
             // Show how to use the various data update flags here
 
-            if (args.IsNameUpdated())                     std::cout << "- Name" << std::endl;
-            if (args.IsUserMetadataUpdated())             std::cout << "- User Metadata" << std::endl;
-            if (args.IsEndpointInformationUpdated())      std::cout << "- Endpoint Information" << std::endl;
-            if (args.IsStreamConfigurationUpdated())      std::cout << "- Stream Configuration" << std::endl;
-            if (args.AreFunctionBlocksUpdated())          std::cout << "- Function Blocks" << std::endl;
-            if (args.IsDeviceIdentityUpdated())           std::cout << "- Device Identity" << std::endl;
-            if (args.AreAdditionalCapabilitiesUpdated())  std::cout << "- Additional Capabilities" << std::endl;
+            if (args.IsNameUpdated()) std::wcout << L"- Name: " << args.UpdatedDevice().Name().c_str() << std::endl;
+            if (args.IsNumberUpdated()) std::wcout << L"- WinMM Port Number" << args.UpdatedDevice().Number() << std::endl;
 
         };
 
     // During initial enumeration, this event fires for each endpoint found. After initial enumeration, this will fire
     // for any new endpoints added (examples: USB Device plugged in, Virtual Device created by an app, etc.
-    auto OnWatcherDeviceAdded = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationAddedEventArgs const& args)
+    auto OnWatcherDeviceAdded = [&](MidiLegacyPortDeviceWatcher const& /*sender*/, MidiLegacyPortDeviceInformationAddedEventArgs const& args)
         {
-            std::cout << std::endl;
-            std::cout << "Added  : " << winrt::to_string(args.AddedDevice().Name()) << std::endl;
-            std::cout << "         " << winrt::to_string(args.AddedDevice().EndpointDeviceId()) << std::endl ;
+            std::wcout << std::endl;
+            std::wcout << L"Added  :      " << args.AddedDevice().Name().c_str() << std::endl;
+            std::wcout << L"              " << args.AddedDevice().PortDeviceId().c_str() << std::endl ;
+            std::wcout << L"WinMM Number: " << args.AddedDevice().Number() << std::endl;
         };
 
 
