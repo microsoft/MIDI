@@ -74,8 +74,8 @@
     <None Include="Midi2.NetworkMidiTransport.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="packages.config" />
     <None Include="SPEC_REVIEW.md" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h">
@@ -142,9 +142,5 @@
     <Midl Include="Midi2NetworkMidiTransport.idl">
       <Filter>Source Files</Filter>
     </Midl>
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>
