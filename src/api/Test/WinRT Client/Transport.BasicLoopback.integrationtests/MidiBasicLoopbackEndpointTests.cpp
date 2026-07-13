@@ -115,7 +115,7 @@ void MidiBasicLoopbackTests::TestCreateLegacyPorts()
             << " - " << winrt::to_string(response.CreatedLoopbackEntry().Name())
             << std::endl << std::endl;
 
-        auto endpointPorts = MidiLegacyPortDeviceInformation::FindAllForEndpoint(endpointId);
+        auto endpointPorts = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(endpointId);
         VERIFY_IS_NOT_NULL(endpointPorts);
         VERIFY_IS_TRUE(endpointPorts.Size() > 0);
 
@@ -132,7 +132,7 @@ void MidiBasicLoopbackTests::TestCreateLegacyPorts()
             }
 
             std::cout
-                << " - " << winrt::to_string(portInfo.EndpointDeviceId())
+                << " - " << winrt::to_string(portInfo.AssociatedEndpointDeviceId())
                 << " - " << winrt::to_string(portInfo.Name())
                 << std::endl;
         }

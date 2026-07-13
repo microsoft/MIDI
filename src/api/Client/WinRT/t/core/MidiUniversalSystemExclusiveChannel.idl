@@ -20,6 +20,7 @@ namespace Windows.Devices.Midi2
     [contract(MidiCoreApiContract,1)]
     [interface_name("Windows.Devices.Midi2.IMidiUniversalSystemExclusiveChannel", UUID_IMidiUniversalSystemExclusiveChannel)]
     [static_name("Windows.Devices.Midi2.IMidiUniversalSystemExclusiveChannelStatics", UUID_IMidiUniversalSystemExclusiveChannelStatics)]
+    [constructor_name("Windows.Devices.Midi2.IMidiUniversalSystemExclusiveChannelFactory", UUID_IMidiUniversalSystemExclusiveChannelFactory)]
     runtimeclass MidiUniversalSystemExclusiveChannel : Windows.Foundation.IStringable
     {
         MidiUniversalSystemExclusiveChannel();

@@ -16,6 +16,7 @@ namespace Windows.Devices.Midi2
     [contract(MidiCoreApiContract,1)]
     [interface_name("Windows.Devices.Midi2.IMidiChannel", UUID_IMidiChannel)]
     [static_name("Windows.Devices.Midi2.IMidiChannelStatics", UUID_IMidiChannelStatics)]
+    [constructor_name("Windows.Devices.Midi2.IMidiChannelFactory", UUID_IMidiChannelFactory)]
     runtimeclass MidiChannel : Windows.Foundation.IStringable
     {
         MidiChannel();

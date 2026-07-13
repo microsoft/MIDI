@@ -41,6 +41,7 @@
 #include <winrt/Windows.ApplicationModel.h>
 #include <winrt/Windows.ApplicationModel.Core.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Devices.Enumeration.Pnp.h>
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Devices.Midi.h>
@@ -57,10 +58,14 @@ namespace foundation =      ::winrt::Windows::Foundation;
 namespace collections =     ::winrt::Windows::Foundation::Collections;
 namespace streams =         ::winrt::Windows::Storage::Streams;
 namespace coreapp =         ::winrt::Windows::ApplicationModel::Core;
+namespace pnp =             ::winrt::Windows::Devices::Enumeration::Pnp;        // needed to get the parent device id for an interface. Normal enum doesn't project it.
+
 
 // pre-declare namespaces
 namespace WindowsMidiServicesInternal {};
 namespace internal =        ::WindowsMidiServicesInternal;
+
+
 
 
 #include <mmsyscom.h>   // needed for MAXPNAMELEN
@@ -85,6 +90,16 @@ namespace internal =        ::WindowsMidiServicesInternal;
 #include <midi_ump_message_defs.h>
 
 #include "winrt_date_util.h"
+#include "winrt_devpkey_util.h"
+#include "async_helper.h"
+#include "MidiPnpDeviceInfo.h"
+#include "MidiPnpUtilities.h"
+
+#include "winrt_enumeration_prop_util.h"
+
+#include "midi_stream_message_defs.h"
+#include "midi_function_block_prop_util.h"
+#include "endpoint_device_interface_helpers.h"
 
 // service interface
 #include <WindowsMidiServices.h>
@@ -100,8 +115,38 @@ namespace internal =        ::WindowsMidiServicesInternal;
 namespace winrt::Windows::Devices::Midi2 {};
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
-namespace winrt::Windows::Devices::Midi2::Messages {};
-namespace msgs = ::winrt::Windows::Devices::Midi2::Messages;
+namespace winrt::Windows::Devices::Midi2::CapabilityInquiry {};
+namespace ci = ::winrt::Windows::Devices::Midi2::CapabilityInquiry;
+
+namespace winrt::Windows::Devices::Midi2::Diagnostics {};
+namespace diag = ::winrt::Windows::Devices::Midi2::Diagnostics;
+
+namespace winrt::Windows::Devices::Midi2::Enumeration {};
+namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
+
+namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy {};
+namespace legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
+
+namespace winrt::Windows::Devices::Midi2::Reporting {};
+namespace rpt = ::winrt::Windows::Devices::Midi2::Reporting;
+
+namespace winrt::Windows::Devices::Midi2::ServiceConfig {};
+namespace svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
+
+namespace winrt::Windows::Devices::Midi2::Transports::Loopback {};
+namespace loop = ::winrt::Windows::Devices::Midi2::Transports::Loopback;
+
+namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback {};
+namespace bloop = ::winrt::Windows::Devices::Midi2::Transports::BasicLoopback;
+
+namespace winrt::Windows::Devices::Midi2::Transports::Virtual {};
+namespace virt = ::winrt::Windows::Devices::Midi2::Transports::Virtual;
+
+namespace winrt::Windows::Devices::Midi2::Utilities::Messages {};
+namespace msgs = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
+
+
+
 
 #define SAFE_COTASKMEMFREE(p) \
     if (NULL != p) { \
@@ -110,7 +155,7 @@ namespace msgs = ::winrt::Windows::Devices::Midi2::Messages;
     }
 
 
-// libmidi2
+// libmidi2 from vcpkg
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
@@ -124,9 +169,7 @@ namespace msgs = ::winrt::Windows::Devices::Midi2::Messages;
 
 #include "resource.h"
 
-#include "midi_stream_message_defs.h"
-#include "midi_function_block_prop_util.h"
-#include "endpoint_device_interface_helpers.h"
+
 #include "MidiEndpointNametable.h"
 
 

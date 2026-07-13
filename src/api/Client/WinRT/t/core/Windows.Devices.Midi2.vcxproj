@@ -214,19 +214,19 @@
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;uuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;uuid.lib;$(SolutionDir)vsfiles-sdk\out\MidiPluginConfigurationLib\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiEndpointNamingLib\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiPnpLib\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">MachineARM64</TargetMachine>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib;uuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib;uuid.lib;$(SolutionDir)vsfiles-sdk\out\MidiPluginConfigurationLib\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiEndpointNamingLib\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiPnpLib\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">MachineARM64X</TargetMachine>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib;uuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib;uuid.lib;$(SolutionDir)vsfiles-sdk\out\MidiPluginConfigurationLib\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiEndpointNamingLib\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiPnpLib\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -272,9 +272,9 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib;uuid.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib;uuid.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib;uuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib;uuid.lib;$(SolutionDir)vsfiles-sdk\out\MidiPluginConfigurationLib\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiEndpointNamingLib\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiPnpLib\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib;uuid.lib;$(SolutionDir)vsfiles-sdk\out\MidiPluginConfigurationLib\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiEndpointNamingLib\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiPnpLib\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib;uuid.lib;$(SolutionDir)vsfiles-sdk\out\MidiPluginConfigurationLib\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiEndpointNamingLib\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles-sdk\out\MidiPnpLib\$(Platform)\$(Configuration)\midipnplib.lib</AdditionalDependencies>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MachineARM64</TargetMachine>
       <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">MachineARM64X</TargetMachine>
     </Link>
@@ -295,6 +295,11 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="midi_api_mode_defs.h" />
+    <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="midi_stream_message_defs.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
       <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
     </ClInclude>
@@ -325,26 +330,223 @@
     <ClInclude Include="MidiMessage96.h">
       <DependentUpon>MidiMessage96.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiApi.h" />
+    <ClInclude Include="MidiApi.h">
+      <DependentUpon>MidiApi.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiUniversalSystemExclusiveChannel.h">
       <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="midi_api_mode_defs.h" />
-    <ClInclude Include="midi_function_block_prop_util.h" />
-    <ClInclude Include="midi_stream_message_defs.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiChannelEndpointListener.h">
+      <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiGroupEndpointListener.h">
+      <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageTypeEndpointListener.h">
+      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDiagnostics.h">
+      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServicePingResponse.h">
+      <DependentUpon>MidiServicePingResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServicePingResponseSummary.h">
+      <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi1PortNameTableEntry.h">
+      <DependentUpon>Midi1PortNameTableEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredDeviceIdentity.h">
+      <DependentUpon>MidiDeclaredDeviceIdentity.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredEndpointInfo.h">
+      <DependentUpon>MidiDeclaredEndpointInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDeclaredStreamConfiguration.h">
+      <DependentUpon>MidiDeclaredStreamConfiguration.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformation.h">
+      <DependentUpon>MidiLegacyPortDeviceInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationAddedEventArgs.h">
+      <DependentUpon>MidiLegacyPortDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationRemovedEventArgs.h">
+      <DependentUpon>MidiLegacyPortDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.h">
+      <DependentUpon>MidiLegacyPortDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLegacyPortDeviceWatcher.h">
+      <DependentUpon>MidiLegacyPortDeviceWatcher.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceIdHelper.h">
+      <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDevicePropertyHelper.h">
+      <DependentUpon>MidiEndpointDevicePropertyHelper.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformation.h">
+      <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationAddedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationUpdatedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationRemovedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcher.h">
+      <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointTransportSuppliedInfo.h">
+      <DependentUpon>MidiEndpointTransportSuppliedInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointUserSuppliedInfo.h">
+      <DependentUpon>MidiEndpointUserSuppliedInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiGroupTerminalBlock.h">
+      <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlock.h">
+      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiParentDeviceInformation.h">
+      <DependentUpon>MidiParentDeviceInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiReporting.h">
+      <DependentUpon>MidiReporting.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceSessionConnectionInfo.h">
+      <DependentUpon>MidiServiceSessionConnectionInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceSessionInfo.h">
+      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportPluginInfo.h">
+      <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceConfigResponse.h">
+      <DependentUpon>MidiServiceConfigResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportPluginConfigManager.h">
+      <DependentUpon>MidiServiceTransportPluginConfigManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceEndpointCustomizationConfig.h">
+      <DependentUpon>MidiServiceEndpointCustomizationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportCommand.h">
+      <DependentUpon>MidiServiceTransportCommand.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportCommonCommands.h">
+      <DependentUpon>MidiServiceTransportCommonCommands.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
+      <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackCreationResult.h">
+      <DependentUpon>MidiBasicLoopbackCreationResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackCreationConfig.h">
+      <DependentUpon>MidiBasicLoopbackCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEndpointDefinition.h">
+      <DependentUpon>MidiBasicLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackManager.h">
+      <DependentUpon>MidiBasicLoopbackManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackRemovalConfig.h">
+      <DependentUpon>MidiBasicLoopbackRemovalConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackEntry.h">
+      <DependentUpon>MidiBasicLoopbackEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackRemovalResult.h">
+      <DependentUpon>MidiBasicLoopbackRemovalResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackUpdateResult.h">
+      <DependentUpon>MidiBasicLoopbackUpdateResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackCreationResult.h">
+      <DependentUpon>MidiLoopbackCreationResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointDefinition.h">
+      <DependentUpon>MidiLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointEntry.h">
+      <DependentUpon>MidiLoopbackEndpointEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackRemovalConfig.h">
+      <DependentUpon>MidiLoopbackRemovalConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackManager.h">
+      <DependentUpon>MidiLoopbackManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackCreationConfig.h">
+      <DependentUpon>MidiLoopbackCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEntry.h">
+      <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackRemovalResult.h">
+      <DependentUpon>MidiLoopbackRemovalResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackUpdateResult.h">
+      <DependentUpon>MidiLoopbackUpdateResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiStreamConfigRequestReceivedEventArgs.h">
+      <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualDevice.h">
+      <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualDeviceCreationConfig.h">
+      <DependentUpon>MidiVirtualDeviceCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualDeviceManager.h">
+      <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiUniversalSystemExclusive7MessageBuilder.h">
+      <DependentUpon>MidiUniversalSystemExclusive7MessageBuilder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBuilder.h">
+      <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageConverter.h">
+      <DependentUpon>MidiMessageConverter.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiStreamMessageBuilder.h">
+      <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageHelper.h">
+      <DependentUpon>MidiMessageHelper.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSystemExclusive7MessageHelper.h">
+      <DependentUpon>MidiSystemExclusive7MessageHelper.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiUniqueId.h">
+      <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="winrt_devpkey_util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
       <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointConnection_ComExtensions.cpp" />
-    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -378,7 +580,9 @@
     <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiApi.cpp" />
+    <ClCompile Include="MidiApi.cpp">
+      <DependentUpon>MidiApi.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClCompile>
@@ -403,10 +607,201 @@
     <ClCompile Include="MidiUniversalSystemExclusiveChannel.cpp">
       <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
+    <ClCompile Include="MidiChannelEndpointListener.cpp">
+      <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="midi_function_block_prop_util.cpp" />
+    <ClCompile Include="MidiGroupEndpointListener.cpp">
+      <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDiagnostics.cpp">
+      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServicePingResponse.cpp">
+      <DependentUpon>MidiServicePingResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServicePingResponseSummary.cpp">
+      <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi1PortNameTableEntry.cpp">
+      <DependentUpon>Midi1PortNameTableEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredDeviceIdentity.cpp">
+      <DependentUpon>MidiDeclaredDeviceIdentity.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredEndpointInfo.cpp">
+      <DependentUpon>MidiDeclaredEndpointInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDeclaredStreamConfiguration.cpp">
+      <DependentUpon>MidiDeclaredStreamConfiguration.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformation.cpp">
+      <DependentUpon>MidiLegacyPortDeviceInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationAddedEventArgs.cpp">
+      <DependentUpon>MidiLegacyPortDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationRemovedEventArgs.cpp">
+      <DependentUpon>MidiLegacyPortDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.cpp">
+      <DependentUpon>MidiLegacyPortDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLegacyPortDeviceWatcher.cpp">
+      <DependentUpon>MidiLegacyPortDeviceWatcher.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
+      <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDevicePropertyHelper.cpp">
+      <DependentUpon>MidiEndpointDevicePropertyHelper.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformation.cpp">
+      <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationAddedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationRemovedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationUpdatedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+      <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointTransportSuppliedInfo.cpp">
+      <DependentUpon>MidiEndpointTransportSuppliedInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointUserSuppliedInfo.cpp">
+      <DependentUpon>MidiEndpointUserSuppliedInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiGroupTerminalBlock.cpp">
+      <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlock.cpp">
+      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiParentDeviceInformation.cpp">
+      <DependentUpon>MidiParentDeviceInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiReporting.cpp">
+      <DependentUpon>MidiReporting.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceSessionConnectionInfo.cpp">
+      <DependentUpon>MidiServiceSessionConnectionInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceSessionInfo.cpp">
+      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportPluginInfo.cpp">
+      <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigResponse.cpp">
+      <DependentUpon>MidiServiceConfigResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportPluginConfigManager.cpp">
+      <DependentUpon>MidiServiceTransportPluginConfigManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceEndpointCustomizationConfig.cpp">
+      <DependentUpon>MidiServiceEndpointCustomizationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportCommand.cpp">
+      <DependentUpon>MidiServiceTransportCommand.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportCommonCommands.cpp">
+      <DependentUpon>MidiServiceTransportCommonCommands.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
+      <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackCreationResult.cpp">
+      <DependentUpon>MidiBasicLoopbackCreationResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackCreationConfig.cpp">
+      <DependentUpon>MidiBasicLoopbackCreationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEndpointDefinition.cpp">
+      <DependentUpon>MidiBasicLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackManager.cpp">
+      <DependentUpon>MidiBasicLoopbackManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackRemovalConfig.cpp">
+      <DependentUpon>MidiBasicLoopbackRemovalConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackEntry.cpp">
+      <DependentUpon>MidiBasicLoopbackEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackRemovalResult.cpp">
+      <DependentUpon>MidiBasicLoopbackRemovalResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackUpdateResult.cpp">
+      <DependentUpon>MidiBasicLoopbackUpdateResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackCreationResult.cpp">
+      <DependentUpon>MidiLoopbackCreationResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointDefinition.cpp">
+      <DependentUpon>MidiLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointEntry.cpp">
+      <DependentUpon>MidiLoopbackEndpointEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackRemovalConfig.cpp">
+      <DependentUpon>MidiLoopbackRemovalConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackManager.cpp">
+      <DependentUpon>MidiLoopbackManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackCreationConfig.cpp">
+      <DependentUpon>MidiLoopbackCreationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEntry.cpp">
+      <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackRemovalResult.cpp">
+      <DependentUpon>MidiLoopbackRemovalResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackUpdateResult.cpp">
+      <DependentUpon>MidiLoopbackUpdateResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiStreamConfigRequestReceivedEventArgs.cpp">
+      <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualDevice.cpp">
+      <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceCreationConfig.cpp">
+      <DependentUpon>MidiVirtualDeviceCreationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceManager.cpp">
+      <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiUniversalSystemExclusive7MessageBuilder.cpp">
+      <DependentUpon>MidiUniversalSystemExclusive7MessageBuilder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBuilder.cpp">
+      <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageConverter.cpp">
+      <DependentUpon>MidiMessageConverter.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiStreamMessageBuilder.cpp">
+      <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageHelper.cpp">
+      <DependentUpon>MidiMessageHelper.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSystemExclusive7MessageHelper.cpp">
+      <DependentUpon>MidiSystemExclusive7MessageHelper.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiUniqueId.cpp">
+      <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
@@ -434,6 +829,92 @@
     <Midl Include="MidiPacketTypeEnum.idl" />
     <Midl Include="MidiSystemTimerSettings.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
+    <Midl Include="MidiChannelEndpointListener.idl" />
+    <Midl Include="MidiGroupEndpointListener.idl" />
+    <Midl Include="MidiMessageTypeEndpointListener.idl" />
+    <Midl Include="MidiDiagnostics.idl" />
+    <Midl Include="MidiServicePingResponse.idl" />
+    <Midl Include="MidiServicePingResponseSummary.idl" />
+    <Midl Include="Midi1PortNamingApproachEnum.idl" />
+    <Midl Include="MidiEndpointDeviceIdHelper.idl" />
+    <Midl Include="Midi1PortNameTableEntry.idl" />
+    <Midl Include="MidiDeclaredEndpointInfo.idl" />
+    <Midl Include="MidiDeclaredDeviceIdentity.idl" />
+    <Midl Include="MidiDeclaredStreamConfiguration.idl" />
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl" />
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl" />
+    <Midl Include="MidiEndpointDevicePropertyHelper.idl" />
+    <Midl Include="MidiEndpointTransportSuppliedInfo.idl" />
+    <Midl Include="MidiEndpointUserSuppliedInfo.idl" />
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl" />
+    <Midl Include="MidiEndpointDeviceInformation.idl" />
+    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl" />
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl" />
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
+    <Midl Include="MidiEndpointDeviceWatcher.idl" />
+    <Midl Include="MidiEndpointNativeDataFormatEnum.idl" />
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl" />
+    <Midl Include="MidiFunctionBlock.idl" />
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
+    <Midl Include="MidiGroupTerminalBlock.idl" />
+    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
+    <Midl Include="Midi1PortFlowEnum.idl" />
+    <Midl Include="MidiLegacyPortDeviceInformation.idl" />
+    <Midl Include="MidiLegacyPortDeviceInformationAddedEventArgs.idl" />
+    <Midl Include="MidiLegacyPortDeviceInformationRemovedEventArgs.idl" />
+    <Midl Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.idl" />
+    <Midl Include="MidiLegacyPortDeviceWatcher.idl" />
+    <Midl Include="MidiParentDeviceInformation.idl" />
+    <Midl Include="MidiProtocolEnum.idl" />
+    <Midl Include="MidiReporting.idl" />
+    <Midl Include="MidiServiceSessionConnectionInfo.idl" />
+    <Midl Include="MidiServiceSessionInfo.idl" />
+    <Midl Include="MidiServiceTransportPluginInfo.idl" />
+    <Midl Include="IMidiServiceTransportPluginConfig.idl" />
+    <Midl Include="MidiServiceConfigEndpointMatchCriteria.idl" />
+    <Midl Include="MidiServiceTransportCommonCommands.idl" />
+    <Midl Include="MidiServiceEndpointCustomizationConfig.idl" />
+    <Midl Include="MidiServiceTransportCommand.idl" />
+    <Midl Include="MidiServiceConfigResponse.idl" />
+    <Midl Include="MidiServiceConfigResponseStatusEnum.idl" />
+    <Midl Include="MidiServiceTransportPluginConfigManager.idl" />
+    <Midl Include="MidiBasicLoopbackErrorCodeEnum.idl" />
+    <Midl Include="MidiBasicLoopbackCreationConfig.idl" />
+    <Midl Include="MidiBasicLoopbackCreationResult.idl" />
+    <Midl Include="MidiBasicLoopbackEndpointDefinition.idl" />
+    <Midl Include="MidiBasicLoopbackManager.idl" />
+    <Midl Include="MidiBasicLoopbackRemovalConfig.idl" />
+    <Midl Include="MidiBasicLoopbackEntry.idl" />
+    <Midl Include="MidiBasicLoopbackRemovalResult.idl" />
+    <Midl Include="MidiBasicLoopbackUpdateResult.idl" />
+    <Midl Include="MidiLoopbackUpdateResult.idl" />
+    <Midl Include="MidiLoopbackErrorCodeEnum.idl" />
+    <Midl Include="MidiLoopbackEndpointEntry.idl" />
+    <Midl Include="MidiLoopbackRemovalConfig.idl" />
+    <Midl Include="MidiLoopbackManager.idl" />
+    <Midl Include="MidiLoopbackEndpointDefinition.idl" />
+    <Midl Include="MidiLoopbackCreationResult.idl" />
+    <Midl Include="MidiLoopbackCreationConfig.idl" />
+    <Midl Include="MidiLoopbackRemovalResult.idl" />
+    <Midl Include="MidiLoopbackEntry.idl" />
+    <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl" />
+    <Midl Include="MidiVirtualDevice.idl" />
+    <Midl Include="MidiVirtualDeviceCreationConfig.idl" />
+    <Midl Include="MidiVirtualDeviceManager.idl" />
+    <Midl Include="MidiUniversalSystemExclusive7MessageBuilder.idl" />
+    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl" />
+    <Midl Include="MidiMessageConverter.idl" />
+    <Midl Include="MidiMessageBuilder.idl" />
+    <Midl Include="MidiStreamMessageBuilder.idl" />
+    <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
+    <Midl Include="MidiMessageHelper.idl" />
+    <Midl Include="MidiSystemExclusive7MessageHelper.idl" />
+    <Midl Include="MidiUniqueId.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

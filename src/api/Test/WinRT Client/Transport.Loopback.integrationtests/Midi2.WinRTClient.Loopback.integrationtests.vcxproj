@@ -167,26 +167,6 @@
       <Private>true</Private>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
-      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Reporting\Windows.Devices.Midi2.Reporting.vcxproj">
-      <Project>{e165ef50-e4ce-4765-8388-4df4f9d03b57}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\ServiceConfig\Windows.Devices.Midi2.ServiceConfig.vcxproj">
-      <Project>{0d921d5f-ffa3-4937-b171-ae4363fdf143}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Transports.Loopback\Windows.Devices.Midi2.Transports.Loopback.vcxproj">
-      <Project>{1dd0b884-f1e7-4ad0-b060-74e50d217c4a}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -24,7 +24,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\MidiPnpLib\MidiPnpDeviceInfo.cpp" />
-    <ClCompile Include="..\MidiPnpLib\MidiPnpUtilities.cpp" />
+    <ClCompile Include="..\MidiPnpLib\MidiPnpDeviceInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MidiPnpLib\MidiPnpUtilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

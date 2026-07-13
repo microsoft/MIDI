@@ -175,11 +175,6 @@
       <Private>true</Private>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
-      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

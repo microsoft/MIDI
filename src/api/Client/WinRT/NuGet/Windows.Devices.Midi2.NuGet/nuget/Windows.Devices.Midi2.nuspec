@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Windows.Devices.Midi2</id>
-		<version>0.99.12-preview.1</version>
+		<version>0.99.21-preview.1</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services App SDK. Temporary package to use until the metadata is in an official Windows SDK</description>
 		<license type="expression">MIT</license>
@@ -13,6 +13,7 @@
 		<tags>midi midi2 windows music audio native</tags>
 		<dependencies>
             <group targetFramework="native" />
+            <group targetFramework="net10.0" />
         </dependencies>
 
     </metadata>
@@ -26,101 +27,20 @@
       <!-- Reference winmds -->
 
       <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ClientPlugins\x64\Release\Windows.Devices.Midi2.ClientPlugins.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Diagnostics\x64\Release\Windows.Devices.Midi2.Diagnostics.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Enumeration\x64\Release\Windows.Devices.Midi2.Enumeration.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Reporting\x64\Release\Windows.Devices.Midi2.Reporting.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ServiceConfig\x64\Release\Windows.Devices.Midi2.ServiceConfig.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.BasicLoopback\x64\Release\Windows.Devices.Midi2.Transports.BasicLoopback.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Loopback\x64\Release\Windows.Devices.Midi2.Transports.Loopback.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Virtual\x64\Release\Windows.Devices.Midi2.Transports.Virtual.winmd" />
-      <file target="ref\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Utilities.Messages\x64\Release\Windows.Devices.Midi2.Utilities.Messages.winmd" />
 
-
+      <file target="ref\net10.0\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.winmd" />
 
       <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.dll" />
       <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.pri" />
       <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.pdb" />
 
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ClientPlugins\x64\Release\Windows.Devices.Midi2.ClientPlugins.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ClientPlugins\x64\Release\Windows.Devices.Midi2.ClientPlugins.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ClientPlugins\x64\Release\Windows.Devices.Midi2.ClientPlugins.pdb" />
-
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Diagnostics\x64\Release\Windows.Devices.Midi2.Diagnostics.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Diagnostics\x64\Release\Windows.Devices.Midi2.Diagnostics.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Diagnostics\x64\Release\Windows.Devices.Midi2.Diagnostics.pdb" />
-
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Enumeration\x64\Release\Windows.Devices.Midi2.Enumeration.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Enumeration\x64\Release\Windows.Devices.Midi2.Enumeration.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Enumeration\x64\Release\Windows.Devices.Midi2.Enumeration.pdb" />
-
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Reporting\x64\Release\Windows.Devices.Midi2.Reporting.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Reporting\x64\Release\Windows.Devices.Midi2.Reporting.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Reporting\x64\Release\Windows.Devices.Midi2.Reporting.pdb" />
-
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ServiceConfig\x64\Release\Windows.Devices.Midi2.ServiceConfig.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ServiceConfig\x64\Release\Windows.Devices.Midi2.ServiceConfig.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ServiceConfig\x64\Release\Windows.Devices.Midi2.ServiceConfig.pdb" />
-
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.BasicLoopback\x64\Release\Windows.Devices.Midi2.Transports.BasicLoopback.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.BasicLoopback\x64\Release\Windows.Devices.Midi2.Transports.BasicLoopback.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.BasicLoopback\x64\Release\Windows.Devices.Midi2.Transports.BasicLoopback.pdb" />
-
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Loopback\x64\Release\Windows.Devices.Midi2.Transports.Loopback.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Loopback\x64\Release\Windows.Devices.Midi2.Transports.Loopback.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Loopback\x64\Release\Windows.Devices.Midi2.Transports.Loopback.pdb" />
-
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Virtual\x64\Release\Windows.Devices.Midi2.Transports.Virtual.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Virtual\x64\Release\Windows.Devices.Midi2.Transports.Virtual.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Virtual\x64\Release\Windows.Devices.Midi2.Transports.Virtual.pdb" />
-
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Utilities.Messages\x64\Release\Windows.Devices.Midi2.Utilities.Messages.dll" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Utilities.Messages\x64\Release\Windows.Devices.Midi2.Utilities.Messages.pri" />
-      <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Utilities.Messages\x64\Release\Windows.Devices.Midi2.Utilities.Messages.pdb" />
-
+      
 
       <!-- The Arm64X binaries are output to the Arm64EC folder by Visual Studio -->
 
       <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.dll" />
       <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.pri" />
       <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ClientPlugins\arm64EC\Release\Windows.Devices.Midi2.ClientPlugins.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ClientPlugins\arm64EC\Release\Windows.Devices.Midi2.ClientPlugins.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ClientPlugins\arm64EC\Release\Windows.Devices.Midi2.ClientPlugins.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Diagnostics\arm64EC\Release\Windows.Devices.Midi2.Diagnostics.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Diagnostics\arm64EC\Release\Windows.Devices.Midi2.Diagnostics.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Diagnostics\arm64EC\Release\Windows.Devices.Midi2.Diagnostics.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Enumeration\arm64EC\Release\Windows.Devices.Midi2.Enumeration.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Enumeration\arm64EC\Release\Windows.Devices.Midi2.Enumeration.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Enumeration\arm64EC\Release\Windows.Devices.Midi2.Enumeration.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Reporting\arm64EC\Release\Windows.Devices.Midi2.Reporting.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Reporting\arm64EC\Release\Windows.Devices.Midi2.Reporting.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Reporting\arm64EC\Release\Windows.Devices.Midi2.Reporting.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ServiceConfig\arm64EC\Release\Windows.Devices.Midi2.ServiceConfig.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ServiceConfig\arm64EC\Release\Windows.Devices.Midi2.ServiceConfig.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.ServiceConfig\arm64EC\Release\Windows.Devices.Midi2.ServiceConfig.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.BasicLoopback\arm64EC\Release\Windows.Devices.Midi2.Transports.BasicLoopback.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.BasicLoopback\arm64EC\Release\Windows.Devices.Midi2.Transports.BasicLoopback.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.BasicLoopback\arm64EC\Release\Windows.Devices.Midi2.Transports.BasicLoopback.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Loopback\arm64EC\Release\Windows.Devices.Midi2.Transports.Loopback.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Loopback\arm64EC\Release\Windows.Devices.Midi2.Transports.Loopback.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Loopback\arm64EC\Release\Windows.Devices.Midi2.Transports.Loopback.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Virtual\arm64EC\Release\Windows.Devices.Midi2.Transports.Virtual.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Virtual\arm64EC\Release\Windows.Devices.Midi2.Transports.Virtual.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Transports.Virtual\arm64EC\Release\Windows.Devices.Midi2.Transports.Virtual.pdb" />
-
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Utilities.Messages\arm64EC\Release\Windows.Devices.Midi2.Utilities.Messages.dll" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Utilities.Messages\arm64EC\Release\Windows.Devices.Midi2.Utilities.Messages.pri" />
-      <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2.Utilities.Messages\arm64EC\Release\Windows.Devices.Midi2.Utilities.Messages.pdb" />
-
 
       <!-- <file target="runtimes\win-arm64ec\lib\uap10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.26100.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" /> -->
 
@@ -129,8 +49,13 @@
 
       <!-- <file target="build\"           src="Windows.Devices.Midi2.props" />-->
 
-      <file target="build\native\"    src="Windows.Devices.Midi2.targets"  />
-      <file target="build\native\"    src="Windows.Devices.Midi2.props" />
+      <file target="build\native\"    src="native\Windows.Devices.Midi2.targets"  />
+      <file target="build\native\"    src="native\Windows.Devices.Midi2.props" />
+
+      <file target="build\net10.0\"   src="net10.0\Windows.Devices.Midi2.targets"  />
+      <file target="build\net10.0\"   src="net10.0\Windows.Devices.Midi2.props" />
+
+
 
       <!--<file target="build\net10.0\"    src="dotnet\Windows.Devices.Midi2.targets"  />
       <file target="build\uap10.0\"   src="dotnet\Windows.Devices.Midi2.targets"  />-->

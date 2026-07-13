@@ -16,6 +16,7 @@ namespace Windows.Devices.Midi2
     [contract(MidiCoreApiContract,1)]
     [interface_name("Windows.Devices.Midi2.IMidiGroup", UUID_IMidiGroup)]
     [static_name("Windows.Devices.Midi2.IMidiGroupStatics", UUID_IMidiGroupStatics)]
+    [constructor_name("Windows.Devices.Midi2.IMidiGroupFactory", UUID_IMidiGroupFactory)]
     runtimeclass MidiGroup : Windows.Foundation.IStringable
     {
         MidiGroup();

@@ -1,45 +1,60 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <WindowsSdkPackageVersion>10.0.26100.57</WindowsSdkPackageVersion>
+    <SupportedOSPlatformVersion>10.0.26100.00</SupportedOSPlatformVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <BaseOutputPath>G:\Github\microsoft\midi\src\api\vsfiles-sdk\out\nuget\$(Platform)\$(Configuration)\</BaseOutputPath>
-    <Platforms>AnyCPU;ARM64;x64</Platforms>
+    <BaseOutputPath>$(SolutionDir)vsfiles-sdk\out\nuget\$(Platform)\$(Configuration)\</BaseOutputPath>
+    <Platform>x64</Platform>
+    <Platforms>ARM64;x64</Platforms>
+    <AssemblyName>Windows.Devices.Midi2.NetProjection</AssemblyName>
+
+    <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 
 
   <PropertyGroup>
-    <CsWinRTExcludes>
-      
-    </CsWinRTExcludes>
     <CsWinRTIncludes>
       Windows.Devices.Midi2
+      Windows.Devices.Midi2.CapabilityInquiry
       Windows.Devices.Midi2.ClientPlugins
       Windows.Devices.Midi2.Diagnostics
       Windows.Devices.Midi2.Enumeration
       Windows.Devices.Midi2.Enumeration.Legacy
       Windows.Devices.Midi2.Reporting
       Windows.Devices.Midi2.ServiceConfig
+      Windows.Devices.Midi2.Transports
       Windows.Devices.Midi2.Transports.BasicLoopback
       Windows.Devices.Midi2.Transports.Loopback
       Windows.Devices.Midi2.Transports.Virtual
       Windows.Devices.Midi2.Utilities.Messages
     </CsWinRTIncludes>
-    <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
-    <CsWinRTGenerateProjection>False</CsWinRTGenerateProjection>
   </PropertyGroup>
 
   <PropertyGroup>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
     <NuspecFile>$(GeneratedNugetDir)Windows.Devices.Midi2.nuspec</NuspecFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>$(SolutionDir)vsfiles-sdk\PublishedNuGet\</PackageOutputPath>
+
+
+    
+    <EnableComInterop>true</EnableComInterop>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+  </ItemGroup>
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="3.0.0-preview.260319.2" />
+    <ProjectReference Include="..\..\t\core\Windows.Devices.Midi2.vcxproj">
+      <ReferenceOutputAssembly>True</ReferenceOutputAssembly>      
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

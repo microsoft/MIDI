@@ -172,16 +172,6 @@
     <ProjectReference Include="..\..\..\Client\WinRT\t\Diagnostics\Windows.Devices.Midi2.Diagnostics.vcxproj">
       <Project>{c24cc839-6d54-4f78-ac5b-c5b3e90b0dab}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
-      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Diagnostics\Windows.Devices.Midi2.Diagnostics.vcxproj">
-      <Project>{c24cc839-6d54-4f78-ac5b-c5b3e90b0dab}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Client\WinRT\Windows.Devices.Midi2.Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
       <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
       <Private>true</Private>

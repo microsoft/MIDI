@@ -20,6 +20,7 @@ namespace Windows.Devices.Midi2
     [contract(MidiCoreApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.IMidiMessage128", UUID_IMidiMessage128)]
     [static_name("Windows.Devices.Midi2.IMidiMessage128Statics", UUID_IMidiMessage128Statics)]
+    [constructor_name("Windows.Devices.Midi2.IMidiMessage128Factory", UUID_IMidiMessage128Factory)]
     unsealed runtimeclass MidiMessage128 : IMidiUniversalPacket,
                                            Windows.Foundation.IStringable
     {

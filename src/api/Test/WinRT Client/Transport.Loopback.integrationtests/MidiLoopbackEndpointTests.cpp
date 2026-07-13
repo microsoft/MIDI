@@ -141,7 +141,7 @@ void MidiLoopbackEndpointTests::TestCreateLegacyPorts()
         endpointAId = response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId();
         endpointBId = response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId();
 
-        auto endpointAPorts = MidiLegacyPortDeviceInformation::FindAllForEndpoint(endpointAId);
+        auto endpointAPorts = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(endpointAId);
         VERIFY_IS_NOT_NULL(endpointAPorts);
         VERIFY_IS_TRUE(endpointAPorts.Size() > 0);
 
@@ -158,12 +158,12 @@ void MidiLoopbackEndpointTests::TestCreateLegacyPorts()
             }
 
             std::cout
-                << " - " << winrt::to_string(portInfo.EndpointDeviceId())
+                << " - " << winrt::to_string(portInfo.PortDeviceInstanceId())
                 << " - " << winrt::to_string(portInfo.Name())
                 << std::endl;
         }
 
-        auto endpointBPorts = MidiLegacyPortDeviceInformation::FindAllForEndpoint(endpointBId);
+        auto endpointBPorts = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(endpointBId);
         VERIFY_IS_NOT_NULL(endpointBPorts);
         VERIFY_IS_TRUE(endpointBPorts.Size() > 0);
 
@@ -180,7 +180,7 @@ void MidiLoopbackEndpointTests::TestCreateLegacyPorts()
             }
 
             std::cout
-                << " - " << winrt::to_string(portInfo.EndpointDeviceId())
+                << " - " << winrt::to_string(portInfo.PortDeviceInstanceId())
                 << " - " << winrt::to_string(portInfo.Name())
                 << std::endl;
         }

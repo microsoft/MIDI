@@ -1,0 +1,54 @@
+<Project>
+  <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
+
+
+  <Target Name="SetupMIDIServicesSDKReference"
+          BeforeTargets="BeforeResolveReferences">
+    <Message Text="-- Copying Windows MIDI Services references .winmd files" />
+
+
+    <ItemGroup>
+      <Reference Include="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\..\..\ref\net10.0\Windows.Devices.Midi2.winmd'))" />
+    </ItemGroup>
+  </Target>
+
+
+  <!--
+  <PropertyGroup>
+    <CsWinRTEnabled>true</CsWinRTEnabled>
+    <CsWinRTParams>
+      -target net10.0
+      -input 10.0.26100.0
+      -input "$(MSBuildThisFileDirectory)..\..\ref\net10.0\Windows.Devices.Midi2.winmd"
+      -output "$(IntermediateOutputPath)\net8.0-windows10.0.19041.0\Generated Files\CsWinRT"
+      -include Windows
+      -exclude Microsoft
+    </CsWinRTParams>
+  </PropertyGroup>
+  -->
+
+  <!--<PropertyGroup>
+    <CsWinRTInput></CsWinRTInput>
+  </PropertyGroup>-->
+
+
+  <!--<ItemGroup>
+    <MidiImplementation Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-$(Platform)\net10.0\Windows.Devices.Midi2.dll" />
+    <MidiResources      Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-$(Platform)\net10.0\Windows.Devices.Midi2.pri" />
+    <MidiDebugSymbols   Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-$(Platform)\net10.0\Windows.Devices.Midi2.pdb" />
+
+    <None Include="@(MidiImplementation)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <None Include="@(MidiResources)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <None Include="@(MidiDebugSymbols)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>-->
+
+
+</Project>

@@ -77,7 +77,7 @@ void MidiLegacyPortDeviceInformationTests::TestCreateFromId()
             std::wcout << L"Instance Id: " << portInfo.PortDeviceInstanceId().c_str() << std::endl;
             std::wcout << L"WinMM Port:  " << portInfo.Number() << std::endl;
             std::wcout << L"Parent:      " << portInfo.ParentDeviceInstanceId().c_str() << std::endl;
-            std::wcout << L"Assoc Ep:    " << portInfo.EndpointDeviceId().c_str() << std::endl;
+            std::wcout << L"Assoc Ep:    " << portInfo.AssociatedEndpointDeviceId().c_str() << std::endl;
             std::wcout << L"Group:       " << portInfo.Group().ToString().c_str() << std::endl;
             std::wcout << L"DevDrivIfId: " << portInfo.DriverDeviceInterfaceId().c_str() << std::endl;
             std::wcout << L"Flow:        " << (uint32_t)portInfo.Flow() << std::endl;
@@ -121,9 +121,9 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
 
             // gs synth has empty endpoint device id, as do any .drv-based ports
             std::wcout << L" Related UMP Endpoint -----------------------------------" << std::endl;
-            if (!portInfo.EndpointDeviceId().empty())
+            if (!portInfo.AssociatedEndpointDeviceId().empty())
             {
-                auto endpointDevice = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(portInfo.EndpointDeviceId());
+                auto endpointDevice = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(portInfo.AssociatedEndpointDeviceId());
                 VERIFY_IS_NOT_NULL(endpointDevice);
 
                 std::wcout << L" - Name:                 " << endpointDevice.Name().c_str() << std::endl;
@@ -301,7 +301,7 @@ void MidiLegacyPortDeviceInformationTests::TestFindAllForEndpoint()
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAllForEndpoint(ep.EndpointDeviceId());
+        auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(ep.EndpointDeviceId());
 
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();

@@ -174,33 +174,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\ClientPlugins\Windows.Devices.Midi2.ClientPlugins.vcxproj">
-      <Project>{79730de5-cdd0-47ff-aa5b-baa64ebe83a1}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Client\WinRT\t\core\Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Diagnostics\Windows.Devices.Midi2.Diagnostics.vcxproj">
-      <Project>{c24cc839-6d54-4f78-ac5b-c5b3e90b0dab}</Project>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <Private>true</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Enumeration\Windows.Devices.Midi2.Enumeration.vcxproj">
-      <Project>{001d0daf-53d0-47f9-becc-e7a481181912}</Project>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <Private>true</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Reporting\Windows.Devices.Midi2.Reporting.vcxproj">
-      <Project>{e165ef50-e4ce-4765-8388-4df4f9d03b57}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Client\WinRT\t\Utilities.Messages\Windows.Devices.Midi2.Utilities.Messages.vcxproj">
-      <Project>{d2bc7e5c-09e5-4fbb-84de-26c9e6984a28}</Project>
       <Private>true</Private>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>

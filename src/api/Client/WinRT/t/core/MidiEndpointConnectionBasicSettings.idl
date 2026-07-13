@@ -18,6 +18,7 @@ namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
     [interface_name("Windows.Devices.Midi2.IMidiEndpointConnectionBasicSettings", UUID_IMidiEndpointConnectionBasicSettings)]
+    [constructor_name("Windows.Devices.Midi2.IMidiEndpointConnectionBasicSettingsFactory", UUID_IMidiEndpointConnectionBasicSettingsFactory)]
     runtimeclass MidiEndpointConnectionBasicSettings : IMidiEndpointConnectionSettings
     {
         MidiEndpointConnectionBasicSettings();

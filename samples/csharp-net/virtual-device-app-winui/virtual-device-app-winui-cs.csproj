@@ -55,9 +55,9 @@
 
   <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6584" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="0.99.21-preview.1" />
     <PackageReference Include="WinUIEx" Version="2.8.0" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>

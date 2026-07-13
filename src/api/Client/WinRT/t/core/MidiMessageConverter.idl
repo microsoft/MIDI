@@ -1,0 +1,164 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiMessage32.idl";
+import "MidiGroup.idl";
+
+
+
+namespace Windows.Devices.Midi2.Utilities.Messages
+{
+    [contract(MidiMessageUtilityApiContract,1)]
+    [static_name("Windows.Devices.Midi2.Utilities.Messages.IMidiMessageConverterStatics", UUID_IMidiMessageConverterStatics)]
+    static runtimeclass MidiMessageConverter
+    {
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1Message(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 statusByte
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1Message(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 statusByte,
+            UInt8 dataByte1
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1Message(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 statusByte,
+            UInt8 dataByte1,
+            UInt8 dataByte2
+        );
+
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1ChannelPressureMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiChannelPressureMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1NoteOffMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiNoteOffMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1NoteOnMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiNoteOnMessage originalMessage);
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1PitchBendChangeMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiPitchBendChangeMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1PolyphonicKeyPressureMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiPolyphonicKeyPressureMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1ProgramChangeMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiProgramChangeMessage originalMessage
+        );
+
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1TimeCodeMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiTimeCodeMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1SongPositionPointerMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiSongPositionPointerMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1SongSelectMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiSongSelectMessage originalMessage
+        );
+
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1TuneRequestMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiTuneRequestMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1TimingClockMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiTimingClockMessage originalMessage
+        );
+
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1StartMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiStartMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1ContinueMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiContinueMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1StopMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiStopMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1ActiveSensingMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiActiveSensingMessage originalMessage
+        );
+
+        static Windows.Devices.Midi2.MidiMessage32 ConvertMidi1SystemResetMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.MidiSystemResetMessage originalMessage
+        );
+
+
+        static IVector<UInt32> ConvertMidi1CompleteMessageBytesToUmpWords(
+            Windows.Devices.Midi2.MidiGroup group,
+            IIterable<UInt8> midi1Bytes,
+            Boolean allowRunningStatus
+        );
+
+        static IVector<UInt8> ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(
+            IIterable<UInt32> umpWords
+        );
+
+        static IVector<UInt8> ConvertHexByteStringToByteArray(
+            String hexByteString
+        );
+
+        static IVector<UInt32> ConvertMidi1MessageToUmpWords(
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Devices.Midi.IMidiMessage originalMessage
+        );
+
+    };
+}

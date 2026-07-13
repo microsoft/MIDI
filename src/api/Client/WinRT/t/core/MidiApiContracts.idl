@@ -13,4 +13,82 @@ namespace Windows.Devices.Midi2
     [contractversion(1)]
     apicontract MidiCoreApiContract { };
 
+    namespace CapabilityInquiry
+    {
+        [contractversion(1)]
+        apicontract MidiCapabilityInquiryApiContract { };
+    }
+
+    namespace ClientPlugins
+    {
+        [contractversion(1)]
+        apicontract MidiClientPluginsApiContract { };
+    }
+
+    namespace Diagnostics
+    {
+        [contractversion(1)]
+        apicontract MidiDiagnosticsApiContract { };
+    }
+
+
+    namespace Enumeration
+    {
+        [contractversion(1)]
+        apicontract MidiEnumerationApiContract { };
+
+        namespace Legacy
+        {
+            [contractversion(1)]
+            apicontract MidiEnumerationLegacyApiContract { };
+        }
+    }
+
+    namespace Reporting
+    {
+        [contractversion(1)]
+        apicontract MidiReportingApiContract { };
+    }
+
+    namespace ServiceConfig
+    {
+        [contractversion(1)]
+        apicontract MidiServiceConfigApiContract { };
+    }
+
+
+    namespace Transports
+    {
+
+        namespace Loopback
+        {
+            [contractversion(1)]
+            apicontract MidiTransportsLoopbackApiContract { };
+        }
+
+        namespace BasicLoopback
+        {
+            [contractversion(1)]
+            apicontract MidiTransportsBasicLoopbackApiContract { };
+        }
+
+        namespace Virtual
+        {
+            [contractversion(1)]
+            apicontract MidiTransportsVirtualApiContract { };
+        }
+    }
+
+
+    namespace Utilities
+    {
+
+        namespace Messages
+        {
+            [contractversion(1)]
+            apicontract MidiMessageUtilityApiContract { };
+        }
+
+    }
+
 }

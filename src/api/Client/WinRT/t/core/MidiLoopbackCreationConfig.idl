@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiLoopbackEndpointDefinition.idl";
+import "IMidiServiceTransportPluginConfig.idl";
+
+
+namespace Windows.Devices.Midi2.Transports.Loopback
+{
+    [contract(MidiTransportsLoopbackApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackCreationConfig", UUID_IMidiLoopbackCreationConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackCreationConfigFactory", UUID_IMidiLoopbackCreationConfigFactory)]
+    runtimeclass MidiLoopbackCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiLoopbackCreationConfig();
+        MidiLoopbackCreationConfig(
+            Guid associationId, 
+            MidiLoopbackEndpointDefinition endpointDefinitionA, 
+            MidiLoopbackEndpointDefinition endpointDefinitionB
+        );
+
+        Guid AssociationId;
+
+        MidiLoopbackEndpointDefinition EndpointDefinitionA;
+        MidiLoopbackEndpointDefinition EndpointDefinitionB;
+
+        Boolean IsMuted;
+    }
+}
+
