@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Windows.Devices.Midi2;
-using Microsoft.Windows.Devices.Midi2.Messages;
+using Windows.Devices.Midi2;
+using Windows.Devices.Midi2.Utilities.Messages;
 
 namespace MidiSample.AppToAppMidi
 {

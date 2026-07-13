@@ -22,7 +22,7 @@
       <!--<WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion> -->
     <UseRidGraph>true</UseRidGraph>
 
-      <CsWinRTEnabled>false</CsWinRTEnabled>
+      <CsWinRTEnabled>true</CsWinRTEnabled>
       
       <PublishAot>False</PublishAot>
       <PublishTrimmed>False</PublishTrimmed>
@@ -55,6 +55,7 @@
 
   <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->
   <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6584" />
     <PackageReference Include="Windows.Devices.Midi2" Version="0.99.21-preview.1" />
