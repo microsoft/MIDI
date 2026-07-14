@@ -521,7 +521,7 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
                 WriteBlankLine();
             }
 
-            if (! midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing || !valuesToDeleteWOW.empty())
+            if (midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing || !valuesToDeleteWOW.empty())
             {
                 WriteImportant("Making required changes for 32 bit apps");
                 FixRegistryValues(drivers32WOWHklmKey, valuesToDeleteWOW, midiWOWValueNeedsReplacing, midi1WOWValueNeedsReplacing);

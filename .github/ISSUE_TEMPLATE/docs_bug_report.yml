@@ -14,6 +14,17 @@ body:
   attributes:
     value: Thank you for filing a bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug.
 
+- type: checkboxes
+  id: steps-completed
+  attributes:
+    label: Report pre-requisites
+    description: These steps must be completed before filing a bug report
+    options:
+    - label: I have searched this repo for existing issues to confirm this is not a duplicate
+      required: true
+    - label: I agree to follow this project's Code of Conduct
+      required: true
+      
 - type: input
   id: page-url
   attributes:
