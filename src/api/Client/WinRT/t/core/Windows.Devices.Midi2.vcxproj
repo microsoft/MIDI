@@ -513,9 +513,6 @@
     <ClInclude Include="MidiVirtualDeviceManager.h">
       <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUniversalSystemExclusive7MessageBuilder.h">
-      <DependentUpon>MidiUniversalSystemExclusive7MessageBuilder.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClInclude>
@@ -781,9 +778,6 @@
     <ClCompile Include="MidiVirtualDeviceManager.cpp">
       <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUniversalSystemExclusive7MessageBuilder.cpp">
-      <DependentUpon>MidiUniversalSystemExclusive7MessageBuilder.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiMessageBuilder.cpp">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClCompile>
@@ -902,7 +896,6 @@
     <Midl Include="MidiVirtualDevice.idl" />
     <Midl Include="MidiVirtualDeviceCreationConfig.idl" />
     <Midl Include="MidiVirtualDeviceManager.idl" />
-    <Midl Include="MidiUniversalSystemExclusive7MessageBuilder.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />

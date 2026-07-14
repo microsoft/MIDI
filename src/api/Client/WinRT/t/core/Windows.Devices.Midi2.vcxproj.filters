@@ -347,9 +347,6 @@
     <Midl Include="MidiSystemExclusive8StatusEnum.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
-    <Midl Include="MidiUniversalSystemExclusive7MessageBuilder.idl">
-      <Filter>SDK\Utilities\Messages</Filter>
-    </Midl>
     <Midl Include="MidiUniqueId.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>

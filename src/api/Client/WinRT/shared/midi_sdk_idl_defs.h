@@ -194,7 +194,7 @@
 #define UUID_IMidiMessageHelperStatics						                8087b303-0519-c0de-31d1-ee00E0103000
 #define UUID_IMidiStreamMessageBuilderStatics				                8087b303-0519-c0de-31d1-ee00E0104000
 #define UUID_IMidiSystemExclusive7MessageHelperStatics                      8087b303-0519-c0de-31d1-dd00E0105000
-#define UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics            8087b303-0519-c0de-31d1-dd00E0106000
+//#define UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics            8087b303-0519-c0de-31d1-dd00E0106000
 
 
 
