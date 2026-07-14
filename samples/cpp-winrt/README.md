@@ -13,13 +13,15 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 
 | Sample | Description |
 | -------| ----------- |
-| [Full Init](full-init/) | Shows complete end-to-end of detecting Windows MIDI Services, downloading missing bits, and initializing the SDK. |
-| [App SDK Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages|
-| [Enumerate Endpoints](static-enum-endpoints/) | Demonstrates enumerating endpoints, getting group terminal and function blocks, and other properties|
-| [Loopback Endpoints](loopback-endpoints/) | Demonstrates how to create simple loopback endpoints at runtime.|
-| [Simple app-to-app MIDI](simple-app-to-app-midi/) | Demonstrates how to create an application endpoint, and update properties like function blocks. The C# sample is more of a real-world use-case.|
-| [Static Enum Endpoints](static-enum-endpoints/) | Demonstrates how to get a one-time static list of active endpoints.|
-| [Watch Endpoints](watch-endpoints/) | Demonstrates handling device add/remove notifications, as well as device property changes. Most applications will want to use the watcher so they can properly react to device plug/unplug, as well as things like Function Block updates.|
+| [App SDK Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages |
+| [COM Extensions](com-extensions/) | Shows how to use the COM extensions for super fast allocation-free MIDI Message send/receive |
+| [Enumerate Endpoints](static-enum-endpoints/) | Demonstrates enumerating endpoints, getting group terminal and function blocks, and other properties |
+| [Loopback Endpoints](loopback-endpoints/) | Demonstrates how to create MIDI 2.0 bidirectional loopback endpoints at runtime |
+| [Loopback Basic Endpoints](loopback-endpoints/) | Demonstrates how to create MIDI 1.0-style loopback endpoints at runtime |
+| [Simple app-to-app MIDI](simple-app-to-app-midi/) | Demonstrates how to create an application endpoint, and update properties like function blocks. The C# sample is more of a real-world use-case |
+| [Static Enum Endpoints](static-enum-endpoints/) | Demonstrates how to get a one-time static list of active endpoints |
+| [Watch Endpoints](watch-endpoints/) | Demonstrates handling device add/remove notifications, as well as device property changes. Most applications will want to use the watcher so they can properly react to device plug/unplug, as well as things like Function Block updates |
+| [Watch MIDI 1 Ports](watch-midi1-ports/) | Watch ports that are available to older MIDI 1 APIs |
 
 We recommend you load the entire solution in Visual Studio, as that is how the NuGet package configuration is set up. Change the sample you run by setting that project as startup.
 

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Windows.Devices.Midi2</id>
-		<version>0.99.29-devpreview.1</version>
+		<version>0.99.30-devpreview.1</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services App SDK. Temporary package to use until the metadata is in an official Windows SDK</description>
 		<license type="expression">MIT</license>
