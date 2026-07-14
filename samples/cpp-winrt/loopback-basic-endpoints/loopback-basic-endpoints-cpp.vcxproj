@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="..\packages\Windows.Devices.Midi2.0.99.30-devpreview.1\build\native\Windows.Devices.Midi2.props" Condition="Exists('..\packages\Windows.Devices.Midi2.0.99.30-devpreview.1\build\native\Windows.Devices.Midi2.props')" />
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.23-rc.5.17</WindowsMidiServicesSdkPackage>
     <CppWinRTOptimized>true</CppWinRTOptimized>
@@ -15,7 +16,6 @@
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.props" Condition="Exists('..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM64">
       <Configuration>Debug</Configuration>
@@ -44,7 +44,7 @@
   </ItemGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '15.0'">v141</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '14.0'">v140</PlatformToolset>
@@ -154,16 +154,16 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" />
-    <Import Project="..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.targets" Condition="Exists('..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\packages\Windows.Devices.Midi2.0.99.30-devpreview.1\build\native\Windows.Devices.Midi2.targets" Condition="Exists('..\packages\Windows.Devices.Midi2.0.99.30-devpreview.1\build\native\Windows.Devices.Midi2.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets'))" />
-    <Error Condition="!Exists('..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.props'))" />
-    <Error Condition="!Exists('..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\packages\Windows.Devices.Midi2.0.99.30-devpreview.1\build\native\Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Windows.Devices.Midi2.0.99.30-devpreview.1\build\native\Windows.Devices.Midi2.props'))" />
+    <Error Condition="!Exists('..\packages\Windows.Devices.Midi2.0.99.30-devpreview.1\build\native\Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Windows.Devices.Midi2.0.99.30-devpreview.1\build\native\Windows.Devices.Midi2.targets'))" />
   </Target>
 </Project>

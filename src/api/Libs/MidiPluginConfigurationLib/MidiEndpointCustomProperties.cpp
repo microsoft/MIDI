@@ -32,6 +32,9 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 
+#include <Feature_Servicing_MIDI2CustomOutgoingLatency.h>
+#include <Feature_Servicing_MIDI2RecommendedCCIntervalProp.h>
+
 namespace WindowsMidiServicesPluginConfigurationLib
 {
 
@@ -48,6 +51,7 @@ namespace WindowsMidiServicesPluginConfigurationLib
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_REQUIRES_NOTE_OFF_TRANSLATION_PROPERTY_KEY  L"requiresNoteOffTranslation"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SUPPORTS_MPE_PROPERTY_KEY                   L"supportsMidiPolyphonicExpression"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_RECOMMENDED_CC_INTERVAL_MS_PROPERTY_KEY     L"recommendedControlChangeIntervalMilliseconds"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY         L"outgoingLatencyTicks"
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_PORTS_PROPERTY_KEY                           L"midi1Ports"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_PROPERTY_KEY                       L"namingApproach"
@@ -128,6 +132,27 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
         else
         {
             props->RecommendedControlChangeIntervalMilliseconds = 0;
+        }
+
+        if (Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled())
+        {
+            // custom latency
+            auto latencyval = customPropertiesObject.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY, 0);
+            if (latencyval > 0 && latencyval <= std::numeric_limits<uint64_t>::max())
+            {
+                // Like all clock fields, the field is 64 bit in case our ticks get faster than 100ns some day. But we clamp this 
+                // to 32 bit for now which itself gives you > 400 seconds of latency at 100ns ticks. Could clamp this even lower.
+                if (latencyval > std::numeric_limits<uint32_t>::max())
+                {
+                    latencyval = std::numeric_limits<uint32_t>::max();
+                }
+
+                props->OutgoingLatencyTicks = static_cast<uint64_t>(latencyval);
+            }
+            else
+            {
+                props->OutgoingLatencyTicks = 0;
+            }
         }
 
 
@@ -268,6 +293,18 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
             json::JsonValue::CreateNumberValue(RecommendedControlChangeIntervalMilliseconds));
 
 
+
+        if (Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled())
+        {
+            customPropertiesObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY,
+                json::JsonValue::CreateNumberValue(static_cast<double>(OutgoingLatencyTicks)));
+        }
+
+
+
+
+
         // naming approach for ports
 
         winrt::hstring namingApproach{};
@@ -359,6 +396,8 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
 
 
 // write only the properties which aren't in the Common Properties structure at endpoint creation time
+// The expectation is that the config contains the entire set of properties the user cares about.
+// If it's missing, we write default values
 _Use_decl_annotations_
 bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEVPROPERTY>& destination)
 {
@@ -402,16 +441,36 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
     }
 
     // cc automation interval
-    if (RecommendedControlChangeIntervalMilliseconds != 0)
+    if (Feature_Servicing_MIDI2RecommendedCCIntervalProp::IsEnabled())
     {
+        // write this value no matter what.
         destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
     }
     else
     {
-        destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
+        if (RecommendedControlChangeIntervalMilliseconds != 0)
+        {
+            destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
+        }
+        else
+        {
+            destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
+        }
+
     }
+
+
+    if (Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled())
+    {
+        // custom latency
+        destination.push_back({ {PKEY_MIDI_MidiOutCustomLatencyTicks, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_UINT64, sizeof(uint64_t), (PVOID)&OutgoingLatencyTicks });
+    }
+
+
 
     // naming approach
     destination.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },

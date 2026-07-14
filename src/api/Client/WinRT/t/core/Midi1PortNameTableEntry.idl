@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "Midi1PortFlowEnum.idl";
+import "MidiGroup.idl";
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+    // this needs to be kept in sync with Midi1PortNameEntry in service
+
+    [contract(MidiEnumerationApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidi1PortNameTableEntry", UUID_IMidi1PortNameTableEntry)]
+    runtimeclass Midi1PortNameTableEntry
+    {
+        Windows.Devices.Midi2.MidiGroup Group { get; };
+        Midi1PortFlow Flow{ get; };
+
+        String CustomName{ get; };              // user-supplied name. Blank if not provided.
+        String LegacyCompatibleName{ get; };    // WinMM MIDI 1.0 compatible port name
+        String NewStyleName{ get; };            // New-style port name
+    };
+}

@@ -1026,6 +1026,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MIDI Monitor.
+        /// </summary>
+        internal static string MonitorConsoleTitleSuffix {
+            get {
+                return ResourceManager.GetString("MonitorConsoleTitleSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Timestamp.
         /// </summary>
         internal static string MonitorEndpointResultTableColumnHeaderTimestamp {

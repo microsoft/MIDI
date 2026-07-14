@@ -670,6 +670,8 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiLastRemoteHostName, 920);     // DEVP
 #define STRING_PKEY_MIDI_NetworkMidiLastRemotePort MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"921"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiLastRemotePort, 921);        // DEVPROP_TYPE_STRING
 
+#define STRING_PKEY_MIDI_DriverName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"922"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DriverName, 922);        // DEVPROP_TYPE_STRING
 
 // MIDI 1.0 Port Naming Properties  ==========================================================
 // Starts at 950

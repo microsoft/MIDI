@@ -1,0 +1,68 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiLegacyPortDeviceInformation.idl";
+
+import "MidiLegacyPortDeviceInformationAddedEventArgs.idl";
+import "MidiLegacyPortDeviceInformationUpdatedEventArgs.idl";
+import "MidiLegacyPortDeviceInformationRemovedEventArgs.idl";
+
+import "Midi1PortFlowEnum.idl";
+
+namespace Windows.Devices.Midi2.Enumeration.Legacy
+{
+    [contract(MidiEnumerationLegacyApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceWatcher", UUID_IMidiLegacyPortDeviceWatcher)]
+    [static_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceWatcherStatics", UUID_IMidiLegacyPortDeviceWatcherStatics)]
+    runtimeclass MidiLegacyPortDeviceWatcher
+    {
+        static MidiLegacyPortDeviceWatcher Create();
+        static MidiLegacyPortDeviceWatcher CreateForFlow(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        void Start();
+        void Stop();
+
+        // Cached list of ports
+        Windows.Foundation.Collections.IMapView<String, MidiLegacyPortDeviceInformation> EnumeratedPorts{ get; };
+
+        Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
+
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, MidiLegacyPortDeviceInformationAddedEventArgs> Added;
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, MidiLegacyPortDeviceInformationUpdatedEventArgs> Updated;
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, MidiLegacyPortDeviceInformationRemovedEventArgs> Removed;
+
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, IInspectable> EnumerationCompleted;
+        event Windows.Foundation.TypedEventHandler<MidiLegacyPortDeviceWatcher, IInspectable> Stopped;
+
+        // these all operate on the collection of enumerated ports and are a snapshot in time.They do not re-query
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForFlow(Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        MidiLegacyPortDeviceInformation GetEnumeratedPortForNumber(UInt32 portNumber, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(String parentDeviceInstanceId);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForParent(String parentDeviceInstanceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpoint(String endpointDeviceId);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpoint(String endpointDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(String portName);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(String portName, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForDriverDeviceInterfaceId(String driverDeviceInterfaceId);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForDriverDeviceInterfaceId(String driverDeviceInterfaceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        UInt32 CountSourcePorts { get;};
+        UInt32 CountDestinationPorts { get;};
+
+    }
+}

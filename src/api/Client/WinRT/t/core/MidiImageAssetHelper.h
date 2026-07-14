@@ -1,0 +1,44 @@
+//// Copyright (c) Microsoft Corporation and Contributors.
+//// Licensed under the MIT License
+//// ============================================================================
+//// This is part of the Windows MIDI Services App SDK and should be used
+//// in your Windows application via an official binary distribution.
+//// Further information: https://aka.ms/midi
+//// ============================================================================
+//
+//#pragma once
+//#include "Utilities.Metadata.MidiImageAssetHelper.g.h"
+//
+//namespace winrt::Windows::Devices::Midi2::Utilities::Metadata::implementation
+//{
+//    struct MidiImageAssetHelper
+//    {
+//        MidiImageAssetHelper() = default;
+//
+//        static winrt::hstring GetImageFullPathForTransport(
+//            _In_ midi2::Reporting::MidiServiceTransportPluginInfo const& transportPluginInfo) noexcept;
+//
+//        static winrt::hstring GetDefaultImageFullPathForTransport(
+//            _In_ midi2::Reporting::MidiServiceTransportPluginInfo const& transportPluginInfo) noexcept;
+//
+//        static winrt::hstring GetImageFullPathForEndpoint(
+//            _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
+//
+//        static winrt::hstring GetDefaultImageFullPathForEndpoint(
+//            _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
+//
+//
+//        static bool EndpointHasValidCustomImageAsset(
+//            _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
+//
+//        static winrt::hstring GetFullCustomImageAssetPathForEndpointImage(
+//            _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
+//
+//    };
+//}
+//namespace winrt::Windows::Devices::Midi2::Utilities::Metadata::factory_implementation
+//{
+//    struct MidiImageAssetHelper : MidiImageAssetHelperT<MidiImageAssetHelper, implementation::MidiImageAssetHelper>
+//    {
+//    };
+//}

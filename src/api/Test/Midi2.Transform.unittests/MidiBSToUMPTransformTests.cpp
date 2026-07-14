@@ -94,6 +94,7 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
     }
     std::cout << std::endl;
 
+    // MessageOptionFlags_None means no running status
     VERIFY_SUCCEEDED(transform->SendMidiMessage(MessageOptionFlags_None, (void*)bytes, byteCount, 0));
 
     // wait
@@ -221,20 +222,140 @@ void MidiBSToUMPTransformTests::TestTimingClock()
     InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
 }
 
-//void MidiBSToUMPTransformTests::TestTimingClockPadded()
-//{
-//    uint8_t groupIndex{ 0 };
-//
-//    uint8_t bytes[] =
-//    {
-//        //0x00, 0x00, 0x00, 0x00, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-//        0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-//    };
-//
-//    std::vector<uint32_t> expectedWords{ 0x10F80000 };
-//
-//    InternalTestBytes(groupIndex, bytes, _countof(bytes), 1, expectedWords);
-//}
+void MidiBSToUMPTransformTests::TestTimingClockPadded()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        // 12 bytes total. This reflects what happens with inMusic drivers
+        0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    std::vector<uint32_t> expectedWords{ 0x10F80000 };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+}
+
+// if this fails, then it means running status is enabled.
+void MidiBSToUMPTransformTests::TestCCPadded()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        // 12 bytes total. This reflects what happens with inMusic drivers
+        0xb0, 0x10, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    std::vector<uint32_t> expectedWords{ 0x20b01007 };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+}
+
+void MidiBSToUMPTransformTests::TestIssueGithub1040CorruptedIncomingSysExIdeal()
+{
+
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        // F0 00 02 17 0F 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 09 09 09 09 09 09 09 09 09 09 09 09 09 09 09 09 F7
+
+        0xF0, 0x00, 0x02, 0x17, 0x0F, 0x02, 
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 
+        0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 
+        0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+        0x09, 0x09, 0x09, 0xF7
+    };
+
+    std::vector<uint32_t> expectedWords
+    {  
+        0x30160002, 0x170F0202,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000000,
+        0x30260000, 0x00000909,
+        0x30260909, 0x09090909,
+        0x30260909, 0x09090909,
+        0x30320909, 0x00000000
+    };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+
+}
+
+
+void MidiBSToUMPTransformTests::TestBasicMalformedSysex()
+{
+    // SysEx 7 UMP status: 0x0 - complete message in one UMP. 0x1: start, 0x2: continue, 0x3: end
+
+
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        0xF0, 0x01, 0x02, 0x03, 0x04, 0x05,                     // Scenario 1: 5 data bytes no f7
+        0xF0, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,   // Scenario 2: 8 data bytes no f7
+        0xF0, 0x21, 0x22, 0x23, 0x24, 0x25, 0xF7, 0xF7,         // Scenario 3: 3 data bytes, two f7, expectation is extra F7 is ignored
+        0xF0, 0xF0, 0x31, 0x32, 0x33, 0x34, 0xF7,               // Scenario 4: 4 data bytes, two f0, expectation is extra F0 is ignored.
+    };
+
+    std::vector<uint32_t> expectedWords
+    {
+        //0x30050102, 0x03040500,                           // Scenario 1: Ideal is SysEx Complete with 5 data bytes, but that can be argued as invalid
+        0x30150102, 0x03040500,                             // Scenario 1: Acceptable is SysEx Start. This is what we actually get
+
+        0x30161112, 0x13141516, 0x30221718, 0x00000000,     // Scenario 2: SysEx Start + Continue with 8 data bytes, no F7, so no SysEx End
+
+        0x30052122, 0x23242500,                             // Scenario 3: SysEx Complete in one message with 5 data bytes
+                                                            // Scenario 3: THIS FAILS: Extra F7 causes data corruption currently. Should just be ignored, but 
+                                                            //             produces a 30350000 SysEx End using same (uncleared) data byte count as previous message
+                                                            //             Needs fix from Andrew: https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/36
+
+        0x30043132, 0x33340000,                             // Scenario 4:  SysEx Complete in one message with 4 data bytes
+    };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+
+}
+
+
+
+
 
 bool MidiBSToUMPTransformTests::ClassSetup()
 {

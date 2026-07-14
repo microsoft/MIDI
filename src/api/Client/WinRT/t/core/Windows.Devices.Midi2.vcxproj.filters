@@ -1,0 +1,435 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiEndpointConnection_ComExtensions.cpp">
+      <Filter>SDK\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="midi_function_block_prop_util.cpp" />
+    <ClCompile Include="MidiApi.cpp">
+      <Filter>SDK\Init</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="midi_stream_message_defs.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="MidiApi.h">
+      <Filter>SDK\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_api_mode_defs.h">
+      <Filter>SDK\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="winrt_devpkey_util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiApiContracts.idl">
+      <Filter>Contracts</Filter>
+    </Midl>
+    <Midl Include="MidiChannel.idl">
+      <Filter>SDK\Common</Filter>
+    </Midl>
+    <Midl Include="MidiClock.idl">
+      <Filter>SDK\Common</Filter>
+    </Midl>
+    <Midl Include="MidiGroup.idl">
+      <Filter>SDK\Common</Filter>
+    </Midl>
+    <Midl Include="MidiUniversalSystemExclusiveChannel.idl">
+      <Filter>SDK\Common</Filter>
+    </Midl>
+    <Midl Include="MidiSystemTimerSettings.idl">
+      <Filter>SDK\Common</Filter>
+    </Midl>
+    <Midl Include="MidiSession.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointConnectionSource.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="IMidiMessageReceivedEventSource.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointConnection.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="MidiMessageReceivedEventArgs.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="MidiSendMessageResultsEnum.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointConnectionSettings.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="IMidiUniversalPacket.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessage32.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessage64.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessage96.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessage128.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessageStruct.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTypeEnum.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiPacketTypeEnum.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiApi.idl">
+      <Filter>SDK\Init</Filter>
+    </Midl>
+    <Midl Include="MidiApiModeEnum.idl">
+      <Filter>SDK\Init</Filter>
+    </Midl>
+    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="Midi1PortFlowEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNameTableEntry.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNamingApproachEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackCreationConfig.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackCreationResponse.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEndpointDefinition.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackEntry.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackErrorCodeEnum.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackManager.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackRemovalConfig.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackRemovalResponse.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackUpdateResponse.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
+    <Midl Include="MidiChannelEndpointListener.idl">
+      <Filter>SDK\ClientPlugins</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredDeviceIdentity.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredEndpointInfo.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="IMidiServiceTransportPluginConfig.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredStreamConfiguration.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiDiagnostics.idl">
+      <Filter>SDK\Diagnostics</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceIdHelper.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformation.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePropertyHelper.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceWatcher.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointTransportSuppliedInfo.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointUserSuppliedInfo.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlock.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiGroupEndpointListener.idl">
+      <Filter>SDK\ClientPlugins</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTypeEndpointListener.idl">
+      <Filter>SDK\ClientPlugins</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackCreationConfig.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackCreationResponse.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointDefinition.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointEntry.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEntry.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackManager.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackRemovalConfig.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackRemovalResponse.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackUpdateResponse.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceInformation.idl">
+      <Filter>SDK\Enumeration\Legacy</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceInformationAddedEventArgs.idl">
+      <Filter>SDK\Enumeration\Legacy</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceInformationRemovedEventArgs.idl">
+      <Filter>SDK\Enumeration\Legacy</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceInformationUpdatedEventArgs.idl">
+      <Filter>SDK\Enumeration\Legacy</Filter>
+    </Midl>
+    <Midl Include="MidiLegacyPortDeviceWatcher.idl">
+      <Filter>SDK\Enumeration\Legacy</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlock.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBuilder.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessageConverter.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessageHelper.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiParentDeviceInformation.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiProtocolEnum.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiReporting.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigEndpointMatchCriteria.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigResponse.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigResponseStatusEnum.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceEndpointCustomizationConfig.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponse.idl">
+      <Filter>SDK\Diagnostics</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponseSummary.idl">
+      <Filter>SDK\Diagnostics</Filter>
+    </Midl>
+    <Midl Include="MidiServiceSessionConnectionInfo.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceSessionInfo.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportCommand.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportCommonCommands.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportPluginConfigManager.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportPluginInfo.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl">
+      <Filter>SDK\Transports\Virtual</Filter>
+    </Midl>
+    <Midl Include="MidiStreamMessageBuilder.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiSystemExclusive7MessageHelper.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiSystemExclusive8StatusEnum.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUniqueId.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDevice.idl">
+      <Filter>SDK\Transports\Virtual</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDeviceCreationConfig.idl">
+      <Filter>SDK\Transports\Virtual</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDeviceManager.idl">
+      <Filter>SDK\Transports\Virtual</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-winrt-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Contracts">
+      <UniqueIdentifier>{7efaa032-8652-43d2-92b1-2560daa13cd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{3777e50a-7535-4b4a-ac5b-ccc15a6a9c70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Common">
+      <UniqueIdentifier>{9f2bc877-37b4-4351-ba08-6c81554a73d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Messages">
+      <UniqueIdentifier>{8e60c7e3-0fb8-4ebf-9eca-780318fddde1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Session">
+      <UniqueIdentifier>{9d2c97f3-0764-401e-8e8d-2578562e6962}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{d55cebca-71a4-4cd8-8d02-02b45119248b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Init">
+      <UniqueIdentifier>{db47925e-c34c-4f67-adc5-fc7746041a0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Utilities">
+      <UniqueIdentifier>{2cc155ff-5537-4eee-876a-3815071095e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Utilities\Messages">
+      <UniqueIdentifier>{f54d7cb1-e50c-4a96-be32-142d3397eda2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports">
+      <UniqueIdentifier>{821d1fe7-733c-4a8c-9997-1df80c2bbec5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Loopback">
+      <UniqueIdentifier>{5852dc29-79cf-436f-8c8d-69348c2a0a0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\BasicLoopback">
+      <UniqueIdentifier>{d26ffba1-1a00-4bc1-bc8b-a347d59d5307}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Virtual">
+      <UniqueIdentifier>{bf0e8c61-565e-4884-8124-385585130932}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Enumeration">
+      <UniqueIdentifier>{14f96542-90ad-48d4-a223-efb64e1cd819}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Enumeration\Legacy">
+      <UniqueIdentifier>{702631ed-b95b-4628-a587-a5df5f63be00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\ClientPlugins">
+      <UniqueIdentifier>{b6d3bb36-bbe2-43cf-838a-dbbbb1a91403}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\ServiceConfig">
+      <UniqueIdentifier>{d08bd679-8114-4d58-8225-23cc42f4914a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Diagnostics">
+      <UniqueIdentifier>{0c19d590-2743-4619-b04b-d5c2efbaa3d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Reporting">
+      <UniqueIdentifier>{ab52021a-e9ae-41da-b81e-77a5f8ec7394}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\CapabilityInquiry">
+      <UniqueIdentifier>{60734a8e-cbfd-48f1-a39b-9ce2819282f2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

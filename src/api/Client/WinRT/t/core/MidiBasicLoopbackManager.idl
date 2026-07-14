@@ -1,0 +1,49 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiBasicLoopbackCreationResponse.idl";
+import "MidiBasicLoopbackRemovalResponse.idl";
+import "MidiBasicLoopbackUpdateResponse.idl";
+
+import "MidiBasicLoopbackCreationConfig.idl";
+import "MidiBasicLoopbackRemovalConfig.idl";
+
+import "MidiEndpointDeviceInformation.idl";
+
+namespace Windows.Devices.Midi2.Transports.BasicLoopback
+{
+    [contract(MidiTransportsBasicLoopbackApiContract, 1)]
+    [static_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackManagerStatics", UUID_IMidiBasicLoopbackManagerStatics)]
+    static runtimeclass MidiBasicLoopbackManager
+    {
+        static Boolean IsTransportAvailable{ get; };
+
+        static Guid TransportId{ get; };
+
+        static MidiBasicLoopbackCreationResponse CreateTransientLoopback(
+            MidiBasicLoopbackCreationConfig creationConfig);
+
+        static MidiBasicLoopbackRemovalResponse RemoveTransientLoopback(
+            MidiBasicLoopbackRemovalConfig removalConfig);
+
+        static Guid GetAssociationId(
+            Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation basicLoopbackEndpoint);
+
+        static Boolean DoesLoopbackExist(String uniqueIdentifier);
+
+        static MidiBasicLoopbackUpdateResponse MuteLoopback(Guid associationId);
+        static MidiBasicLoopbackUpdateResponse UnmuteLoopback(Guid associationId);
+
+        static IVector<MidiBasicLoopbackEntry> GetActiveLoopbackEntries();
+
+    }
+}

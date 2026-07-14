@@ -20,32 +20,19 @@ class MidiBasicLoopbackDevice
 public:
     std::shared_ptr<MidiBasicLoopbackDeviceDefinition> Definition;
 
-//    bool IsFromConfigurationFile{ true };
 
-    void Shutdown()
+    HRESULT Initialize(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
-        if (m_callback != nullptr)
-        {
-            m_callback = nullptr;
-        }
+        RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
-        Definition.reset();
-
-    }
-
-
-
-
-
-    void RegisterEndpoint(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
-    {
-        //m_bidiA = endpoint;
         m_callback = callback;
+
+        return S_OK;
     }
 
     HRESULT SendMessage(_In_ MessageOptionFlags optionFlags, _In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
-        if (Definition->IsMuted) return S_OK;
+        if (!Definition || Definition->IsMuted) return S_OK;
 
         if (m_callback != nullptr)
         {
@@ -55,12 +42,16 @@ public:
         return S_OK;
     }
 
+    HRESULT Shutdown()
+    {
+        m_callback = nullptr;
+        Definition.reset();
+
+        return S_OK;
+    }
 
     ~MidiBasicLoopbackDevice()
     {
-        //m_bidiA = nullptr;
-        //m_bidiB = nullptr;
-
         Shutdown();
     }
 

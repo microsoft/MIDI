@@ -1213,4 +1213,7 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   <data name="ParameterBridgeEndpointsEndpointIdB" xml:space="preserve">
     <value>Endpoint Identifier of the second endpoint in the bridge</value>
   </data>
+  <data name="MonitorConsoleTitleSuffix" xml:space="preserve">
+    <value>MIDI Monitor</value>
+  </data>
 </root>

@@ -16,9 +16,10 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using WinUIEx;
 
-using Microsoft.Windows.Devices.Midi2;
-using Microsoft.Windows.Devices.Midi2.Messages;
-using Microsoft.Windows.Devices.Midi2.Endpoints.Virtual;
+using Windows.Devices.Midi2;
+using Windows.Devices.Midi2.Enumeration;
+using Windows.Devices.Midi2.Utilities.Messages;
+using Windows.Devices.Midi2.Transports.Virtual;
 //using Microsoft.Windows.Devices.Midi2.Initialization;
 using Windows.UI.Popups;
 
@@ -31,8 +32,6 @@ namespace MidiSample.AppToAppMidi
         private MidiSession _session;
         private MidiEndpointConnection _connection;
         private MidiVirtualDevice _virtualDevice;
-
-        private Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer _initializer;
 
         public List<Note> Notes { get; }
 
@@ -47,43 +46,29 @@ namespace MidiSample.AppToAppMidi
             this.SetWindowSize(500, 600);
             this.Closed += MainWindow_Closed;
 
-            // the initializer implements the Dispose pattern, so will shut down WinRT type redirection when disposed
-            _initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create();
-
-            // initialize SDK runtime
-            if (_initializer.InitializeSdkRuntime())
+            if (MidiApi.EnsureServiceAvailable())
             {
-                // start the service
-                if (_initializer.EnsureServiceAvailable())
+                if (StartVirtualDevice())
                 {
-                    if (StartVirtualDevice())
-                    {
-                        var notes = new byte[] { 50, 52, 53, 55, 57, 58, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76 };
-                        Notes = notes.Select(n => new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
+                    var notes = new byte[] { 50, 52, 53, 55, 57, 58, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76 };
+                    Notes = notes.Select(n => new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
 
-                        this.SetIsAlwaysOnTop(true);
+                    this.SetIsAlwaysOnTop(true);
 
-                        UpdateName.IsEnabled = true;
-                        EndpointNameEntry.IsEnabled = true;
-                        PadContainer.Visibility = Visibility.Visible;
-                    }
-                    else
-                    {
-                        this.AppWindow.Title = "(failed to start virtual device)";
-                    }
+                    UpdateName.IsEnabled = true;
+                    EndpointNameEntry.IsEnabled = true;
+                    PadContainer.Visibility = Visibility.Visible;
                 }
                 else
                 {
-                    this.AppWindow.Title = "(failed to get service running)";
-                    Console.WriteLine("!Failed to get service running");
+                    this.AppWindow.Title = "(failed to start virtual device)";
                 }
             }
             else
             {
-                this.AppWindow.Title = "(failed to get initialize SDK runtime)";
-                Console.WriteLine("!Failed to initialize SDK Runtime");
+                this.AppWindow.Title = "(failed to get service running)";
+                Console.WriteLine("!Failed to get service running");
             }
-
         }
 
         private void MainWindow_Closed(object sender, WindowEventArgs args)
@@ -95,11 +80,6 @@ namespace MidiSample.AppToAppMidi
                 _session.DisconnectEndpointConnection(_connection.ConnectionId);
             }
             _session.Dispose();
-
-            if (_initializer != null)
-            {
-                _initializer.Dispose();
-            }
         }
 
         private bool StartVirtualDevice()
@@ -230,17 +210,10 @@ namespace MidiSample.AppToAppMidi
             // todo: set any device identity values if you want. This is optional
             // The SysEx id, if used, needs to be a valid one
             var declaredDeviceIdentity = new MidiDeclaredDeviceIdentity();
-            declaredDeviceIdentity.DeviceFamilyMsb = 0x01;
-            declaredDeviceIdentity.DeviceFamilyLsb = 0x02;
-            declaredDeviceIdentity.DeviceFamilyModelNumberMsb = 0x03;
-            declaredDeviceIdentity.DeviceFamilyModelNumberLsb = 0x04;
-            declaredDeviceIdentity.SoftwareRevisionLevelByte1 = 0x05;
-            declaredDeviceIdentity.SoftwareRevisionLevelByte2 = 0x06;
-            declaredDeviceIdentity.SoftwareRevisionLevelByte3 = 0x07;
-            declaredDeviceIdentity.SoftwareRevisionLevelByte4 = 0x08;
-            declaredDeviceIdentity.SystemExclusiveIdByte1 = 0x09;
-            declaredDeviceIdentity.SystemExclusiveIdByte2 = 0x0A;
-            declaredDeviceIdentity.SystemExclusiveIdByte3 = 0x0B;
+            declaredDeviceIdentity.SetDeviceFamily(0x02, 0x01);
+            declaredDeviceIdentity.SetDeviceFamilyModelNumber(0x04, 0x03);
+            declaredDeviceIdentity.SetSoftwareRevisionLevel(0x05, 0x06, 0x07, 0x08);
+            declaredDeviceIdentity.SetSystemExclusiveId(0x09, 0x0A, 0x0B);
 
 
             var userSuppliedInfo = new MidiEndpointUserSuppliedInfo();

@@ -1,0 +1,50 @@
+{
+  "header":
+  {
+    "_comment": "NOTE: All json keys are case-sensitive, including GUIDs.",
+    "configName": "Default",
+    "product": "Windows MIDI Services",
+    "fileVersion": 1
+  },
+  "endpointTransportPluginSettings":
+  {
+    "{942BF02D-93C0-4EA8-B03E-D51156CA75E1}":
+    {
+      "create":
+      {
+        "{DF88CA43-94B3-4795-AAAE-7CC8396B9A06}":
+        {
+          "endpointA":
+          {
+            "name": "Default App Loopback (A)",
+            "description": "Default MIDI 2.0 loopback endpoint for use by applications. This is the A-side of the loopback pair.",
+            "uniqueIdentifier": "DEFAULT"
+          },
+          "endpointB":
+          {
+            "name": "Default App Loopback (B)",
+            "description": "Default MIDI 2.0 loopback endpoint for use by applications. This is the B-side of the loopback pair.",
+            "uniqueIdentifier": "DEFAULT"
+          },
+          "muted": false
+        }
+      }
+    },
+    "{10088473-9478-4E62-850B-3D2315E135B8}":
+    {
+      "create":
+      {
+        "{8BEBE745-291B-4860-A82A-C9726E402E49}":
+        {
+          "endpoint":
+          {
+            "name": "Default Basic App Loopback",
+            "description": "Default MIDI 1.0 loopback endpoint for use by applications.",
+            "uniqueIdentifier": "BASIC_DEF",
+            "muted": false
+          }
+        }
+      }
+    }
+  }
+}

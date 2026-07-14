@@ -19,16 +19,13 @@
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\Inc\MidiEndpointCustomProperties.h">
+    <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Inc\MidiEndpointMatchCriteria.h">
+    <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomPropertiesCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Inc\MidiEndpointCustomPropertiesCache.h">
+    <ClInclude Include="$(SolutionDir)Inc\MidiEndpointMatchCriteria.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -42,5 +39,8 @@
     <ClCompile Include="MidiEndpointCustomPropertiesCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

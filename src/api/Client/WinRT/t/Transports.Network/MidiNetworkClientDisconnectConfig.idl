@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Endpoints.Network
+{
+    [experimental]
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientDisconnectConfig")]
+    runtimeclass MidiNetworkClientDisconnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkClientDisconnectConfig();
+
+        String Id;							// GUID or other string we use in the config file and for subsequent edits/deletes
+    }
+}
+

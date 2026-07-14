@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Diagnostics
+{
+    [contract(MidiDiagnosticsApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Diagnostics.IMidiServicePingResponse", UUID_IMidiServicePingResponse)]
+    runtimeclass MidiServicePingResponse
+    {
+        UInt32 SourceId { get; };
+        UInt32 Index { get; };
+
+        UInt64 ClientSendMidiTimestamp { get; };
+        UInt64 ServiceReportedMidiTimestamp { get; };
+        UInt64 ClientReceiveMidiTimestamp { get; };
+
+        UInt64 ClientDeltaTimestamp { get; };
+    };
+}

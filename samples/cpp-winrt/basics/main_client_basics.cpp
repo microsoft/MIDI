@@ -18,24 +18,16 @@
 // you need to use the versions packaged with the SDK, use the ones in /build/native/include/winmidi/winrt
 #include <winrt/Windows.Foundation.h>
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+#include <winrt/Windows.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 
-using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK Core
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;        // For message utilities and strong types
+using namespace winrt::Windows::Devices::Midi2;                  // SDK Core
+using namespace winrt::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
+using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;        // For message utilities and strong types
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
-
-// This include file has a wrapper for the bootstrapper code. You are welcome to
-// use the .hpp as-is, or work the functionality into your code in whatever way
-// makes the most sense for your application.
-// 
-// The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
-#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
-namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 int main()
 {
@@ -47,37 +39,19 @@ int main()
     // MTA by default
     winrt::init_apartment();
 
-    // this is the initializer in the bootstrapper hpp file
-    std::shared_ptr<init::MidiDesktopAppSdkInitializer> initializer = std::make_shared<init::MidiDesktopAppSdkInitializer>();
 
-    // you can, of course, use guard macros instead of this check
-    if (initializer != nullptr)
+    if (!MidiApi::EnsureServiceAvailable())
     {
-        if (!initializer->InitializeSdkRuntime())
-        {
-            std::cout << "Could not initialize SDK runtime" << std::endl;
-            std::wcout << "Install the latest SDK runtime installer from " << initializer->LatestMidiAppSdkDownloadUrl << std::endl;
-            return 1;
-        }
-
-        if (!initializer->EnsureServiceAvailable())
-        {
-            std::cout << "Could not demand-start the MIDI service" << std::endl;
-            return 1;
-        }
-    }
-    else
-    {
-        // This shouldn't happen, but good to guard
-        std::cout << "Unable to create initializer" << std::endl;
+        std::wcout << L"Could not demand-start the MIDI service" << std::endl;
         return 1;
     }
+
 
     // create the MIDI session, giving us access to Windows MIDI Services. An app may open 
     // more than one session. If so, the session name should be meaningful to the user, like
     // the name of a browser tab, or a project.
 
-    std::cout << std::endl << "Creating session..." << std::endl;
+    std::wcout << std::endl << L"Creating session..." << std::endl;
 
     MidiSession session = MidiSession::Create(L"Sample Session");
 
@@ -85,10 +59,10 @@ int main()
     winrt::hstring endpointBId = MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId();
 
     MidiEndpointConnection sendEndpoint = session.CreateEndpointConnection(endpointAId);
-    std::cout << "Connected to sending endpoint: " << winrt::to_string(endpointAId) << std::endl;
+    std::wcout << L"Connected to sending endpoint: " << endpointAId.c_str() << std::endl;
 
     MidiEndpointConnection receiveEndpoint = session.CreateEndpointConnection(endpointBId);
-    std::cout << "Connected to receiving endpoint: " << winrt::to_string(endpointBId) << std::endl;
+    std::wcout << L"Connected to receiving endpoint: " << endpointBId.c_str() << std::endl;
 
     // Wire up an event handler to receive the message. There is a single event handler type, but the
     // MidiMessageReceivedEventArgs class provides the different ways to access the data
@@ -114,14 +88,14 @@ int main()
                 messageSourceEndpointDeviceId = sourceConnection.ConnectedEndpointDeviceId();
             }
 
-            std::cout << std::endl;
-            std::cout << "Received UMP" << std::endl;
-            std::cout << "- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
-            std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
-            std::cout << "- UMP Msg Type:      0x" << std::hex << static_cast<uint32_t>(ump.MessageType()) << std::endl;
-            std::cout << "- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
-            std::cout << "- Message:           " << winrt::to_string(MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())) << std::endl;
-            std::cout << "- Source:            " << winrt::to_string(messageSourceEndpointDeviceId) << std::endl;
+            std::wcout << std::endl;
+            std::wcout << L"Received UMP" << std::endl;
+            std::wcout << L"- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
+            std::wcout << L"- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
+            std::wcout << L"- UMP Msg Type:      0x" << std::hex << static_cast<uint32_t>(ump.MessageType()) << std::endl;
+            std::wcout << L"- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
+            std::wcout << L"- Message:           " << MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord()).c_str() << std::endl;
+            std::wcout << L"- Source:            " << messageSourceEndpointDeviceId.c_str() << std::endl;
 
             // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 
@@ -131,17 +105,17 @@ int main()
                 // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
                 auto ump32 = ump.as<MidiMessage32>();
 
-                std::cout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
+                std::wcout << L"- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
             }
 
-            std::cout << std::endl;
+            std::wcout << std::endl;
 
         };
 
     // the returned token is used to deregister the event later.
     winrt::event_token eventRevokeToken = receiveEndpoint.MessageReceived(MessageReceivedHandler);
 
-    std::cout << std::endl << "Opening endpoint connection" << std::endl;
+    std::wcout << std::endl << L"Opening endpoint connection" << std::endl;
 
     // once you have wired up all your event handlers, added any filters/listeners, etc.
     // You can open the connection. Doing this will query the cache for the in-protocol 
@@ -149,7 +123,7 @@ int main()
     // which will come back asynchronously with responses.
     if (sendEndpoint.Open() && receiveEndpoint.Open())
     {
-        std::cout << std::endl << "Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
+        std::wcout << std::endl << L"Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
 
         MidiMessage32 ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
             MidiClock::TimestampConstantSendImmediately(),  // bypass message scheduling
@@ -161,18 +135,18 @@ int main()
 
         // here you would set other values in the UMP word(s)
 
-        std::cout << "Sending single UMP..." << std::endl;
+        std::wcout << L"Sending single UMP..." << std::endl;
 
         IMidiUniversalPacket ump = ump32.as<IMidiUniversalPacket>();
         MidiSendMessageResults sendResult = sendEndpoint.SendSingleMessagePacket(ump);          // could also use the SendWords methods, etc.
 
         if (MidiEndpointConnection::SendMessageSucceeded(sendResult))
         {
-            std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
+            std::wcout << std::endl << L" ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
         }
         else
         {
-            std::cout << std::endl << "Message sending failed." << std::endl;
+            std::wcout << std::endl << L"Message sending failed." << std::endl;
         }
 
         system("pause");
@@ -180,7 +154,7 @@ int main()
     }
     else
     {
-        std::cout << "Unable to open one or both endpoints" << std::endl;
+        std::wcout << L"Unable to open one or both endpoints" << std::endl;
     }
 
     // Cleanup code follows =============================================================================
@@ -188,13 +162,13 @@ int main()
     // winrt::event_token has a bool operator overload to tell you if it is valid
     if (eventRevokeToken)
     {
-        std::cout << std::endl << "Deregistering event handler..." << std::endl;
+        std::wcout << std::endl << L"Deregistering event handler..." << std::endl;
 
         // deregister the event by passing in the revoke token
         receiveEndpoint.MessageReceived(eventRevokeToken);
     }
 
-    std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
+    std::wcout << L"Disconnecting UMP Endpoint Connection..." << std::endl;
 
     // if you close the session, this automatically happens. But keeping here to show how to manually handle closing connections
     session.DisconnectEndpointConnection(sendEndpoint.ConnectionId());
@@ -211,14 +185,6 @@ int main()
     receiveEndpoint = nullptr;
     session = nullptr;
 
-    // clean up the SDK WinRT redirection
-    std::cout << "Cleaning up SDK..." << std::endl;
-    if (initializer != nullptr)
-    {
-        initializer->ShutdownSdkRuntime();
-        initializer.reset();
-    }
-
-    std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;
+    std::wcout << L"Cleaning up WinRT / COM apartment..." << std::endl;
     winrt::uninit_apartment();
 }

@@ -1,0 +1,49 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiVirtualPatchBayRouteCreationResult.idl";
+import "MidiVirtualPatchBayRouteUpdateResult.idl";
+import "MidiVirtualPatchBayRouteCreationConfig.idl";
+import "MidiVirtualPatchBayRouteRemovalConfig.idl";
+import "MidiVirtualPatchBayRouteUpdateConfig.idl";
+import "MidiVirtualPatchBayRouteStatus.idl";
+
+namespace Windows.Devices.Midi2.VirtualPatchBay
+{
+    [experimental]
+    [static_name("Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayManagerStatics")]
+    static runtimeclass MidiVirtualPatchBayManager
+    {
+        static Boolean IsTransportAvailable{ get; };
+        static Guid TransportId{ get; };
+
+        static IVectorView<MidiVirtualPatchBayRouteDefinition> GetRoutes();
+        static MidiVirtualPatchBayRouteDefinition GetRoute(Guid routeId);
+
+
+        static MidiVirtualPatchBayRouteCreationResult CreateRoute(
+            MidiVirtualPatchBayRouteCreationConfig creationConfig);
+
+        static MidiVirtualPatchBayRouteUpdateResult UpdateRoute(
+            MidiVirtualPatchBayRouteUpdateConfig updateConfig);
+
+        static Boolean RemoveRoute(
+            MidiVirtualPatchBayRouteRemovalConfig removalConfig);
+
+        static MidiVirtualPatchBayRouteStatus GetRouteStatus(
+            Guid routeId
+        );
+
+
+    }
+}
+

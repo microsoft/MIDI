@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="MidiChannelTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiClockTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroupTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessage32Tests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessage64Tests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessage96Tests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessage128Tests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessagePacketTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUniqueIdTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Module.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MidiChannelTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiClockTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroupTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessage32Tests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessage64Tests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessage96Tests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessage128Tests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessagePacketTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUniqueIdTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Midi2ClientTests.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{9edf6db8-139e-401b-9a4c-7cacb819b0e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{49fce4f5-f57e-414c-a2a9-71174ffb6431}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support">
+      <UniqueIdentifier>{c71143bf-87ce-4e43-b6c9-98ddc626e1e0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+</Project>

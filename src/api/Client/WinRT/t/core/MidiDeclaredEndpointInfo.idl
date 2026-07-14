@@ -1,0 +1,53 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredEndpointInfo", UUID_IMidiDeclaredEndpointInfo)]
+    [constructor_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredEndpointInfoFactory", UUID_IMidiDeclaredEndpointInfoFactory)]
+    runtimeclass MidiDeclaredEndpointInfo
+    {
+        MidiDeclaredEndpointInfo();
+        MidiDeclaredEndpointInfo(
+            String name,
+            String productInstanceId,
+            Boolean supportsMidi10Protocol,
+            Boolean supportsMidi20Protocol,
+            Boolean supportsReceivingJitterReductionTimestamps,
+            Boolean supportsSendingJitterReductionTimestamps,
+            Boolean hasStaticFunctionBlocks,
+            UInt8 declaredFunctionBlockCount,
+            UInt8 specificationVersionMajor,
+            UInt8 specificationVersionMinor
+        );
+
+
+        Boolean IsReadOnly { get; };
+
+        String Name;
+        String ProductInstanceId;
+
+        Boolean SupportsMidi10Protocol;
+        Boolean SupportsMidi20Protocol;
+        Boolean SupportsReceivingJitterReductionTimestamps;
+        Boolean SupportsSendingJitterReductionTimestamps;
+
+        Boolean HasStaticFunctionBlocks;
+        UInt8 DeclaredFunctionBlockCount;
+
+        UInt8 SpecificationVersionMajor;
+        UInt8 SpecificationVersionMinor;
+
+    };
+}

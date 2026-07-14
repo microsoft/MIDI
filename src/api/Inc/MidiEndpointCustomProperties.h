@@ -87,8 +87,8 @@ namespace WindowsMidiServicesPluginConfigurationLib
 
     struct MidiEndpointCustomMidi1PortProperties
     {
-        uint8_t GroupIndex;
-        winrt::hstring Name;
+        uint8_t GroupIndex{ 0 };
+        winrt::hstring Name{};
     };
 
     //enum MidiEndpointCustomMidi1NamingApproach
@@ -124,6 +124,7 @@ namespace WindowsMidiServicesPluginConfigurationLib
         bool RequiresNoteOffTranslation{};
         bool SupportsMidiPolyphonicExpression{};
         uint16_t RecommendedControlChangeIntervalMilliseconds{};
+        uint64_t OutgoingLatencyTicks{};
 
      //   bool UmpOnly{ false };
         WindowsMidiServicesNamingLib::Midi1PortNameSelection Midi1NamingApproach{ WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault };

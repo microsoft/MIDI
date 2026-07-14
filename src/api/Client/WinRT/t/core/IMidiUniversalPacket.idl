@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+import "MidiPacketTypeEnum.idl";
+import "MidiMessageTypeEnum.idl";
+
+
+namespace Windows.Devices.Midi2
+{
+    [contract(MidiCoreApiContract, 1)]
+    [uuid(UUID_IMidiUniversalPacket), version(1.0)]
+    interface IMidiUniversalPacket
+    {
+        UInt64 Timestamp;
+
+        MidiMessageType MessageType;
+        MidiPacketType PacketType{ get; };
+
+        UInt32 PeekFirstWord();
+
+
+        IVector<UInt32> GetAllWords();
+        UInt8 AppendAllMessageWordsToList(IVector<UInt32> targetList);
+
+        UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
+    };
+}

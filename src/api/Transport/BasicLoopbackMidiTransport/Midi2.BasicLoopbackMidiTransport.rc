@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,2
- PRODUCTVERSION 1,0,0,2
+ FILEVERSION 1,0,1,3
+ PRODUCTVERSION 1,0,1,3
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -77,8 +77,8 @@ BEGIN
             VALUE "InternalName", "Midi2.BasicLoopbackMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.BasicLoopbackMidiTransport.dll"
 
-            VALUE "FileVersion", "1.0.0.2"
-            VALUE "ProductVersion", "1.0.0.2"
+            VALUE "FileVersion", "1.0.1.3"
+            VALUE "ProductVersion", "1.0.1.3"
 
             VALUE "OLESelfRegister", ""
         END
@@ -105,7 +105,12 @@ BEGIN
     IDS_ERROR_DUPLICATE_UNIQUE_ID       "Unique identifier is already in use with another loopback endpoint."
     IDS_ERROR_MISSING_UNIQUE_ID         "Missing or blank unique identifier."
     IDS_ERROR_MISSING_NAME              "Missing or blank endpoint name."
+    IDS_ERROR_MISSING_ASSOCIATION_ID    "Missing or blank association id."
     IDS_ERROR_CREATION_FAILED           "Endpoint creation failed for an unknown reason."
+    IDS_ERROR_ENDPOINT_NOT_FOUND        "Endpoint not found."
+    IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."
+    //IDS_ERROR_MISSING_ENTRY_IDENTIFIER   "Missing or blank entry identifier."
+
 
 END
 

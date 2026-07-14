@@ -49,13 +49,13 @@
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Midi2.BasicLoopbackMidiTransport.def">
       <Filter>Source Files</Filter>
     </None>
     <None Include="Midi2.BasicLoopbackMidiTransport.rgs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h">
@@ -98,6 +98,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiBasicLoopbackDeviceTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="basic_loopback_transport_error_codes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
