@@ -6,10 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-//using Microsoft.Windows.Devices.Midi2.Initialization;
-using Microsoft.Windows.Devices.Midi2.Messages;
-
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointSendMessageCommand : Command<EndpointSendMessageCommand.Settings>
@@ -186,8 +182,8 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                IMidiEndpointConnectionSettings connectionSettings;
-                connectionSettings = new MidiEndpointConnectionBasicSettings(false, false);
+                MidiEndpointConnectionSettings connectionSettings;
+                connectionSettings = new MidiEndpointConnectionSettings(false, false);
 
                 var connection = session.CreateEndpointConnection(endpointId, connectionSettings);
                 if (connection != null)

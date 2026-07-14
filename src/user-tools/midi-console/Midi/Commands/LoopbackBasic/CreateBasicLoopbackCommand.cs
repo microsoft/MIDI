@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
 using Windows.Foundation;
 
 namespace Microsoft.Midi.ConsoleApp
@@ -100,7 +98,7 @@ namespace Microsoft.Midi.ConsoleApp
             }
 
 
-            var creationConfig = new MidiBasicLoopbackEndpointCreationConfig();
+            var creationConfig = new MidiBasicLoopbackCreationConfig();
 
             var definition = new MidiBasicLoopbackEndpointDefinition()
             {
@@ -111,14 +109,14 @@ namespace Microsoft.Midi.ConsoleApp
             creationConfig.AssociationId = associationId;
             creationConfig.EndpointDefinition = definition;
 
-            var creationResult = MidiBasicLoopbackEndpointManager.CreateTransientLoopbackEndpoint(creationConfig);
+            var creationResult = MidiBasicLoopbackManager.CreateTransientLoopback(creationConfig);
 
             if (creationResult.Success)
             {
                 // todo: show details of created loopback endpoint, using a table.
                 // explain that they will go away with next service restart
 
-                var endpoint = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(creationResult.EndpointDeviceId);
+                var endpoint = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(creationResult.CreatedLoopbackEntry.EndpointDeviceId);
 
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.MessageBasicLoopbackCreationSuccess));
                 AnsiConsole.WriteLine();
@@ -133,11 +131,11 @@ namespace Microsoft.Midi.ConsoleApp
 
                 table.ShowHeaders = false;
 
-                table.AddRow(AnsiMarkupFormatter.FormatFriendlyPropertyKey(Strings.LabelLoopbackEndpointIdentifier), AnsiMarkupFormatter.FormatEndpointName(endpoint.Name));
-                table.AddRow("", AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpoint.EndpointDeviceId));
+                table.AddRow(AnsiMarkupFormatter.FormatFriendlyPropertyKey(Strings.LabelLoopbackEndpointIdentifier), AnsiMarkupFormatter.FormatEndpointName(creationResult.CreatedLoopbackEntry.Name));
+                table.AddRow("", AnsiMarkupFormatter.FormatFullEndpointInterfaceId(creationResult.CreatedLoopbackEntry.EndpointDeviceId));
                 table.AddEmptyRow();
 
-                table.AddRow(AnsiMarkupFormatter.FormatFriendlyPropertyKey(Strings.LabelAssociationId), AnsiMarkupFormatter.FormatEndpointAssociationId(creationResult.AssociationId));
+                table.AddRow(AnsiMarkupFormatter.FormatFriendlyPropertyKey(Strings.LabelAssociationId), AnsiMarkupFormatter.FormatEndpointAssociationId(creationResult.CreatedLoopbackEntry.AssociationId));
 
                 AnsiConsole.Write(table);
 
@@ -148,7 +146,7 @@ namespace Microsoft.Midi.ConsoleApp
             else
             {
                 AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError(Strings.ErrorCreatingLoopback));
-                AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError(creationResult.ErrorInformation));
+                AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError(creationResult.ErrorMessage));
 
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }

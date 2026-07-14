@@ -2507,6 +2507,33 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Driver Inf.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelDriverInfPath {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelDriverInfPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Driver Provider.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelDriverProvider {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelDriverProvider", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Driver Version.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelDriverVersion {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelDriverVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Endpoint Information Last Updated.
         /// </summary>
         internal static string PropertyTablePropertyLabelEndpointInfoLastUpdated {

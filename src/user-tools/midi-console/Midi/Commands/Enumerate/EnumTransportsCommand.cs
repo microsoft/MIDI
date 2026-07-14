@@ -6,11 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-
-//using Microsoft.Windows.Devices.Midi2.Initialization;
-using Microsoft.Windows.Devices.Midi2.Reporting;
-
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EnumTransportsCommand : Command<EnumTransportsCommand.Settings>
@@ -63,7 +58,7 @@ namespace Microsoft.Midi.ConsoleApp
                     if (settings.Verbose)
                     {
                         table.AddRow(
-                        $"Transport Id:                  [mediumturquoise]{AnsiMarkupFormatter.FormatTransportId(transport.Id)}[/]"
+                        $"Transport Id:                  [mediumturquoise]{AnsiMarkupFormatter.FormatTransportId(transport.TransportId)}[/]"
                         );
 
                         table.AddRow(

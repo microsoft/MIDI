@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Messages;
-using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 using Windows.Security.Cryptography.Core;
 
 namespace Microsoft.Midi.ConsoleApp
@@ -397,8 +395,8 @@ namespace Microsoft.Midi.ConsoleApp
                 case MidiMessageType.Midi2ChannelVoice64:
                     return GetDecodedMidi2ChannelVoiceData(message);
 
-                case MidiMessageType.DataMessage64:
-                    return GetDecodedSysEx7MessageData(message);
+                //case MidiMessageType.DataMessage64:
+                //    return GetDecodedSysEx7MessageData(message);
 
                 default:
                     return string.Empty;
@@ -559,38 +557,38 @@ namespace Microsoft.Midi.ConsoleApp
 
 
 
-        private string GetDecodedSysEx7MessageData(ReceivedMidiMessage message)
-        {
-            string decodedData = string.Empty;
+        //private string GetDecodedSysEx7MessageData(ReceivedMidiMessage message)
+        //{
+        //    string decodedData = string.Empty;
 
-            const uint maxSysEx7BytesPerMessage = 6;
-            if (MidiSystemExclusiveMessageHelper.MessageIsSystemExclusive7Message(message.Word0))
-            {
-                // show the bytes
-                var byteCount = MidiSystemExclusiveMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(message.Word0);
+        //    const uint maxSysEx7BytesPerMessage = 6;
+        //    if (MidiSystemExclusiveMessageHelper.MessageIsSystemExclusive7Message(message.Word0))
+        //    {
+        //        // show the bytes
+        //        var byteCount = MidiSystemExclusiveMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(message.Word0);
 
-                foreach (var b in MidiSystemExclusiveMessageHelper.GetDataBytesFromSingleSystemExclusive7Message(message.Word0, message.Word1))
-                {
-                    decodedData += b.ToString("X2") + " ";
-                }
+        //        foreach (var b in MidiSystemExclusiveMessageHelper.GetDataBytesFromSingleSystemExclusive7Message(message.Word0, message.Word1))
+        //        {
+        //            decodedData += b.ToString("X2") + " ";
+        //        }
 
-                if (byteCount < maxSysEx7BytesPerMessage)
-                {
-                    decodedData += "[grey]";
+        //        if (byteCount < maxSysEx7BytesPerMessage)
+        //        {
+        //            decodedData += "[grey]";
 
-                    for (int i = 0; i < maxSysEx7BytesPerMessage - byteCount; i++)
-                    {
-                        decodedData += "-- ";
-                    }
+        //            for (int i = 0; i < maxSysEx7BytesPerMessage - byteCount; i++)
+        //            {
+        //                decodedData += "-- ";
+        //            }
 
-                    decodedData += "[/]";
-                }
+        //            decodedData += "[/]";
+        //        }
 
-                decodedData = $"[darkseagreen2]{decodedData}[/]";
-            }
+        //        decodedData = $"[darkseagreen2]{decodedData}[/]";
+        //    }
 
-            return decodedData;
-        }
+        //    return decodedData;
+        //}
 
     }
 

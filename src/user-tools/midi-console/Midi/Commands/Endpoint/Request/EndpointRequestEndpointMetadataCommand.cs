@@ -6,11 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-
-//using Microsoft.Windows.Devices.Midi2.Initialization;
-using Microsoft.Windows.Devices.Midi2.Messages;
-
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointRequestEndpointMetadataCommand : Command<EndpointRequestEndpointMetadataCommand.Settings>

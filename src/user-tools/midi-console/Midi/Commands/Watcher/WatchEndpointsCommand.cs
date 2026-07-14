@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-//using Microsoft.Windows.Devices.Midi2.Initialization;
-
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class WatchEndpointsCommand : Command<WatchEndpointsCommand.Settings>
