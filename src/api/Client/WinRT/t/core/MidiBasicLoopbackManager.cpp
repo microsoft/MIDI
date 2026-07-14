@@ -12,9 +12,9 @@
 #include "MidiBasicLoopbackManager.h"
 #include "Transports.BasicLoopback.MidiBasicLoopbackManager.g.cpp"
 
-#include "MidiBasicLoopbackCreationResult.h"
-#include "MidiBasicLoopbackRemovalResult.h"
-#include "MidiBasicLoopbackUpdateResult.h"
+#include "MidiBasicLoopbackCreationResponse.h"
+#include "MidiBasicLoopbackRemovalResponse.h"
+#include "MidiBasicLoopbackUpdateResponse.h"
 #include "MidiBasicLoopbackEntry.h"
 
 
@@ -46,11 +46,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
 
     _Use_decl_annotations_
-    bloop::MidiBasicLoopbackCreationResult MidiBasicLoopbackManager::CreateTransientLoopback(
+    bloop::MidiBasicLoopbackCreationResponse MidiBasicLoopbackManager::CreateTransientLoopback(
         bloop::MidiBasicLoopbackCreationConfig const& creationConfig) noexcept
     {
         // the success code in this defaults to False
-        auto result = winrt::make_self<implementation::MidiBasicLoopbackCreationResult>();
+        auto result = winrt::make_self<implementation::MidiBasicLoopbackCreationResponse>();
         if (result == nullptr)
         {
             return nullptr;
@@ -226,10 +226,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
 
     _Use_decl_annotations_
-    bloop::MidiBasicLoopbackRemovalResult MidiBasicLoopbackManager::RemoveTransientLoopback(
+    bloop::MidiBasicLoopbackRemovalResponse MidiBasicLoopbackManager::RemoveTransientLoopback(
         bloop::MidiBasicLoopbackRemovalConfig const& removalConfig) noexcept
     {
-        auto result = winrt::make_self<MidiBasicLoopbackRemovalResult>();
+        auto result = winrt::make_self<MidiBasicLoopbackRemovalResponse>();
 
         if (result == nullptr)
         {
@@ -336,9 +336,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
     }
 
     _Use_decl_annotations_
-    bloop::MidiBasicLoopbackUpdateResult MidiBasicLoopbackManager::MuteLoopback(_In_ winrt::guid const& associationId)
+    bloop::MidiBasicLoopbackUpdateResponse MidiBasicLoopbackManager::MuteLoopback(_In_ winrt::guid const& associationId)
     {
-        auto result = winrt::make_self<MidiBasicLoopbackUpdateResult>();
+        auto result = winrt::make_self<MidiBasicLoopbackUpdateResponse>();
 
         if (result == nullptr)
         {
@@ -421,9 +421,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
     }
 
     _Use_decl_annotations_
-    bloop::MidiBasicLoopbackUpdateResult MidiBasicLoopbackManager::UnmuteLoopback(_In_ winrt::guid const& associationId)
+    bloop::MidiBasicLoopbackUpdateResponse MidiBasicLoopbackManager::UnmuteLoopback(_In_ winrt::guid const& associationId)
     {
-        auto result = winrt::make_self<MidiBasicLoopbackUpdateResult>();
+        auto result = winrt::make_self<MidiBasicLoopbackUpdateResponse>();
 
         if (result == nullptr)
         {

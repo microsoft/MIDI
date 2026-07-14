@@ -11,6 +11,10 @@
 #include "MidiMessageReceivedEventArgs.h"
 #include "MidiMessageReceivedEventArgs.g.cpp"
 
+#include "MidiMessage32.h"
+#include "MidiMessage64.h"
+#include "MidiMessage96.h"
+#include "MidiMessage128.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {

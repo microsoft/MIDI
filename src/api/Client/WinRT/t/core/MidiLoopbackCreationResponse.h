@@ -7,13 +7,13 @@
 // ============================================================================
 
 #pragma once
-#include "Transports.Loopback.MidiLoopbackCreationResult.g.h"
+#include "Transports.Loopback.MidiLoopbackCreationResponse.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 {
-    struct MidiLoopbackCreationResult : MidiLoopbackCreationResultT<MidiLoopbackCreationResult>
+    struct MidiLoopbackCreationResponse : MidiLoopbackCreationResponseT<MidiLoopbackCreationResponse>
     {
-        MidiLoopbackCreationResult() = default;
+        MidiLoopbackCreationResponse() = default;
 
         bool Success() const noexcept { return m_success; };
         loop::MidiLoopbackErrorCode ErrorCode() const noexcept { return m_errorCode; }

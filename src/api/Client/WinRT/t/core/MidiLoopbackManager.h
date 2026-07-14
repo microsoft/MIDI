@@ -20,10 +20,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}"); }
 
-        static loop::MidiLoopbackCreationResult CreateTransientLoopback(
+        static loop::MidiLoopbackCreationResponse CreateTransientLoopback(
             _In_ loop::MidiLoopbackCreationConfig const& creationConfig) noexcept;
 
-        static loop::MidiLoopbackRemovalResult RemoveTransientLoopback(
+        static loop::MidiLoopbackRemovalResponse RemoveTransientLoopback(
             _In_ loop::MidiLoopbackRemovalConfig const& deletionConfig) noexcept;
 
         static midi2enum::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
@@ -45,8 +45,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
 
 
-        static loop::MidiLoopbackUpdateResult MuteLoopback(_In_ winrt::guid const& associationId) noexcept;
-        static loop::MidiLoopbackUpdateResult UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept;
+        static loop::MidiLoopbackUpdateResponse MuteLoopback(_In_ winrt::guid const& associationId) noexcept;
+        static loop::MidiLoopbackUpdateResponse UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept;
 
     };
 }

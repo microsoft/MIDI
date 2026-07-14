@@ -44,9 +44,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void LogMessageDataValidationErrorDetails(_In_ bool value) { m_logUmpDataErrors = value; }
 
         bool IsOpen() const noexcept { return m_isOpen; }
-        //bool IsAutoReconnectEnabled() const noexcept { return m_autoReconnect; }
 
-        midi2::IMidiEndpointConnectionSettings Settings() const noexcept { return m_settings; }
+        midi2::MidiEndpointConnectionSettings Settings() const noexcept { return m_settings; }
 
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable value) noexcept { m_tag = value; }
@@ -263,7 +262,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin>
             m_messageProcessingPlugins{ winrt::multi_threaded_vector<midi2::IMidiEndpointMessageProcessingPlugin>() };
 
-        midi2::IMidiEndpointConnectionSettings m_settings{ nullptr };
+        midi2::MidiEndpointConnectionSettings m_settings{ nullptr };
 
 
         bool ValidateUmp(_In_ uint32_t word0, _In_ uint8_t wordCount) noexcept;

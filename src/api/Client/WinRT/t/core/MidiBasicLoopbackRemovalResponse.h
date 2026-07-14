@@ -6,17 +6,19 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#pragma once
-#include "Transports.Loopback.MidiLoopbackRemovalResult.g.h"
 
-namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
+#pragma once
+#include "Transports.BasicLoopback.MidiBasicLoopbackRemovalResponse.g.h"
+
+
+namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementation
 {
-    struct MidiLoopbackRemovalResult : MidiLoopbackRemovalResultT<MidiLoopbackRemovalResult>
+    struct MidiBasicLoopbackRemovalResponse : MidiBasicLoopbackRemovalResponseT<MidiBasicLoopbackRemovalResponse>
     {
-        MidiLoopbackRemovalResult() = default;
+        MidiBasicLoopbackRemovalResponse() = default;
 
         bool Success() const noexcept { return m_success; };
-        loop::MidiLoopbackErrorCode ErrorCode() const noexcept { return m_errorCode; }
+        bloop::MidiBasicLoopbackErrorCode ErrorCode() const noexcept { return m_errorCode; }
         winrt::hstring ErrorMessage() const noexcept { return m_errorMessage; }
 
 
@@ -25,7 +27,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
             m_success = true;
         }
 
-        void InternalSetFailure(_In_ loop::MidiLoopbackErrorCode const errorCode, _In_ winrt::hstring const& errorMessage)
+        void InternalSetFailure(_In_ bloop::MidiBasicLoopbackErrorCode const errorCode, _In_ winrt::hstring const& errorMessage)
         {
             m_success = false;
             m_errorCode = errorCode;
@@ -34,7 +36,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
     private:
         bool m_success{ false };
-        loop::MidiLoopbackErrorCode m_errorCode{ loop::MidiLoopbackErrorCode::NoErrorInformationAvailable };
+        bloop::MidiBasicLoopbackErrorCode m_errorCode{ bloop::MidiBasicLoopbackErrorCode::NoErrorInformationAvailable };
         winrt::hstring m_errorMessage{ };
     };
 }

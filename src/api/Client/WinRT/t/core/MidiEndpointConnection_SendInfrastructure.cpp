@@ -10,6 +10,12 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
+#include "MidiMessage32.h"
+#include "MidiMessage64.h"
+#include "MidiMessage96.h"
+#include "MidiMessage128.h"
+
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_

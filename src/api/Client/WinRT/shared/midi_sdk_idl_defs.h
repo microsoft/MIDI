@@ -58,8 +58,8 @@
 #define UUID_IMidiEndpointConnection						                8087b303-0519-c0de-31d1-dd0010006000
 #define UUID_IMidiEndpointConnectionStatics					                8087b303-0519-c0de-31d1-ee0010006000
 
-#define UUID_IMidiEndpointConnectionBasicSettings			                8087b303-0519-c0de-31d1-dd0010007000
-#define UUID_IMidiEndpointConnectionBasicSettingsFactory	                8087b303-0519-c0de-31d1-ff0010007000
+#define UUID_IMidiEndpointConnectionSettings			                    8087b303-0519-c0de-31d1-dd0010007000
+#define UUID_IMidiEndpointConnectionSettingsFactory	                        8087b303-0519-c0de-31d1-ff0010007000
 
 #define UUID_IMidiMessageReceivedEventArgs					                8087b303-0519-c0de-31d1-dd0010008000
 
@@ -67,7 +67,6 @@
 #define UUID_IMidiSessionStatics							                8087b303-0519-c0de-31d1-ee0010009000
 
 #define UUID_IMidiUniversalPacket							                "8087b303-0519-c0de-31d1-cc001000F010"
-#define UUID_IMidiEndpointConnectionSettings				                "8087b303-0519-c0de-31d1-cc001000F020"
 #define UUID_IMidiEndpointConnectionSource					                "8087b303-0519-c0de-31d1-cc001000F030"
 #define UUID_IMidiEndpointMessageProcessingPlugin			                "8087b303-0519-c0de-31d1-cc001000F040"
 #define UUID_IMidiMessageReceivedEventSource				                "8087b303-0519-c0de-31d1-cc001000F050"
@@ -222,9 +221,9 @@
 #define UUID_IMidiBasicLoopbackRemovalConfig		            8087b303-0519-c0de-31d1-dd00F0103000
 #define UUID_IMidiBasicLoopbackRemovalConfigFactory	            8087b303-0519-c0de-31d1-ff00F0103000
 
-#define UUID_IMidiBasicLoopbackCreationResult                   8087b303-0519-c0de-31d1-dd00F0104000
-#define UUID_IMidiBasicLoopbackRemovalResult                    8087b303-0519-c0de-31d1-dd00F0105000
-#define UUID_IMidiBasicLoopbackUpdateResult                     8087b303-0519-c0de-31d1-dd00F0106000
+#define UUID_IMidiBasicLoopbackCreationResponse                 8087b303-0519-c0de-31d1-dd00F0104000
+#define UUID_IMidiBasicLoopbackRemovalResponse                  8087b303-0519-c0de-31d1-dd00F0105000
+#define UUID_IMidiBasicLoopbackUpdateResponse                   8087b303-0519-c0de-31d1-dd00F0106000
 
 #define UUID_IMidiBasicLoopbackEntry                            8087b303-0519-c0de-31d1-dd00F0107000   
 
@@ -243,9 +242,9 @@
 #define UUID_IMidiLoopbackRemovalConfig				            8087b303-0519-c0de-31d1-dd00F0203000
 #define UUID_IMidiLoopbackRemovalConfigFactory		            8087b303-0519-c0de-31d1-ff00F0203000
 
-#define UUID_IMidiLoopbackCreationResult                        8087b303-0519-c0de-31d1-dd00F0204000
-#define UUID_IMidiLoopbackRemovalResult                         8087b303-0519-c0de-31d1-dd00F0205000
-#define UUID_IMidiLoopbackUpdateResult                          8087b303-0519-c0de-31d1-dd00F0206000
+#define UUID_IMidiLoopbackCreationResponse                      8087b303-0519-c0de-31d1-dd00F0204000
+#define UUID_IMidiLoopbackRemovalResponse                       8087b303-0519-c0de-31d1-dd00F0205000
+#define UUID_IMidiLoopbackUpdateResponse                        8087b303-0519-c0de-31d1-dd00F0206000
 
 #define UUID_IMidiLoopbackEntry                                 8087b303-0519-c0de-31d1-dd00F0207000
 #define UUID_IMidiLoopbackEndpointEntry                         8087b303-0519-c0de-31d1-dd00F0208000

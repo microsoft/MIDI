@@ -300,8 +300,8 @@
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
-      <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointConnectionSettings.h">
+      <DependentUpon>MidiEndpointConnectionSettings.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
@@ -450,8 +450,8 @@
     <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
       <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackCreationResult.h">
-      <DependentUpon>MidiBasicLoopbackCreationResult.idl</DependentUpon>
+    <ClInclude Include="MidiBasicLoopbackCreationResponse.h">
+      <DependentUpon>MidiBasicLoopbackCreationResponse.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiBasicLoopbackCreationConfig.h">
       <DependentUpon>MidiBasicLoopbackCreationConfig.idl</DependentUpon>
@@ -468,14 +468,14 @@
     <ClInclude Include="MidiBasicLoopbackEntry.h">
       <DependentUpon>MidiBasicLoopbackEntry.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackRemovalResult.h">
-      <DependentUpon>MidiBasicLoopbackRemovalResult.idl</DependentUpon>
+    <ClInclude Include="MidiBasicLoopbackRemovalResponse.h">
+      <DependentUpon>MidiBasicLoopbackRemovalResponse.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackUpdateResult.h">
-      <DependentUpon>MidiBasicLoopbackUpdateResult.idl</DependentUpon>
+    <ClInclude Include="MidiBasicLoopbackUpdateResponse.h">
+      <DependentUpon>MidiBasicLoopbackUpdateResponse.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiLoopbackCreationResult.h">
-      <DependentUpon>MidiLoopbackCreationResult.idl</DependentUpon>
+    <ClInclude Include="MidiLoopbackCreationResponse.h">
+      <DependentUpon>MidiLoopbackCreationResponse.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiLoopbackEndpointDefinition.h">
       <DependentUpon>MidiLoopbackEndpointDefinition.idl</DependentUpon>
@@ -495,11 +495,11 @@
     <ClInclude Include="MidiLoopbackEntry.h">
       <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiLoopbackRemovalResult.h">
-      <DependentUpon>MidiLoopbackRemovalResult.idl</DependentUpon>
+    <ClInclude Include="MidiLoopbackRemovalResponse.h">
+      <DependentUpon>MidiLoopbackRemovalResponse.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiLoopbackUpdateResult.h">
-      <DependentUpon>MidiLoopbackUpdateResult.idl</DependentUpon>
+    <ClInclude Include="MidiLoopbackUpdateResponse.h">
+      <DependentUpon>MidiLoopbackUpdateResponse.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiStreamConfigRequestReceivedEventArgs.h">
       <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
@@ -543,8 +543,8 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
-    <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
-      <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointConnectionSettings.cpp">
+      <DependentUpon>MidiEndpointConnectionSettings.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointConnection_ComExtensions.cpp" />
     <ClCompile Include="MidiEndpointConnection.cpp">
@@ -718,8 +718,8 @@
     <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
       <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiBasicLoopbackCreationResult.cpp">
-      <DependentUpon>MidiBasicLoopbackCreationResult.idl</DependentUpon>
+    <ClCompile Include="MidiBasicLoopbackCreationResponse.cpp">
+      <DependentUpon>MidiBasicLoopbackCreationResponse.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiBasicLoopbackCreationConfig.cpp">
       <DependentUpon>MidiBasicLoopbackCreationConfig.idl</DependentUpon>
@@ -736,14 +736,14 @@
     <ClCompile Include="MidiBasicLoopbackEntry.cpp">
       <DependentUpon>MidiBasicLoopbackEntry.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiBasicLoopbackRemovalResult.cpp">
-      <DependentUpon>MidiBasicLoopbackRemovalResult.idl</DependentUpon>
+    <ClCompile Include="MidiBasicLoopbackRemovalResponse.cpp">
+      <DependentUpon>MidiBasicLoopbackRemovalResponse.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiBasicLoopbackUpdateResult.cpp">
-      <DependentUpon>MidiBasicLoopbackUpdateResult.idl</DependentUpon>
+    <ClCompile Include="MidiBasicLoopbackUpdateResponse.cpp">
+      <DependentUpon>MidiBasicLoopbackUpdateResponse.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackCreationResult.cpp">
-      <DependentUpon>MidiLoopbackCreationResult.idl</DependentUpon>
+    <ClCompile Include="MidiLoopbackCreationResponse.cpp">
+      <DependentUpon>MidiLoopbackCreationResponse.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiLoopbackEndpointDefinition.cpp">
       <DependentUpon>MidiLoopbackEndpointDefinition.idl</DependentUpon>
@@ -763,11 +763,11 @@
     <ClCompile Include="MidiLoopbackEntry.cpp">
       <DependentUpon>MidiLoopbackEntry.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackRemovalResult.cpp">
-      <DependentUpon>MidiLoopbackRemovalResult.idl</DependentUpon>
+    <ClCompile Include="MidiLoopbackRemovalResponse.cpp">
+      <DependentUpon>MidiLoopbackRemovalResponse.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackUpdateResult.cpp">
-      <DependentUpon>MidiLoopbackUpdateResult.idl</DependentUpon>
+    <ClCompile Include="MidiLoopbackUpdateResponse.cpp">
+      <DependentUpon>MidiLoopbackUpdateResponse.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiStreamConfigRequestReceivedEventArgs.cpp">
       <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
@@ -808,14 +808,13 @@
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
-    <Midl Include="MidiEndpointConnectionBasicSettings.idl" />
+    <Midl Include="MidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
-    <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiApi.idl" />
     <Midl Include="MidiApiModeEnum.idl" />
@@ -882,22 +881,22 @@
     <Midl Include="MidiServiceTransportPluginConfigManager.idl" />
     <Midl Include="MidiBasicLoopbackErrorCodeEnum.idl" />
     <Midl Include="MidiBasicLoopbackCreationConfig.idl" />
-    <Midl Include="MidiBasicLoopbackCreationResult.idl" />
+    <Midl Include="MidiBasicLoopbackCreationResponse.idl" />
     <Midl Include="MidiBasicLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiBasicLoopbackManager.idl" />
     <Midl Include="MidiBasicLoopbackRemovalConfig.idl" />
     <Midl Include="MidiBasicLoopbackEntry.idl" />
-    <Midl Include="MidiBasicLoopbackRemovalResult.idl" />
-    <Midl Include="MidiBasicLoopbackUpdateResult.idl" />
-    <Midl Include="MidiLoopbackUpdateResult.idl" />
+    <Midl Include="MidiBasicLoopbackRemovalResponse.idl" />
+    <Midl Include="MidiBasicLoopbackUpdateResponse.idl" />
+    <Midl Include="MidiLoopbackUpdateResponse.idl" />
     <Midl Include="MidiLoopbackErrorCodeEnum.idl" />
     <Midl Include="MidiLoopbackEndpointEntry.idl" />
     <Midl Include="MidiLoopbackRemovalConfig.idl" />
     <Midl Include="MidiLoopbackManager.idl" />
     <Midl Include="MidiLoopbackEndpointDefinition.idl" />
-    <Midl Include="MidiLoopbackCreationResult.idl" />
+    <Midl Include="MidiLoopbackCreationResponse.idl" />
     <Midl Include="MidiLoopbackCreationConfig.idl" />
-    <Midl Include="MidiLoopbackRemovalResult.idl" />
+    <Midl Include="MidiLoopbackRemovalResponse.idl" />
     <Midl Include="MidiLoopbackEntry.idl" />
     <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl" />
     <Midl Include="MidiVirtualDevice.idl" />

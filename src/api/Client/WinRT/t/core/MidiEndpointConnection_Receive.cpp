@@ -12,6 +12,8 @@
 
 #include "ump_iterator.h"
 
+#include "MidiMessageReceivedEventArgs.h"
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_

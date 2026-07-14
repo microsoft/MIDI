@@ -19,7 +19,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "endpoint-listeners-cpp", "e
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "loopback-basic-endpoints-cpp", "loopback-basic-endpoints\loopback-basic-endpoints-cpp.vcxproj", "{3C40C6B3-BFDF-468F-9D4E-88B774B1D553}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "watch-endpoints-cpp", "watch-midi1-ports\watch-midi1-ports-cpp.vcxproj", "{6A3FA018-5AD9-4B75-B8D5-EB07AE0ECDCF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "watch-midi1-ports-cpp", "watch-midi1-ports\watch-midi1-ports-cpp.vcxproj", "{6A3FA018-5AD9-4B75-B8D5-EB07AE0ECDCF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "com-extensions-cpp", "com-extensions\com-extensions-cpp.vcxproj", "{FC97E571-7E19-440D-91AD-D488B753D2DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -177,6 +179,22 @@ Global
 		{6A3FA018-5AD9-4B75-B8D5-EB07AE0ECDCF}.Release|x64.Build.0 = Release|x64
 		{6A3FA018-5AD9-4B75-B8D5-EB07AE0ECDCF}.Release|x86.ActiveCfg = Release|x64
 		{6A3FA018-5AD9-4B75-B8D5-EB07AE0ECDCF}.Release|x86.Build.0 = Release|x64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Debug|ARM64.Build.0 = Debug|ARM64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Debug|x64.ActiveCfg = Debug|x64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Debug|x64.Build.0 = Debug|x64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Debug|x86.ActiveCfg = Debug|x64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Debug|x86.Build.0 = Debug|x64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Release|ARM64.ActiveCfg = Release|ARM64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Release|ARM64.Build.0 = Release|ARM64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Release|x64.ActiveCfg = Release|x64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Release|x64.Build.0 = Release|x64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Release|x86.ActiveCfg = Release|x64
+		{FC97E571-7E19-440D-91AD-D488B753D2DA}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

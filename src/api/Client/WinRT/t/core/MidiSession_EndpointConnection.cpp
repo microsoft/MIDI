@@ -11,12 +11,14 @@
 #include "MidiSession.h"
 #include "MidiEndpointConnection.h"
 
+#include "MidiEndpointConnectionSettings.h"
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId,
-        midi2::IMidiEndpointConnectionSettings const& settings
+        midi2::MidiEndpointConnectionSettings const& settings
     ) noexcept
     {
         // load up defaults if nullptr was provided for settings
@@ -24,9 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (settings == nullptr)
         {
-            auto newSettings = winrt::make<MidiEndpointConnectionBasicSettings>();
-
-            defaultSettings = newSettings.as<IMidiEndpointConnectionSettings>();
+            defaultSettings = winrt::make<MidiEndpointConnectionSettings>();
         }
 
 
@@ -56,6 +56,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (settings == nullptr)
             {
+                // get the default value
                 autoReconnect = defaultSettings.AutoReconnect();
                 initSuccess = endpointConnection->InternalInitialize(m_id, m_serviceTransport, connectionInstanceId, normalizedDeviceId, defaultSettings);
             }
@@ -146,7 +147,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     ) noexcept
     {
         // default settings
-        midi2::MidiEndpointConnectionBasicSettings settings{};
+        midi2::MidiEndpointConnectionSettings settings{};
 
         return CreateEndpointConnection(endpointDeviceId, settings);
     }

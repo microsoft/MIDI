@@ -13,7 +13,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    MidiApiMode MidiApi::GetCurrentApiMode() noexcept
+    MidiApiMode MidiApi::GetCurrentlySelectedApiMode() noexcept
     {
         DWORD midiMode = MIDI_USE_MIDISRV;
 
@@ -90,7 +90,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     bool MidiApi::EnsureServiceAvailable() noexcept
     {
         // short-circuit if we're on legacy mode
-        if (GetCurrentApiMode() == MidiApiMode::LegacyMode)
+        if (GetCurrentlySelectedApiMode() == MidiApiMode::LegacyMode)
         {
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),

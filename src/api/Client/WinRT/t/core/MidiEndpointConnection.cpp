@@ -11,6 +11,8 @@
 #include "MidiEndpointConnection.h"
 #include "MidiEndpointConnection.g.cpp"
 
+#include "MidiEndpointConnectionSettings.h"
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     winrt::hstring MidiEndpointConnection::ToString()
@@ -55,7 +57,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             else
             {
                 // no connection settings provided, so use basic defaults
-                m_connectionSettings = winrt::make<MidiEndpointConnectionBasicSettings>();
+                m_connectionSettings = winrt::make<MidiEndpointConnectionSettings>();
             }
 
 
@@ -144,7 +146,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         DWORD mmcssTaskId{};
-        LPCWSTR connectionSettingsJsonString = nullptr;
         TRANSPORTCREATIONPARAMS transportCreationParams{ };
         transportCreationParams.MessageOptions = MessageOptionFlags::MessageOptionFlags_None;
 
@@ -153,8 +154,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (m_connectionSettings != nullptr)
         {
-            connectionSettingsJsonString = static_cast<LPCWSTR>(m_connectionSettings.SettingsJson().c_str());
-
             if (m_connectionSettings.WaitForEndpointReceiptOnSend())
             {
                 transportCreationParams.MessageOptions = MessageOptionFlags::MessageOptionFlags_WaitForSendComplete;
@@ -162,7 +161,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
-        //transportCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
 
         IMidiCallback* obj;
         this->QueryInterface(__uuidof(IMidiCallback), (void**)&obj);
@@ -363,6 +361,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // TODO: any event cleanup?
 
             m_closeHasBeenCalled = true;
+            //m_connectionSettings = nullptr;
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),

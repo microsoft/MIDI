@@ -14,7 +14,7 @@ import "MidiApiContracts.idl";
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiSendMessageResultsEnum.idl";
-import "IMidiEndpointConnectionSettings.idl";
+import "MidiEndpointConnectionSettings.idl";
 import "IMidiEndpointConnectionSource.idl";
 
 

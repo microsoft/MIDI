@@ -10,6 +10,9 @@
 #pragma once
 #include "MidiSession.g.h"
 
+#include "MidiEndpointConnection.h"
+#include "MidiEndpointConnectionSettings.h"
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiSession : MidiSessionT<MidiSession>
@@ -36,7 +39,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::IMidiEndpointConnectionSettings const& settings
+            _In_ midi2::MidiEndpointConnectionSettings const& settings
         ) noexcept;
 
 

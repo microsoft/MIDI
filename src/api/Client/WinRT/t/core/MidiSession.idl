@@ -12,7 +12,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiEndpointConnection.idl";
-import "IMidiEndpointConnectionSettings.idl";
+import "MidiEndpointConnectionSettings.idl";
 
 
 namespace Windows.Devices.Midi2
@@ -37,7 +37,7 @@ namespace Windows.Devices.Midi2
 
         MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
-            IMidiEndpointConnectionSettings settings
+            MidiEndpointConnectionSettings settings
         );
 
         void DisconnectEndpointConnection(Guid endpointConnectionId);

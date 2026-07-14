@@ -6,11 +6,13 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
-#include "MidiLoopbackUpdateResult.h"
-#include "Transports.Loopback.MidiLoopbackUpdateResult.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
+#include "pch.h"
+#include "MidiBasicLoopbackRemovalResponse.h"
+#include "Transports.BasicLoopback.MidiBasicLoopbackRemovalResponse.g.cpp"
+
+
+namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementation
 {
 
 }

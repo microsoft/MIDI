@@ -10,9 +10,9 @@
 import "MidiApiContracts.idl";
 
 
-import "MidiBasicLoopbackCreationResult.idl";
-import "MidiBasicLoopbackRemovalResult.idl";
-import "MidiBasicLoopbackUpdateResult.idl";
+import "MidiBasicLoopbackCreationResponse.idl";
+import "MidiBasicLoopbackRemovalResponse.idl";
+import "MidiBasicLoopbackUpdateResponse.idl";
 
 import "MidiBasicLoopbackCreationConfig.idl";
 import "MidiBasicLoopbackRemovalConfig.idl";
@@ -29,10 +29,10 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
 
         static Guid TransportId{ get; };
 
-        static MidiBasicLoopbackCreationResult CreateTransientLoopback(
+        static MidiBasicLoopbackCreationResponse CreateTransientLoopback(
             MidiBasicLoopbackCreationConfig creationConfig);
 
-        static MidiBasicLoopbackRemovalResult RemoveTransientLoopback(
+        static MidiBasicLoopbackRemovalResponse RemoveTransientLoopback(
             MidiBasicLoopbackRemovalConfig removalConfig);
 
         static Guid GetAssociationId(
@@ -40,8 +40,8 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
 
         static Boolean DoesLoopbackExist(String uniqueIdentifier);
 
-        static MidiBasicLoopbackUpdateResult MuteLoopback(Guid associationId);
-        static MidiBasicLoopbackUpdateResult UnmuteLoopback(Guid associationId);
+        static MidiBasicLoopbackUpdateResponse MuteLoopback(Guid associationId);
+        static MidiBasicLoopbackUpdateResponse UnmuteLoopback(Guid associationId);
 
         static IVector<MidiBasicLoopbackEntry> GetActiveLoopbackEntries();
 

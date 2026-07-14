@@ -53,9 +53,6 @@
     <Midl Include="MidiSession.idl">
       <Filter>SDK\Session</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointConnectionSettings.idl">
-      <Filter>SDK\Session</Filter>
-    </Midl>
     <Midl Include="IMidiEndpointConnectionSource.idl">
       <Filter>SDK\Session</Filter>
     </Midl>
@@ -74,7 +71,7 @@
     <Midl Include="MidiSendMessageResultsEnum.idl">
       <Filter>SDK\Session</Filter>
     </Midl>
-    <Midl Include="MidiEndpointConnectionBasicSettings.idl">
+    <Midl Include="MidiEndpointConnectionSettings.idl">
       <Filter>SDK\Session</Filter>
     </Midl>
     <Midl Include="IMidiUniversalPacket.idl">
@@ -125,7 +122,7 @@
     <Midl Include="MidiBasicLoopbackCreationConfig.idl">
       <Filter>SDK\Transports\BasicLoopback</Filter>
     </Midl>
-    <Midl Include="MidiBasicLoopbackCreationResult.idl">
+    <Midl Include="MidiBasicLoopbackCreationResponse.idl">
       <Filter>SDK\Transports\BasicLoopback</Filter>
     </Midl>
     <Midl Include="MidiBasicLoopbackEndpointDefinition.idl">
@@ -143,10 +140,10 @@
     <Midl Include="MidiBasicLoopbackRemovalConfig.idl">
       <Filter>SDK\Transports\BasicLoopback</Filter>
     </Midl>
-    <Midl Include="MidiBasicLoopbackRemovalResult.idl">
+    <Midl Include="MidiBasicLoopbackRemovalResponse.idl">
       <Filter>SDK\Transports\BasicLoopback</Filter>
     </Midl>
-    <Midl Include="MidiBasicLoopbackUpdateResult.idl">
+    <Midl Include="MidiBasicLoopbackUpdateResponse.idl">
       <Filter>SDK\Transports\BasicLoopback</Filter>
     </Midl>
     <Midl Include="MidiChannelEndpointListener.idl">
@@ -233,7 +230,7 @@
     <Midl Include="MidiLoopbackCreationConfig.idl">
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>
-    <Midl Include="MidiLoopbackCreationResult.idl">
+    <Midl Include="MidiLoopbackCreationResponse.idl">
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>
     <Midl Include="MidiLoopbackEndpointDefinition.idl">
@@ -254,10 +251,10 @@
     <Midl Include="MidiLoopbackRemovalConfig.idl">
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>
-    <Midl Include="MidiLoopbackRemovalResult.idl">
+    <Midl Include="MidiLoopbackRemovalResponse.idl">
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>
-    <Midl Include="MidiLoopbackUpdateResult.idl">
+    <Midl Include="MidiLoopbackUpdateResponse.idl">
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>
     <Midl Include="MidiLegacyPortDeviceInformation.idl">

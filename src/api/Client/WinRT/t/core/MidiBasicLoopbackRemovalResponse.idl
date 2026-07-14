@@ -10,19 +10,16 @@
 import "MidiApiContracts.idl";
 
 import "MidiBasicLoopbackErrorCodeEnum.idl";
-import "MidiBasicLoopbackEntry.idl";
 
 namespace Windows.Devices.Midi2.Transports.BasicLoopback
 {
     [contract(MidiTransportsBasicLoopbackApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackCreationResult", UUID_IMidiBasicLoopbackCreationResult)]
-    runtimeclass MidiBasicLoopbackCreationResult
+    [interface_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackRemovalResponse", UUID_IMidiBasicLoopbackRemovalResponse)]
+    runtimeclass MidiBasicLoopbackRemovalResponse
     {
         Boolean Success { get; };
 
         MidiBasicLoopbackErrorCode ErrorCode{ get; };
         String ErrorMessage{ get; };
-
-        MidiBasicLoopbackEntry CreatedLoopbackEntry{ get; };
     };
 }

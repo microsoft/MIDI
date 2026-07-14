@@ -8,7 +8,7 @@
 
 
     <ItemGroup>
-      <Reference Include="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\..\..\ref\net10.0\Windows.Devices.Midi2.winmd'))" />
+      <Reference Include="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\..\ref\net10.0\Windows.Devices.Midi2.winmd'))" />
     </ItemGroup>
   </Target>
 

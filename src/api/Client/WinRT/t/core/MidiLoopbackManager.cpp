@@ -17,12 +17,12 @@
 #include <algorithm>
 
 #include "MidiLoopbackCreationConfig.h"
-#include "MidiLoopbackCreationResult.h"
+#include "MidiLoopbackCreationResponse.h"
 
-#include "MidiLoopbackUpdateResult.h"
+#include "MidiLoopbackUpdateResponse.h"
 
 #include "MidiLoopbackRemovalConfig.h"
-#include "MidiLoopbackRemovalResult.h"
+#include "MidiLoopbackRemovalResponse.h"
 
 #include "MidiLoopbackEntry.h"
 #include "MidiLoopbackEndpointEntry.h"
@@ -54,7 +54,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
 
     _Use_decl_annotations_
-    loop::MidiLoopbackUpdateResult MidiLoopbackManager::MuteLoopback(_In_ winrt::guid const& associationId) noexcept
+    loop::MidiLoopbackUpdateResponse MidiLoopbackManager::MuteLoopback(_In_ winrt::guid const& associationId) noexcept
     {
         // TODO ===============================
         UNREFERENCED_PARAMETER(associationId);
@@ -63,7 +63,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     }
 
     _Use_decl_annotations_
-    loop::MidiLoopbackUpdateResult MidiLoopbackManager::UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept
+    loop::MidiLoopbackUpdateResponse MidiLoopbackManager::UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept
     {
         // TODO ===============================
 
@@ -88,10 +88,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
 
     _Use_decl_annotations_
-    loop::MidiLoopbackCreationResult MidiLoopbackManager::CreateTransientLoopback(
+    loop::MidiLoopbackCreationResponse MidiLoopbackManager::CreateTransientLoopback(
         loop::MidiLoopbackCreationConfig const& creationConfig) noexcept
     {
-        auto result = winrt::make_self<MidiLoopbackCreationResult>();
+        auto result = winrt::make_self<MidiLoopbackCreationResponse>();
         if (result == nullptr)
         {
             TraceLoggingWrite(
@@ -100,7 +100,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Unable to create instance of MidiLoopbackCreationResult", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Unable to create instance of MidiLoopbackCreationResponse", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingGuid(creationConfig.AssociationId(), "association id")
             );
 
@@ -172,9 +172,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
             auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(creationConfig);
 
             // parse the results
-            auto successResult = serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success;
+            auto successResponse = serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success;
 
-            if (successResult)
+            if (successResponse)
             {
                 auto createdLoopbackEntry = winrt::make_self<MidiLoopbackEntry>();
                 if (createdLoopbackEntry == nullptr)
@@ -332,11 +332,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     }
 
     _Use_decl_annotations_
-    loop::MidiLoopbackRemovalResult MidiLoopbackManager::RemoveTransientLoopback(
+    loop::MidiLoopbackRemovalResponse MidiLoopbackManager::RemoveTransientLoopback(
         loop::MidiLoopbackRemovalConfig const& removalConfig) noexcept
     {
         // the success code in this defaults to False
-        auto result = winrt::make_self<MidiLoopbackRemovalResult>();
+        auto result = winrt::make_self<MidiLoopbackRemovalResponse>();
         if (result == nullptr)
         {
             TraceLoggingWrite(
@@ -345,7 +345,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Unable to allocate new MidiLoopbackRemovalResult", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Unable to allocate new MidiLoopbackRemovalResponse", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingGuid(removalConfig.AssociationId(), "association id")
             );
 

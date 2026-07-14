@@ -8,27 +8,27 @@
 
 
 #include "pch.h"
-#include "MidiEndpointConnectionBasicSettings.h"
-#include "MidiEndpointConnectionBasicSettings.g.cpp"
+#include "MidiEndpointConnectionSettings.h"
+#include "MidiEndpointConnectionSettings.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    MidiEndpointConnectionBasicSettings::MidiEndpointConnectionBasicSettings(bool waitForEndpointReceiptOnSend) noexcept
+        MidiEndpointConnectionSettings::MidiEndpointConnectionSettings(bool waitForEndpointReceiptOnSend) noexcept
     {
         m_waitForEndpointReceiptOnSend = waitForEndpointReceiptOnSend;
     }
 
     _Use_decl_annotations_
-    MidiEndpointConnectionBasicSettings::MidiEndpointConnectionBasicSettings(bool waitForEndpointReceiptOnSend, bool const autoReconnect) noexcept
-            : MidiEndpointConnectionBasicSettings(waitForEndpointReceiptOnSend)
+        MidiEndpointConnectionSettings::MidiEndpointConnectionSettings(bool waitForEndpointReceiptOnSend, bool const autoReconnect) noexcept
+            : MidiEndpointConnectionSettings(waitForEndpointReceiptOnSend)
     {
         m_autoReconnect = autoReconnect;
     }
 
 
 
-    MidiEndpointConnectionBasicSettings::~MidiEndpointConnectionBasicSettings() noexcept
+    MidiEndpointConnectionSettings::~MidiEndpointConnectionSettings() noexcept
     {
         // nothing to do here
     }

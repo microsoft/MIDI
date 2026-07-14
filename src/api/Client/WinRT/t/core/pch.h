@@ -169,32 +169,8 @@ namespace msgs = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
 
 #include "resource.h"
 
-
 #include "MidiEndpointNametable.h"
 
-
 #include "winrt_memory_buffer.h"
-
-#include "MidiApi.h"
-
-#include "MidiGroup.h"
-#include "MidiChannel.h"
-#include "MidiUniversalSystemExclusiveChannel.h"
-
-#include "MidiClock.h"
-
-#include "MidiMessage32.h"
-#include "MidiMessage64.h"
-#include "MidiMessage96.h"
-#include "MidiMessage128.h"
-
-
-#include "MidiEndpointConnectionBasicSettings.h"
-#include "MidiEndpointConnection.h"
-
-#include "MidiMessageReceivedEventArgs.h"
-
-#include "MidiSession.h"
-
 
 #include <shared_mutex>

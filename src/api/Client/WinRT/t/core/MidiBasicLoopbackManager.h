@@ -20,10 +20,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{10088473-9478-4E62-850B-3D2315E135B8}"); }
 
-        static bloop::MidiBasicLoopbackCreationResult CreateTransientLoopback(
+        static bloop::MidiBasicLoopbackCreationResponse CreateTransientLoopback(
             _In_ bloop::MidiBasicLoopbackCreationConfig const& creationConfig) noexcept;
 
-        static bloop::MidiBasicLoopbackRemovalResult RemoveTransientLoopback(
+        static bloop::MidiBasicLoopbackRemovalResponse RemoveTransientLoopback(
             _In_ bloop::MidiBasicLoopbackRemovalConfig const& removalConfig) noexcept;
 
         static winrt::guid GetAssociationId(_In_ midi2enum::MidiEndpointDeviceInformation const& basicLoopbackEndpoint) noexcept;
@@ -31,8 +31,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         static bool DoesLoopbackExist(_In_ winrt::hstring const& uniqueIdentifier);
 
 
-        static bloop::MidiBasicLoopbackUpdateResult MuteLoopback(_In_ winrt::guid const& associationId);
-        static bloop::MidiBasicLoopbackUpdateResult UnmuteLoopback(_In_ winrt::guid const& associationId);
+        static bloop::MidiBasicLoopbackUpdateResponse MuteLoopback(_In_ winrt::guid const& associationId);
+        static bloop::MidiBasicLoopbackUpdateResponse UnmuteLoopback(_In_ winrt::guid const& associationId);
 
 
         static collections::IVector<bloop::MidiBasicLoopbackEntry> GetActiveLoopbackEntries();

@@ -7,20 +7,24 @@
 		<Error  Text="The Windows MIDI Services SDK does not support '$(Platform)' platform. You need to specify at 64 bit platform (x64, Arm64EC, or Arm64)." />
 	</Target>
 
-    <ItemDefinitionGroup>
-        <ClCompile>
-            <!-- Add COM extensions headers for convenience -->
-            <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\..\..\build\native\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-        </ClCompile>
-    </ItemDefinitionGroup>
+    <PropertyGroup>
+        <!-- Add COM extensions headers for convenience -->
+      <ComExtensionsIncludeDir>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)','include\'))</ComExtensionsIncludeDir>
+    </PropertyGroup>
 
-    <Target Name="SetupMIDIServicesSDKReference"
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ComExtensionsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+
+  <Target Name="SetupMIDIServicesSDKReference"
 			BeforeTargets="BeforeResolveReferences">
       <Message Text="-- Copying Windows MIDI Services references .winmd files" />
 
-
       <ItemGroup>
-        <Reference Include="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\..\..\ref\native\Windows.Devices.Midi2.winmd'))" />
+        <Reference Include="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\..\ref\native\Windows.Devices.Midi2.winmd'))" />
       </ItemGroup>
     </Target>
 

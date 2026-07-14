@@ -6,21 +6,10 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "..\..\shared\midi_sdk_idl_defs.h"
+#include "pch.h"
+#include "MidiLoopbackRemovalResponse.h"
+#include "Transports.Loopback.MidiLoopbackRemovalResponse.g.cpp"
 
-import "MidiApiContracts.idl";
-
-import "MidiApiModeEnum.idl";
-
-
-namespace Windows.Devices.Midi2
+namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 {
-    [contract(MidiCoreApiContract,1)]
-    [static_name("Windows.Devices.Midi2.IMidiApiStatics", UUID_IMidiApiStatics)]
-    static runtimeclass MidiApi
-    {
-        static Boolean EnsureServiceAvailable();
-
-        static MidiApiMode GetCurrentlySelectedApiMode();
-    }
 }

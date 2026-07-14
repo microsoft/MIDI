@@ -43,6 +43,4 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         Boolean IsReserved{ get; };
     };
 
-
-
 }

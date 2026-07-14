@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Windows.Devices.Midi2</id>
-		<version>0.99.21-preview.1</version>
+		<version>0.99.29-devpreview.1</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services App SDK. Temporary package to use until the metadata is in an official Windows SDK</description>
 		<license type="expression">MIT</license>
@@ -63,8 +63,8 @@
         
       <!-- COM Extensions -->
       
-      <file target="build\native\include\winmidi" src="..\..\..\..\..\vsfiles-sdk\intermediate\com-extensions-idl\x64\Release\WindowsMidiServicesAppSdkComExtensions.h" />
-      <file target="build\native\include\winmidi" src="..\..\..\..\..\vsfiles-sdk\intermediate\com-extensions-idl\x64\Release\WindowsMidiServicesAppSdkComExtensions_i.c" />
+      <file target="build\native\include\" src="..\..\..\..\..\vsfiles-sdk\intermediate\com-extensions-idl\x64\Release\WindowsMidiServicesAppSdkComExtensions.h" />
+      <file target="build\native\include\" src="..\..\..\..\..\vsfiles-sdk\intermediate\com-extensions-idl\x64\Release\WindowsMidiServicesAppSdkComExtensions_i.c" />
       <!--<file target="build\native\include\winmidi" src="..\..\..\..\..\vsfiles-sdk\intermediate\com-extensions-idl\x64\Release\WindowsMidiServicesAppSdkComExtensions.tlb" /> -->
 
       <!-- <file target="build\native\include\winmidi"             src="..\..\..\..\..\build\staging\app-sdk\WindowsMidiServicesAppSdkComExtensions_p.c" /> -->

@@ -7,11 +7,9 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiBasicLoopbackCreationResult.h"
-#include "Transports.BasicLoopback.MidiBasicLoopbackCreationResult.g.cpp"
+#include "MidiLoopbackCreationResponse.h"
+#include "Transports.Loopback.MidiLoopbackCreationResponse.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementation
+namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 {
-
-
 }

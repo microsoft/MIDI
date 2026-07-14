@@ -8,18 +8,18 @@
 
 
 #pragma once
-#include "MidiEndpointConnectionBasicSettings.g.h"
+#include "MidiEndpointConnectionSettings.g.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiEndpointConnectionBasicSettings : MidiEndpointConnectionBasicSettingsT<MidiEndpointConnectionBasicSettings>
+    struct MidiEndpointConnectionSettings : MidiEndpointConnectionSettingsT<MidiEndpointConnectionSettings>
     {
-        MidiEndpointConnectionBasicSettings() = default;
-        ~MidiEndpointConnectionBasicSettings() noexcept;
+        MidiEndpointConnectionSettings() = default;
+        ~MidiEndpointConnectionSettings() noexcept;
 
 
-        MidiEndpointConnectionBasicSettings(_In_ bool const waitForEndpointReceiptOnSend) noexcept;
-        MidiEndpointConnectionBasicSettings(_In_ bool const waitForEndpointReceiptOnSend, _In_ bool const autoReconnect) noexcept;
+        MidiEndpointConnectionSettings(_In_ bool const waitForEndpointReceiptOnSend) noexcept;
+        MidiEndpointConnectionSettings(_In_ bool const waitForEndpointReceiptOnSend, _In_ bool const autoReconnect) noexcept;
 
         bool WaitForEndpointReceiptOnSend() const noexcept { return m_waitForEndpointReceiptOnSend; }
         bool AutoReconnect() const noexcept { return m_autoReconnect; }
@@ -33,7 +33,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiEndpointConnectionBasicSettings : MidiEndpointConnectionBasicSettingsT<MidiEndpointConnectionBasicSettings, implementation::MidiEndpointConnectionBasicSettings>
+    struct MidiEndpointConnectionSettings : MidiEndpointConnectionSettingsT<MidiEndpointConnectionSettings, implementation::MidiEndpointConnectionSettings>
     {
     };
 }
