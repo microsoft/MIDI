@@ -797,8 +797,31 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         if (properties.HasKey(STRING_PKEY_MIDI_ServiceAssignedPortNumber))
         {
-            m_portNumber = internal::GetDeviceInfoProperty<uint32_t>(properties, STRING_PKEY_MIDI_ServiceAssignedPortNumber, 0);
+            // for MIDI Input (Source) ports, we have to subtract 1 because we number in the service starting at 1
+            // For midi Output (Destination) ports, we leave the number as-is, because the GS synth occupies number 0
+
+            if (m_portFlow == Midi1PortFlow::MidiMessageSource)
+            {
+                auto portNumber = internal::GetDeviceInfoProperty<uint32_t>(properties, STRING_PKEY_MIDI_ServiceAssignedPortNumber, 0);
+
+                if (portNumber > 0)
+                {
+                    m_portNumber = portNumber - 1;
+                }
+                else
+                {
+                    m_portNumber = 0;
+                }
+            }
+            else
+            {
+                m_portNumber = internal::GetDeviceInfoProperty<uint32_t>(properties, STRING_PKEY_MIDI_ServiceAssignedPortNumber, 0);
+            }
+
         }
+
+
+
 
         m_name = name;
         m_id = internal::NormalizeEndpointInterfaceIdHStringCopy(id);
