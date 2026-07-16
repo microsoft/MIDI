@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiServicePingResponseSummary
-namespace: Microsoft.Windows.Devices.Midi2.Diagnostics
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.Diagnostics
 type: runtimeclass
 description: Overall response from pinging the MIDI Service
 ---

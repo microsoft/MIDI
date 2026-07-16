@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiReporting
-namespace: Microsoft.Windows.Devices.Midi2.Reporting
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.Reporting
 type: runtimeclass
 description: Provides information about the service configuration
 ---

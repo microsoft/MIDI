@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: IMidiEndpointMessageProcessingPlugin
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: interface
 description: Interface implemented by any type which can be an endpoint processing plugin in the client app SDK
 ---

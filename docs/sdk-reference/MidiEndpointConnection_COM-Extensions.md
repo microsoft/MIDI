@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiEndpointConnection COM Extensions
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
 implements: IUnknown
 description: Fast and no-allocation message send/receive for a MidiEndpointConnection

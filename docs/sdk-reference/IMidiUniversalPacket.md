@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: IMidiUniversalPacket
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: interface
 description: Common interface implemented by the MidiMessageXX runtime classes.
 ---

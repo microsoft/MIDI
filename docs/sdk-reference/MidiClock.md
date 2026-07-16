@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiClock
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
 description: Used for all timestamps in Windows MIDI Services.
 ---

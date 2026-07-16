@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiPacketType
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: enum
 description: Indicates the number of words in a MIDI message
 ---

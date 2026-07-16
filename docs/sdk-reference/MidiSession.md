@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiSession
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
 implements: Windows.Foundation.IClosable, Windows.Foundation.IStringable
 description: The first class you will create when connecting to an endpoint

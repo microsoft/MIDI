@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiUniqueId
-namespace: Microsoft.Windows.Devices.Midi2.CapabilityInquiry
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.CapabilityInquiry
 type: runtimeclass
 implements: Windows.Foundation.IStringable
 description: A MIDI 2.0 MUID

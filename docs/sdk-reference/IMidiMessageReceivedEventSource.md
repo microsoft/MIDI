@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: IMidiMessageReceivedEventSource
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: interface
 description: Interface which contains the event definition used by any class which raises the `MessageReceived` event
 ---

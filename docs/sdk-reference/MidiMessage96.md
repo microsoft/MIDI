@@ -1,10 +1,9 @@
 ---
 layout: sdk_reference_page
 title: MidiMessage96
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
-implements: Windows.Foundation.IStringable, Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket
+implements: Windows.Foundation.IStringable, Windows.Devices.Midi2.IMidiUniversalPacket
 description: Represents a three-word (96-bit) UMP message
 ---
 

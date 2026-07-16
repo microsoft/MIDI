@@ -1,10 +1,9 @@
 ---
 layout: sdk_reference_page
 title: MidiEndpointConnection
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
-implements: Windows.Foundation.IStringable, Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource, Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionSource
+implements: Windows.Foundation.IStringable, Windows.Devices.Midi2.IMidiMessageReceivedEventSource, Windows.Devices.Midi2.IMidiEndpointConnectionSource
 description: The primary way to send and receive messages with an endpoint.
 tags: session, connection, endpoint
 ---

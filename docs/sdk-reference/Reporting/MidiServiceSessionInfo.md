@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiServiceSessionInfo
-namespace: Microsoft.Windows.Devices.Midi2.Reporting
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.Reporting
 type: runtimeclass
 description: Reporting information about a single open session in the MIDI Service
 ---
