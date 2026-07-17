@@ -16,6 +16,8 @@ import "MidiLegacyPortDeviceInformationAddedEventArgs.idl";
 import "MidiLegacyPortDeviceInformationUpdatedEventArgs.idl";
 import "MidiLegacyPortDeviceInformationRemovedEventArgs.idl";
 
+import "MidiGroup.idl";
+
 import "Midi1PortFlowEnum.idl";
 
 namespace Windows.Devices.Midi2.Enumeration.Legacy
@@ -54,6 +56,9 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
 
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpoint(String endpointDeviceId);
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpoint(String endpointDeviceId, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
+
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpointAndGroup(String endpointDeviceId, Windows.Devices.Midi2.MidiGroup group);
+        IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForAssociatedEndpointAndGroup(String endpointDeviceId, Windows.Devices.Midi2.MidiGroup group, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);
 
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(String portName);
         IVectorView<MidiLegacyPortDeviceInformation> GetEnumeratedPortsForName(String portName, Windows.Devices.Midi2.Enumeration.Midi1PortFlow flow);

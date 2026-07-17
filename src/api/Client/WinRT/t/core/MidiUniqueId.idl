@@ -13,8 +13,8 @@ import "MidiApiContracts.idl";
 
 namespace Windows.Devices.Midi2.CapabilityInquiry
 {
+    [threading(both)]
     [contract(MidiCapabilityInquiryApiContract,1)]
-    [version(1)]
     [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueId", UUID_IMidiUniqueId)]
     [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueIdStatics", UUID_IMidiUniqueIdStatics)]
     [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueIdFactory", UUID_IMidiUniqueIdFactory)]

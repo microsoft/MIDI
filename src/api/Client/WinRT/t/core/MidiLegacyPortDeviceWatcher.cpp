@@ -707,6 +707,52 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         return results.GetView();
     }
+
+
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForAssociatedEndpointAndGroup(
+        winrt::hstring const& endpointDeviceId,
+        midi2::MidiGroup group) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForAssociatedEndpointAndGroup(
+        winrt::hstring const& endpointDeviceId,
+        midi2::MidiGroup group,
+        midi2enum::Midi1PortFlow const flow) const noexcept
+    {
+        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+
+        auto cleanEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
+
+        for (auto const& [key, port] : m_enumeratedPorts)
+        {
+            if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
+            {
+                results.Append(port);
+            }
+        }
+
+        return results.GetView();
+    }
+
+
+
+
     
     _Use_decl_annotations_
     collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForName(

@@ -26,10 +26,10 @@
     <ClInclude Include="MidiApi.h">
       <Filter>SDK\Init</Filter>
     </ClInclude>
-    <ClInclude Include="midi_api_mode_defs.h">
-      <Filter>SDK\Init</Filter>
-    </ClInclude>
     <ClInclude Include="winrt_devpkey_util.h" />
+    <ClInclude Include="midi_api_mode_defs.h">
+      <Filter>SDK\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
@@ -97,12 +97,6 @@
     </Midl>
     <Midl Include="MidiPacketTypeEnum.idl">
       <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiApi.idl">
-      <Filter>SDK\Init</Filter>
-    </Midl>
-    <Midl Include="MidiApiModeEnum.idl">
-      <Filter>SDK\Init</Filter>
     </Midl>
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
       <Filter>SDK\Utilities\Messages</Filter>
@@ -359,6 +353,12 @@
     <Midl Include="MidiVirtualDeviceManager.idl">
       <Filter>SDK\Transports\Virtual</Filter>
     </Midl>
+    <Midl Include="MidiApi.idl">
+      <Filter>SDK\Common</Filter>
+    </Midl>
+    <Midl Include="MidiApiModeEnum.idl">
+      <Filter>SDK\Common</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -383,9 +383,6 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{d55cebca-71a4-4cd8-8d02-02b45119248b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Init">
-      <UniqueIdentifier>{db47925e-c34c-4f67-adc5-fc7746041a0d}</UniqueIdentifier>
     </Filter>
     <Filter Include="SDK\Utilities">
       <UniqueIdentifier>{2cc155ff-5537-4eee-876a-3815071095e3}</UniqueIdentifier>
