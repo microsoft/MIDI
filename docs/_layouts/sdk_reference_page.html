@@ -66,7 +66,7 @@ layout: default
                                     {%   assign iface_short_name = iface_name | remove: "Windows.Foundation." %}
                                     {% elsif iface_name contains "Microsoft.Windows.Devices.Midi2" %}
                                     {%   assign root_folder = "/sdk-reference/" %}
-                                    {%   assign sub_folder = iface_name | remove: "Microsoft.Windows.Devices.Midi2." | replace: ".", "/" %}
+                                    {%   assign sub_folder = iface_name | remove: "Windows.Devices.Midi2." | replace: ".", "/" %}
                                     {%   assign iface_url = root_folder | append: sub_folder | append: "/" | relative_url %}
                                     {%   assign iface_short_name = iface_name | split: "." | last %}
                                     {% else %}

@@ -10,7 +10,7 @@
 
                     {% assign ns_name_size = ns.name | size %}
                     {% if ns_name_size > 45 %}
-                        {% assign display_ns = ns.name | replace: ".Windows.", "..." %}
+                        {% assign display_ns = ns.name | replace: ".Devices.Midi2.", "..." %}
                     {% else %}
                         {% assign display_ns = ns.name %}
                     {% endif %}
