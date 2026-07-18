@@ -174,18 +174,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-        auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
+            auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
-        for (auto const& conn : m_connectionsForAutoReconnect)
-        {
-            if (id == conn->ConnectedEndpointDeviceId())
+            for (auto const& conn : m_connectionsForAutoReconnect)
             {
-                if (conn->InternalWasAlreadyOpened())
+                if (id == conn->ConnectedEndpointDeviceId())
                 {
-                    conn->InternalOnDeviceReconnect();
+                    if (conn->InternalWasAlreadyOpened())
+                    {
+                        conn->InternalOnDeviceReconnect();
+                    }
                 }
             }
-        }
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -236,17 +236,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-        auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
+            auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
-        for (auto const& conn : m_connectionsForAutoReconnect)
-        {
-            // there can be more than one match, so we don't
-            // break after the first one is found
-            if (id == conn->ConnectedEndpointDeviceId())
+            for (auto const& conn : m_connectionsForAutoReconnect)
             {
-                conn->InternalOnDeviceDisconnect();
+                // there can be more than one match, so we don't
+                // break after the first one is found
+                if (id == conn->ConnectedEndpointDeviceId())
+                {
+                    conn->InternalOnDeviceDisconnect();
+                }
             }
-        }
         }
         catch (winrt::hresult_error const& ex)
         {

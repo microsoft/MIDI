@@ -40,7 +40,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
 
-            return nullptr;
         }
         catch (...)
         {
@@ -55,8 +54,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"General exception creating MidiMessage32 from struct.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            return nullptr;
         }
+
+        return nullptr;
+
     }
 
 

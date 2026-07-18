@@ -85,12 +85,12 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        m_enumeratedEndpointDevices.Clear();
+            m_enumeratedEndpointDevices.Clear();
 
-        if (m_watcher)
-        {
-            m_watcher.Start();
-        }
+            if (m_watcher)
+            {
+                m_watcher.Start();
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -518,14 +518,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        if (m_watcher)
-        {
-            return m_watcher.Status();
-        }
-        else
-        {
-            return enumeration::DeviceWatcherStatus::Aborted;
-        }
+            if (m_watcher)
+            {
+                return m_watcher.Status();
+            }
+            else
+            {
+                return enumeration::DeviceWatcherStatus::Aborted;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {

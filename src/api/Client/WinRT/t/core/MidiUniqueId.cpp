@@ -41,15 +41,15 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
     {
         try
         {
-        std::srand((int)(midi2::MidiClock::Now() & 0x00000000FFFFFFFF));
+            std::srand((int)(midi2::MidiClock::Now() & 0x00000000FFFFFFFF));
 
-        uint32_t val = ((uint32_t)(std::rand()) % 0xFFFFF);
+            uint32_t val = ((uint32_t)(std::rand()) % 0xFFFFF);
 
-        // get us out of the reserved area
-        val <<= 8;
+            // get us out of the reserved area
+            val <<= 8;
 
-        //return winrt::make<MidiUniqueId>(val);
-        return ci::MidiUniqueId(val);
+            //return winrt::make<MidiUniqueId>(val);
+            return ci::MidiUniqueId(val);
         }
         catch (winrt::hresult_error const& ex)
         {

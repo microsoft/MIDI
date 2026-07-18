@@ -209,21 +209,38 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-        auto cleanName = internal::TrimmedHStringCopy(newName);
+            auto cleanName = internal::TrimmedHStringCopy(newName);
 
-        // this can be called only if we've already initialized the session tracker
-        if (m_sessionTracker)
-        {
-            auto hr = m_sessionTracker->UpdateClientSessionName(m_id, cleanName.c_str());
-
-            if (SUCCEEDED(hr))
+            // this can be called only if we've already initialized the session tracker
+            if (m_sessionTracker)
             {
-                m_name = cleanName;
-                return true;
+                auto hr = m_sessionTracker->UpdateClientSessionName(m_id, cleanName.c_str());
+
+                if (SUCCEEDED(hr))
+                {
+                    m_name = cleanName;
+                    return true;
+                }
+                else
+                {
+                    LOG_IF_FAILED(hr);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Unable to update session name", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingHResult(hr, MIDI_SDK_TRACE_HRESULT_FIELD)
+                    );
+
+                    return false;
+                }
             }
             else
             {
-                LOG_IF_FAILED(hr);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -231,28 +248,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Unable to update session name", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingHResult(hr, MIDI_SDK_TRACE_HRESULT_FIELD)
+                    TraceLoggingWideString(L"Session tracker interface wasn't already initialized", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
 
                 return false;
             }
-        }
-        else
-        {
-            LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Session tracker interface wasn't already initialized", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
-
-            return false;
-        }
         }
         catch (winrt::hresult_error const& ex)
         {

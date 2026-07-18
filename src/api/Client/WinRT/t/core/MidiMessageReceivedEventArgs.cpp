@@ -69,43 +69,43 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-        auto wordCount = GetValidMessageWordCount();
+            auto wordCount = GetValidMessageWordCount();
 
-        if (wordCount == 1) // ump32
-        {
-            return winrt::make_self<implementation::MidiMessage32>(m_timestamp, m_data.Word0).as<midi2::IMidiUniversalPacket>();
-        }
-        else if (wordCount == 2)    // ump64
-        {
-            return winrt::make_self<implementation::MidiMessage64>(m_timestamp, m_data.Word0, m_data.Word1).as<midi2::IMidiUniversalPacket>();
-        }
-        else if (wordCount == 3) // ump96
-        {
-            return winrt::make_self<implementation::MidiMessage96>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2).as<midi2::IMidiUniversalPacket>();
-        }
-        else if (wordCount == 4) // ump128
-        {
-            return winrt::make_self<implementation::MidiMessage128>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2, m_data.Word3).as<midi2::IMidiUniversalPacket>();
-        }
-        else
-        {
-            // this should never happen
+            if (wordCount == 1) // ump32
+            {
+                return winrt::make_self<implementation::MidiMessage32>(m_timestamp, m_data.Word0).as<midi2::IMidiUniversalPacket>();
+            }
+            else if (wordCount == 2)    // ump64
+            {
+                return winrt::make_self<implementation::MidiMessage64>(m_timestamp, m_data.Word0, m_data.Word1).as<midi2::IMidiUniversalPacket>();
+            }
+            else if (wordCount == 3) // ump96
+            {
+                return winrt::make_self<implementation::MidiMessage96>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2).as<midi2::IMidiUniversalPacket>();
+            }
+            else if (wordCount == 4) // ump128
+            {
+                return winrt::make_self<implementation::MidiMessage128>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2, m_data.Word3).as<midi2::IMidiUniversalPacket>();
+            }
+            else
+            {
+                // this should never happen
 
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Invalid message packet type", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingUInt8(wordCount, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Invalid message packet type", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingUInt8(wordCount, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD)
+                );
 
 
-            return nullptr;
-        }
+                return nullptr;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -181,53 +181,53 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-        if (ump == nullptr)
-        {
-            WINRT_ASSERT(false);    // this will cause a break in debug builds
+            if (ump == nullptr)
+            {
+                WINRT_ASSERT(false);    // this will cause a break in debug builds
 
-            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
-            return false;
-        }
+                return false;
+            }
 
-        if (PacketType() != MidiPacketType::UniversalMidiPacket32)
-        {
-            WINRT_ASSERT(false); // this will cause a break in debug builds
+            if (PacketType() != MidiPacketType::UniversalMidiPacket32)
+            {
+                WINRT_ASSERT(false); // this will cause a break in debug builds
 
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Incorrect UMP Packet type for Ump32", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Incorrect UMP Packet type for Ump32", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
-            return false;
-        }
+                return false;
+            }
 
-        auto impUmp = winrt::get_self<implementation::MidiMessage32, midi2::MidiMessage32>(ump);
-        WINRT_ASSERT(impUmp != nullptr);
+            auto impUmp = winrt::get_self<implementation::MidiMessage32, midi2::MidiMessage32>(ump);
+            WINRT_ASSERT(impUmp != nullptr);
 
-        auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
-        WINRT_ASSERT(umpDestinationData != nullptr);
+            auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
+            WINRT_ASSERT(umpDestinationData != nullptr);
 
-        // copy data over. TODO: need to error check this
-        // Consider adding a write lock to UMP to guard this as well
-        memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket32) * sizeof(uint32_t));
+            // copy data over. TODO: need to error check this
+            // Consider adding a write lock to UMP to guard this as well
+            memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket32) * sizeof(uint32_t));
 
-        return true;
+            return true;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -247,54 +247,54 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-        if (ump == nullptr)
-        {
-            WINRT_ASSERT(false);    // this will cause a break in debug builds
+            if (ump == nullptr)
+            {
+                WINRT_ASSERT(false);    // this will cause a break in debug builds
 
-            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
 
-            return false;
-        }
+                return false;
+            }
 
-        if (PacketType() != MidiPacketType::UniversalMidiPacket64)
-        {
-            WINRT_ASSERT(false); // this will cause a break in debug builds
+            if (PacketType() != MidiPacketType::UniversalMidiPacket64)
+            {
+                WINRT_ASSERT(false); // this will cause a break in debug builds
 
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Incorrect UMP Packet type for Ump64", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Incorrect UMP Packet type for Ump64", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
-            return false;
-        }
+                return false;
+            }
 
-        auto impUmp = winrt::get_self<implementation::MidiMessage64, midi2::MidiMessage64>(ump);
-        WINRT_ASSERT(impUmp != nullptr);
+            auto impUmp = winrt::get_self<implementation::MidiMessage64, midi2::MidiMessage64>(ump);
+            WINRT_ASSERT(impUmp != nullptr);
 
-        auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
-        WINRT_ASSERT(umpDestinationData != nullptr);
+            auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
+            WINRT_ASSERT(umpDestinationData != nullptr);
 
-        // copy data over. TODO: need to error check this
-        // Consider adding a write lock to UMP to guard this as well
-        memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket64) * sizeof(uint32_t));
+            // copy data over. TODO: need to error check this
+            // Consider adding a write lock to UMP to guard this as well
+            memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket64) * sizeof(uint32_t));
 
-        return true;
+            return true;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -314,53 +314,53 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-        if (ump == nullptr)
-        {
-            WINRT_ASSERT(false);    // this will cause a break in debug builds
+            if (ump == nullptr)
+            {
+                WINRT_ASSERT(false);    // this will cause a break in debug builds
 
-            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
-            return false;
-        }
+                return false;
+            }
 
-        if (PacketType() != MidiPacketType::UniversalMidiPacket96)
-        {
-            WINRT_ASSERT(false); // this will cause a break in debug builds
+            if (PacketType() != MidiPacketType::UniversalMidiPacket96)
+            {
+                WINRT_ASSERT(false); // this will cause a break in debug builds
 
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Incorrect UMP Packet type for Ump96", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Incorrect UMP Packet type for Ump96", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
-            return false;
-        }
+                return false;
+            }
 
-        auto impUmp = winrt::get_self<implementation::MidiMessage96, midi2::MidiMessage96>(ump);
-        WINRT_ASSERT(impUmp != nullptr);
+            auto impUmp = winrt::get_self<implementation::MidiMessage96, midi2::MidiMessage96>(ump);
+            WINRT_ASSERT(impUmp != nullptr);
 
-        auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
-        WINRT_ASSERT(umpDestinationData != nullptr);
+            auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
+            WINRT_ASSERT(umpDestinationData != nullptr);
 
-        // copy data over. TODO: need to error check this
-        // Consider adding a write lock to UMP to guard this as well
-        memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket96) * sizeof(uint32_t));
+            // copy data over. TODO: need to error check this
+            // Consider adding a write lock to UMP to guard this as well
+            memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket96) * sizeof(uint32_t));
 
-        return true;
+            return true;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -380,52 +380,52 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-        if (ump == nullptr)
-        {
-            WINRT_ASSERT(false);    // this will cause a break in debug builds
+            if (ump == nullptr)
+            {
+                WINRT_ASSERT(false);    // this will cause a break in debug builds
 
-            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
-            return false;
-        }
+                return false;
+            }
 
-        if (PacketType() != MidiPacketType::UniversalMidiPacket128)
-        {
-            WINRT_ASSERT(false); // this will cause a break in debug builds
+            if (PacketType() != MidiPacketType::UniversalMidiPacket128)
+            {
+                WINRT_ASSERT(false); // this will cause a break in debug builds
 
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Incorrect UMP Packet type for Ump128", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Incorrect UMP Packet type for Ump128", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
-            return false;
-        }
+                return false;
+            }
 
-        auto impUmp = winrt::get_self<implementation::MidiMessage128, midi2::MidiMessage128>(ump);
-        WINRT_ASSERT(impUmp != nullptr);
+            auto impUmp = winrt::get_self<implementation::MidiMessage128, midi2::MidiMessage128>(ump);
+            WINRT_ASSERT(impUmp != nullptr);
 
-        auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
-        WINRT_ASSERT(umpDestinationData != nullptr);
+            auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
+            WINRT_ASSERT(umpDestinationData != nullptr);
 
-        // TODO: Consider adding a write lock to UMP to guard this as well
-        memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket128) * sizeof(uint32_t));
+            // TODO: Consider adding a write lock to UMP to guard this as well
+            memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket128) * sizeof(uint32_t));
 
-        return true;
+            return true;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -470,18 +470,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-        uint8_t messageWordCount = GetValidMessageWordCount();
+            uint8_t messageWordCount = GetValidMessageWordCount();
 
-        // copy over the words
+            // copy over the words
 
-        uint32_t* umpData = (uint32_t*)&m_data;
+            uint32_t* umpData = (uint32_t*)&m_data;
 
-        for (int i = 0; i < messageWordCount; i++)
-        {
-            wordList.Append(umpData[i]);
-        }
+            for (int i = 0; i < messageWordCount; i++)
+            {
+                wordList.Append(umpData[i]);
+            }
 
-        return messageWordCount;
+            return messageWordCount;
         }
         catch (winrt::hresult_error const& ex)
         {

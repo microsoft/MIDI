@@ -16,16 +16,16 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     {
         try
         {
-        json::JsonObject matchObject;
+            json::JsonObject matchObject;
 
-        if (m_match->WriteJson(matchObject))
-        {
-            return matchObject.Stringify();
-        }
-        else
-        {
-            return L"";
-        }
+            if (m_match->WriteJson(matchObject))
+            {
+                return matchObject.Stringify();
+            }
+            else
+            {
+                return L"";
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -46,9 +46,9 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     {
         try
         {
-        auto otherMatch = winrt::get_self<MidiServiceConfigEndpointMatchCriteria>(other)->InternalGetMatchObject();
+            auto otherMatch = winrt::get_self<MidiServiceConfigEndpointMatchCriteria>(other)->InternalGetMatchObject();
 
-        return m_match->Matches(*otherMatch);
+            return m_match->Matches(*otherMatch);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -68,20 +68,20 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     {
         try
         {
-        auto winrtMatch = winrt::make_self<MidiServiceConfigEndpointMatchCriteria>();
+            auto winrtMatch = winrt::make_self<MidiServiceConfigEndpointMatchCriteria>();
 
-        json::JsonObject jsonObject;
+            json::JsonObject jsonObject;
 
-        if (json::JsonObject::TryParse(matchObjectJson, jsonObject))
-        {
-            auto match = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(jsonObject);
+            if (json::JsonObject::TryParse(matchObjectJson, jsonObject))
+            {
+                auto match = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(jsonObject);
 
-            winrtMatch->InternalSetMatchObject(match);
+                winrtMatch->InternalSetMatchObject(match);
 
-            return *winrtMatch;
-        }
+                return *winrtMatch;
+            }
 
-        return nullptr;
+            return nullptr;
         }
         catch (winrt::hresult_error const& ex)
         {

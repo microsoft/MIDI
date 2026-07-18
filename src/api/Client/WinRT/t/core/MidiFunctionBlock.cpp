@@ -133,24 +133,24 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        // this needs to do some data validation, like checking group index, enums, etc.
+            // this needs to do some data validation, like checking group index, enums, etc.
 
-        // this should only update the fields that exist, which is why all the checks
+            // this should only update the fields that exist, which is why all the checks
 
-        if (json.HasKey(JSON_KEY_FB_NUMBER)) m_number = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_NUMBER, 0);
-        if (json.HasKey(JSON_KEY_FB_NAME)) m_name = json.GetNamedString(JSON_KEY_FB_NAME, L"");
-        if (json.HasKey(JSON_KEY_FB_ACTIVE)) m_isActive = json.GetNamedBoolean(JSON_KEY_FB_ACTIVE, false);
-        if (json.HasKey(JSON_KEY_FB_UIHINT)) m_uiHint = (midi2enum::MidiFunctionBlockUIHint)json.GetNamedNumber(JSON_KEY_FB_UIHINT, (int)midi2enum::MidiFunctionBlockUIHint::Unknown);
-        if (json.HasKey(JSON_KEY_FB_MIDI10)) m_midi10Connection = (midi2enum::MidiFunctionBlockRepresentsMidi10Connection)json.GetNamedNumber(JSON_KEY_FB_MIDI10, (int)midi2enum::MidiFunctionBlockRepresentsMidi10Connection::Not10);
-        if (json.HasKey(JSON_KEY_FB_DIRECTION)) m_direction = (midi2enum::MidiFunctionBlockDirection)json.GetNamedNumber(JSON_KEY_FB_DIRECTION, (int)midi2enum::MidiFunctionBlockDirection::Undefined);
-        if (json.HasKey(JSON_KEY_FB_FIRSTGROUP)) m_firstGroup = midi2::MidiGroup((uint8_t)json.GetNamedNumber(JSON_KEY_FB_FIRSTGROUP, 0));
-        if (json.HasKey(JSON_KEY_FB_NUMGROUPSSPANNED)) m_numberOfGroupsSpanned = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_NUMGROUPSSPANNED, 0);
-        if (json.HasKey(JSON_KEY_FB_MIDICIFORMAT)) m_midiCIMessageVersionFormat = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_MIDICIFORMAT, 0);
+            if (json.HasKey(JSON_KEY_FB_NUMBER)) m_number = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_NUMBER, 0);
+            if (json.HasKey(JSON_KEY_FB_NAME)) m_name = json.GetNamedString(JSON_KEY_FB_NAME, L"");
+            if (json.HasKey(JSON_KEY_FB_ACTIVE)) m_isActive = json.GetNamedBoolean(JSON_KEY_FB_ACTIVE, false);
+            if (json.HasKey(JSON_KEY_FB_UIHINT)) m_uiHint = (midi2enum::MidiFunctionBlockUIHint)json.GetNamedNumber(JSON_KEY_FB_UIHINT, (int)midi2enum::MidiFunctionBlockUIHint::Unknown);
+            if (json.HasKey(JSON_KEY_FB_MIDI10)) m_midi10Connection = (midi2enum::MidiFunctionBlockRepresentsMidi10Connection)json.GetNamedNumber(JSON_KEY_FB_MIDI10, (int)midi2enum::MidiFunctionBlockRepresentsMidi10Connection::Not10);
+            if (json.HasKey(JSON_KEY_FB_DIRECTION)) m_direction = (midi2enum::MidiFunctionBlockDirection)json.GetNamedNumber(JSON_KEY_FB_DIRECTION, (int)midi2enum::MidiFunctionBlockDirection::Undefined);
+            if (json.HasKey(JSON_KEY_FB_FIRSTGROUP)) m_firstGroup = midi2::MidiGroup((uint8_t)json.GetNamedNumber(JSON_KEY_FB_FIRSTGROUP, 0));
+            if (json.HasKey(JSON_KEY_FB_NUMGROUPSSPANNED)) m_numberOfGroupsSpanned = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_NUMGROUPSSPANNED, 0);
+            if (json.HasKey(JSON_KEY_FB_MIDICIFORMAT)) m_midiCIMessageVersionFormat = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_MIDICIFORMAT, 0);
 
 
-        // todo: return false on error
+            // todo: return false on error
 
-        return true;
+            return true;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -171,16 +171,16 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         try
         {
-        json::JsonObject jsonObject{};
+            json::JsonObject jsonObject{};
 
-        if (json::JsonObject::TryParse(json, jsonObject))
-        {
-            return UpdateFromJson(jsonObject);
-        }
-        else
-        {
-            return false;
-        }
+            if (json::JsonObject::TryParse(json, jsonObject))
+            {
+                return UpdateFromJson(jsonObject);
+            }
+            else
+            {
+                return false;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -198,19 +198,19 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        json::JsonObject jsonObject;
+            json::JsonObject jsonObject;
 
-        jsonObject.SetNamedValue(JSON_KEY_FB_NUMBER, json::JsonValue::CreateNumberValue(Number()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_NAME, json::JsonValue::CreateStringValue(Name()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_ACTIVE, json::JsonValue::CreateBooleanValue(IsActive()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_UIHINT, json::JsonValue::CreateNumberValue((int)UIHint()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_MIDI10, json::JsonValue::CreateNumberValue((int)RepresentsMidi10Connection()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_DIRECTION, json::JsonValue::CreateNumberValue((int)Direction()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_FIRSTGROUP, json::JsonValue::CreateNumberValue(FirstGroup().Index()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_NUMGROUPSSPANNED, json::JsonValue::CreateNumberValue(GroupCount()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_MIDICIFORMAT, json::JsonValue::CreateNumberValue(MidiCIMessageVersionFormat()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_NUMBER, json::JsonValue::CreateNumberValue(Number()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_NAME, json::JsonValue::CreateStringValue(Name()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_ACTIVE, json::JsonValue::CreateBooleanValue(IsActive()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_UIHINT, json::JsonValue::CreateNumberValue((int)UIHint()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_MIDI10, json::JsonValue::CreateNumberValue((int)RepresentsMidi10Connection()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_DIRECTION, json::JsonValue::CreateNumberValue((int)Direction()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_FIRSTGROUP, json::JsonValue::CreateNumberValue(FirstGroup().Index()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_NUMGROUPSSPANNED, json::JsonValue::CreateNumberValue(GroupCount()));
+            jsonObject.SetNamedValue(JSON_KEY_FB_MIDICIFORMAT, json::JsonValue::CreateNumberValue(MidiCIMessageVersionFormat()));
 
-        return jsonObject.Stringify();
+            return jsonObject.Stringify();
         }
         catch (winrt::hresult_error const& ex)
         {

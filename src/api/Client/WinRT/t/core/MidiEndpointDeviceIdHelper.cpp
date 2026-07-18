@@ -21,30 +21,30 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        // we use the std::wstring version for the substr and find functions which winrt::hstring lacks
-        auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(fullEndpointDeviceId.c_str());
+            // we use the std::wstring version for the substr and find functions which winrt::hstring lacks
+            auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(fullEndpointDeviceId.c_str());
 
-        if (cleanId.starts_with(MIDISRV_UMP_ENDPOINT_SWD_PREFIX))
-        {
-            cleanId = cleanId.substr(wcslen(MIDISRV_UMP_ENDPOINT_SWD_PREFIX));
-        }
-        else
-        {
-            // not our id
-            return L"";
-        }
+            if (cleanId.starts_with(MIDISRV_UMP_ENDPOINT_SWD_PREFIX))
+            {
+                cleanId = cleanId.substr(wcslen(MIDISRV_UMP_ENDPOINT_SWD_PREFIX));
+            }
+            else
+            {
+                // not our id
+                return L"";
+            }
 
-        if (cleanId.ends_with(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX))
-        {
-            cleanId = cleanId.substr(0, cleanId.find(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX));
-        }
-        else
-        {
-            // not our id
-            return L"";
-        }
+            if (cleanId.ends_with(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX))
+            {
+                cleanId = cleanId.substr(0, cleanId.find(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX));
+            }
+            else
+            {
+                // not our id
+                return L"";
+            }
 
-        return cleanId.c_str();     // will auto-convert to winrt::hstring
+            return cleanId.c_str();     // will auto-convert to winrt::hstring
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -86,9 +86,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(fullEndpointDeviceId.c_str());
+            auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(fullEndpointDeviceId.c_str());
 
-        return cleanId.starts_with(MIDISRV_UMP_ENDPOINT_SWD_PREFIX) && cleanId.ends_with(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX);
+            return cleanId.starts_with(MIDISRV_UMP_ENDPOINT_SWD_PREFIX) && cleanId.ends_with(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX);
         }
         catch (winrt::hresult_error const& ex)
         {

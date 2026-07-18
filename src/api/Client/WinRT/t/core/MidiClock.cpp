@@ -190,35 +190,4 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    //_Use_decl_annotations_
-    //bool MidiClock::SetSystemTimerResolutionMilliseconds(uint32_t targetIntervalMilliseconds)
-    //{
-    //    auto timerInfo = GetCurrentSystemTimerInfo();
-
-    //    if (targetIntervalMilliseconds > ConvertTimestampTicksToMilliseconds(timerInfo.MaximumIntervalTicks)) return false;
-    //    if (targetIntervalMilliseconds < ConvertTimestampTicksToMilliseconds(timerInfo.MinimumIntervalTicks)) return false;
-
-    //    //auto newTimerValue = targetIntervalTicks * TimestampFrequency() / m_timerResolutionFrequency;
-    //    auto newTimerValue = ConvertTimestampTicksToMilliseconds(targetIntervalMilliseconds);
-
-    //    // TODO: Call API to set the new timer value
-    //    // NtSetTimerResolution exists but isn't coming up in the user-mode headers.
-    //    // there are also the mmsystem API calls we can use
-    //    
-    //    auto configResult = timeBeginPeriod(targetIntervalMilliseconds);
-
-    //    if (configResult == TIMERR_NOERROR)
-    //    {
-    //        return true;
-    //    }
-    //    else
-    //    {
-    //        return false;
-    //    }
-
-    //}
-
-
-
-
 }

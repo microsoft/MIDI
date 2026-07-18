@@ -58,61 +58,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         std::wstring blockName{ m_block.Name };
 
-        // Name rules for MIDI 1.0 devices (byte-format-native) with single-group blocks
-        // - If the name starts with the device name remove that portion of the string
-        // - Remove separator characters that are left at the beginning of the string
-        // - If the name ends up empty, name it starting with Group 0 = A in the form "Port A"
-
-        //if (m_block.GroupCount == 1)
-        //{
-        //    std::wstring deviceName{ m_deviceName.c_str() };
-
-            //if (blockName == deviceName)
-            //{
-            //    blockName = L"";
-            //}
-            //else if (blockName.starts_with(deviceName))
-            //{
-            //    blockName = internal::TrimmedWStringCopy(blockName.substr(deviceName.length()));
-            //}
-
-            // remove certain orphaned separator characters that are common in names
-            // we could just remove any non-alpha-numeric characters, but that feels
-            // like it may remove something necessary from some devices. Needs testing.
-            //wchar_t separatorChars[] = { '-', '_', ':', '.', '*', '+' };
-
-            //for (auto const& c : separatorChars)
-            //{
-            //    if (blockName.starts_with(c))
-            //    {
-            //        blockName = internal::TrimmedWStringCopy(blockName.substr(1));
-            //        break;
-            //    }
-            //}
-
-            // the device name has now been removed. Let's see what else we have
-
-            //std::wstring portInfo = L"Port " + (wchar_t)(m_block.FirstGroupIndex + 'A');
-
-            //if (blockName.empty())
-            //{
-            //    blockName = portInfo;
-            //}
-            //else if (blockName.find(L"Port") != std::wstring::npos && blockName.find(L"port") != std::wstring::npos)
-            //{
-            //    blockName = L" (" + portInfo + L")";
-            //}
-            //else
-            //{
-            //    // block name already includes some Port name info, so we just leave it
-            //}
-
-        //}
-
         fb->Name(blockName.c_str());
-
-
-
 
         switch ((midi2enum::MidiGroupTerminalBlockDirection)m_block.Direction)
         {

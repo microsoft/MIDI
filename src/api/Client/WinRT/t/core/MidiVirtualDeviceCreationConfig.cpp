@@ -74,67 +74,67 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
     {
         try
         {
-        // create the json for creating the endpoint
+            // create the json for creating the endpoint
 
-        json::JsonObject endpointDefinitionObject;
+            json::JsonObject endpointDefinitionObject;
 
-        json::JsonArray virtualDevicesCreationArray;
-        json::JsonObject transportObject;
-        json::JsonObject topLevelTransportPluginSettingsObject;
-        json::JsonObject outerWrapperObject;
+            json::JsonArray virtualDevicesCreationArray;
+            json::JsonObject transportObject;
+            json::JsonObject topLevelTransportPluginSettingsObject;
+            json::JsonObject outerWrapperObject;
 
-        // set all of our properties.
+            // set all of our properties.
 
-        internal::JsonSetGuidProperty(
-            endpointDefinitionObject,
-            MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY,
-            m_associationId);
+            internal::JsonSetGuidProperty(
+                endpointDefinitionObject,
+                MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY,
+                m_associationId);
 
-        endpointDefinitionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            json::JsonValue::CreateStringValue(m_declaredEndpointInfo.ProductInstanceId()));  // don't truncate here. Happens in service
+            endpointDefinitionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
+                json::JsonValue::CreateStringValue(m_declaredEndpointInfo.ProductInstanceId()));  // don't truncate here. Happens in service
 
-        endpointDefinitionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            json::JsonValue::CreateStringValue(m_endpointName));
+            endpointDefinitionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
+                json::JsonValue::CreateStringValue(m_endpointName));
 
-        endpointDefinitionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            json::JsonValue::CreateStringValue(m_description));
+            endpointDefinitionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
+                json::JsonValue::CreateStringValue(m_description));
 
-        endpointDefinitionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY,
-            json::JsonValue::CreateStringValue(m_manufacturer));
+            endpointDefinitionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY,
+                json::JsonValue::CreateStringValue(m_manufacturer));
 
-        endpointDefinitionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY,
-            json::JsonValue::CreateBooleanValue(m_umpOnly));
-
-
-        // TODO: Other props that have to be set at the service level and not in-protocol
-
-        virtualDevicesCreationArray.Append(endpointDefinitionObject);
-
-        // create the transport object with the child creation node
-
-        transportObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
-            virtualDevicesCreationArray);
-
-        // create the main node with the transport id property as key to the array
-
-        topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(virt::MidiVirtualDeviceManager::TransportId()),
-            transportObject);
-
-        // wrap it all up so the json is valid
-
-        outerWrapperObject.SetNamedValue(
-            MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
-            topLevelTransportPluginSettingsObject);
+            endpointDefinitionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY,
+                json::JsonValue::CreateBooleanValue(m_umpOnly));
 
 
-        return outerWrapperObject;
+            // TODO: Other props that have to be set at the service level and not in-protocol
+
+            virtualDevicesCreationArray.Append(endpointDefinitionObject);
+
+            // create the transport object with the child creation node
+
+            transportObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
+                virtualDevicesCreationArray);
+
+            // create the main node with the transport id property as key to the array
+
+            topLevelTransportPluginSettingsObject.SetNamedValue(
+                internal::GuidToString(virt::MidiVirtualDeviceManager::TransportId()),
+                transportObject);
+
+            // wrap it all up so the json is valid
+
+            outerWrapperObject.SetNamedValue(
+                MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
+                topLevelTransportPluginSettingsObject);
+
+
+            return outerWrapperObject;
         }
         catch (winrt::hresult_error const& ex)
         {

@@ -24,13 +24,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {      
         try
         {
-        return midi2::MidiMessage32(
-            timestamp,
-            (uint32_t)(
-                0x00000000 |
-                internal::CleanupNibble(status) << 20 |
-                internal::CleanupInt20(dataOrReserved))
-        );
+            return midi2::MidiMessage32(
+                timestamp,
+                (uint32_t)(
+                    0x00000000 |
+                    internal::CleanupNibble(status) << 20 |
+                    internal::CleanupInt20(dataOrReserved))
+            );
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -55,15 +55,15 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        return midi2::MidiMessage32(
-            timestamp,
-            (uint32_t)(
-                0x1 << 28 |
-                group.Index() << 24 |
-                status << 16 |
-                internal::CleanupByte7(midi1Byte2) << 8 |
-                internal::CleanupByte7(midi1Byte3))
-        );
+            return midi2::MidiMessage32(
+                timestamp,
+                (uint32_t)(
+                    0x1 << 28 |
+                    group.Index() << 24 |
+                    status << 16 |
+                    internal::CleanupByte7(midi1Byte2) << 8 |
+                    internal::CleanupByte7(midi1Byte3))
+            );
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -88,16 +88,16 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        return midi2::MidiMessage32(
-            timestamp,
-            (uint32_t)(
-                0x2 << 28 |
-                group.Index() << 24 |
-                internal::CleanupNibble((uint8_t)status) << 20 |
-                channel.Index() << 16 |
-                internal::CleanupByte7(byte3) << 8 |
-                internal::CleanupByte7(byte4))
-        );
+            return midi2::MidiMessage32(
+                timestamp,
+                (uint32_t)(
+                    0x2 << 28 |
+                    group.Index() << 24 |
+                    internal::CleanupNibble((uint8_t)status) << 20 |
+                    channel.Index() << 16 |
+                    internal::CleanupByte7(byte3) << 8 |
+                    internal::CleanupByte7(byte4))
+            );
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -127,23 +127,23 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 
         try
         {
-        return midi2::MidiMessage64(
-            timestamp,
-            (uint32_t)(
-                0x3 << 28 |
-                group.Index() << 24 |
-                internal::CleanupNibble(status) << 20 |
-                internal::CleanupNibble(numberOfBytes) << 16 |
-                internal::CleanupByte7(dataByte0) << 8 |
-                internal::CleanupByte7(dataByte1)), 
+            return midi2::MidiMessage64(
+                timestamp,
+                (uint32_t)(
+                    0x3 << 28 |
+                    group.Index() << 24 |
+                    internal::CleanupNibble(status) << 20 |
+                    internal::CleanupNibble(numberOfBytes) << 16 |
+                    internal::CleanupByte7(dataByte0) << 8 |
+                    internal::CleanupByte7(dataByte1)), 
                 
-            (uint32_t)(
-                internal::CleanupByte7(dataByte2) << 24 |
-                internal::CleanupByte7(dataByte3) << 16 |
-                internal::CleanupByte7(dataByte4) << 8 |
-                internal::CleanupByte7(dataByte5))
+                (uint32_t)(
+                    internal::CleanupByte7(dataByte2) << 24 |
+                    internal::CleanupByte7(dataByte3) << 16 |
+                    internal::CleanupByte7(dataByte4) << 8 |
+                    internal::CleanupByte7(dataByte5))
 
-            );
+                );
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -170,15 +170,15 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        return midi2::MidiMessage64(
-            timestamp,
-            (uint32_t)(
-                0x4 << 28 |
-                group.Index() << 24 |
-                internal::CleanupNibble((uint8_t)status) << 20 |
-                channel.Index() << 16 |
-                index), 
-            data);
+            return midi2::MidiMessage64(
+                timestamp,
+                (uint32_t)(
+                    0x4 << 28 |
+                    group.Index() << 24 |
+                    internal::CleanupNibble((uint8_t)status) << 20 |
+                    channel.Index() << 16 |
+                    index), 
+                data);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -215,19 +215,19 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        return midi2::MidiMessage128(
-            timestamp,
-            (uint32_t)(
-                (uint32_t)0x5 << 28 |
-                static_cast<uint32_t>(group.Index()) << 24 |
-                static_cast<uint32_t>(internal::CleanupNibble((uint8_t)status)) << 20 |
-                static_cast<uint32_t>(internal::CleanupNibble(numberOfValidDataBytesThisMessage)) << 16 |
-                static_cast<uint32_t>(streamId) << 8 |
-                static_cast<uint32_t>(dataByte00)),
-            internal::MidiWordFromBytes(dataByte01, dataByte02, dataByte03, dataByte04),
-            internal::MidiWordFromBytes(dataByte05, dataByte06, dataByte07, dataByte08),
-            internal::MidiWordFromBytes(dataByte09, dataByte10, dataByte11, dataByte12)
-            );
+            return midi2::MidiMessage128(
+                timestamp,
+                (uint32_t)(
+                    (uint32_t)0x5 << 28 |
+                    static_cast<uint32_t>(group.Index()) << 24 |
+                    static_cast<uint32_t>(internal::CleanupNibble((uint8_t)status)) << 20 |
+                    static_cast<uint32_t>(internal::CleanupNibble(numberOfValidDataBytesThisMessage)) << 16 |
+                    static_cast<uint32_t>(streamId) << 8 |
+                    static_cast<uint32_t>(dataByte00)),
+                internal::MidiWordFromBytes(dataByte01, dataByte02, dataByte03, dataByte04),
+                internal::MidiWordFromBytes(dataByte05, dataByte06, dataByte07, dataByte08),
+                internal::MidiWordFromBytes(dataByte09, dataByte10, dataByte11, dataByte12)
+                );
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -257,39 +257,39 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        uint32_t word0{ 0 };
-        uint32_t word1{ 0 };
-        uint32_t word2{ 0 };
-        uint32_t word3{ 0 };
+            uint32_t word0{ 0 };
+            uint32_t word1{ 0 };
+            uint32_t word2{ 0 };
+            uint32_t word3{ 0 };
 
-        // message type is 5. status is 8
-        word0 = 
-            (uint32_t)0x5 << 28 |
-            static_cast<uint32_t>(group.Index()) << 24 |
-            (uint32_t)0x8 << 20 | 
-            static_cast<uint32_t>(internal::CleanupNibble(mdsId)) << 16 |
-            static_cast<uint32_t>(numberValidDataBytesInThisChunk);
+            // message type is 5. status is 8
+            word0 = 
+                (uint32_t)0x5 << 28 |
+                static_cast<uint32_t>(group.Index()) << 24 |
+                (uint32_t)0x8 << 20 | 
+                static_cast<uint32_t>(internal::CleanupNibble(mdsId)) << 16 |
+                static_cast<uint32_t>(numberValidDataBytesInThisChunk);
 
-        word1 =
-            static_cast<uint32_t>(numberChunksInMixedDataSet) << 16 |
-            static_cast<uint32_t>(numberOfThisChunk);
+            word1 =
+                static_cast<uint32_t>(numberChunksInMixedDataSet) << 16 |
+                static_cast<uint32_t>(numberOfThisChunk);
 
-        word2 =
-            static_cast<uint32_t>(manufacturerId) << 16 |
-            static_cast<uint32_t>(deviceId);
+            word2 =
+                static_cast<uint32_t>(manufacturerId) << 16 |
+                static_cast<uint32_t>(deviceId);
 
-        word3 =
-            static_cast<uint32_t>(subId1) << 16 |
-            static_cast<uint32_t>(subId2);
+            word3 =
+                static_cast<uint32_t>(subId1) << 16 |
+                static_cast<uint32_t>(subId2);
 
 
-        return midi2::MidiMessage128(
-            timestamp,
-            word0,
-            word1,
-            word2,
-            word3
-            );
+            return midi2::MidiMessage128(
+                timestamp,
+                word0,
+                word1,
+                word2,
+                word3
+                );
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -325,46 +325,46 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        uint32_t word0{ 0 };
-        uint32_t word1{ 0 };
-        uint32_t word2{ 0 };
-        uint32_t word3{ 0 };
+            uint32_t word0{ 0 };
+            uint32_t word1{ 0 };
+            uint32_t word2{ 0 };
+            uint32_t word3{ 0 };
 
-        // message type is 5. status is 8
-        word0 =
-            (uint32_t)0x5 << 28 |
-            static_cast<uint32_t>(group.Index()) << 24 |
-            (uint32_t)0x9 << 20 |
-            static_cast<uint32_t>(internal::CleanupNibble(mdsId)) << 16 |
-            static_cast<uint32_t>(dataByte00) << 8 |
-            static_cast<uint32_t>(dataByte01);
+            // message type is 5. status is 8
+            word0 =
+                (uint32_t)0x5 << 28 |
+                static_cast<uint32_t>(group.Index()) << 24 |
+                (uint32_t)0x9 << 20 |
+                static_cast<uint32_t>(internal::CleanupNibble(mdsId)) << 16 |
+                static_cast<uint32_t>(dataByte00) << 8 |
+                static_cast<uint32_t>(dataByte01);
 
-        word1 =
-            static_cast<uint32_t>(dataByte02) << 24 |
-            static_cast<uint32_t>(dataByte03) << 16 |
-            static_cast<uint32_t>(dataByte04) << 8 |
-            static_cast<uint32_t>(dataByte05);
+            word1 =
+                static_cast<uint32_t>(dataByte02) << 24 |
+                static_cast<uint32_t>(dataByte03) << 16 |
+                static_cast<uint32_t>(dataByte04) << 8 |
+                static_cast<uint32_t>(dataByte05);
 
-        word2 =
-            static_cast<uint32_t>(dataByte06) << 24 |
-            static_cast<uint32_t>(dataByte07) << 16 |
-            static_cast<uint32_t>(dataByte08) << 8 |
-            static_cast<uint32_t>(dataByte09);
+            word2 =
+                static_cast<uint32_t>(dataByte06) << 24 |
+                static_cast<uint32_t>(dataByte07) << 16 |
+                static_cast<uint32_t>(dataByte08) << 8 |
+                static_cast<uint32_t>(dataByte09);
 
-        word3 =
-            static_cast<uint32_t>(dataByte10) << 24 |
-            static_cast<uint32_t>(dataByte11) << 16 |
-            static_cast<uint32_t>(dataByte12) << 8 |
-            static_cast<uint32_t>(dataByte13);
+            word3 =
+                static_cast<uint32_t>(dataByte10) << 24 |
+                static_cast<uint32_t>(dataByte11) << 16 |
+                static_cast<uint32_t>(dataByte12) << 8 |
+                static_cast<uint32_t>(dataByte13);
 
 
-        return midi2::MidiMessage128(
-            timestamp,
-            word0,
-            word1,
-            word2,
-            word3
-            );
+            return midi2::MidiMessage128(
+                timestamp,
+                word0,
+                word1,
+                word2,
+                word3
+                );
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -394,20 +394,20 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        return midi2::MidiMessage128(
-            timestamp,
-            (uint32_t)(
-                static_cast<uint32_t>(0xD) << 28 |
-                static_cast<uint32_t>(group.Index()) << 24 |
-                static_cast<uint32_t>(internal::CleanupCrumb(form)) << 22 |
-                static_cast<uint32_t>(internal::CleanupCrumb(address)) << 20 |
-                static_cast<uint32_t>(channel.Index()) << 16 |
-                static_cast<uint32_t>(statusBank) << 8 |
-                status),
-            word1Data,
-            word2Data,
-            word3Data
-        );
+            return midi2::MidiMessage128(
+                timestamp,
+                (uint32_t)(
+                    static_cast<uint32_t>(0xD) << 28 |
+                    static_cast<uint32_t>(group.Index()) << 24 |
+                    static_cast<uint32_t>(internal::CleanupCrumb(form)) << 22 |
+                    static_cast<uint32_t>(internal::CleanupCrumb(address)) << 20 |
+                    static_cast<uint32_t>(channel.Index()) << 16 |
+                    static_cast<uint32_t>(statusBank) << 8 |
+                    status),
+                word1Data,
+                word2Data,
+                word3Data
+            );
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -435,17 +435,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {       
         try
         {
-        return midi2::MidiMessage128(
-            timestamp, 
-            (uint32_t)(
-                static_cast<uint32_t>(0xF) << 28 |
-                static_cast<uint32_t>(internal::CleanupCrumb(form)) << 26 |
-                static_cast<uint32_t>(internal::CleanupInt10(status)) << 16 |
-                word0RemainingData), 
-            word1Data,
-            word2Data,
-            word3Data
-            );
+            return midi2::MidiMessage128(
+                timestamp, 
+                (uint32_t)(
+                    static_cast<uint32_t>(0xF) << 28 |
+                    static_cast<uint32_t>(internal::CleanupCrumb(form)) << 26 |
+                    static_cast<uint32_t>(internal::CleanupInt10(status)) << 16 |
+                    word0RemainingData), 
+                word1Data,
+                word2Data,
+                word3Data
+                );
         }
         catch (winrt::hresult_error const& ex)
         {

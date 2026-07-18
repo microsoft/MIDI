@@ -30,26 +30,26 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        uint8_t messageByteCount = GetDataByteCountFromSystemExclusiveMessageFirstWord(word0);
-        uint32_t currentWord = word0;
-        uint8_t shift = 8;
+            uint8_t messageByteCount = GetDataByteCountFromSystemExclusiveMessageFirstWord(word0);
+            uint32_t currentWord = word0;
+            uint8_t shift = 8;
 
-        for (uint8_t i = 0; i < messageByteCount; i++)
-        {
-            dataBytesToAppendTo.Append((uint8_t)(currentWord >> shift & 0xFF)); // we don't & 0x7F in case the data is actually bad
-
-            if (shift == 0)
+            for (uint8_t i = 0; i < messageByteCount; i++)
             {
-                currentWord = word1;
-                shift = 24;
-            }
-            else
-            {
-                shift -= 8;
-            }
-        }
+                dataBytesToAppendTo.Append((uint8_t)(currentWord >> shift & 0xFF)); // we don't & 0x7F in case the data is actually bad
 
-        return messageByteCount;
+                if (shift == 0)
+                {
+                    currentWord = word1;
+                    shift = 24;
+                }
+                else
+                {
+                    shift -= 8;
+                }
+            }
+
+            return messageByteCount;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -70,7 +70,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        return AppendDataBytesFromSingleSystemExclusiveMessage(message.Word0(), message.Word1(), dataBytesToAppendTo);
+            return AppendDataBytesFromSingleSystemExclusiveMessage(message.Word0(), message.Word1(), dataBytesToAppendTo);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -91,14 +91,14 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        auto result = winrt::single_threaded_vector<uint8_t>();
+            auto result = winrt::single_threaded_vector<uint8_t>();
 
-        for (auto const& message : messages)
-        {
-            AppendDataBytesFromSingleSystemExclusiveMessage(message, result);
-        }
+            for (auto const& message : messages)
+            {
+                AppendDataBytesFromSingleSystemExclusiveMessage(message, result);
+            }
 
-        return result;
+            return result;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -120,11 +120,11 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        auto result = winrt::single_threaded_vector<uint8_t>();
+            auto result = winrt::single_threaded_vector<uint8_t>();
 
-        AppendDataBytesFromSingleSystemExclusiveMessage(word0, word1, result);
+            AppendDataBytesFromSingleSystemExclusiveMessage(word0, word1, result);
 
-        return result;
+            return result;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -144,11 +144,11 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        auto result = winrt::single_threaded_vector<uint8_t>();
+            auto result = winrt::single_threaded_vector<uint8_t>();
 
-        AppendDataBytesFromSingleSystemExclusiveMessage(message.Word0(), message.Word1(), result);
+            AppendDataBytesFromSingleSystemExclusiveMessage(message.Word0(), message.Word1(), result);
 
-        return result;
+            return result;
         }
         catch (winrt::hresult_error const& ex)
         {

@@ -41,17 +41,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     {
         try
         {
-        auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
+            auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
 
-        for (auto const& transport : transports)
-        {
-            if (transport.TransportId() == TransportId())
+            for (auto const& transport : transports)
             {
-                return true;
+                if (transport.TransportId() == TransportId())
+                {
+                    return true;
+                }
             }
-        }
 
-        return false;
+            return false;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -429,16 +429,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     {
         try
         {
-        if (loopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
-            loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
-        {
-            // we treat it as a guid, but the property itself is a string
-            auto associator = winrt::unbox_value<winrt::hstring>(loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
+            if (loopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
+                loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
+            {
+                // we treat it as a guid, but the property itself is a string
+                auto associator = winrt::unbox_value<winrt::hstring>(loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
 
-            return internal::StringToGuid(associator.c_str());
-        }
+                return internal::StringToGuid(associator.c_str());
+            }
 
-        return foundation::GuidHelper::Empty();
+            return foundation::GuidHelper::Empty();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -459,9 +459,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     {
         try
         {
-        auto domain = midi2enum::MidiEndpointDeviceInformation::FindAll();
+            auto domain = midi2enum::MidiEndpointDeviceInformation::FindAll();
 
-        return GetAssociatedLoopbackEndpoint(loopbackEndpoint, domain);
+            return GetAssociatedLoopbackEndpoint(loopbackEndpoint, domain);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -483,11 +483,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     {
         try
         {
-        auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(loopbackEndpointId);
+            auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(loopbackEndpointId);
 
-        auto info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(cleanId);
+            auto info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(cleanId);
 
-        return GetAssociatedLoopbackEndpoint(info);
+            return GetAssociatedLoopbackEndpoint(info);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -600,9 +600,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     {
         try
         {
-        winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_A_PREFIX, uniqueIdentifier.c_str());
+            winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_A_PREFIX, uniqueIdentifier.c_str());
 
-        return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
+            return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -620,9 +620,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     {
         try
         {
-        winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_B_PREFIX, uniqueIdentifier.c_str());
+            winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_B_PREFIX, uniqueIdentifier.c_str());
 
-        return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
+            return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
         }
         catch (winrt::hresult_error const& ex)
         {

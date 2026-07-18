@@ -28,17 +28,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
     {
         try
         {
-        auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
+            auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
 
-        for (auto const& transport : transports)
-        {
-            if (transport.TransportId() == TransportId())
+            for (auto const& transport : transports)
             {
-                return true;
+                if (transport.TransportId() == TransportId())
+                {
+                    return true;
+                }
             }
-        }
 
-        return false;
+            return false;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -59,46 +59,46 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
     {
         try
         {
-        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-        additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
-        additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
+            auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+            additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
+            additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
 
-        // we can't include custom properties in the selector, so we need to get all
-        // the midi interfaces and run through them, checking the associator
-        auto devices = enumeration::DeviceInformation::FindAllAsync(
-            midi2::MidiEndpointConnection::GetDeviceSelector(),
-            additionalProperties,
-            enumeration::DeviceInformationKind::DeviceInterface
-        ).get();
+            // we can't include custom properties in the selector, so we need to get all
+            // the midi interfaces and run through them, checking the associator
+            auto devices = enumeration::DeviceInformation::FindAllAsync(
+                midi2::MidiEndpointConnection::GetDeviceSelector(),
+                additionalProperties,
+                enumeration::DeviceInformationKind::DeviceInterface
+            ).get();
 
-        winrt::hstring stringifiedAssociationId { internal::GuidToString(associationId) };
+            winrt::hstring stringifiedAssociationId { internal::GuidToString(associationId) };
 
-        if (devices != nullptr && devices.Size() > 0)
-        {
-            for (auto const& di : devices)
+            if (devices != nullptr && devices.Size() > 0)
             {
-                auto transportLayer = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(STRING_PKEY_MIDI_TransportLayer, di, foundation::GuidHelper::Empty());
-
-                if (transportLayer == TransportId())
+                for (auto const& di : devices)
                 {
-                    // it's a virtual device, let's check the associator id and the type
-                    auto associator = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, di, L"");
+                    auto transportLayer = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(STRING_PKEY_MIDI_TransportLayer, di, foundation::GuidHelper::Empty());
 
-                    if (!associator.empty() && associator == stringifiedAssociationId)
+                    if (transportLayer == TransportId())
                     {
-                        std::wstring searchId = internal::ToLowerTrimmedHStringCopy(di.Id()).c_str();
-                        std::wstring prefix = internal::ToLowerTrimmedWStringCopy(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX);
+                        // it's a virtual device, let's check the associator id and the type
+                        auto associator = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, di, L"");
 
-                        if (searchId.find(prefix) != searchId.npos)
+                        if (!associator.empty() && associator == stringifiedAssociationId)
                         {
-                            return internal::NormalizeEndpointInterfaceIdHStringCopy(di.Id());
+                            std::wstring searchId = internal::ToLowerTrimmedHStringCopy(di.Id()).c_str();
+                            std::wstring prefix = internal::ToLowerTrimmedWStringCopy(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX);
+
+                            if (searchId.find(prefix) != searchId.npos)
+                            {
+                                return internal::NormalizeEndpointInterfaceIdHStringCopy(di.Id());
+                            }
                         }
                     }
                 }
             }
-        }
 
-        return L""; // not found
+            return L""; // not found
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -120,58 +120,58 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
     {
         try
         {
-        winrt::hstring deviceEndpointDeviceId{};
-        //winrt::hstring clientEndpointDeviceId{};
+            winrt::hstring deviceEndpointDeviceId{};
+            //winrt::hstring clientEndpointDeviceId{};
 
-        auto createResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(creationConfig);
+            auto createResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(creationConfig);
 
-        if (createResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
-        {
-            auto responseObject = createResponse.ResponseJson();
-
-            if (responseObject != nullptr)
+            if (createResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
-                auto responseArray = responseObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY, nullptr);
+                auto responseObject = createResponse.ResponseJson();
 
-                if (responseArray == nullptr || responseArray.Size() == 0)
+                if (responseObject != nullptr)
                 {
-                //    internal::LogGeneralError(__FUNCTION__, L"Unexpected empty response array");
+                    auto responseArray = responseObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY, nullptr);
 
-                    return nullptr;
+                    if (responseArray == nullptr || responseArray.Size() == 0)
+                    {
+                    //    internal::LogGeneralError(__FUNCTION__, L"Unexpected empty response array");
+
+                        return nullptr;
+                    }
+                    else
+                    {
+                        // get the id. We should have only one item in the response array here so we'll just grab the first
+
+                        auto firstObject = responseArray.GetObjectAt(0);
+
+                        deviceEndpointDeviceId = firstObject.GetNamedString(
+                            MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY,
+                            L"");
+
+
+                        // Create the MidiVirtualDevice
+                        auto device = winrt::make_self<implementation::MidiVirtualDevice>();
+
+                        // populate the virtual device with everything needed
+
+                        // TODO: We need to get the client id
+                        device->InternalInitialize(deviceEndpointDeviceId, creationConfig);
+
+                        return *device;
+                    }
                 }
                 else
                 {
-                    // get the id. We should have only one item in the response array here so we'll just grab the first
-
-                    auto firstObject = responseArray.GetObjectAt(0);
-
-                    deviceEndpointDeviceId = firstObject.GetNamedString(
-                        MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY,
-                        L"");
-
-
-                    // Create the MidiVirtualDevice
-                    auto device = winrt::make_self<implementation::MidiVirtualDevice>();
-
-                    // populate the virtual device with everything needed
-
-                    // TODO: We need to get the client id
-                    device->InternalInitialize(deviceEndpointDeviceId, creationConfig);
-
-                    return *device;
+                    // couldn't parse the json
                 }
             }
             else
             {
-                // couldn't parse the json
+                // failure return from service. createResponse.Status(). Should share this
             }
-        }
-        else
-        {
-            // failure return from service. createResponse.Status(). Should share this
-        }
 
-        return nullptr;
+            return nullptr;
         }
         catch (winrt::hresult_error const& ex)
         {

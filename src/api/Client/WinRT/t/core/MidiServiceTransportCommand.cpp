@@ -45,52 +45,52 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     {
         try
         {
-        json::JsonObject outerWrapper;
-        json::JsonObject transportObject;
-        json::JsonObject topLevelTransportPluginSettingsObject;
+            json::JsonObject outerWrapper;
+            json::JsonObject transportObject;
+            json::JsonObject topLevelTransportPluginSettingsObject;
 
-        json::JsonObject commandObject;
-        json::JsonObject argumentsObject;
+            json::JsonObject commandObject;
+            json::JsonObject argumentsObject;
 
-
-        commandObject.SetNamedValue(
-            MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY,
-            json::JsonValue::CreateStringValue(m_verb));
-
-        if (m_arguments.Size() > 0)
-        {
-            for (auto const& arg : m_arguments)
-            {
-                argumentsObject.SetNamedValue(
-                    arg.Key(),
-                    json::JsonValue::CreateStringValue(arg.Value()));
-            }
 
             commandObject.SetNamedValue(
-                MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY,
-                argumentsObject
-            );
-        }
+                MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY,
+                json::JsonValue::CreateStringValue(m_verb));
 
-        // create the transport object with the child commandObject
+            if (m_arguments.Size() > 0)
+            {
+                for (auto const& arg : m_arguments)
+                {
+                    argumentsObject.SetNamedValue(
+                        arg.Key(),
+                        json::JsonValue::CreateStringValue(arg.Value()));
+                }
 
-        transportObject.SetNamedValue(
-            MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY,
-            commandObject);
+                commandObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY,
+                    argumentsObject
+                );
+            }
 
-        // create the main node with the transport id property as key to the array
+            // create the transport object with the child commandObject
 
-        topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(m_transportId),
-            transportObject);
+            transportObject.SetNamedValue(
+                MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY,
+                commandObject);
 
-        // wrap it all up so the json is valid
+            // create the main node with the transport id property as key to the array
 
-        outerWrapper.SetNamedValue(
-            MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
-            topLevelTransportPluginSettingsObject);
+            topLevelTransportPluginSettingsObject.SetNamedValue(
+                internal::GuidToString(m_transportId),
+                transportObject);
 
-        return outerWrapper;
+            // wrap it all up so the json is valid
+
+            outerWrapper.SetNamedValue(
+                MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
+                topLevelTransportPluginSettingsObject);
+
+            return outerWrapper;
         }
         catch (winrt::hresult_error const& ex)
         {

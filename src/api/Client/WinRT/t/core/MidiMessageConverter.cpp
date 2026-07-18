@@ -47,40 +47,40 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        // we don't handle sysex here
-        if (MIDI_BYTE_IS_SYSEX_START_STATUS(statusByte) || MIDI_BYTE_IS_SYSEX_END_STATUS(statusByte))
-        {
-            return nullptr;
-        }
+            // we don't handle sysex here
+            if (MIDI_BYTE_IS_SYSEX_START_STATUS(statusByte) || MIDI_BYTE_IS_SYSEX_END_STATUS(statusByte))
+            {
+                return nullptr;
+            }
 
 
-        uint32_t midiWord{ 0 };
-        midiWord = internal::MidiWordFromBytes(
-            (uint8_t)0x00,
-            statusByte,
-            internal::CleanupByte7(dataByte1),
-            internal::CleanupByte7(dataByte2)
-        );
+            uint32_t midiWord{ 0 };
+            midiWord = internal::MidiWordFromBytes(
+                (uint8_t)0x00,
+                statusByte,
+                internal::CleanupByte7(dataByte1),
+                internal::CleanupByte7(dataByte2)
+            );
 
-        if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(statusByte))
-        {
-            // convert rt message
-            internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::SystemCommon32);
-        }
-        else if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(statusByte))
-        {
-            // convert cv message
-            internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
-        }
+            if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(statusByte))
+            {
+                // convert rt message
+                internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::SystemCommon32);
+            }
+            else if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(statusByte))
+            {
+                // convert cv message
+                internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
+            }
 
-        // set the group
-        internal::SetGroupIndexInFirstWord(midiWord, group.Index());
+            // set the group
+            internal::SetGroupIndexInFirstWord(midiWord, group.Index());
 
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(midiWord);
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(midiWord);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -104,51 +104,51 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        // get the bytes using IBufferByteAccess and then do the conversion
+            // get the bytes using IBufferByteAccess and then do the conversion
 
-        auto dataPointer = originalMessage.RawData().data();
-        auto numBytes = originalMessage.RawData().Length();
+            auto dataPointer = originalMessage.RawData().data();
+            auto numBytes = originalMessage.RawData().Length();
 
-        uint32_t midiWord{ 0 };
+            uint32_t midiWord{ 0 };
 
-        if (numBytes == 3)
-        {
-            midiWord = internal::MidiWordFromBytes(
-                (uint8_t)0x00,  // message type and group
-                dataPointer[0], // status
-                internal::CleanupByte7(dataPointer[1]),
-                internal::CleanupByte7(dataPointer[2])
-            );
+            if (numBytes == 3)
+            {
+                midiWord = internal::MidiWordFromBytes(
+                    (uint8_t)0x00,  // message type and group
+                    dataPointer[0], // status
+                    internal::CleanupByte7(dataPointer[1]),
+                    internal::CleanupByte7(dataPointer[2])
+                );
 
-        }
-        else if (numBytes == 2)
-        {
-            midiWord = internal::MidiWordFromBytes(
-                (uint8_t)0x00,  // message type and group
-                dataPointer[0], // status
-                internal::CleanupByte7(dataPointer[1]),
-                (uint8_t)0x00
-            );
+            }
+            else if (numBytes == 2)
+            {
+                midiWord = internal::MidiWordFromBytes(
+                    (uint8_t)0x00,  // message type and group
+                    dataPointer[0], // status
+                    internal::CleanupByte7(dataPointer[1]),
+                    (uint8_t)0x00
+                );
 
-        }
-        else if (numBytes == 1)
-        {
-            midiWord = internal::MidiWordFromBytes(
-                (uint8_t)0x00,  // message type and group
-                dataPointer[0], // status
-                (uint8_t)0x00,
-                (uint8_t)0x00
-            );
-        }
+            }
+            else if (numBytes == 1)
+            {
+                midiWord = internal::MidiWordFromBytes(
+                    (uint8_t)0x00,  // message type and group
+                    dataPointer[0], // status
+                    (uint8_t)0x00,
+                    (uint8_t)0x00
+                );
+            }
 
-        // TODO: this is an assumption. We really should check the message type
-        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
-        //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
+            // TODO: this is an assumption. We really should check the message type
+            internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
+            //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
-        // set the group
-        internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
+            // set the group
+            internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
 
-        return midiWord;
+            return midiWord;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -176,13 +176,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -205,13 +205,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -234,13 +234,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -263,13 +263,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -292,13 +292,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -321,13 +321,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -350,13 +350,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -380,13 +380,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -409,13 +409,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -438,13 +438,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+            message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -470,13 +470,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+            message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -500,13 +500,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+            message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -530,13 +530,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+            message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -559,13 +559,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+            message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -588,13 +588,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+            message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -617,13 +617,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        midi2::MidiMessage32 message;
-        message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+            midi2::MidiMessage32 message;
+            message.Timestamp(timestamp);
+            message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
-        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+            message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
-        return message;
+            return message;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -648,27 +648,27 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        bytestreamToUMP converter;
+            bytestreamToUMP converter;
 
-        auto words = winrt::single_threaded_vector<uint32_t>();
+            auto words = winrt::single_threaded_vector<uint32_t>();
 
-        converter.defaultGroup = group.Index();
-        converter.enableRunningStatus = allowRunningStatus;
+            converter.defaultGroup = group.Index();
+            converter.enableRunningStatus = allowRunningStatus;
 
-        auto it = midi1Bytes.First();
-        while (it.HasCurrent())
-        {
-            converter.bytestreamParse(it.Current());
-
-            while (converter.availableUMP())
+            auto it = midi1Bytes.First();
+            while (it.HasCurrent())
             {
-                words.Append(converter.readUMP());
+                converter.bytestreamParse(it.Current());
+
+                while (converter.availableUMP())
+                {
+                    words.Append(converter.readUMP());
+                }
+
+                it.MoveNext();
             }
 
-            it.MoveNext();
-        }
-
-        return words;
+            return words;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -690,34 +690,34 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        bytestreamToUMP converter;
+            bytestreamToUMP converter;
 
-        auto words = winrt::single_threaded_vector<uint32_t>();
+            auto words = winrt::single_threaded_vector<uint32_t>();
 
-        converter.defaultGroup = group.Index();
-        converter.enableRunningStatus = false;
+            converter.defaultGroup = group.Index();
+            converter.enableRunningStatus = false;
 
-        auto data = originalMessage.RawData().data();
-        auto dataLength = originalMessage.RawData().Length();
+            auto data = originalMessage.RawData().data();
+            auto dataLength = originalMessage.RawData().Length();
 
-        for (uint32_t i = 0; i < dataLength; i++)
-        {
-            converter.bytestreamParse(data[i]);
-
-            // if on the last byte, ensure we close out sysex
-            // in case this message isn't complete SysEx with F7
-            if (i == dataLength -1)
+            for (uint32_t i = 0; i < dataLength; i++)
             {
-                converter.dumpSysex7State(true);
+                converter.bytestreamParse(data[i]);
+
+                // if on the last byte, ensure we close out sysex
+                // in case this message isn't complete SysEx with F7
+                if (i == dataLength -1)
+                {
+                    converter.dumpSysex7State(true);
+                }
+
+                while (converter.availableUMP())
+                {
+                    words.Append(converter.readUMP());
+                }
             }
 
-            while (converter.availableUMP())
-            {
-                words.Append(converter.readUMP());
-            }
-        }
-
-        return words;
+            return words;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -741,24 +741,24 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         try
         {
-        umpToBytestream converter;
+            umpToBytestream converter;
 
-        auto bytes = winrt::single_threaded_vector<uint8_t>();
+            auto bytes = winrt::single_threaded_vector<uint8_t>();
 
-        auto it = umpWords.First();
-        while (it.HasCurrent())
-        {
-            converter.UMPStreamParse(it.Current());
-
-            while (converter.availableBS())
+            auto it = umpWords.First();
+            while (it.HasCurrent())
             {
-                bytes.Append(converter.readBS());
+                converter.UMPStreamParse(it.Current());
+
+                while (converter.availableBS())
+                {
+                    bytes.Append(converter.readBS());
+                }
+
+                it.MoveNext();
             }
 
-            it.MoveNext();
-        }
-
-        return bytes;
+            return bytes;
         }
         catch (winrt::hresult_error const& ex)
         {

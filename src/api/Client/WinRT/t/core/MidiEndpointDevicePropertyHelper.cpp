@@ -25,12 +25,12 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        if (!m_initialized)
-        {
-            BuildPropertyMap();
-        }
+            if (!m_initialized)
+            {
+                BuildPropertyMap();
+            }
 
-        return m_propertyFriendlyNames.GetView();
+            return m_propertyFriendlyNames.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -55,12 +55,12 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        if (!m_initialized)
-        {
-            BuildPropertyMap();
-        }
+            if (!m_initialized)
+            {
+                BuildPropertyMap();
+            }
 
-        return m_propertyFriendlyNames.HasKey(internal::TrimmedHStringCopy(key));
+            return m_propertyFriendlyNames.HasKey(internal::TrimmedHStringCopy(key));
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -80,9 +80,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        winrt::hstring propKeyString = BuildPropertyStringKey(fmtid, pid);
+            winrt::hstring propKeyString = BuildPropertyStringKey(fmtid, pid);
 
-        return IsMidiPropertyKey(propKeyString);
+            return IsMidiPropertyKey(propKeyString);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -102,9 +102,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        winrt::hstring propKeyString = BuildPropertyStringKey(fmtid, pid);
+            winrt::hstring propKeyString = BuildPropertyStringKey(fmtid, pid);
 
-        return GetMidiPropertyNameFromPropertyKey(propKeyString);
+            return GetMidiPropertyNameFromPropertyKey(propKeyString);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -123,17 +123,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-        if (!m_initialized)
-        {
-            BuildPropertyMap();
-        }
+            if (!m_initialized)
+            {
+                BuildPropertyMap();
+            }
 
-        if (m_propertyFriendlyNames.HasKey(key))
-        {
-            return m_propertyFriendlyNames.Lookup(key);
-        }
+            if (m_propertyFriendlyNames.HasKey(key))
+            {
+                return m_propertyFriendlyNames.Lookup(key);
+            }
 
-        return L"";
+            return L"";
         }
         catch (winrt::hresult_error const& ex)
         {
