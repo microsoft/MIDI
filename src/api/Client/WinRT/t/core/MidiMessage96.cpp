@@ -13,25 +13,139 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    _Use_decl_annotations_
+    midi2::MidiMessage96 MidiMessage96::CreateFromStruct(
+        internal::MidiTimestamp const timestamp,
+        MidiMessageStruct const& message) noexcept
+    {
+        try
+        {
+            return midi2::MidiMessage96(timestamp, message.Word0, message.Word1, message.Word2);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult error creating MidiMessage96 from struct.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            return nullptr;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"General exception creating MidiMessage96 from struct.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            return nullptr;
+        }
+    }
+
+
     collections::IVector<uint32_t> MidiMessage96::GetAllWords() const noexcept
     {
-        auto vec = winrt::single_threaded_vector<uint32_t>();
+        try
+        {
+            auto vec = winrt::single_threaded_vector<uint32_t>();
 
-        vec.Append(m_ump.word0);
-        vec.Append(m_ump.word1);
-        vec.Append(m_ump.word2);
+            vec.Append(m_ump.word0);
+            vec.Append(m_ump.word1);
+            vec.Append(m_ump.word2);
 
-        return vec;
+            return vec;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult error building the words vector.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            return winrt::single_threaded_vector<uint32_t>();
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"General exception building the words vector.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            return winrt::single_threaded_vector<uint32_t>();
+        }
     }
 
     _Use_decl_annotations_
     uint8_t MidiMessage96::AppendAllMessageWordsToList(collections::IVector<uint32_t> targetVector) const noexcept
     {
-        targetVector.Append(m_ump.word0);
-        targetVector.Append(m_ump.word1);
-        targetVector.Append(m_ump.word2);
+        try
+        {
+            targetVector.Append(m_ump.word0);
+            targetVector.Append(m_ump.word1);
+            targetVector.Append(m_ump.word2);
 
-        return 3;
+            return 3;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult error appending words to the list.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            return 0;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"General exception appending words to the list.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            return 0;
+        }
     }
 
 
@@ -52,7 +166,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // get a pointer to the buffer
             if (SUCCEEDED(interop->GetBuffer(&value, &valueSize)))
             {
-                if (byteOffset + numBytesInPacket > valueSize)
+                if (static_cast<uint64_t>(byteOffset) + numBytesInPacket > valueSize)
                 {
                     // no room
                     return 0;
@@ -73,8 +187,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error filling buffer.");
+            return 0;
+        }
         catch (...)
         {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception filling buffer.");
             return 0;
         }
 

@@ -15,38 +15,32 @@ import "MidiEndpointDeviceInformation.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiParentDeviceInformation", UUID_IMidiParentDeviceInformation)]
-//    [static_name("Windows.Devices.Midi2.Enumeration.IMidiParentDeviceInformationStatics", UUID_IMidiParentDeviceInformationStatics)]
     runtimeclass MidiParentDeviceInformation : Windows.Foundation.IStringable
     {
-     //   static MidiParentDeviceInformation CreateFromId(String deviceInstanceId);
-    //    static IVectorView<MidiParentDeviceInformation> FindAllForContainer(Guid containerId);
+        [noexcept] String Id { get; };
+        [noexcept] String Name{ get; };
+        [noexcept] Guid ContainerId{ get; };
 
-    //    static IVectorView<String> GetAdditionalPropertiesList();
+        [noexcept] String ParentDeviceInstanceId{ get; };
 
-        String Id { get; };
-        String Name{ get; };
-        Guid ContainerId{ get; };
-        //String DeviceInstanceId{ get; };
-
-        String ParentDeviceInstanceId{ get; };
-
-        String RelatedParentMediaDriverDeviceInstanceId{ get; };
+        [noexcept] String RelatedParentMediaDriverDeviceInstanceId{ get; };
 
         //String ModelName{ get; };
         //String Manufacturer{ get; };
 
-        String DriverInfPath{ get; };           // DEVPKEY_Device_DriverInfPath
-        String DriverKey{ get; };               // DEVPKEY_Device_Driver
-        String DriverProvider{ get; };          // DEVPKEY_Device_DriverProvider
-        String ServiceName{ get; };             // DEVPKEY_Device_Service
-        String DriverVersion{ get; };           // DEVPKEY_Device_DriverVersion
-        String EnumeratorName{ get; };          // DEVPKEY_Device_EnumeratorName
+        [noexcept] String DriverInfPath{ get; };           // DEVPKEY_Device_DriverInfPath
+        [noexcept] String DriverKey{ get; };               // DEVPKEY_Device_Driver
+        [noexcept] String DriverProvider{ get; };          // DEVPKEY_Device_DriverProvider
+        [noexcept] String ServiceName{ get; };             // DEVPKEY_Device_Service
+        [noexcept] String DriverVersion{ get; };           // DEVPKEY_Device_DriverVersion
+        [noexcept] String EnumeratorName{ get; };          // DEVPKEY_Device_EnumeratorName
 
-        UInt16 UsbVendorId{ get; };             // parsed from device instance id
-        UInt16 UsbProductId{ get; };            // parsed from device instance id
-        String UsbSerialNumber{ get; };         // parsed from device instance id
+        [noexcept] UInt16 UsbVendorId{ get; };             // parsed from device instance id
+        [noexcept] UInt16 UsbProductId{ get; };            // parsed from device instance id
+        [noexcept] String UsbSerialNumber{ get; };         // parsed from device instance id
 
-        UInt32 ReportedDeviceIdsHash {get;};    // DEVPKEY_Device_ReportedDeviceIdsHash
+        [noexcept] UInt32 ReportedDeviceIdsHash {get;};    // DEVPKEY_Device_ReportedDeviceIdsHash
     }
 }

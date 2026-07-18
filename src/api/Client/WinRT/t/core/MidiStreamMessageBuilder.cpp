@@ -272,14 +272,27 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
          winrt::hstring const& name
     ) noexcept
     {
-        return BuildSplitTextMessages(
-            timestamp,
-            MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION,
-            (uint16_t)0,
-            MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH,
-            MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET,
-            name
-        );
+        try
+        {
+            return BuildSplitTextMessages(
+                timestamp,
+                MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION,
+                (uint16_t)0,
+                MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH,
+                MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET,
+                name
+            );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building endpoint name notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building endpoint name notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
     }
 
     // TODO: This is ASCII
@@ -289,14 +302,27 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         winrt::hstring const& productInstanceId
     )
     {
-        return BuildSplitTextMessages(
-            timestamp,
-            MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION,
-            (uint16_t)0,
-            MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_MAX_LENGTH,
-            MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_CHARACTERS_PER_PACKET,
-            productInstanceId
-        );
+        try
+        {
+            return BuildSplitTextMessages(
+                timestamp,
+                MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION,
+                (uint16_t)0,
+                MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_MAX_LENGTH,
+                MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_CHARACTERS_PER_PACKET,
+                productInstanceId
+            );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building product instance id notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building product instance id notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
 
     }
 
@@ -443,14 +469,27 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         // to last byte
         uint16_t word0Remainder = static_cast<uint16_t>(functionBlockNumber) << 8;
 
-        return BuildSplitTextMessages(
-            timestamp,
-            MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION,
-            word0Remainder,
-            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_MAX_LENGTH,
-            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_CHARACTERS_PER_PACKET,
-            name
-        );
+        try
+        {
+            return BuildSplitTextMessages(
+                timestamp,
+                MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION,
+                word0Remainder,
+                MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_MAX_LENGTH,
+                MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_CHARACTERS_PER_PACKET,
+                name
+            );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building function block name notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building function block name notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
     }
 
 
@@ -459,42 +498,55 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         collections::IIterable<midi2::IMidiUniversalPacket> const& messages
         )
     {
-        std::string s{};
-        s.reserve(13);
-
-        for (auto ump : messages)
+        try
         {
-            midi2::MidiMessage128 message{ nullptr };
+            std::string s{};
+            s.reserve(13);
 
-            if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+            for (auto ump : messages)
             {
-                message = ump.as<midi2::MidiMessage128>();
+                midi2::MidiMessage128 message{ nullptr };
 
-                // verify that the message form is correct (begin/[continue]/end or just complete)
+                if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+                {
+                    message = ump.as<midi2::MidiMessage128>();
 
-                // verify the status is correct
+                    // verify that the message form is correct (begin/[continue]/end or just complete)
 
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
+                    // verify the status is correct
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                }
+
             }
 
+            return winrt::to_hstring(s);
         }
-
-        return winrt::to_hstring(s);
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error parsing function block name notification messages.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception parsing function block name notification messages.");
+            return L"";
+        }
 
     }
 
@@ -506,39 +558,52 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         std::string s{};
         s.reserve(14);
 
-        for (auto ump : messages)
+        try
         {
-            midi2::MidiMessage128 message{ nullptr };
-
-            if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+            for (auto ump : messages)
             {
-                message = ump.as<midi2::MidiMessage128>();
+                midi2::MidiMessage128 message{ nullptr };
 
-                // verify that the message form is correct (begin/[continue]/end or just complete)
+                if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+                {
+                    message = ump.as<midi2::MidiMessage128>();
 
-                // verify the status is correct
+                    // verify that the message form is correct (begin/[continue]/end or just complete)
 
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
+                    // verify the status is correct
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                }
             }
-        }
 
-        return winrt::to_hstring(s);
+            return winrt::to_hstring(s);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error parsing endpoint name notification messages.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception parsing endpoint name notification messages.");
+            return L"";
+        }
     }
 
     _Use_decl_annotations_
@@ -549,38 +614,51 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         std::string s{};
         s.reserve(14);
 
-        for (auto ump : messages)
+        try
         {
-            midi2::MidiMessage128 message{ nullptr };
-
-            if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+            for (auto ump : messages)
             {
-                message = ump.as<midi2::MidiMessage128>();
-                // verify that the message form is correct (begin/[continue]/end or just complete)
+                midi2::MidiMessage128 message{ nullptr };
 
-            // verify the status is correct
+                if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+                {
+                    message = ump.as<midi2::MidiMessage128>();
+                    // verify that the message form is correct (begin/[continue]/end or just complete)
 
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
+                // verify the status is correct
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
 
-                AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
-                AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+
+                    AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+                    AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                }
             }
-        }
 
-        return winrt::to_hstring(s);
+            return winrt::to_hstring(s);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error parsing product instance id notification messages.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception parsing product instance id notification messages.");
+            return L"";
+        }
     }
 
 

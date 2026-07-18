@@ -32,14 +32,19 @@
       <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.dll" />
       <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.pri" />
       <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.pdb" />
-
-      
-
+     
       <!-- The Arm64X binaries are output to the Arm64EC folder by Visual Studio -->
 
       <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.dll" />
       <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.pri" />
       <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.pdb" />
+
+      <!-- But at compile time, MSBUILD goes looking for a win-arm64ec folder, despite the targets file. So duplicating here. -->
+
+      <file target="runtimes\win-arm64ec\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.dll" />
+      <file target="runtimes\win-arm64ec\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.pri" />
+      <file target="runtimes\win-arm64ec\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.pdb" />
+
 
       <!-- <file target="runtimes\win-arm64ec\lib\uap10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\x64\Release\net8.0-windows10.0.26100.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" /> -->
 
@@ -53,7 +58,6 @@
 
       <file target="build\net10.0\"   src="net10.0\Windows.Devices.Midi2.targets"  />
       <file target="build\net10.0\"   src="net10.0\Windows.Devices.Midi2.props" />
-
 
 
       <!--<file target="build\net10.0\"    src="dotnet\Windows.Devices.Midi2.targets"  />

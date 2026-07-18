@@ -23,14 +23,14 @@ namespace Windows.Devices.Midi2
         event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceDisconnected;
         event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceReconnected;
 
-        IInspectable Tag;
+        [noexcept] IInspectable Tag;
 
-        Guid ConnectionId{ get; };
-        String ConnectedEndpointDeviceId{ get; };
+        [noexcept] Guid ConnectionId{ get; };
+        [noexcept] String ConnectedEndpointDeviceId{ get; };
 
         //Boolean IsAutoReconnectEnabled{ get; };
-        MidiEndpointConnectionSettings Settings{ get; };
+        [noexcept] MidiEndpointConnectionSettings Settings{ get; };
 
-        Boolean IsOpen{ get; };
+        [noexcept] Boolean IsOpen{ get; };
     }
 }

@@ -15,12 +15,13 @@ import "MidiServiceSessionInfo.idl";
 namespace Windows.Devices.Midi2.Reporting
 {
     [contract(MidiReportingApiContract, 1)]
+    
     [static_name("Windows.Devices.Midi2.Reporting.IMidiReportingStatics", UUID_IMidiReportingStatics)]
     static runtimeclass MidiReporting
     {
-        static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
+        [noexcept] static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
 
-        static IVector<MidiServiceSessionInfo> GetActiveSessions();
+        [noexcept] static IVector<MidiServiceSessionInfo> GetActiveSessions();
     }
 }
 

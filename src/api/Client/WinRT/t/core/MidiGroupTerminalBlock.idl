@@ -17,33 +17,34 @@ import "MidiFunctionBlock.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiGroupTerminalBlock", UUID_IMidiGroupTerminalBlock)]
     [static_name("Windows.Devices.Midi2.Enumeration.IMidiGroupTerminalBlockStatics", UUID_IMidiGroupTerminalBlockStatics)]
     runtimeclass MidiGroupTerminalBlock : Windows.Foundation.IStringable
     {
-        static String ShortLabel{ get; };
-        static String ShortLabelPlural{ get; };
-        static String LongLabel{ get; };
-        static String LongLabelPlural{ get; };
+        [noexcept] static String ShortLabel{ get; };
+        [noexcept] static String ShortLabelPlural{ get; };
+        [noexcept] static String LongLabel{ get; };
+        [noexcept] static String LongLabelPlural{ get; };
 
-        UInt8 Number{ get; };
+        [noexcept] UInt8 Number{ get; };
 
-        String Name{ get; };
+        [noexcept] String Name{ get; };
 
-        MidiGroupTerminalBlockDirection Direction { get; };
-        MidiGroupTerminalBlockProtocol Protocol { get; };
+        [noexcept] MidiGroupTerminalBlockDirection Direction { get; };
+        [noexcept] MidiGroupTerminalBlockProtocol Protocol { get; };
 
-        Windows.Devices.Midi2.MidiGroup FirstGroup{ get; };
-        UInt8 GroupCount{ get; };
+        [noexcept] Windows.Devices.Midi2.MidiGroup FirstGroup{ get; };
+        [noexcept] UInt8 GroupCount{ get; };
 
-        Boolean IncludesGroup(Windows.Devices.Midi2.MidiGroup group);
+        [noexcept] Boolean IncludesGroup(Windows.Devices.Midi2.MidiGroup group);
 
-        UInt16 MaxDeviceInputBandwidthIn4KBitsPerSecondUnits{ get; };
-        UInt16 MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits{ get; };
+        [noexcept] UInt16 MaxDeviceInputBandwidthIn4KBitsPerSecondUnits{ get; };
+        [noexcept] UInt16 MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits{ get; };
 
-        UInt32 CalculatedMaxDeviceInputBandwidthBitsPerSecond{ get; };
-        UInt32 CalculatedMaxDeviceOutputBandwidthBitsPerSecond{ get; };
+        [noexcept] UInt32 CalculatedMaxDeviceInputBandwidthBitsPerSecond{ get; };
+        [noexcept] UInt32 CalculatedMaxDeviceOutputBandwidthBitsPerSecond{ get; };
 
-        MidiFunctionBlock AsEquivalentFunctionBlock();
+        [noexcept] MidiFunctionBlock AsEquivalentFunctionBlock();
     }
 }

@@ -6,9 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-
-//using Microsoft.Windows.Devices.Midi2.Initialization;
 using Spectre.Console;
 
 namespace Microsoft.Midi.ConsoleApp

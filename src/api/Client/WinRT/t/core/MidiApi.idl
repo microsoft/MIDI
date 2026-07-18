@@ -16,11 +16,12 @@ import "MidiApiModeEnum.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
+    
     [static_name("Windows.Devices.Midi2.IMidiApiStatics", UUID_IMidiApiStatics)]
     static runtimeclass MidiApi
     {
-        static Boolean EnsureServiceAvailable();
+        [noexcept] static Boolean EnsureServiceAvailable();
 
-        static MidiApiMode GetCurrentlySelectedApiMode();
+        [noexcept] static MidiApiMode GetCurrentlySelectedApiMode();
     }
 }

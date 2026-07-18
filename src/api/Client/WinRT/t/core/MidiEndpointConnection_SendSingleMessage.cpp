@@ -20,51 +20,64 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiMessageStruct const& message
         ) noexcept
     {
-#ifdef _DEBUG
-        // performance-critical function, so only trace when in a debug build
-        TraceLoggingWrite(
-            Midi2SdkTelemetryProvider::Provider(),
-            MIDI_SDK_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
-            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
-            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
-            TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
-            TraceLoggingUInt8(wordCount, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD)
-            );
-#endif
-
-        if (!ValidateUmp(message.Word0, wordCount))
+        try
         {
-            LOG_IF_FAILED_MSG(E_INVALIDARG, "Invalid UMP data");   // this also generates a fallback error with file and line number info
-
-            if (LogMessageDataValidationErrorDetails())
-            {
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Send failed. Word count is incorrect for this UMP", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
-                    TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
-                    TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
-                    TraceLoggingUInt8(wordCount, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD),
-                    TraceLoggingUInt32(message.Word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
+    #ifdef _DEBUG
+            // performance-critical function, so only trace when in a debug build
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
+                TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
+                TraceLoggingUInt8(wordCount, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD)
                 );
+    #endif
+
+            if (!ValidateUmp(message.Word0, wordCount))
+            {
+                LOG_IF_FAILED_MSG(E_INVALIDARG, "Invalid UMP data");   // this also generates a fallback error with file and line number info
+
+                if (LogMessageDataValidationErrorDetails())
+                {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Send failed. Word count is incorrect for this UMP", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                        TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
+                        TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
+                        TraceLoggingUInt8(wordCount, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD),
+                        TraceLoggingUInt32(message.Word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
+                    );
+                }
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Invalid UMP data\n");
+
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
 
-            OutputDebugString(L"MIDI App SDK: Send failed. Invalid UMP data\n");
+            auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
 
-            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
+            return SendMessageRaw(m_endpointTransport, (void*)(&message), byteLength, timestamp);
         }
-
-        auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
-
-        return SendMessageRaw(m_endpointTransport, (void*)(&message), byteLength, timestamp);
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending single message struct.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending single message struct.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
     }
 
 
@@ -138,7 +151,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (SUCCEEDED(interop->GetBuffer(&dataPointer, &dataSize)))
             {
                 // make sure we're not going to spin past the end of the buffer
-                if (byteOffset + byteCount > bufferReference.Capacity())
+                if (static_cast<uint64_t>(byteOffset) + byteCount > bufferReference.Capacity())
                 {
                     LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
@@ -251,8 +264,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            // check for out-of-bounds first
-            if (startIndex + wordCount > words.size())
+            // check for out-of-bounds first (64-bit so startIndex + wordCount cannot overflow)
+            if (static_cast<uint64_t>(startIndex) + wordCount > words.size())
             {
                 LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 

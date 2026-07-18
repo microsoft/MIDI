@@ -22,22 +22,23 @@ import "MidiChannel.idl";
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [contract(MidiMessageUtilityApiContract,1)]
+    
     [static_name("Windows.Devices.Midi2.Utilities.Messages.IMidiMessageBuilderStatics", UUID_IMidiMessageBuilderStatics)]
     static runtimeclass MidiMessageBuilder
     {
-        static Windows.Devices.Midi2.MidiMessage32 BuildUtilityMessage(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage32 BuildUtilityMessage(
             UInt64 timestamp, 
             UInt8 status, 
             UInt32 dataOrReserved);
 
-        static Windows.Devices.Midi2.MidiMessage32 BuildSystemMessage(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage32 BuildSystemMessage(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             UInt8 status, 
             UInt8 midi1Byte2, 
             UInt8 midi1Byte3);
 
-        static Windows.Devices.Midi2.MidiMessage32 BuildMidi1ChannelVoiceMessage(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage32 BuildMidi1ChannelVoiceMessage(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             Midi1ChannelVoiceMessageStatus status,
@@ -46,7 +47,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
             UInt8 byte4);
 
         [default_overload]
-        static Windows.Devices.Midi2.MidiMessage64 BuildSystemExclusive7Message(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage64 BuildSystemExclusive7Message(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             UInt8 status,
@@ -58,7 +59,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
             UInt8 dataByte4, 
             UInt8 dataByte5);
 
-        static Windows.Devices.Midi2.MidiMessage64 BuildMidi2ChannelVoiceMessage(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage64 BuildMidi2ChannelVoiceMessage(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             Midi2ChannelVoiceMessageStatus status,
@@ -66,7 +67,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
             UInt16 index,
             UInt32 data);
 
-        static Windows.Devices.Midi2.MidiMessage128 BuildSystemExclusive8Message(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage128 BuildSystemExclusive8Message(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             MidiSystemExclusive8Status status,
@@ -86,7 +87,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
             UInt8 dataByte11, 
             UInt8 dataByte12);
 
-        static Windows.Devices.Midi2.MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             UInt8 mdsId,
@@ -98,7 +99,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
             UInt16 subId1, 
             UInt16 subId2);
 
-        static Windows.Devices.Midi2.MidiMessage128 BuildMixedDataSetChunkDataMessage(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage128 BuildMixedDataSetChunkDataMessage(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             UInt8 mdsId,
@@ -117,7 +118,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
             UInt8 dataByte12, 
             UInt8 dataByte13);
 
-        static Windows.Devices.Midi2.MidiMessage128 BuildFlexDataMessage(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage128 BuildFlexDataMessage(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             UInt8 form,
@@ -129,7 +130,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
             UInt32 word2Data, 
             UInt32 word3Data);
 
-        static Windows.Devices.Midi2.MidiMessage128 BuildStreamMessage(
+        [noexcept] static Windows.Devices.Midi2.MidiMessage128 BuildStreamMessage(
             UInt64 timestamp,
             UInt8 form,
             UInt16 status, 

@@ -23,6 +23,6 @@ namespace Windows.Devices.Midi2
     {      
         event Windows.Foundation.TypedEventHandler<IMidiMessageReceivedEventSource, MidiMessageReceivedEventArgs> MessageReceived;
 
-        IMidiEndpointConnectionSource GetEndpointConnectionSource();
+        [noexcept] IMidiEndpointConnectionSource GetEndpointConnectionSource();
     }
 }

@@ -91,6 +91,29 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             for (auto it = iterator.begin(); it < iterator.end(); ++it)
             {
+                // Guard against a malformed/truncated trailing message. CurrentMessageWordCount()
+                // is derived from word0 and can claim more words than remain in the buffer; without
+                // this check the event args constructor would memcpy past the end of the buffer.
+                if (!it.CurrentMessageSeemsComplete())
+                {
+                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Incomplete/truncated message at end of received buffer. Stopping processing.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                        TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+                    );
+
+                    OutputDebugString(L"MIDI App SDK: Incomplete/truncated message at end of received buffer.\n");
+
+                    break;
+                }
+
                 // one copy of the event args for this gets sent to all listeners and the main event
                 auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>(
                     static_cast<PVOID>(it.get()), 

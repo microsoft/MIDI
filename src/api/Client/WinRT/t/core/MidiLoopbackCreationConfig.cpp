@@ -51,83 +51,96 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
     json::JsonObject MidiLoopbackCreationConfig::ConfigJson()
     {
-        json::JsonObject endpointAssociationObject;
-        json::JsonObject endpointDeviceAObject;
-        json::JsonObject endpointDeviceBObject;
+        try
+        {
+            json::JsonObject endpointAssociationObject;
+            json::JsonObject endpointDeviceAObject;
+            json::JsonObject endpointDeviceBObject;
 
-        json::JsonObject endpointCreationObject;
-        json::JsonObject transportObject;
-        json::JsonObject topLevelTransportPluginSettingsObject;
-        json::JsonObject outerWrapperObject;
+            json::JsonObject endpointCreationObject;
+            json::JsonObject transportObject;
+            json::JsonObject topLevelTransportPluginSettingsObject;
+            json::JsonObject outerWrapperObject;
 
-        // build Endpoint A
+            // build Endpoint A
 
-        endpointDeviceAObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.Name()).c_str()));
+            endpointDeviceAObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.Name()).c_str()));
 
-        endpointDeviceAObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.Description()).c_str()));
+            endpointDeviceAObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.Description()).c_str()));
 
-        endpointDeviceAObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.UniqueId()).c_str()));
+            endpointDeviceAObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionA.UniqueId()).c_str()));
 
-        // build Endpoint B
+            // build Endpoint B
 
-        endpointDeviceBObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.Name()).c_str()));
+            endpointDeviceBObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.Name()).c_str()));
 
-        endpointDeviceBObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.Description()).c_str()));
+            endpointDeviceBObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.Description()).c_str()));
 
-        endpointDeviceBObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.UniqueId()).c_str()));
+            endpointDeviceBObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definitionB.UniqueId()).c_str()));
 
-        // create the association object with the two devices as children
+            // create the association object with the two devices as children
 
-        endpointAssociationObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY,
-            endpointDeviceAObject);
+            endpointAssociationObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY,
+                endpointDeviceAObject);
 
-        endpointAssociationObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY,
-            endpointDeviceBObject);
+            endpointAssociationObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY,
+                endpointDeviceBObject);
 
-        endpointAssociationObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
-            json::JsonValue::CreateBooleanValue(IsMuted()));
+            endpointAssociationObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
+                json::JsonValue::CreateBooleanValue(IsMuted()));
 
-        // create the creation node with the association object as the child property
+            // create the creation node with the association object as the child property
 
-        endpointCreationObject.SetNamedValue(
-            internal::GuidToString(m_associationId),
-            endpointAssociationObject);
+            endpointCreationObject.SetNamedValue(
+                internal::GuidToString(m_associationId),
+                endpointAssociationObject);
 
-        // create the transport object with the child creation node
+            // create the transport object with the child creation node
 
-        transportObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
-            endpointCreationObject);
+            transportObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
+                endpointCreationObject);
 
-        // create the main node
+            // create the main node
 
-        topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(loop::MidiLoopbackManager::TransportId()),
-            transportObject);
+            topLevelTransportPluginSettingsObject.SetNamedValue(
+                internal::GuidToString(loop::MidiLoopbackManager::TransportId()),
+                transportObject);
 
-        // wrap it all up so the json is valid
+            // wrap it all up so the json is valid
 
-        outerWrapperObject.SetNamedValue(
-            MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
-            topLevelTransportPluginSettingsObject);
+            outerWrapperObject.SetNamedValue(
+                MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
+                topLevelTransportPluginSettingsObject);
 
 
-        return outerWrapperObject;
+            return outerWrapperObject;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting config json.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting config json.");
+            return nullptr;
+        }
+
     }
-
 }

@@ -18,6 +18,7 @@ import "IMidiMessageReceivedEventSource.idl";
 namespace Windows.Devices.Midi2.ClientPlugins
 {
     [contract(MidiClientPluginsApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.ClientPlugins.IMidiChannelEndpointListener", UUID_IMidiChannelEndpointListener)]
     [constructor_name("Windows.Devices.Midi2.ClientPlugins.IMidiChannelEndpointListenerFactory", UUID_IMidiChannelEndpointListenerFactory)]
     runtimeclass MidiChannelEndpointListener : Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin,
@@ -25,11 +26,11 @@ namespace Windows.Devices.Midi2.ClientPlugins
     {
         MidiChannelEndpointListener();
 
-        Windows.Devices.Midi2.MidiGroup IncludedGroup;
+        [noexcept] Windows.Devices.Midi2.MidiGroup IncludedGroup;
 
-        IVector<Windows.Devices.Midi2.MidiChannel> IncludedChannels{ get; };
+        [noexcept] IVector<Windows.Devices.Midi2.MidiChannel> IncludedChannels{ get; };
 
-        Boolean PreventCallingFurtherListeners;
-        Boolean PreventFiringMainMessageReceivedEvent;
+        [noexcept] Boolean PreventCallingFurtherListeners;
+        [noexcept] Boolean PreventFiringMainMessageReceivedEvent;
     }
 }

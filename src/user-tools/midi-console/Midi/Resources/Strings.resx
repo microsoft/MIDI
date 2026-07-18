@@ -1216,4 +1216,14 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   <data name="MonitorConsoleTitleSuffix" xml:space="preserve">
     <value>MIDI Monitor</value>
   </data>
+  <data name="PropertyTablePropertyLabelDriverProvider" xml:space="preserve">
+    <value>Driver Provider</value>
+  </data>
+  <data name="PropertyTablePropertyLabelDriverInfPath" xml:space="preserve">
+    <value>Driver Inf</value>
+  </data>
+  <data name="PropertyTablePropertyLabelDriverVersion" xml:space="preserve">
+    <value>Driver Version</value>
+    <comment>Driver </comment>
+  </data>
 </root>

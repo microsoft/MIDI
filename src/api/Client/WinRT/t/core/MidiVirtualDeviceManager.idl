@@ -16,17 +16,18 @@ import "MidiVirtualDevice.idl";
 namespace Windows.Devices.Midi2.Transports.Virtual
 {
     [contract(MidiTransportsVirtualApiContract, 1)]
+    
     [static_name("Windows.Devices.Midi2.Transports.Virtual.IMidiVirtualDeviceManagerStatics", UUID_IMidiVirtualDeviceManagerStatics)]
     static runtimeclass MidiVirtualDeviceManager
     {
-        static Boolean IsTransportAvailable{ get; };
+        [noexcept] static Boolean IsTransportAvailable{ get; };
 
-        static Guid TransportId{ get; };
+        [noexcept] static Guid TransportId{ get; };
 
-        static MidiVirtualDevice CreateVirtualDevice(
+        [noexcept] static MidiVirtualDevice CreateVirtualDevice(
             MidiVirtualDeviceCreationConfig creationConfig);
 
-        static String GetAssociatedClientEndpointDeviceId(Guid associationId);
+        [noexcept] static String GetAssociatedClientEndpointDeviceId(Guid associationId);
 
         //static Boolean RemoveVirtualDevice(
         //    MidiVirtualDeviceRemovalConfig removalConfig);

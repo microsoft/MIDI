@@ -16,18 +16,19 @@ import "MidiServiceSessionConnectionInfo.idl";
 namespace Windows.Devices.Midi2.Reporting
 {
     [contract(MidiReportingApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Reporting.IMidiServiceSessionInfo", UUID_IMidiServiceSessionInfo)]
     runtimeclass MidiServiceSessionInfo
     {
-        Guid SessionId{ get; };
+        [noexcept] Guid SessionId{ get; };
 
-        UInt64 ProcessId{ get; };
-        String ProcessName{ get; };
-        String SessionName{ get; };
+        [noexcept] UInt64 ProcessId{ get; };
+        [noexcept] String ProcessName{ get; };
+        [noexcept] String SessionName{ get; };
 
-        Windows.Foundation.DateTime StartTime{ get; };
+        [noexcept] Windows.Foundation.DateTime StartTime{ get; };
 
 
-        IVectorView<MidiServiceSessionConnectionInfo> Connections{ get; };
+        [noexcept] IVectorView<MidiServiceSessionConnectionInfo> Connections{ get; };
     }
 }

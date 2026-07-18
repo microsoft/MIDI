@@ -50,12 +50,13 @@
 
   <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
     <PackageReference Include="Spectre.Console" Version="0.53.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.53.0" />
     <PackageReference Include="System.Management" Version="10.0.2" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.2" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="0.99.30-devpreview.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\shared\Microsoft.Devices.Midi2.Tools.Shared\Microsoft.Devices.Midi2.Tools.Shared.csproj" />

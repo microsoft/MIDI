@@ -14,6 +14,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
+    
     [interface_name("Windows.Devices.Midi2.IMidiEndpointConnectionSettings", UUID_IMidiEndpointConnectionSettings)]
     [constructor_name("Windows.Devices.Midi2.IMidiEndpointConnectionSettingsFactory", UUID_IMidiEndpointConnectionSettingsFactory)]
     runtimeclass MidiEndpointConnectionSettings
@@ -22,8 +23,8 @@ namespace Windows.Devices.Midi2
         MidiEndpointConnectionSettings(Boolean waitForEndpointReceiptOnSend);
         MidiEndpointConnectionSettings(Boolean waitForEndpointReceiptOnSend, Boolean autoReconnect);
 
-        Boolean WaitForEndpointReceiptOnSend{ get; };
-        Boolean AutoReconnect{ get; };
+        [noexcept] Boolean WaitForEndpointReceiptOnSend{ get; };
+        [noexcept] Boolean AutoReconnect{ get; };
 
     }
 }

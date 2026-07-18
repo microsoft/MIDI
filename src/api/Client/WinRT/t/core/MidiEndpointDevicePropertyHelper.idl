@@ -14,16 +14,17 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [static_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDevicePropertyHelperStatics", UUID_IMidiEndpointDevicePropertyHelperStatics)]
     static runtimeclass MidiEndpointDevicePropertyHelper
     {
-        static String GetMidiPropertyNameFromPropertyKey(Guid fmtid, UInt32 pid);
-        static String GetMidiPropertyNameFromPropertyKey(String key);
+        [noexcept] static String GetMidiPropertyNameFromPropertyKey(Guid fmtid, UInt32 pid);
+        [noexcept] static String GetMidiPropertyNameFromPropertyKey(String key);
 
-        static Boolean IsMidiPropertyKey(String key);
-        static Boolean IsMidiPropertyKey(Guid fmtid, UInt32 pid);
+        [noexcept] static Boolean IsMidiPropertyKey(String key);
+        [noexcept] static Boolean IsMidiPropertyKey(Guid fmtid, UInt32 pid);
 
-        static IMapView<String, String> GetAllMidiProperties();
+        [noexcept] static IMapView<String, String> GetAllMidiProperties();
     }
 }
 

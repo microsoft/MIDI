@@ -31,32 +31,45 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     // }
     json::JsonObject MidiLoopbackRemovalConfig::ConfigJson()
     {
-        json::JsonArray endpointDeletionArray;
-        json::JsonObject transportObject;
-        json::JsonObject topLevelTransportPluginSettingsObject;
-        json::JsonObject outerWrapperObject;
+        try
+        {
+            json::JsonArray endpointDeletionArray;
+            json::JsonObject transportObject;
+            json::JsonObject topLevelTransportPluginSettingsObject;
+            json::JsonObject outerWrapperObject;
 
-        json::JsonValue endpointDeletionAssociationId = json::JsonValue::CreateStringValue(internal::GuidToString(m_associationId));
-        endpointDeletionArray.Append(endpointDeletionAssociationId);
+            json::JsonValue endpointDeletionAssociationId = json::JsonValue::CreateStringValue(internal::GuidToString(m_associationId));
+            endpointDeletionArray.Append(endpointDeletionAssociationId);
 
-        // create the transport object with the child creation node
+            // create the transport object with the child creation node
 
-        transportObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY,
-            endpointDeletionArray);
+            transportObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY,
+                endpointDeletionArray);
 
-        // create the main node
+            // create the main node
 
-        topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(loop::MidiLoopbackManager::TransportId()),
-            transportObject);
+            topLevelTransportPluginSettingsObject.SetNamedValue(
+                internal::GuidToString(loop::MidiLoopbackManager::TransportId()),
+                transportObject);
 
-        // wrap it all up so the json is valid
+            // wrap it all up so the json is valid
 
-        outerWrapperObject.SetNamedValue(
-            MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
-            topLevelTransportPluginSettingsObject);
+            outerWrapperObject.SetNamedValue(
+                MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
+                topLevelTransportPluginSettingsObject);
 
-        return outerWrapperObject;
+            return outerWrapperObject;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting config json.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting config json.");
+            return nullptr;
+        }
     }
 }

@@ -16,8 +16,8 @@ namespace Windows.Devices.Midi2.ServiceConfig
     [uuid(UUID_IMidiServiceTransportPluginConfig), version(1.0)]
     interface IMidiServiceTransportPluginConfig
     {
-        Guid TransportId { get; };
+        [noexcept] Guid TransportId { get; };
 
-        Windows.Data.Json.JsonObject ConfigJson{ get; };
+        [noexcept] Windows.Data.Json.JsonObject ConfigJson{ get; };
     }
 }

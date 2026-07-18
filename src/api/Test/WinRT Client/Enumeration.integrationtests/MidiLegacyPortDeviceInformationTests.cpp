@@ -225,12 +225,12 @@ void MidiLegacyPortDeviceInformationTests::TestFindAll()
     {
         if (port.Flow() == Midi1PortFlow::MidiMessageSource)
         {
-            std::wcout << L"Found Source: " << port.Name().c_str() << std::endl;
+            std::wcout << L"Found Source: " << port.Number() << L" :: " << port.Name().c_str() << std::endl;
             sourcePortCount++;
         }
         else if (port.Flow() == Midi1PortFlow::MidiMessageDestination)
         {
-            std::wcout << L"Found Destination: " << port.Name().c_str() << std::endl;
+            std::wcout << L"Found Destination: " << port.Number() << L" :: " << port.Name().c_str() << std::endl;
             destinationPortCount++;
         }
     }

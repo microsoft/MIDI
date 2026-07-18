@@ -368,6 +368,17 @@ void MidiLegacyPortDeviceWatcherTests::TestGetMethods()
         auto foundPortsByDriverDeviceInterfaceId = watcher.GetEnumeratedPortsForDriverDeviceInterfaceId(port.DriverDeviceInterfaceId());
         VERIFY_IS_NOT_NULL(foundPortsByDriverDeviceInterfaceId);
         VERIFY_IS_TRUE(foundPortsByDriverDeviceInterfaceId.Size() > 0);
+
+
+
+        // Test GetEnumeratedPortsForAssociatedEndpoint
+
+
+
+        // Test GetEnumeratedPortsForAssociatedEndpointAndGroup
+
+
+
     }
 
     // at least some ports should have a driver device interface id to be valid.

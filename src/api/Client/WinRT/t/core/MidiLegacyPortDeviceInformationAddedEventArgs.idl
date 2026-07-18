@@ -17,7 +17,7 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
     [interface_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceInformationAddedEventArgs", UUID_IMidiLegacyPortDeviceInformationAddedEventArgs)]
     runtimeclass MidiLegacyPortDeviceInformationAddedEventArgs
     {
-        MidiLegacyPortDeviceInformation AddedDevice{ get; };
+        [noexcept] MidiLegacyPortDeviceInformation AddedDevice{ get; };
     }
 }
 

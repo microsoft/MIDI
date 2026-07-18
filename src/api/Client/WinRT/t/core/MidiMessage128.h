@@ -35,10 +35,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiMessage128 CreateFromStruct(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ MidiMessageStruct const& message)
-        {
-            return midi2::MidiMessage128(timestamp, message.Word0, message.Word1, message.Word2, message.Word3);
-        }
+            _In_ MidiMessageStruct const& message) noexcept;
+
 
         // internal
         void InternalInitializeFromPointer(

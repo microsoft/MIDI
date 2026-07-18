@@ -26,32 +26,32 @@ namespace Windows.Devices.Midi2.Enumeration
     {
         MidiFunctionBlock();
 
-        static String ShortLabel{ get; };
-        static String ShortLabelPlural{ get; };
-        static String LongLabel{ get; };
-        static String LongLabelPlural{ get; };
+        [noexcept] static String ShortLabel{ get; };
+        [noexcept] static String ShortLabelPlural{ get; };
+        [noexcept] static String LongLabel{ get; };
+        [noexcept] static String LongLabelPlural{ get; };
 
-        Boolean IsReadOnly { get; };
+        [noexcept] Boolean IsReadOnly { get; };
 
-        UInt8 Number;
-        String Name;
+        [noexcept] UInt8 Number;
+        [noexcept] String Name;
 
 
-        Boolean IsActive;
+        [noexcept] Boolean IsActive;
 
-        MidiFunctionBlockDirection Direction;
-        MidiFunctionBlockUIHint UIHint;
+        [noexcept] MidiFunctionBlockDirection Direction;
+        [noexcept] MidiFunctionBlockUIHint UIHint;
 
-        MidiFunctionBlockRepresentsMidi10Connection RepresentsMidi10Connection;
+        [noexcept] MidiFunctionBlockRepresentsMidi10Connection RepresentsMidi10Connection;
 
-        Windows.Devices.Midi2.MidiGroup FirstGroup;
+        [noexcept] Windows.Devices.Midi2.MidiGroup FirstGroup;
         //UInt8 FirstGroupIndex;
-        UInt8 GroupCount;
+        [noexcept] UInt8 GroupCount;
 
-        Boolean IncludesGroup(Windows.Devices.Midi2.MidiGroup group);
+        [noexcept] Boolean IncludesGroup(Windows.Devices.Midi2.MidiGroup group);
 
-        UInt8 MidiCIMessageVersionFormat;
+        [noexcept] UInt8 MidiCIMessageVersionFormat;
 
-        UInt8 MaxSystemExclusive8Streams;
+        [noexcept] UInt8 MaxSystemExclusive8Streams;
     }
 }

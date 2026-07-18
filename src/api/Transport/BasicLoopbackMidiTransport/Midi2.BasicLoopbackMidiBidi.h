@@ -25,6 +25,7 @@ private:
 //    wil::com_ptr_nothrow <IMidiCallback> m_callback{ nullptr };
     LONGLONG m_callbackContext{};
 
+    wil::srwlock m_deviceLock;
     std::shared_ptr<MidiBasicLoopbackDevice> m_device;
 
 

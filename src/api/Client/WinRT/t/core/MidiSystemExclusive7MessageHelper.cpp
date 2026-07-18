@@ -28,26 +28,39 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint32_t const word1,
         collections::IVector<uint8_t> dataBytesToAppendTo) noexcept
     {
-        uint8_t messageByteCount = GetDataByteCountFromSystemExclusiveMessageFirstWord(word0);
-        uint32_t currentWord = word0;
-        uint8_t shift = 8;
-
-        for (uint8_t i = 0; i < messageByteCount; i++)
+        try
         {
-            dataBytesToAppendTo.Append((uint8_t)(currentWord >> shift & 0xFF)); // we don't & 0x7F in case the data is actually bad
+            uint8_t messageByteCount = GetDataByteCountFromSystemExclusiveMessageFirstWord(word0);
+            uint32_t currentWord = word0;
+            uint8_t shift = 8;
 
-            if (shift == 0)
+            for (uint8_t i = 0; i < messageByteCount; i++)
             {
-                currentWord = word1;
-                shift = 24;
+                dataBytesToAppendTo.Append((uint8_t)(currentWord >> shift & 0xFF)); // we don't & 0x7F in case the data is actually bad
+
+                if (shift == 0)
+                {
+                    currentWord = word1;
+                    shift = 24;
+                }
+                else
+                {
+                    shift -= 8;
+                }
             }
-            else
-            {
-                shift -= 8;
-            }
+
+            return messageByteCount;
         }
-
-        return messageByteCount;
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error appending data bytes from single system exclusive message.");
+            return 0;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception appending data bytes from single system exclusive message.");
+            return 0;
+        }
     }
 
     _Use_decl_annotations_
@@ -55,7 +68,20 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi2::MidiMessage64 const& message,
         collections::IVector<uint8_t> dataBytesToAppendTo) noexcept
     {
-        return AppendDataBytesFromSingleSystemExclusiveMessage(message.Word0(), message.Word1(), dataBytesToAppendTo);
+        try
+        {
+            return AppendDataBytesFromSingleSystemExclusiveMessage(message.Word0(), message.Word1(), dataBytesToAppendTo);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error appending data bytes from single system exclusive message.");
+            return 0;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception appending data bytes from single system exclusive message.");
+            return 0;
+        }
     }
 
 
@@ -63,14 +89,27 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     collections::IVector<uint8_t> MidiSystemExclusive7MessageHelper::GetDataBytesFromMultipleSystemExclusiveMessages(
         collections::IIterable<midi2::MidiMessage64> const& messages) noexcept
     {
-        auto result = winrt::single_threaded_vector<uint8_t>();
-
-        for (auto const& message : messages)
+        try
         {
-            AppendDataBytesFromSingleSystemExclusiveMessage(message, result);
-        }
+            auto result = winrt::single_threaded_vector<uint8_t>();
 
-        return result;
+            for (auto const& message : messages)
+            {
+                AppendDataBytesFromSingleSystemExclusiveMessage(message, result);
+            }
+
+            return result;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting data bytes from multiple system exclusive messages.");
+            return winrt::single_threaded_vector<uint8_t>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting data bytes from multiple system exclusive messages.");
+            return winrt::single_threaded_vector<uint8_t>();
+        }
     }
 
     _Use_decl_annotations_
@@ -79,22 +118,48 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint32_t const word1
     ) noexcept
     {
-        auto result = winrt::single_threaded_vector<uint8_t>();
+        try
+        {
+            auto result = winrt::single_threaded_vector<uint8_t>();
 
-        AppendDataBytesFromSingleSystemExclusiveMessage(word0, word1, result);
+            AppendDataBytesFromSingleSystemExclusiveMessage(word0, word1, result);
 
-        return result;
+            return result;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting data bytes from single system exclusive message.");
+            return winrt::single_threaded_vector<uint8_t>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting data bytes from single system exclusive message.");
+            return winrt::single_threaded_vector<uint8_t>();
+        }
     }
 
     _Use_decl_annotations_
     collections::IVector<uint8_t> MidiSystemExclusive7MessageHelper::GetDataBytesFromSingleSystemExclusiveMessage(
         midi2::MidiMessage64 const& message) noexcept
     {
-        auto result = winrt::single_threaded_vector<uint8_t>();
+        try
+        {
+            auto result = winrt::single_threaded_vector<uint8_t>();
 
-        AppendDataBytesFromSingleSystemExclusiveMessage(message.Word0(), message.Word1(), result);
+            AppendDataBytesFromSingleSystemExclusiveMessage(message.Word0(), message.Word1(), result);
 
-        return result;
+            return result;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting data bytes from single system exclusive message.");
+            return winrt::single_threaded_vector<uint8_t>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting data bytes from single system exclusive message.");
+            return winrt::single_threaded_vector<uint8_t>();
+        }
     }
 
 

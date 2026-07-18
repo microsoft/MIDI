@@ -83,11 +83,22 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     void MidiEndpointDeviceWatcher::Start()
     {
-        m_enumeratedEndpointDevices.Clear();
-
-        if (m_watcher)
+        try
         {
-            m_watcher.Start();
+            m_enumeratedEndpointDevices.Clear();
+
+            if (m_watcher)
+            {
+                m_watcher.Start();
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error starting endpoint device watcher.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception starting endpoint device watcher.");
         }
     }
 
@@ -505,12 +516,25 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     enumeration::DeviceWatcherStatus MidiEndpointDeviceWatcher::Status()
     {
-        if (m_watcher)
+        try
         {
-            return m_watcher.Status();
+            if (m_watcher)
+            {
+                return m_watcher.Status();
+            }
+            else
+            {
+                return enumeration::DeviceWatcherStatus::Aborted;
+            }
         }
-        else
+        catch (winrt::hresult_error const& ex)
         {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting endpoint device watcher status.");
+            return enumeration::DeviceWatcherStatus::Aborted;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting endpoint device watcher status.");
             return enumeration::DeviceWatcherStatus::Aborted;
         }
     }

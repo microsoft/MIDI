@@ -11,7 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.Windows.Devices.Midi2.Utilities.Metadata;
+using Windows.Devices.Midi2.Utilities.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

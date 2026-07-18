@@ -14,14 +14,27 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {
     winrt::hstring MidiServiceConfigEndpointMatchCriteria::GetConfigJson() const noexcept
     {
-        json::JsonObject matchObject;
+        try
+        {
+            json::JsonObject matchObject;
 
-        if (m_match->WriteJson(matchObject))
-        {
-            return matchObject.Stringify();
+            if (m_match->WriteJson(matchObject))
+            {
+                return matchObject.Stringify();
+            }
+            else
+            {
+                return L"";
+            }
         }
-        else
+        catch (winrt::hresult_error const& ex)
         {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting match criteria config json.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting match criteria config json.");
             return L"";
         }
 
@@ -31,29 +44,55 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     _Use_decl_annotations_
     bool MidiServiceConfigEndpointMatchCriteria::Matches(midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria const& other) const noexcept
     {
-        auto otherMatch = winrt::get_self<MidiServiceConfigEndpointMatchCriteria>(other)->InternalGetMatchObject();
+        try
+        {
+            auto otherMatch = winrt::get_self<MidiServiceConfigEndpointMatchCriteria>(other)->InternalGetMatchObject();
 
-        return m_match->Matches(*otherMatch);
+            return m_match->Matches(*otherMatch);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error matching endpoint match criteria.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception matching endpoint match criteria.");
+            return false;
+        }
     }
 
 
     _Use_decl_annotations_
     midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria MidiServiceConfigEndpointMatchCriteria::FromJson(_In_ winrt::hstring const& matchObjectJson) noexcept
     {
-        auto winrtMatch = winrt::make_self<MidiServiceConfigEndpointMatchCriteria>();
-
-        json::JsonObject jsonObject;
-
-        if (json::JsonObject::TryParse(matchObjectJson, jsonObject))
+        try
         {
-            auto match = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(jsonObject);
+            auto winrtMatch = winrt::make_self<MidiServiceConfigEndpointMatchCriteria>();
 
-            winrtMatch->InternalSetMatchObject(match);
+            json::JsonObject jsonObject;
 
-            return *winrtMatch;
+            if (json::JsonObject::TryParse(matchObjectJson, jsonObject))
+            {
+                auto match = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(jsonObject);
+
+                winrtMatch->InternalSetMatchObject(match);
+
+                return *winrtMatch;
+            }
+
+            return nullptr;
         }
-
-        return nullptr;
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error creating match criteria from json.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception creating match criteria from json.");
+            return nullptr;
+        }
     }
 
 

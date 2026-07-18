@@ -14,14 +14,15 @@ import "MidiProtocolEnum.idl";
 namespace Windows.Devices.Midi2.Transports.Virtual
 {
     [contract(MidiTransportsVirtualApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Transports.Virtual.IMidiStreamConfigRequestReceivedEventArgs", UUID_IMidiStreamConfigRequestReceivedEventArgs)]
     runtimeclass MidiStreamConfigRequestReceivedEventArgs
     {
-        UInt64 Timestamp{ get; };
+        [noexcept] UInt64 Timestamp{ get; };
 
-        Windows.Devices.Midi2.Enumeration.MidiProtocol PreferredMidiProtocol{ get; };
+        [noexcept] Windows.Devices.Midi2.Enumeration.MidiProtocol PreferredMidiProtocol{ get; };
 
-        Boolean RequestEndpointTransmitJitterReductionTimestamps{ get; };
-        Boolean RequestEndpointReceiveJitterReductionTimestamps{ get; };
+        [noexcept] Boolean RequestEndpointTransmitJitterReductionTimestamps{ get; };
+        [noexcept] Boolean RequestEndpointReceiveJitterReductionTimestamps{ get; };
     }
 }

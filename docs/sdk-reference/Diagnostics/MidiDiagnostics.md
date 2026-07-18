@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiDiagnostics
-namespace: Microsoft.Windows.Devices.Midi2.Diagnostics
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.Diagnostics
 type: runtimeclass
 description: Utility class for testing Windows MIDI Services
 ---

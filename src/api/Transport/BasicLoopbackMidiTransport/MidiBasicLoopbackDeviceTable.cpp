@@ -16,14 +16,16 @@ _Use_decl_annotations_
 std::shared_ptr<MidiBasicLoopbackDevice> MidiBasicLoopbackDeviceTable::GetDevice(
     winrt::guid const& associationId)
 {
-    if (m_devices.find(associationId) != m_devices.end())
+    auto lock = m_devicesLock.lock_shared();
+
+    // single lookup; avoid operator[] which would default-insert a null
+    // entry if the key were missing.
+    if (auto it = m_devices.find(associationId); it != m_devices.end())
     {
-        return m_devices[associationId];
+        return it->second;
     }
-    else
-    {
-        return nullptr;
-    }
+
+    return nullptr;
 }
 
 
@@ -33,9 +35,13 @@ std::shared_ptr<MidiBasicLoopbackDevice> MidiBasicLoopbackDeviceTable::GetDevice
 {
     auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceId);
 
+    auto lock = m_devicesLock.lock_shared();
+
     for (auto const& [key, device] : m_devices)
     {
-        if (device)
+        // device may be shut down (Definition reset) but not yet removed,
+        // so guard both the device and its definition.
+        if (device && device->Definition)
         {
             if (cleanId == internal::NormalizeEndpointInterfaceIdWStringCopy(device->Definition->CreatedEndpointInterfaceId))
             {
@@ -63,6 +69,8 @@ void MidiBasicLoopbackDeviceTable::SetDevice(
         TraceLoggingGuid(associationId, "association id")
     );
 
+    auto lock = m_devicesLock.lock_exclusive();
+
     m_devices[associationId] = device;
 }
 
@@ -70,14 +78,23 @@ _Use_decl_annotations_
 void MidiBasicLoopbackDeviceTable::RemoveDevice(
     winrt::guid const& associationId)
 {
-    if (auto device = m_devices.find(associationId); device != m_devices.end())
+    // Detach the device from the map under the lock, then shut it down
+    // outside the lock so we don't hold the table lock across a callback
+    // teardown (which could otherwise invert lock order against the data path).
+    std::shared_ptr<MidiBasicLoopbackDevice> device;
     {
-        if (device->second)
-        {
-            device->second->Shutdown();
-        }
+        auto lock = m_devicesLock.lock_exclusive();
 
-        m_devices.erase(associationId);
+        if (auto it = m_devices.find(associationId); it != m_devices.end())
+        {
+            device = it->second;
+            m_devices.erase(it);
+        }
+    }
+
+    if (device)
+    {
+        device->Shutdown();
     }
 }
 
@@ -87,11 +104,16 @@ bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierInUseForLoopback(
 {
     auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
 
+    auto lock = m_devicesLock.lock_shared();
+
     for (auto const& [key, device] : m_devices)
     {
-        if (cleanId == internal::ToLowerTrimmedWStringCopy(device->Definition->EndpointUniqueIdentifier))
+        if (device && device->Definition)
         {
-            return true;
+            if (cleanId == internal::ToLowerTrimmedWStringCopy(device->Definition->EndpointUniqueIdentifier))
+            {
+                return true;
+            }
         }
     }
 
@@ -101,7 +123,16 @@ bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierInUseForLoopback(
 
 HRESULT MidiBasicLoopbackDeviceTable::Shutdown()
 {
-    for (auto& [key, device] : m_devices)
+    // Move the map out under the lock, then shut down the devices outside
+    // the lock (same rationale as RemoveDevice).
+    std::map<winrt::guid, std::shared_ptr<MidiBasicLoopbackDevice>> devices;
+    {
+        auto lock = m_devicesLock.lock_exclusive();
+        devices = std::move(m_devices);
+        m_devices.clear();
+    }
+
+    for (auto& [key, device] : devices)
     {
         if (device)
         {
@@ -109,6 +140,5 @@ HRESULT MidiBasicLoopbackDeviceTable::Shutdown()
         }
     }
 
-    m_devices.clear();
     return S_OK;
 }

@@ -66,49 +66,62 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
     json::JsonObject MidiServiceEndpointCustomizationConfig::ConfigJson() const noexcept
     {
-        json::JsonObject matchObject;
-        json::JsonObject customPropertiesObject;
-        json::JsonArray endpointUpdateArray;
-        json::JsonObject endpointUpdateObject;
-        json::JsonObject transportObject;
-        json::JsonObject topLevelTransportPluginSettingsObject;
-        json::JsonObject outerWrapperObject;
-
-
-        // match object within the update object. What is supported will vary by transport
-        if (m_matchCriteria != nullptr && json::JsonObject::TryParse(m_matchCriteria.GetConfigJson(), matchObject))
+        try
         {
-            endpointUpdateObject.SetNamedValue(MidiServiceConfigEndpointMatchCriteria::MatchObjectKey(), matchObject);
-        }
+            json::JsonObject matchObject;
+            json::JsonObject customPropertiesObject;
+            json::JsonArray endpointUpdateArray;
+            json::JsonObject endpointUpdateObject;
+            json::JsonObject transportObject;
+            json::JsonObject topLevelTransportPluginSettingsObject;
+            json::JsonObject outerWrapperObject;
 
-        if (m_props->WriteJson(customPropertiesObject))
+
+            // match object within the update object. What is supported will vary by transport
+            if (m_matchCriteria != nullptr && json::JsonObject::TryParse(m_matchCriteria.GetConfigJson(), matchObject))
+            {
+                endpointUpdateObject.SetNamedValue(MidiServiceConfigEndpointMatchCriteria::MatchObjectKey(), matchObject);
+            }
+
+            if (m_props->WriteJson(customPropertiesObject))
+            {
+                endpointUpdateObject.SetNamedValue(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
+            }
+
+
+            // add the endpoint update object to the array
+            endpointUpdateArray.Append(endpointUpdateObject);
+
+            // updates are an array, so we add this as an anonymous object
+            transportObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY,
+                endpointUpdateArray);
+
+            // create the main node
+
+            topLevelTransportPluginSettingsObject.SetNamedValue(
+                internal::GuidToString(m_transportId),
+                transportObject);
+
+            // wrap it all up so the json is valid
+
+            outerWrapperObject.SetNamedValue(
+                MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
+                topLevelTransportPluginSettingsObject);
+
+
+            return outerWrapperObject;
+        }
+        catch (winrt::hresult_error const& ex)
         {
-            endpointUpdateObject.SetNamedValue(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error building endpoint customization config json.");
+            return nullptr;
         }
-
-
-        // add the endpoint update object to the array
-        endpointUpdateArray.Append(endpointUpdateObject);
-
-        // updates are an array, so we add this as an anonymous object
-        transportObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY,
-            endpointUpdateArray);
-
-        // create the main node
-
-        topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(m_transportId),
-            transportObject);
-
-        // wrap it all up so the json is valid
-
-        outerWrapperObject.SetNamedValue(
-            MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
-            topLevelTransportPluginSettingsObject);
-
-
-        return outerWrapperObject;
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception building endpoint customization config json.");
+            return nullptr;
+        }
     }
 
 
@@ -117,11 +130,22 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         midi2::MidiGroup const& group, 
         winrt::hstring const& name) noexcept
     {
-        WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
-        props.GroupIndex = group.Index();
-        props.Name = name;
+        try
+        {
+            WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
+            props.GroupIndex = group.Index();
+            props.Name = name;
 
-        m_props->Midi1Sources[props.GroupIndex] = props;
+            m_props->Midi1Sources[props.GroupIndex] = props;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error adding MIDI 1.0 source port custom name.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception adding MIDI 1.0 source port custom name.");
+        }
     }
 
     _Use_decl_annotations_
@@ -129,11 +153,22 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         midi2::MidiGroup const& group, 
         winrt::hstring const& name) noexcept
     {
-        WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
-        props.GroupIndex = group.Index();
-        props.Name = name;
+        try
+        {
+            WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
+            props.GroupIndex = group.Index();
+            props.Name = name;
 
-        m_props->Midi1Destinations[props.GroupIndex] = props;
+            m_props->Midi1Destinations[props.GroupIndex] = props;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error adding MIDI 1.0 destination port custom name.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception adding MIDI 1.0 destination port custom name.");
+        }
     }
 
 

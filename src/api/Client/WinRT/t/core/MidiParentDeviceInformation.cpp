@@ -25,102 +25,94 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         winrt::hstring const& actualParentDeviceInstanceId,
         winrt::hstring const& mediaDriverDeviceParentInstanceId) noexcept
     {
-        // Get vid/pid/serial
-
-        if (internal::IsStandardUsbDeviceInstanceId(actualParentDeviceInstanceId.c_str()))
+        try
         {
-            uint16_t vid{ 0 };
-            uint16_t pid{ 0 };
-            std::wstring serial{ };
+            // Get vid/pid/serial
 
-            auto hr = internal::ParseUsbDeviceInstanceIntoVidPidSerial(actualParentDeviceInstanceId.c_str(), vid, pid, serial);
-
-            if (SUCCEEDED(hr))
+            if (internal::IsStandardUsbDeviceInstanceId(actualParentDeviceInstanceId.c_str()))
             {
-                m_usbVendorId = vid;
-                m_usbProductId = pid;
-                m_usbSerialNumber = winrt::hstring(serial);
+                uint16_t vid{ 0 };
+                uint16_t pid{ 0 };
+                std::wstring serial{ };
+
+                auto hr = internal::ParseUsbDeviceInstanceIntoVidPidSerial(actualParentDeviceInstanceId.c_str(), vid, pid, serial);
+
+                if (SUCCEEDED(hr))
+                {
+                    m_usbVendorId = vid;
+                    m_usbProductId = pid;
+                    m_usbSerialNumber = winrt::hstring(serial);
+                }
             }
-        }
 
-        // get properties from the parent device
-        auto pnpinfoParent = internal::MidiPnpDeviceInfo::CreateFromInstanceId(actualParentDeviceInstanceId.c_str());
-        if (!pnpinfoParent)
-        {
-            // this is an unexpected problem. Maybe the device was just disconnected?
-            return false;
-        }
-
-
-        m_id = internal::NormalizeDeviceInstanceIdHStringCopy(pnpinfoParent->InstanceId());
-        m_containerId = pnpinfoParent->ContainerId() ? pnpinfoParent->ContainerId().value() : foundation::GuidHelper::Empty();
-        if (pnpinfoParent->GetDeviceUInt32(DEVPKEY_Device_ReportedDeviceIdsHash).has_value())
-        {
-            m_reportedDeviceIdsHash = pnpinfoParent->GetDeviceUInt32(DEVPKEY_Device_ReportedDeviceIdsHash).value();
-        }
-
-        // get properties from the media parent device, like driver name etc.
-        // not every endpoint will have this
-        winrt::hstring idForDriverProperties{};
-        
-        if (!mediaDriverDeviceParentInstanceId.empty())
-        {
-            // we have a provided &MI_00 device, so use it for driver properties
-            idForDriverProperties = mediaDriverDeviceParentInstanceId;
-            m_relatedParentDeviceMediaInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(mediaDriverDeviceParentInstanceId);
-        }
-        else
-        {
-            // no &MI_00 device, so fall back to actual parent
-            idForDriverProperties = actualParentDeviceInstanceId;
-            m_relatedParentDeviceMediaInstanceId = {};
-        }
-        
-        auto driverPropertiesNode = internal::MidiPnpDeviceInfo::CreateFromInstanceId(idForDriverProperties.c_str());
-        if (driverPropertiesNode)
-        {
-            m_driverInfPath = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_DriverInfPath);
-            m_driverKey = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_Driver);
-            m_driverProvider = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_DriverProvider);
-            m_serviceName = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_Service);
-            m_driverVersion = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_DriverVersion);
-            m_enumeratorName = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_EnumeratorName);
-
-            m_parentDeviceInstanceId = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_Parent);
-
-
-            if (EnumeratorName() == L"PCI")
+            // get properties from the parent device
+            auto pnpinfoParent = internal::MidiPnpDeviceInfo::CreateFromInstanceId(actualParentDeviceInstanceId.c_str());
+            if (!pnpinfoParent)
             {
-                m_name = driverPropertiesNode->Name();
+                // this is an unexpected problem. Maybe the device was just disconnected?
+                return false;
+            }
+
+
+            m_id = internal::NormalizeDeviceInstanceIdHStringCopy(pnpinfoParent->InstanceId());
+            m_containerId = pnpinfoParent->ContainerId() ? pnpinfoParent->ContainerId().value() : foundation::GuidHelper::Empty();
+            if (pnpinfoParent->GetDeviceUInt32(DEVPKEY_Device_ReportedDeviceIdsHash).has_value())
+            {
+                m_reportedDeviceIdsHash = pnpinfoParent->GetDeviceUInt32(DEVPKEY_Device_ReportedDeviceIdsHash).value();
+            }
+
+            // get properties from the media parent device, like driver name etc.
+            // not every endpoint will have this
+            winrt::hstring idForDriverProperties{};
+        
+            if (!mediaDriverDeviceParentInstanceId.empty())
+            {
+                // we have a provided &MI_00 device, so use it for driver properties
+                idForDriverProperties = mediaDriverDeviceParentInstanceId;
+                m_relatedParentDeviceMediaInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(mediaDriverDeviceParentInstanceId);
             }
             else
             {
-                m_name = driverPropertiesNode->NamePreferringBusDescription();
+                // no &MI_00 device, so fall back to actual parent
+                idForDriverProperties = actualParentDeviceInstanceId;
+                m_relatedParentDeviceMediaInstanceId = {};
             }
+        
+            auto driverPropertiesNode = internal::MidiPnpDeviceInfo::CreateFromInstanceId(idForDriverProperties.c_str());
+            if (driverPropertiesNode)
+            {
+                m_driverInfPath = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_DriverInfPath);
+                m_driverKey = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_Driver);
+                m_driverProvider = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_DriverProvider);
+                m_serviceName = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_Service);
+                m_driverVersion = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_DriverVersion);
+                m_enumeratorName = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_EnumeratorName);
+
+                m_parentDeviceInstanceId = driverPropertiesNode->GetDeviceString(DEVPKEY_Device_Parent);
+
+
+                if (EnumeratorName() == L"PCI")
+                {
+                    m_name = driverPropertiesNode->Name();
+                }
+                else
+                {
+                    m_name = driverPropertiesNode->NamePreferringBusDescription();
+                }
+            }
+
+            return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error initializing parent device information.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception initializing parent device information.");
         }
 
-        return true;
-
-
-
-        //auto pnpinfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(DeviceInstanceId());
-
-        //if (pnpinfo)
-        //{
-        //    if (EnumeratorName() == L"PCI")
-        //    {
-        //        m_name = pnpinfo->Name();
-        //    }
-        //    else
-        //    {
-        //        m_name = pnpinfo->NamePreferringBusDescription();
-        //    }
-        //}
-        //else
-        //{
-        //    m_name = deviceInformation.Name();
-        //}
-
+        return false;
 
     }
 
@@ -130,6 +122,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         winrt::hstring const& mediaDriverDeviceId) noexcept
     {
 
+        try
+        {
         // Fast fail: validate the devnode exists via cfgmgr before we pay
         // for the lookup. This also catches phantom devices.
         if (!internal::MidiPnpDeviceInfo::CreateFromInstanceId(deviceInstanceId.c_str()).has_value())
@@ -144,6 +138,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
         else
         {
+            return nullptr;
+        }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error creating parent device information from ids.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception creating parent device information from ids.");
             return nullptr;
         }
     }
@@ -181,6 +186,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     winrt::hstring MidiParentDeviceInformation::ToString() const noexcept
     {
+        try
+        {
         winrt::hstring baseName{ L"MidiParentDeviceInformation: " };
 
         if (Name().empty())
@@ -194,5 +201,16 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
 
         return baseName;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error converting parent device information to string.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception converting parent device information to string.");
+            return L"";
+        }
     }
 }

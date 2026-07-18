@@ -98,10 +98,16 @@ CMidi2BasicLoopbackMidiBidi::Shutdown()
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-    if (m_device)
+    std::shared_ptr<MidiBasicLoopbackDevice> device;
     {
-        LOG_IF_FAILED(m_device->Shutdown());
+        auto lock = m_deviceLock.lock_exclusive();
+        device = std::move(m_device);
         m_device.reset();
+    }
+
+    if (device)
+    {
+        LOG_IF_FAILED(device->Shutdown());
     }
 
     return S_OK;
@@ -118,22 +124,24 @@ CMidi2BasicLoopbackMidiBidi::SendMidiMessage(
     LONGLONG Position
 )
 {
-
-    //TraceLoggingWrite(
-    //    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-    //    TraceLoggingBool(m_isEndpointA, "is endpoint A")
-    //);
-
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_device);
 
-    RETURN_IF_FAILED(m_device->SendMessage(optionFlags, Message, Size, Position, m_callbackContext));
+    // UMP payloads are 32-bit words; reject non-word-aligned sizes so we
+    // never forward a malformed buffer to the receiving callback.
+    RETURN_HR_IF(E_INVALIDARG, (Size % sizeof(uint32_t)) != 0);
+
+    // Snapshot the device under the lock so a concurrent Shutdown() can't
+    // reset it between our null check and the call.
+    std::shared_ptr<MidiBasicLoopbackDevice> device;
+    {
+        auto lock = m_deviceLock.lock_shared();
+        device = m_device;
+    }
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, device);
+
+    RETURN_IF_FAILED(device->SendMessage(optionFlags, Message, Size, Position, m_callbackContext));
 
     return S_OK;
 }

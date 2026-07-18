@@ -14,6 +14,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointUserSuppliedInfo", UUID_IMidiEndpointUserSuppliedInfo)]
     [constructor_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointUserSuppliedInfoFactory", UUID_IMidiEndpointUserSuppliedInfoFactory)]
     runtimeclass MidiEndpointUserSuppliedInfo
@@ -29,18 +30,18 @@ namespace Windows.Devices.Midi2.Enumeration
             Boolean useCustomMidiOutgoingLatencyTicksForScheduling
         );
 
-        Boolean IsReadOnly { get; };
+        [noexcept] Boolean IsReadOnly { get; };
 
-        String Name;
-        String Description;
+        [noexcept] String Name;
+        [noexcept] String Description;
 
-        String ImageFileName;
+        [noexcept] String ImageFileName;
 
-        Boolean RequiresNoteOffTranslation;
-        UInt16 RecommendedControlChangeAutomationIntervalMilliseconds;
-        Boolean SupportsMidiPolyphonicExpression;
+        [noexcept] Boolean RequiresNoteOffTranslation;
+        [noexcept] UInt16 RecommendedControlChangeAutomationIntervalMilliseconds;
+        [noexcept] Boolean SupportsMidiPolyphonicExpression;
 
-        UInt64 CustomMidiOutgoingLatencyTicks;
-        Boolean UseCustomMidiOutgoingLatencyTicksForScheduling;
+        [noexcept] UInt64 CustomMidiOutgoingLatencyTicks;
+        [noexcept] Boolean UseCustomMidiOutgoingLatencyTicksForScheduling;
     };
 }

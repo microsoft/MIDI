@@ -48,28 +48,41 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerDeviceInformation() const noexcept
     {
-        // find the container with the same container ID and DeviceInstanceId as us.
+        try
+        {
+            // find the container with the same container ID and DeviceInstanceId as us.
 
-        if (ContainerId() == winrt::guid{}) return nullptr;
+            if (ContainerId() == winrt::guid{}) return nullptr;
 
-        auto containerId = ContainerId();
+            auto containerId = ContainerId();
 
-        // STA-safe: run the async on the thread pool and wait.
-        auto container = internal::RunOnBackgroundThreadAndWait(
-            [containerId]()
-            {
-                return enumeration::DeviceInformation::CreateFromIdAsync(
-                    internal::GuidToString(containerId),
-                    {
-                        L"System.Devices.DeviceInstanceId",
-                        MIDI_DEVICE_PARENT_PROPERTY_KEY,
-                        L"System.Devices.Manufacturer",
-                        L"System.Devices.ModelName"
-                    },
-                    enumeration::DeviceInformationKind::DeviceContainer);
-            });
+            // STA-safe: run the async on the thread pool and wait.
+            auto container = internal::RunOnBackgroundThreadAndWait(
+                [containerId]()
+                {
+                    return enumeration::DeviceInformation::CreateFromIdAsync(
+                        internal::GuidToString(containerId),
+                        {
+                            L"System.Devices.DeviceInstanceId",
+                            MIDI_DEVICE_PARENT_PROPERTY_KEY,
+                            L"System.Devices.Manufacturer",
+                            L"System.Devices.ModelName"
+                        },
+                        enumeration::DeviceInformationKind::DeviceContainer);
+                });
 
-        return container;
+            return container;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting container device information.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting container device information.");
+            return nullptr;
+        }
     }
 
 
@@ -100,142 +113,155 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     collections::IVectorView<winrt::hstring> MidiEndpointDeviceInformation::GetAdditionalPropertiesList() noexcept
     {
-        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+        try
+        {
+            auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
-        additionalProperties.Append(L"System.ItemNameDisplay");
-        additionalProperties.Append(L"System.Devices.FriendlyName");
-        additionalProperties.Append(MIDI_DEVICE_PARENT_PROPERTY_KEY);
-        additionalProperties.Append(L"System.Devices.DeviceManufacturer");
-        additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
-        additionalProperties.Append(L"System.Devices.Present");
-        additionalProperties.Append(L"System.Devices.InterfaceEnabled");
+            additionalProperties.Append(L"System.ItemNameDisplay");
+            additionalProperties.Append(L"System.Devices.FriendlyName");
+            additionalProperties.Append(MIDI_DEVICE_PARENT_PROPERTY_KEY);
+            additionalProperties.Append(L"System.Devices.DeviceManufacturer");
+            additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
+            additionalProperties.Append(L"System.Devices.Present");
+            additionalProperties.Append(L"System.Devices.InterfaceEnabled");
 
-        // Basics ============================================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
-        additionalProperties.Append(STRING_PKEY_MIDI_TransportCode);
+            // Basics ============================================================================
+            additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
+            additionalProperties.Append(STRING_PKEY_MIDI_TransportCode);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
-        additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
-        additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
+            additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
+            additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
+            additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
-        additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
+            additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
+            additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointName);
-        additionalProperties.Append(STRING_PKEY_MIDI_Description);
-
-
-
-        // USB / KS Properties ===============================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
-        additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
-        additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
-        additionalProperties.Append(STRING_PKEY_MIDI_UsbVID);
-        additionalProperties.Append(STRING_PKEY_MIDI_UsbPID);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointName);
+            additionalProperties.Append(STRING_PKEY_MIDI_Description);
 
 
-        // Major Known Endpoint Types ========================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);
 
-//        additionalProperties.Append(STRING_PKEY_MIDI_EndpointRequiresMetadataHandler);
+            // USB / KS Properties ===============================================================
+            additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
+            additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
+            additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
+            additionalProperties.Append(STRING_PKEY_MIDI_UsbVID);
+            additionalProperties.Append(STRING_PKEY_MIDI_UsbPID);
 
-        // In-protocol Endpoint information ==================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointUmpVersionMajor);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointUmpVersionMinor);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedName);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId);
-        additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentity);
+            // Major Known Endpoint Types ========================================================
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);
 
-        // In-protocol Endpoint configuration ================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredProtocol);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps);
+    //        additionalProperties.Append(STRING_PKEY_MIDI_EndpointRequiresMetadataHandler);
 
-        // Function Blocks ===================================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockDeclaredCount);
-        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
+            // In-protocol Endpoint information ==================================================
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointUmpVersionMajor);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointUmpVersionMinor);
 
-        // User-supplied metadata ============================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
-        additionalProperties.Append(STRING_PKEY_MIDI_CustomImagePath);
-        additionalProperties.Append(STRING_PKEY_MIDI_CustomDescription);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedName);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId);
+            additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentity);
+
+            // In-protocol Endpoint configuration ================================================
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredProtocol);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps);
+
+            // Function Blocks ===================================================================
+            additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockDeclaredCount);
+            additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
+
+            // User-supplied metadata ============================================================
+            additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
+            additionalProperties.Append(STRING_PKEY_MIDI_CustomImagePath);
+            additionalProperties.Append(STRING_PKEY_MIDI_CustomDescription);
        
-        // Additional Capabilities ============================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_RequiresNoteOffTranslation);
-        additionalProperties.Append(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS);
-        additionalProperties.Append(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression);
+            // Additional Capabilities ============================================================
+            additionalProperties.Append(STRING_PKEY_MIDI_RequiresNoteOffTranslation);
+            additionalProperties.Append(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS);
+            additionalProperties.Append(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression);
 
-        // In-protocol Metadata Timestamps ====================================================
+            // In-protocol Metadata Timestamps ====================================================
 
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointInformationLastUpdateTime);
-        additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime);
-        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime);
-
-
-        additionalProperties.Append(STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks);
-        additionalProperties.Append(STRING_PKEY_MIDI_MidiOutCustomLatencyTicks);
-        additionalProperties.Append(STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime);
+            additionalProperties.Append(STRING_PKEY_MIDI_EndpointInformationLastUpdateTime);
+            additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime);
+            additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime);
 
 
-        // transport-specific
+            additionalProperties.Append(STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks);
+            additionalProperties.Append(STRING_PKEY_MIDI_MidiOutCustomLatencyTicks);
+            additionalProperties.Append(STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_TransportEndpointConfigId);
+
+            // transport-specific
+
+            additionalProperties.Append(STRING_PKEY_MIDI_TransportEndpointConfigId);
        
-        additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
+            additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName);
-        additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemotePort);
-
-
+            additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName);
+            additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemotePort);
 
 
-        // WinMM / Naming properties ==========================================================
-  //      additionalProperties.Append(STRING_PKEY_MIDI_UseLegacyMidi1PortNamingScheme);
-        additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
-        additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
-        additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
 
-        // these can be useful for debugging, but not much else. They are defined in MidiKSDef.h
-        //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
-        //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsPinId);
-        //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_InPinId);
-        //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_OutPinId);
-        //additionalProperties.Append(STRING_DEVPKEY_KsTransport);
-        additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);
-        additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
+
+            // WinMM / Naming properties ==========================================================
+      //      additionalProperties.Append(STRING_PKEY_MIDI_UseLegacyMidi1PortNamingScheme);
+            additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
+            additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
+            additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
+
+            // these can be useful for debugging, but not much else. They are defined in MidiKSDef.h
+            //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
+            //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsPinId);
+            //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_InPinId);
+            //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_OutPinId);
+            //additionalProperties.Append(STRING_DEVPKEY_KsTransport);
+            additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);
+            additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
 
         
-        additionalProperties.Append(STRING_PKEY_MIDI_IsMuted);
-        additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
+            additionalProperties.Append(STRING_PKEY_MIDI_IsMuted);
+            additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
 
 
 
-        // Calculated metrics =================================================================
-        // we don't load them here because they would spam device information update events
-        // and they are (potentially) used only in the service
+            // Calculated metrics =================================================================
+            // we don't load them here because they would spam device information update events
+            // and they are (potentially) used only in the service
 
 
-        // Function Blocks =================================================================
+            // Function Blocks =================================================================
 
 
-        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
-        {
-            winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
-            winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
+            for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+            {
+                winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
+                winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
 
-            additionalProperties.Append(functionBlockProperty);
-            additionalProperties.Append(functionBlockNameProperty);
+                additionalProperties.Append(functionBlockProperty);
+                additionalProperties.Append(functionBlockNameProperty);
+            }
+
+            return additionalProperties.GetView();
         }
-
-        return additionalProperties.GetView();
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building additional properties list.");
+            return winrt::single_threaded_vector<winrt::hstring>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building additional properties list.");
+            return winrt::single_threaded_vector<winrt::hstring>().GetView();
+        }
     }
 
 
@@ -344,6 +370,11 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
                 }
             }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error finding all endpoints.");
+            return winrt::single_threaded_vector<midi2enum::MidiEndpointDeviceInformation>().GetView();
         }
         catch (...)
         {
@@ -515,6 +546,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 }
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error creating and updating device.");
+        }
         catch (...)
         {
             LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
@@ -585,6 +620,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                 return *endpointInfo;
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error creating and updating device.");
+        }
         catch (...)
         {
             LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
@@ -631,8 +670,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             }
 
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error reading date time property.");
+        }
         catch (...)
         {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception reading date time property.");
         }
 
         return defaultValue;
@@ -645,26 +689,53 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     winrt::hstring MidiEndpointDeviceInformation::Name() const noexcept
     {
-        // user-supplied name overrides all others
-        if (GetUserSuppliedInfo().Name() != L"") return GetUserSuppliedInfo().Name();
+        try
+        {
+            // user-supplied name overrides all others
+            if (GetUserSuppliedInfo().Name() != L"") return GetUserSuppliedInfo().Name();
 
-        // endpoint name discovered in-protocol is next highest
-        if (GetDeclaredEndpointInfo().Name() != L"") return GetDeclaredEndpointInfo().Name();
+            // endpoint name discovered in-protocol is next highest
+            if (GetDeclaredEndpointInfo().Name() != L"") return GetDeclaredEndpointInfo().Name();
 
-        // transport-supplied name is last
-        if (GetTransportSuppliedInfo().Name() != L"") return GetTransportSuppliedInfo().Name();
+            // transport-supplied name is last
+            if (GetTransportSuppliedInfo().Name() != L"") return GetTransportSuppliedInfo().Name();
 
-        if (internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.FriendlyName", L"") != L"") return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.FriendlyName", L"");   
+            if (internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.FriendlyName", L"") != L"") return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.FriendlyName", L"");   
 
-        return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.ItemNameDisplay", L"(Unknown)");
+            return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.ItemNameDisplay", L"(Unknown)");
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting endpoint name.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting endpoint name.");
+        }
+
+        return L"";
+
     }
 
     midi2enum::MidiEndpointDevicePurpose MidiEndpointDeviceInformation::EndpointPurpose() const noexcept
     {
-        // This assumes we're keeping things in sync with the service
-        // like we should be
+        try
+        {
+            // This assumes we're keeping things in sync with the service
+            // like we should be
 
-        return (midi2enum::MidiEndpointDevicePurpose)internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_EndpointDevicePurpose, 0);
+            return (midi2enum::MidiEndpointDevicePurpose)internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_EndpointDevicePurpose, 0);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting endpoint purpose.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting endpoint purpose.");
+        }
+
+        return (midi2enum::MidiEndpointDevicePurpose)0;
     }
 
 
@@ -744,7 +815,20 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     collections::IVectorView<midi2enum::MidiGroupTerminalBlock> MidiEndpointDeviceInformation::GetGroupTerminalBlocks() const noexcept
     {
-        return m_groupTerminalBlocks.GetView();
+        try
+        {
+            return m_groupTerminalBlocks.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting group terminal blocks.");
+            return winrt::single_threaded_vector<midi2enum::MidiGroupTerminalBlock>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting group terminal blocks.");
+            return winrt::single_threaded_vector<midi2enum::MidiGroupTerminalBlock>().GetView();
+        }
     }
 
 
@@ -1380,24 +1464,37 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     midi2enum::Midi1PortNamingApproach MidiEndpointDeviceInformation::Midi1PortNamingApproach() const noexcept
     {
-        auto namingPropVal = internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_Midi1PortNamingSelection, (uint32_t)WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault);
-
-        // these types are value-compatible. However, we don't simply cast because
-        // sometimes these properties have garbage in them before they are set for
-        // the first time
-
-        switch (namingPropVal)
+        try
         {
-        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault:
+            auto namingPropVal = internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_Midi1PortNamingSelection, (uint32_t)WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault);
+
+            // these types are value-compatible. However, we don't simply cast because
+            // sometimes these properties have garbage in them before they are set for
+            // the first time
+
+            switch (namingPropVal)
+            {
+            case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault:
+                return midi2enum::Midi1PortNamingApproach::Default;
+
+            case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM:
+                return midi2enum::Midi1PortNamingApproach::UseClassicCompatible;
+
+            case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName:
+                return midi2enum::Midi1PortNamingApproach::UseNewStyle;
+
+            default:
+                return midi2enum::Midi1PortNamingApproach::Default;
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting MIDI 1.0 port naming approach.");
             return midi2enum::Midi1PortNamingApproach::Default;
-
-        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM:
-            return midi2enum::Midi1PortNamingApproach::UseClassicCompatible;
-
-        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName:
-            return midi2enum::Midi1PortNamingApproach::UseNewStyle;
-
-        default:
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting MIDI 1.0 port naming approach.");
             return midi2enum::Midi1PortNamingApproach::Default;
         }
     }
@@ -1408,51 +1505,64 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         collections::IVector<midi2enum::Midi1PortNameTableEntry> nameTable{ winrt::single_threaded_vector<midi2enum::Midi1PortNameTableEntry>() };
 
-        auto nameTableRefArray = GetBinaryProperty(STRING_PKEY_MIDI_Midi1PortNameTable);
-
-        if (nameTableRefArray != nullptr)
+        try
         {
-            auto refData = nameTableRefArray.Value();
+            auto nameTableRefArray = GetBinaryProperty(STRING_PKEY_MIDI_Midi1PortNameTable);
 
-            auto nameTableInternal = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromPropertyData(refData);
-
-            for (auto const& internalTable : { nameTableInternal->GetAllSourceEntries(), nameTableInternal->GetAllDestinationEntries() })
+            if (nameTableRefArray != nullptr)
             {
-                for (auto const& nameTableInternalEntry : internalTable)
+                auto refData = nameTableRefArray.Value();
+
+                auto nameTableInternal = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromPropertyData(refData);
+
+                for (auto const& internalTable : { nameTableInternal->GetAllSourceEntries(), nameTableInternal->GetAllDestinationEntries() })
                 {
-                    auto entry = winrt::make_self<Midi1PortNameTableEntry>();
-
-                    Midi1PortFlow flow;
-
-                    switch (nameTableInternalEntry.DataFlowFromUserPerspective)
+                    for (auto const& nameTableInternalEntry : internalTable)
                     {
-                    case MidiFlow::MidiFlowIn:
-                        flow = Midi1PortFlow::MidiMessageSource;
-                        break;
-                    case MidiFlow::MidiFlowOut:
-                        flow = Midi1PortFlow::MidiMessageDestination;
-                        break;
-                    default:
-                        // this should not happen. Assigning destination as a fallback.
-                        flow = Midi1PortFlow::MidiMessageDestination;
-                        break;
+                        auto entry = winrt::make_self<Midi1PortNameTableEntry>();
+
+                        Midi1PortFlow flow;
+
+                        switch (nameTableInternalEntry.DataFlowFromUserPerspective)
+                        {
+                        case MidiFlow::MidiFlowIn:
+                            flow = Midi1PortFlow::MidiMessageSource;
+                            break;
+                        case MidiFlow::MidiFlowOut:
+                            flow = Midi1PortFlow::MidiMessageDestination;
+                            break;
+                        default:
+                            // this should not happen. Assigning destination as a fallback.
+                            flow = Midi1PortFlow::MidiMessageDestination;
+                            break;
+                        }
+
+                        entry->InternalInitialize(
+                            midi2::MidiGroup(nameTableInternalEntry.GroupIndex),
+                            flow,
+                            nameTableInternalEntry.CustomName,
+                            nameTableInternalEntry.LegacyWinMMName,
+                            nameTableInternalEntry.NewStyleName
+                        );
+
+
+                        nameTable.Append(*entry);
                     }
-
-                    entry->InternalInitialize(
-                        midi2::MidiGroup(nameTableInternalEntry.GroupIndex),
-                        flow,
-                        nameTableInternalEntry.CustomName,
-                        nameTableInternalEntry.LegacyWinMMName,
-                        nameTableInternalEntry.NewStyleName
-                    );
-
-
-                    nameTable.Append(*entry);
                 }
             }
-        }
 
-        return nameTable.GetView();
+            return nameTable.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting name table.");
+            return winrt::single_threaded_vector<midi2enum::Midi1PortNameTableEntry>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting name table.");
+            return winrt::single_threaded_vector<midi2enum::Midi1PortNameTableEntry>().GetView();
+        }
     }
 
 }

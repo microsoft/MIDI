@@ -17,19 +17,20 @@ import "MidiFunctionBlock.idl";
 namespace Windows.Devices.Midi2.Transports.Virtual
 {
     [contract(MidiTransportsVirtualApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Transports.Virtual.IMidiVirtualDevice", UUID_IMidiVirtualDevice)]
     runtimeclass MidiVirtualDevice : Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin
     {
-        String DeviceEndpointDeviceId{ get; };
+        [noexcept] String DeviceEndpointDeviceId{ get; };
         //String ClientEndpointDeviceId{ get; };    // this is not available at initial creation time
-        Guid AssociationId{ get; };
+        [noexcept] Guid AssociationId{ get; };
 
-        IMapView<UInt8, Windows.Devices.Midi2.Enumeration.MidiFunctionBlock> FunctionBlocks{ get; };
+        [noexcept] IMapView<UInt8, Windows.Devices.Midi2.Enumeration.MidiFunctionBlock> FunctionBlocks{ get; };
         
-        Boolean UpdateFunctionBlock(Windows.Devices.Midi2.Enumeration.MidiFunctionBlock block);
-        Boolean UpdateEndpointName(String name);
+        [noexcept] Boolean UpdateFunctionBlock(Windows.Devices.Midi2.Enumeration.MidiFunctionBlock block);
+        [noexcept] Boolean UpdateEndpointName(String name);
 
-        Boolean SuppressHandledMessages;
+        [noexcept] Boolean SuppressHandledMessages;
 
         event Windows.Foundation.TypedEventHandler<MidiVirtualDevice, MidiStreamConfigRequestReceivedEventArgs> StreamConfigRequestReceived;
     }

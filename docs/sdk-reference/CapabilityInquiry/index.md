@@ -1,8 +1,7 @@
 ---
 layout: sdk_namespace_page
 title: MIDI CI Namespace Overview
-namespace: Microsoft.Windows.Devices.Midi2.CapabilityInquiry
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.CapabilityInquiry
 description: Namespace for MIDI-CI types
 ---
 

@@ -1,10 +1,9 @@
 ---
 layout: sdk_reference_page
 title: MidiGroupEndpointListener
-namespace: Microsoft.Windows.Devices.Midi2.ClientPlugins
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.ClientPlugins
 type: runtimeclass
-implements: Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
+implements: Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Windows.Devices.Midi2.IMidiMessageReceivedEventSource
 description: Provides a way to filter incoming messages by group without opening separate connections
 ---
 

@@ -18,6 +18,7 @@ import "MidiFunctionBlock.idl";
 namespace Windows.Devices.Midi2.Transports.Virtual
 {
     [contract(MidiTransportsVirtualApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Transports.Virtual.IMidiVirtualDeviceCreationConfig", UUID_IMidiVirtualDeviceCreationConfig)]
     [constructor_name("Windows.Devices.Midi2.Transports.Virtual.IMidiVirtualDeviceCreationConfigFactory", UUID_IMidiVirtualDeviceCreationConfigFactory)]
     runtimeclass MidiVirtualDeviceCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
@@ -51,18 +52,18 @@ namespace Windows.Devices.Midi2.Transports.Virtual
         // MidiEndpointTransportSuppliedInfo settings available because some, like 
         // transport id and data format, need to be set service-side. Also, all 
         // app-to-app MIDI devices are multi-client
-        String Name;
-        String Description;
-        String Manufacturer;
+        [noexcept] String Name;
+        [noexcept] String Description;
+        [noexcept] String Manufacturer;
 
-        Boolean CreateOnlyUmpEndpoints;
+        [noexcept] Boolean CreateOnlyUmpEndpoints;
 
-        Guid AssociationId{ get; };
+        [noexcept] Guid AssociationId{ get; };
 
-        Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity DeclaredDeviceIdentity;
-        Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo DeclaredEndpointInfo;
-        Windows.Devices.Midi2.Enumeration.MidiEndpointUserSuppliedInfo UserSuppliedInfo;
+        [noexcept] Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity DeclaredDeviceIdentity;
+        [noexcept] Windows.Devices.Midi2.Enumeration.MidiDeclaredEndpointInfo DeclaredEndpointInfo;
+        [noexcept] Windows.Devices.Midi2.Enumeration.MidiEndpointUserSuppliedInfo UserSuppliedInfo;
 
-        IVector<Windows.Devices.Midi2.Enumeration.MidiFunctionBlock> FunctionBlocks{ get; };
+        [noexcept] IVector<Windows.Devices.Midi2.Enumeration.MidiFunctionBlock> FunctionBlocks{ get; };
     }
 }

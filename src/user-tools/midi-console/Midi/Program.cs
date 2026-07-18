@@ -10,10 +10,6 @@ using System.Runtime.Versioning;
 
 using Microsoft.Midi.ConsoleApp;
 
-using sdkInit = Microsoft.Windows.Devices.Midi2.Initialization;
-
-
-
 
 Console.InputEncoding = System.Text.Encoding.UTF8;
 Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -169,12 +165,12 @@ app.Configure(config =>
             .WithDescription(Strings.CommandSendMessagesFileDescription)
             ;
 
-        endpoint.AddCommand<EndpointSendSysExFileCommand>("send-sysex-file")
-            .WithAlias("send-sysex")
-            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-sysex-file", "%USERPROFILE%\\Documents\\patch_dump.syx")
-            .WithExample("endpoint", "send-sysex", "patch_dump.syx")
-            .WithDescription(Strings.CommandSendSysExFileDescription)
-            ;
+        //endpoint.AddCommand<EndpointSendSysExFileCommand>("send-sysex-file")
+        //    .WithAlias("send-sysex")
+        //    .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-sysex-file", "%USERPROFILE%\\Documents\\patch_dump.syx")
+        //    .WithExample("endpoint", "send-sysex", "patch_dump.syx")
+        //    .WithDescription(Strings.CommandSendSysExFileDescription)
+        //    ;
 
         endpoint.AddCommand<EndpointPlayNotesCommand>("play-notes")
             .WithAlias("play")
@@ -191,13 +187,13 @@ app.Configure(config =>
             .WithDescription(Strings.CommandEndpointPropertiesDescription)
             ;
 
-        endpoint.AddCommand<EndpointSendClockCommand>("send-beat-clock")
-            .WithAlias("send-clock")
-            .WithAlias("clock")
-            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-clock", "--tempo", "120", "--ppqn", "24", "--group", "8")
-            .WithExample("endpoint", "send-clock", "--tempo", "120", "--group", "1", "--group", "2", "--group", "16", "--send-start", "--send-stop")
-            .WithDescription(Strings.CommandSendClockDescription)
-            ;
+        //endpoint.AddCommand<EndpointSendClockCommand>("send-beat-clock")
+        //    .WithAlias("send-clock")
+        //    .WithAlias("clock")
+        //    .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-clock", "--tempo", "120", "--ppqn", "24", "--group", "8")
+        //    .WithExample("endpoint", "send-clock", "--tempo", "120", "--group", "1", "--group", "2", "--group", "16", "--send-start", "--send-stop")
+        //    .WithDescription(Strings.CommandSendClockDescription)
+        //    ;
 
 
 
@@ -293,9 +289,9 @@ app.Configure(config =>
             ;
 
 
-        bridge.AddCommand<BridgeEndpointsCommand>("endpoints")
-            .WithDescription(Strings.CommandBridgeEndpointsDescription)
-            ;
+        //bridge.AddCommand<BridgeEndpointsCommand>("endpoints")
+        //    .WithDescription(Strings.CommandBridgeEndpointsDescription)
+        //    ;
 
 
     }).WithAlias("connect");
@@ -350,8 +346,6 @@ app.Configure(config =>
 // app title
 AnsiConsole.WriteLine();
 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppTitle(Strings.AppTitle));
-AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation($"{Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.Name} ({Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.Source})"));
-AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.BuildFullVersion));
 AnsiConsole.WriteLine();
 
 
@@ -364,96 +358,47 @@ if (!Microsoft.Midi.Settings.Helpers.MidiFeatureDetectionHelper.IsWindowsMidiSer
 }
 
 
-
-
-
-
-
-sdkInit.MidiDesktopAppSdkInitializer? initializer = null;
-
-try
+// this is super brittle
+if (args.Length > 1 && (args[0].ToLower() == "service" || args[0].ToLower() == "svc"))
 {
-    initializer = sdkInit.MidiDesktopAppSdkInitializer.Create();
+    // skip service initialization because user is perfoming a service command
 }
-catch (Exception ex)
+else
 {
-    LoggingService.Current.LogError(Strings.ErrorSdkInitializerInitializationFailedExceptionInCreate, ex);
-
-    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailedExceptionInCreate));
-    return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
-}
-
-
-if (initializer == null)
-{
-    LoggingService.Current.LogError(Strings.ErrorSdkInitializerInitializationFailed);
-
-    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailed));
-
-    return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
-}
-
-using (initializer)
-{
-    // initialize SDK runtime
-    if (!initializer.InitializeSdkRuntime())
+    // is the service running? If not, show a message so the user knows what is happening
+    using (var controller = MidiServiceHelper.GetServiceController())
     {
-        LoggingService.Current.LogError(Strings.ErrorSdkInitializationFailed);
-
-        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializationFailed));
-
-        return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
-    }
-
-
-    // this is super brittle
-    if (args.Length > 1 && (args[0].ToLower() == "service" || args[0].ToLower() == "svc"))
-    {
-        // skip service initialization because user is perfoming a service command
-    }
-    else
-    {
-        // is the service running? If not, show a message so the user knows what is happening
-        using (var controller = MidiServiceHelper.GetServiceController())
+        if (!MidiServiceHelper.ServiceIsReallyRunning(controller))
         {
-            if (!MidiServiceHelper.ServiceIsReallyRunning(controller))
-            {
-                LoggingService.Current.LogInfo(Strings.StartingMidiService);
+            LoggingService.Current.LogInfo(Strings.StartingMidiService);
 
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.StartingMidiService));
-            }
-        }
-
-        // start the service
-        if (!initializer.EnsureServiceAvailable())
-        {
-            LoggingService.Current.LogError(Strings.ErrorMidiServiceNotAvailable);
-
-            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
-
-            return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.StartingMidiService));
         }
     }
 
-    if (args.Length == 0)
+    // start the service
+    if (!MidiApi.EnsureServiceAvailable())
     {
-        // show app description only when no arguments supplied
+        LoggingService.Current.LogError(Strings.ErrorMidiServiceNotAvailable);
 
-        LoggingService.Current.LogInfo(initializer.GetInstalledSdkDescription(true, true, true));
+        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
 
-        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppDescription(Strings.AppDescription));
-        AnsiConsole.WriteLine();
-
-        AnsiConsole.MarkupLine("Installed MIDI SDK: " + AnsiMarkupFormatter.FormatSdkVersionInformation(initializer.GetInstalledSdkDescription(true, true, true)));
-        AnsiConsole.WriteLine();
+        return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
     }
-
-
-    MidiClock.BeginLowLatencySystemTimerPeriod();
-
-    var result = app.Run(args);
-
-    MidiClock.EndLowLatencySystemTimerPeriod();
-
-    return result;
 }
+
+if (args.Length == 0)
+{
+    // show app description only when no arguments supplied
+    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppDescription(Strings.AppDescription));
+    AnsiConsole.WriteLine();
+}
+
+
+MidiClock.BeginLowLatencySystemTimerPeriod();
+
+var result = app.Run(args);
+
+MidiClock.EndLowLatencySystemTimerPeriod();
+
+return result;

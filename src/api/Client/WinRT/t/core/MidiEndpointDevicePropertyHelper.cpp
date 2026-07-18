@@ -23,12 +23,25 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     collections::IMapView<winrt::hstring, winrt::hstring> MidiEndpointDevicePropertyHelper::GetAllMidiProperties() noexcept
     {
-        if (!m_initialized)
+        try
         {
-            BuildPropertyMap();
-        }
+            if (!m_initialized)
+            {
+                BuildPropertyMap();
+            }
 
-        return m_propertyFriendlyNames.GetView();
+            return m_propertyFriendlyNames.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting all MIDI properties.");
+            return winrt::single_threaded_map<winrt::hstring, winrt::hstring>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting all MIDI properties.");
+            return winrt::single_threaded_map<winrt::hstring, winrt::hstring>().GetView();
+        }
     }
 
     _Use_decl_annotations_
@@ -40,46 +53,98 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     _Use_decl_annotations_
     bool MidiEndpointDevicePropertyHelper::IsMidiPropertyKey(winrt::hstring const& key) noexcept
     {
-        if (!m_initialized)
+        try
         {
-            BuildPropertyMap();
-        }
+            if (!m_initialized)
+            {
+                BuildPropertyMap();
+            }
 
-        return m_propertyFriendlyNames.HasKey(internal::TrimmedHStringCopy(key));
+            return m_propertyFriendlyNames.HasKey(internal::TrimmedHStringCopy(key));
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error checking is MIDI property key.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking is MIDI property key.");
+            return false;
+        }
     }
 
 
     _Use_decl_annotations_
     bool MidiEndpointDevicePropertyHelper::IsMidiPropertyKey(winrt::guid fmtid, uint32_t const pid) noexcept
     {
-        winrt::hstring propKeyString = BuildPropertyStringKey(fmtid, pid);
+        try
+        {
+            winrt::hstring propKeyString = BuildPropertyStringKey(fmtid, pid);
 
-        return IsMidiPropertyKey(propKeyString);
+            return IsMidiPropertyKey(propKeyString);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error checking is MIDI property key.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking is MIDI property key.");
+            return false;
+        }
     }
 
 
     _Use_decl_annotations_
     winrt::hstring MidiEndpointDevicePropertyHelper::GetMidiPropertyNameFromPropertyKey(winrt::guid const& fmtid, uint32_t const pid) noexcept
     {
-        winrt::hstring propKeyString = BuildPropertyStringKey(fmtid, pid);
+        try
+        {
+            winrt::hstring propKeyString = BuildPropertyStringKey(fmtid, pid);
 
-        return GetMidiPropertyNameFromPropertyKey(propKeyString);
+            return GetMidiPropertyNameFromPropertyKey(propKeyString);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting MIDI property name from property key.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting MIDI property name from property key.");
+            return L"";
+        }
     }
 
     _Use_decl_annotations_
     winrt::hstring MidiEndpointDevicePropertyHelper::GetMidiPropertyNameFromPropertyKey(winrt::hstring const& key) noexcept
     {
-        if (!m_initialized)
+        try
         {
-            BuildPropertyMap();
-        }
+            if (!m_initialized)
+            {
+                BuildPropertyMap();
+            }
 
-        if (m_propertyFriendlyNames.HasKey(key))
+            if (m_propertyFriendlyNames.HasKey(key))
+            {
+                return m_propertyFriendlyNames.Lookup(key);
+            }
+
+            return L"";
+        }
+        catch (winrt::hresult_error const& ex)
         {
-            return m_propertyFriendlyNames.Lookup(key);
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting MIDI property name from property key.");
+            return L"";
         }
-
-        return L"";
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting MIDI property name from property key.");
+            return L"";
+        }
     }
 
     _Use_decl_annotations_
