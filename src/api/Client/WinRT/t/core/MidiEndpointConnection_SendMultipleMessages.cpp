@@ -393,6 +393,28 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::TransmissionWordCountExceeded;
             }
 
+            // validate that startIndex + wordCount stays within the supplied array.
+            // Use 64-bit arithmetic so the sum cannot overflow and bypass the check.
+            if (static_cast<uint64_t>(startIndex) + wordCount > words.size())
+            {
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Send failed. Array start index + word count is > array size", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                    TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+                );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Array start index + word count is > array size\n");
+
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
+            }
+
 
             // validate that the messages are complete. If you don't want this step, you
             // need to use the COM extension
@@ -567,6 +589,28 @@ namespace winrt::Windows::Devices::Midi2::implementation
     #endif
 
             std::vector<uint32_t> wordList;
+
+            // validate that startIndex + messageCount stays within the supplied array.
+            // Use 64-bit arithmetic so the sum cannot overflow and bypass the check.
+            if (static_cast<uint64_t>(startIndex) + messageCount > messages.size())
+            {
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Send failed. Array start index + message count is > array size", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                    TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+                );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Array start index + message count is > array size\n");
+
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
+            }
 
             for (auto i = startIndex; i < startIndex + messageCount; i++)
             {

@@ -264,8 +264,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            // check for out-of-bounds first
-            if (startIndex + wordCount > words.size())
+            // check for out-of-bounds first (64-bit so startIndex + wordCount cannot overflow)
+            if (static_cast<uint64_t>(startIndex) + wordCount > words.size())
             {
                 LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
