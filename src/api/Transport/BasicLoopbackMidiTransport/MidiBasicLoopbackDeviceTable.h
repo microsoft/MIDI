@@ -13,8 +13,13 @@
 class MidiBasicLoopbackDeviceTable
 {
 private:
-    // unline GUID, winrt::guid has built-in comparison so it can be used as a key in std::map
+    // unlike GUID, winrt::guid has built-in comparison so it can be used as a key in std::map
     std::map<winrt::guid, std::shared_ptr<MidiBasicLoopbackDevice>> m_devices;
+
+    // guards all access to m_devices. Accessed from the data path
+    // (GetDeviceById via SendMidiMessage), the activation path (SetDevice),
+    // and teardown (RemoveDevice / Shutdown), so it must be synchronized.
+    wil::srwlock m_devicesLock;
 
 
 public:

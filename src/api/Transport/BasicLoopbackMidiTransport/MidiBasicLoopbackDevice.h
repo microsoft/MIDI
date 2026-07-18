@@ -25,6 +25,8 @@ public:
     {
         RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
+        auto lock = m_lock.lock_exclusive();
+
         m_callback = callback;
 
         return S_OK;
@@ -32,18 +34,32 @@ public:
 
     HRESULT SendMessage(_In_ MessageOptionFlags optionFlags, _In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
-        if (!Definition || Definition->IsMuted) return S_OK;
+        RETURN_HR_IF_NULL(E_INVALIDARG, message);
+        RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-        if (m_callback != nullptr)
+        // Snapshot the callback and definition under the lock so a concurrent
+        // Shutdown() (which clears both) can't free them out from under us
+        // while we're forwarding the message. We deliberately release the
+        // lock before invoking the callback to avoid holding it across a
+        // potentially long, re-entrant call into client code.
+        wil::com_ptr_nothrow<IMidiCallback> callback;
+        std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition;
         {
-            return m_callback->Callback(optionFlags, message, size, position, context);
+            auto lock = m_lock.lock_shared();
+            callback = m_callback;
+            definition = Definition;
         }
 
-        return S_OK;
+        if (!definition || definition->IsMuted) return S_OK;
+        if (callback == nullptr) return S_OK;
+
+        return callback->Callback(optionFlags, message, size, position, context);
     }
 
     HRESULT Shutdown()
     {
+        auto lock = m_lock.lock_exclusive();
+
         m_callback = nullptr;
         Definition.reset();
 
@@ -56,6 +72,7 @@ public:
     }
 
 private:
+    wil::srwlock m_lock;
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
 
 };
