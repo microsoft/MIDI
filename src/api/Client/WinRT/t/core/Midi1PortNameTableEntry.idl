@@ -18,14 +18,15 @@ namespace Windows.Devices.Midi2.Enumeration
     // this needs to be kept in sync with Midi1PortNameEntry in service
 
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidi1PortNameTableEntry", UUID_IMidi1PortNameTableEntry)]
     runtimeclass Midi1PortNameTableEntry
     {
-        Windows.Devices.Midi2.MidiGroup Group { get; };
-        Midi1PortFlow Flow{ get; };
+        [noexcept] Windows.Devices.Midi2.MidiGroup Group { get; };
+        [noexcept] Midi1PortFlow Flow{ get; };
 
-        String CustomName{ get; };              // user-supplied name. Blank if not provided.
-        String LegacyCompatibleName{ get; };    // WinMM MIDI 1.0 compatible port name
-        String NewStyleName{ get; };            // New-style port name
+        [noexcept] String CustomName{ get; };              // user-supplied name. Blank if not provided.
+        [noexcept] String LegacyCompatibleName{ get; };    // WinMM MIDI 1.0 compatible port name
+        [noexcept] String NewStyleName{ get; };            // New-style port name
     };
 }

@@ -26,6 +26,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
 {
     bool MidiVirtualDeviceManager::IsTransportAvailable() noexcept
     {
+        try
+        {
         auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
 
         for (auto const& transport : transports)
@@ -37,6 +39,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         }
 
         return false;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error checking virtual device transport availability.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking virtual device transport availability.");
+            return false;
+        }
     }
 
 
@@ -44,6 +57,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
     _Use_decl_annotations_
     winrt::hstring MidiVirtualDeviceManager::GetAssociatedClientEndpointDeviceId(winrt::guid associationId) noexcept
     {
+        try
+        {
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
         additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
@@ -84,6 +99,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         }
 
         return L""; // not found
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting associated client endpoint device id.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting associated client endpoint device id.");
+            return L"";
+        }
     }
 
 
@@ -92,6 +118,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         _In_ virt::MidiVirtualDeviceCreationConfig creationConfig
     ) noexcept
     {
+        try
+        {
         winrt::hstring deviceEndpointDeviceId{};
         //winrt::hstring clientEndpointDeviceId{};
 
@@ -144,6 +172,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         }
 
         return nullptr;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error creating virtual device.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception creating virtual device.");
+            return nullptr;
+        }
     }
 
 }

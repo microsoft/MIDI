@@ -272,6 +272,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
          winrt::hstring const& name
     ) noexcept
     {
+        try
+        {
         return BuildSplitTextMessages(
             timestamp,
             MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION,
@@ -280,6 +282,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET,
             name
         );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building endpoint name notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building endpoint name notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
     }
 
     // TODO: This is ASCII
@@ -289,6 +302,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         winrt::hstring const& productInstanceId
     )
     {
+        try
+        {
         return BuildSplitTextMessages(
             timestamp,
             MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION,
@@ -297,6 +312,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_CHARACTERS_PER_PACKET,
             productInstanceId
         );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building product instance id notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building product instance id notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
 
     }
 
@@ -443,6 +469,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         // to last byte
         uint16_t word0Remainder = static_cast<uint16_t>(functionBlockNumber) << 8;
 
+        try
+        {
         return BuildSplitTextMessages(
             timestamp,
             MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION,
@@ -451,6 +479,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_CHARACTERS_PER_PACKET,
             name
         );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building function block name notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building function block name notification messages.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
     }
 
 
@@ -459,6 +498,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         collections::IIterable<midi2::IMidiUniversalPacket> const& messages
         )
     {
+        try
+        {
         std::string s{};
         s.reserve(13);
 
@@ -495,6 +536,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         }
 
         return winrt::to_hstring(s);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error parsing function block name notification messages.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception parsing function block name notification messages.");
+            return L"";
+        }
 
     }
 
@@ -506,6 +558,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         std::string s{};
         s.reserve(14);
 
+        try
+        {
         for (auto ump : messages)
         {
             midi2::MidiMessage128 message{ nullptr };
@@ -539,6 +593,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         }
 
         return winrt::to_hstring(s);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error parsing endpoint name notification messages.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception parsing endpoint name notification messages.");
+            return L"";
+        }
     }
 
     _Use_decl_annotations_
@@ -549,6 +614,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         std::string s{};
         s.reserve(14);
 
+        try
+        {
         for (auto ump : messages)
         {
             midi2::MidiMessage128 message{ nullptr };
@@ -581,6 +648,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         }
 
         return winrt::to_hstring(s);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error parsing product instance id notification messages.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception parsing product instance id notification messages.");
+            return L"";
+        }
     }
 
 

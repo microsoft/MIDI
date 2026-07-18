@@ -13,23 +13,24 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [static_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDeviceIdHelperStatics", UUID_IMidiEndpointDeviceIdHelperStatics)]
     static runtimeclass MidiEndpointDeviceIdHelper
     {
         // returns a short version of the midisrv-enumerated id
         // from:    \\?\swd#midisrv#midiu_ksa_9447707571394916916#{e7cce071-3c03-423f-88d3-f1045d02552b}
         // to       ksa_9447707571394916916
-        static String GetShortIdFromFullId(String fullEndpointDeviceId);
+        [noexcept] static String GetShortIdFromFullId(String fullEndpointDeviceId);
 
         // returns the full id for a midisrv-enumerated shortId
-        static String GetFullIdFromShortId(String shortEndpointDeviceId);
+        [noexcept] static String GetFullIdFromShortId(String shortEndpointDeviceId);
 
         // returns true if this is a midisrv-enumerated id. This only checks format
         // and components, not whether the device is actually present or real.
-        static Boolean IsPossibleWindowsMidiServicesEndpointDeviceId(String fullEndpointDeviceId);
+        [noexcept] static Boolean IsPossibleWindowsMidiServicesEndpointDeviceId(String fullEndpointDeviceId);
 
         // puts the full id in the correct case. Wrapper around the internal function which
         // does that for all endpoint ids we expose. Useful when doing comparisons.
-        static String NormalizeFullId(String fullEndpointDeviceId);
+        [noexcept] static String NormalizeFullId(String fullEndpointDeviceId);
     }
 }

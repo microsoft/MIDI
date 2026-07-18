@@ -207,6 +207,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiSession::UpdateName(winrt::hstring const& newName) noexcept
     {
+        try
+        {
         auto cleanName = internal::TrimmedHStringCopy(newName);
 
         // this can be called only if we've already initialized the session tracker
@@ -249,6 +251,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"Session tracker interface wasn't already initialized", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
+            return false;
+        }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error updating session name.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception updating session name.");
             return false;
         }
     }

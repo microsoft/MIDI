@@ -18,6 +18,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint64_t const timestamp, 
         collections::IIterable<uint32_t> const& words)
     {
+        try
+        {
         auto result = winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
 
         auto iter = words.First();
@@ -94,6 +96,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         }
 
         return result;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building packet list from word list.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building packet list from word list.");
+            return winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+        }
     }
 
     _Use_decl_annotations_
@@ -102,6 +115,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     {
         // we're doing this the safe and easy way, but there's likely a more efficient way to copy the memory over
 
+        try
+        {
         auto result = winrt::single_threaded_vector<uint32_t>();
 
         for (auto const& message : messages)
@@ -110,6 +125,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         }
 
         return result;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building word list from packet list.");
+            return winrt::single_threaded_vector<uint32_t>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building word list from packet list.");
+            return winrt::single_threaded_vector<uint32_t>();
+        }
     }
 
 
@@ -153,7 +179,20 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     _Use_decl_annotations_
     midi2::MidiGroup MidiMessageHelper::GetGroupFromMessageFirstWord(_In_ uint32_t const word0)
     {
-        return midi2::MidiGroup(internal::GetGroupIndexFromFirstWord(word0));
+        try
+        {
+            return midi2::MidiGroup(internal::GetGroupIndexFromFirstWord(word0));
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting group from message first word.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting group from message first word.");
+            return nullptr;
+        }
     }
 
 
@@ -161,7 +200,20 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     _Use_decl_annotations_
     uint32_t MidiMessageHelper::ReplaceGroupInMessageFirstWord(uint32_t const word0, midi2::MidiGroup const newGroup) noexcept
     {
-        return internal::GetFirstWordWithNewGroup(word0, newGroup.Index());
+        try
+        {
+            return internal::GetFirstWordWithNewGroup(word0, newGroup.Index());
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error replacing group in message first word.");
+            return 0;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception replacing group in message first word.");
+            return 0;
+        }
     }
 
     _Use_decl_annotations_
@@ -174,7 +226,20 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     _Use_decl_annotations_
     midi2::MidiChannel MidiMessageHelper::GetChannelFromMessageFirstWord(_In_ uint32_t const word0)
     {
-        return midi2::MidiChannel(internal::GetChannelIndexFromFirstWord(word0));
+        try
+        {
+            return midi2::MidiChannel(internal::GetChannelIndexFromFirstWord(word0));
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting channel from message first word.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting channel from message first word.");
+            return nullptr;
+        }
     }
 
 
@@ -182,7 +247,20 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     _Use_decl_annotations_
     uint32_t MidiMessageHelper::ReplaceChannelInMessageFirstWord(uint32_t const word0, midi2::MidiChannel const newChannel) noexcept
     {
-        return internal::GetFirstWordWithNewChannel(word0, newChannel.Index());
+        try
+        {
+            return internal::GetFirstWordWithNewChannel(word0, newChannel.Index());
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error replacing channel in message first word.");
+            return 0;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception replacing channel in message first word.");
+            return 0;
+        }
     }
 
     _Use_decl_annotations_
@@ -273,11 +351,24 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     _Use_decl_annotations_
     winrt::hstring MidiMessageHelper::GetNoteDisplayNameFromNoteIndex(uint8_t const noteIndex) noexcept
     {
+        try
+        {
         static const winrt::hstring noteNames[]{ L"C", L"C#/Db", L"D", L"D#/Eb", L"E", L"F", L"F#/Gb", L"G", L"G#/Ab", L"A", L"A#/Bb", L"B" };
 
         if (noteIndex > 0x7F) return internal::ResourceGetHString(IDS_NOTE_INVALID);
 
         return noteNames[noteIndex % _countof(noteNames)];
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting note display name from note index.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting note display name from note index.");
+            return L"";
+        }
     }
 
     // this works for classic note indexes 0-127
@@ -305,6 +396,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     _Use_decl_annotations_
     winrt::hstring MidiMessageHelper::GetMessageDisplayNameFromFirstWord(uint32_t const word0) noexcept
     {
+        try
+        {
         switch (GetMessageTypeFromMessageFirstWord(word0))
         {
         case midi2::MidiMessageType::UtilityMessage32:
@@ -610,6 +703,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             // this is here just to satisfy the compiler because it doesn't understand 4-bit values
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT_UNKNOWN); //L"Unknown";
         };
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting message display name from first word.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting message display name from first word.");
+            return L"";
+        }
 
 
     }

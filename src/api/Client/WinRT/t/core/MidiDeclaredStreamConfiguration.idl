@@ -15,6 +15,7 @@ import "MidiProtocolEnum.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredStreamConfiguration", UUID_IMidiDeclaredStreamConfiguration)]
     [constructor_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredStreamConfigurationFactory", UUID_IMidiDeclaredStreamConfigurationFactory)]
     runtimeclass MidiDeclaredStreamConfiguration
@@ -26,10 +27,10 @@ namespace Windows.Devices.Midi2.Enumeration
             Boolean sendJitterReductionTimestamps
         );
 
-        Boolean IsReadOnly { get; };
+        [noexcept] Boolean IsReadOnly { get; };
 
-        MidiProtocol Protocol;
-        Boolean ReceiveJitterReductionTimestamps;
-        Boolean SendJitterReductionTimestamps;
+        [noexcept] MidiProtocol Protocol;
+        [noexcept] Boolean ReceiveJitterReductionTimestamps;
+        [noexcept] Boolean SendJitterReductionTimestamps;
     };
 }

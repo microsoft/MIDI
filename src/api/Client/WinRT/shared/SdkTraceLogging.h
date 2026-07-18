@@ -40,3 +40,44 @@ class Midi2SdkTelemetryProvider : public wil::TraceLoggingProvider
 
 #define MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD          "message timestamp"
 #define MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD              "ump word0"
+
+
+// Helper macros for logging exceptions from within [noexcept] members. These expand to the
+// same TraceLogging error pattern used throughout the SDK. Use MIDI_SDK_TRACE_THIS_POINTER
+// for instance methods and nullptr for static methods.
+//
+// Example:
+//   catch (winrt::hresult_error const& ex)
+//   {
+//       MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error doing the thing.");
+//       return <default>;
+//   }
+//   catch (...)
+//   {
+//       MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception doing the thing.");
+//       return <default>;
+//   }
+
+#define MIDI_SDK_LOG_HRESULT_EXCEPTION(thisPointer, ex, messageText)                             \
+    LOG_IF_FAILED(static_cast<HRESULT>((ex).code()));                                            \
+    TraceLoggingWrite(                                                                           \
+        Midi2SdkTelemetryProvider::Provider(),                                                  \
+        MIDI_SDK_TRACE_EVENT_ERROR,                                                              \
+        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),                         \
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),                                                 \
+        TraceLoggingPointer((thisPointer), MIDI_SDK_TRACE_THIS_FIELD),                           \
+        TraceLoggingWideString((messageText), MIDI_SDK_TRACE_MESSAGE_FIELD),                     \
+        TraceLoggingHResult(static_cast<HRESULT>((ex).code()), MIDI_SDK_TRACE_HRESULT_FIELD),    \
+        TraceLoggingWideString((ex).message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)               \
+    )
+
+#define MIDI_SDK_LOG_GENERAL_EXCEPTION(thisPointer, messageText)                                 \
+    LOG_IF_FAILED(E_FAIL);                                                                       \
+    TraceLoggingWrite(                                                                           \
+        Midi2SdkTelemetryProvider::Provider(),                                                  \
+        MIDI_SDK_TRACE_EVENT_ERROR,                                                              \
+        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),                         \
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),                                                 \
+        TraceLoggingPointer((thisPointer), MIDI_SDK_TRACE_THIS_FIELD),                           \
+        TraceLoggingWideString((messageText), MIDI_SDK_TRACE_MESSAGE_FIELD)                      \
+    )

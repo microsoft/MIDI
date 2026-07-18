@@ -35,68 +35,69 @@ import "MidiParentDeviceInformation.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDeviceInformation", UUID_IMidiEndpointDeviceInformation)]
     [static_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDeviceInformationStatics", UUID_IMidiEndpointDeviceInformationStatics)]
     runtimeclass MidiEndpointDeviceInformation : Windows.Foundation.IStringable
     {
-        static MidiEndpointDeviceInformation CreateFromEndpointDeviceId(String endpointDeviceId);
+        [noexcept] static MidiEndpointDeviceInformation CreateFromEndpointDeviceId(String endpointDeviceId);
 
-        static IVectorView<MidiEndpointDeviceInformation> FindAll();
-        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
-        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
+        [noexcept] static IVectorView<MidiEndpointDeviceInformation> FindAll();
+        [noexcept] static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
+        [noexcept] static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
 
-        static IVectorView<MidiEndpointDeviceInformation> FindAllForContainer(Guid containerId);
+        [noexcept] static IVectorView<MidiEndpointDeviceInformation> FindAllForContainer(Guid containerId);
 
-        static Guid EndpointInterfaceClass{ get; };
+        [noexcept] static Guid EndpointInterfaceClass{ get; };
 
-        static IVectorView<String> GetAdditionalPropertiesList();
+        [noexcept] static IVectorView<String> GetAdditionalPropertiesList();
 
-        static Boolean DeviceMatchesFilter(MidiEndpointDeviceInformation deviceInformation, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
-
-
-
-        String EndpointDeviceId { get; };
-
-        String Name{ get; };
-
-        Guid ContainerId{ get; };
-        String DeviceInstanceId{ get; };
-
-        MidiEndpointDevicePurpose EndpointPurpose{ get; };
+        [noexcept] static Boolean DeviceMatchesFilter(MidiEndpointDeviceInformation deviceInformation, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
 
 
-        MidiDeclaredEndpointInfo GetDeclaredEndpointInfo();
-        Windows.Foundation.DateTime DeclaredEndpointInfoLastUpdateTime{ get; };
 
-        MidiDeclaredDeviceIdentity GetDeclaredDeviceIdentity();
-        Windows.Foundation.DateTime DeclaredDeviceIdentityLastUpdateTime{ get; };
+        [noexcept] String EndpointDeviceId { get; };
 
-        MidiDeclaredStreamConfiguration GetDeclaredStreamConfiguration();
-        Windows.Foundation.DateTime DeclaredStreamConfigurationLastUpdateTime{ get; };
+        [noexcept] String Name{ get; };
 
-        IVectorView<MidiFunctionBlock> GetDeclaredFunctionBlocks();
-        Windows.Foundation.DateTime DeclaredFunctionBlocksLastUpdateTime{ get; };
+        [noexcept] Guid ContainerId{ get; };
+        [noexcept] String DeviceInstanceId{ get; };
 
-        IVectorView<MidiGroupTerminalBlock> GetGroupTerminalBlocks();
-
-        MidiEndpointUserSuppliedInfo GetUserSuppliedInfo();
-
-        MidiEndpointTransportSuppliedInfo GetTransportSuppliedInfo();
-
-        String ParentDeviceInstanceId{ get; };          // device instance id of the parent device
-
-        MidiParentDeviceInformation GetParentDeviceInformation();
-        Windows.Devices.Enumeration.DeviceInformation GetContainerDeviceInformation();
-
-        Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
-
-        IVectorView<Midi1PortNameTableEntry> GetNameTable();
-
-        Midi1PortNamingApproach Midi1PortNamingApproach{ get; };
+        [noexcept] MidiEndpointDevicePurpose EndpointPurpose{ get; };
 
 
-        Boolean IsMidi1PortCreationEnabled{ get; };
-        Boolean IsMuted{ get; };
+        [noexcept] MidiDeclaredEndpointInfo GetDeclaredEndpointInfo();
+        [noexcept] Windows.Foundation.DateTime DeclaredEndpointInfoLastUpdateTime{ get; };
+
+        [noexcept] MidiDeclaredDeviceIdentity GetDeclaredDeviceIdentity();
+        [noexcept] Windows.Foundation.DateTime DeclaredDeviceIdentityLastUpdateTime{ get; };
+
+        [noexcept] MidiDeclaredStreamConfiguration GetDeclaredStreamConfiguration();
+        [noexcept] Windows.Foundation.DateTime DeclaredStreamConfigurationLastUpdateTime{ get; };
+
+        [noexcept] IVectorView<MidiFunctionBlock> GetDeclaredFunctionBlocks();
+        [noexcept] Windows.Foundation.DateTime DeclaredFunctionBlocksLastUpdateTime{ get; };
+
+        [noexcept] IVectorView<MidiGroupTerminalBlock> GetGroupTerminalBlocks();
+
+        [noexcept] MidiEndpointUserSuppliedInfo GetUserSuppliedInfo();
+
+        [noexcept] MidiEndpointTransportSuppliedInfo GetTransportSuppliedInfo();
+
+        [noexcept] String ParentDeviceInstanceId{ get; };          // device instance id of the parent device
+
+        [noexcept] MidiParentDeviceInformation GetParentDeviceInformation();
+        [noexcept] Windows.Devices.Enumeration.DeviceInformation GetContainerDeviceInformation();
+
+        [noexcept] Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
+
+        [noexcept] IVectorView<Midi1PortNameTableEntry> GetNameTable();
+
+        [noexcept] Midi1PortNamingApproach Midi1PortNamingApproach{ get; };
+
+
+        [noexcept] Boolean IsMidi1PortCreationEnabled{ get; };
+        [noexcept] Boolean IsMuted{ get; };
 
 
     }

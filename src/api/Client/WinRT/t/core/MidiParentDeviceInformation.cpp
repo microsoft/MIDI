@@ -25,6 +25,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         winrt::hstring const& actualParentDeviceInstanceId,
         winrt::hstring const& mediaDriverDeviceParentInstanceId) noexcept
     {
+        try
+        {
         // Get vid/pid/serial
 
         if (internal::IsStandardUsbDeviceInstanceId(actualParentDeviceInstanceId.c_str()))
@@ -121,7 +123,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         //    m_name = deviceInformation.Name();
         //}
 
-
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error initializing parent device information.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception initializing parent device information.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
@@ -130,6 +142,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         winrt::hstring const& mediaDriverDeviceId) noexcept
     {
 
+        try
+        {
         // Fast fail: validate the devnode exists via cfgmgr before we pay
         // for the lookup. This also catches phantom devices.
         if (!internal::MidiPnpDeviceInfo::CreateFromInstanceId(deviceInstanceId.c_str()).has_value())
@@ -144,6 +158,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
         else
         {
+            return nullptr;
+        }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error creating parent device information from ids.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception creating parent device information from ids.");
             return nullptr;
         }
     }
@@ -181,6 +206,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     winrt::hstring MidiParentDeviceInformation::ToString() const noexcept
     {
+        try
+        {
         winrt::hstring baseName{ L"MidiParentDeviceInformation: " };
 
         if (Name().empty())
@@ -194,5 +221,16 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
 
         return baseName;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error converting parent device information to string.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception converting parent device information to string.");
+            return L"";
+        }
     }
 }

@@ -17,12 +17,12 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
     [interface_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceInformationUpdatedEventArgs", UUID_IMidiLegacyPortDeviceInformationUpdatedEventArgs)]
     runtimeclass MidiLegacyPortDeviceInformationUpdatedEventArgs
     {
-        MidiLegacyPortDeviceInformation UpdatedDevice{ get; };
+        [noexcept] MidiLegacyPortDeviceInformation UpdatedDevice{ get; };
 
         //Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
 
-        Boolean IsNameUpdated{ get; };
-        Boolean IsNumberUpdated{ get; };
+        [noexcept] Boolean IsNameUpdated{ get; };
+        [noexcept] Boolean IsNumberUpdated{ get; };
 
     }
 }

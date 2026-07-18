@@ -19,6 +19,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     _Use_decl_annotations_
     winrt::hstring MidiEndpointDeviceIdHelper::GetShortIdFromFullId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
+        try
+        {
         // we use the std::wstring version for the substr and find functions which winrt::hstring lacks
         auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(fullEndpointDeviceId.c_str());
 
@@ -43,6 +45,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
 
         return cleanId.c_str();     // will auto-convert to winrt::hstring
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting short id from full id.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting short id from full id.");
+            return L"";
+        }
     }
 
     _Use_decl_annotations_
@@ -52,22 +65,61 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         // that what is supplied is a real short endpoint device id. If it isn't, the only problem
         // they'll have is any lookups on the id will return nothing.
 
-        return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDISRV_UMP_ENDPOINT_SWD_PREFIX + shortEndpointDeviceId + MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX);
+        try
+        {
+            return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDISRV_UMP_ENDPOINT_SWD_PREFIX + shortEndpointDeviceId + MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting full id from short id.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting full id from short id.");
+            return L"";
+        }
     }
 
     _Use_decl_annotations_
     bool MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
+        try
+        {
         auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(fullEndpointDeviceId.c_str());
 
         return cleanId.starts_with(MIDISRV_UMP_ENDPOINT_SWD_PREFIX) && cleanId.ends_with(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error checking possible Windows MIDI Services endpoint device id.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking possible Windows MIDI Services endpoint device id.");
+            return false;
+        }
     }
 
 
     _Use_decl_annotations_
     winrt::hstring MidiEndpointDeviceIdHelper::NormalizeFullId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
-        return internal::NormalizeEndpointInterfaceIdHStringCopy(fullEndpointDeviceId);
+        try
+        {
+            return internal::NormalizeEndpointInterfaceIdHStringCopy(fullEndpointDeviceId);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error normalizing full id.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception normalizing full id.");
+            return L"";
+        }
     }
 
 }

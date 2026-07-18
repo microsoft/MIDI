@@ -22,6 +22,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint8_t const status,
         uint32_t const dataOrReserved) noexcept
     {      
+        try
+        {
         return midi2::MidiMessage32(
             timestamp,
             (uint32_t)(
@@ -29,6 +31,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
                 internal::CleanupNibble(status) << 20 |
                 internal::CleanupInt20(dataOrReserved))
         );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building utility message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building utility message.");
+            return nullptr;
+        }
 
     }
 
@@ -40,6 +53,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint8_t const midi1Byte2,
         uint8_t const midi1Byte3) noexcept
     {
+        try
+        {
         return midi2::MidiMessage32(
             timestamp,
             (uint32_t)(
@@ -49,6 +64,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
                 internal::CleanupByte7(midi1Byte2) << 8 |
                 internal::CleanupByte7(midi1Byte3))
         );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building system message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building system message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -60,6 +86,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint8_t const byte3,
         uint8_t const byte4) noexcept
     {
+        try
+        {
         return midi2::MidiMessage32(
             timestamp,
             (uint32_t)(
@@ -70,6 +98,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
                 internal::CleanupByte7(byte3) << 8 |
                 internal::CleanupByte7(byte4))
         );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building MIDI 1.0 channel voice message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building MIDI 1.0 channel voice message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -85,7 +124,9 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint8_t const dataByte4,
         uint8_t const dataByte5) noexcept
     {
-        
+
+        try
+        {
         return midi2::MidiMessage64(
             timestamp,
             (uint32_t)(
@@ -103,6 +144,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
                 internal::CleanupByte7(dataByte5))
 
             );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building system exclusive 7 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building system exclusive 7 message.");
+            return nullptr;
+        }
 
     }
 
@@ -116,6 +168,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint16_t const index,
         uint32_t const data) noexcept
     {
+        try
+        {
         return midi2::MidiMessage64(
             timestamp,
             (uint32_t)(
@@ -125,6 +179,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
                 channel.Index() << 16 |
                 index), 
             data);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building MIDI 2.0 channel voice message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building MIDI 2.0 channel voice message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -148,6 +213,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint8_t const dataByte11,
         uint8_t const dataByte12) noexcept
     {
+        try
+        {
         return midi2::MidiMessage128(
             timestamp,
             (uint32_t)(
@@ -161,6 +228,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             internal::MidiWordFromBytes(dataByte05, dataByte06, dataByte07, dataByte08),
             internal::MidiWordFromBytes(dataByte09, dataByte10, dataByte11, dataByte12)
             );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building system exclusive 8 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building system exclusive 8 message.");
+            return nullptr;
+        }
     }
 
 
@@ -177,6 +255,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint16_t const subId1,
         uint16_t const subId2)
     {
+        try
+        {
         uint32_t word0{ 0 };
         uint32_t word1{ 0 };
         uint32_t word2{ 0 };
@@ -210,6 +290,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             word2,
             word3
             );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building mixed data set chunk header message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building mixed data set chunk header message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -232,6 +323,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint8_t const dataByte12,
         uint8_t const dataByte13)
     {
+        try
+        {
         uint32_t word0{ 0 };
         uint32_t word1{ 0 };
         uint32_t word2{ 0 };
@@ -272,6 +365,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             word2,
             word3
             );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building mixed data set chunk data message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building mixed data set chunk data message.");
+            return nullptr;
+        }
     }
 
 
@@ -288,6 +392,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint32_t const word2Data,
         uint32_t const word3Data)
     {
+        try
+        {
         return midi2::MidiMessage128(
             timestamp,
             (uint32_t)(
@@ -302,6 +408,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             word2Data,
             word3Data
         );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building flex data message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building flex data message.");
+            return nullptr;
+        }
 
 
     }
@@ -316,6 +433,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint32_t const word2Data,
         uint32_t const word3Data) noexcept
     {       
+        try
+        {
         return midi2::MidiMessage128(
             timestamp, 
             (uint32_t)(
@@ -327,6 +446,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             word2Data,
             word3Data
             );
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building stream message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building stream message.");
+            return nullptr;
+        }
     }
 
 }

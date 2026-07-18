@@ -14,6 +14,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Transports.Loopback
 {
     [contract(MidiTransportsLoopbackApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackEndpointDefinition", UUID_IMidiLoopbackEndpointDefinition)]
     [constructor_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackEndpointDefinitionFactory", UUID_IMidiLoopbackEndpointDefinitionFactory)]
     runtimeclass MidiLoopbackEndpointDefinition
@@ -22,8 +23,8 @@ namespace Windows.Devices.Midi2.Transports.Loopback
         MidiLoopbackEndpointDefinition(String name, String uniqueId);
         MidiLoopbackEndpointDefinition(String name, String uniqueId, String description);
 
-        String Name;
-        String UniqueId;
-        String Description;
+        [noexcept] String Name;
+        [noexcept] String UniqueId;
+        [noexcept] String Description;
     };
 }

@@ -14,14 +14,15 @@ import "MidiLoopbackEndpointEntry.idl";
 namespace Windows.Devices.Midi2.Transports.Loopback
 {
     [contract(MidiTransportsLoopbackApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackEntry", UUID_IMidiLoopbackEntry)]
     runtimeclass MidiLoopbackEntry
     {
-        Guid AssociationId{ get; };
+        [noexcept] Guid AssociationId{ get; };
 
-        MidiLoopbackEndpointEntry EndpointA{ get; };
-        MidiLoopbackEndpointEntry EndpointB{ get; };
+        [noexcept] MidiLoopbackEndpointEntry EndpointA{ get; };
+        [noexcept] MidiLoopbackEndpointEntry EndpointB{ get; };
 
-        Boolean IsMuted{ get; };
+        [noexcept] Boolean IsMuted{ get; };
     };
 }

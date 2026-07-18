@@ -72,6 +72,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
     //
     json::JsonObject MidiVirtualDeviceCreationConfig::ConfigJson() const noexcept
     {
+        try
+        {
         // create the json for creating the endpoint
 
         json::JsonObject endpointDefinitionObject;
@@ -133,6 +135,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
 
 
         return outerWrapperObject;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error building virtual device creation config json.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception building virtual device creation config json.");
+            return nullptr;
+        }
     }
 
 

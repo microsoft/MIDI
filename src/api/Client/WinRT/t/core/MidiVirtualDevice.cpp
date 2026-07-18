@@ -23,6 +23,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         _In_ virt::MidiVirtualDeviceCreationConfig const& config
     ) noexcept
     {
+        try
+        {
         m_deviceEndpointDeviceId = deviceEndpointDeviceId;
 
         m_declaredDeviceIdentity = config.DeclaredDeviceIdentity();
@@ -37,12 +39,23 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         {
             m_functionBlocks.Insert(fb.Number(), fb);
         }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error initializing virtual device.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception initializing virtual device.");
+        }
     }
 
 
     _Use_decl_annotations_
     bool MidiVirtualDevice::UpdateFunctionBlock(midi2enum::MidiFunctionBlock const& updatedBlock) noexcept
     {
+        try
+        {
         // If blocks are static, return false. By spec, they are not allowed to be updated.
         if (m_declaredEndpointInfo.HasStaticFunctionBlocks())
         {
@@ -129,11 +142,24 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
 
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error updating function block.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception updating function block.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
     bool MidiVirtualDevice::UpdateEndpointName(winrt::hstring const& name) noexcept
     {
+        try
+        {
         auto cleanedName = internal::TrimmedHStringCopy(name);
 
         if (m_declaredEndpointInfo.Name() != cleanedName)
@@ -162,13 +188,35 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         }
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error updating endpoint name.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception updating endpoint name.");
+            return false;
+        }
     }
 
 
     _Use_decl_annotations_
     void MidiVirtualDevice::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept
     {
-        m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
+        try
+        {
+            m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error initializing virtual device connection.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception initializing virtual device connection.");
+        }
     }
 
     void MidiVirtualDevice::OnEndpointConnectionOpened() noexcept
@@ -184,6 +232,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
     _Use_decl_annotations_
     bool MidiVirtualDevice::SendFunctionBlockInfoNotificationMessage(midi2enum::MidiFunctionBlock const& fb) noexcept
     {
+        try
+        {
         if (m_endpointConnection == nullptr || !m_endpointConnection.IsOpen())
         {
             return false;
@@ -219,11 +269,24 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         }
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending function block info notification message.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending function block info notification message.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
     bool MidiVirtualDevice::SendFunctionBlockNameNotificationMessages(midi2enum::MidiFunctionBlock const& fb) noexcept
     {
+        try
+        {
         if (m_endpointConnection == nullptr || !m_endpointConnection.IsOpen())
         {
             return false;
@@ -254,11 +317,24 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         }
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending function block name notification messages.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending function block name notification messages.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
     bool MidiVirtualDevice::SendEndpointNameNotificationMessages(winrt::hstring const& name) noexcept
     {
+        try
+        {
         if (m_endpointConnection == nullptr || !m_endpointConnection.IsOpen())
         {
             return false;
@@ -288,6 +364,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         }
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending endpoint name notification messages.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending endpoint name notification messages.");
+            return false;
+        }
     }
 
 
@@ -297,6 +384,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         bool& skipFurtherListeners,
         bool& skipMainMessageReceivedEvent)  noexcept
     {
+        try
+        {
         bool handled = false;
 
         //OutputDebugString(L"MIDI SDK: MidiVirtualDevice::ProcessIncomingMessage\n");
@@ -632,5 +721,14 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
             skipMainMessageReceivedEvent = false;
         }
 
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error processing incoming message.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception processing incoming message.");
+        }
     }
 }

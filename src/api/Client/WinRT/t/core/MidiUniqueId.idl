@@ -13,8 +13,8 @@ import "MidiApiContracts.idl";
 
 namespace Windows.Devices.Midi2.CapabilityInquiry
 {
-    [threading(both)]
     [contract(MidiCapabilityInquiryApiContract,1)]
+    
     [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueId", UUID_IMidiUniqueId)]
     [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueIdStatics", UUID_IMidiUniqueIdStatics)]
     [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueIdFactory", UUID_IMidiUniqueIdFactory)]
@@ -24,23 +24,23 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         MidiUniqueId(UInt32 combined28BitValue);
         MidiUniqueId(UInt8 sevenBitByte1, UInt8 sevenBitByte2, UInt8 sevenBitByte3, UInt8 sevenBitByte4);
 
-        static String ShortLabel{ get; };
-        static String ShortLabelPlural{ get; };
-        static String LongLabel{ get; };
-        static String LongLabelPlural{ get; };
+        [noexcept] static String ShortLabel{ get; };
+        [noexcept] static String ShortLabelPlural{ get; };
+        [noexcept] static String LongLabel{ get; };
+        [noexcept] static String LongLabelPlural{ get; };
 
-        static MidiUniqueId CreateBroadcast();
-        static MidiUniqueId CreateRandom();
+        [noexcept] static MidiUniqueId CreateBroadcast();
+        [noexcept] static MidiUniqueId CreateRandom();
 
-        UInt8 Byte1;
-        UInt8 Byte2;
-        UInt8 Byte3;
-        UInt8 Byte4;
+        [noexcept] UInt8 Byte1;
+        [noexcept] UInt8 Byte2;
+        [noexcept] UInt8 Byte3;
+        [noexcept] UInt8 Byte4;
 
-        UInt32 AsCombined28BitValue{ get; };
+        [noexcept] UInt32 AsCombined28BitValue{ get; };
 
-        Boolean IsBroadcast{ get; };
-        Boolean IsReserved{ get; };
+        [noexcept] Boolean IsBroadcast{ get; };
+        [noexcept] Boolean IsReserved{ get; };
     };
 
 }

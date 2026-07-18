@@ -133,6 +133,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     _Use_decl_annotations_
     winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForSourcePortsForContainer(winrt::guid const& containerId) noexcept
     {
+        try
+        {
         winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
 
         winrt::hstring selector =
@@ -141,11 +143,24 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
         return selector;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building source ports for container selector.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building source ports for container selector.");
+            return L"";
+        }
     }
 
     _Use_decl_annotations_
     winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForDestinationPortsForContainer(winrt::guid const& containerId) noexcept
     {
+        try
+        {
         winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
         winrt::hstring selector =
@@ -154,6 +169,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
         return selector;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building destination ports for container selector.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building destination ports for container selector.");
+            return L"";
+        }
     }
 
     //_Use_decl_annotations_
@@ -176,6 +202,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     // used by the watcher
     winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForSourceAndDestinationPorts() noexcept
     {
+        try
+        {
         winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
         winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
@@ -186,10 +214,23 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
         return selector;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building source and destination ports selector.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building source and destination ports selector.");
+            return L"";
+        }
     }
 
     winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForSourcePorts() noexcept
     {
+        try
+        {
         winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
         winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
@@ -199,10 +240,23 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
         return selector;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building source ports selector.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building source ports selector.");
+            return L"";
+        }
     }
 
     winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForDestinationPorts() noexcept
     {
+        try
+        {
         winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
         winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
@@ -212,6 +266,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
         return selector;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building destination ports selector.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building destination ports selector.");
+            return L"";
+        }
     }
 
 
@@ -234,6 +299,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     _Use_decl_annotations_
     winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForSourcePortsForParentDeviceInstanceId(winrt::hstring const& parentDeviceInstanceId) noexcept
     {
+        try
+        {
         winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
 
         winrt::hstring selector =
@@ -242,11 +309,24 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             L"System.Devices.Parent:=\"" + parentDeviceInstanceId + L"\"";
 
         return selector;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building source ports for parent selector.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building source ports for parent selector.");
+            return L"";
+        }
     }
 
     _Use_decl_annotations_
     winrt::hstring MidiLegacyPortDeviceInformation::InternalGetSelectorForDestinationPortsForParentDeviceInstanceId(winrt::hstring const& parentDeviceInstanceId) noexcept
     {
+        try
+        {
         winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
         winrt::hstring selector =
@@ -255,6 +335,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             L"System.Devices.Parent:=\"" + parentDeviceInstanceId + L"\"";
 
         return selector;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building destination ports for parent selector.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building destination ports for parent selector.");
+            return L"";
+        }
     }
 
 
@@ -643,7 +734,20 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
     midi2enum::MidiParentDeviceInformation MidiLegacyPortDeviceInformation::GetParentDeviceInformation() const noexcept
     {
-        return midi2enum::implementation::MidiParentDeviceInformation::InternalCreateFromIds(m_parentDeviceInstanceId, m_mediaDriverParentDeviceInstanceId);
+        try
+        {
+            return midi2enum::implementation::MidiParentDeviceInformation::InternalCreateFromIds(m_parentDeviceInstanceId, m_mediaDriverParentDeviceInstanceId);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting parent device information.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting parent device information.");
+            return nullptr;
+        }
     }
 
 
@@ -698,9 +802,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
                 }
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error finding legacy ports for associated endpoint.");
+        }
         catch (...)
         {
-            // can't find endpoint
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception finding legacy ports for associated endpoint.");
         }
 
         return results.GetView();
@@ -752,9 +860,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
                 }
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error finding legacy ports for associated endpoint.");
+        }
         catch (...)
         {
-            // can't find endpoint
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception finding legacy ports for associated endpoint.");
         }
 
         return results.GetView();
@@ -888,6 +1000,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
     collections::IVectorView<hstring> MidiLegacyPortDeviceInformation::GetAdditionalPropertiesList() noexcept
     {
+        try
+        {
         auto props = winrt::single_threaded_vector<winrt::hstring>();
 
         props.Append(L"System.ItemNameDisplay");
@@ -907,11 +1021,35 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         props.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
 
         return props.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building legacy port additional properties list.");
+            return winrt::single_threaded_vector<winrt::hstring>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building legacy port additional properties list.");
+            return winrt::single_threaded_vector<winrt::hstring>().GetView();
+        }
     }
 
     winrt::hstring MidiLegacyPortDeviceInformation::ToString() const noexcept
     {
-        // TODO: Get from resources
-        return L"MIDI 1 Port: " + Name() + L": " + Group().ToString();
+        try
+        {
+            // TODO: Get from resources
+            return L"MIDI 1 Port: " + Name() + L": " + Group().ToString();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error converting legacy port to string.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception converting legacy port to string.");
+            return L"";
+        }
     }
 }

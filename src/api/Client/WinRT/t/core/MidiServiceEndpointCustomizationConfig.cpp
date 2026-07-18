@@ -66,6 +66,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
     json::JsonObject MidiServiceEndpointCustomizationConfig::ConfigJson() const noexcept
     {
+        try
+        {
         json::JsonObject matchObject;
         json::JsonObject customPropertiesObject;
         json::JsonArray endpointUpdateArray;
@@ -109,6 +111,17 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
 
         return outerWrapperObject;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error building endpoint customization config json.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception building endpoint customization config json.");
+            return nullptr;
+        }
     }
 
 
@@ -117,11 +130,22 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         midi2::MidiGroup const& group, 
         winrt::hstring const& name) noexcept
     {
+        try
+        {
         WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
         props.GroupIndex = group.Index();
         props.Name = name;
 
         m_props->Midi1Sources[props.GroupIndex] = props;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error adding MIDI 1.0 source port custom name.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception adding MIDI 1.0 source port custom name.");
+        }
     }
 
     _Use_decl_annotations_
@@ -129,11 +153,22 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         midi2::MidiGroup const& group, 
         winrt::hstring const& name) noexcept
     {
+        try
+        {
         WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
         props.GroupIndex = group.Index();
         props.Name = name;
 
         m_props->Midi1Destinations[props.GroupIndex] = props;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error adding MIDI 1.0 destination port custom name.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception adding MIDI 1.0 destination port custom name.");
+        }
     }
 
 

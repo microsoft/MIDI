@@ -39,6 +39,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 {
     bool MidiLoopbackManager::IsTransportAvailable() noexcept
     {
+        try
+        {
         auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
 
         for (auto const& transport : transports)
@@ -50,6 +52,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         }
 
         return false;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error checking loopback transport availability.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking loopback transport availability.");
+            return false;
+        }
     }
 
 
@@ -414,6 +427,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     winrt::guid MidiLoopbackManager::GetAssociationId(
         midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint) noexcept
     {
+        try
+        {
         if (loopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
             loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
         {
@@ -424,6 +439,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         }
 
         return foundation::GuidHelper::Empty();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting loopback association id.");
+            return foundation::GuidHelper::Empty();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting loopback association id.");
+            return foundation::GuidHelper::Empty();
+        }
     }
 
     _Use_decl_annotations_
@@ -431,9 +457,22 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         midi2enum::MidiEndpointDeviceInformation const& loopbackEndpoint
     ) noexcept
     {
+        try
+        {
         auto domain = midi2enum::MidiEndpointDeviceInformation::FindAll();
 
         return GetAssociatedLoopbackEndpoint(loopbackEndpoint, domain);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting associated loopback endpoint.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting associated loopback endpoint.");
+            return nullptr;
+        }
     }
 
 
@@ -442,11 +481,24 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         winrt::hstring const& loopbackEndpointId
     ) noexcept
     {
+        try
+        {
         auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(loopbackEndpointId);
 
         auto info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(cleanId);
 
         return GetAssociatedLoopbackEndpoint(info);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting associated loopback endpoint for id.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting associated loopback endpoint for id.");
+            return nullptr;
+        }
     }
 
 
@@ -546,16 +598,42 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
     bool MidiLoopbackManager::DoesLoopbackAExist(_In_ winrt::hstring const& uniqueIdentifier) noexcept
     {
+        try
+        {
         winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_A_PREFIX, uniqueIdentifier.c_str());
 
         return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error checking loopback A existence.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking loopback A existence.");
+            return false;
+        }
     }
 
     bool MidiLoopbackManager::DoesLoopbackBExist(_In_ winrt::hstring const& uniqueIdentifier) noexcept
     {
+        try
+        {
         winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_B_PREFIX, uniqueIdentifier.c_str());
 
         return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error checking loopback B existence.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking loopback B existence.");
+            return false;
+        }
     }
 
 }

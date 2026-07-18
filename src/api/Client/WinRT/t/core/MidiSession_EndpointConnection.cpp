@@ -146,10 +146,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring const& endpointDeviceId
     ) noexcept
     {
-        // default settings
-        midi2::MidiEndpointConnectionSettings settings{};
+        try
+        {
+            // default settings
+            midi2::MidiEndpointConnectionSettings settings{};
 
-        return CreateEndpointConnection(endpointDeviceId, settings);
+            return CreateEndpointConnection(endpointDeviceId, settings);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error creating endpoint connection.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception creating endpoint connection.");
+            return nullptr;
+        }
     }
 
 

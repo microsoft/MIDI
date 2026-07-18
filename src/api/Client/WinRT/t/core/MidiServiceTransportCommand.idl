@@ -16,6 +16,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Windows.Devices.Midi2.ServiceConfig
 {
     [contract(MidiServiceConfigApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportCommand", UUID_IMidiServiceTransportCommand)]
     [constructor_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportCommandFactory", UUID_IMidiServiceTransportCommandFactory)]
     runtimeclass MidiServiceTransportCommand : IMidiServiceTransportPluginConfig
@@ -25,8 +26,8 @@ namespace Windows.Devices.Midi2.ServiceConfig
         MidiServiceTransportCommand(Guid transportId, String verb);
         MidiServiceTransportCommand(Guid transportId, String verb, IMap<String, String> arguments);
 
-        String Verb;
+        [noexcept] String Verb;
 
-        IMap<String, String> Arguments;
+        [noexcept] IMap<String, String> Arguments;
     };
 }

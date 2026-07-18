@@ -14,12 +14,13 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDeviceInformationRemovedEventArgs", UUID_IMidiEndpointDeviceInformationRemovedEventArgs)]
     runtimeclass MidiEndpointDeviceInformationRemovedEventArgs
     {
-        String EndpointDeviceId { get; };
+        [noexcept] String EndpointDeviceId { get; };
 
-        Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
+        [noexcept] Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
     }
 }
 

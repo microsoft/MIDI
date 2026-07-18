@@ -22,39 +22,40 @@ import "MidiEndpointDeviceInformation.idl";
 namespace Windows.Devices.Midi2.Transports.Loopback
 {
     [contract(MidiTransportsLoopbackApiContract, 1)]
+    
     [static_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackManagerStatics", UUID_IMidiLoopbackManagerStatics)]
     static runtimeclass MidiLoopbackManager
     {
-        static Boolean IsTransportAvailable{ get; };
+        [noexcept] static Boolean IsTransportAvailable{ get; };
 
-        static Guid TransportId{ get; };
+        [noexcept] static Guid TransportId{ get; };
 
-        static MidiLoopbackCreationResponse CreateTransientLoopback(
+        [noexcept] static MidiLoopbackCreationResponse CreateTransientLoopback(
             MidiLoopbackCreationConfig creationConfig);
 
-        static MidiLoopbackRemovalResponse RemoveTransientLoopback(
+        [noexcept] static MidiLoopbackRemovalResponse RemoveTransientLoopback(
             MidiLoopbackRemovalConfig removalConfig);
 
-        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
+        [noexcept] static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
             String loopbackEndpointId);
 
-        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+        [noexcept] static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
             Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint,
             IIterable<Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation> endpointsToSearch);
 
-        static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+        [noexcept] static Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
             Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint);
 
-        static Boolean DoesLoopbackAExist(String uniqueIdentifier);
-        static Boolean DoesLoopbackBExist(String uniqueIdentifier);
+        [noexcept] static Boolean DoesLoopbackAExist(String uniqueIdentifier);
+        [noexcept] static Boolean DoesLoopbackBExist(String uniqueIdentifier);
 
-        static Guid GetAssociationId(Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint);
+        [noexcept] static Guid GetAssociationId(Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation loopbackEndpoint);
 
-        static MidiLoopbackUpdateResponse MuteLoopback(Guid associationId);
-        static MidiLoopbackUpdateResponse UnmuteLoopback(Guid associationId);
+        [noexcept] static MidiLoopbackUpdateResponse MuteLoopback(Guid associationId);
+        [noexcept] static MidiLoopbackUpdateResponse UnmuteLoopback(Guid associationId);
 
 
-        static IVectorView<MidiLoopbackEntry> GetActiveLoopbackEntries();
+        [noexcept] static IVectorView<MidiLoopbackEntry> GetActiveLoopbackEntries();
 
     }
 }

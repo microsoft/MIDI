@@ -26,6 +26,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         // default to failed
         auto response = internal::BuildConfigurationResponseObject(false);
 
+        try
+        {
 
         auto iid = __uuidof(IMidiTransportConfigurationManager);
         winrt::com_ptr<IMidiTransportConfigurationManager> configManager;
@@ -210,6 +212,17 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
             return response;
         }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error sending config json and getting response.");
+            return response;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception sending config json and getting response.");
+            return response;
+        }
 
     }
 
@@ -379,7 +392,20 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     svc::MidiServiceConfigResponse MidiServiceTransportPluginConfigManager::SendCommand(
         svc::MidiServiceTransportCommand const& command) noexcept
     {
-        return SendUpdate(command.TransportId(), command.ConfigJson());
+        try
+        {
+            return SendUpdate(command.TransportId(), command.ConfigJson());
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error sending transport command.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception sending transport command.");
+            return nullptr;
+        }
     }
 
 }

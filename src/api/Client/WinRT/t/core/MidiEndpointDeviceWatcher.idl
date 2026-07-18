@@ -20,19 +20,20 @@ import "MidiEndpointDeviceInformationAddedEventArgs.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDeviceWatcher", UUID_IMidiEndpointDeviceWatcher)]
     [static_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDeviceWatcherStatics", UUID_IMidiEndpointDeviceWatcherStatics)]
     runtimeclass MidiEndpointDeviceWatcher
     {
-        static MidiEndpointDeviceWatcher Create();
-        static MidiEndpointDeviceWatcher Create(MidiEndpointDeviceInformationFilters endpointFilters);
+        [noexcept] static MidiEndpointDeviceWatcher Create();
+        [noexcept] static MidiEndpointDeviceWatcher Create(MidiEndpointDeviceInformationFilters endpointFilters);
 
-        void Start();
-        void Stop();
+        [noexcept] void Start();
+        [noexcept] void Stop();
 
-        Windows.Foundation.Collections.IMapView<String, MidiEndpointDeviceInformation> EnumeratedEndpointDevices{ get; };
+        [noexcept] Windows.Foundation.Collections.IMapView<String, MidiEndpointDeviceInformation> EnumeratedEndpointDevices{ get; };
 
-        Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
+        [noexcept] Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
 
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationAddedEventArgs> Added;
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationRemovedEventArgs> Removed;

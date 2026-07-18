@@ -15,6 +15,7 @@ import "MidiEndpointNativeDataFormatEnum.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointTransportSuppliedInfo", UUID_IMidiEndpointTransportSuppliedInfo)]
     [constructor_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointTransportSuppliedInfoFactory", UUID_IMidiEndpointTransportSuppliedInfoFactory)]
     runtimeclass MidiEndpointTransportSuppliedInfo
@@ -34,26 +35,26 @@ namespace Windows.Devices.Midi2.Enumeration
             String driverDeviceInterfaceId
         );
 
-        Boolean IsReadOnly { get; };
+        [noexcept] Boolean IsReadOnly { get; };
 
-        String Name;
-        String Description;
+        [noexcept] String Name;
+        [noexcept] String Description;
 
-        String SerialNumber;
+        [noexcept] String SerialNumber;
 
-        UInt16 VendorId;
-        UInt16 ProductId;
+        [noexcept] UInt16 VendorId;
+        [noexcept] UInt16 ProductId;
 
-        String ManufacturerName;
+        [noexcept] String ManufacturerName;
 
-        Boolean SupportsMultiClient;
+        [noexcept] Boolean SupportsMultiClient;
 
-        MidiEndpointNativeDataFormat NativeDataFormat;
+        [noexcept] MidiEndpointNativeDataFormat NativeDataFormat;
 
-        Guid TransportId;
-        String TransportCode;
+        [noexcept] Guid TransportId;
+        [noexcept] String TransportCode;
 
-        String DriverDeviceInterfaceId;
+        [noexcept] String DriverDeviceInterfaceId;
 
     };
 }

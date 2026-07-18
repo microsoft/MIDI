@@ -126,6 +126,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (m_autoReconnectDeviceWatcher != nullptr)
         {
+            try
+            {
             m_autoReconnectDeviceWatcher.Stop();
 
             m_autoReconnectDeviceWatcherAddedRevoker.revoke();
@@ -133,6 +135,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_autoReconnectDeviceWatcherRemovedRevoker.revoke();
 
             return true;
+            }
+            catch (winrt::hresult_error const& ex)
+            {
+                MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error stopping endpoint watcher.");
+                return false;
+            }
+            catch (...)
+            {
+                MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception stopping endpoint watcher.");
+                return false;
+            }
         }
         else
         {
@@ -159,6 +172,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         UNREFERENCED_PARAMETER(source);
 
+        try
+        {
         auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
         for (auto const& conn : m_connectionsForAutoReconnect)
@@ -170,6 +185,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     conn->InternalOnDeviceReconnect();
                 }
             }
+        }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error handling device added.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception handling device added.");
         }
 
     }
@@ -209,7 +233,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // Search all connections to see if we're tracking this one.
         // If we are, and it is not in the auto-reconnect map, then
         // close/disconnect the connection completely
-        
+
+        try
+        {
         auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
         for (auto const& conn : m_connectionsForAutoReconnect)
@@ -220,6 +246,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 conn->InternalOnDeviceDisconnect();
             }
+        }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error handling device removed.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception handling device removed.");
         }
 
     }

@@ -21,22 +21,22 @@ namespace Windows.Devices.Midi2
     [uuid(UUID_IMidiEndpointMessageProcessingPlugin), version(1.0)]
     interface IMidiEndpointMessageProcessingPlugin
     {
-        Guid PluginId { get; };            
+        [noexcept] Guid PluginId { get; };            
 
-        String PluginName;
-        IInspectable PluginTag;
+        [noexcept] String PluginName;
+        [noexcept] IInspectable PluginTag;
 
-        Boolean IsEnabled;
+        [noexcept] Boolean IsEnabled;
 
-        void Initialize(IMidiEndpointConnectionSource endpointConnection);
+        [noexcept] void Initialize(IMidiEndpointConnectionSource endpointConnection);
 
-        void OnEndpointConnectionOpened();
+        [noexcept] void OnEndpointConnectionOpened();
 
-        void ProcessIncomingMessage(
+        [noexcept] void ProcessIncomingMessage(
             MidiMessageReceivedEventArgs args,
             out Boolean skipFurtherListeners,
             out Boolean skipMainMessageReceivedEvent);
 
-        void Cleanup();
+        [noexcept] void Cleanup();
     }
 }

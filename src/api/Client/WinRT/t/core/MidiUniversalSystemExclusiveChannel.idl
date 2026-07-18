@@ -18,6 +18,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
+    
     [interface_name("Windows.Devices.Midi2.IMidiUniversalSystemExclusiveChannel", UUID_IMidiUniversalSystemExclusiveChannel)]
     [static_name("Windows.Devices.Midi2.IMidiUniversalSystemExclusiveChannelStatics", UUID_IMidiUniversalSystemExclusiveChannelStatics)]
     [constructor_name("Windows.Devices.Midi2.IMidiUniversalSystemExclusiveChannelFactory", UUID_IMidiUniversalSystemExclusiveChannelFactory)]
@@ -26,17 +27,17 @@ namespace Windows.Devices.Midi2
         MidiUniversalSystemExclusiveChannel();
         MidiUniversalSystemExclusiveChannel(UInt8 index);
 
-        static String ShortLabel{ get; };
-        static String ShortLabelPlural{ get; };
-        static String LongLabel{ get; };
-        static String LongLabelPlural{ get; };
+        [noexcept] static String ShortLabel{ get; };
+        [noexcept] static String ShortLabelPlural{ get; };
+        [noexcept] static String LongLabel{ get; };
+        [noexcept] static String LongLabelPlural{ get; };
 
         // returns a channel with the special value of 127
-        static MidiUniversalSystemExclusiveChannel DisregardChannel{ get; };
+        [noexcept] static MidiUniversalSystemExclusiveChannel DisregardChannel{ get; };
 
-        UInt8 Index;
-        UInt8 DisplayValue{ get; };
+        [noexcept] UInt8 Index;
+        [noexcept] UInt8 DisplayValue{ get; };
 
-        static Boolean IsValidIndex(UInt8 index);
+        [noexcept] static Boolean IsValidIndex(UInt8 index);
     }
 }

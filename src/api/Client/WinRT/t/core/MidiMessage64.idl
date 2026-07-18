@@ -17,6 +17,7 @@ import "MidiMessageStruct.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.IMidiMessage64", UUID_IMidiMessage64)]
     [static_name("Windows.Devices.Midi2.IMidiMessage64Statics", UUID_IMidiMessage64Statics)]
     [constructor_name("Windows.Devices.Midi2.IMidiMessage64Factory", UUID_IMidiMessage64Factory)]
@@ -28,9 +29,9 @@ namespace Windows.Devices.Midi2
         MidiMessage64(UInt64 timestamp, UInt32[] words);
 
         // required because can't overload constructors in WinRT except by arity
-        static MidiMessage64 CreateFromStruct(UInt64 timestamp, MidiMessageStruct message);
+        [noexcept] static MidiMessage64 CreateFromStruct(UInt64 timestamp, MidiMessageStruct message);
 
-        UInt32 Word0;
-        UInt32 Word1;
+        [noexcept] UInt32 Word0;
+        [noexcept] UInt32 Word1;
     };
 }

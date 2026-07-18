@@ -44,6 +44,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
      
     json::JsonObject MidiBasicLoopbackCreationConfig::ConfigJson() const noexcept
     {
+        try
+        {
         json::JsonObject endpointAssociationObject;
         json::JsonObject endpointDeviceObject;
 
@@ -103,5 +105,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
         return outerWrapperObject;
 
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error building basic loopback creation config json.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception building basic loopback creation config json.");
+            return nullptr;
+        }
     }
 }

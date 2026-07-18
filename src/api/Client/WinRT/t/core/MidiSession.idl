@@ -18,30 +18,31 @@ import "MidiEndpointConnectionSettings.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
+    
     [interface_name("Windows.Devices.Midi2.IMidiSession", UUID_IMidiSession)]
     [static_name("Windows.Devices.Midi2.IMidiSessionStatics", UUID_IMidiSessionStatics)]
     runtimeclass MidiSession : Windows.Foundation.IClosable, Windows.Foundation.IStringable
     {
-        Guid SessionId { get; };
-        String Name{ get; };
+        [noexcept] Guid SessionId { get; };
+        [noexcept] String Name{ get; };
 
-        static MidiSession Create(String sessionName);
+        [noexcept] static MidiSession Create(String sessionName);
 
-        Boolean IsOpen { get; };
+        [noexcept] Boolean IsOpen { get; };
 
-        IMapView<Guid, MidiEndpointConnection> Connections{ get; };
+        [noexcept] IMapView<Guid, MidiEndpointConnection> Connections{ get; };
 
-        MidiEndpointConnection CreateEndpointConnection(
+        [noexcept] MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId
         );
 
-        MidiEndpointConnection CreateEndpointConnection(
+        [noexcept] MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
             MidiEndpointConnectionSettings settings
         );
 
-        void DisconnectEndpointConnection(Guid endpointConnectionId);
+        [noexcept] void DisconnectEndpointConnection(Guid endpointConnectionId);
 
-        Boolean UpdateName(String newName);
+        [noexcept] Boolean UpdateName(String newName);
     }
 }

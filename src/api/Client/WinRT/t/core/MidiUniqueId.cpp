@@ -20,13 +20,27 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
     ci::MidiUniqueId MidiUniqueId::CreateBroadcast()
     {
-        //return winrt::make<MidiUniqueId>(MIDI_MUID_BROADCAST);
-        return ci::MidiUniqueId(MIDI_MUID_BROADCAST);
-
+        try
+        {
+            //return winrt::make<MidiUniqueId>(MIDI_MUID_BROADCAST);
+            return ci::MidiUniqueId(MIDI_MUID_BROADCAST);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error creating broadcast unique id.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception creating broadcast unique id.");
+            return nullptr;
+        }
     }
 
     ci::MidiUniqueId MidiUniqueId::CreateRandom()
     {
+        try
+        {
         std::srand((int)(midi2::MidiClock::Now() & 0x00000000FFFFFFFF));
 
         uint32_t val = ((uint32_t)(std::rand()) % 0xFFFFF);
@@ -36,6 +50,17 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         //return winrt::make<MidiUniqueId>(val);
         return ci::MidiUniqueId(val);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error creating random unique id.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception creating random unique id.");
+            return nullptr;
+        }
     }
 
     uint32_t MidiUniqueId::AsCombined28BitValue() const noexcept

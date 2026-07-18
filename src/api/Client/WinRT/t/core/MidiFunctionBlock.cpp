@@ -131,6 +131,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     _Use_decl_annotations_
     bool MidiFunctionBlock::UpdateFromJson(json::JsonObject const json) noexcept
     {
+        try
+        {
         // this needs to do some data validation, like checking group index, enums, etc.
 
         // this should only update the fields that exist, which is why all the checks
@@ -149,6 +151,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         // todo: return false on error
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error updating function block from json.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception updating function block from json.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
@@ -156,6 +169,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         // TODO: Need to catch any exceptions in here
 
+        try
+        {
         json::JsonObject jsonObject{};
 
         if (json::JsonObject::TryParse(json, jsonObject))
@@ -166,10 +181,23 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         {
             return false;
         }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error updating function block from json string.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception updating function block from json string.");
+            return false;
+        }
     }
 
     winrt::hstring MidiFunctionBlock::GetJsonString() noexcept
     {
+        try
+        {
         json::JsonObject jsonObject;
 
         jsonObject.SetNamedValue(JSON_KEY_FB_NUMBER, json::JsonValue::CreateNumberValue(Number()));
@@ -181,8 +209,19 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         jsonObject.SetNamedValue(JSON_KEY_FB_FIRSTGROUP, json::JsonValue::CreateNumberValue(FirstGroup().Index()));
         jsonObject.SetNamedValue(JSON_KEY_FB_NUMGROUPSSPANNED, json::JsonValue::CreateNumberValue(GroupCount()));
         jsonObject.SetNamedValue(JSON_KEY_FB_MIDICIFORMAT, json::JsonValue::CreateNumberValue(MidiCIMessageVersionFormat()));
-        
+
         return jsonObject.Stringify();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting function block json string.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting function block json string.");
+            return L"";
+        }
     }
 
 

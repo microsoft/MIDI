@@ -529,11 +529,22 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
     void MidiLegacyPortDeviceWatcher::Start() noexcept
     {
+        try
+        {
         m_enumeratedPorts.Clear();
 
         if (m_watcher)
         {
             m_watcher.Start();
+        }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error starting legacy port device watcher.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception starting legacy port device watcher.");
         }
     }
 
@@ -599,6 +610,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         uint32_t const portNumber, 
         midi2enum::Midi1PortFlow const flow) const noexcept
     {
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.Flow() == flow && port.Number() == portNumber)
@@ -608,6 +621,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return nullptr;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated port for number.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated port for number.");
+            return nullptr;
+        }
     }
 
     
@@ -615,6 +639,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     collections::IVectorView<legacy::MidiLegacyPortDeviceInformation> MidiLegacyPortDeviceWatcher::GetEnumeratedPortsForFlow(
         midi2enum::Midi1PortFlow const flow) const noexcept
     {
+        try
+        {
         auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
 
         for (auto const& [key, port] : m_enumeratedPorts)
@@ -626,6 +652,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for flow.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for flow.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
 
 
@@ -638,6 +675,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(parentDeviceInstanceId);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
@@ -647,6 +686,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for parent.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for parent.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
 
     _Use_decl_annotations_
@@ -658,6 +708,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanParentDeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(parentDeviceInstanceId);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.Flow() == flow && port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
@@ -667,6 +719,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for parent.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for parent.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
 
     _Use_decl_annotations_
@@ -677,6 +740,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
@@ -686,6 +751,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for associated endpoint.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for associated endpoint.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
     
     _Use_decl_annotations_
@@ -697,6 +773,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
@@ -706,6 +784,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for associated endpoint.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for associated endpoint.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
 
 
@@ -718,6 +807,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
@@ -727,6 +818,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for associated endpoint and group.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for associated endpoint and group.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
 
     _Use_decl_annotations_
@@ -739,6 +841,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
@@ -748,6 +852,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for associated endpoint and group.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for associated endpoint and group.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
 
 
@@ -762,6 +877,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanPortName = internal::ToLowerTrimmedHStringCopy(portName);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
@@ -771,6 +888,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for name.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for name.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
     
     _Use_decl_annotations_
@@ -782,6 +910,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanPortName = internal::ToLowerTrimmedHStringCopy(portName);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.Flow() == flow && internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
@@ -791,6 +921,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for name.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for name.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
     
     _Use_decl_annotations_
@@ -801,6 +942,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanDriverDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdHStringCopy(driverDeviceInterfaceId);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
@@ -810,6 +953,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for driver device interface id.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for driver device interface id.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
     
     _Use_decl_annotations_
@@ -821,6 +975,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         auto cleanDriverDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdHStringCopy(driverDeviceInterfaceId);
 
+        try
+        {
         for (auto const& [key, port] : m_enumeratedPorts)
         {
             if (port.Flow() == flow && port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
@@ -830,6 +986,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
 
         return results.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting enumerated ports for driver device interface id.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting enumerated ports for driver device interface id.");
+            return winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>().GetView();
+        }
     }
 
 

@@ -14,6 +14,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Enumeration
 {
     [contract(MidiEnumerationApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredEndpointInfo", UUID_IMidiDeclaredEndpointInfo)]
     [constructor_name("Windows.Devices.Midi2.Enumeration.IMidiDeclaredEndpointInfoFactory", UUID_IMidiDeclaredEndpointInfoFactory)]
     runtimeclass MidiDeclaredEndpointInfo
@@ -33,21 +34,21 @@ namespace Windows.Devices.Midi2.Enumeration
         );
 
 
-        Boolean IsReadOnly { get; };
+        [noexcept] Boolean IsReadOnly { get; };
 
-        String Name;
-        String ProductInstanceId;
+        [noexcept] String Name;
+        [noexcept] String ProductInstanceId;
 
-        Boolean SupportsMidi10Protocol;
-        Boolean SupportsMidi20Protocol;
-        Boolean SupportsReceivingJitterReductionTimestamps;
-        Boolean SupportsSendingJitterReductionTimestamps;
+        [noexcept] Boolean SupportsMidi10Protocol;
+        [noexcept] Boolean SupportsMidi20Protocol;
+        [noexcept] Boolean SupportsReceivingJitterReductionTimestamps;
+        [noexcept] Boolean SupportsSendingJitterReductionTimestamps;
 
-        Boolean HasStaticFunctionBlocks;
-        UInt8 DeclaredFunctionBlockCount;
+        [noexcept] Boolean HasStaticFunctionBlocks;
+        [noexcept] UInt8 DeclaredFunctionBlockCount;
 
-        UInt8 SpecificationVersionMajor;
-        UInt8 SpecificationVersionMinor;
+        [noexcept] UInt8 SpecificationVersionMajor;
+        [noexcept] UInt8 SpecificationVersionMinor;
 
     };
 }

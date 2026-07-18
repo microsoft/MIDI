@@ -45,6 +45,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint8_t const dataByte2
     ) noexcept
     {
+        try
+        {
         // we don't handle sysex here
         if (MIDI_BYTE_IS_SYSEX_START_STATUS(statusByte) || MIDI_BYTE_IS_SYSEX_END_STATUS(statusByte))
         {
@@ -79,6 +81,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.Word0(midiWord);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
 
@@ -89,6 +102,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::IMidiMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         // get the bytes using IBufferByteAccess and then do the conversion
 
         auto dataPointer = originalMessage.RawData().data();
@@ -134,6 +149,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
 
         return midiWord;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message bytes.");
+            return 0;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message bytes.");
+            return 0;
+        }
     }
 
 
@@ -148,6 +174,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiTimeCodeMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -155,6 +183,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -164,6 +203,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiSongPositionPointerMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -171,6 +212,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -180,6 +232,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiSongSelectMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -187,6 +241,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -196,6 +261,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiTuneRequestMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -203,6 +270,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -212,6 +290,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiTimingClockMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -219,6 +299,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -228,6 +319,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiStartMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -235,6 +328,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -244,6 +348,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiContinueMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -251,6 +357,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
 
@@ -261,6 +378,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiStopMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -268,6 +387,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -277,6 +407,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiActiveSensingMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -284,6 +416,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -293,6 +436,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiSystemResetMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -300,6 +445,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
 
@@ -312,6 +468,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiChannelPressureMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -319,6 +477,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
 
@@ -329,6 +498,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiNoteOffMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -336,6 +507,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
 
@@ -346,6 +528,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiNoteOnMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -353,6 +537,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -362,6 +557,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiPitchBendChangeMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -369,6 +566,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -378,6 +586,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiPolyphonicKeyPressureMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -385,6 +595,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
     _Use_decl_annotations_
@@ -394,6 +615,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         midi1::MidiProgramChangeMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
@@ -401,6 +624,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
         return message;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message.");
+            return nullptr;
+        }
     }
 
 
@@ -412,6 +646,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         bool const allowRunningStatus
     ) noexcept
     {
+        try
+        {
         bytestreamToUMP converter;
 
         auto words = winrt::single_threaded_vector<uint32_t>();
@@ -433,6 +669,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         }
 
         return words;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 complete message bytes to UMP words.");
+            return winrt::single_threaded_vector<uint32_t>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 complete message bytes to UMP words.");
+            return winrt::single_threaded_vector<uint32_t>();
+        }
     }
 
     _Use_decl_annotations_
@@ -441,6 +688,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         _In_ midi1::IMidiMessage const& originalMessage
     ) noexcept
     {
+        try
+        {
         bytestreamToUMP converter;
 
         auto words = winrt::single_threaded_vector<uint32_t>();
@@ -469,6 +718,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         }
 
         return words;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting MIDI 1.0 message to UMP words.");
+            return winrt::single_threaded_vector<uint32_t>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 message to UMP words.");
+            return winrt::single_threaded_vector<uint32_t>();
+        }
 
     }
 
@@ -479,6 +739,8 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         _In_ collections::IIterable<uint32_t> const& umpWords
     ) noexcept
     {
+        try
+        {
         umpToBytestream converter;
 
         auto bytes = winrt::single_threaded_vector<uint8_t>();
@@ -497,6 +759,17 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         }
 
         return bytes;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error converting UMP words to MIDI 1.0 bytes.");
+            return winrt::single_threaded_vector<uint8_t>();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting UMP words to MIDI 1.0 bytes.");
+            return winrt::single_threaded_vector<uint8_t>();
+        }
     }
 
 
@@ -560,7 +833,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
                 TraceLoggingWideString(L"Exception attempting to convert string to bytes", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            return nullptr;
+            return winrt::single_threaded_vector<uint8_t>();
         }
 
     }

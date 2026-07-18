@@ -67,6 +67,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     midi2::IMidiUniversalPacket MidiMessageReceivedEventArgs::GetMessagePacket()
     {
+        try
+        {
         auto wordCount = GetValidMessageWordCount();
 
         if (wordCount == 1) // ump32
@@ -102,6 +104,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
             );
 
 
+            return nullptr;
+        }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting message packet.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting message packet.");
             return nullptr;
         }
     }
@@ -166,6 +179,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     bool MidiMessageReceivedEventArgs::FillMessage32(
         midi2::MidiMessage32 const& ump)
     {
+        try
+        {
         if (ump == nullptr)
         {
             WINRT_ASSERT(false);    // this will cause a break in debug builds
@@ -213,12 +228,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket32) * sizeof(uint32_t));
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error filling message 32.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception filling message 32.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
     bool MidiMessageReceivedEventArgs::FillMessage64(
         midi2::MidiMessage64 const& ump)
     {
+        try
+        {
         if (ump == nullptr)
         {
             WINRT_ASSERT(false);    // this will cause a break in debug builds
@@ -267,12 +295,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket64) * sizeof(uint32_t));
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error filling message 64.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception filling message 64.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
     bool MidiMessageReceivedEventArgs::FillMessage96(
         midi2::MidiMessage96 const& ump)
     {
+        try
+        {
         if (ump == nullptr)
         {
             WINRT_ASSERT(false);    // this will cause a break in debug builds
@@ -320,12 +361,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket96) * sizeof(uint32_t));
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error filling message 96.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception filling message 96.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
     bool MidiMessageReceivedEventArgs::FillMessage128(
         midi2::MidiMessage128 const& ump)
     {
+        try
+        {
         if (ump == nullptr)
         {
             WINRT_ASSERT(false);    // this will cause a break in debug builds
@@ -372,6 +426,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memcpy(umpDestinationData, &m_data, (uint32_t)(MidiPacketType::UniversalMidiPacket128) * sizeof(uint32_t));
 
         return true;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error filling message 128.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception filling message 128.");
+            return false;
+        }
     }
 
     _Use_decl_annotations_
@@ -403,6 +468,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         collections::IVector<uint32_t> wordList
         )
     {
+        try
+        {
         uint8_t messageWordCount = GetValidMessageWordCount();
 
         // copy over the words
@@ -415,6 +482,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         return messageWordCount;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error appending words to list.");
+            return 0;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception appending words to list.");
+            return 0;
+        }
     }
 
 

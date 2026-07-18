@@ -19,28 +19,28 @@ namespace Windows.Devices.Midi2
     [static_name("Windows.Devices.Midi2.IMidiClockStatics", UUID_IMidiClockStatics)]
     static runtimeclass MidiClock
     {
-        static UInt64 Now{ get; };
+        [noexcept] static UInt64 Now{ get; };
 
-        static UInt64 TimestampConstantSendImmediately{ get; };
-        static UInt64 TimestampConstantMessageQueueMaximumFutureTicks{ get; };
+        [noexcept] static UInt64 TimestampConstantSendImmediately{ get; };
+        [noexcept] static UInt64 TimestampConstantMessageQueueMaximumFutureTicks{ get; };
 
-        static UInt64 TimestampFrequency{ get; };
+        [noexcept] static UInt64 TimestampFrequency{ get; };
 
-        static Double ConvertTimestampTicksToNanoseconds(UInt64 timestampValue);
-        static Double ConvertTimestampTicksToMicroseconds(UInt64 timestampValue);
-        static Double ConvertTimestampTicksToMilliseconds(UInt64 timestampValue);
-        static Double ConvertTimestampTicksToSeconds(UInt64 timestampValue);
+        [noexcept] static Double ConvertTimestampTicksToNanoseconds(UInt64 timestampValue);
+        [noexcept] static Double ConvertTimestampTicksToMicroseconds(UInt64 timestampValue);
+        [noexcept] static Double ConvertTimestampTicksToMilliseconds(UInt64 timestampValue);
+        [noexcept] static Double ConvertTimestampTicksToSeconds(UInt64 timestampValue);
 
-        static UInt64 OffsetTimestampByTicks(UInt64 timestampValue, Int64 offsetTicks);
+        [noexcept] static UInt64 OffsetTimestampByTicks(UInt64 timestampValue, Int64 offsetTicks);
 
-        static UInt64 OffsetTimestampByMicroseconds(UInt64 timestampValue, Int64 offsetMicroseconds);
-        static UInt64 OffsetTimestampByMilliseconds(UInt64 timestampValue, Int64 offsetMilliseconds);
-        static UInt64 OffsetTimestampBySeconds(UInt64 timestampValue, Int64 offsetSeconds);
+        [noexcept] static UInt64 OffsetTimestampByMicroseconds(UInt64 timestampValue, Int64 offsetMicroseconds);
+        [noexcept] static UInt64 OffsetTimestampByMilliseconds(UInt64 timestampValue, Int64 offsetMilliseconds);
+        [noexcept] static UInt64 OffsetTimestampBySeconds(UInt64 timestampValue, Int64 offsetSeconds);
 
-        static MidiSystemTimerSettings GetCurrentSystemTimerInfo();
+        [noexcept] static MidiSystemTimerSettings GetCurrentSystemTimerInfo();
 
-        static Boolean BeginLowLatencySystemTimerPeriod();
-        static Boolean EndLowLatencySystemTimerPeriod();
+        [noexcept] static Boolean BeginLowLatencySystemTimerPeriod();
+        [noexcept] static Boolean EndLowLatencySystemTimerPeriod();
     }
 }
 

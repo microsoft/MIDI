@@ -42,6 +42,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::IMemoryBuffer const& buffer
         ) noexcept
     {
+        try
+        {
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
@@ -178,6 +180,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         return midi2::MidiSendMessageResults::Succeeded;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending multiple messages from buffer.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending multiple messages from buffer.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
     }
 
 
@@ -187,6 +200,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp const timestamp,
         collections::IIterable<uint32_t> const& words) noexcept
     {
+        try
+        {
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
@@ -278,6 +293,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         return midi2::MidiSendMessageResults::Succeeded;
 
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending multiple messages from word list.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending multiple messages from word list.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
     }
 
     _Use_decl_annotations_
@@ -287,6 +313,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint32_t const wordCount,
         winrt::array_view<uint32_t const> words) noexcept
     {
+        try
+        {
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
@@ -374,6 +402,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         return midi2::MidiSendMessageResults::Succeeded;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending multiple messages from word array.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending multiple messages from word array.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
     }
 
 
@@ -383,6 +422,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp const timestamp,
         collections::IIterable<MidiMessageStruct> const& messages) noexcept
     {
+        try
+        {
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
@@ -435,6 +476,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         return midi2::MidiSendMessageResults::Succeeded;
 
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending multiple messages from struct list.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending multiple messages from struct list.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
     }
 
 
@@ -446,6 +498,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint32_t const messageCount,
         winrt::array_view<MidiMessageStruct const> messages) noexcept
     {
+        try
+        {
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
@@ -500,6 +554,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         return midi2::MidiSendMessageResults::Succeeded;
 
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending multiple messages from struct array.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending multiple messages from struct array.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
     }
 
 
@@ -508,6 +573,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesPacketList(
         collections::IIterable<IMidiUniversalPacket> const& messages) noexcept
     {
+        try
+        {
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
@@ -549,6 +616,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         return midi2::MidiSendMessageResults::Succeeded;
 
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending multiple messages from packet list.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending multiple messages from packet list.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
     }
 
 }

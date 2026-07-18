@@ -21,54 +21,55 @@ import "IMidiUniversalPacket.idl";
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [contract(MidiMessageUtilityApiContract,1)]
+    
     [static_name("Windows.Devices.Midi2.Utilities.Messages.IMidiMessageHelperStatics", UUID_IMidiMessageHelperStatics)]
     static runtimeclass MidiMessageHelper
     {
-        static Boolean ValidateMessage32MessageType(UInt32 word0);
-        static Boolean ValidateMessage64MessageType(UInt32 word0);
-        static Boolean ValidateMessage96MessageType(UInt32 word0);
-        static Boolean ValidateMessage128MessageType(UInt32 word0);
+        [noexcept] static Boolean ValidateMessage32MessageType(UInt32 word0);
+        [noexcept] static Boolean ValidateMessage64MessageType(UInt32 word0);
+        [noexcept] static Boolean ValidateMessage96MessageType(UInt32 word0);
+        [noexcept] static Boolean ValidateMessage128MessageType(UInt32 word0);
 
-        static Windows.Devices.Midi2.MidiMessageType GetMessageTypeFromMessageFirstWord(UInt32 word0);
-        static Windows.Devices.Midi2.MidiPacketType GetPacketTypeFromMessageFirstWord(UInt32 word0);
+        [noexcept] static Windows.Devices.Midi2.MidiMessageType GetMessageTypeFromMessageFirstWord(UInt32 word0);
+        [noexcept] static Windows.Devices.Midi2.MidiPacketType GetPacketTypeFromMessageFirstWord(UInt32 word0);
 
-        static Boolean MessageTypeHasGroupField(Windows.Devices.Midi2.MidiMessageType messageType);
-        static UInt32 ReplaceGroupInMessageFirstWord(UInt32 word0, Windows.Devices.Midi2.MidiGroup newGroup);
-        static Windows.Devices.Midi2.MidiGroup GetGroupFromMessageFirstWord(UInt32 word0);
+        [noexcept] static Boolean MessageTypeHasGroupField(Windows.Devices.Midi2.MidiMessageType messageType);
+        [noexcept] static UInt32 ReplaceGroupInMessageFirstWord(UInt32 word0, Windows.Devices.Midi2.MidiGroup newGroup);
+        [noexcept] static Windows.Devices.Midi2.MidiGroup GetGroupFromMessageFirstWord(UInt32 word0);
 
-        static UInt8 GetStatusFromUtilityMessage(UInt32 word0);
-        static Midi1ChannelVoiceMessageStatus GetStatusFromMidi1ChannelVoiceMessage(UInt32 word0);
-        static Midi2ChannelVoiceMessageStatus GetStatusFromMidi2ChannelVoiceMessageFirstWord(UInt32 word0);
+        [noexcept] static UInt8 GetStatusFromUtilityMessage(UInt32 word0);
+        [noexcept] static Midi1ChannelVoiceMessageStatus GetStatusFromMidi1ChannelVoiceMessage(UInt32 word0);
+        [noexcept] static Midi2ChannelVoiceMessageStatus GetStatusFromMidi2ChannelVoiceMessageFirstWord(UInt32 word0);
         
 
-        static UInt8 GetStatusBankFromFlexDataMessageFirstWord(UInt32 word0);
-        static UInt8 GetStatusFromFlexDataMessageFirstWord(UInt32 word0);
+        [noexcept] static UInt8 GetStatusBankFromFlexDataMessageFirstWord(UInt32 word0);
+        [noexcept] static UInt8 GetStatusFromFlexDataMessageFirstWord(UInt32 word0);
 
-        static UInt8 GetStatusFromSystemCommonMessage(UInt32 word0);
+        [noexcept] static UInt8 GetStatusFromSystemCommonMessage(UInt32 word0);
 
-        static UInt8 GetStatusFromDataMessage64FirstWord(UInt32 word0);
-        static UInt8 GetNumberOfBytesFromDataMessage64FirstWord(UInt32 word0);
+        [noexcept] static UInt8 GetStatusFromDataMessage64FirstWord(UInt32 word0);
+        [noexcept] static UInt8 GetNumberOfBytesFromDataMessage64FirstWord(UInt32 word0);
 
-        static UInt8 GetStatusFromDataMessage128FirstWord(UInt32 word0);
-        static UInt8 GetNumberOfBytesFromDataMessage128FirstWord(UInt32 word0);
-
-
-        static Boolean MessageTypeHasChannelField(Windows.Devices.Midi2.MidiMessageType messageType);
-        static UInt32 ReplaceChannelInMessageFirstWord(UInt32 word0, Windows.Devices.Midi2.MidiChannel newChannel);
-        static Windows.Devices.Midi2.MidiChannel GetChannelFromMessageFirstWord(UInt32 word0);
-
-        static UInt8 GetFormFromStreamMessageFirstWord(UInt32 word0);
-        static UInt16 GetStatusFromStreamMessageFirstWord(UInt32 word0);
+        [noexcept] static UInt8 GetStatusFromDataMessage128FirstWord(UInt32 word0);
+        [noexcept] static UInt8 GetNumberOfBytesFromDataMessage128FirstWord(UInt32 word0);
 
 
-        static String GetMessageDisplayNameFromFirstWord(UInt32 word0);
-        static String GetNoteDisplayNameFromNoteIndex(UInt8 noteIndex);
+        [noexcept] static Boolean MessageTypeHasChannelField(Windows.Devices.Midi2.MidiMessageType messageType);
+        [noexcept] static UInt32 ReplaceChannelInMessageFirstWord(UInt32 word0, Windows.Devices.Midi2.MidiChannel newChannel);
+        [noexcept] static Windows.Devices.Midi2.MidiChannel GetChannelFromMessageFirstWord(UInt32 word0);
 
-        static Int16 GetNoteOctaveFromNoteIndex(UInt8 noteIndex);
-        static Int16 GetNoteOctaveFromNoteIndex(UInt8 noteIndex, UInt8 middleCOctave);
+        [noexcept] static UInt8 GetFormFromStreamMessageFirstWord(UInt32 word0);
+        [noexcept] static UInt16 GetStatusFromStreamMessageFirstWord(UInt32 word0);
 
 
-        static IVector<Windows.Devices.Midi2.IMidiUniversalPacket> GetPacketListFromWordList(UInt64 timestamp, IIterable<UInt32> words);
-        static IVector<UInt32> GetWordListFromPacketList(IIterable<Windows.Devices.Midi2.IMidiUniversalPacket> messages);
+        [noexcept] static String GetMessageDisplayNameFromFirstWord(UInt32 word0);
+        [noexcept] static String GetNoteDisplayNameFromNoteIndex(UInt8 noteIndex);
+
+        [noexcept] static Int16 GetNoteOctaveFromNoteIndex(UInt8 noteIndex);
+        [noexcept] static Int16 GetNoteOctaveFromNoteIndex(UInt8 noteIndex, UInt8 middleCOctave);
+
+
+        [noexcept] static IVector<Windows.Devices.Midi2.IMidiUniversalPacket> GetPacketListFromWordList(UInt64 timestamp, IIterable<UInt32> words);
+        [noexcept] static IVector<UInt32> GetWordListFromPacketList(IIterable<Windows.Devices.Midi2.IMidiUniversalPacket> messages);
     };
 }

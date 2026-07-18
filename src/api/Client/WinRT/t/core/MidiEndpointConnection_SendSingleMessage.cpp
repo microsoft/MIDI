@@ -20,6 +20,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiMessageStruct const& message
         ) noexcept
     {
+        try
+        {
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
@@ -65,6 +67,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
 
         return SendMessageRaw(m_endpointTransport, (void*)(&message), byteLength, timestamp);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error sending single message struct.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception sending single message struct.");
+            return midi2::MidiSendMessageResults::Failed;
+        }
     }
 
 

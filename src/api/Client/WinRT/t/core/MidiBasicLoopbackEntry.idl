@@ -12,17 +12,18 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Transports.BasicLoopback
 {
     [contract(MidiTransportsBasicLoopbackApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackEntry", UUID_IMidiBasicLoopbackEntry)]
     runtimeclass MidiBasicLoopbackEntry
     {
-        Guid AssociationId{ get; };
+        [noexcept] Guid AssociationId{ get; };
 
-        String EndpointDeviceId{ get; };
+        [noexcept] String EndpointDeviceId{ get; };
 
-        String Name{ get; };
-        String Description{ get; };
+        [noexcept] String Name{ get; };
+        [noexcept] String Description{ get; };
 
-        Boolean IsMuted{ get;};
+        [noexcept] Boolean IsMuted{ get;};
 
         //// if the basic loopback endpoint is made the parent of the legacy ports, the query should be fast.
         //// but ideally get this from the server. Only do a lookup if empty.

@@ -48,6 +48,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerDeviceInformation() const noexcept
     {
+        try
+        {
         // find the container with the same container ID and DeviceInstanceId as us.
 
         if (ContainerId() == winrt::guid{}) return nullptr;
@@ -70,6 +72,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             });
 
         return container;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting container device information.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting container device information.");
+            return nullptr;
+        }
     }
 
 
@@ -100,6 +113,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     collections::IVectorView<winrt::hstring> MidiEndpointDeviceInformation::GetAdditionalPropertiesList() noexcept
     {
+        try
+        {
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
         additionalProperties.Append(L"System.ItemNameDisplay");
@@ -236,6 +251,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
 
         return additionalProperties.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building additional properties list.");
+            return winrt::single_threaded_vector<winrt::hstring>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building additional properties list.");
+            return winrt::single_threaded_vector<winrt::hstring>().GetView();
+        }
     }
 
 
@@ -631,8 +657,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             }
 
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error reading date time property.");
+        }
         catch (...)
         {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception reading date time property.");
         }
 
         return defaultValue;
@@ -645,6 +676,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     winrt::hstring MidiEndpointDeviceInformation::Name() const noexcept
     {
+        try
+        {
         // user-supplied name overrides all others
         if (GetUserSuppliedInfo().Name() != L"") return GetUserSuppliedInfo().Name();
 
@@ -657,14 +690,38 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         if (internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.FriendlyName", L"") != L"") return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.FriendlyName", L"");   
 
         return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.ItemNameDisplay", L"(Unknown)");
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting endpoint name.");
+            return L"";
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting endpoint name.");
+            return L"";
+        }
     }
 
     midi2enum::MidiEndpointDevicePurpose MidiEndpointDeviceInformation::EndpointPurpose() const noexcept
     {
+        try
+        {
         // This assumes we're keeping things in sync with the service
         // like we should be
 
         return (midi2enum::MidiEndpointDevicePurpose)internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_EndpointDevicePurpose, 0);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting endpoint purpose.");
+            return (midi2enum::MidiEndpointDevicePurpose)0;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting endpoint purpose.");
+            return (midi2enum::MidiEndpointDevicePurpose)0;
+        }
     }
 
 
@@ -744,7 +801,20 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     collections::IVectorView<midi2enum::MidiGroupTerminalBlock> MidiEndpointDeviceInformation::GetGroupTerminalBlocks() const noexcept
     {
-        return m_groupTerminalBlocks.GetView();
+        try
+        {
+            return m_groupTerminalBlocks.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting group terminal blocks.");
+            return winrt::single_threaded_vector<midi2enum::MidiGroupTerminalBlock>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting group terminal blocks.");
+            return winrt::single_threaded_vector<midi2enum::MidiGroupTerminalBlock>().GetView();
+        }
     }
 
 
@@ -1380,6 +1450,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
     midi2enum::Midi1PortNamingApproach MidiEndpointDeviceInformation::Midi1PortNamingApproach() const noexcept
     {
+        try
+        {
         auto namingPropVal = internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_Midi1PortNamingSelection, (uint32_t)WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault);
 
         // these types are value-compatible. However, we don't simply cast because
@@ -1400,6 +1472,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         default:
             return midi2enum::Midi1PortNamingApproach::Default;
         }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting MIDI 1.0 port naming approach.");
+            return midi2enum::Midi1PortNamingApproach::Default;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting MIDI 1.0 port naming approach.");
+            return midi2enum::Midi1PortNamingApproach::Default;
+        }
     }
 
 
@@ -1408,6 +1491,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         collections::IVector<midi2enum::Midi1PortNameTableEntry> nameTable{ winrt::single_threaded_vector<midi2enum::Midi1PortNameTableEntry>() };
 
+        try
+        {
         auto nameTableRefArray = GetBinaryProperty(STRING_PKEY_MIDI_Midi1PortNameTable);
 
         if (nameTableRefArray != nullptr)
@@ -1453,6 +1538,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
 
         return nameTable.GetView();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error getting name table.");
+            return winrt::single_threaded_vector<midi2enum::Midi1PortNameTableEntry>().GetView();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception getting name table.");
+            return winrt::single_threaded_vector<midi2enum::Midi1PortNameTableEntry>().GetView();
+        }
     }
 
 }

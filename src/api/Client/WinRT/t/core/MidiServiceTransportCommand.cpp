@@ -43,6 +43,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
     json::JsonObject MidiServiceTransportCommand::ConfigJson() const noexcept
     {
+        try
+        {
         json::JsonObject outerWrapper;
         json::JsonObject transportObject;
         json::JsonObject topLevelTransportPluginSettingsObject;
@@ -89,5 +91,16 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             topLevelTransportPluginSettingsObject);
 
         return outerWrapper;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error building transport command config json.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception building transport command config json.");
+            return nullptr;
+        }
     }
 }

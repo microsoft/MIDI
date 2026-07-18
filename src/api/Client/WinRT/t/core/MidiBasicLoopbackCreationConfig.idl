@@ -16,6 +16,7 @@ import "MidiBasicLoopbackEndpointDefinition.idl";
 namespace Windows.Devices.Midi2.Transports.BasicLoopback
 {
     [contract(MidiTransportsBasicLoopbackApiContract, 1)]
+    
     [interface_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackCreationConfig", UUID_IMidiBasicLoopbackCreationConfig)]
     [constructor_name("Windows.Devices.Midi2.Transports.BasicLoopback.IMidiBasicLoopbackCreationConfigFactory", UUID_IMidiBasicLoopbackCreationConfigFactory)]
     runtimeclass MidiBasicLoopbackCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
@@ -26,10 +27,10 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
             MidiBasicLoopbackEndpointDefinition endpointDefinition
         );
 
-        Guid AssociationId;
+        [noexcept] Guid AssociationId;
 
-        MidiBasicLoopbackEndpointDefinition EndpointDefinition;
+        [noexcept] MidiBasicLoopbackEndpointDefinition EndpointDefinition;
 
-        Boolean IsMuted;
+        [noexcept] Boolean IsMuted;
     }
 }

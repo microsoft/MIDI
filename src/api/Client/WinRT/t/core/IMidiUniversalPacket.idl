@@ -20,17 +20,17 @@ namespace Windows.Devices.Midi2
     [uuid(UUID_IMidiUniversalPacket), version(1.0)]
     interface IMidiUniversalPacket
     {
-        UInt64 Timestamp;
+        [noexcept] UInt64 Timestamp;
 
-        MidiMessageType MessageType;
-        MidiPacketType PacketType{ get; };
+        [noexcept] MidiMessageType MessageType;
+        [noexcept] MidiPacketType PacketType{ get; };
 
-        UInt32 PeekFirstWord();
+        [noexcept] UInt32 PeekFirstWord();
 
 
-        IVector<UInt32> GetAllWords();
-        UInt8 AppendAllMessageWordsToList(IVector<UInt32> targetList);
+        [noexcept] IVector<UInt32> GetAllWords();
+        [noexcept] UInt8 AppendAllMessageWordsToList(IVector<UInt32> targetList);
 
-        UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
+        [noexcept] UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
     };
 }
