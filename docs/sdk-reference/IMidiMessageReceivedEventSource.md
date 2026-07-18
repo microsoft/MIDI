@@ -14,3 +14,9 @@ Interface which contains the event definition used by any class which raises the
 | -------- | ----------- |
 | `MessageReceived(source, args)` | The main message received event definition. |
 
+## Methods
+
+| Method | Description |
+| -------- | ----------- |
+| `GetEndpointConnectionSource()` | Returns the [`IMidiEndpointConnectionSource`](./IMidiEndpointConnectionSource.md) that owns this message source. |
+

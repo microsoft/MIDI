@@ -12,6 +12,6 @@ Indicates the message flow for a group terminal block. Note that this is, per th
 
 | Property | Value | Description |
 | -------- | ------- | ------ |
-| `Bidirectional` | `0x0` | This block represents a bidirectional function. |
-| `BlockInput` | `0x1` | This block represents an input function, from the block's point of view. |
-| `BlockOutput` | `0x2` | This block represents an output function, from the block's point of view. |
+| `Bidirectional` | `0x00000000` | This block represents a bidirectional function. |
+| `BlockInput` | `0x00000001` | This block represents an input function, from the block's point of view. |
+| `BlockOutput` | `0x00000002` | This block represents an output function, from the block's point of view. |

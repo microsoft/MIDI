@@ -12,8 +12,8 @@ Indicates the intended purpose of the endpoint. Use this to help classify endpoi
 
 | Property | Value | Description |
 | --------------- | ---------- | ----------- |
-| `NormalMessageEndpoint` | `0` | The endpoint is any number of normal messaging endpoint types. |
-| `VirtualDeviceResponder` | `100` | The endpoint is the device-side of an app-to-app MIDI connection. Only the device app should use this endpoint. |
-| `InBoxGeneralMidiSynth` | `400` | The endpoint represents the internal General MIDI Synthesizer  |
-| `DiagnosticLoopback` | `500` | The endpoint is one of the static system-wide diagnostics loopback endpoints. These are not normally used in applications  |
-| `DiagnosticPing` | `510` | The endpoint is the internal diagnostics ping endpoint. This endpoint should never be used by applications as it is reserved for the `MidiService` ping feature.  |
+| `NormalMessageEndpoint` | `0x00000000` | The endpoint is any number of normal messaging endpoint types. |
+| `VirtualDeviceResponder` | `0x00000064` | The endpoint is the device-side of an app-to-app MIDI connection. Only the device app should use this endpoint. |
+| `InBoxGeneralMidiSynth` | `0x00000190` | The endpoint represents the internal General MIDI Synthesizer  |
+| `DiagnosticLoopback` | `0x000001F4` | The endpoint is one of the static system-wide diagnostics loopback endpoints. These are not normally used in applications  |
+| `DiagnosticPing` | `0x000001FE` | The endpoint is the internal diagnostics ping endpoint. This endpoint should never be used by applications as it is reserved for the `MidiService` ping feature.  |

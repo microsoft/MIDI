@@ -2,11 +2,19 @@
 layout: sdk_reference_page
 title: MidiBasicLoopbackEndpointDefinition
 namespace: Windows.Devices.Midi2.Transports.BasicLoopback
-type: struct
-description: The information supplied when creating a basic MIDI 1.0 loopback endpoint
+type: runtimeclass
+description: The information supplied when creating a basic MIDI 1.0-style loopback endpoint
 ---
 
-## Fields
+## Constructors
+
+| Constructor | Description |
+| --- | --- |
+| `MidiBasicLoopbackEndpointDefinition()` | Create an empty definition |
+| `MidiBasicLoopbackEndpointDefinition(name, uniqueId)` | Create a definition with the specified name and unique id |
+| `MidiBasicLoopbackEndpointDefinition(name, uniqueId, description)` | Create a definition with the specified name, unique id, and description |
+
+## Properties
 
 | Property | Description |
 |---|---|

@@ -22,6 +22,6 @@ Of course, when sending messages through the app SDK, you always use the Univers
 
 | Property | Value | Description |
 | --------------- | ---------- | ----------- |
-| `Unknown` | `0` | Unknown native data format |
-| `Midi1ByteFormat` | `1` | The native data format is the MIDI 1.0 byte message format |
-| `UniversalMidiPacketFormat` | `2` | The native data format is the Universal MIDI Packet data format |
+| `Unknown` | `0x00000000` | Unknown native data format |
+| `Midi1ByteFormat` | `0x00000001` | The native data format is the MIDI 1.0 byte message format |
+| `UniversalMidiPacketFormat` | `0x00000002` | The native data format is the Universal MIDI Packet data format |

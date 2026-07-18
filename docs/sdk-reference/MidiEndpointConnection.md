@@ -25,7 +25,6 @@ To ensure an application is able to wire up processing plugins and event handler
 | `IsOpen` | True if this connection is currently open. When first created, the connection is not open until the consuming code calls the `Open` method |
 | `Settings` | Settings used to create this connection. Treat this as read-only. |
 | `MessageProcessingPlugins` | Collection of all message processing plugins which will optionally handle incoming messages. |
-| `IsAutoReconnectEnabled` | True if endpoints are automatically reconnected if they are, for example, unplugged and then replugged. The value is set at the session level. |
 
 ## Static Member Functions
 

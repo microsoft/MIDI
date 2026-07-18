@@ -20,4 +20,10 @@ Includes all functions and properties in `IMidiUniversalPacket`, as well as:
 | Function | Description |
 | -------- | ----------- |
 | `MidiMessage32()` | Default constructor |
-| `MidiMessage32 (timestamp, word0)` | Construct a new message with a timestamp and 32 bit MIDI word |
+| `MidiMessage32(timestamp, word0)` | Construct a new message with a timestamp and 32-bit MIDI word |
+
+## Static Methods
+
+| Static Method | Description |
+| ------------- | ----------- |
+| `CreateFromStruct(timestamp, message)` | Creates a `MidiMessage32` from a `MidiMessageStruct` and a timestamp |

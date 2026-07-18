@@ -1,7 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiMessageHelper
-namespace: Windows.Devices.Midi2.Utilties.Messages
+namespace: Windows.Devices.Midi2.Utilities.Messages
 type: runtimeclass
 description: Class with helper functions for UMP messages
 ---
@@ -66,5 +66,6 @@ In most cases, the calling application needs to do some validation before callin
 | Function | Description |
 | --------------- | ----------- |
 | `GetMessageDisplayNameFromFirstWord (word0)` | Returns the "Friendly Name" string for a message. To see an example, this is what is displayed in the MIDI console output when you are monitoring an endpoint in verbose mode. |
-| `GetNoteDisplayNameFromNoteIndex (noteIndex)` | Returns the common display name for a MIDI note index 0-127 |
-| `GetNoteOctaveFromNoteIndex (noteIndex, middleCOctave)` | Returns the octave number for a MIDI note index |
+| `GetNoteDisplayNameFromNoteIndex(noteIndex)` | Returns the common display name for a MIDI note index 0-127 |
+| `GetNoteOctaveFromNoteIndex(noteIndex)` | Returns the octave number for a MIDI note index using the default middle C octave |
+| `GetNoteOctaveFromNoteIndex(noteIndex, middleCOctave)` | Returns the octave number for a MIDI note index, using the specified middle C octave number |

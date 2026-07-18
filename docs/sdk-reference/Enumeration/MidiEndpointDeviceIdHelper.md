@@ -27,9 +27,9 @@ This class works on Windows MIDI Services UMP endpoints only. It does not work o
 
 ## Static Methods
 
-| Property | Description |
+| Static Method | Description |
 | --------------- | ----------- |
 | `GetShortIdFromFullId(fullEndpointDeviceId)` | Returns the short form of the Endpoint Device Id |
 | `GetFullIdFromShortId(shortEndpointDeviceId)` | Given a short id, returns the full id. No validation is performed to ensure the id is a valid UMP Endpoint |
-| `IsWindowsMidiServicesEndpointDeviceId(fullEndpointDeviceId)` | Returns true if the endpoint device id appear to be a Windows MIDI Services UMP Endpoint Device Id. No actual lookup is performed. |
+| `IsPossibleWindowsMidiServicesEndpointDeviceId(fullEndpointDeviceId)` | Returns true if the endpoint device id appears to be a Windows MIDI Services UMP Endpoint Device Id. No actual lookup is performed. |
 | `NormalizeFullId(fullEndpointDeviceId)` | Returns the id in normalized form: trimmed and lowercase. |

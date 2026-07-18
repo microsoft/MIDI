@@ -1,7 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiMessageConverter
-namespace: Windows.Devices.Midi2.Utilties.Messages
+namespace: Windows.Devices.Midi2.Utilities.Messages
 type: runtimeclass
 description: Helper class to convert MIDI 1.0 byte format messages into UMP messages
 ---
@@ -37,7 +37,16 @@ This class provides support for representing MIDI 1.0 messages in the Universal 
 | --------------- | ----------- |
 | `ConvertMidi1ChannelPressureMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiChannelPressureMessage` message to `MidiMessage32`|
 | `ConvertMidi1NoteOffMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiNoteOffMessage` message to `MidiMessage32`|
-| `ConvertMidi1NoteOnMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiNoteOnMessage` message to `MidiMessage32`|
-| `ConvertMidi1PitchBendChangeMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiPitchBendChangeMessage` message to `MidiMessage32`|
-| `ConvertMidi1PolyphonicKeyPressureMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiPolyphonicKeyPressureMessage` message to `MidiMessage32`|
-| `ConvertMidi1ProgramChangeMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiProgramChangeMessage` message to `MidiMessage32`|
+| `ConvertMidi1NoteOnMessage(timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiNoteOnMessage` message to `MidiMessage32`|
+| `ConvertMidi1PitchBendChangeMessage(timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiPitchBendChangeMessage` message to `MidiMessage32`|
+| `ConvertMidi1PolyphonicKeyPressureMessage(timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiPolyphonicKeyPressureMessage` message to `MidiMessage32`|
+| `ConvertMidi1ProgramChangeMessage(timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiProgramChangeMessage` message to `MidiMessage32`|
+
+## Byte Array Conversion Functions
+
+| Static Method | Description |
+| ------------- | ----------- |
+| `ConvertMidi1MessageToUmpWords(group, originalMessage)` | Converts a WinRT `IMidiMessage` to a list of UMP words for the given group. |
+| `ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus)` | Converts a sequence of raw MIDI 1.0 bytes to UMP words. Set `allowRunningStatus` to `true` to handle running status encoding. |
+| `ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(umpWords)` | Converts a sequence of UMP words (all from one group) back to MIDI 1.0 bytes. |
+| `ConvertHexByteStringToByteArray(hexByteString)` | Converts a space-separated or plain hex byte string (e.g., `"F0 41 10 F7"`) to a byte array. Useful for parsing SysEx strings from user input. |

@@ -22,13 +22,13 @@ The `MidiVirtualDeviceCreationConfig` class specifies, in an easy to use format,
 | `FunctionBlocks` | The set of function blocks to be declared for this endpoint |
 | `CreateOnlyUmpEndpoints` | True if only UMP endpoints should be created for this endpoint (no WinMM or WinRT MIDI 1.0 Ports) |
 
-## Methods
+## Constructors
 
-| Name | Description |
+| Constructor | Description |
 | --------------- | ----------- |
-| `MidiVirtualDeviceCreationConfig (name, description, manufacturer, declaredEndpointInfo)` | Create a virtual device with the specified information|
-| `MidiVirtualDeviceCreationConfig (name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity)` | Create a virtual device with the specified information |
-| `MidiVirtualDeviceCreationConfig (name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity, userSuppliedInfo)` | Create a virtual device with the specified information |
+| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo)` | Create a virtual device with the specified information |
+| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity)` | Create a virtual device with the specified information and device identity |
+| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity, userSuppliedInfo)` | Create a virtual device with all specified information |
 
 ## Examples
 

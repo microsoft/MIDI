@@ -1,7 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiMessageBuilder
-namespace: Windows.Devices.Midi2.Utilties.Messages
+namespace: Windows.Devices.Midi2.Utilities.Messages
 type: runtimeclass
 description: Helper class to construct common message types
 ---

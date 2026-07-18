@@ -14,7 +14,7 @@ In general, these values should not restrict completely what you enable a user t
 
 | Property | Value | Description |
 | -------- | ------- | ------ |
-| `Unknown` | `0x0` | Unknown or undefined. |
-| `Receiver` | `0x1` | This block is primarily a receiver of MIDI data. For example, a tone generator. |
-| `Sender` | `0x2` | This block is primarily a sender of MIDI data. For example, a keyboard or grid of touch pads. |
-| `Bidirectional` | `0x3` | This block is bidirectional. For example, a sequencer which can both record and play notes. |
+| `Unknown` | `0x00000000` | Unknown or undefined. |
+| `Receiver` | `0x00000001` | This block is primarily a receiver of MIDI data. For example, a tone generator. |
+| `Sender` | `0x00000002` | This block is primarily a sender of MIDI data. For example, a keyboard or grid of touch pads. |
+| `Bidirectional` | `0x00000003` | This block is bidirectional. For example, a sequencer which can both record and play notes. |

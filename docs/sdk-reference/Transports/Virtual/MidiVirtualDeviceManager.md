@@ -19,7 +19,8 @@ This is the class used by applications to create and start new virtual (app-to-a
 
 | Name | Description |
 | --------------- | ----------- |
-| `CreateVirtualDevice (creationConfig)` | Creates a new virtual device with the specified configuration |
+| `CreateVirtualDevice(creationConfig)` | Creates a new virtual device with the specified configuration. Returns the `MidiVirtualDevice` instance. |
+| `GetAssociatedClientEndpointDeviceId(associationId)` | Returns the endpoint device id for the client-side endpoint associated with the given association id. |
 
 ## Examples
 

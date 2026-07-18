@@ -1,7 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiEndpointDiscoveryRequests
-namespace: Windows.Devices.Midi2.Utilties.Messages
+namespace: Windows.Devices.Midi2.Utilities.Messages
 type: enum
 description: MIDI 2.0 endpoint discovery request flags
 ---

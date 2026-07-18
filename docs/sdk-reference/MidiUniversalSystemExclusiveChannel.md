@@ -4,34 +4,37 @@ title: MidiUniversalSystemExclusiveChannel
 namespace: Windows.Devices.Midi2
 type: runtimeclass
 implements: Windows.Foundation.IStringable
-description: TODO Class used to provide formatting and data validation for MIDI 1.0 and MIDI 2.0 channels.
+description: Class used to provide formatting and data validation for Universal System Exclusive (SysEx 8) channels.
 ---
 
-TODO
-
-The `MidiChannel` class is used to provide formatting and data validation for MIDI 1.0 and MIDI 2.0 channels. For clarity, the 0-15 value used in all messages is the `Index` and the 1-16 value those are mapped to for user display, is the `DisplayValue`.
+The `MidiUniversalSystemExclusiveChannel` class is used to provide formatting and data validation for Universal System Exclusive (SysEx 7) channel types used in MIDI 2.0.
 
 ## Constructors
 
-| `MidiChannel()` | Create a MidiChannel with index 0 |
-| `MidiChannel(UInt8)` | Create a MidiChannel with the specified channel Index (0-15). Any data in the upper 4 bits of the provided byte is ignored, so you may pass in an entire status + channel value here without first cleaning it. C++ note: C++/WinRT creates a constructor which takes nullptr, as a result `MidiChannel(0)` will fail to compile if you have the compiler option set to equate 0 and nullptr. To avoid this, use `MidiChannel(static_cast<uint8_t>(0))` or simply `MidiChannel()`|
+| Constructor | Description |
+| ----------- | ----------- |
+| `MidiUniversalSystemExclusiveChannel()` | Create a `MidiUniversalSystemExclusiveChannel` with index 0 |
+| `MidiUniversalSystemExclusiveChannel(UInt8)` | Create a `MidiUniversalSystemExclusiveChannel` with the specified channel index |
 
 ## Properties
 
-| `Index` | The data value, or channel Index (0-15) |
-| `DisplayValue` | The number that should be displayed in any UI. (1-16) |
+| Property | Description |
+| -------- | ----------- |
+| `Index` | The channel index value |
+| `DisplayValue` | The number that should be displayed in any UI (Index + 1) |
 
 ## Static Properties
 
-| `ShortLabel` | Returns the localized abbreviation. For example, "Ch" in English. |
+| Static Property | Description |
+| --------------- | ----------- |
+| `ShortLabel` | Returns the localized abbreviation. |
 | `ShortLabelPlural` | Returns the localized plural abbreviation. |
-| `LongLabel` | Returns the localized full name. For example, "Channel" in English. |
+| `LongLabel` | Returns the localized full name. |
 | `LongLabelPlural` | Returns the localized full plural name. |
+| `DisregardChannel` | Returns a `MidiUniversalSystemExclusiveChannel` instance representing the "disregard channel" value per the MIDI 2.0 specification. |
 
 ## Static Methods
 
-| `IsValidIndex(UInt8)` | Verifies that the provided index is valid (between 0 and 15) |
-
-## Examples
-
-More complete examples [available on Github](https://aka.ms/midirepo)
+| Static Method | Description |
+| ------------- | ----------- |
+| `IsValidIndex(UInt8)` | Verifies that the provided index is valid. |

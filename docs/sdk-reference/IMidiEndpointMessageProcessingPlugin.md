@@ -16,9 +16,9 @@ The main part of message processing is the `ProcessIncomingMessage` callback.
 
 | Property | Description |
 | ---- | ---- |
-| `Id` | Generated GUID for this plugin instance. This is needed if you want to remove the plugin from the endpoint connection |
-| `Name` | Optional application-supplied name for this plugin instance. |
-| `Tag` | Optional application-supplied arbitrary data to associate with this plugin instance |
+| `PluginId` | Generated GUID for this plugin instance. This is needed if you want to remove the plugin from the endpoint connection |
+| `PluginName` | Optional application-supplied name for this plugin instance. |
+| `PluginTag` | Optional application-supplied arbitrary data to associate with this plugin instance |
 | `IsEnabled` | True if the plugin is enabled and should participate in message processing |
 
 ## Functions

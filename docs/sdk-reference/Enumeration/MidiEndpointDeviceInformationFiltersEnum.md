@@ -17,5 +17,5 @@ When enumerating devices, it is helpful to be able to filter for different types
 | `VirtualDeviceResponder` | `0x00000100` | Include endpoints which are virtual devices. Note that this is the device side of the endpoint, not the side available to other applications. Typically, you would not use this. |
 | `DiagnosticLoopback` | `0x00010000` | Use this value only when providing development, test, or diagnostic services for MIDI. |
 | `DiagnosticPing` | `0x00020000` | You would not normally include this in an enumeration. This endpoint is internal. |
-| `AllStandardEndpoints` | `StandardNativeUniversalMidiPacketFormat` plus `StandardNativeMidi1ByteFormat` | This is the value most applications should use, and is the default. |
+| `AllStandardEndpoints` | `0x00000003` | This is the value most applications should use, and is the default. Combines `StandardNativeUniversalMidiPacketFormat` and `StandardNativeMidi1ByteFormat`. |
 

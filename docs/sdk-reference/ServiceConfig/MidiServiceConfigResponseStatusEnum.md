@@ -15,9 +15,10 @@ Enum which indicates if a configuration attempt resulted in success or failure.
 
 | Property | Value | Description |
 | --- | --- | --- |
-| `Success` | 0 | The call succeeded |
-| `ErrorTargetNotFound` | 404 | The target transport or transform was not found |
-| `ErrorConfigJsonNullOrEmpty` | 600 | The supplied config json is missing |
-| `ErrorProcessingConfigJson` | 601 | There's an error in the config json |
-| `ErrorProcessingResponseJson` | 605 | There's an error in the response json |
-| `ErrorNotImplemented` | 2600 | The requested capability is not implemented |
+| `Success` | `0x00000000` | The call succeeded |
+| `ErrorTargetNotFound` | `0x00000194` | The target transport or transform was not found |
+| `ErrorConfigJsonNullOrEmpty` | `0x00000258` | The supplied config json is missing |
+| `ErrorProcessingConfigJson` | `0x00000259` | There's an error in the config json |
+| `ErrorProcessingResponseJson` | `0x0000025D` | There's an error in the response json |
+| `ErrorFromService` | `0x00000328` | An error was returned from the service |
+| `ErrorNotImplemented` | `0x00000A28` | The requested capability is not implemented |

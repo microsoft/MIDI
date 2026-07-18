@@ -1,7 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiFunctionBlockDiscoveryRequests
-namespace: Windows.Devices.Midi2.Utilties.Messages
+namespace: Windows.Devices.Midi2.Utilities.Messages
 type: enum
 description: MIDI 2.0 function block discovery request flags
 ---

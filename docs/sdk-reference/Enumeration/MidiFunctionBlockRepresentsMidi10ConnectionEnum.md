@@ -12,7 +12,7 @@ Indicates the MIDI 1.0 capability restrictions for a function block. Note that W
 
 | Property | Value | Description |
 | -------- | ------- | ------ |
-| `Not10` | `0x0` | This function block is not a MIDI 1.0 function. |
-| `YesBandwidthUnrestricted` | `0x1` | This block represents a MIDI 1.0 function, but has the ability to receive messages faster than the original MIDI 1.0 protocol speed. |
-| `YesBandwidthRestricted` | `0x2` | This block represents a MIDI 1.0 function, and applications should take care to send messages to it at the normal MIDI 1.0 protocol speed. |
-| `Reserved` | `0x3` | Reserved for future use. |
+| `Not10` | `0x00000000` | This function block is not a MIDI 1.0 function. |
+| `YesBandwidthUnrestricted` | `0x00000001` | This block represents a MIDI 1.0 function, but has the ability to receive messages faster than the original MIDI 1.0 protocol speed. |
+| `YesBandwidthRestricted` | `0x00000002` | This block represents a MIDI 1.0 function, and applications should take care to send messages to it at the normal MIDI 1.0 protocol speed. |
+| `Reserved` | `0x00000003` | Reserved for future use. |

@@ -15,5 +15,7 @@ Plugin-specific configuration return results.
 
 | Property | Description |
 | --- | --- |
-| `Status` | Indicates success or failure for the config. |
-| `ResponseJson` | Json with more details. This is transport-specific. |
+| `Status` | A `MidiServiceConfigResponseStatus` value indicating success or failure. |
+| `ServiceErrorCode` | A transport-specific error code if the operation failed. |
+| `ServiceErrorMessage` | A human-readable error message from the service if the operation failed. |
+| `ResponseJson` | A `JsonObject` with transport-specific response details. |

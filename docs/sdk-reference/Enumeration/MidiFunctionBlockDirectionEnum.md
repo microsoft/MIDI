@@ -12,7 +12,7 @@ Indicates the message flow for a function block. Note that this is, per the spec
 
 | Property | Value | Description |
 | -------- | ------- | ------ |
-| `Undefined` | `0x0` | Unknown or undefined |
-| `BlockInput` | `0x1` | This block represents an input function, from the block's point of view. |
-| `BlockOutput` | `0x2` | This block represents an output function, from the block's point of view. |
-| `Bidirectional` | `0x3` | This block represents a bidirectional function. |
+| `Undefined` | `0x00000000` | Unknown or undefined |
+| `BlockInput` | `0x00000001` | This block represents an input function, from the block's point of view. |
+| `BlockOutput` | `0x00000002` | This block represents an output function, from the block's point of view. |
+| `Bidirectional` | `0x00000003` | This block represents a bidirectional function. |

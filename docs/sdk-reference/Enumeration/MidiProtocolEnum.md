@@ -10,6 +10,6 @@ description: Indicates the protocol configuration for a endpoint, group, or func
 
 | Property | Value | Description |
 | --------------- | ---------- | ----------- |
-| `Default` | `0x0` | No configured value | 
-| `Midi1` | `0x1` | Configured for MIDI 1.0 | 
-| `Midi2` | `0x2` | Configured for MIDI 2.0 | 
+| `Default` | `0x00000000` | No configured value | 
+| `Midi1` | `0x00000001` | Configured for MIDI 1.0 | 
+| `Midi2` | `0x00000002` | Configured for MIDI 2.0 | 

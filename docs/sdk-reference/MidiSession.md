@@ -13,9 +13,10 @@ An application may have any number of sessions open. For example, the applicatio
 
 ## Properties
 
+| Property | Description |
+| -------- | ----------- |
 | `SessionId`  | Generated Id for the session |
 | `Name` | Name for this session. To change the name after creating the session, use the `UpdateName()` function. This will update the service |
-| `Settings`  | The settings used to create this session |
 | `IsOpen` | True if this session is open and ready to use |
 | `Connections` | Map of all endpoint connections created through this session. Disconnecting an endpoint using `DisconnectEndpointConnection` will remove the connection from this map. The map key is the generated connection GUID that identifies an instance of an endpoint connection |
 
@@ -27,9 +28,10 @@ The two static functions are factory-pattern methods for creating a new session.
 
 ## Methods
 
-| `CreateEndpointConnection(String)` | Create a new connection to the specified endpoint device Id |
-| `CreateEndpointConnection(String, Boolean)` | Create a new connection to the specified endpoint device Id, with an option to reconnect if a device is disconnected and then reconnected while the connection object is alive |
-| `CreateEndpointConnection(String, Boolean, IMidiEndpointConnectionSettings)` | Create a new connection to the specified endpoint device Id, using the provided reconnect value and endpoint-specific settings |
+| Method | Description |
+| ------ | ----------- |
+| `CreateEndpointConnection(endpointDeviceId)` | Create a new connection to the specified endpoint device Id |
+| `CreateEndpointConnection(endpointDeviceId, settings)` | Create a new connection to the specified endpoint device Id, with the provided [`MidiEndpointConnectionSettings`](./MidiEndpointConnectionSettings.md) |
 | `DisconnectEndpointConnection(endpointConnectionId)` | Cleanly disconnect an endpoint connection and remove it from the connection map |
 | `UpdateName(newName)` | Update the name of this session locally and in the MIDI Service |
 
