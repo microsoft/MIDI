@@ -28,7 +28,7 @@ github: https://github.com/psychlist1972
 
 
 # MIDI site-specific
-sdk_idl_root_url: "https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/"
+sdk_idl_root_url: "https://github.com/microsoft/MIDI/tree/main/src/api/Client/WinRT/t/core"
 
 # Build settings
 markdown: kramdown
