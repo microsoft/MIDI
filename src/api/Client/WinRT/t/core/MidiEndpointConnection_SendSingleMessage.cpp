@@ -151,7 +151,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (SUCCEEDED(interop->GetBuffer(&dataPointer, &dataSize)))
             {
                 // make sure we're not going to spin past the end of the buffer
-                if (byteOffset + byteCount > bufferReference.Capacity())
+                if (static_cast<uint64_t>(byteOffset) + byteCount > bufferReference.Capacity())
                 {
                     LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 

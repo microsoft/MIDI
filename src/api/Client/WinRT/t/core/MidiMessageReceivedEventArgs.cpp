@@ -447,8 +447,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         uint8_t messageWordCount = GetValidMessageWordCount();
 
-        // make sure there's enough room in the array to hold the data we have
-        if (words.size() - startIndex < messageWordCount)
+        // make sure there's enough room in the array to hold the data we have.
+        // Use 64-bit arithmetic so a large startIndex cannot underflow/overflow the check.
+        if (static_cast<uint64_t>(startIndex) + messageWordCount > words.size())
             return 0;
 
         // copy over the words
@@ -504,8 +505,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         uint8_t messageByteCount = GetValidMessageWordCount() * sizeof(uint32_t);
 
-        // make sure there's enough room in the array to hold the data we have
-        if (bytes.size() - startIndex < messageByteCount)
+        // make sure there's enough room in the array to hold the data we have.
+        // Use 64-bit arithmetic so a large startIndex cannot underflow/overflow the check.
+        if (static_cast<uint64_t>(startIndex) + messageByteCount > bytes.size())
             return 0;
 
         // copy over the bytes
@@ -542,7 +544,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             uint8_t numWords = GetValidMessageWordCount();
             uint8_t numBytes = numWords * sizeof(uint32_t);
 
-            if (byteOffset + numBytes > valueSize)
+            // Use 64-bit arithmetic so byteOffset near UINT32_MAX cannot overflow the check.
+            if (static_cast<uint64_t>(byteOffset) + numBytes > valueSize)
             {
                 // no room
                 return 0;

@@ -77,10 +77,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (SUCCEEDED(interop->GetBuffer(&dataPointer, &dataSize)))
             {
-                if (byteOffset + byteCount > dataSize)
+                if (static_cast<uint64_t>(byteOffset) + byteCount > dataSize)
                 {
-                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
                     TraceLoggingWrite(
                         Midi2SdkTelemetryProvider::Provider(),
                         MIDI_SDK_TRACE_EVENT_ERROR,
@@ -98,10 +96,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
                 // make sure we're not going to spin past the end of the buffer
-                if (byteOffset + byteCount > bufferReference.Capacity())
+                if (static_cast<uint64_t>(byteOffset) + byteCount > bufferReference.Capacity())
                 {
-                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
                     TraceLoggingWrite(
                         Midi2SdkTelemetryProvider::Provider(),
                         MIDI_SDK_TRACE_EVENT_ERROR,
@@ -117,22 +113,75 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
                 }
 
+                // validate we have whole words
+                if (byteCount == 0 || byteCount % sizeof(uint32_t) != 0)
+                {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Send failed. Buffer size is not a multiple of 4 bytes", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                    );
+                    OutputDebugString(L"MIDI App SDK: Send failed. Buffer size is not a multiple of uint32 size\n");
+
+                    return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageOther;
+                }
+
+                // validate that the number of words is not > the largest allowed transmission
+                if (byteCount / sizeof(uint32_t) > GetSupportedMaxMidiWordsPerTransmission())
+                {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Send failed. Buffer size is not a multiple of 4 bytes", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                    );
+                    OutputDebugString(L"MIDI App SDK: Send failed. Buffer size is not a multiple of uint32 size\n");
+
+                    return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageOther;
+                }
+
 
                 // endianness becomes a concern so we need to make sure we treat this as words
                 uint8_t* byteDataPointer = dataPointer + byteOffset;
 
+                // Validate the data using the ump iterator
 
+                internal::UmpBufferIterator bufferIterator(reinterpret_cast<internal::UmpBufferIterator::pointer>(byteDataPointer), byteCount / sizeof(uint32_t));
 
-                // TODO: Validate the data using the ump iterator
 
                 // TODO: Validate length isn't > largest transmission size
 
+                for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
+                {
+                    if (!it.CurrentMessageSeemsComplete())
+                    {
+                        LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Incomplete messages in send buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                        );
+
+                        OutputDebugString(L"MIDI App SDK: Incomplete messages in send buffer.\n");
+
+                        return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
+                    }
+                }
 
 
-
-
-
-
+                // we've validated everything so go ahead and send
 
                 auto result = SendMessageRaw(
                     m_endpointTransport, 

@@ -531,12 +531,12 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        m_enumeratedPorts.Clear();
+            m_enumeratedPorts.Clear();
 
-        if (m_watcher)
-        {
-            m_watcher.Start();
-        }
+            if (m_watcher)
+            {
+                m_watcher.Start();
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -612,15 +612,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.Flow() == flow && port.Number() == portNumber)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                return port;
+                if (port.Flow() == flow && port.Number() == portNumber)
+                {
+                    return port;
+                }
             }
-        }
 
-        return nullptr;
+            return nullptr;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -641,17 +641,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
+            auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
 
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.Flow() == flow)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.Flow() == flow)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -677,15 +677,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -710,15 +710,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.Flow() == flow && port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.Flow() == flow && port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -742,15 +742,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -775,15 +775,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -809,15 +809,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -843,15 +843,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -879,15 +879,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -912,15 +912,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.Flow() == flow && internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.Flow() == flow && internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -944,15 +944,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -977,15 +977,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-        for (auto const& [key, port] : m_enumeratedPorts)
-        {
-            if (port.Flow() == flow && port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
+            for (auto const& [key, port] : m_enumeratedPorts)
             {
-                results.Append(port);
+                if (port.Flow() == flow && port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
+                {
+                    results.Append(port);
+                }
             }
-        }
 
-        return results.GetView();
+            return results.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {

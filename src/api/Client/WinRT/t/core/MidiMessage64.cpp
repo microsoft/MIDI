@@ -164,7 +164,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // get a pointer to the buffer
             if (SUCCEEDED(interop->GetBuffer(&value, &valueSize)))
             {
-                if (byteOffset + numBytesInPacket > valueSize)
+                if (static_cast<uint64_t>(byteOffset) + numBytesInPacket > valueSize)
                 {
                     // no room
                     return 0;

@@ -135,14 +135,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
+            winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
 
-        winrt::hstring selector =
-            L"System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\"  AND " +
-            L"System.Devices.ContainerId:=\"" + internal::GuidToString(containerId) + L"\" AND " +
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+            winrt::hstring selector =
+                L"System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\"  AND " +
+                L"System.Devices.ContainerId:=\"" + internal::GuidToString(containerId) + L"\" AND " +
+                L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
-        return selector;
+            return selector;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -161,14 +161,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
+            winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
-        winrt::hstring selector =
-            L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\" AND " +
-            L"System.Devices.ContainerId:=\"" + internal::GuidToString(containerId) + L"\" AND " +
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+            winrt::hstring selector =
+                L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\" AND " +
+                L"System.Devices.ContainerId:=\"" + internal::GuidToString(containerId) + L"\" AND " +
+                L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
-        return selector;
+            return selector;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -204,16 +204,16 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
-        winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
+            winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
+            winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
 
-        winrt::hstring selector =
-            L"(System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\" OR " +
-            L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\") AND " +
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+            winrt::hstring selector =
+                L"(System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\" OR " +
+                L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\") AND " +
+                L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
-        return selector;
+            return selector;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -231,15 +231,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
-        winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
+            winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
+            winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
 
-        winrt::hstring selector =
-            L"System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\" AND " +
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+            winrt::hstring selector =
+                L"System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\" AND " +
+                L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
-        return selector;
+            return selector;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -257,15 +257,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
-        winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
+            winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
+            winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
 
-        winrt::hstring selector =
-            L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\" AND " +
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+            winrt::hstring selector =
+                L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\" AND " +
+                L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
-        return selector;
+            return selector;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -301,14 +301,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
+            winrt::hstring sourceClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1SourcePortInterfaceClass()).c_str();
 
-        winrt::hstring selector =
-            L"System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\" AND " +
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True AND " +
-            L"System.Devices.Parent:=\"" + parentDeviceInstanceId + L"\"";
+            winrt::hstring selector =
+                L"System.Devices.InterfaceClassGuid:=\"" + sourceClass + L"\" AND " +
+                L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True AND " +
+                L"System.Devices.Parent:=\"" + parentDeviceInstanceId + L"\"";
 
-        return selector;
+            return selector;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -327,14 +327,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
+            winrt::hstring destinationClass = internal::GuidToString(MidiLegacyPortDeviceInformation::Midi1DestinationPortInterfaceClass()).c_str();
 
-        winrt::hstring selector =
-            L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\" AND " +
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True AND " +
-            L"System.Devices.Parent:=\"" + parentDeviceInstanceId + L"\"";
+            winrt::hstring selector =
+                L"System.Devices.InterfaceClassGuid:=\"" + destinationClass + L"\" AND " +
+                L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True AND " +
+                L"System.Devices.Parent:=\"" + parentDeviceInstanceId + L"\"";
 
-        return selector;
+            return selector;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -1002,25 +1002,25 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-        auto props = winrt::single_threaded_vector<winrt::hstring>();
+            auto props = winrt::single_threaded_vector<winrt::hstring>();
 
-        props.Append(L"System.ItemNameDisplay");
-        props.Append(L"System.Devices.FriendlyName");
+            props.Append(L"System.ItemNameDisplay");
+            props.Append(L"System.Devices.FriendlyName");
 
-        props.Append(L"System.Devices.ContainerId");
-        props.Append(L"System.Devices.Parent");
-        props.Append(L"System.Devices.InterfaceClassGuid");
+            props.Append(L"System.Devices.ContainerId");
+            props.Append(L"System.Devices.Parent");
+            props.Append(L"System.Devices.InterfaceClassGuid");
 
-        //props.Append(STRING_DEVPKEY_Device_Parent);
-        props.Append(STRING_DEVPKEY_Device_LastKnownParent);
-        props.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
-        props.Append(STRING_PKEY_MIDI_PortAssignedGroupIndex);
-        props.Append(STRING_PKEY_MIDI_NativeDataFormat);
-        props.Append(STRING_PKEY_MIDI_TransportLayer);
-        props.Append(STRING_PKEY_MIDI_AssociatedUMP);
-        props.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+            //props.Append(STRING_DEVPKEY_Device_Parent);
+            props.Append(STRING_DEVPKEY_Device_LastKnownParent);
+            props.Append(STRING_PKEY_MIDI_DriverDeviceInterface);
+            props.Append(STRING_PKEY_MIDI_PortAssignedGroupIndex);
+            props.Append(STRING_PKEY_MIDI_NativeDataFormat);
+            props.Append(STRING_PKEY_MIDI_TransportLayer);
+            props.Append(STRING_PKEY_MIDI_AssociatedUMP);
+            props.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
 
-        return props.GetView();
+            return props.GetView();
         }
         catch (winrt::hresult_error const& ex)
         {
