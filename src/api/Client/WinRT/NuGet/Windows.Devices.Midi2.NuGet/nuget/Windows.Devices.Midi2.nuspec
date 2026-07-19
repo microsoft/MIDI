@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Windows.Devices.Midi2</id>
-		<version>0.99.30-devpreview.1</version>
+		<version>0.99.31-devpreview.2</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services App SDK. Temporary package to use until the metadata is in an official Windows SDK</description>
 		<license type="expression">MIT</license>
@@ -33,7 +33,9 @@
       <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.pri" />
       <file target="runtimes\win-x64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\x64\Release\Windows.Devices.Midi2.pdb" />
      
-      <!-- The Arm64X binaries are output to the Arm64EC folder by Visual Studio -->
+      
+      
+      <!-- The Arm64X implementation binaries are output to the Arm64EC folder by Visual Studio -->
 
       <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.dll" />
       <file target="runtimes\win-arm64\native\"  src="..\..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\arm64EC\Release\Windows.Devices.Midi2.pri" />
