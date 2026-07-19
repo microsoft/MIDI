@@ -425,7 +425,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resources.rc">
+    <ResourceCompile Include="Resource.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
