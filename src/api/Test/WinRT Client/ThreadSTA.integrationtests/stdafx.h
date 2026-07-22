@@ -20,7 +20,6 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <winrt/Windows.Devices.Midi2.Diagnostics.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 #include <winrt/Windows.Devices.Midi2.ClientPlugins.h>
-#include <winrt/Windows.Devices.Midi2.Reporting.h>
 #include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 
 
@@ -28,7 +27,6 @@ using namespace winrt::Windows::Devices::Midi2;
 using namespace winrt::Windows::Devices::Midi2::Diagnostics;
 using namespace winrt::Windows::Devices::Midi2::Enumeration;
 using namespace winrt::Windows::Devices::Midi2::ClientPlugins;
-using namespace winrt::Windows::Devices::Midi2::Reporting;
 using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 
 #include <iostream>
@@ -43,12 +41,6 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 #include "MidiDefs.h"
 
 #include "..\SdkTestCommon.h"
-
-#include "MidiEndpointConnectionBufferTests.h"
-#include "MidiEndpointConnectionTests.h"
-#include "MidiEndpointListenerTests.h"
-#include "MidiMessageSchedulerTests.h"
-#include "MidiSessionTests.h"
 
 
 

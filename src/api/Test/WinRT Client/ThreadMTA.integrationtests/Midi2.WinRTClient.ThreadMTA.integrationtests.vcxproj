@@ -21,7 +21,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{7C9608FE-4AA4-46D8-ACB8-840C6B216A59}</ProjectGuid>
+    <ProjectGuid>{D9E85EA2-43FA-4317-98E9-B6BD37AF38AD}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <CppWinRTOptimized>true</CppWinRTOptimized>
@@ -30,7 +30,7 @@
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
     <CppWinRTLibs>true</CppWinRTLibs>
     <MinimalCoreWin>true</MinimalCoreWin>
-    <ProjectName>Midi2.WinRTClient.Session.integrationtests</ProjectName>
+    <ProjectName>Midi2.WinRTClient.ThreadMTA.integrationtests</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -150,19 +150,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiComExtensionsTests.cpp" />
-    <ClCompile Include="MidiEndpointConnectionBufferTests.cpp" />
-    <ClCompile Include="MidiEndpointConnectionTests.cpp" />
-    <ClCompile Include="MidiEndpointListenerTests.cpp" />
-    <ClCompile Include="MidiMessageSchedulerTests.cpp" />
-    <ClCompile Include="MidiSessionTests.cpp" />
+    <ClCompile Include="MidiEventHandlerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiComExtensionsTests.h" />
-    <ClInclude Include="MidiEndpointConnectionBufferTests.h" />
-    <ClInclude Include="MidiEndpointConnectionTests.h" />
-    <ClInclude Include="MidiEndpointListenerTests.h" />
-    <ClInclude Include="MidiMessageSchedulerTests.h" />
-    <ClInclude Include="MidiSessionTests.h" />
+    <ClInclude Include="MidiEventHandlerTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

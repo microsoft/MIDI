@@ -9,21 +9,14 @@
 
 #pragma once
 
-class MidiEndpointCreationThreadTests
-    : public WEX::TestClass<MidiEndpointCreationThreadTests>
+class MidiEventHandlerTests
+    : public WEX::TestClass<MidiEventHandlerTests>
 {
 public:
 
-    BEGIN_TEST_CLASS(MidiEndpointCreationThreadTests)
-        TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.BluetoothMidiTransport.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.DiagnosticsTransport.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSTransport.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.MidiSrvTransport.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.NetworkMidiTransport.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.VirtualMidiTransport.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.VirtualPatchBayTransport.dll")
+    BEGIN_TEST_CLASS(MidiEventHandlerTests)
+        TEST_CLASS_PROPERTY(L"TestClassification", L"Integration")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"usbmidi2.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"MidiSrv.exe")
@@ -46,9 +39,7 @@ private:
 
     
     wil::unique_event_nothrow m_receiverReady;
-
     wil::unique_event_nothrow m_receiveComplete;
-
 
 };
 

@@ -10,12 +10,14 @@
 #include "stdafx.h"
 
 
+#include "MidiEventHandlerTests.h"
+
 
 
 #define NUM_MESSAGES_TO_TRANSMIT 10
 
 _Use_decl_annotations_
-void MidiEndpointCreationThreadTests::ReceiveThreadWorker(MidiSession session, winrt::hstring endpointId)
+void MidiEventHandlerTests::ReceiveThreadWorker(MidiSession session, winrt::hstring endpointId)
 {
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -34,7 +36,7 @@ void MidiEndpointCreationThreadTests::ReceiveThreadWorker(MidiSession session, w
             UNREFERENCED_PARAMETER(args);
 
             auto callbackThreadId = GetCurrentThreadId();
-            std::cout << "Message received on callback thread: " << callbackThreadId << std::endl;
+            std::cout << "Message received on lambda thread: " << callbackThreadId << std::endl;
 
             countMessagesReceived++;
 
@@ -74,7 +76,7 @@ void MidiEndpointCreationThreadTests::ReceiveThreadWorker(MidiSession session, w
 
 
 _Use_decl_annotations_
-void MidiEndpointCreationThreadTests::SendThreadWorker(MidiSession session, winrt::hstring endpointId)
+void MidiEventHandlerTests::SendThreadWorker(MidiSession session, winrt::hstring endpointId)
 {
     auto threadId = GetCurrentThreadId();
 
@@ -96,8 +98,10 @@ void MidiEndpointCreationThreadTests::SendThreadWorker(MidiSession session, winr
 
 
 
-void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
+void MidiEventHandlerTests::TestCreateNewSession()
 {
+    winrt::init_apartment(winrt::apartment_type::multi_threaded);
+
     m_receiveComplete.create();
     m_receiverReady.create();
 
@@ -110,7 +114,7 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
     auto session = MidiSession::Create(L"Multi-threaded Test");
 
     // create loopback A on thread A
-    std::thread workerThreadA(&MidiEndpointCreationThreadTests::ReceiveThreadWorker, this, session, MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    std::thread workerThreadA(&MidiEventHandlerTests::ReceiveThreadWorker, this, session, MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
     workerThreadA.detach();
 
     if (!m_receiverReady.wait(10000))
@@ -125,7 +129,7 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
     }
 
     // create loopback B on thread B
-    std::thread workerThreadB(&MidiEndpointCreationThreadTests::SendThreadWorker, this, session, MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    std::thread workerThreadB(&MidiEventHandlerTests::SendThreadWorker, this, session, MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
     workerThreadB.detach();
 
     if (!m_receiveComplete.wait(20000))
@@ -139,8 +143,6 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
         std::cout << "Session: Message receive complete notification received." << std::endl;
     }
 
-    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
-    // these don't go out of scope here and self-destruct, so we set them to nullptr
     session = nullptr;
 
 }

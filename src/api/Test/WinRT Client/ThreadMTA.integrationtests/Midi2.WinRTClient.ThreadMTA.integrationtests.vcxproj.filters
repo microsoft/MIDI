@@ -18,19 +18,7 @@
     <ClInclude Include="stdafx.h">
       <Filter>Support</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointConnectionBufferTests.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointConnectionTests.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointListenerTests.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessageSchedulerTests.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSessionTests.h">
+    <ClInclude Include="MidiEventHandlerTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MidiComExtensionsTests.h">
@@ -38,19 +26,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiEndpointConnectionBufferTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointConnectionTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointListenerTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiMessageSchedulerTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSessionTests.cpp">
+    <ClCompile Include="MidiEventHandlerTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="MidiComExtensionsTests.cpp">
