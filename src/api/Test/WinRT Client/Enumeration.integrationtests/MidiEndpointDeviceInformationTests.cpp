@@ -108,8 +108,6 @@ void MidiEndpointDeviceInformationTests::TestFindAll()
     {
         std::wcout << L"Endpoint: " << ep.Name().c_str() << std::endl;
     }
-
-
 }
 
 
