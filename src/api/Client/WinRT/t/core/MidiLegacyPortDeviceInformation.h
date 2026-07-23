@@ -57,7 +57,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         midi2enum::Midi1PortFlow Flow() const noexcept { return m_portFlow; }
         uint32_t Number() const noexcept { return m_portNumber; }
 
-        midi2::MidiGroup Group() const noexcept { return MidiGroup(internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_PortAssignedGroupIndex, 0)); }
+        midi2::MidiGroup Group() const noexcept { return MidiGroup(static_cast<uint8_t>(internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_PortAssignedGroupIndex, 0))); }
 
         midi2enum::MidiEndpointNativeDataFormat NativeDataFormat() const noexcept
         {
