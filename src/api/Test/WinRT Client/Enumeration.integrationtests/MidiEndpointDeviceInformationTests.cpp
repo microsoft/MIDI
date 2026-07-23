@@ -111,3 +111,41 @@ void MidiEndpointDeviceInformationTests::TestFindAll()
 
 
 }
+
+
+
+void MidiEndpointDeviceInformationTests::ValidateAssociatedMidi1Ports()
+{
+    auto endpoints = MidiEndpointDeviceInformation::FindAll();
+
+    VERIFY_IS_TRUE(endpoints.Size() > 0);
+
+    for (auto const& ep : endpoints)
+    {
+        std::wcout << L"Endpoint: " << ep.Name().c_str() << std::endl;
+
+        auto ports = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(ep.EndpointDeviceId());
+
+        std::map<std::tuple<uint32_t, uint8_t>, bool> groupMap;
+
+        for (auto const& port : ports)
+        {
+            // check to ensure we don't have duplicate group/flow combos. This is to verify we don't have another github issue #1060
+            if (groupMap.find(std::make_tuple(static_cast<uint32_t>(port.Flow()), port.Group().DisplayValue())) != groupMap.end())
+            {
+                // duplicate group and flow
+                VERIFY_FAIL();
+            }
+            else
+            {
+                groupMap[std::make_tuple(static_cast<uint32_t>(port.Flow()), port.Group().DisplayValue())] = true;
+            }
+
+            std::wcout << L" - Port: " << port.Name().c_str() << std::endl;
+            std::wcout << L"   - Id: " << port.PortDeviceId().c_str() << std::endl;
+            std::wcout << L"   - Group: " << port.Group().ToString() << std::endl;
+            std::wcout << L"   - Flow: " << static_cast<uint32_t>(port.Flow()) << std::endl;
+        }
+
+    }
+}

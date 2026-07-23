@@ -24,6 +24,7 @@ public:
     TEST_METHOD(TestWalkUpToParent);
 
     TEST_METHOD(TestFindAll);
+    TEST_METHOD(ValidateAssociatedMidi1Ports);
 
 
 private:
