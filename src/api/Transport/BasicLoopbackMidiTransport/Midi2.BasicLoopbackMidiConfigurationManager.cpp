@@ -40,6 +40,55 @@ CMidi2BasicLoopbackMidiConfigurationManager::Initialize(
 }
 
 
+
+_Use_decl_annotations_
+HRESULT
+CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandListEntries(
+    json::JsonObject const& responseObject)
+{
+    auto definitions = TransportState::Current().GetEndpointTable()->GetDeviceListSnapshot();
+
+    // add the entries to the response object
+
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY
+    //
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY 
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_NAME_KEY
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY
+
+    auto entriesArray = json::JsonArray();
+
+    for (auto const& def : definitions)
+    {
+        auto obj = json::JsonObject();
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY, 
+            json::JsonValue::CreateStringValue(winrt::to_hstring(def.AssociationId)));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY,
+            json::JsonValue::CreateStringValue(def.CreatedEndpointInterfaceId.c_str()));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_NAME_KEY,
+            json::JsonValue::CreateStringValue(def.EndpointName.c_str()));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
+            json::JsonValue::CreateStringValue(def.EndpointDescription.c_str()));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
+            json::JsonValue::CreateBooleanValue(def.IsMuted));
+
+        entriesArray.Append(obj);
+    }
+
+    responseObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY, entriesArray);
+
+    return S_OK;
+}
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
@@ -98,7 +147,8 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
-        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);        // mute implies unmute
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, true);
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
@@ -141,6 +191,19 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
                 internal::ResourceGetWString(IDS_ERROR_MISSING_ASSOCIATION_ID));
         }
 
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES)
+    {
+        auto hr = ExecuteCommandListEntries(responseObject);
+
+        if (SUCCEEDED(hr))
+        {
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
+        else
+        {
+            RETURN_IF_FAILED(hr);
+        }
     }
     else
     {
@@ -528,15 +591,55 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                 auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationIdGuid);
 
-                //auto uniqueId = device->Definition.EndpointUniqueIdentifier;
+                // The association id comes from untrusted client JSON. GetDevice
+                // returns null for an unknown / already-removed id, and a device
+                // that has been shut down but not yet removed has a null
+                // Definition. Guard both before dereferencing.
+                if (device == nullptr || device->Definition == nullptr)
+                {
+                    TraceLoggingWrite(
+                        MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Remove requested for unknown or already-removed association id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(associationId.c_str(), "association id")
+                    );
 
-                auto removalHr = TransportState::Current().GetEndpointManager()->DeleteEndpoint(device->Definition);
+                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                        responseObject,
+                        BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                        internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+
+                    o.MoveNext();
+                    continue;
+                }
+
+                auto endpointManager = TransportState::Current().GetEndpointManager();
+                if (endpointManager == nullptr)
+                {
+                    // service is shutting down; nothing more we can do
+                    TraceLoggingWrite(
+                        MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Endpoint manager unavailable during remove", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(associationId.c_str(), "association id")
+                    );
+
+                    o.MoveNext();
+                    continue;
+                }
+
+                auto removalHr = endpointManager->DeleteEndpoint(device->Definition);
 
                 LOG_IF_FAILED(removalHr);
 
                 if (SUCCEEDED(removalHr))
                 {
-
                     TransportState::Current().GetEndpointTable()->RemoveDevice(associationIdGuid);
 
                     internal::SetConfigurationResponseObjectSuccess(responseObject);

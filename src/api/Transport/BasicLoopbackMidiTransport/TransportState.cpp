@@ -26,7 +26,11 @@ TransportState& TransportState::Current()
 HRESULT
 TransportState::ConstructEndpointManager()
 {
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BasicLoopbackMidiEndpointManager>(&m_endpointManager));
+    wil::com_ptr<CMidi2BasicLoopbackMidiEndpointManager> endpointManager;
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BasicLoopbackMidiEndpointManager>(&endpointManager));
+
+    auto lock = m_stateLock.lock_exclusive();
+    m_endpointManager = std::move(endpointManager);
 
     return S_OK;
 }
@@ -35,7 +39,11 @@ TransportState::ConstructEndpointManager()
 HRESULT
 TransportState::ConstructConfigurationManager()
 {
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BasicLoopbackMidiConfigurationManager>(&m_configurationManager));
+    wil::com_ptr<CMidi2BasicLoopbackMidiConfigurationManager> configurationManager;
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BasicLoopbackMidiConfigurationManager>(&configurationManager));
+
+    auto lock = m_stateLock.lock_exclusive();
+    m_configurationManager = std::move(configurationManager);
 
     return S_OK;
 }

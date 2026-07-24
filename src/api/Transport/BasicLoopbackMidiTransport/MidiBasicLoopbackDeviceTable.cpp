@@ -39,14 +39,16 @@ std::shared_ptr<MidiBasicLoopbackDevice> MidiBasicLoopbackDeviceTable::GetDevice
 
     for (auto const& [key, device] : m_devices)
     {
-        // device may be shut down (Definition reset) but not yet removed,
-        // so guard both the device and its definition.
-        if (device && device->Definition)
+        if (!device) continue;
+
+        // Snapshot the definition shared_ptr so a concurrent device Shutdown()
+        // (which resets Definition) can't tear the pointer during the deref.
+        auto definition = device->Definition;
+        if (!definition) continue;
+
+        if (cleanId == internal::NormalizeEndpointInterfaceIdWStringCopy(definition->CreatedEndpointInterfaceId))
         {
-            if (cleanId == internal::NormalizeEndpointInterfaceIdWStringCopy(device->Definition->CreatedEndpointInterfaceId))
-            {
-                return device;
-            }
+            return device;
         }
     }
 
@@ -108,17 +110,46 @@ bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierInUseForLoopback(
 
     for (auto const& [key, device] : m_devices)
     {
-        if (device && device->Definition)
+        if (!device) continue;
+
+        auto definition = device->Definition;
+        if (!definition) continue;
+
+        if (cleanId == internal::ToLowerTrimmedWStringCopy(definition->EndpointUniqueIdentifier))
         {
-            if (cleanId == internal::ToLowerTrimmedWStringCopy(device->Definition->EndpointUniqueIdentifier))
-            {
-                return true;
-            }
+            return true;
         }
     }
 
     return false;
 }
+
+
+
+std::vector<MidiBasicLoopbackDeviceDefinition> MidiBasicLoopbackDeviceTable::GetDeviceListSnapshot()
+{
+    std::vector<MidiBasicLoopbackDeviceDefinition> results;
+
+    // lock so no adds/removes happen while building the list
+    auto lock = m_devicesLock.lock_shared();
+
+    for (auto const& [key, device] : m_devices)
+    {
+        // device may be shut down (Definition reset) but not yet removed,
+        // so guard both the device and its definition.
+        if (device && device->Definition)
+        {
+            // snapshot so no pointer issues if removed from table after this point
+            results.push_back(*(device->Definition));
+        }
+    }
+
+    return results;
+}
+
+
+
+
 
 
 HRESULT MidiBasicLoopbackDeviceTable::Shutdown()

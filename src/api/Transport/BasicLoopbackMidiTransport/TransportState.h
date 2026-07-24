@@ -23,32 +23,53 @@ public:
 
     wil::com_ptr<CMidi2BasicLoopbackMidiEndpointManager> GetEndpointManager()
     {
+        auto lock = m_stateLock.lock_shared();
         return m_endpointManager;
     }
 
     wil::com_ptr<CMidi2BasicLoopbackMidiConfigurationManager> GetConfigurationManager()
     {
+        auto lock = m_stateLock.lock_shared();
         return m_configurationManager;
     }
 
     std::shared_ptr<MidiBasicLoopbackDeviceTable> GetEndpointTable()
     {
+        auto lock = m_stateLock.lock_shared();
         return m_endpointTable;
     }
 
     std::shared_ptr<TransportWorkQueue> GetEndpointWorkQueue()
     {
+        auto lock = m_stateLock.lock_shared();
         return m_workQueue;
     }
 
     HRESULT Shutdown()
     {
-        m_endpointManager.reset();
-        m_configurationManager.reset();
-
-        if (m_endpointTable)
+        // Snapshot-and-clear the managed members under the lock, but run the
+        // (potentially long) table shutdown outside the lock so we don't hold
+        // m_stateLock across a call that itself takes other locks.
+        wil::com_ptr<CMidi2BasicLoopbackMidiEndpointManager> endpointManager;
+        wil::com_ptr<CMidi2BasicLoopbackMidiConfigurationManager> configurationManager;
+        std::shared_ptr<MidiBasicLoopbackDeviceTable> endpointTable;
         {
-            LOG_IF_FAILED(m_endpointTable->Shutdown());
+            auto lock = m_stateLock.lock_exclusive();
+
+            endpointManager = std::move(m_endpointManager);
+            m_endpointManager.reset();
+
+            configurationManager = std::move(m_configurationManager);
+            m_configurationManager.reset();
+
+            // keep m_endpointTable / m_workQueue alive (never reset) so late
+            // accessor calls still return a valid, empty object rather than null.
+            endpointTable = m_endpointTable;
+        }
+
+        if (endpointTable)
+        {
+            LOG_IF_FAILED(endpointTable->Shutdown());
         }
 
         return S_OK;
@@ -63,6 +84,10 @@ private:
     TransportState();
     ~TransportState();
 
+
+    // guards the managed pointers below against concurrent accessor reads
+    // and Shutdown()/Construct*() writes.
+    wil::srwlock m_stateLock;
 
     wil::com_ptr<CMidi2BasicLoopbackMidiEndpointManager> m_endpointManager{ nullptr };
     wil::com_ptr<CMidi2BasicLoopbackMidiConfigurationManager> m_configurationManager{ nullptr };
