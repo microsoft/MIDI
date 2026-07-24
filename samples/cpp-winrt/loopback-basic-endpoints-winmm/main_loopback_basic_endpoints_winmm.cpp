@@ -60,6 +60,7 @@ bool CreateLoopbackEndpoints()
 
         auto midi1ports = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(m_endpointId);
 
+        // we expect 2 new ports (one source, one destination)
         if (midi1ports.Size() > 1)
         {
             std::wcout << L"Found " << midi1ports.Size() << L" MIDI 1.0 ports for the loopback endpoint." << std::endl;
