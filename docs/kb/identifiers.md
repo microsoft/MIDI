@@ -47,6 +47,8 @@ Additionally, the device information includes other identifiers which may be use
 | `MidiDeclaredEndpointInfo.ProductInstanceId` | UMP Endpoint discovery | This is the unique id that the endpoint declares. It is not guaranteed to be unique across brands or models, and is an optional but recommended part of MIDI 2.0 discovery. In the case of a single device with multiple endpoints (as can happen with Network MIDI 2.0) it is shared across all endpoints for the device. Nevertheless, this is at least as reliable as the old WinMM port names. |
 | `MidiDeclaredDeviceIdentity.*` | UMP Endpoint discovery | This contains the SysEx Ids, Device Family and Device Model Ids as declared by the device. When provided (it is optional) it is expected to remain consistent |
 
+In addition to this, the parent device information includes VID/PID etc. But be careful about relying solely on this as a customer may have more than one copy of the device attached.
+
 ## USB MIDI 2.0
 
 The DDI for the USB MIDI 2.0 implementation on Windows includes the ability to request the VID, PID, Serial Number, and Manufacturer Name for a device. This makes it easy for us to provide that information as part of the device information.
@@ -58,6 +60,8 @@ For USB devices, the VID/PID are a good combination for recognizing a type of US
 | `MidiEndpointTransportSuppliedInfo.VendorId` | USB Driver | The USB VID for the parent device for this endpoint. If VID and PID are both 0, the information was not provided. |
 | `MidiEndpointTransportSuppliedInfo.ProductId` | USB Driver | The USB PID for the parent device for this endpoint. If VID and PID are both 0, the information was not provided. |
 | `MidiEndpointTransportSuppliedInfo.SerialNumber` | USB Driver or other | The USB `iSerialNumber`, if provided, for the parent of this endpoint. May also contain other provided serial numbers when the device is not a USB device. |
+
+This information is also available on the parent device. It may seem strange to have it in both places, but it's retrieved in a different way in each case because we didn't want to change the MIDI 1.0 USB DDI.
 
 ## USB MIDI 1.0 Ports as UMP Endpoints
 
@@ -128,6 +132,5 @@ For devices which support it, prefer MIDI-CI as the mechanism for identifying a 
 
 Additionally, the usual [MIDI 1.0 SysEx Identity Request](http://midi.teragonaudio.com/tech/midispec/identity.htm) can provide this information to you for many devices. The information provided in this is approximately the same as what is provided in MIDI 2.0 discovery, for the Device Identity.
 
-For USB MIDI (1.0 and 2.0) devices, the VID and PID will identify the make and model of the device for you when they are available.
+For USB MIDI (1.0 and 2.0) devices, the VID and PID  identify the make and model of the device for you when they are available.
 
-> NOTE: The VID/PID aren't available for MIDI 1.0 devices at the time of this writing, but it's being worked on before the official production release.
