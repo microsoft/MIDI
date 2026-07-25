@@ -46,12 +46,28 @@ void MidiBasicLoopbackTests::TestCreateLoopback()
 
         endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
 
-
         std::cout
             << "Loopback Endpoint: " << std::endl
             << " - " << winrt::to_string(endpointId)
             << " - " << winrt::to_string(response.CreatedLoopbackEntry().Name())
             << std::endl << std::endl;
+
+
+        // Call GetActiveLoopbackEntries and validate that the new entry is present in the list
+
+        auto entries = MidiBasicLoopbackManager::GetActiveLoopbackEntries();
+        bool thisLoopbackEntryFound = false;
+
+        for (auto const& entry : entries)
+        {
+            if (entry.AssociationId() == response.CreatedLoopbackEntry().AssociationId())
+            {
+                thisLoopbackEntryFound = true;
+                break;
+            }
+        }
+
+        VERIFY_IS_TRUE(thisLoopbackEntryFound);
 
         // Give a hoot. Don't pollute.
         MidiBasicLoopbackRemovalConfig removalConfig(response.CreatedLoopbackEntry().AssociationId());

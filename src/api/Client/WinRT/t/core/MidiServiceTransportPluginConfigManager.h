@@ -26,6 +26,10 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         static svc::MidiServiceConfigResponse SendCommand(
             _In_ svc::MidiServiceTransportCommand const& command) noexcept;
 
+        static bool QueryCapability(
+            _In_ winrt::guid const& transportId,
+            _In_ winrt::hstring const& capabilityQueryKey) noexcept;
+
     private:
 
         static json::JsonObject InternalSendConfigJsonAndGetResponse(
