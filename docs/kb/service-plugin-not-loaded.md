@@ -11,7 +11,7 @@ Windows MIDI Services supports the creation of Transport (and in the future, Tra
 
 The Windows MIDI Service does a signing check for all loaded service plugins, including our own. If the plugin has not been signed using a certificate recognized by this PC, then the plugin will not load.
 
-To get around this, developers, and those testing out unsigned plugins, should turn on Developer Mode in Windows Settings. This bypasses the signing check.
+To get around this, developers, and those testing out unsigned plugins, should turn on Developer Mode in Windows Settings. This bypasses the signing check. It's required to be on for as long as the unsigned plugin is used.
 
 > <h4>NOTE<h4>
 > Bypassing the signing check could put your PC at risk by loading malicious code into the MIDI Service. Do this only for plugins you know and trust.

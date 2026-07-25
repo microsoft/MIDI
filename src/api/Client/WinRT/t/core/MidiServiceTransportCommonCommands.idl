@@ -21,6 +21,8 @@ namespace Windows.Devices.Midi2.ServiceConfig
     {
         [noexcept] static String QueryCapabilities{ get; };
 
+        [noexcept] static String ListEntries{ get; };
+
         [noexcept] static String RestartEndpoint{ get; };
         [noexcept] static String DisconnectEndpoint{ get; };
         [noexcept] static String ReconnectEndpoint{ get; };

@@ -46,7 +46,6 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 
 #include "MidiEndpointConnectionBufferTests.h"
 #include "MidiEndpointConnectionTests.h"
-#include "MidiEndpointCreationThreadTests.h"
 #include "MidiEndpointListenerTests.h"
 #include "MidiMessageSchedulerTests.h"
 #include "MidiSessionTests.h"

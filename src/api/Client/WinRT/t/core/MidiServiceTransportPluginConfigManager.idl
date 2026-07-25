@@ -29,6 +29,11 @@ namespace Windows.Devices.Midi2.ServiceConfig
 
         [noexcept] static MidiServiceConfigResponse SendCommand(
             MidiServiceTransportCommand command);
+
+        [noexcept] static Boolean QueryCapability(
+            Guid transportId,
+            String capabilityQueryKey);
+
     }
 }
 

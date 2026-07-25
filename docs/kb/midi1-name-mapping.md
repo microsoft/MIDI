@@ -7,6 +7,10 @@ description: How to to map stored MIDI WinMM port names to current endpoints
 
 # WinMM Naming
 
+> !This document is under review and needs to be updated.!
+
+
+
 WinMM had a specific approach to naming MIDI 1.0 ports which resulted in names like `MIDIOUT2 (Some Device)`. That name worked well for decades, but was not what manufacturers and customers have asked for. So in Windows MIDI Services, we have introduced modern port naming, which uses the devices `iJack` name when available.
 
 However, for decades, applications have had to store the MIDI 1.0 WinMM port names in their project and other files to be able to pull up the correct port when next launched. As a result, our default MIDI 1.0 port names in Windows MIDI Services are the WinMM-compatible names, complete with the naming bugs inherent in that approach (for example: devices with the same USB Vendor and Product Id, but different names, will result in both devices sharing one of the names).

@@ -13,8 +13,11 @@
 
 #include "midi1_message_defs.h"
 
+#include "MidiBytestreamToUmpMessageConverterState.h"
+
 namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 {
+
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1Message(
         internal::MidiTimestamp const timestamp,
@@ -638,34 +641,61 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
     }
 
 
-
     _Use_decl_annotations_
     collections::IVector<uint32_t> MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(
-        midi2::MidiGroup const& group,
-        collections::IIterable<uint8_t> const& midi1Bytes,
-        bool const allowRunningStatus
+        _In_ midi2::MidiGroup  const& group,
+        _In_ collections::IIterable<uint8_t> const& midi1Bytes,
+        _In_ bool const allowRunningStatus,
+        _In_ msgs::MidiBytestreamToUmpMessageConverterState const& converterState
     ) noexcept
     {
+        bool useRetainedConverter = converterState != nullptr;
+
         try
         {
-            bytestreamToUMP converter;
+            auto state = winrt::get_self<MidiBytestreamToUmpMessageConverterState>(converterState);
 
             auto words = winrt::single_threaded_vector<uint32_t>();
 
-            converter.defaultGroup = group.Index();
-            converter.enableRunningStatus = allowRunningStatus;
+            std::shared_ptr<bytestreamToUMP> converter;
+
+            if (useRetainedConverter)
+            {
+                converter = state->InternalGetConverter();
+            }
+            else
+            {
+                converter = std::make_shared<bytestreamToUMP>();
+            }
+
+            converter->defaultGroup = group.Index();
+            converter->enableRunningStatus = allowRunningStatus;
 
             auto it = midi1Bytes.First();
             while (it.HasCurrent())
             {
-                converter.bytestreamParse(it.Current());
+                converter->bytestreamParse(it.Current());
 
-                while (converter.availableUMP())
+                while (converter->availableUMP())
                 {
-                    words.Append(converter.readUMP());
+                    words.Append(converter->readUMP());
                 }
 
                 it.MoveNext();
+
+                // if this is in the middle of SysEx, and there was no F7, then 
+                // we need to dump the current state when we're not retaining
+                // state across calls
+                if (!it.HasCurrent() && !useRetainedConverter)
+                {
+                    converter->dumpSysex7State(false);
+
+                    while (converter->availableUMP())
+                    {
+                        words.Append(converter->readUMP());
+                    }
+                }
+
             }
 
             return words;
@@ -680,6 +710,18 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception converting MIDI 1.0 complete message bytes to UMP words.");
             return winrt::single_threaded_vector<uint32_t>();
         }
+
+    }
+
+
+    _Use_decl_annotations_
+    collections::IVector<uint32_t> MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(
+        midi2::MidiGroup const& group,
+        collections::IIterable<uint8_t> const& midi1Bytes,
+        bool const allowRunningStatus
+    ) noexcept
+    {
+        return ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus, nullptr);
     }
 
     _Use_decl_annotations_

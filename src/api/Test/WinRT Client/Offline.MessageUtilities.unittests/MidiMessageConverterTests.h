@@ -33,6 +33,8 @@ public:
     TEST_METHOD(TestConvertUMPToHexBytes);
     TEST_METHOD(TestConvertHexBytesToUMP);
 
+    TEST_METHOD(TestIncompleteSysEx7Conversion);
+    TEST_METHOD(TestStatefulSysEx7Conversion);
 
 
 };

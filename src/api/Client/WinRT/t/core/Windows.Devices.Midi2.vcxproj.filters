@@ -15,6 +15,9 @@
     <ClCompile Include="MidiApi.cpp">
       <Filter>SDK\Init</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -29,6 +32,9 @@
     <ClInclude Include="winrt_devpkey_util.h" />
     <ClInclude Include="midi_api_mode_defs.h">
       <Filter>SDK\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBytestreamToUmpMessageConverterState.h">
+      <Filter>SDK\Utilities\Messages</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -358,6 +364,9 @@
     </Midl>
     <Midl Include="MidiApiModeEnum.idl">
       <Filter>SDK\Common</Filter>
+    </Midl>
+    <Midl Include="MidiBytestreamToUmpMessageConverterState.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

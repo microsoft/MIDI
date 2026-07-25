@@ -11,6 +11,12 @@ Before reviewing this, [please see "Mapping MIDI 1.0 Port Concepts" here](/mappi
 
 Although the modern UMP-based MIDI 1.0 and MIDI 2.0 Windows.Devices.Midi2 API works with both MIDI 1.0 and MIDI 2.0 devices, there are times when you may want to partially transition to the new API while retaining existing legacy MIDI 1 API functionality, or you may need to map between artifacts from the two APIs.
 
+## Fundamental Differences
+
+MIDI UMP Endpoint and MIDI 1.0 Port creation are both asynchronous processes in Windows MIDI Services. Apps that are used to detecting a physical hardware connection and then immediate port availability will not work correctly.
+
+In addition, the presence of the UMP endpoint for a device does not mean that the MIDI 1.0 ports are also immediately available. These are two separate steps. In the case of MIDI 2.0 devices with function blocks, there will be several seconds before the MIDI 1.0 ports are properly aligned with the device declarations. 
+
 ## The Legacy enumeration namespace
 
 `Windows.Devices.Midi2.Enumeration` includes a `Legacy` sub-namespace specifically focused on integration with older APIs. This includes a class for WinMM/WinRT MIDI 1.0 port device information, as well as a Device Watcher implementation just for MIDI 1.0 ports.
@@ -47,7 +53,7 @@ The `MidiLegacyPortDeviceWatcher` maintains a list of all MIDI 1.0 ports, that i
 
 ## Find all MIDI 1.0 ports
 
-If you don't need the updates and efficiency provided by a Device Watcher, you can statically enumerate all the MIDI 1.0 ports, or just the sources (inputs) or destinations (outputs) using the static methods on the `Windows.Devices.Midi2.Enumeration.Legacy.MidiLegacyPortDeviceInformation` type.
+If you don't need the updates and efficiency provided by a Device Watcher, you can statically enumerate all the MIDI 1.0 ports, or just the sources (inputs) or destinations (outputs) using the static methods on the `Windows.Devices.Midi2.Enumeration.Legacy.MidiLegacyPortDeviceInformation` type. These represent a snapshot in time only.
 
 ```cpp
 static IVectorView<MidiLegacyPortDeviceInformation> FindAll()
@@ -105,9 +111,4 @@ Although technically the VID/PID/Serial is information about the parent, we prov
 Each UMP Endpoint has a parent. In the case of USB devices, that will be a physical hardware device.
 
 A call to `MidiEndpointDeviceInformation.GetParentDeviceInformation()` on an existing endpoint will return all the parent device information we believe to be relevant for use with MIDI. This also includes any driver information we were able to retrieve about the device. Note that outside of USB, most transports do not require kernel drivers, so much of this information will be empty.
-
-## Getting the original MIDI 1.0 port names for a user-renamed port
-
-
-
 

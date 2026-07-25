@@ -23,6 +23,7 @@ private:
 
 
 public:
+    std::vector<MidiBasicLoopbackDeviceDefinition> GetDeviceListSnapshot();
 
     std::shared_ptr<MidiBasicLoopbackDevice> GetDevice(_In_ winrt::guid const& associationId);
     std::shared_ptr<MidiBasicLoopbackDevice> GetDeviceById(_In_ std::wstring const& endpointDeviceId);

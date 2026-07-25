@@ -148,6 +148,14 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             _In_ bool const allowRunningStatus
         ) noexcept;
 
+        static collections::IVector<uint32_t> ConvertMidi1CompleteMessageBytesToUmpWords(
+            _In_ midi2::MidiGroup  const& group,
+            _In_ collections::IIterable<uint8_t> const& midi1Bytes,
+            _In_ bool const allowRunningStatus,
+            _In_ msgs::MidiBytestreamToUmpMessageConverterState const& converterState
+        ) noexcept;
+
+
         static collections::IVector<uint8_t> ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(
             _In_ collections::IIterable<uint32_t> const& umpWords
         ) noexcept;
@@ -162,6 +170,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         ) noexcept;
 
     private:
+
         static uint32_t InternalConvertBytes(
             _In_ uint8_t const groupIndex,
             _In_ midi1::IMidiMessage const& originalMessage

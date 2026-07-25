@@ -7,7 +7,7 @@ description: Follow the instructions here to get add/update/remove notifications
 
 In WinRT, a device watcher is a type class which raises events when specific devices are added, removed, or have had property changes. The concept of a device watcher is central to working with all types of devices in Windows. The Windows SDK ships with a general `Windows::Devices::Enumeration::DeviceWatcher` class which can be used for any type of device query.
 
-In Windows MIDI Services, we've provided a specialized version of the device watcher called the `Microsoft::Windows::Devices::Midi2::MidiEndpointDeviceWatcher`. This class takes the research and guesswork out of watching a device, and supports the additional information we capture in custom device properties.
+In Windows MIDI Services, we've provided a specialized version of the device watcher called the `Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceWatcher`. This class takes the research and guesswork out of watching a device, and supports the additional information we capture in custom device properties.
 
 > Using a device watcher is a best practice for most MIDI applications. However, if you want to retrieve a one-time snapshot of active devices, see the [How to Enumerate Endpoints](how-to-enumerate-endpoints) document.
 

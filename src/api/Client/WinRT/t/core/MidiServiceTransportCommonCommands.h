@@ -16,6 +16,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         MidiServiceTransportCommonCommands() = default;
 
         static winrt::hstring QueryCapabilities() noexcept { return MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES; }
+        static winrt::hstring ListEntries() noexcept { return MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES; }
+
         static winrt::hstring RestartEndpoint() noexcept { return MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RESTART_ENDPOINT; }
         static winrt::hstring DisconnectEndpoint() noexcept { return MIDI_CONFIG_JSON_TRANSPORT_COMMAND_DISCONNECT_ENDPOINT; }
         static winrt::hstring ReconnectEndpoint() noexcept { return MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RECONNECT_ENDPOINT; }

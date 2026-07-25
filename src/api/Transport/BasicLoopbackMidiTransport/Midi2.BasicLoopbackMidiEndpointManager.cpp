@@ -71,21 +71,20 @@ CMidi2BasicLoopbackMidiEndpointManager::ProcessWorkQueue()
 
     uint32_t countItemsProcessed{ 0 };
 
-    while (!TransportState::Current().GetEndpointWorkQueue()->IsEmpty())
+    // GetNextWorkItem is now atomic (locked), so drive the loop off its
+    // return value rather than a separate IsEmpty() check, which would be
+    // a TOCTOU against a concurrent enqueue/drain.
+    TransportWorkItem item{ };
+    while (TransportState::Current().GetEndpointWorkQueue()->GetNextWorkItem(item))
     {
-        TransportWorkItem item{ };
-
-        if (TransportState::Current().GetEndpointWorkQueue()->GetNextWorkItem(item))
+        if (item.Type == TransportWorkItemWorkType::Create)
         {
-            if (item.Type == TransportWorkItemWorkType::Create)
-            {
-                LOG_IF_FAILED(CreateEndpoint(item.Definition));
+            LOG_IF_FAILED(CreateEndpoint(item.Definition));
 
-                countItemsProcessed++;
-            }
-
-            // TODO: Process other types of work items
+            countItemsProcessed++;
         }
+
+        // TODO: Process other types of work items
     }
 
     TraceLoggingWrite(

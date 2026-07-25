@@ -24,9 +24,6 @@
     <ClInclude Include="MidiEndpointConnectionTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointCreationThreadTests.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="MidiEndpointListenerTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -45,9 +42,6 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointConnectionTests.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointCreationThreadTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointListenerTests.cpp">

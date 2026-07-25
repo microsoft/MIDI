@@ -210,5 +210,66 @@ void MidiMessageConverterTests::TestConvertUMPToHexBytes()
     {
         VERIFY_ARE_EQUAL(expectedResults[i], actualResults.GetAt(i));
     }
+}
 
+// Status
+// 0x0 Complete SysEx in one UMP
+// 0x1 Start SysEx
+// 0x2 Continue SysEx
+// 0x3 End SysEx
+
+// This verifies that Sysex state is dumped when the end of the input data is reached
+void MidiMessageConverterTests::TestIncompleteSysEx7Conversion()
+{
+    std::vector<uint8_t> bytes = { 0xF0, 0x7E, 0x7F, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
+
+    // assumes group index 5 in the output
+    MidiGroup group(5);
+    std::vector<uint32_t> expectedResults = { 0x35167E7F, 0x00010203, 0x35230405, 0x06000000 };
+
+    auto actualResults = MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(group, bytes, false);
+
+    VERIFY_IS_NOT_NULL(actualResults);
+    VERIFY_ARE_EQUAL(expectedResults.size(), actualResults.Size());
+
+    for (uint32_t i = 0; i < expectedResults.size(); i++)
+    {
+        VERIFY_ARE_EQUAL(expectedResults[i], actualResults.GetAt(i));
+    }
+}
+
+// This verifies that Sysex state works properly across calls
+void MidiMessageConverterTests::TestStatefulSysEx7Conversion()
+{
+    // this is what is used to retain state across calls. You'll want to have
+    // one of these per endpoint/group that you're converting data for. When
+    // it goes out of scope, the state is lost. You can also allocate this using
+    // winrt::make and then explicitly destroy the object, like you would with
+    // any other WinRT type
+    MidiBytestreamToUmpMessageConverterState state;
+
+    std::vector<uint8_t> bytes1 = { 0xF0, 0x7E, 0x7F, 0x00 };
+    std::vector<uint8_t> bytes2 = { 0x01, 0x02 };
+    std::vector<uint8_t> bytes3 = { 0x03, 0x04, 0x05, 0x06, 0xF7 };
+
+    // assumes group index 5 in the output
+    MidiGroup group(5);
+    std::vector<uint32_t> expectedResults = { 0x35167E7F, 0x00010203, 0x35330405, 0x06000000 };
+
+    auto actualResults1 = MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(group, bytes1, false, state);
+    auto actualResults2 = MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(group, bytes2, false, state);
+    auto actualResults3 = MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(group, bytes3, false, state);
+
+    std::vector<uint32_t> actualResults{};
+
+    actualResults.insert(actualResults.end(), actualResults1.begin(), actualResults1.end());
+    actualResults.insert(actualResults.end(), actualResults2.begin(), actualResults2.end());
+    actualResults.insert(actualResults.end(), actualResults3.begin(), actualResults3.end());
+
+    VERIFY_ARE_EQUAL(expectedResults.size(), actualResults.size());
+
+    for (uint32_t i = 0; i < expectedResults.size(); i++)
+    {
+        VERIFY_ARE_EQUAL(expectedResults[i], actualResults[i]);
+    }
 }

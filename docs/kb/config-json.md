@@ -5,7 +5,9 @@ audience: everyone
 description: General information about the MIDI configuration file format.
 ---
 
-It's best to use the Settings application and the transport / processing plugins for Settings to manipulate the file. However, if you edit it by hand, here are some notes.
+**Only the Settings application shall write to the config file.** Although it is just a text file, direct manipulation by users is discouraged, and manipulation by other applications is forbidden and not supported.
+
+It is plain text to enable porting to other PCs, versioning, and more.
 
 > <h4>Important NOTE</h4>
 > The json in the configuration file is an implementation detail, and so may change in the future. We always recommend using our tools to make any changes.

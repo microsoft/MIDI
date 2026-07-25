@@ -391,7 +391,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
             cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
 
-            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(cmd);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
 
             if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
@@ -476,7 +476,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
             cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT);
 
-            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(cmd);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
 
             if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
@@ -547,12 +547,66 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
     collections::IVector<bloop::MidiBasicLoopbackEntry> MidiBasicLoopbackManager::GetActiveLoopbackEntries()
     {
+        auto results = winrt::single_threaded_vector<bloop::MidiBasicLoopbackEntry>();
 
-        // TODO ==============================================
+        try
+        {
+            auto supportsListEntries = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES);
 
+            if (supportsListEntries)
+            {
+                svc::MidiServiceTransportCommand cmd(TransportId());
+                cmd.Verb(svc::MidiServiceTransportCommonCommands::ListEntries());
 
+                auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
 
-        return nullptr;
+                if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+                {
+                    if (serviceResponse.ResponseJson().HasKey(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY))
+                    {
+                        auto entriesJson = serviceResponse.ResponseJson().GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY);
+
+                        for (const auto& jsonEntry : entriesJson)
+                        {
+                            auto entryObject = jsonEntry.GetObject();
+
+                            auto entry = winrt::make_self<MidiBasicLoopbackEntry>();
+
+                            auto associationIdString = entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY, L"");
+
+                            if (associationIdString.empty())
+                            {
+                                // invalid entry
+                                continue;
+                            }
+
+                            entry->InternalInitialize(
+                                winrt::guid(associationIdString),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_NAME_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L""),
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY, L"")
+                            );
+
+                            results.Append(*entry);
+                        }
+                    }
+                }
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting active loopback entries.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting active loopback entries.");
+        }
+
+        return results;
+
     }
 
 

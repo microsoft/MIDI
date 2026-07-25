@@ -408,4 +408,48 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         }
     }
 
+
+
+    _Use_decl_annotations_
+    bool MidiServiceTransportPluginConfigManager::QueryCapability(
+        winrt::guid const& transportId,
+        winrt::hstring const& capabilityQueryKey) noexcept
+    {
+        try
+        {
+            svc::MidiServiceTransportCommand cmd(transportId);
+            cmd.Verb(svc::MidiServiceTransportCommonCommands::QueryCapabilities());
+
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                if (serviceResponse.ResponseJson().HasKey(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES))
+                {
+                    auto capabilitiesJson = serviceResponse.ResponseJson().GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES);
+
+                    if (capabilitiesJson.HasKey(capabilityQueryKey))
+                    {
+                        auto supportsCapability = capabilitiesJson.GetNamedBoolean(capabilityQueryKey);
+
+                        return supportsCapability;
+                    }
+                }
+            }
+            else
+            {
+                // transport doesn't support command query. 
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error from QueryCapability.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception from QueryCapability.");
+        }
+
+        return false;
+    }
 }
