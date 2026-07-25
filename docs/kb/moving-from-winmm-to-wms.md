@@ -25,16 +25,56 @@ Here's the hierarchy in order from broad to specific
 | Group | For a MIDI 1.0 device, this is your port's address. It's logically equivalent to the virtual cable number on the device. |
 | Channel | The address within the message. |
 
-
 ## How this came about
 
-(USB MIDI 1.0 virtual cables in the packet)
+In the driver (and USB MIDI 1.0 specification), USB MIDI 1.0 sends and receive normal MIDI messages using 32 bit packets. There is one stream to/from the USB endpoint.
 
-(MIDI 2.0 moved the address into the message itself, to work across transports)
+| Field | Size (bits) | Description |
+| ----- | ---- | ----------- |
+| Cable Number  | 4 | This is effectively the "port" in the stream |
+| Code Index Number | 4 | This indicates the type of message, like Note on or Off, SysEx start/continue/end |
+| Byte 1 | 8 | Data or status byte |
+| Byte 2 | 8 (but 7 usable) | Data byte |
+| Byte 3 | 8 (but 7 usable) | Data byte |
 
+In the UMP data format, we have the equivalent information. Here's the smallest UMP message packet, which also happens to be used for MIDI 1.0 messages.
 
+| Field | Size (bits) | Description |
+| ----- | ---- | ----------- |
+| Message Type | 4 | This indicates the type of message: 32, 64, 96, or 128 bit, but also the use (System real-time, MIDI 1.0 or MIDI 2.0 channel voice, SysEx 7, etc.) |
+| Group Index  | 4 | This is the group on stream, much like the Cable Number in USB MIDI 1.0 |
+| Remaining Data | n | The remaining data is split across a defined number of 32 bit words. In MIDI 1.0 protocol, the total message is 1 word long, so there are 26 more bits of data
 
-# Concrete Mapping
+Every UMP starts with the same two fields, and the definition of the next fields is set based upon the message type. Here's an expansion for MIDI 1.0 channel voice Note On messages
+
+| Field | Size (bits) | Description |
+| ----- | ---- | ----------- |
+| Message Type | 4 | as above |
+| Group Index  | 4 | as above |
+| Status OpCode | 4 | As used by MIDI 1.0. Dictates how the rest of the message is parsed |
+| Status Channel | 4 | As used by MIDI 1.0 |
+| Note Number | 8 (7 used) | MIDI 1.0 note number, 0-127 |
+| Velocity | 8 (7 used) | MIDI 1.0 velocity value, 0-127 |
+
+The UMP Specification explains how to move MIDI 1.0 data into this format. It's not the same for all messages (like RPN/NRPN and clock) but for Note On/Off, you see that you can simply copy the 3 message bytes into the Status, Note Number, and Velocity fields of the UMP.
+
+The biggest advantage of moving the addressing information directly into the messages, is now other transports, like Network MIDI 2.0, can fully support MIDI 2.0 without having to recreate USB-specific functionality that is needed to address messages.
+
+## Transforming MIDI 1.0 devices into UMP endpoints
+
+MIDI 2.0 devices naturally use UMP as their data format, and fully embrace the "single stream, multiple groups" approach. Although MIDI 1.0 will never disappear (I love my 80s synths), we developed the Windows MIDI Services API and underlying service to fully embrace the future.
+
+Because the group index is now part of the message, we can no longer address ports when sending/receiving. Otherwise, a mismatch between the Group Index and the Virtual Cable would result in undefined behavior. Some implementations of MIDI in other operating systems had this behavior early on, and MIDI Association members agreed it would be confusing even if the group indexes were forced to match the destination group.
+
+Because in Windows we decided to have a unified UMP-based API, we also had to tackle this issue. What we decided to do is to map all MIDI 1.0 streams into UMP-compatible formats. That required aggregating all the MIDI 1.0 endpoints on the device into a stream, and then internally mapping the Group Index with the kernel stream pin number. Each MIDI 1.0 UMP endpoint contains a map which states that `Group 0 is Pin 3 on Interface X`, and `Group 1 is Pin 5 on Interface Y`, etc. 
+
+This is all managed behind the scenes. For USB devices, it's quite a clean mapping because they can have only 16 source and 16 destination cables. 
+
+Custom drivers for things like loopbacks were more troublesome, because inside Windows, they can expose as many pins as they need to, without the USB limitation. For those, we had to change the parsing logic to spin up additional logical endpoints to contain the overflow. That's not as clean, but works. The lack of this feature was part of the source of the initial rollout problem for loopMIDI and similar drivers.
+
+> Note that we ultimately want to eliminate the need for any kernel drivers for MIDI beyond the in-box ones. We know we will not meet that goal 100%, but it is why we have built-in loopback endpoints, as well as virtual device support, and an open architecture for creating transport service plugins using COM. Devices should not become unusable due to a vendor no longer maintaining a driver, and vendor driver bugs should not hold back innovation in MIDI in Windows.
+
+# Concrete Concept Mapping
 
 WinMM is a simple API, but part of that simplicity is because it provides very limited information about ports, and lacks a lot of features customers and developers have requested over the past 30+ years. As a result of that and the integration of MIDI 2.0, the Windows MIDI Services API is somewhat more complex. Here's a mapping of concepts from WinMM to the Windows MIDI Services API.
 
@@ -66,13 +106,13 @@ Windows MIDI Services provides specializations of the WinRT `DeviceWatcher` whic
 
 > Note 2: In WinMM, there's another asynchronous process which looks for new WinMM ports before it makes them available with the specified port number. If you try to use a WinMM API to open a port inside the Watcher's Added event, it's possible the port number will not yet be recognized by WinMM.
 
-You can find samples of both types of watcher at https://aka.ms/midisamples
+You can find samples of both types of watcher at [https://aka.ms/midisamples](https://aka.ms/midisamples)
 
-## Don't store names
+### Don't store names
 
 In WinMM, the only persistent identifier we gave you was the port name. That meant users could never rename them, which was the second-most requested feature after multi-client support. In Windows MIDI Services, customers are free to rename ports using either the legacy names (WinMM-style), new-style names (uses iJack when available), or completely custom names.
 
-> Names are not a persistent identifier
+> Names are not a persistent or durable identifier
 
 In Windows MIDI Services, you have other ways to identify endpoints, using parent device information, unique identifiers, and more. While there is no one solution which will fit every scenario, we recommend, at a minimum, using these as a backup to ensure users are not punished for choosing more meaningful names for their devices.
 
@@ -88,7 +128,7 @@ After creating the connection using the Session object, you will need to wire up
 
 > Your app needs to be ready for incoming messages as soon as you call Open. That means your COM Extensions callbacks are set up if you are using them, message listeners and event handlers are set up if you are using those. In WinMM, it was common in the past to not have buffers set up until after opening the port. This was the cause of a number of app compat issues when we rolled out Windows MIDI Services, because the new stack is just faster for receiving incoming messages.
 
-You can find samples for at https://aka.ms/midisamples
+You can find samples for at [https://aka.ms/midisamples](https://aka.ms/midisamples)
 
 ### Receiving messages only from a single group
 
@@ -100,7 +140,7 @@ For convenience, the Windows MIDI Services client API includes message listeners
 
 There are three types of listeners included in the SDK in the `Windows.Devices.Midi2.ClientPlugins` namespace. You can also create your own listeners by implmenting the `Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin` and `Windows.Devices.Midi2.IMidiMessageReceivedEventSource` interfaces.
 
-You can find samples for Endpoint Listeners at https://aka.ms/midisamples. 
+You can find samples for Endpoint Listeners at [https://aka.ms/midisamples](https://aka.ms/midisamples). 
 
 ## Getting parent device information like VID/PID
 
@@ -130,11 +170,15 @@ static IVector<UInt32> ConvertMidi1CompleteMessageBytesToUmpWords(
             Windows.Devices.Midi2.Utilities.Messages.MidiBytestreamToUmpMessageConverterState converterState
 ```
 
-## Sending messages
+## Sending and receiving messages
 
 In WinMM, there are two primary ways to send messages. `midiOutLongMsg` was used for SysEx messages, and `midiOutShortMsg` for others. In Windows MIDI Services, all MIDI messages are sent the same way. You do not need to distinguish between SysEx or Channel Voice messages other than ensuring they are formatted using the correct UMP message types per the UMP specification.
 
 All methods to send messages are on the `MidiEndpointConnection` type, or the associated COM extension.
+
+Similarly, Windows MIDI Services receives all messages through the `MidiEndpointConnection` type. This is via an event if you use the WinRT events, or via a COM callback if you use the COM extensions.
+
+> The COM callbacks are the only way to receive multiple messages together. The event support is for a single message at a time.
 
 ## Outgoing timestamps
 
@@ -147,4 +191,3 @@ Although the timestamps are currently based on `QueryPerformanceCounter` Always 
 ## Incoming timestamps
 
 In WinMM and WinRT MIDI 1.0, incoming message timestamps are an offset from when the port was opened. In Windows MIDI Services, outgoing and incoming timestamps are offsets from when the PC was booted up. They are 64 bit values, currently in 100ns units, and so will not wrap around in our lifetimes, even if the PC is left on every single day. You do not need to handle any sort of wrapping of these numbers.
-
