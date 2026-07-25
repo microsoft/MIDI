@@ -295,6 +295,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiBytestreamToUmpMessageConverterState.h" />
     <ClInclude Include="midi_api_mode_defs.h" />
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -536,6 +537,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -807,6 +809,7 @@
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiGroup.idl" />
+    <Midl Include="MidiBytestreamToUmpMessageConverterState.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />

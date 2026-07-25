@@ -19,6 +19,7 @@
 #include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 
+using namespace winrt::Windows::Foundation::Collections;
 
 using namespace winrt::Windows::Devices::Midi2;
 //using namespace winrt::Windows::Devices::Midi2::CapabilityInquiry;

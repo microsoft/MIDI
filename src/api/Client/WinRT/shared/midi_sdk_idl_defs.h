@@ -193,10 +193,11 @@
 #define UUID_IMidiMessageConverterStatics					                8087b303-0519-c0de-31d1-ee00E0102000
 #define UUID_IMidiMessageHelperStatics						                8087b303-0519-c0de-31d1-ee00E0103000
 #define UUID_IMidiStreamMessageBuilderStatics				                8087b303-0519-c0de-31d1-ee00E0104000
-#define UUID_IMidiSystemExclusive7MessageHelperStatics                      8087b303-0519-c0de-31d1-dd00E0105000
-//#define UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics            8087b303-0519-c0de-31d1-dd00E0106000
+#define UUID_IMidiSystemExclusive7MessageHelperStatics                      8087b303-0519-c0de-31d1-ee00E0105000
+//#define UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics            8087b303-0519-c0de-31d1-ee00E0106000
 
-
+#define UUID_IMidiBytestreamToUmpMessageConverterState                      8087b303-0519-c0de-31d1-dd00E0108000
+#define UUID_IMidiBytestreamToUmpMessageConverterStateFactory               8087b303-0519-c0de-31d1-ff00E0108000
 
 // ============================================================================
 // Windows.Devices.Midi2.Utilities.Sequencing : Interface number 00E02
