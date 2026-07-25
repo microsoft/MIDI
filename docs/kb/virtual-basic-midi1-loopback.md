@@ -12,7 +12,7 @@ description: All about the MIDI 1.0 basic loopback (MIDI 1.0 app-to-app MIDI) tr
 
 ## Overview
 
-A Virtual Loopback is a mechanism for two or more applications to communicate with each other over MIDI. 
+A Virtual Loopback is a mechanism for two or more applications to communicate with each other over MIDI. It can also be called a "bus", but we use Loopback on Windows due to its historical association with this feature from third-parties.
 
 ## Suggested Uses
 
