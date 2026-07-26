@@ -30,9 +30,9 @@ jobs:
       
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11.6
-      with:
-        runVcpkgInstall: true
-      
+      #with:
+        #runVcpkgInstall: true
+     
     - name: Build Service x86
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=x86
       
