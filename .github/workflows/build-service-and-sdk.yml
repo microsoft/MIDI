@@ -7,8 +7,8 @@ on:
     branches: [ "main" ]
 
 env:
-  MIDI2_SOLUTION: '"${{ github.workspace }}\src\api\Midi2.sln"'
-  SDK_SOLUTION: '"${{ github.workspace }}\src\api\Midi2-AppSDK.sln"'
+  MIDI2_SOLUTION: '${{ github.workspace }}\src\api\Midi2.sln'
+  SDK_SOLUTION: '${{ github.workspace }}\src\api\Midi2-AppSDK.sln'
 jobs:
   build:
     runs-on: windows-latest
@@ -19,9 +19,13 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v3
+      
+    - name: Restore Service NuGet packages
+      run: nuget restore $${{ env.MIDI2_SOLUTION }}
+      
     - name: Build Service x86
-      run: msbuild $MIDI2_SOLUTION /t:Build /p:Configuration=Release /p:Platform=x86
+      run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=x86
     - name: Build Service x64
-      run: msbuild $MIDI2_SOLUTION /t:Build /p:Configuration=Release /p:Platform=x64
+      run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=x64
     - name: Build Service Arm64EC
-      run: msbuild $MIDI2_SOLUTION /t:Build /p:Configuration=Release /p:Platform=Arm64EC
+      run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=Arm64EC
