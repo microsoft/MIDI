@@ -31,14 +31,34 @@ jobs:
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v3
 
-    - name: Setup vcpkg
+    - name: Setup vcpkg - KSA Transport
       uses: lukka/run-vcpkg@v11
       with:
         runVcpkgInstall: true
-        runVcpkgFormatString: '[`install`, `--recurse`]'
-        #vcpkgArguments: 'libmidi2'
-        #vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg.json'
-        #vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg-configuration.json'
+        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/Transport/KSAggregateTransport/vcpkg.json'
+        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/Transport/KSAggregateTransport/vcpkg-configuration.json'
+
+    - name: Setup vcpkg - ByteStreamToUMP Transform
+      uses: lukka/run-vcpkg@v11
+      with:
+        runVcpkgInstall: true
+        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/ByteStreamToUMP/vcpkg.json'
+        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/ByteStreamToUMP/vcpkg-configuration.json'
+
+    - name: Setup vcpkg - UmpProtocolDownscaler Transform
+      uses: lukka/run-vcpkg@v11
+      with:
+        runVcpkgInstall: true
+        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/UmpProtocolDownscaler/vcpkg.json'
+        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/UmpProtocolDownscaler/vcpkg-configuration.json'
+
+    - name: Setup vcpkg - UMPToByteStream Transform
+      uses: lukka/run-vcpkg@v11
+      with:
+        runVcpkgInstall: true
+        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/UMPToByteStream/vcpkg.json'
+        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/UMPToByteStream/vcpkg-configuration.json'
+
      
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v3
