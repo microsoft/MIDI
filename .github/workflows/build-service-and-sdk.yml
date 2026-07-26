@@ -33,8 +33,9 @@ jobs:
 
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
-      #with:
-        #runVcpkgInstall: true
+      with:
+        runVcpkgInstall: true
+        runVcpkgFormatString: '[`install`, `--recurse`]'
         #vcpkgArguments: 'libmidi2'
         #vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg.json'
         #vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg-configuration.json'
