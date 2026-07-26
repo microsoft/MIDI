@@ -5,8 +5,8 @@ on:
     branches: [ "main" ]
     #paths:
     #- 'src\api\**'
-  pull_request:
-    branches: [ "main" ]
+  #pull_request:
+   # branches: [ "main" ]
     #paths:
     #- 'src\api\**'
 
@@ -35,7 +35,8 @@ jobs:
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        # runVcpkgInstall: true
+        runVcpkgInstall: true
+        vcpkgDirectory: '${{ github.workspace }}\vcpkg'
         vcpkgArguments: 'libmidi2'
         vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}\**\vcpkg.json'
         vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}\**\vcpkg-configuration.json'
