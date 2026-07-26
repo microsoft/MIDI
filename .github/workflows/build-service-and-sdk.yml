@@ -1,10 +1,14 @@
-name: Build service and plugins
+name: Build service, plugins, and App SDK
 
 on:
   push:
     branches: [ "main" ]
+    #paths:
+    #- 'src\api\**'
   pull_request:
     branches: [ "main" ]
+    #paths:
+    #- 'src\api\**'
 
 env:
   MIDI2_SOLUTION: '${{ github.workspace }}\src\api\Midi2.sln'
@@ -25,11 +29,9 @@ jobs:
       run: nuget restore ${{ env.MIDI2_SOLUTION }}
       
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
+      uses: lukka/run-vcpkg@v11.6
       with:
-        vcpkgDirectory: '${{ github.workspace }}\vcpkg'
         runVcpkgInstall: true
-        vcpkgJsonGlob: '**\vcpkg.json'
       
     - name: Build Service x86
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=x86
