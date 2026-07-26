@@ -31,19 +31,19 @@ jobs:
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v3
 
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      #with:
+        #runVcpkgInstall: true
+        #vcpkgArguments: 'libmidi2'
+        #vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg.json'
+        #vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg-configuration.json'
+     
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v3
       
     - name: Restore Service NuGet packages for Midi2 Solution
       run: nuget restore ${{ env.MIDI2_SOLUTION }}
 
-    - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        runVcpkgInstall: true
-        vcpkgArguments: 'libmidi2'
-        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg.json'
-        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg-configuration.json'
-     
     - name: Build Service
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=${{ matrix.service-build-platform }}
