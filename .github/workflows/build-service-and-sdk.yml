@@ -31,6 +31,9 @@ jobs:
     - name: Restore Service NuGet packages for Midi2 Solution
       run: nuget restore ${{ env.MIDI2_SOLUTION }}
 
+    - name: Create vcpkg directory
+      run: mkdir '${{ github.workspace }}\vcpkg'
+      
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
