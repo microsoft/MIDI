@@ -13,6 +13,7 @@ on:
 env:
   MIDI2_SOLUTION: '${{ github.workspace }}\src\api\Midi2.sln'
   SDK_SOLUTION: '${{ github.workspace }}\src\api\Midi2-AppSDK.sln'
+  SOLUTION_DIR: '${{ github.workspace }}\src\api'
   
 jobs:
   build:
@@ -38,10 +39,10 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         runVcpkgInstall: true
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+        vcpkgDirectory: '${{ env.SOLUTION_DIR }}\vcpkg'
         vcpkgArguments: 'libmidi2'
-        vcpkgJsonGlob: '${{ github.workspace }}/src/api/**/vcpkg.json'
-        vcpkgConfigurationJsonGlob: '${{ github.workspace }}/src/api/**/vcpkg-configuration.json'
+        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}\**\vcpkg.json'
+        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}\**\vcpkg-configuration.json'
      
     - name: Build Service
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=${{ matrix.service-build-platform }}
