@@ -36,10 +36,10 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         runVcpkgInstall: true
-        vcpkgDirectory: '${{ github.workspace }}\vcpkg'
+        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
         vcpkgArguments: 'libmidi2'
-        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}\**\vcpkg.json'
-        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}\**\vcpkg-configuration.json'
+        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg.json'
+        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg-configuration.json'
      
     - name: Build Service
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=${{ matrix.service-build-platform }}
