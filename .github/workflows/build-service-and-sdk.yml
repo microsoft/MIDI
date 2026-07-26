@@ -9,6 +9,7 @@ on:
 env:
   MIDI2_SOLUTION: '${{ github.workspace }}\src\api\Midi2.sln'
   SDK_SOLUTION: '${{ github.workspace }}\src\api\Midi2-AppSDK.sln'
+  
 jobs:
   build:
     runs-on: windows-latest
@@ -17,15 +18,24 @@ jobs:
       uses: actions/checkout@v4
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v3
+
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v3
-      
-    - name: Restore Service NuGet packages
+    - name: Restore Service NuGet packages for Midi2 Solution
       run: nuget restore ${{ env.MIDI2_SOLUTION }}
+      
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgDirectory: '${{ github.workspace }}\vcpkg'
+        runVcpkgInstall: true
+        vcpkgJsonGlob: '**\vcpkg.json'
       
     - name: Build Service x86
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=x86
+      
     - name: Build Service x64
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=x64
+      
     - name: Build Service Arm64EC
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=Arm64EC
