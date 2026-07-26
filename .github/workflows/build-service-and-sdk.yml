@@ -17,8 +17,8 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v3
     - name: Build Service x86
-      run: msbuild /src/api/midi2.sln /t:Build /p:Configuration=Release /p:Platform=x86
+      run: msbuild \src\api\midi2.sln /t:Build /p:Configuration=Release /p:Platform=x86
     - name: Build Service x64
-      run: msbuild /src/api/midi2.sln /t:Build /p:Configuration=Release /p:Platform=x64
+      run: msbuild \src\api\midi2.sln /t:Build /p:Configuration=Release /p:Platform=x64
     - name: Build Service Arm64EC
-      run: msbuild /src/api/midi2.sln /t:Build /p:Configuration=Release /p:Platform=Arm64EC
+      run: msbuild \src\api\midi2.sln /t:Build /p:Configuration=Release /p:Platform=Arm64EC
