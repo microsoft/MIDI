@@ -1,0 +1,48 @@
+name: Build service, plugins, and App SDK
+
+on:
+  push:
+    branches: [ "main" ]
+    #paths:
+    #- 'src\api\**'
+  pull_request:
+    branches: [ "main" ]
+    #paths:
+    #- 'src\api\**'
+
+env:
+  MIDI2_SOLUTION: '${{ github.workspace }}\src\api\Midi2.sln'
+  SDK_SOLUTION: '${{ github.workspace }}\src\api\Midi2-AppSDK.sln'
+  SOLUTION_DIR: '${{ github.workspace }}\src\api'
+  
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        service-build-platform: [x86, x64, Arm64EC]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4   
+    - name: setup-msbuild
+      uses: microsoft/setup-msbuild@v3
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v3
+    - name: Restore Service NuGet packages for Midi2 Solution
+      run: nuget restore ${{ env.MIDI2_SOLUTION }}
+
+    - name: Create vcpkg directory
+      run: mkdir '${{ github.workspace }}\vcpkg'
+      
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        # runVcpkgInstall: true
+        vcpkgDirectory: '${{ env.SOLUTION_DIR }}\vcpkg'
+        vcpkgArguments: 'libmidi2'
+        vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}\**\vcpkg.json'
+        vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}\**\vcpkg-configuration.json'
+     
+    - name: Build Service
+      run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=${{ matrix.service-build-platform }}
