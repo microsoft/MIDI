@@ -27,6 +27,9 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: true
+
+    - name: Checkout vcpkg
+      run: git submodule update --init --recursive
         
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v3
@@ -35,6 +38,7 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         runVcpkgInstall: true
+        runVcpkgFormatString: '[`install`, `--recurse`, `--clean-after-build`, `--x-install-root`, `$[env.SOLUTION_DIR]/Transport/KSAggregateTransport/`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
         vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/Transport/KSAggregateTransport/vcpkg.json'
         vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/Transport/KSAggregateTransport/vcpkg-configuration.json'
 
@@ -42,6 +46,7 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         runVcpkgInstall: true
+        runVcpkgFormatString: '[`install`, `--recurse`, `--clean-after-build`, `--x-install-root`, `$[env.SOLUTION_DIR]/Transform/ByteStreamToUMP/`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
         vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/ByteStreamToUMP/vcpkg.json'
         vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/ByteStreamToUMP/vcpkg-configuration.json'
 
@@ -49,6 +54,7 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         runVcpkgInstall: true
+        runVcpkgFormatString: '[`install`, `--recurse`, `--clean-after-build`, `--x-install-root`, `$[env.SOLUTION_DIR]/Transform/UmpProtocolDownscaler/`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
         vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/UmpProtocolDownscaler/vcpkg.json'
         vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/UmpProtocolDownscaler/vcpkg-configuration.json'
 
@@ -56,6 +62,7 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         runVcpkgInstall: true
+        runVcpkgFormatString: '[`install`, `--recurse`, `--clean-after-build`, `--x-install-root`, `$[env.SOLUTION_DIR]/Transform/UMPToByteStream/`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`]'
         vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/UMPToByteStream/vcpkg.json'
         vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/Transform/UMPToByteStream/vcpkg-configuration.json'
 
