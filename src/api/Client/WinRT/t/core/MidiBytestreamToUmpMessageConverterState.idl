@@ -10,7 +10,6 @@
 import "MidiApiContracts.idl";
 
 
-
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [contract(MidiMessageUtilityApiContract, 1)]
@@ -21,6 +20,6 @@ namespace Windows.Devices.Midi2.Utilities.Messages
     {
         MidiBytestreamToUmpMessageConverterState();
 
-        String Tag{ get; set; };
+        [noexcept] String Tag;
     }
 }

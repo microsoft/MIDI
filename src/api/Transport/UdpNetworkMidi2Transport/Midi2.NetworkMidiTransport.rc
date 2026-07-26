@@ -99,6 +99,13 @@ BEGIN
     IDS_PLUGIN_METADATA_NAME            "Network MIDI 2.0 (UDP) PROTOTYPE"
     IDS_PLUGIN_METADATA_DESCRIPTION     "(Prototype) Provides host and client Network MIDI 2.0 (UDP) capabilities"
     IDS_PLUGIN_METADATA_AUTHOR          "Microsoft"
+
+
+    IDS_ERROR_PARSING_JSON              "Error parsing JSON. Is it valid?"
+    IDS_ERROR_MISSING_ENTRY_IDENTIFIER  "Missing entry identifier."
+    IDS_ERROR_MISSING_NAME              "Missing or blank endpoint name."
+    IDS_ERROR_CREATION_FAILED           "Endpoint creation failed for an unknown reason."
+    IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."
 END
 
 IDR_MIDI2NETWORKMIDITRANSPORT REGISTRY "Midi2.NetworkMidiTransport.rgs"
