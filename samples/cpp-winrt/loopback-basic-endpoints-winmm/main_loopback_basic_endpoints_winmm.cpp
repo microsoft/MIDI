@@ -87,7 +87,7 @@ bool CreateLoopbackEndpoints()
                     if (result == MMSYSERR_NOERROR)
                     {
                         std::wcout
-                            << L" - caps.szPname: " << caps.szPname << std::endl
+                            << L" - caps.szPname: " << caps.szPname << std::endl;
                     }
                     else
                     {
@@ -104,7 +104,7 @@ bool CreateLoopbackEndpoints()
                     if (result == MMSYSERR_NOERROR)
                     {
                         std::wcout
-                            << L" - caps.szPname: " << caps.szPname << std::endl
+                            << L" - caps.szPname: " << caps.szPname << std::endl;
                     }
                     else
                     {

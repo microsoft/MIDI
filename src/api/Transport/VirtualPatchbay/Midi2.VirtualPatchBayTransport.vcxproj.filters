@@ -50,13 +50,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Midi2.VirtualPatchBayTransport.def">
       <Filter>Source Files</Filter>
     </None>
     <None Include="Midi2.VirtualPatchBayTransport.rgs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h">
@@ -114,5 +114,8 @@
     <Midl Include="Midi2VirtualPatchBayTransport.idl">
       <Filter>Source Files</Filter>
     </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
 </Project>

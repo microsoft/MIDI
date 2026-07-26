@@ -23,19 +23,20 @@ using namespace ABI::Windows::Foundation;
 
 void MidiRegistrationTests::TestRegistration()
 {
-    std::cout << "** This test functions on the installed registrations. It does not use the project SDK files, so run only after manifest is registered" << std::endl;
+    //winrt::init_apartment();
+    //std::cout << "** This test functions on the installed registrations. It does not use the project SDK files, so run only after manifest is registered" << std::endl;
 
-    // loop through list of registered types and verify the Ro APIs can find them
+    //// loop through list of registered types and verify the Ro APIs can find them
 
-    ComPtr<IUriRuntimeClassFactory> uriFactory;
-    HRESULT hr = RoGetActivationFactory(
-        HStringReference(RuntimeClass_Windows_Foundation_Uri).Get(),
-        IID_PPV_ARGS(&uriFactory)
-    );
+    //ComPtr<IUriRuntimeClassFactory> uriFactory;
+    //HRESULT hr = RoGetActivationFactory(
+    //    HStringReference(RuntimeClass_Windows_Foundation_Uri).Get(),
+    //    IID_PPV_ARGS(&uriFactory)
+    //);
 
-    if (SUCCEEDED(hr)) {
-        // Use uriFactory to create instances of Uri
-    }
+    //if (SUCCEEDED(hr)) {
+    //    // Use uriFactory to create instances of Uri
+    //}
 
 }
 
