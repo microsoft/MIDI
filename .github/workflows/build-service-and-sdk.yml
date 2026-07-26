@@ -24,12 +24,16 @@ jobs:
         service-build-platform: [x86, x64, Arm64EC]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4   
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v3
 
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v3
+      
     - name: Restore Service NuGet packages for Midi2 Solution
       run: nuget restore ${{ env.MIDI2_SOLUTION }}
 
@@ -37,7 +41,7 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         #runVcpkgInstall: true
-        vcpkgArguments: 'libmidi2'
+        #vcpkgArguments: 'libmidi2'
         vcpkgJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg.json'
         vcpkgConfigurationJsonGlob: '${{ env.SOLUTION_DIR }}/**/vcpkg-configuration.json'
      
