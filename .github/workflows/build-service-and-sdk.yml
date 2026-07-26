@@ -21,7 +21,7 @@ jobs:
       uses: NuGet/setup-nuget@v3
       
     - name: Restore Service NuGet packages
-      run: nuget restore $${{ env.MIDI2_SOLUTION }}
+      run: nuget restore ${{ env.MIDI2_SOLUTION }}
       
     - name: Build Service x86
       run: msbuild ${{ env.MIDI2_SOLUTION }} /t:Build /p:Configuration=Release /p:Platform=x86
