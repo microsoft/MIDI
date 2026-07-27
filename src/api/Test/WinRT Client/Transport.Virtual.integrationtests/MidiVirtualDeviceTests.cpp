@@ -149,10 +149,123 @@ void MidiVirtualDeviceTests::TestCreateVirtualDevice()
         VERIFY_IS_NOT_NULL(clientEndpointInfo);
 
 
-        // TODO: Should do some other virtual device functional tests here, like send/receive etc.
+        // Send/receive test: send a set of MIDI 2.0 Note On messages from the
+        // virtual device (device-side connection) to the client-side connection,
+        // and verify the count and content of what the client receives.
+
+        LOG_OUTPUT(L"Creating client-side connection for send/receive test");
+
+        auto clientConnection = session.CreateEndpointConnection(createdClientEndpointId);
+        VERIFY_IS_NOT_NULL(clientConnection);
+
+        wil::unique_event_nothrow allMessagesReceived;
+        allMessagesReceived.create();
+
+        const uint32_t numberOfMessagesToSend = 10;
+
+        // Build the expected MIDI 2.0 Note On messages.
+        // MIDI 2.0 Channel Voice (Message Type 4) Note On (status 0x9).
+        // word0: 0x4 | group | 0x9 | channel | noteNumber | attributeType
+        // word1: velocity (16 bits) | attribute data (16 bits)
+        const uint8_t group = 0;
+        const uint8_t channel = 0;
+        const uint8_t attributeType = 0;
+        const uint16_t attributeData = 0x0000;
+
+        std::vector<std::pair<uint32_t, uint32_t>> expectedMessages;
+        for (uint32_t i = 0; i < numberOfMessagesToSend; i++)
+        {
+            uint8_t noteNumber = static_cast<uint8_t>(60 + i);          // notes 60..69
+            uint16_t velocity = static_cast<uint16_t>(0x1000 + i);      // distinct velocities
+
+            uint32_t word0 =
+                (0x4u << 28) |
+                (static_cast<uint32_t>(group & 0x0F) << 24) |
+                (0x9u << 20) |
+                (static_cast<uint32_t>(channel & 0x0F) << 16) |
+                (static_cast<uint32_t>(noteNumber) << 8) |
+                (static_cast<uint32_t>(attributeType));
+
+            uint32_t word1 =
+                (static_cast<uint32_t>(velocity) << 16) |
+                (static_cast<uint32_t>(attributeData));
+
+            expectedMessages.push_back({ word0, word1 });
+        }
+
+        uint32_t receivedMessageCount{ 0 };
+        bool allMessageContentValid{ true };
+
+        auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+            {
+                VERIFY_IS_NOT_NULL(sender);
+                VERIFY_IS_NOT_NULL(args);
+
+                uint32_t index = receivedMessageCount;
+
+                // verify message type
+                if (args.MessageType() != MidiMessageType::Midi2ChannelVoice64)
+                {
+                    allMessageContentValid = false;
+                }
+                else if (index < expectedMessages.size())
+                {
+                    // verify content against what we sent
+                    auto message = args.GetMessagePacket().as<MidiMessage64>();
+
+                    if (message.Word0() != expectedMessages[index].first ||
+                        message.Word1() != expectedMessages[index].second)
+                    {
+                        allMessageContentValid = false;
+                    }
+                }
+
+                receivedMessageCount++;
+
+                if (receivedMessageCount == numberOfMessagesToSend)
+                {
+                    allMessagesReceived.SetEvent();
+                }
+            };
+
+        auto messageEventToken = clientConnection.MessageReceived(MessageReceivedHandler);
+
+        VERIFY_IS_TRUE(clientConnection.Open());
+
+        LOG_OUTPUT(L"Sending MIDI 2.0 Note On messages from the virtual device to the client");
+
+        std::vector<IMidiUniversalPacket> packetList;
+        for (auto const& expected : expectedMessages)
+        {
+            packetList.push_back(
+                MidiMessage64(MidiClock::TimestampConstantSendImmediately(), expected.first, expected.second));
+        }
+
+        auto sendResult = connection.SendMultipleMessagesPacketList(packetList);
+        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(sendResult));
+
+        LOG_OUTPUT(L"Waiting for the client to receive all messages");
+        if (!allMessagesReceived.wait(5000))
+        {
+            LOG_OUTPUT(L"Timed out waiting for messages");
+        }
+
+        // verify the correct number of messages were received
+        VERIFY_ARE_EQUAL(receivedMessageCount, numberOfMessagesToSend);
+
+        // verify the content of each received message was as expected
+        VERIFY_IS_TRUE(allMessageContentValid);
+
+        clientConnection.MessageReceived(messageEventToken);
+
+        packetList.clear();
+
+        LOG_OUTPUT(L"Disconnecting client-side connection");
+        session.DisconnectEndpointConnection(clientConnection.ConnectionId());
+        clientConnection = nullptr;
 
 
-    
+
         LOG_OUTPUT(L"Removing message processing plugin");
         connection.RemoveMessageProcessingPlugin(virtualDevice.PluginId());
 
