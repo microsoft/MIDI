@@ -428,27 +428,29 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
                 DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
     }
 
-    // supports MPE
-    if (SupportsMidiPolyphonicExpression)
-    {
-        destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropTrue });
-    }
-    else
-    {
-        destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
-    }
-
-    // cc automation interval
     if (Feature_Servicing_MIDI2RecommendedCCIntervalProp::IsEnabled())
     {
+        // cc automation interval
         // write this value no matter what.
-        destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
+        destination.push_back({ {PKEY_MIDI_RecommendedCCAutomationIntervalMS, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
+
+        // supports MPE (this was being stored in the wrong property before)
+        if (SupportsMidiPolyphonicExpression)
+        {
+            destination.push_back({ {PKEY_MIDI_SupportsMidiPolyphonicExpression, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropTrue });
+        }
+        else
+        {
+            destination.push_back({ {PKEY_MIDI_SupportsMidiPolyphonicExpression, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
+        }
+
     }
     else
     {
+        // this writes the wrong property, but this is what shipped
         if (RecommendedControlChangeIntervalMilliseconds != 0)
         {
             destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
@@ -459,6 +461,19 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
             destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
         }
+
+        // supports MPE (NOTE: This is the wrong property, but this is what was shipped)
+        if (SupportsMidiPolyphonicExpression)
+        {
+            destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropTrue });
+        }
+        else
+        {
+            destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
+        }
+
 
     }
 
