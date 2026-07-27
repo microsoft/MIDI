@@ -226,6 +226,10 @@ CMidi2BasicLoopbackMidiEndpointManager::DeleteEndpoint(
 
     RETURN_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(definition->CreatedShortClientInstanceId.c_str()));
 
+    // Also need to remove from internal list
+
+    TransportState::Current().GetEndpointTable()->RemoveDevice(definition->AssociationId);
+
     return S_OK;
 }
 

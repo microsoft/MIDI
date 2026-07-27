@@ -31,8 +31,12 @@ public:
 
     TEST_METHOD(TestCreateLoopback);
     TEST_METHOD(TestCreateLegacyPorts);
-    
+
     TEST_METHOD(TestUmpSendReceive);
+
+    // Issue GH1070: WinMM ports for a basic loopback must be able to be
+    // re-opened after being closed.
+    TEST_METHOD(TestReopenLegacyWinMMPorts);
 
 private:
 

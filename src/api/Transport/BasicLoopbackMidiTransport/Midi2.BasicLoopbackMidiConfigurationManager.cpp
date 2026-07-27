@@ -612,8 +612,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
                         internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
 
-                    o.MoveNext();
-                    continue;
+                    return S_FALSE;
                 }
 
                 auto endpointManager = TransportState::Current().GetEndpointManager();
@@ -630,8 +629,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(associationId.c_str(), "association id")
                     );
 
-                    o.MoveNext();
-                    continue;
+                    return E_FAIL;
                 }
 
                 auto removalHr = endpointManager->DeleteEndpoint(device->Definition);
@@ -657,6 +655,13 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(L"Failed to remove device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingWideString(configurationJsonSection, "json")
                     );
+
+                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                        responseObject,
+                        BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_REMOVAL_FAILED,
+                        internal::ResourceGetWString(IDS_ERROR_ENDPOINT_REMOVAL_FAILED));
+
+                    return S_FALSE;
                 }
 
                 o.MoveNext();

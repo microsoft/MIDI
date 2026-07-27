@@ -107,7 +107,12 @@ CMidi2BasicLoopbackMidiBidi::Shutdown()
 
     if (device)
     {
-        LOG_IF_FAILED(device->Shutdown());
+        // This Bidi represents a single client connection. The device itself
+        // is owned by the endpoint table and must survive so the endpoint can
+        // be reopened. Only detach our callback -- do NOT call device->Shutdown(),
+        // which would reset the shared Definition and permanently disable the
+        // endpoint for future connections (regression: GitHub #1070).
+        LOG_IF_FAILED(device->DisconnectClient());
     }
 
     return S_OK;
