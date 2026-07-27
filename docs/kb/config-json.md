@@ -5,12 +5,12 @@ audience: everyone
 description: General information about the MIDI configuration file format.
 ---
 
-**Only the Settings application shall write to the config file.** Although it is just a text file, direct manipulation by users is discouraged, and manipulation by other applications is forbidden and not supported.
+**Only the Settings application shall write to the config file.** Although it is just a text file, direct manipulation by users is discouraged, and manipulation by other applications is forbidden and not supported. We reserve the right to change the format at any point in the future, without notification. Any documentation provided is for convenience, and does not indicate a contract with customers or developers.
 
 It is plain text to enable porting to other PCs, versioning, and more.
 
 > <h4>Important NOTE</h4>
-> The json in the configuration file is an implementation detail, and so may change in the future. We always recommend using our tools to make any changes.
+> The json in the configuration file is an implementation detail, and so may change in the future. Only use our tools to make any changes.
 
 ## The File location is Restricted
 

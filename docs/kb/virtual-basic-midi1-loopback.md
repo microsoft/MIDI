@@ -24,6 +24,9 @@ As with all configuration file changes, you must use the MIDI Settings app. Dire
 
 Here's an example configuration section for the Virtual Basic Loopback MIDI 1.0 endpoints.
 
+[Please read the article about the config file for rules about using or editing the config file](config-json.md)
+
+
 ```json
 
 "endpointTransportPluginSettings":

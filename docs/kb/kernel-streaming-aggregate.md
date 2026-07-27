@@ -42,6 +42,8 @@ MIDI 1.0 port names use a new algorithm for naming, compared to what we have had
 
 Endpoints for this transport are not created through the configuration file, but certain properties, such as the name and description, are updatable through it.
 
+[Please read the article about the config file for rules about using or editing the config file](config-json.md)
+
 ```json
 "endpointTransportPluginSettings":
 {
