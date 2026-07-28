@@ -71,13 +71,13 @@ body:
     options:
       - label: Application using WinMM MIDI 1.0 (Classic API). Name provided below.
       - label: Application using WinRT MIDI 1.0 (Windows 10 MIDI). Name provided below.
-      - label: Application using Windows MIDI Services SDK (MIDI 2.0). Name provided below.
+      - label: Application using Windows MIDI Services API (sometimes referred to as MIDI 2.0). Name provided below.
       - label: Other app/DAW/tool. Not sure about which API or SDK it uses. Name provided below.
       - label: Windows MIDI Services tools like MIDI Settings, Console, etc.
       - label: Directly in Windows MIDI Services SDK (for Developers only, please provide repro code)
       - label: General Windows shell (Device Manager, Settings, Services, etc.). Name provided below.
-      - label: Windows MIDI 2.0 Class Driver (usbmidi2-acx)
-      - label: Windows MIDI 1.0 Class Driver (usbaudio)
+      - label: Windows MIDI 2.0 Class Driver (usbmidi2-acx.sys)
+      - label: Windows MIDI 1.0 Class Driver (usbaudio.sys)
       - label: Vendor-provided MIDI driver (please provide details below)
       - label: Other or Unsure (please indicate in additional notes section below)
 
@@ -86,14 +86,25 @@ body:
   attributes:
     label: Application Name and Version
     description: Name and version of the application where you noticed the error, if applicable
+    placeholder: Application name and version, like "Cubase 15.1.1"
   validations:
     required: false
 
 - type: input
   id: midi-device-name
   attributes:
-    label: MIDI Device Name
-    description: Name of the MIDI device (or virtual device provider) used
+    label: MIDI Device
+    description: Brand/Make/Model/Name of the MIDI device (or virtual device provider) used
+    placeholder: MIDI device name, like "Roland A-88MKII"
+  validations:
+    required: false
+
+- type: input
+  id: vendor-driver
+  attributes:
+    label: Vendor Driver
+    description: If you used a third-party driver (Roland, Korg, Yamaha, inMusic, etc.), please provide the name and version of the driver used. You can often find this in Apps > Installed Apps in Windows Settings.
+    placeholder: Driver brand, name, and version, like "Yamaha USB MIDI v3.1.5"
   validations:
     required: false
 
@@ -101,7 +112,7 @@ body:
   id: mididiag-output
   attributes:
     label: Output from the MIDI Diagnostics Tool
-    description: Use the MIDI settings app from https://aka.ms/midi, open the MIDI Settings app, and go to the troubleshooting page. Capture the resulting MIDI system information and paste the entire text here.
+    description: Use the installer from https://aka.ms/midi, open the MIDI Settings app, and go to the troubleshooting page. Capture the resulting MIDI system information and paste the entire text here.
     placeholder: mididiag output
   validations:
     required: true
@@ -122,7 +133,7 @@ body:
   attributes:
     label: Your personal observation that led to the bug report
     description: AI Generated bug reports get into the weeds too quickly, and usually neglect to explain what you actually saw, and why you filed a bug in the first place. This part is incredibly important, please do not use an AI to fill out this field.
-    placeholder: Your own personal (not AI-generated) observations that led to the bug report
+    placeholder: Your own personal (not AI-generated) observations that led to the bug report. What did you see? What wasn't working? What was expected to happen?
   validations:
     required: true
 
@@ -136,18 +147,10 @@ body:
     required: true
 
 - type: textarea
-  id: expected-behavior
-  attributes:
-    label: Expected behavior            
-    placeholder: What were you expecting to have happen?
-  validations:
-    required: false
-
-- type: textarea
   id: additional-notes
   attributes:
     label: Additional notes
-    description: Any additional notes or information which may be relevant
-    placeholder: Any additional notes or information which may be relevant
+    description: Any additional notes or information which may be relevant. If you have used specific editor apps or older device apps as part of the report, please provide links to the download pages or company page.
+    placeholder: Any additional notes, information, or links which may be relevant
   validations:
     required: false
