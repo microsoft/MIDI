@@ -116,7 +116,16 @@ body:
       required: false
     - label: I tried but was unable to reproduce this issue using a simple application
       required: false
-      
+
+- type: textarea
+  id: observations
+  attributes:
+    label: Your personal observation that led to the bug report
+    description: AI Generated bug reports get into the weeds too quickly, and usually neglect to explain what you actually saw, and why you filed a bug in the first place. This part is incredibly important, please do not use an AI to fill out this field.
+    placeholder: Your own personal (not AI-generated) observations that led to the bug report
+  validations:
+    required: true
+
 - type: textarea
   id: repro-steps
   attributes:
