@@ -32,6 +32,19 @@ public:
         return S_OK;
     }
 
+    // Detach the current client connection's callback WITHOUT tearing down the
+    // device itself. The device (and its Definition) is owned by the endpoint
+    // table and must outlive individual client connections so the endpoint can
+    // be opened again later. Called on client disconnect (Bidi::Shutdown).
+    HRESULT DisconnectClient()
+    {
+        auto lock = m_lock.lock_exclusive();
+
+        m_callback = nullptr;
+
+        return S_OK;
+    }
+
     HRESULT SendMessage(_In_ MessageOptionFlags optionFlags, _In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
         RETURN_HR_IF_NULL(E_INVALIDARG, message);
@@ -56,6 +69,9 @@ public:
         return callback->Callback(optionFlags, message, size, position, context);
     }
 
+    // Full teardown of the device. Only the endpoint table (RemoveDevice /
+    // table Shutdown) should call this, when the endpoint itself is being
+    // destroyed -- NOT on a per-connection disconnect.
     HRESULT Shutdown()
     {
         auto lock = m_lock.lock_exclusive();

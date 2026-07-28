@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,1,3
- PRODUCTVERSION 1,0,1,3
+ FILEVERSION 1,0,1,4
+ PRODUCTVERSION 1,0,1,4
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -77,8 +77,8 @@ BEGIN
             VALUE "InternalName", "Midi2.BasicLoopbackMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.BasicLoopbackMidiTransport.dll"
 
-            VALUE "FileVersion", "1.0.1.3"
-            VALUE "ProductVersion", "1.0.1.3"
+            VALUE "FileVersion", "1.0.1.4"
+            VALUE "ProductVersion", "1.0.1.4"
 
             VALUE "OLESelfRegister", ""
         END
@@ -109,6 +109,7 @@ BEGIN
     IDS_ERROR_CREATION_FAILED           "Endpoint creation failed for an unknown reason."
     IDS_ERROR_ENDPOINT_NOT_FOUND        "Endpoint not found."
     IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."
+    IDS_ERROR_ENDPOINT_REMOVAL_FAILED   "Endpoint removal failed for an unknown reason."
     //IDS_ERROR_MISSING_ENTRY_IDENTIFIER   "Missing or blank entry identifier."
 
 
