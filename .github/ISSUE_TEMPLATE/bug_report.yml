@@ -23,6 +23,8 @@ body:
       required: true
     - label: I agree to follow this project's Code of Conduct
       required: true
+    - label: I acknowledge that if I do not respond to follow-up questions in a timely manner, the issue may be closed without any changes or fixes
+      required: true
 
 - type: checkboxes
   id: clarity-and-disclosure
