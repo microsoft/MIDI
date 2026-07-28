@@ -26,6 +26,14 @@ We've made this available primarily for two reasons:
 
 Although this can be used by anyone, this mode is primarily for DJs who don't need advanced MIDI features, but do need their DJ controller not to lock up the PC if accidentally disconnected during a set.
 
+This mode loses the following Windows MIDI Services features:
+
+- Support for multiple applications using the same MIDI device (multi-client)
+- Built-in loopback ports (on x64, use products like loopMIDI, loopBE, etc. instead)
+- Access to upcoming Network MIDI 2.0, BLE MIDI 2.0, and other protocols.
+- Access to MIDI 2.0 devices like Montage M, Native Instruments Komplete Kontrol mk3, StudioLogic SL series, Waldorf Iridium and family, Roland A88, and others when MIDI 2.0 mode is selected on those devices. All of those devices also have a MIDI 1.0 mode, so you will need to use that instead.
+- The new, faster combined MIDI 1.0 and MIDI 2.0 driver
+
 ## Mode 2: Hybrid API Mode
 
 Use with caution. Devices using MIDI 1.0 drivers are available only through the old APIs. Devices using the new combined MIDI 1.0/MIDI 2.0 driver are available only through the new API. The two do not see each other at all. This will be confusing for many because the MIDI ports seen are going to depend on the driver used and the API used by an app.
@@ -44,3 +52,8 @@ This will eventually be in the MIDI Settings app, once the feature is fully enab
 4. Right click on that value, and choose "Modify"
 5. Set the value: one of the above modes: 0, 1, 2
 6. Reboot for it to take effect.
+
+# Important note for hardware/software manufacturers and support
+
+If you want to provide these instructions to your customers, please link to this article rather than copy the text. We will have friendlier ways of changing the API mode in the future, and this document will be updated to reflect those changes.
+
