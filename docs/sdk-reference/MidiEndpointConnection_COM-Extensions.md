@@ -115,6 +115,8 @@ interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
 | -------- | ----------- |
 | `MessagesReceived` | Called when one or more messages have been received from the endpoint. How many messages are included in a single call depends largely upon how the endpoint receives and passes them along, and what additional processing is done on the data in the service. 
 
+**Performance Tip:** When processing the `MessagesReceived` callback, do so quickly. This callback is synchronous. If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
+
 The session id and connection id are provided for convenience when using a centralized message handler. 
 
 The messages data pointer is valid only for the duration of the call, as it is a pointer into the cross-process memory-mapped buffer shared with the service. Therefore, all data must be copied and not referenced. 

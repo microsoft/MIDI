@@ -48,5 +48,6 @@ This class provides support for representing MIDI 1.0 messages in the Universal 
 | ------------- | ----------- |
 | `ConvertMidi1MessageToUmpWords(group, originalMessage)` | Converts a WinRT `IMidiMessage` to a list of UMP words for the given group. |
 | `ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus)` | Converts a sequence of raw MIDI 1.0 bytes to UMP words. Set `allowRunningStatus` to `true` to handle running status encoding. |
+| `ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus, converterState)` | Converts a sequence of raw MIDI 1.0 bytes to UMP words, using the supplied [`MidiBytestreamToUmpMessageConverterState`](MidiBytestreamToUmpMessageConverterState.md) to preserve conversion state (partial messages, running status) across calls for a continuous stream. |
 | `ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(umpWords)` | Converts a sequence of UMP words (all from one group) back to MIDI 1.0 bytes. |
 | `ConvertHexByteStringToByteArray(hexByteString)` | Converts a space-separated or plain hex byte string (e.g., `"F0 41 10 F7"`) to a byte array. Useful for parsing SysEx strings from user input. |
