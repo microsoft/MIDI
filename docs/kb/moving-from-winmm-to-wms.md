@@ -78,12 +78,20 @@ Custom drivers for things like loopbacks were more troublesome, because inside W
 
 WinMM is a simple API, but part of that simplicity is because it provides very limited information about ports, and lacks a lot of features customers and developers have requested over the past 30+ years. As a result of that and the integration of MIDI 2.0, the Windows MIDI Services API is somewhat more complex. Here's a mapping of concepts from WinMM to the Windows MIDI Services API.
 
+## A note on threading
+
+Many WinMM apps do all the MIDI work on the UI thread. Although this was never explicitly a forbidden approach, it was never a best practice. We're not judging here, though, just informing.
+
+In Windows MIDI Services, the service startup can take multiple seconds. For the SDK, we were explicitely asked by partner developers to **not** have Async calls, as those can be a pain when you are already managing your own threading. Therefore, **please ensure that your MIDI work, especially initialization and message sending, is not running on the UI thread** in your app. Otherwise, calls which take more than a five seconds can cause your app to "ghost" or "fade" and be reported as unresponsive.
+
+In modern apps, the UI thread should handle UI, and not MIDI. We recommend you initialize WinRT/COM in an MTA (Multi-threaded apartment)-enabled thread to ensure there are no blocking calls.
+
 ## Initialization
 
 There are three things you want to do before opening a connection to a MIDI Endpoint
 
 1. Initialize the WinRT (and COM) apartment. In C++/WinRT this is done using `winrt::init_apartment()`
-2. Ensure the MIDI Service has started. The MIDI Service will start when the first call is made to it to open any endpoint. However, you need to have those endpoints enumerated first, so it's best to call `MidiApi::EnsureServiceAvailable()` and check the return value. If the user has disabled the service, is using the MIDI Legacy Mode (no service) or the service cannot start for some reason, this will return false. When the service is demand-started in this way, enumeration of MIDI Endpoints begins as soon as it has started up. You can also check the currently set API mode in the `MidiApi` type, and bail (or fall back to older APIs) if it is set to legacy mode.
+2. Ensure the MIDI Service has started. The MIDI Service will start when the first call is made to it to open any endpoint. However, you need to have those endpoints enumerated first, so it's best to call `MidiApi::EnsureServiceAvailable()` and check the return value. If the user has disabled the service, is using the MIDI Legacy Mode (no service) or the service cannot start for some reason, this will return false. When the service is demand-started in this way, enumeration of MIDI Endpoints begins as soon as it has started up. You can also check the currently set API mode in the `MidiApi` type, and bail (or fall back to older APIs) if it is set to legacy mode. **NOTE: Service startup typically takes several seconds, more if there are many MIDI devices attached.** This is true even when using WinMM under the new MIDI stack.
 3. Create a `MidiSession`. An app can have multiple MIDI Sessions if there's logical separation between them (think different open projects). I recommend giving your session a meaningful name that the customer will recognize if they look at active sessions using any of the tools we make available.
 
 Once you have done those three things, you can start working with MIDI Endpoints
@@ -108,7 +116,7 @@ Windows MIDI Services provides specializations of the WinRT `DeviceWatcher` whic
 
 You can find samples of both types of watcher at [https://aka.ms/midisamples](https://aka.ms/midisamples)
 
-### Don't store names
+### Best Practice: Don't store names
 
 In WinMM, the only persistent identifier we gave you was the port name. That meant users could never rename them, which was the second-most requested feature after multi-client support. In Windows MIDI Services, customers are free to rename ports using either the legacy names (WinMM-style), new-style names (uses iJack when available), or completely custom names.
 
@@ -180,6 +188,12 @@ Similarly, Windows MIDI Services receives all messages through the `MidiEndpoint
 
 > The COM callbacks are the only way to receive multiple messages together. The event support is for a single message at a time.
 
+### Best practice: Receive and handle messages quickly for best performance
+
+When you receive an event callback or a COM Extensions callback indicating new message data is available, handle it quickly. You want to keep MIDI flowing and responsive, and the buffer between the service and your app drained, so that means you will want to copy the message data you need into your own processing queue, and then return from the event. If you have time-consuming processing to do, or additional messages to send in response, that should be handled separately outside the event or callback handler.
+
+Although there were no cross-process queues involved, the same advice was true in WinMM before Windows MIDI Services so many professional apps already handle the data in this way.
+
 ## Outgoing timestamps
 
 To send a message immediately, as you would in WinMM, pass the `MidiClock::TimestampConstantSendImmediately()` value. You can also use `MidiClock::Now()` but the constant bypasses an additional check in the service and so is ever so slightly more efficient.
@@ -191,3 +205,5 @@ Although the timestamps are currently based on `QueryPerformanceCounter` Always 
 ## Incoming timestamps
 
 In WinMM and WinRT MIDI 1.0, incoming message timestamps are an offset from when the port was opened. In Windows MIDI Services, outgoing and incoming timestamps are offsets from when the PC was booted up. They are 64 bit values, currently in 100ns units, and so will not wrap around in our lifetimes, even if the PC is left on every single day. You do not need to handle any sort of wrapping of these numbers.
+
+
