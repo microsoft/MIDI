@@ -150,7 +150,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     {
                         // This is synchronous by design, but that requires the listener (and the client app which sinks any event) to not block
 
-                        plugin.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
+                        if (plugin.IsEnabled())
+                        {
+                            plugin.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
+                        }
 
                         // if the listener has told us to skip further listeners, effectively 
                         // removing this message from the queue, then break out of the loop
