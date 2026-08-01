@@ -718,7 +718,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
             else
             {
                 skipFurtherListeners = false;
-                skipMainMessageReceivedEvent = false;
+                //skipMainMessageReceivedEvent = false; // don't need to set this. It may have already been set to true by a previous listener.
             }
 
         }

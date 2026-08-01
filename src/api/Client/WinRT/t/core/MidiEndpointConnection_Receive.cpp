@@ -22,68 +22,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
         UNREFERENCED_PARAMETER(context);
         UNREFERENCED_PARAMETER(optionFlags);
 
-
-        // this is for the COM extensions approach to receiving messages. It's a fast exit.
-        if (m_comCallback != nullptr)
+        // COM Extension Handling ===================================================================================
         {
-            if (size > 0)
+            winrt::slim_lock_guard guard(m_comCallbackLock);
+
+            // this is for the COM extensions approach to receiving messages. It's a fast exit.
+            if (m_comCallback != nullptr)
             {
+
+                RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+                RETURN_HR_IF_NULL(E_INVALIDARG, data);
+
                 // when you use the COM extensions, we bypass all other processing of incoming messages
-                return m_comCallback->MessagesReceived(
+                RETURN_IF_FAILED(m_comCallback->MessagesReceived(
                     m_sessionId,
                     m_connectionId,
                     static_cast<ULONGLONG>(timestamp),
                     size / sizeof(uint32_t),
-                    static_cast<UINT32*>(data)
+                    static_cast<UINT32*>(data))
                 );
-            }
-            else
-            {
-                // should never have a size of 0, but guarding just in case.
-                return E_INVALIDARG;
+
+                return S_OK;
             }
         }
 
-
+        // Event-based message Handling ===================================================================================
 
         if ((!m_messageReceivedEvent) && (!m_messageProcessingPlugins || m_messageProcessingPlugins.Size() == 0))
         {
-#ifdef _DEBUG
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exiting quickly due to no listeners", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
-                TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
-            );
-#endif
-
             // fast exit if there's nothing listening
             return S_OK;
         }
 
-#ifdef _DEBUG
-        // performance-critical function, so only trace when in a debug build
-        TraceLoggingWrite(
-            Midi2SdkTelemetryProvider::Provider(),
-            MIDI_SDK_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
-            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
-            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
-        );
-#endif
-
-
         try
         {
             // Use the midi message iterator to loop through messages here. We raise the event for each message.
-            // If someone wants the raw buffer, there's a COM interface for that.
+            // If someone wants the raw buffer with multiple messages, there's the COM extensions interface for that.
 
             internal::UmpBufferIterator iterator(
                 static_cast<uint32_t*>(data), 
@@ -135,7 +109,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     OutputDebugString(L"MIDI App SDK: Unable to create MidiMessageReceivedEventArgs\n");
 
-                    RETURN_IF_FAILED(E_POINTER);
+                    RETURN_IF_FAILED(E_OUTOFMEMORY);
                 }
 
                 bool skipMainMessageReceivedEvent = false;
@@ -152,7 +126,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                         if (plugin.IsEnabled())
                         {
-                            plugin.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
+                            try
+                            {
+                                plugin.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
+                            }
+                            catch (winrt::hresult_error const& ex)
+                            {
+                                MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error bubbled up through plugin ProcessIncomingMessage.");
+                            }
+                            catch (...)
+                            {
+                                MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception bubbled up through plugin ProcessIncomingMessage.");
+                            }
+
                         }
 
                         // if the listener has told us to skip further listeners, effectively 
@@ -161,11 +147,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     }
                 }
 
-                // if the main message received event is hooked up, and we're not skipping it, use it
-                if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
+
+                try
                 {
-                    m_messageReceivedEvent(*this, *args);
+                    // if the main message received event is hooked up, and we're not skipping it, use it
+                    if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
+                    {
+                        m_messageReceivedEvent(*this, *args);
+                    }
                 }
+                catch (winrt::hresult_error const& ex)
+                {
+                    MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error bubbled up through message received event.");
+                }
+                catch (...)
+                {
+                    MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception bubbled up through message received event.");
+                }
+
             }
 
             return S_OK;

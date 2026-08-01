@@ -251,6 +251,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::com_ptr<IMidiBidirectional> m_endpointTransport{ nullptr };
 
         winrt::com_ptr<IMidiEndpointConnectionMessagesReceivedCallback> m_comCallback{ nullptr };
+        winrt::slim_mutex m_comCallbackLock;
+
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
@@ -259,6 +261,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         //midi2::MidiEndpointConnectionOptions m_options;
 
+        winrt::slim_mutex m_messageProcessingPluginsLock;
         foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin>
             m_messageProcessingPlugins{ winrt::multi_threaded_vector<midi2::IMidiEndpointMessageProcessingPlugin>() };
 

@@ -45,10 +45,10 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation
         }
 
         void PreventFiringMainMessageReceivedEvent(_In_ bool const value) noexcept { m_preventFiringMainMessageReceivedEvent = value; }
-        bool PreventFiringMainMessageReceivedEvent() noexcept { return m_preventFiringMainMessageReceivedEvent; }
+        bool PreventFiringMainMessageReceivedEvent() const noexcept { return m_preventFiringMainMessageReceivedEvent; }
 
         void PreventCallingFurtherListeners(_In_ bool const value) noexcept { m_preventCallingFurtherListeners = value; }
-        bool PreventCallingFurtherListeners() noexcept { return m_preventCallingFurtherListeners; }
+        bool PreventCallingFurtherListeners() const noexcept { return m_preventCallingFurtherListeners; }
 
 
         void Initialize(_In_ midi2::IMidiEndpointConnectionSource const& endpointConnection);
@@ -57,8 +57,8 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation
 
         void ProcessIncomingMessage(
             _In_ midi2::MidiMessageReceivedEventArgs const& args,
-            _Out_ bool& skipFurtherListeners,
-            _Out_ bool& skipMainMessageReceivedEvent);
+            _Inout_ bool& skipFurtherListeners,
+            _Inout_ bool& skipMainMessageReceivedEvent);
 
 
     private:
