@@ -149,9 +149,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DiscordReproTest.cpp" />
     <ClCompile Include="MidiBasicLoopbackEndpointTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DiscordReproTest.h" />
     <ClInclude Include="MidiBasicLoopbackEndpointTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
