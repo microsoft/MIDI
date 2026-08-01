@@ -30,6 +30,8 @@ namespace Windows.Devices.Midi2.ClientPlugins
 
         [noexcept] IVector<Windows.Devices.Midi2.MidiChannel> IncludedChannels{ get; };
 
+        [noexcept] Boolean IncludeSystemCommonAndRealTimeMessages;
+
         [noexcept] Boolean PreventCallingFurtherListeners;
         [noexcept] Boolean PreventFiringMainMessageReceivedEvent;
     }

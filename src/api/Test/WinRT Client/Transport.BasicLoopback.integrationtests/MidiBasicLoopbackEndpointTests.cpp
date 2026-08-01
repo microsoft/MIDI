@@ -43,53 +43,40 @@ void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
 
     std::vector<MidiLegacyPortDeviceInformation> addedDevices;
 
-    // Evaluate the ports we've collected so far against our loopback endpoint.
-    // Must be called while holding portListLock.
-    auto evaluateAddedDevices = [&]()
-        {
-            if (endpointId.empty())
-            {
-                return;
-            }
-
-            for (auto const& device : addedDevices)
-            {
-                if (_wcsicmp(device.AssociatedEndpointDeviceId().c_str(), endpointId.c_str()) != 0)
-                {
-                    continue;
-                }
-
-                if (device.Flow() == Midi1PortFlow::MidiMessageSource && !haveSourcePort)
-                {
-                    sourcePortNumber = device.Number();
-                    haveSourcePort = true;
-                }
-                else if (device.Flow() == Midi1PortFlow::MidiMessageDestination && !haveDestinationPort)
-                {
-                    destinationPortNumber = device.Number();
-                    haveDestinationPort = true;
-                }
-            }
-
-            if (haveSourcePort && haveDestinationPort)
-            {
-                bothPortsAvailable.SetEvent();
-            }
-        };
-
     auto addedToken = watcher.Added([&](auto const& /*source*/, MidiLegacyPortDeviceInformationAddedEventArgs const& args)
         {
             auto lock = portListLock.lock();
 
-            addedDevices.push_back(args.AddedDevice());
-            evaluateAddedDevices();
-        });
+            auto port = args.AddedDevice();
 
-    watcher.Start();
+            addedDevices.push_back(port);
+            
+            if (port.AssociatedEndpointDeviceId() == endpointId)
+            {
+                std::wcout << L"Added device assoc id: " << port.AssociatedEndpointDeviceId().c_str() << std::endl;
+
+                if (port.Flow() == Midi1PortFlow::MidiMessageSource && !haveSourcePort)
+                {
+                    sourcePortNumber = port.Number();
+                    haveSourcePort = true;
+                }
+                else if (port.Flow() == Midi1PortFlow::MidiMessageDestination && !haveDestinationPort)
+                {
+                    destinationPortNumber = port.Number();
+                    haveDestinationPort = true;
+                }
+
+                if (haveSourcePort && haveDestinationPort)
+                {
+                    bothPortsAvailable.SetEvent();
+                }
+            }
+
+        });
 
     // Create the basic loopback
 
-    auto uniqueId = L"ID" + winrt::to_hstring(MidiClock::Now());
+    auto uniqueId = winrt::to_hstring(foundation::GuidHelper::CreateNewGuid());
 
     MidiBasicLoopbackEndpointDefinition definition(
         L"Test Basic Loopback GH1070",
@@ -125,11 +112,10 @@ void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
     {
         auto lock = portListLock.lock();
         endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
-
-        // The ports may already have been reported to the watcher before we knew
-        // the endpoint id, so re-evaluate what we've collected so far.
-        evaluateAddedDevices();
     }
+
+
+    watcher.Start();
 
     LOG_OUTPUT(L"Waiting for the source and destination legacy ports to appear in the watcher");
     if (!bothPortsAvailable.wait(10000))
@@ -479,9 +465,7 @@ void MidiBasicLoopbackTests::TestUmpSendReceive()
 
 
 
-
-
-
+    
     ////    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
 
     //VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
@@ -634,4 +618,8 @@ void MidiBasicLoopbackTests::TestUmpSendReceive()
 
     //    VERIFY_FAIL();
     //}
+
 }
+
+
+

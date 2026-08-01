@@ -12,30 +12,24 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-
     void MidiEndpointConnection::InitializePlugins() noexcept
     {
+        // ensure plugins are not added or removed while we are iterating through them
+        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
             {
                 plugin.Initialize(*this);
             }
+            catch (winrt::hresult_error const& ex)
+            {
+                MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error Initializing plugins.");
+            }
             catch (...)
             {
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Exception initializing plugins.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                );
-
-                OutputDebugString(L"MIDI App SDK: Exception initializing plugins.\n");
+                MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception Initializing plugins.");
             }
         }
     }
@@ -43,56 +37,44 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::CallOnConnectionOpenedOnPlugins() noexcept
     {
+        // ensure plugins are not added or removed while we are iterating through them
+        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
             {
                 plugin.OnEndpointConnectionOpened();
             }
+            catch (winrt::hresult_error const& ex)
+            {
+                MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error calling OnEndpointConnectionOpened on plugins.");
+            }
             catch (...)
             {
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Exception calling Open on plugins.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                );
-
-                OutputDebugString(L"MIDI App SDK: Exception calling Open on plugins.\n");
-
+                MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception calling OnEndpointConnectionOpened on plugins.");
             }
         }
     }
 
     void MidiEndpointConnection::CleanupPlugins() noexcept
     {
+        // ensure plugins are not added or removed while we are iterating through them
+        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
             {
                 plugin.Cleanup();
             }
+            catch (winrt::hresult_error const& ex)
+            {
+                MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error cleaning up plugins.");
+            }
             catch (...)
             {
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Exception cleaning up plugins.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                );
-
-                OutputDebugString(L"MIDI App SDK: Exception cleaning up plugins.\n");
-
+                MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception cleaning up plugins.");
             }
         }
 
@@ -105,6 +87,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiEndpointConnection::AddMessageProcessingPlugin(midi2::IMidiEndpointMessageProcessingPlugin const& plugin)
     {
+        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+
         m_messageProcessingPlugins.Append(plugin);
 
         try
@@ -119,31 +103,38 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 plugin.OnEndpointConnectionOpened();
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error initializing or calling OnEndpointConnectionOpened on newly-added plugin.");
+        }
         catch (...)
         {
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception initializing or calling OnEndpointConnectionOpened on newly-added plugin.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-            );
-
-            OutputDebugString(L"MIDI App SDK: Exception initializing or calling OnEndpointConnectionOpened on newly-added plugin.\n");
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception initializing or calling OnEndpointConnectionOpened on newly-added plugin.");
         }
     }
 
     _Use_decl_annotations_
     void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid pluginId)
     {
+        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+
         for (uint32_t i = 0; i < m_messageProcessingPlugins.Size(); i++)
         {
             if (m_messageProcessingPlugins.GetAt(i).PluginId() == pluginId)
             {
+                try
+                {
+                    m_messageProcessingPlugins.GetAt(i).Cleanup();
+                }
+                catch (winrt::hresult_error const& ex)
+                {
+                    MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error cleaning up message processing plugin.");
+                }
+                catch (...)
+                {
+                    MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception cleaning up message processing plugin.");
+                }
+
                 m_messageProcessingPlugins.RemoveAt(i);
                 break;
             }

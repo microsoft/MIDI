@@ -47,6 +47,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
             auto endpointConnection = winrt::make_self<implementation::MidiEndpointConnection>();
+            LOG_HR_IF_NULL(E_OUTOFMEMORY, endpointConnection);
+            if (endpointConnection == nullptr) return nullptr;
+
 
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
@@ -68,6 +71,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (initSuccess)
             {
+                winrt::slim_lock_guard guard(m_connectionsLock);
+
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 
                 if (autoReconnect)
@@ -178,6 +183,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             if (m_connections.HasKey(endpointConnectionId))
             {
+                winrt::slim_lock_guard guard(m_connectionsLock);
+
                 // disconnect the endpoint from the service, call Close() etc.
 
                 auto conn = m_connections.Lookup(endpointConnectionId);
