@@ -29,6 +29,11 @@ public:
         TEST_METHOD(TestGroupListener);
         TEST_METHOD(TestGroupAndChannelListener);
 
+        TEST_METHOD(TestMultipleChannelListeners);
+        TEST_METHOD(TestChannelListenerIncludingSystemCommonAndRealTime);
+        TEST_METHOD(TestChannelListenerExcludingSystemCommonAndRealTime);
+        TEST_METHOD(TestPreventCallingFurtherListeners);
+
 
 private:
 

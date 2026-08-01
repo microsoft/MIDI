@@ -48,7 +48,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             auto endpointConnection = winrt::make_self<implementation::MidiEndpointConnection>();
             LOG_HR_IF_NULL(E_OUTOFMEMORY, endpointConnection);
-            return nullptr;
+            if (endpointConnection == nullptr) return nullptr;
 
 
             // generate internal endpoint Id
