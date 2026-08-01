@@ -17,9 +17,10 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 
 | Property | Description |
 | ---- | ---- |
-| `IncludedGroups` | The list of `MidiGroup` numbers that this listener will listen to. |
+| `IncludedGroups` | The list of `MidiGroup`s that this listener will listen to. |
 | `PreventCallingFurtherListeners` | True if this plugin should prevent further listeners from processing a message that is in-scope for this processor. |
 | `PreventFiringMainMessageReceivedEvent` | True if this plugin should prevent the endpoint's `MessageReceived` event from firing if the message was in-scope for this plugin. |
+| `PreventCallingFurtherListeners` | True if this plugin should prevent any plugins after this one from executing if the message was handled by this plugin instance. |
 
 ## Functions
 
