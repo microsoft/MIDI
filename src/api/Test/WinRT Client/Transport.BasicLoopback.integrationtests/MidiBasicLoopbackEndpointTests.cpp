@@ -183,6 +183,78 @@ void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
 }
 
 
+void MidiBasicLoopbackTests::TestCreateLoopbackWithGarbageUniqueId()
+{
+    // A unique id containing spaces, symbols, and punctuation must still result in a
+    // successfully created loopback, because MidiBasicLoopbackManager strips the
+    // invalid characters before submitting the config to the service.
+
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    auto validPrefix = L"ID" + winrt::to_hstring(MidiClock::Now());
+    auto garbageUniqueId = MakeGarbageUniqueId(validPrefix.c_str());
+
+    auto expectedUniqueId = ExpectedCleanedUniqueId(garbageUniqueId);
+
+    // sanity check the test data itself: the garbage id must actually be dirty, and
+    // must still contain something valid once cleaned
+    VERIFY_IS_FALSE(UniqueIdContainsOnlyValidCharacters(garbageUniqueId));
+    VERIFY_IS_FALSE(expectedUniqueId.empty());
+
+    std::wcout << L"Supplied unique id: " << garbageUniqueId << std::endl;
+    std::wcout << L"Expected cleaned unique id: " << expectedUniqueId << std::endl;
+
+    MidiBasicLoopbackEndpointDefinition definition(
+        L"Test Basic Loopback Garbage Id",
+        winrt::hstring{ garbageUniqueId },
+        L"Loopback created with a unique id which contains invalid characters."
+    );
+
+    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
+
+    LOG_OUTPUT(L"Creating loopback endpoint creation config");
+    MidiBasicLoopbackCreationConfig creationConfig(associationId, definition);
+
+    LOG_OUTPUT(L"Creating loopback");
+    auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
+    VERIFY_IS_NOT_NULL(response);
+
+    if (response.Success())
+    {
+        LOG_OUTPUT(L"Endpoint created successfully");
+
+        VERIFY_IS_NOT_NULL(response.CreatedLoopbackEntry());
+        VERIFY_IS_FALSE(response.CreatedLoopbackEntry().EndpointDeviceId().empty());
+
+        // the manager cleans the unique id in the config before submitting it
+        std::wstring actualUniqueId{ creationConfig.EndpointDefinition().UniqueId().c_str() };
+
+        std::wcout << L"Actual unique id after creation: " << actualUniqueId << std::endl;
+
+        VERIFY_IS_TRUE(UniqueIdContainsOnlyValidCharacters(actualUniqueId));
+        VERIFY_IS_TRUE(actualUniqueId == expectedUniqueId);
+
+        // Give a hoot. Don't pollute.
+        MidiBasicLoopbackRemovalConfig removalConfig(response.CreatedLoopbackEntry().AssociationId());
+        auto removalResponse = MidiBasicLoopbackManager::RemoveTransientLoopback(removalConfig);
+
+        VERIFY_IS_NOT_NULL(removalResponse);
+        VERIFY_IS_TRUE(removalResponse.Success());
+    }
+    else
+    {
+        LOG_OUTPUT(L"Return result indicates failure");
+
+        std::wcout << L"Success:       " << response.Success() << std::endl;
+        std::wcout << L"Error Code:    " << std::hex << static_cast<uint32_t>(response.ErrorCode()) << std::dec << std::endl;
+        std::wcout << L"Error Message: " << response.ErrorMessage().c_str() << std::endl;
+
+        VERIFY_FAIL();
+    }
+}
+
+
 void MidiBasicLoopbackTests::TestCreateLoopback()
 {
     VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());

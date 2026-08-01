@@ -11,6 +11,105 @@
 
 
 
+void MidiLoopbackEndpointTests::TestCreateLoopbackWithGarbageUniqueIds()
+{
+    // Unique ids containing spaces, symbols, and punctuation must still result in a
+    // successfully created loopback, because MidiLoopbackManager strips the invalid
+    // characters from both the A-side and B-side definitions before submitting the
+    // config to the service.
+
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
+
+    auto validPrefix = L"ID" + winrt::to_hstring(MidiClock::Now());
+
+    // deliberately different garbage ids for the A and B sides
+    auto garbageUniqueIdA = MakeGarbageUniqueId(validPrefix.c_str() + std::wstring(L"-A"));
+    auto garbageUniqueIdB = MakeGarbageUniqueId(validPrefix.c_str() + std::wstring(L"-B"));
+
+    auto expectedUniqueIdA = ExpectedCleanedUniqueId(garbageUniqueIdA);
+    auto expectedUniqueIdB = ExpectedCleanedUniqueId(garbageUniqueIdB);
+
+    // sanity check the test data itself: the garbage ids must actually be dirty, and
+    // must still contain something valid once cleaned
+    VERIFY_IS_FALSE(UniqueIdContainsOnlyValidCharacters(garbageUniqueIdA));
+    VERIFY_IS_FALSE(UniqueIdContainsOnlyValidCharacters(garbageUniqueIdB));
+    VERIFY_IS_FALSE(expectedUniqueIdA.empty());
+    VERIFY_IS_FALSE(expectedUniqueIdB.empty());
+
+    std::wcout << L"Supplied unique id A: " << garbageUniqueIdA << std::endl;
+    std::wcout << L"Expected cleaned unique id A: " << expectedUniqueIdA << std::endl;
+    std::wcout << L"Supplied unique id B: " << garbageUniqueIdB << std::endl;
+    std::wcout << L"Expected cleaned unique id B: " << expectedUniqueIdB << std::endl;
+
+    // A-side of the loopback
+    MidiLoopbackEndpointDefinition definitionA(
+        L"Test Loopback A Garbage Id",
+        winrt::hstring{ garbageUniqueIdA },
+        L"A-side created with a unique id which contains invalid characters."
+    );
+
+    // B-side of the loopback
+    MidiLoopbackEndpointDefinition definitionB(
+        L"Test Loopback B Garbage Id",
+        winrt::hstring{ garbageUniqueIdB },
+        L"B-side created with a unique id which contains invalid characters."
+    );
+
+    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
+
+    LOG_OUTPUT(L"Creating loopback endpoint creation config");
+
+    MidiLoopbackCreationConfig creationConfig(associationId, definitionA, definitionB);
+
+    LOG_OUTPUT(L"Creating loopbacks");
+
+    auto response = MidiLoopbackManager::CreateTransientLoopback(creationConfig);
+    VERIFY_IS_NOT_NULL(response);
+
+    if (response.Success())
+    {
+        LOG_OUTPUT(L"Endpoints created successfully");
+
+        VERIFY_IS_NOT_NULL(response.CreatedLoopbackEntry());
+        VERIFY_IS_NOT_NULL(response.CreatedLoopbackEntry().EndpointA());
+        VERIFY_IS_NOT_NULL(response.CreatedLoopbackEntry().EndpointB());
+        VERIFY_IS_FALSE(response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId().empty());
+        VERIFY_IS_FALSE(response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId().empty());
+
+        // the manager cleans both unique ids in the config before submitting it
+        std::wstring actualUniqueIdA{ creationConfig.EndpointDefinitionA().UniqueId().c_str() };
+        std::wstring actualUniqueIdB{ creationConfig.EndpointDefinitionB().UniqueId().c_str() };
+
+        std::wcout << L"Actual unique id A after creation: " << actualUniqueIdA << std::endl;
+        std::wcout << L"Actual unique id B after creation: " << actualUniqueIdB << std::endl;
+
+        VERIFY_IS_TRUE(UniqueIdContainsOnlyValidCharacters(actualUniqueIdA));
+        VERIFY_IS_TRUE(actualUniqueIdA == expectedUniqueIdA);
+
+        VERIFY_IS_TRUE(UniqueIdContainsOnlyValidCharacters(actualUniqueIdB));
+        VERIFY_IS_TRUE(actualUniqueIdB == expectedUniqueIdB);
+
+        // Give a hoot. Don't pollute.
+        MidiLoopbackRemovalConfig removalConfig(response.CreatedLoopbackEntry().AssociationId());
+        auto removalResponse = MidiLoopbackManager::RemoveTransientLoopback(removalConfig);
+
+        VERIFY_IS_NOT_NULL(removalResponse);
+        VERIFY_IS_TRUE(removalResponse.Success());
+    }
+    else
+    {
+        LOG_OUTPUT(L"Return result indicates failure");
+
+        std::wcout << L"Success:       " << response.Success() << std::endl;
+        std::wcout << L"Error Code:    " << std::hex << static_cast<uint32_t>(response.ErrorCode()) << std::dec << std::endl;
+        std::wcout << L"Error Message: " << response.ErrorMessage().c_str() << std::endl;
+
+        VERIFY_FAIL();
+    }
+}
+
+
 void MidiLoopbackEndpointTests::TestCreateLoopback()
 {
     VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());

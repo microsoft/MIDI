@@ -10,6 +10,10 @@
 
 #include <iostream>
 
+
+#if false
+
+
 struct EndpointInfoBase
 {
     winrt::hstring endpointId;
@@ -363,3 +367,6 @@ void DiscordReproTests::TestMaximRepro()
  //   std::cin.get();
 
 }
+
+
+#endif

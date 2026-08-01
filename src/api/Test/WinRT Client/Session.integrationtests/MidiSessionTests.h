@@ -17,7 +17,7 @@ public:
 
     BEGIN_TEST_CLASS(MidiSessionTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.BluetoothMidiTransport.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.DiagnosticsTransport.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSTransport.dll")
@@ -30,13 +30,13 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"MidiSrv.exe")
     END_TEST_CLASS()
 
-        //TEST_CLASS_SETUP(ClassSetup);
-        //TEST_CLASS_CLEANUP(ClassCleanup);
+    //TEST_CLASS_SETUP(ClassSetup);
+    //TEST_CLASS_CLEANUP(ClassCleanup);
 
-        //TEST_METHOD_SETUP(TestSetup);
-        //TEST_METHOD_CLEANUP(TestCleanup);
+    //TEST_METHOD_SETUP(TestSetup);
+    //TEST_METHOD_CLEANUP(TestCleanup);
 
-        //Generic Tests
+    //Generic Tests
     TEST_METHOD(TestCreateNewSession);
     TEST_METHOD(TestSessionList);
     TEST_METHOD(TestUpdateSessionName);

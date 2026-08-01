@@ -97,11 +97,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             return *result;
         }
 
-        // provide a unique id if none was specified
-        winrt::hstring endpointUniqueId{ internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId()) };
-        if (endpointUniqueId.empty())
+        // clean up the unique id and then verify there's still something left to it
+        creationConfig.EndpointDefinition().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinition().UniqueId().c_str()).c_str(), MAXPNAMELEN - 1));
+
+        if (creationConfig.EndpointDefinition().UniqueId().empty())
         {
-            std::wstring id{ internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid()) };
+            // the RemoveInvalidSWDUniqueIdCharacters is currently redundant with the TruncateHStringCopy, but we want to keep it in case we change the logic in the future
+            std::wstring id{ internal::RemoveInvalidSWDUniqueIdCharacters(internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid())) };
             internal::InPlaceToLower(id);
 
             creationConfig.EndpointDefinition().UniqueId(id);
