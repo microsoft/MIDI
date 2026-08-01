@@ -62,8 +62,25 @@ struct SessionHandle
 };
 
 
+// pre-setup
+// create three ports in loopMIDI: MIDI A, MIDI B, MIDI C;
+// create basic loopback endpoint AAA via MIDI Settings;
+
+// test steps
+// run watcher maintaining cache of ports(endpoint ID + GTB + group) via added / removed notifications;
+// create basic loopback endpoint VIRT LAST;
+// get input port from cache corresponding to VIRT LAST;
+// open connection on the endpoint from input port info and turn group listener on;
+// delete VIRT LAST;
+// get output port from cache corresponding to MIDI A;
+// open connection on the endpoint from output port info;
+// send Note On message via this connection.
+
 void DiscordReproTests::TestMaximRepro()
 {
+    std::cout << "Not a real test, just a repro for Discord user Maxim's issue." << std::endl;
+    VERIFY_FAIL(L"** Comment-out fail if you want to run this. It requires specific setup steps **");
+
     winrt::init_apartment();
 
     // Create MIDI session and set up watcher.
@@ -342,7 +359,7 @@ void DiscordReproTests::TestMaximRepro()
 
     //
 
-    std::wcout << L"Press Enter to exit..." << std::endl;
-    std::cin.get();
+ //   std::wcout << L"Press Enter to exit..." << std::endl;
+ //   std::cin.get();
 
 }
