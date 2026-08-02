@@ -273,3 +273,233 @@ void MidiMessageConverterTests::TestStatefulSysEx7Conversion()
         VERIFY_ARE_EQUAL(expectedResults[i], actualResults[i]);
     }
 }
+
+
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiTimeCode()
+{
+    uint8_t statusByte = 0xF1;
+    uint8_t dataByte1 = 0x26;
+
+    LOG_OUTPUT(L"Building MIDI Time Code Message");
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            dataByte1,
+            0
+        );
+
+        auto message2 = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            dataByte1
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16) | (dataByte1 << 8);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+        VERIFY_ARE_EQUAL(message2.Word0(), expectedWord0);
+    }
+}
+
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiSongPositionPointer()
+{
+    uint8_t statusByte = 0xF2;
+    uint8_t dataByte1 = 0x26;
+    uint8_t dataByte2 = 0x17;
+
+    LOG_OUTPUT(L"Building MIDI Song Position Pointer Message");
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            dataByte1,
+            dataByte2
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16) | (dataByte1 << 8) | (dataByte2);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+    }
+}
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiSongSelect()
+{
+    uint8_t statusByte = 0xF3;
+    uint8_t dataByte1 = 0x26;
+
+    LOG_OUTPUT(L"Building MIDI Time Code Message");
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            dataByte1,
+            0
+        );
+
+        auto message2 = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            dataByte1
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16) | (dataByte1 << 8);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+        VERIFY_ARE_EQUAL(message2.Word0(), expectedWord0);
+    }
+}
+
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiTuneRequest()
+{
+    uint8_t statusByte = 0xF6;
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            0,
+            0
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+    }
+}
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiStart()
+{
+    uint8_t statusByte = 0xFA;
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            0,
+            0
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+    }
+}
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiContinue()
+{
+    uint8_t statusByte = 0xFB;
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            0,
+            0
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+    }
+}
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiStop()
+{
+    uint8_t statusByte = 0xFC;
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            0,
+            0
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+    }
+}
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiActiveSensing()
+{
+    uint8_t statusByte = 0xFE;
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            0,
+            0
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+    }
+}
+
+
+void MidiMessageConverterTests::TestConvertSystemCommonMidiReset()
+{
+    uint8_t statusByte = 0xFF;
+
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto message = MidiMessageConverter::ConvertMidi1Message(
+            0,
+            MidiGroup(groupIndex),
+            statusByte,
+            0,
+            0
+        );
+
+        uint32_t expectedWord0 = 0x10000000 | (groupIndex << 24) | (statusByte << 16);
+
+        std::cout << "Expecting: 0x" << std::hex << expectedWord0 << std::endl;
+
+        VERIFY_ARE_EQUAL(message.Word0(), expectedWord0);
+    }
+}
+

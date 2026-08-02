@@ -24,7 +24,6 @@ public:
     TEST_METHOD(TestConvertControlChangeMessages);
     TEST_METHOD(TestConvertNoteOnMessages);
     TEST_METHOD(TestConvertNoteOffMessages);
-    TEST_METHOD(TestConvertClockMessages);
 
     TEST_METHOD(TestConvertHexStringToBytes);
     TEST_METHOD(TestConvertHexStringNoSpacesToBytes);
@@ -35,6 +34,17 @@ public:
 
     TEST_METHOD(TestIncompleteSysEx7Conversion);
     TEST_METHOD(TestStatefulSysEx7Conversion);
+
+    TEST_METHOD(TestConvertSystemCommonMidiTimeCode);
+    TEST_METHOD(TestConvertSystemCommonMidiSongPositionPointer);
+    TEST_METHOD(TestConvertSystemCommonMidiSongSelect);
+    TEST_METHOD(TestConvertSystemCommonMidiTuneRequest);
+    TEST_METHOD(TestConvertClockMessages);
+    TEST_METHOD(TestConvertSystemCommonMidiStart);
+    TEST_METHOD(TestConvertSystemCommonMidiContinue);
+    TEST_METHOD(TestConvertSystemCommonMidiStop);
+    TEST_METHOD(TestConvertSystemCommonMidiActiveSensing);
+    TEST_METHOD(TestConvertSystemCommonMidiReset);
 
 
 };
