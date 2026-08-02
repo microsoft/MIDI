@@ -16,48 +16,6 @@
 #pragma comment(lib, "winmm.lib")
 
 
-// Resolves the current WinMM port number for an endpoint and flow.
-//
-// The service assigns the port number asynchronously, and it can arrive after the
-// port is first enumerated (the watcher reports it later through an Updated event
-// with IsNumberUpdated set). So we re-query the port here rather than relying on
-// the value captured when the port was first added, and we retry until the number
-// is within the range WinMM will accept.
-static bool TryResolveWinMMPortNumber(
-    _In_ winrt::hstring const& endpointDeviceId,
-    _In_ Midi1PortFlow const flow,
-    _Out_ uint32_t& portNumber)
-{
-    portNumber = 0;
-
-    const int maxAttempts = 50;     // up to 5 seconds
-
-    for (int attempt = 0; attempt < maxAttempts; attempt++)
-    {
-        auto ports = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(endpointDeviceId, flow);
-
-        if (ports != nullptr && ports.Size() > 0)
-        {
-            auto number = ports.GetAt(0).Number();
-
-            auto deviceCount = (flow == Midi1PortFlow::MidiMessageSource)
-                ? midiInGetNumDevs()
-                : midiOutGetNumDevs();
-
-            if (number < deviceCount)
-            {
-                portNumber = number;
-                return true;
-            }
-        }
-
-        Sleep(100);
-    }
-
-    return false;
-}
-
-
 void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
 {
     // Regression test for issue 1070: after opening and closing the WinMM
