@@ -23,13 +23,16 @@ namespace pnp = winrt::Windows::Devices::Enumeration::Pnp;
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
+#include <winrt/Windows.Devices.Midi2.Transports.Loopback.h>
 
 using namespace winrt::Windows::Devices::Midi2;
 using namespace winrt::Windows::Devices::Midi2::Enumeration;
 using namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy;
+using namespace winrt::Windows::Devices::Midi2::Transports::Loopback;
 
 #include <iostream>
 #include <set>
+#include <map>
 
 #include <avrt.h>
 #include <wil\winrt.h>

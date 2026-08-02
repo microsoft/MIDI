@@ -6,26 +6,18 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
 #pragma once
 
-// This information is provided by the configuration manager
-
-
-struct MidiLoopbackDeviceDefinition
+class Feature_Servicing_MIDI2LoopbackMuteAndList
 {
-    std::wstring AssociationId{};
-
-    std::wstring EndpointName{};
-    std::wstring EndpointDescription{};
-
-    std::wstring EndpointUniqueIdentifier{};
-
-    std::wstring InstanceIdPrefix{};
-
-    std::wstring CreatedShortClientInstanceId{};
-    std::wstring CreatedEndpointInterfaceId{};
-
-    bool UMPOnly{ false };
-
+public:
+    static bool IsEnabled()
+    {
+        return true;
+    }
 };
+
+inline bool Feature_Servicing_MIDI2LoopbackMuteAndList_IsEnabled()
+{
+    return true;
+}

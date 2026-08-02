@@ -103,6 +103,7 @@ BEGIN
     IDS_ERROR_MISSING_UNIQUE_ID         "Missing or blank unique identifier."
     IDS_ERROR_MISSING_NAME              "Missing or blank endpoint name."
     IDS_ERROR_CREATION_FAILED           "Endpoint creation failed for an unknown reason."
+    IDS_ERROR_ENDPOINT_NOT_FOUND        "Endpoint not found."
 
 END
 

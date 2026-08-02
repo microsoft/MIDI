@@ -34,6 +34,11 @@ public:
     // successfully created loopback, because the manager cleans it up first.
     TEST_METHOD(TestCreateLoopbackWithGarbageUniqueId);
 
+    // Muting, unmuting, and enumerating active loopbacks
+    TEST_METHOD(TestMuteLoopback);
+    TEST_METHOD(TestUnmuteAfterMute);
+    TEST_METHOD(TestListActiveLoopbacks);
+
 
     // Issue GH1070: WinMM ports for a basic loopback must be able to be
     // re-opened after being closed.

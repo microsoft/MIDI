@@ -10,6 +10,7 @@
 
 #include "MidiEndpointCustomProperties.h"
 #include "json_transport_command_helper.h"
+#include <mmdeviceapi.h>    // for E_NOTFOUND
 
 _Use_decl_annotations_
 HRESULT
@@ -40,6 +41,106 @@ CMidi2LoopbackMidiConfigurationManager::Initialize(
 
 
 
+
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiConfigurationManager::ExecuteCommandListEntries(
+    json::JsonObject const& responseObject)
+{
+    auto devices = TransportState::Current().GetEndpointTable()->GetDeviceListSnapshot();
+
+    // add the entries to the response object
+
+    auto entriesArray = json::JsonArray();
+
+    for (auto const& device : devices)
+    {
+        auto obj = json::JsonObject();
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY,
+            json::JsonValue::CreateStringValue(device.DefinitionA.AssociationId));  // it's the same in DefinitionB
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_MUTED_KEY,
+            json::JsonValue::CreateBooleanValue(device.IsMuted));
+
+
+        auto objEndpointA = json::JsonObject();
+
+        objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY,
+            json::JsonValue::CreateStringValue(device.DefinitionA.CreatedEndpointInterfaceId.c_str()));
+
+        objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY,
+            json::JsonValue::CreateStringValue(device.DefinitionA.EndpointName.c_str()));
+
+        objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
+            json::JsonValue::CreateStringValue(device.DefinitionA.EndpointDescription.c_str()));
+
+
+        auto objEndpointB = json::JsonObject();
+
+        objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY,
+            json::JsonValue::CreateStringValue(device.DefinitionB.CreatedEndpointInterfaceId.c_str()));
+
+        objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY,
+            json::JsonValue::CreateStringValue(device.DefinitionB.EndpointName.c_str()));
+
+        objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
+            json::JsonValue::CreateStringValue(device.DefinitionB.EndpointDescription.c_str()));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_A_KEY, objEndpointA);
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_B_KEY, objEndpointB);
+
+        entriesArray.Append(obj);
+    }
+
+    responseObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY, entriesArray);
+
+    return S_OK;
+}
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
+    winrt::guid const& associationId,
+    bool const isMuted)
+{
+    TraceLoggingWrite(
+        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(associationId, "association id"),
+        TraceLoggingBool(isMuted, "isMuted")
+    );
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointTable());
+
+    // get this into the normal string format.
+
+    auto associationIdString = internal::ToLowerTrimmedWStringCopy(winrt::to_hstring(associationId).c_str());
+
+    auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationIdString);
+    RETURN_HR_IF_NULL(E_NOTFOUND, device);
+
+    device->IsMuted = isMuted;
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
+
+    // These aren't in a single transaction, so could be out of sync. But these are only for
+    // informational purposes, so only the endpoint properties would appear broken if that happened
+    RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->UpdateSingleEndpointMutedStateProperty(device->DefinitionA, isMuted));
+    RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->UpdateSingleEndpointMutedStateProperty(device->DefinitionB, isMuted));
+
+    return S_OK;
+}
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
@@ -66,9 +167,68 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
 
+        if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+        {
+            capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);        // mute implies unmute
+            capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, true);
+        }
+
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
 
+    }
+    else if ((Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled()) && 
+        (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT || commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT))
+    {
+        bool mute = (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
+
+        // Check to see if we have an endpointdeviceid
+        if (auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID);
+            arg != commandHelper.Arguments()->end())
+        {
+            auto associationId = internal::StringToGuid(arg->second);
+
+            auto hr = ExecuteCommandChangeMutedState(associationId, mute);
+
+            if (hr == E_NOTFOUND)
+            {
+                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                    responseObject,
+                    LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                    internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+            }
+            else if (SUCCEEDED(hr))
+            {
+                internal::SetConfigurationResponseObjectSuccess(responseObject);
+            }
+            else
+            {
+                RETURN_IF_FAILED(hr);
+            }
+        }
+        else
+        {
+            // no association id
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+                internal::ResourceGetWString(IDS_ERROR_MISSING_ASSOCIATION_ID));
+        }
+
+    }
+    else if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled() && 
+        (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES))
+    {
+        auto hr = ExecuteCommandListEntries(responseObject);
+
+        if (SUCCEEDED(hr))
+        {
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
+        else
+        {
+            RETURN_IF_FAILED(hr);
+        }
     }
     else
     {

@@ -80,7 +80,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
     )
     {
-        winrt::slim_lock_guard guard(m_comCallbackLock);
+        std::lock_guard<std::mutex> guard(m_comCallbackLock);
 
         TraceLoggingWrite(
             Midi2SdkTelemetryProvider::Provider(),
@@ -104,7 +104,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     HRESULT
     MidiEndpointConnection::RemoveMessagesReceivedCallback()
     {
-        winrt::slim_lock_guard guard(m_comCallbackLock);
+        std::lock_guard<std::mutex> guard(m_comCallbackLock);
 
         TraceLoggingWrite(
             Midi2SdkTelemetryProvider::Provider(),

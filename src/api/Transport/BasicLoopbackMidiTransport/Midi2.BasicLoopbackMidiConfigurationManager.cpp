@@ -10,7 +10,7 @@
 
 #include "MidiEndpointCustomProperties.h"
 #include "json_transport_command_helper.h"
-#include <mmdeviceapi.h>
+#include <mmdeviceapi.h>    // for E_NOTFOUND
 
 _Use_decl_annotations_
 HRESULT
@@ -445,42 +445,6 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                     MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY,
                                     endpointIdAVal);
 
-
-                                // if we're not processing the config file, go ahead and return the created MIDI 1 ports.
-                                if (!processingMultipleCreates)
-                                {
-                                    // get the associated MIDI 1 ports and add them to the results
-
-                                    if (definition->CreatedMidi1DestinationPorts.size() > 0)
-                                    {
-                                        json::JsonArray midi1PortsJsonArray;
-
-                                        for (const auto& portId : definition->CreatedMidi1DestinationPorts)
-                                        {
-                                            auto portIdVal = json::JsonValue::CreateStringValue(portId);
-                                            midi1PortsJsonArray.Append(portIdVal);
-                                        }
-
-                                        responseObject.SetNamedValue(
-                                            MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_CREATED_MIDI1_DESTINATION_PORTS_ARRAY_KEY,
-                                            midi1PortsJsonArray);
-                                    }
-
-                                    if (definition->CreatedMidi1SourcePorts.size() > 0)
-                                    {
-                                        json::JsonArray midi1PortsJsonArray;
-
-                                        for (const auto& portId : definition->CreatedMidi1SourcePorts)
-                                        {
-                                            auto portIdVal = json::JsonValue::CreateStringValue(portId);
-                                            midi1PortsJsonArray.Append(portIdVal);
-                                        }
-
-                                        responseObject.SetNamedValue(
-                                            MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_CREATED_MIDI1_SOURCE_PORTS_ARRAY_KEY,
-                                            midi1PortsJsonArray);
-                                    }
-                                }
                             }
                             else
                             {

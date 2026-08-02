@@ -24,6 +24,7 @@
 #include <cwctype>
 #include <queue>
 #include <mutex>
+#include <thread>
 #include <format>
 #include <filesystem>
 
@@ -36,6 +37,7 @@
 #include <wil\tracelogging.h>
 #include <wil\registry.h>
 
+#include <winrt/base.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.ApplicationModel.h>

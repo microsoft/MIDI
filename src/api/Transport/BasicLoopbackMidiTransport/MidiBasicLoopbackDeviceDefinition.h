@@ -26,8 +26,8 @@ struct MidiBasicLoopbackDeviceDefinition
     std::wstring CreatedShortClientInstanceId{};
     std::wstring CreatedEndpointInterfaceId{};
 
-    std::vector<winrt::hstring> CreatedMidi1SourcePorts{};
-    std::vector<winrt::hstring> CreatedMidi1DestinationPorts{};
+//    std::vector<winrt::hstring> CreatedMidi1SourcePorts{};
+//    std::vector<winrt::hstring> CreatedMidi1DestinationPorts{};
 
     bool IsMuted{ false };
 };

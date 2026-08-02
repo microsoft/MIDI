@@ -24,6 +24,11 @@ public:
 
     TEST_METHOD(TestGetMethods);
 
+    // Repro: creating MIDI 1.0 ports while the watcher is still performing its
+    // initial enumeration fast-fails the process (0xC0000409). See the comment
+    // above the implementation for full repro details.
+    TEST_METHOD(TestPortsCreatedDuringInitialEnumeration);
+
 private:
 
 

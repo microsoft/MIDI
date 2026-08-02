@@ -388,6 +388,28 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
         try
         {
+            auto supportsMuteAndUnmute = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT);
+
+            if (!supportsMuteAndUnmute)
+            {
+                result->InternalSetFailure(
+                    bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                    L"Transport does not support mute operation.");   // TODO: Localize
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to mute loopback. Transport does not support mute operation.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return *result;
+            }
+
             svc::MidiServiceTransportCommand cmd(TransportId());
 
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
@@ -473,6 +495,28 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
         try
         {
+            auto supportsMuteAndUnmute = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT);
+
+            if (!supportsMuteAndUnmute)
+            {
+                result->InternalSetFailure(
+                    bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                    L"Transport does not support unmute operation.");   // TODO: Localize
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to unmute loopback. Transport does not support unmute operation.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return *result;
+            }
+
             svc::MidiServiceTransportCommand cmd(TransportId());
 
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));

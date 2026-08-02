@@ -386,3 +386,202 @@ void MidiLegacyPortDeviceWatcherTests::TestGetMethods()
 
 }
 
+
+// ============================================================================
+// Repro for: creating MIDI 1.0 ports while a MidiLegacyPortDeviceWatcher is
+// still performing its initial enumeration fast-fails the client process.
+//
+// Repro steps, all of which this test performs:
+//   1. Create a MidiLegacyPortDeviceWatcher and call Start().
+//   2. WITHOUT waiting for EnumerationCompleted, immediately create a transient
+//      A/B loopback. That creates four MIDI 1.0 ports at once (a source and a
+//      destination for each of the A and B endpoints).
+//   3. Wait for the watcher to report them.
+//
+// Observed: the test host process dies with exception code 0xC0000409
+// (STATUS_STACK_BUFFER_OVERRUN / __fastfail) while the watcher is delivering
+// events. This reproduces consistently on a machine with a large number of
+// existing MIDI 1.0 ports, where the initial enumeration takes a while.
+//
+// The Added handler below deliberately does nothing except record what it was
+// handed, so the crash is not coming from the test's own callback work.
+//
+// Workaround / control case: waiting for the watcher's EnumerationCompleted
+// event before creating the ports makes this test pass reliably, which is what
+// isolates the problem to port creation racing the initial enumeration.
+//
+// Knock-on effect: because the watcher's delivery dies partway through, an
+// application that survives will also see Added raised for only a subset of the
+// newly created ports.
+// ============================================================================
+void MidiLegacyPortDeviceWatcherTests::TestPortsCreatedDuringInitialEnumeration()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
+
+    wil::critical_section addedLock;
+    wil::unique_event_nothrow enumerationCompleted;
+    enumerationCompleted.create();
+
+    // port device id -> associated endpoint device id, as reported through Added
+    std::map<std::wstring, std::wstring> addedPorts;
+
+    auto watcher = MidiLegacyPortDeviceWatcher::Create();
+    VERIFY_IS_NOT_NULL(watcher);
+
+    auto addedToken = watcher.Added([&](auto const&, MidiLegacyPortDeviceInformationAddedEventArgs const& args)
+        {
+            // Deliberately no TAEF VERIFY calls in here. This handler is invoked
+            // concurrently on watcher threads while the initial enumeration is still
+            // running, and we only want to record what we were given.
+            if (args == nullptr) return;
+
+            auto port = args.AddedDevice();
+
+            if (port == nullptr) return;
+
+            auto lock = addedLock.lock();
+
+            addedPorts.insert_or_assign(
+                std::wstring(port.PortDeviceId().c_str()),
+                std::wstring(port.AssociatedEndpointDeviceId().c_str()));
+        });
+
+    auto enumerationCompletedToken = watcher.EnumerationCompleted([&](auto const&, auto const&)
+        {
+            enumerationCompleted.SetEvent();
+        });
+
+    auto cleanupWatcher = wil::scope_exit([&]
+        {
+            if (watcher == nullptr) return;
+
+            watcher.Stop();
+
+            if (addedToken) watcher.Added(addedToken);
+            if (enumerationCompletedToken) watcher.EnumerationCompleted(enumerationCompletedToken);
+        });
+
+    LOG_OUTPUT(L"Starting watcher");
+
+    watcher.Start();
+
+    // NOTE: we deliberately do NOT wait for EnumerationCompleted here.
+    //
+    // This mirrors what a real application does: start watching, then immediately
+    // create the ports it cares about. The initial enumeration of all existing
+    // MIDI 1.0 ports on the machine is still in flight at this point.
+
+    // Create an A/B loopback. This creates four MIDI 1.0 ports at once.
+    auto uniqueId = winrt::to_hstring(foundation::GuidHelper::CreateNewGuid());
+
+    MidiLoopbackEndpointDefinition definitionA(
+        L"Test Watcher Added Repro A",
+        uniqueId + L"-A",
+        L"A-side of the loopback used to repro the watcher Added defect.");
+
+    MidiLoopbackEndpointDefinition definitionB(
+        L"Test Watcher Added Repro B",
+        uniqueId + L"-B",
+        L"B-side of the loopback used to repro the watcher Added defect.");
+
+    MidiLoopbackCreationConfig creationConfig(
+        foundation::GuidHelper::CreateNewGuid(), definitionA, definitionB);
+
+    LOG_OUTPUT(L"Creating the A/B loopback (creates four MIDI 1.0 ports at once)");
+
+    auto response = MidiLoopbackManager::CreateTransientLoopback(creationConfig);
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_TRUE(response.Success());
+
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+    auto endpointAId = response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId();
+    auto endpointBId = response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId();
+
+    auto cleanupLoopback = wil::scope_exit([&]
+        {
+            MidiLoopbackRemovalConfig removalConfig(associationId);
+            auto removalResponse = MidiLoopbackManager::RemoveTransientLoopback(removalConfig);
+
+            VERIFY_IS_NOT_NULL(removalResponse);
+            VERIFY_IS_TRUE(removalResponse.Success());
+        });
+
+    // Give the watcher a generous amount of time to report all four ports.
+    LOG_OUTPUT(L"Waiting for the watcher to report the new ports");
+    Sleep(15000);
+
+    std::wcout << L"Initial enumeration completed during the wait: "
+               << (enumerationCompleted.is_signaled() ? L"yes" : L"no") << std::endl;
+
+    // Ground truth: query the ports for both endpoints directly. Each port device
+    // id is expected to map to the endpoint it was created under.
+    std::map<std::wstring, std::wstring> expectedPorts;
+
+    for (auto const& endpointId : { endpointAId, endpointBId })
+    {
+        auto ports = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(endpointId);
+        VERIFY_IS_NOT_NULL(ports);
+
+        for (auto const& port : ports)
+        {
+            expectedPorts.insert_or_assign(
+                std::wstring(port.PortDeviceId().c_str()),
+                std::wstring(port.AssociatedEndpointDeviceId().c_str()));
+        }
+    }
+
+    // an A/B loopback has a source and a destination for each of its two endpoints
+    std::wcout << L"Ports found by direct query: " << expectedPorts.size() << std::endl;
+    VERIFY_ARE_EQUAL(expectedPorts.size(), (size_t)4);
+
+    size_t reportedByWatcherCount{ 0 };
+    size_t withCorrectAssociatedEndpointCount{ 0 };
+
+    {
+        auto lock = addedLock.lock();
+
+        for (auto const& expected : expectedPorts)
+        {
+            auto const& expectedPortDeviceId = expected.first;
+            auto const& expectedAssociatedEndpointId = expected.second;
+
+            auto found = addedPorts.find(expectedPortDeviceId);
+
+            if (found == addedPorts.end())
+            {
+                std::wcout << L"  NOT REPORTED BY WATCHER : " << expectedPortDeviceId << std::endl;
+                continue;
+            }
+
+            reportedByWatcherCount++;
+
+            auto const& actualAssociatedEndpointId = found->second;
+
+            if (_wcsicmp(actualAssociatedEndpointId.c_str(), expectedAssociatedEndpointId.c_str()) == 0)
+            {
+                withCorrectAssociatedEndpointCount++;
+
+                std::wcout << L"  OK                      : " << expectedPortDeviceId << std::endl;
+            }
+            else
+            {
+                std::wcout
+                    << L"  WRONG ASSOCIATED ENDPOINT: " << expectedPortDeviceId << std::endl
+                    << L"      expected : '" << expectedAssociatedEndpointId << L"'" << std::endl
+                    << L"      from Added: '" << actualAssociatedEndpointId << L"'" << std::endl;
+            }
+        }
+    }
+
+    std::wcout << L"Reported by watcher:                      " << reportedByWatcherCount << std::endl;
+    std::wcout << L"With correct AssociatedEndpointDeviceId:  " << withCorrectAssociatedEndpointCount << std::endl;
+
+    // Reaching this point at all means the process survived, which by itself is
+    // part of what this test is checking. The watcher must then have raised Added
+    // for all four of the newly created ports, each carrying the endpoint it
+    // belongs to.
+    VERIFY_ARE_EQUAL(reportedByWatcherCount, expectedPorts.size());
+    VERIFY_ARE_EQUAL(withCorrectAssociatedEndpointCount, expectedPorts.size());
+}
+

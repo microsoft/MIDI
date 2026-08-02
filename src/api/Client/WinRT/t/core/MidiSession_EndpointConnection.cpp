@@ -71,7 +71,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (initSuccess)
             {
-                winrt::slim_lock_guard guard(m_connectionsLock);
+                std::lock_guard<std::mutex> guard(m_connectionsLock);
 
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 
@@ -183,7 +183,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             if (m_connections.HasKey(endpointConnectionId))
             {
-                winrt::slim_lock_guard guard(m_connectionsLock);
+                std::lock_guard<std::mutex> guard(m_connectionsLock);
 
                 // disconnect the endpoint from the service, call Close() etc.
 

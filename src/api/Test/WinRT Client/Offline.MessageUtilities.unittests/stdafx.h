@@ -27,6 +27,7 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 using namespace winrt::Windows::Devices::Midi2::Enumeration;
 
 #include <iostream>
+#include <vector>
 
 #include <avrt.h>
 #include <wil\resource.h>
@@ -42,6 +43,7 @@ using namespace winrt::Windows::Devices::Midi2::Enumeration;
 #include "MidiMessageBuilderTests.h"
 #include "MidiStreamMessageBuilderTests.h"
 #include "MidiMessageConverterTests.h"
+#include "MidiSystemExclusive7MessageHelperTests.h"
 
 
 

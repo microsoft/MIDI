@@ -22,7 +22,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         bool InternalInitialize(
             _In_ winrt::hstring const& endpointDeviceId, 
             _In_ winrt::hstring const& name, 
-            _In_ winrt::hstring const& description) noexcept
+            _In_ winrt::hstring const& description
+            ) noexcept
         {
             m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
             m_name = internal::TrimmedHStringCopy(name);

@@ -79,7 +79,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // key is the unique guid for the connection
         collections::IMap<winrt::guid, midi2::MidiEndpointConnection>
             m_connections{ winrt::multi_threaded_map<winrt::guid, midi2::MidiEndpointConnection>() };
-        winrt::slim_mutex m_connectionsLock;
+        mutable std::mutex m_connectionsLock;
 
         // this is a vector instead of a map because there can me more than one
         // open connection for a single endpoint device id

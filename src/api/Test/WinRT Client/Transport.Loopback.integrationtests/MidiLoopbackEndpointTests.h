@@ -34,6 +34,15 @@ public:
     // cleans them up first.
     TEST_METHOD(TestCreateLoopbackWithGarbageUniqueIds);
 
+    // Muting, unmuting, and enumerating active loopbacks
+    TEST_METHOD(TestMuteLoopback);
+    TEST_METHOD(TestUnmuteAfterMute);
+    TEST_METHOD(TestListActiveLoopbacks);
+
+    // A loopback has four WinMM ports (source and destination for both A and B),
+    // all of which must be re-openable after being closed.
+    TEST_METHOD(TestReopenLegacyWinMMPorts);
+
 
 private:
 

@@ -30,6 +30,6 @@ namespace Windows.Devices.Midi2.Utilities.Messages
         [noexcept] static UInt8 GetDataByteCountFromSystemExclusiveMessageFirstWord(UInt32 word0);
         [noexcept] static Boolean MessageIsSystemExclusiveMessage(UInt32 word0);
 
-
+        [noexcept] static Boolean VerifyContainsOnlyDataBytes(IIterable<UInt8> dataBytesToTest);
     };
 }
