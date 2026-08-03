@@ -37,6 +37,9 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 
         static uint8_t GetDataByteCountFromSystemExclusiveMessageFirstWord(_In_ uint32_t word0) noexcept;
         static bool MessageIsSystemExclusiveMessage(_In_ uint32_t word0) noexcept;
+
+
+        static bool VerifyContainsOnlyDataBytes(_In_ collections::IIterable<uint8_t> const& dataBytesToTest) noexcept;
     };
 }
 namespace winrt::Windows::Devices::Midi2::Utilities::Messages::factory_implementation

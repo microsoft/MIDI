@@ -97,11 +97,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             return *result;
         }
 
-        // provide a unique id if none was specified
-        winrt::hstring endpointUniqueId{ internal::TrimmedHStringCopy(creationConfig.EndpointDefinition().UniqueId()) };
-        if (endpointUniqueId.empty())
+        // clean up the unique id and then verify there's still something left to it
+        creationConfig.EndpointDefinition().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinition().UniqueId().c_str()).c_str(), MAXPNAMELEN - 1));
+
+        if (creationConfig.EndpointDefinition().UniqueId().empty())
         {
-            std::wstring id{ internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid()) };
+            // the RemoveInvalidSWDUniqueIdCharacters is currently redundant with the TruncateHStringCopy, but we want to keep it in case we change the logic in the future
+            std::wstring id{ internal::RemoveInvalidSWDUniqueIdCharacters(internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid())) };
             internal::InPlaceToLower(id);
 
             creationConfig.EndpointDefinition().UniqueId(id);
@@ -386,6 +388,28 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
         try
         {
+            auto supportsMuteAndUnmute = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT);
+
+            if (!supportsMuteAndUnmute)
+            {
+                result->InternalSetFailure(
+                    bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                    L"Transport does not support mute operation.");   // TODO: Localize
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to mute loopback. Transport does not support mute operation.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return *result;
+            }
+
             svc::MidiServiceTransportCommand cmd(TransportId());
 
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
@@ -471,6 +495,28 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
         try
         {
+            auto supportsMuteAndUnmute = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT);
+
+            if (!supportsMuteAndUnmute)
+            {
+                result->InternalSetFailure(
+                    bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                    L"Transport does not support unmute operation.");   // TODO: Localize
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to unmute loopback. Transport does not support unmute operation.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return *result;
+            }
+
             svc::MidiServiceTransportCommand cmd(TransportId());
 
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));

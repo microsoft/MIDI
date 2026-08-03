@@ -57,5 +57,7 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
         [noexcept] Windows.Devices.Midi2.Enumeration.MidiEndpointNativeDataFormat NativeDataFormat{ get; };   // the native data format of the port, which is needed to know in order to use the port with WinMM APIs. This is the same as the parent endpoint's native data format. Here for convenience.
 
         [noexcept] Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
+
+        [noexcept] Guid TransportId{ get; };
     }
 }

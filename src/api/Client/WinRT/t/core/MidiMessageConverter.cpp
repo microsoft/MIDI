@@ -56,34 +56,33 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
                 return nullptr;
             }
 
+            bytestreamToUMP converter;
 
-            uint32_t midiWord{ 0 };
-            midiWord = internal::MidiWordFromBytes(
-                (uint8_t)0x00,
-                statusByte,
-                internal::CleanupByte7(dataByte1),
-                internal::CleanupByte7(dataByte2)
-            );
+            converter.defaultGroup = group.Index();
+            converter.bytestreamParse(statusByte);
 
-            if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(statusByte))
+            if (MIDI_MESSAGE_IS_TWO_BYTES(statusByte))
             {
-                // convert rt message
-                internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::SystemCommon32);
+                converter.bytestreamParse(dataByte1);
             }
-            else if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(statusByte))
+            else if (MIDI_MESSAGE_IS_THREE_BYTES(statusByte))
             {
-                // convert cv message
-                internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
+                converter.bytestreamParse(dataByte1);
+                converter.bytestreamParse(dataByte2);
             }
 
-            // set the group
-            internal::SetGroupIndexInFirstWord(midiWord, group.Index());
+            if (converter.availableUMP())
+            {
+                MidiMessage32 message;
+                message.Word0(converter.readUMP());
+                message.Timestamp(timestamp);
 
-            midi2::MidiMessage32 message;
-            message.Timestamp(timestamp);
-            message.Word0(midiWord);
-
-            return message;
+                return message;
+            }
+            else
+            {
+                return nullptr;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {

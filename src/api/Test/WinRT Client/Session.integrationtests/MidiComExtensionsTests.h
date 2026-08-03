@@ -17,29 +17,29 @@ public:
 
     BEGIN_TEST_CLASS(MidiComExtensionsTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
     END_TEST_CLASS()
 
-        //TEST_CLASS_SETUP(ClassSetup);
-        //TEST_CLASS_CLEANUP(ClassCleanup);
+    //TEST_CLASS_SETUP(ClassSetup);
+    //TEST_CLASS_CLEANUP(ClassCleanup);
 
-        //TEST_METHOD_SETUP(TestSetup);
-        //TEST_METHOD_CLEANUP(TestCleanup);
+    //TEST_METHOD_SETUP(TestSetup);
+    //TEST_METHOD_CLEANUP(TestCleanup);
 
-        TEST_METHOD(TestSendReceiveMessages);
+    TEST_METHOD(TestSendReceiveMessages);
 
-        STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    {
+        if (m_midiInCallback)
         {
-            if (m_midiInCallback)
-            {
-                m_midiInCallback(sessionId, connectionId, timestamp, wordCount, messages);
-            }
-            return S_OK;
+            m_midiInCallback(sessionId, connectionId, timestamp, wordCount, messages);
         }
+        return S_OK;
+    }
 
-        STDMETHODIMP QueryInterface(REFIID, void**) { return S_OK; }
-        STDMETHODIMP_(ULONG) AddRef() { return 1; }
-        STDMETHODIMP_(ULONG) Release() { return 1; }
+    STDMETHODIMP QueryInterface(REFIID, void**) { return S_OK; }
+    STDMETHODIMP_(ULONG) AddRef() { return 1; }
+    STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
     std::function<void(GUID, GUID, UINT64, UINT32, UINT32*)> m_midiInCallback;

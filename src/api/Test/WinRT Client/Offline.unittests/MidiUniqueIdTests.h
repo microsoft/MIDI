@@ -12,30 +12,31 @@
 
 // These are excluded until the full MIDI CI API is implemented and distributed
 
+#include <winrt/Windows.Devices.Midi2.CapabilityInquiry.h>
+using namespace winrt::Windows::Devices::Midi2::CapabilityInquiry;
 
 
-//
-//class MidiUniqueIdTests
-//    : public WEX::TestClass<MidiUniqueIdTests>
-//{
-//public:
-//
-//    BEGIN_TEST_CLASS(MidiUniqueIdTests)
-//        TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-//        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll")
-//    END_TEST_CLASS()
-//
-//        //TEST_METHOD_SETUP(TestSetup);
-//        //TEST_METHOD_CLEANUP(TestCleanup);
-//
-//    TEST_METHOD(TestCreateEmptyId);
-//    TEST_METHOD(TestCreateRandomId);
-//    TEST_METHOD(TestCreateBroadcastId);
-//    TEST_METHOD(TestCreateFrom28BitNumber);
-//    TEST_METHOD(TestCreateFromBytes);
-//
-//private:
-//
-//
-//};
-//
+class MidiUniqueIdTests
+    : public WEX::TestClass<MidiUniqueIdTests>
+{
+public:
+
+    BEGIN_TEST_CLASS(MidiUniqueIdTests)
+        TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
+    END_TEST_CLASS()
+
+    //TEST_METHOD_SETUP(TestSetup);
+    //TEST_METHOD_CLEANUP(TestCleanup);
+
+    TEST_METHOD(TestCreateEmptyId);
+    TEST_METHOD(TestCreateRandomId);
+    TEST_METHOD(TestCreateBroadcastId);
+    TEST_METHOD(TestCreateFrom28BitNumber);
+    TEST_METHOD(TestCreateFromBytes);
+
+private:
+
+
+};
+

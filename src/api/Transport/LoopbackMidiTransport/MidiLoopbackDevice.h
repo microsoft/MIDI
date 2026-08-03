@@ -15,10 +15,10 @@
 class MidiLoopbackDevice
 {
 public:
+    bool IsMuted{ false };
+
     MidiLoopbackDeviceDefinition DefinitionA;
     MidiLoopbackDeviceDefinition DefinitionB;
-
-//    bool IsFromConfigurationFile{ true };
 
     void Shutdown()
     {
@@ -51,9 +51,19 @@ public:
 
     HRESULT SendMessageAToB(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
-        if (m_callbackB != nullptr)
+        if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
         {
-            return m_callbackB->Callback(MessageOptionFlags_None, message, size, position, context);
+            if (m_callbackB != nullptr && !IsMuted)
+            {
+                return m_callbackB->Callback(MessageOptionFlags_None, message, size, position, context);
+            }
+        }
+        else
+        {
+            if (m_callbackB != nullptr)
+            {
+                return m_callbackB->Callback(MessageOptionFlags_None, message, size, position, context);
+            }
         }
 
         return S_OK;
@@ -61,9 +71,19 @@ public:
 
     HRESULT SendMessageBToA(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
-        if (m_callbackA != nullptr)
+        if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
         {
-            return m_callbackA->Callback(MessageOptionFlags_None, message, size, position, context);
+            if (m_callbackA != nullptr && !IsMuted)
+            {
+                return m_callbackA->Callback(MessageOptionFlags_None, message, size, position, context);
+            }
+        }
+        else
+        {
+            if (m_callbackA != nullptr)
+            {
+                return m_callbackA->Callback(MessageOptionFlags_None, message, size, position, context);
+            }
         }
 
         return S_OK;

@@ -15,7 +15,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     void MidiEndpointConnection::InitializePlugins() noexcept
     {
         // ensure plugins are not added or removed while we are iterating through them
-        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+        std::lock_guard<std::mutex> guard(m_messageProcessingPluginsLock);
 
         for (const auto& plugin : m_messageProcessingPlugins)
         {
@@ -38,7 +38,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     void MidiEndpointConnection::CallOnConnectionOpenedOnPlugins() noexcept
     {
         // ensure plugins are not added or removed while we are iterating through them
-        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+        std::lock_guard<std::mutex> guard(m_messageProcessingPluginsLock);
 
         for (const auto& plugin : m_messageProcessingPlugins)
         {
@@ -60,7 +60,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     void MidiEndpointConnection::CleanupPlugins() noexcept
     {
         // ensure plugins are not added or removed while we are iterating through them
-        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+        std::lock_guard<std::mutex> guard(m_messageProcessingPluginsLock);
 
         for (const auto& plugin : m_messageProcessingPlugins)
         {
@@ -87,7 +87,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiEndpointConnection::AddMessageProcessingPlugin(midi2::IMidiEndpointMessageProcessingPlugin const& plugin)
     {
-        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+        std::lock_guard<std::mutex> guard(m_messageProcessingPluginsLock);
 
         m_messageProcessingPlugins.Append(plugin);
 
@@ -116,7 +116,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid pluginId)
     {
-        winrt::slim_lock_guard guard(m_messageProcessingPluginsLock);
+        std::lock_guard<std::mutex> guard(m_messageProcessingPluginsLock);
 
         for (uint32_t i = 0; i < m_messageProcessingPlugins.Size(); i++)
         {

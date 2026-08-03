@@ -17,22 +17,18 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    HRESULT MidiEndpointConnection::Callback(MessageOptionFlags optionFlags, PVOID data, UINT size, LONGLONG timestamp, LONGLONG context)
+    HRESULT MidiEndpointConnection::Callback(MessageOptionFlags /*optionFlags*/, PVOID data, UINT size, LONGLONG timestamp, LONGLONG /*context*/)
     {
-        UNREFERENCED_PARAMETER(context);
-        UNREFERENCED_PARAMETER(optionFlags);
+        RETURN_HR_IF_NULL(E_INVALIDARG, data);
+        RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
         // COM Extension Handling ===================================================================================
         {
-            winrt::slim_lock_guard guard(m_comCallbackLock);
+            std::lock_guard<std::mutex> guard(m_comCallbackLock);
 
             // this is for the COM extensions approach to receiving messages. It's a fast exit.
             if (m_comCallback != nullptr)
             {
-
-                RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
-                RETURN_HR_IF_NULL(E_INVALIDARG, data);
-
                 // when you use the COM extensions, we bypass all other processing of incoming messages
                 RETURN_IF_FAILED(m_comCallback->MessagesReceived(
                     m_sessionId,

@@ -16,15 +16,14 @@ public:
 
     BEGIN_TEST_CLASS(MidiMessageConverterTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.dll")
-        END_TEST_CLASS()
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
+    END_TEST_CLASS()
 
 
     //Generic Tests
     TEST_METHOD(TestConvertControlChangeMessages);
     TEST_METHOD(TestConvertNoteOnMessages);
     TEST_METHOD(TestConvertNoteOffMessages);
-    TEST_METHOD(TestConvertClockMessages);
 
     TEST_METHOD(TestConvertHexStringToBytes);
     TEST_METHOD(TestConvertHexStringNoSpacesToBytes);
@@ -35,6 +34,17 @@ public:
 
     TEST_METHOD(TestIncompleteSysEx7Conversion);
     TEST_METHOD(TestStatefulSysEx7Conversion);
+
+    TEST_METHOD(TestConvertSystemCommonMidiTimeCode);
+    TEST_METHOD(TestConvertSystemCommonMidiSongPositionPointer);
+    TEST_METHOD(TestConvertSystemCommonMidiSongSelect);
+    TEST_METHOD(TestConvertSystemCommonMidiTuneRequest);
+    TEST_METHOD(TestConvertClockMessages);
+    TEST_METHOD(TestConvertSystemCommonMidiStart);
+    TEST_METHOD(TestConvertSystemCommonMidiContinue);
+    TEST_METHOD(TestConvertSystemCommonMidiStop);
+    TEST_METHOD(TestConvertSystemCommonMidiActiveSensing);
+    TEST_METHOD(TestConvertSystemCommonMidiReset);
 
 
 };

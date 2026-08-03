@@ -20,16 +20,16 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"usbmidi2.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"MidiSrv.exe")
-        END_TEST_CLASS()
+    END_TEST_CLASS()
 
-        //TEST_CLASS_SETUP(ClassSetup);
-        //TEST_CLASS_CLEANUP(ClassCleanup);
+    //TEST_CLASS_SETUP(ClassSetup);
+    //TEST_CLASS_CLEANUP(ClassCleanup);
 
-        //TEST_METHOD_SETUP(TestSetup);
-        //TEST_METHOD_CLEANUP(TestCleanup);
+    //TEST_METHOD_SETUP(TestSetup);
+    //TEST_METHOD_CLEANUP(TestCleanup);
 
-        //Generic Tests
-        TEST_METHOD(TestCreateNewSession);
+    //Generic Tests
+    TEST_METHOD(TestCreateNewSession);
 
 
 private:

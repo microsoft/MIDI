@@ -24,6 +24,7 @@
 #include <cwctype>
 #include <queue>
 #include <mutex>
+#include <thread>
 #include <format>
 #include <filesystem>
 
@@ -36,6 +37,7 @@
 #include <wil\tracelogging.h>
 #include <wil\registry.h>
 
+#include <winrt/base.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.ApplicationModel.h>
@@ -145,6 +147,8 @@ namespace virt = ::winrt::Windows::Devices::Midi2::Transports::Virtual;
 namespace winrt::Windows::Devices::Midi2::Utilities::Messages {};
 namespace msgs = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
 
+namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer {};
+namespace sysex = ::winrt::Windows::Devices::Midi2::Utilities::SysExTransfer;
 
 
 

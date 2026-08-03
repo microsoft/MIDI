@@ -165,12 +165,12 @@ app.Configure(config =>
             .WithDescription(Strings.CommandSendMessagesFileDescription)
             ;
 
-        //endpoint.AddCommand<EndpointSendSysExFileCommand>("send-sysex-file")
-        //    .WithAlias("send-sysex")
-        //    .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-sysex-file", "%USERPROFILE%\\Documents\\patch_dump.syx")
-        //    .WithExample("endpoint", "send-sysex", "patch_dump.syx")
-        //    .WithDescription(Strings.CommandSendSysExFileDescription)
-        //    ;
+        endpoint.AddCommand<EndpointSendSysExFileCommand>("send-sysex-file")
+            .WithAlias("send-sysex")
+            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-sysex-file", "%USERPROFILE%\\Documents\\patch_dump.syx")
+            .WithExample("endpoint", "send-sysex", "patch_dump.syx")
+            .WithDescription(Strings.CommandSendSysExFileDescription)
+            ;
 
         endpoint.AddCommand<EndpointPlayNotesCommand>("play-notes")
             .WithAlias("play")
@@ -275,6 +275,13 @@ app.Configure(config =>
     config.AddCommand<WatchEndpointsCommand>("watch-endpoints")
         .WithDescription(Strings.CommandWatchEndpointsDescription)
         .WithExample("watch-endpoints")
+        .WithAlias("watch-ump")
+        ;
+
+    config.AddCommand<WatchPortsCommand>("watch-ports")
+        .WithDescription(Strings.CommandWatchPortsDescription)
+        .WithExample("watch-ports")
+        .WithAlias("watch-legacy")
         ;
 
 

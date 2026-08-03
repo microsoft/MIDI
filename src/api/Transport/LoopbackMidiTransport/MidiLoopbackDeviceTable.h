@@ -18,7 +18,7 @@ private:
 
 public:
 
-    MidiLoopbackDevice* GetDevice(std::wstring associationId)
+    MidiLoopbackDevice* GetDevice(_In_ std::wstring const& associationId)
     {
         auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
 
@@ -32,14 +32,14 @@ public:
         }
     }
 
-    void SetDevice(std::wstring associationId, MidiLoopbackDevice device)
+    void SetDevice(_In_ std::wstring const& associationId, _In_ MidiLoopbackDevice const& device)
     {
         auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
 
         m_devices[cleanId] = device;
     }
 
-    void RemoveDevice(std::wstring associationId)
+    void RemoveDevice(_In_ std::wstring const& associationId)
     {
         auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
 
@@ -52,7 +52,7 @@ public:
     }
 
 
-    bool IsUniqueIdentifierInUseForLoopbackA(std::wstring uniqueIdentifier)
+    bool IsUniqueIdentifierInUseForLoopbackA(_In_ std::wstring const& uniqueIdentifier)
     {
         auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
 
@@ -67,7 +67,7 @@ public:
         return false;
     }
 
-    bool IsUniqueIdentifierInUseForLoopbackB(std::wstring uniqueIdentifier)
+    bool IsUniqueIdentifierInUseForLoopbackB(_In_ std::wstring const& uniqueIdentifier)
     {
         auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
 
@@ -81,4 +81,24 @@ public:
 
         return false;
     }
+
+
+
+    std::vector<MidiLoopbackDevice> GetDeviceListSnapshot()
+    {
+        std::vector<MidiLoopbackDevice> results;
+
+        // lock so no adds/removes happen while building the list
+        // UPDATE THIS with the Loopback locking mechanism that was added through security PR
+//        auto lock = m_devicesLock.lock_shared();
+
+        for (auto const& [key, device] : m_devices)
+        {
+            results.push_back(device);
+        }
+
+        return results;
+    }
+
+
 };

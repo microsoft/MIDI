@@ -172,4 +172,24 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         return internal::GetUmpMessageTypeFromFirstWord(word0) == MIDI_UMP_MESSAGE_TYPE_DATA_MESSAGE_64 &&
             internal::GetStatusFromDataMessage64FirstWord(word0) <= 0x03;   // 0x0, 0x1, 0x2, 0x3 are SysEx7
     }
+
+
+
+
+    _Use_decl_annotations_
+    bool MidiSystemExclusive7MessageHelper::VerifyContainsOnlyDataBytes(collections::IIterable<uint8_t> const& dataBytesToTest) noexcept
+    {
+        for (auto const& dataByte : dataBytesToTest)
+        {
+            if (dataByte > 0x7F)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+
 }

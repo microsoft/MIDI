@@ -72,7 +72,7 @@
 namespace json = ::winrt::Windows::Data::Json;
 //#pragma pop_macro("GetObject")
 
-
+#include "Feature_Servicing_MIDI2LoopbackMuteAndList.h"
 
 // TransportUtilities
 #include "wstring_util.h"
@@ -91,6 +91,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "MidiXProc.h"
 
 #include "loopback_transport_defs.h"
+#include "loopback_transport_error_codes.h"
 
 #include "Midi2LoopbackMidiTransport_i.c"
 #include "Midi2LoopbackMidiTransport.h"

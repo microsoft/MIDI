@@ -25,6 +25,13 @@ private:
         _In_ json::JsonObject const& transportObject,
         _In_ json::JsonObject& responseObject);
 
+    HRESULT ExecuteCommandChangeMutedState(
+        _In_ winrt::guid const& associationId,
+        _In_ bool const muted);
+
+    HRESULT ExecuteCommandListEntries(
+        _Inout_ json::JsonObject const& responseObject);
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
 
     GUID m_TransportId;   // kept for convenience

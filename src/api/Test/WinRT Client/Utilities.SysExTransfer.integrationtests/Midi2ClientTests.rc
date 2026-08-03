@@ -6,6 +6,6 @@
 #define VER_FILESUBTYPE          VFT_UNKNOWN
 #define VER_FILEDESCRIPTION_STR  "Windows MIDI 2 client tests"
 #define VER_INTERNALNAME_STR     "Windows MIDI 2 client tests"
-#define VER_ORIGINALFILENAME_STR "Midi2.Client.unittests.dll"
+#define VER_ORIGINALFILENAME_STR "Midi2.WinRTClient.Loopback.integrationtests.dll"
 
 #include <common.ver>

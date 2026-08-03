@@ -36,6 +36,10 @@ public:
 
     bool IsInitialized() { return m_initialized; }
 
+    HRESULT UpdateSingleEndpointMutedStateProperty(
+        _In_ MidiLoopbackDeviceDefinition const& definition,
+        _In_ bool const isMuted);
+
 
     //HRESULT DeleteEndpointPair(
     //    _In_ GUID const VirtualEndpointAssociationGuid
@@ -57,7 +61,6 @@ private:
 
     HRESULT CreateSingleEndpoint(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
     HRESULT DeleteSingleEndpoint(_In_ MidiLoopbackDeviceDefinition const& definition);
-
 
     GUID m_ContainerId{};
     GUID m_TransportTransportId{};

@@ -11,6 +11,7 @@
 
 #include <mmsystem.h>
 #include <vector>
+#include <atomic>
 
 #pragma comment(lib, "winmm.lib")
 
@@ -117,14 +118,16 @@ void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
 
     watcher.Start();
 
-    LOG_OUTPUT(L"Waiting for the source and destination legacy ports to appear in the watcher");
-    if (!bothPortsAvailable.wait(10000))
-    {
-        LOG_OUTPUT(L"Timed out waiting for the legacy ports to be added.");
-        VERIFY_FAIL();
-        return;
-    }
+    // Resolve the WinMM port numbers for the loopback.
+    //
+    // These are resolved by querying the ports directly rather than by waiting on the
+    // watcher's Added events. The watcher does not reliably raise Added for every port
+    // when several are created at once, and the port number itself is assigned
+    // asynchronously, so a direct query is the authoritative source for this test.
+    LOG_OUTPUT(L"Resolving the source and destination legacy WinMM port numbers");
 
+    VERIFY_IS_TRUE(TryResolveWinMMPortNumber(endpointId, Midi1PortFlow::MidiMessageSource, sourcePortNumber));
+    VERIFY_IS_TRUE(TryResolveWinMMPortNumber(endpointId, Midi1PortFlow::MidiMessageDestination, destinationPortNumber));
 
     // stop watching before we do anything else
     if (watcher != nullptr)
@@ -133,9 +136,6 @@ void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
 
         watcher.Stop();
     }
-
-    VERIFY_IS_TRUE(haveSourcePort);
-    VERIFY_IS_TRUE(haveDestinationPort);
 
     LOG_OUTPUT(WEX::Common::String().Format(
         L"Source WinMM port number: %u, Destination WinMM port number: %u",
@@ -180,6 +180,78 @@ void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
     }
 
     // cleanupLoopback scope_exit handler removes the loopback
+}
+
+
+void MidiBasicLoopbackTests::TestCreateLoopbackWithGarbageUniqueId()
+{
+    // A unique id containing spaces, symbols, and punctuation must still result in a
+    // successfully created loopback, because MidiBasicLoopbackManager strips the
+    // invalid characters before submitting the config to the service.
+
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    auto validPrefix = L"ID" + winrt::to_hstring(MidiClock::Now());
+    auto garbageUniqueId = MakeGarbageUniqueId(validPrefix.c_str());
+
+    auto expectedUniqueId = ExpectedCleanedUniqueId(garbageUniqueId);
+
+    // sanity check the test data itself: the garbage id must actually be dirty, and
+    // must still contain something valid once cleaned
+    VERIFY_IS_FALSE(UniqueIdContainsOnlyValidCharacters(garbageUniqueId));
+    VERIFY_IS_FALSE(expectedUniqueId.empty());
+
+    std::wcout << L"Supplied unique id: " << garbageUniqueId << std::endl;
+    std::wcout << L"Expected cleaned unique id: " << expectedUniqueId << std::endl;
+
+    MidiBasicLoopbackEndpointDefinition definition(
+        L"Test Basic Loopback Garbage Id",
+        winrt::hstring{ garbageUniqueId },
+        L"Loopback created with a unique id which contains invalid characters."
+    );
+
+    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
+
+    LOG_OUTPUT(L"Creating loopback endpoint creation config");
+    MidiBasicLoopbackCreationConfig creationConfig(associationId, definition);
+
+    LOG_OUTPUT(L"Creating loopback");
+    auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
+    VERIFY_IS_NOT_NULL(response);
+
+    if (response.Success())
+    {
+        LOG_OUTPUT(L"Endpoint created successfully");
+
+        VERIFY_IS_NOT_NULL(response.CreatedLoopbackEntry());
+        VERIFY_IS_FALSE(response.CreatedLoopbackEntry().EndpointDeviceId().empty());
+
+        // the manager cleans the unique id in the config before submitting it
+        std::wstring actualUniqueId{ creationConfig.EndpointDefinition().UniqueId().c_str() };
+
+        std::wcout << L"Actual unique id after creation: " << actualUniqueId << std::endl;
+
+        VERIFY_IS_TRUE(UniqueIdContainsOnlyValidCharacters(actualUniqueId));
+        VERIFY_IS_TRUE(actualUniqueId == expectedUniqueId);
+
+        // Give a hoot. Don't pollute.
+        MidiBasicLoopbackRemovalConfig removalConfig(response.CreatedLoopbackEntry().AssociationId());
+        auto removalResponse = MidiBasicLoopbackManager::RemoveTransientLoopback(removalConfig);
+
+        VERIFY_IS_NOT_NULL(removalResponse);
+        VERIFY_IS_TRUE(removalResponse.Success());
+    }
+    else
+    {
+        LOG_OUTPUT(L"Return result indicates failure");
+
+        std::wcout << L"Success:       " << response.Success() << std::endl;
+        std::wcout << L"Error Code:    " << std::hex << static_cast<uint32_t>(response.ErrorCode()) << std::dec << std::endl;
+        std::wcout << L"Error Message: " << response.ErrorMessage().c_str() << std::endl;
+
+        VERIFY_FAIL();
+    }
 }
 
 
@@ -347,6 +419,305 @@ void MidiBasicLoopbackTests::TestCreateLegacyPorts()
     }
 }
 
+
+
+// Looks up an active loopback entry by association id. Returns nullptr if not found.
+static MidiBasicLoopbackEntry FindActiveLoopbackEntry(winrt::guid const& associationId)
+{
+    auto entries = MidiBasicLoopbackManager::GetActiveLoopbackEntries();
+
+    if (entries == nullptr) return nullptr;
+
+    for (auto const& entry : entries)
+    {
+        if (entry.AssociationId() == associationId)
+        {
+            return entry;
+        }
+    }
+
+    return nullptr;
+}
+
+// Creates a transient basic loopback with a unique name/id, and verifies the response.
+static MidiBasicLoopbackCreationResponse CreateTestLoopback(_In_ winrt::hstring const& namePrefix)
+{
+    auto uniqueId = L"ID" + winrt::to_hstring(MidiClock::Now()) + winrt::to_hstring(rand());
+
+    MidiBasicLoopbackEndpointDefinition definition(
+        namePrefix,
+        uniqueId,
+        L"Loopback created by the Windows MIDI Services TAEF tests."
+    );
+
+    MidiBasicLoopbackCreationConfig creationConfig(foundation::GuidHelper::CreateNewGuid(), definition);
+
+    auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
+
+    VERIFY_IS_NOT_NULL(response);
+
+    if (!response.Success())
+    {
+        std::wcout << L"Error Code:    " << std::hex << static_cast<uint32_t>(response.ErrorCode()) << std::dec << std::endl;
+        std::wcout << L"Error Message: " << response.ErrorMessage().c_str() << std::endl;
+    }
+
+    VERIFY_IS_TRUE(response.Success());
+    VERIFY_IS_NOT_NULL(response.CreatedLoopbackEntry());
+    VERIFY_IS_FALSE(response.CreatedLoopbackEntry().EndpointDeviceId().empty());
+
+    return response;
+}
+
+static void RemoveTestLoopback(winrt::guid const& associationId)
+{
+    MidiBasicLoopbackRemovalConfig removalConfig(associationId);
+    auto removalResponse = MidiBasicLoopbackManager::RemoveTransientLoopback(removalConfig);
+
+    VERIFY_IS_NOT_NULL(removalResponse);
+    VERIFY_IS_TRUE(removalResponse.Success());
+}
+
+
+void MidiBasicLoopbackTests::TestMuteLoopback()
+{
+    // Once a loopback is muted, messages sent to it must no longer be looped back.
+
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Mute");
+
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+    auto endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
+
+    // a newly created loopback must not be muted
+    VERIFY_IS_FALSE(response.CreatedLoopbackEntry().IsMuted());
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    LOG_OUTPUT(L"Creating session and connection");
+
+    auto session = MidiSession::Create(L"TestMuteLoopback");
+    VERIFY_IS_NOT_NULL(session);
+
+    auto connection = session.CreateEndpointConnection(endpointId);
+    VERIFY_IS_NOT_NULL(connection);
+
+    wil::unique_event_nothrow messageReceived;
+    messageReceived.create();
+
+    std::atomic<uint32_t> receivedMessageCount{ 0 };
+
+    auto eventToken = connection.MessageReceived([&](auto&&, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(args);
+
+            std::cout << "Received message 0x" << std::hex << args.PeekFirstWord() << std::dec << std::endl;
+
+            receivedMessageCount++;
+            messageReceived.SetEvent();
+        });
+
+    VERIFY_IS_TRUE(connection.Open());
+
+    MidiMessage64 message(MidiClock::TimestampConstantSendImmediately(), 0x43001627, 0x86753090);
+
+    // Baseline: while unmuted, the message must loop back
+    LOG_OUTPUT(L"Sending message while unmuted");
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connection.SendSingleMessagePacket(message)));
+
+    VERIFY_IS_TRUE(messageReceived.wait(5000));
+    VERIFY_ARE_EQUAL(receivedMessageCount.load(), (uint32_t)1);
+
+    // Mute the loopback
+    LOG_OUTPUT(L"Muting the loopback");
+    auto muteResponse = MidiBasicLoopbackManager::MuteLoopback(associationId);
+    VERIFY_IS_NOT_NULL(muteResponse);
+
+    if (!muteResponse.Success())
+    {
+        std::wcout << L"Mute Error Message: " << muteResponse.ErrorMessage().c_str() << std::endl;
+    }
+
+    VERIFY_IS_TRUE(muteResponse.Success());
+
+    // the active loopback entry must now report that it is muted
+    auto mutedEntry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(mutedEntry);
+    VERIFY_IS_TRUE(mutedEntry.IsMuted());
+
+    // Send while muted. Nothing should come back.
+    messageReceived.ResetEvent();
+    receivedMessageCount = 0;
+
+    LOG_OUTPUT(L"Sending message while muted");
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connection.SendSingleMessagePacket(message)));
+
+    // wait long enough that a message would have arrived had it not been muted
+    VERIFY_IS_FALSE(messageReceived.wait(2000));
+    VERIFY_ARE_EQUAL(receivedMessageCount.load(), (uint32_t)0);
+
+    connection.MessageReceived(eventToken);
+    session.DisconnectEndpointConnection(connection.ConnectionId());
+    session.Close();
+}
+
+
+void MidiBasicLoopbackTests::TestUnmuteAfterMute()
+{
+    // After unmuting a previously muted loopback, messages must flow again.
+
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Unmute");
+
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+    auto endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    auto session = MidiSession::Create(L"TestUnmuteAfterMute");
+    VERIFY_IS_NOT_NULL(session);
+
+    auto connection = session.CreateEndpointConnection(endpointId);
+    VERIFY_IS_NOT_NULL(connection);
+
+    wil::unique_event_nothrow messageReceived;
+    messageReceived.create();
+
+    std::atomic<uint32_t> receivedMessageCount{ 0 };
+
+    auto eventToken = connection.MessageReceived([&](auto&&, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(args);
+
+            std::cout << "Received message 0x" << std::hex << args.PeekFirstWord() << std::dec << std::endl;
+
+            receivedMessageCount++;
+            messageReceived.SetEvent();
+        });
+
+    VERIFY_IS_TRUE(connection.Open());
+
+    MidiMessage64 message(MidiClock::TimestampConstantSendImmediately(), 0x43001627, 0x86753090);
+
+    // Mute first, and confirm the messages are actually blocked
+    LOG_OUTPUT(L"Muting the loopback");
+    auto muteResponse = MidiBasicLoopbackManager::MuteLoopback(associationId);
+    VERIFY_IS_NOT_NULL(muteResponse);
+    VERIFY_IS_TRUE(muteResponse.Success());
+
+    LOG_OUTPUT(L"Sending message while muted");
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connection.SendSingleMessagePacket(message)));
+
+    VERIFY_IS_FALSE(messageReceived.wait(2000));
+    VERIFY_ARE_EQUAL(receivedMessageCount.load(), (uint32_t)0);
+
+    // Now unmute
+    LOG_OUTPUT(L"Unmuting the loopback");
+    auto unmuteResponse = MidiBasicLoopbackManager::UnmuteLoopback(associationId);
+    VERIFY_IS_NOT_NULL(unmuteResponse);
+
+    if (!unmuteResponse.Success())
+    {
+        std::wcout << L"Unmute Error Message: " << unmuteResponse.ErrorMessage().c_str() << std::endl;
+    }
+
+    VERIFY_IS_TRUE(unmuteResponse.Success());
+
+    // the active loopback entry must no longer report that it is muted
+    auto unmutedEntry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(unmutedEntry);
+    VERIFY_IS_FALSE(unmutedEntry.IsMuted());
+
+    // messages must flow again
+    messageReceived.ResetEvent();
+    receivedMessageCount = 0;
+
+    LOG_OUTPUT(L"Sending message after unmuting");
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connection.SendSingleMessagePacket(message)));
+
+    VERIFY_IS_TRUE(messageReceived.wait(5000));
+    VERIFY_ARE_EQUAL(receivedMessageCount.load(), (uint32_t)1);
+
+    connection.MessageReceived(eventToken);
+    session.DisconnectEndpointConnection(connection.ConnectionId());
+    session.Close();
+}
+
+
+void MidiBasicLoopbackTests::TestListActiveLoopbacks()
+{
+    // Creating multiple loopbacks must result in all of them being reported by
+    // GetActiveLoopbackEntries, and removing them must take them back out of the list.
+
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    auto countBefore = MidiBasicLoopbackManager::GetActiveLoopbackEntries().Size();
+
+    LOG_OUTPUT(L"Creating first loopback");
+    auto response1 = CreateTestLoopback(L"Test Basic Loopback List 1");
+    auto associationId1 = response1.CreatedLoopbackEntry().AssociationId();
+    auto endpointId1 = response1.CreatedLoopbackEntry().EndpointDeviceId();
+
+    auto cleanup1 = wil::scope_exit([&] { RemoveTestLoopback(associationId1); });
+
+    LOG_OUTPUT(L"Creating second loopback");
+    auto response2 = CreateTestLoopback(L"Test Basic Loopback List 2");
+    auto associationId2 = response2.CreatedLoopbackEntry().AssociationId();
+    auto endpointId2 = response2.CreatedLoopbackEntry().EndpointDeviceId();
+
+    auto cleanup2 = wil::scope_exit([&] { RemoveTestLoopback(associationId2); });
+
+    // the two loopbacks must be distinct
+    VERIFY_IS_FALSE(associationId1 == associationId2);
+    VERIFY_IS_FALSE(HStringsAreCaseInsensitiveEqual(endpointId1, endpointId2));
+
+    auto entries = MidiBasicLoopbackManager::GetActiveLoopbackEntries();
+    VERIFY_IS_NOT_NULL(entries);
+
+    std::cout << "Active loopback entries: " << entries.Size() << std::endl;
+
+    for (auto const& entry : entries)
+    {
+        std::cout
+            << " - " << winrt::to_string(entry.Name())
+            << " : " << winrt::to_string(entry.EndpointDeviceId())
+            << std::endl;
+    }
+
+    // both of the loopbacks we created must be present
+    auto entry1 = FindActiveLoopbackEntry(associationId1);
+    VERIFY_IS_NOT_NULL(entry1);
+    VERIFY_IS_TRUE(HStringsAreCaseInsensitiveEqual(entry1.EndpointDeviceId(), endpointId1));
+
+    auto entry2 = FindActiveLoopbackEntry(associationId2);
+    VERIFY_IS_NOT_NULL(entry2);
+    VERIFY_IS_TRUE(HStringsAreCaseInsensitiveEqual(entry2.EndpointDeviceId(), endpointId2));
+
+    // and the count must have grown by exactly the two we added
+    VERIFY_ARE_EQUAL(entries.Size(), countBefore + 2);
+
+    // now remove the first one and verify it drops out of the list while the other remains
+    LOG_OUTPUT(L"Removing the first loopback");
+    RemoveTestLoopback(associationId1);
+    cleanup1.release();
+
+    VERIFY_IS_NULL(FindActiveLoopbackEntry(associationId1));
+    VERIFY_IS_NOT_NULL(FindActiveLoopbackEntry(associationId2));
+
+    LOG_OUTPUT(L"Removing the second loopback");
+    RemoveTestLoopback(associationId2);
+    cleanup2.release();
+
+    VERIFY_IS_NULL(FindActiveLoopbackEntry(associationId2));
+
+    // we should be back where we started
+    VERIFY_ARE_EQUAL(MidiBasicLoopbackManager::GetActiveLoopbackEntries().Size(), countBefore);
+}
 
 
 void MidiBasicLoopbackTests::TestUmpSendReceive()

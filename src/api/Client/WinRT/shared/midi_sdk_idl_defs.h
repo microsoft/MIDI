@@ -207,6 +207,10 @@
 // Windows.Devices.Midi2.Utilities.SysExTransfer : Interface number 00E03
 
 
+#define UUID_IMidiSystemExclusiveSendProgress                               8087b303-0519-c0de-31d1-dd00E0301000
+
+#define UUID_IMidiSystemExclusiveSenderStatics			   	                8087b303-0519-c0de-31d1-ee00E0302000
+
 
 // ========== Transports : Interface number 0F ========================================================================
 

@@ -69,29 +69,318 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     _Use_decl_annotations_
     loop::MidiLoopbackUpdateResponse MidiLoopbackManager::MuteLoopback(_In_ winrt::guid const& associationId) noexcept
     {
-        // TODO ===============================
-        UNREFERENCED_PARAMETER(associationId);
+        auto result = winrt::make_self<MidiLoopbackUpdateResponse>();
 
-        return nullptr;
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
+
+        try
+        {
+            auto supportsMuteAndUnmute = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT);
+
+            if (!supportsMuteAndUnmute)
+            {
+                result->InternalSetFailure(
+                    loop::MidiLoopbackErrorCode::ClientApiException,
+                    L"Transport does not support mute operation.");   // TODO: Localize
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to mute loopback. Transport does not support mute operation.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return *result;
+            }
+
+            svc::MidiServiceTransportCommand cmd(TransportId());
+
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
+            cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
+
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                result->InternalSetSuccess();
+            }
+            else
+            {
+                result->InternalSetFailure(
+                    static_cast<loop::MidiLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to mute loopback. Service returned a failure result.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingUInt32(serviceResponse.ServiceErrorCode(), "service error code"),
+                    TraceLoggingWideString(serviceResponse.ServiceErrorMessage().c_str(), "service error message"),
+                    TraceLoggingGuid(associationId, "association id")
+                );
+            }
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            result->InternalSetFailure(
+                loop::MidiLoopbackErrorCode::ClientApiException,
+                ex.message());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to mute loopback. hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "error message"),
+                TraceLoggingGuid(associationId, "association id")
+            );
+
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            result->InternalSetFailure(
+                loop::MidiLoopbackErrorCode::ClientApiException,
+                L"General exception.");
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to mute loopback. General exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(associationId, "association id")
+            );
+        }
+
+        return *result;
+
     }
 
     _Use_decl_annotations_
     loop::MidiLoopbackUpdateResponse MidiLoopbackManager::UnmuteLoopback(_In_ winrt::guid const& associationId) noexcept
     {
-        // TODO ===============================
+        auto result = winrt::make_self<MidiLoopbackUpdateResponse>();
 
-        UNREFERENCED_PARAMETER(associationId);
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
 
-        return nullptr;
+        try
+        {
+            auto supportsMuteAndUnmute = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT);
+
+            if (!supportsMuteAndUnmute)
+            {
+                result->InternalSetFailure(
+                    loop::MidiLoopbackErrorCode::ClientApiException,
+                    L"Transport does not support unmute operation.");   // TODO: Localize
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to unmute loopback. Transport does not support unmute operation.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return *result;
+            }
+
+            svc::MidiServiceTransportCommand cmd(TransportId());
+
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
+            cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT);
+
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                result->InternalSetSuccess();
+            }
+            else
+            {
+                result->InternalSetFailure(
+                    static_cast<loop::MidiLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to unmute loopback. Service returned a failure result.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingUInt32(serviceResponse.ServiceErrorCode(), "service error code"),
+                    TraceLoggingWideString(serviceResponse.ServiceErrorMessage().c_str(), "service error message"),
+                    TraceLoggingGuid(associationId, "association id")
+                );
+            }
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            result->InternalSetFailure(
+                loop::MidiLoopbackErrorCode::ClientApiException,
+                ex.message());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to unmute loopback. hresult exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "error message"),
+                TraceLoggingGuid(associationId, "association id")
+            );
+
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            result->InternalSetFailure(
+                loop::MidiLoopbackErrorCode::ClientApiException,
+                L"General exception.");
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to unmute loopback. General exception", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(associationId, "association id")
+            );
+        }
+
+        return *result;
+
     }
 
 
 
     collections::IVectorView<loop::MidiLoopbackEntry> MidiLoopbackManager::GetActiveLoopbackEntries() noexcept
     {
-        // TODO ===============================
+        auto results = winrt::single_threaded_vector<loop::MidiLoopbackEntry>();
 
-        return nullptr;
+        try
+        {
+            auto supportsListEntries = svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES);
+
+            if (supportsListEntries)
+            {
+                svc::MidiServiceTransportCommand cmd(TransportId());
+                cmd.Verb(svc::MidiServiceTransportCommonCommands::ListEntries());
+
+                auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+
+                if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+                {
+                    if (serviceResponse.ResponseJson().HasKey(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY))
+                    {
+                        auto entriesJson = serviceResponse.ResponseJson().GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY);
+
+                        // process each of the returned entries
+                        for (const auto& jsonEntry : entriesJson)
+                        {
+                            auto entryObject = jsonEntry.GetObject();
+
+                            if (entryObject == nullptr)
+                            {
+                                continue;
+                            }
+
+                            auto entry = winrt::make_self<MidiLoopbackEntry>();
+                            auto loopbackA = winrt::make_self<MidiLoopbackEndpointEntry>();
+                            auto loopbackB = winrt::make_self<MidiLoopbackEndpointEntry>();
+
+                            if (entry == nullptr || loopbackA == nullptr || loopbackB == nullptr)
+                            {
+                                // memory failure
+                                break;
+                            }
+
+                            auto associationIdString = entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY, L"");
+
+                            if (associationIdString.empty())
+                            {
+                                // invalid entry
+                                continue;
+                            }
+
+                            // endpoint A
+                            if (entryObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_A_KEY))
+                            {
+                                auto endpointObject = entryObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_A_KEY);
+
+                                loopbackA->InternalInitialize(
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY, L""),
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY, L""),
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L"")
+                                );
+                            }
+
+                            // endpoint B
+                            if (entryObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_B_KEY))
+                            {
+                                auto endpointObject = entryObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_B_KEY);
+
+                                loopbackB->InternalInitialize(
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY, L""),
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY, L""),
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L"")
+                                );
+
+                            }
+
+                            // overall loopback
+                            entry->InternalSetAssociationId(winrt::guid(associationIdString));
+                            entry->InternalSetMuted(entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_MUTED_KEY, false));
+                            entry->InternalSetEndpointEntries(*loopbackA, *loopbackB);
+
+                            results.Append(*entry);
+                        }
+                    }
+                }
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error getting active loopback entries.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception getting active loopback entries.");
+        }
+
+        return results.GetView();
     }
 
 

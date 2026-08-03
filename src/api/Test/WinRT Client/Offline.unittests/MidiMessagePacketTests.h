@@ -16,7 +16,7 @@ public:
 
     BEGIN_TEST_CLASS(MidiMessagePacketTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Devices.Midi2.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.BluetoothMidiTransport.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.DiagnosticsTransport.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSTransport.dll")
@@ -29,14 +29,14 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"MidiSrv.exe")
     END_TEST_CLASS()
 
-        //TEST_METHOD_SETUP(TestSetup);
-        //TEST_METHOD_CLEANUP(TestCleanup);
+    //TEST_METHOD_SETUP(TestSetup);
+    //TEST_METHOD_CLEANUP(TestCleanup);
 
-        TEST_METHOD(TestUmp32);
-        TEST_METHOD(TestUmp64);
-        TEST_METHOD(TestUmp96);
-        TEST_METHOD(TestUmp128);
-        TEST_METHOD(TestUmpInterfaceCasting);
+    TEST_METHOD(TestUmp32);
+    TEST_METHOD(TestUmp64);
+    TEST_METHOD(TestUmp96);
+    TEST_METHOD(TestUmp128);
+    TEST_METHOD(TestUmpInterfaceCasting);
 
 
 private:

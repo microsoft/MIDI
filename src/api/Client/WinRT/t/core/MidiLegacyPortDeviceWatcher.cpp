@@ -135,7 +135,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
             return nullptr;
         }
-
     }
 
 
@@ -148,7 +147,23 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             auto legacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
+            if (legacyPortDeviceInformation == nullptr)
+            {
+                LOG_HR_IF_NULL(E_OUTOFMEMORY, legacyPortDeviceInformation);
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Unable to allocate new MidiLegacyPortDeviceInformation", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return;
+            }
 
             legacyPortDeviceInformation->InternalInitialize(args.Name(), args.Id(), args.Properties());
 
@@ -233,6 +248,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
             if (m_enumeratedPorts.HasKey(mapKey))
@@ -327,6 +344,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
             if (m_enumeratedPorts.HasKey(mapKey))
@@ -531,7 +550,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-            m_enumeratedPorts.Clear();
+            {
+                std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+                m_enumeratedPorts.Clear();
+            }
 
             if (m_watcher)
             {
@@ -560,8 +582,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
-            m_enumeratedPorts.Clear();
-
             if (m_watcher)
             {
                 // unwire events
@@ -572,6 +592,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
                 m_watcher.EnumerationCompleted(m_enumerationCompletedEventRevokeToken);
                 m_watcher.Stopped(m_stoppedEventRevokeToken);
             }
+
+            m_enumeratedPorts.Clear();
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -612,6 +634,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.Flow() == flow && port.Number() == portNumber)
@@ -641,6 +665,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
 
             for (auto const& [key, port] : m_enumeratedPorts)
@@ -677,6 +703,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
@@ -710,6 +738,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.Flow() == flow && port.ParentDeviceInstanceId() == cleanParentDeviceInstanceId)
@@ -742,6 +772,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
@@ -775,6 +807,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId)
@@ -809,6 +843,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
@@ -843,6 +879,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.Flow() == flow && port.AssociatedEndpointDeviceId() == cleanEndpointDeviceId && port.Group().Index() == group.Index())
@@ -879,6 +917,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
@@ -912,6 +952,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.Flow() == flow && internal::ToLowerHStringCopy(port.Name()) == cleanPortName)
@@ -944,6 +986,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)
@@ -977,6 +1021,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
+            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
+
             for (auto const& [key, port] : m_enumeratedPorts)
             {
                 if (port.Flow() == flow && port.DriverDeviceInterfaceId() == cleanDriverDeviceInterfaceId)

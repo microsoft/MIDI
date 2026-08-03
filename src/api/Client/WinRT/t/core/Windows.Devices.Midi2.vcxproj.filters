@@ -18,6 +18,12 @@
     <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp">
       <Filter>SDK\Utilities\Messages</Filter>
     </ClCompile>
+    <ClCompile Include="MidiSystemExclusiveSender.cpp">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -35,6 +41,12 @@
     </ClInclude>
     <ClInclude Include="MidiBytestreamToUmpMessageConverterState.h">
       <Filter>SDK\Utilities\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSystemExclusiveSender.h">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSystemExclusiveSendProgress.h">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -368,6 +380,12 @@
     <Midl Include="MidiBytestreamToUmpMessageConverterState.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
+    <Midl Include="MidiSystemExclusiveSender.idl">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </Midl>
+    <Midl Include="MidiSystemExclusiveSendProgress.idl">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -431,6 +449,9 @@
     </Filter>
     <Filter Include="SDK\CapabilityInquiry">
       <UniqueIdentifier>{60734a8e-cbfd-48f1-a39b-9ce2819282f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Utilities\SysEx Transfer">
+      <UniqueIdentifier>{84ec9bf5-bdec-41bc-a6dc-0031372b044b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

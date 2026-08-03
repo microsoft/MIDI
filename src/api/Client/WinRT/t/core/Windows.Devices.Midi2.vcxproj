@@ -296,6 +296,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="MidiBytestreamToUmpMessageConverterState.h" />
+    <ClInclude Include="MidiSystemExclusiveSender.h" />
     <ClInclude Include="midi_api_mode_defs.h" />
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -532,12 +533,14 @@
     <ClInclude Include="MidiUniqueId.h">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiSystemExclusiveSendProgress.h" />
     <ClInclude Include="winrt_devpkey_util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp" />
+    <ClCompile Include="MidiSystemExclusiveSender.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -798,6 +801,7 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiSystemExclusiveSendProgress.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
@@ -823,6 +827,8 @@
     <Midl Include="MidiMessage96.idl" />
     <Midl Include="MidiMessageTypeEnum.idl" />
     <Midl Include="MidiPacketTypeEnum.idl" />
+    <Midl Include="MidiSystemExclusiveSender.idl" />
+    <Midl Include="MidiSystemExclusiveSendProgress.idl" />
     <Midl Include="MidiSystemTimerSettings.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />

@@ -9,6 +9,8 @@
 #pragma once
 #include "Enumeration.Legacy.MidiLegacyPortDeviceWatcher.g.h"
 
+#include <mutex>
+
 namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 {
     struct MidiLegacyPortDeviceWatcher : MidiLegacyPortDeviceWatcherT<MidiLegacyPortDeviceWatcher>
@@ -113,6 +115,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         collections::IMap<winrt::hstring, legacy::MidiLegacyPortDeviceInformation> m_enumeratedPorts =
             winrt::multi_threaded_map<winrt::hstring, legacy::MidiLegacyPortDeviceInformation>();
+
+        mutable std::mutex m_enumeratedPortsLock;
 
         enumeration::DeviceWatcher m_watcher{ nullptr };
 

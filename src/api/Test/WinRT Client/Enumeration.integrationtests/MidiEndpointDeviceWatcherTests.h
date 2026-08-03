@@ -17,15 +17,14 @@ public:
     BEGIN_TEST_CLASS(MidiEndpointDeviceWatcherTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.Enumeration.dll")
-        END_TEST_CLASS()
+    END_TEST_CLASS()
 
-        TEST_METHOD(TestWatcherEnumerationLoopbackEndpoints);
-        TEST_METHOD(TestWatcherEnumerationPingEndpoint);
-        TEST_METHOD(TestWatcherEnumerationAllDiagnosticsEndpoints);
+    TEST_METHOD(TestWatcherEnumerationLoopbackEndpoints);
+    TEST_METHOD(TestWatcherEnumerationPingEndpoint);
+    TEST_METHOD(TestWatcherEnumerationAllDiagnosticsEndpoints);
 
 
-        void TestWatcherEnumeration(_In_ MidiEndpointDeviceInformationFilters filter, _In_ uint32_t numEndpointsExpected);
+    void TestWatcherEnumeration(_In_ MidiEndpointDeviceInformationFilters filter, _In_ uint32_t numEndpointsExpected);
 
 
 private:

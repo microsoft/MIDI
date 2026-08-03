@@ -907,6 +907,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             }
         }
 
+        if (properties.HasKey(STRING_PKEY_MIDI_TransportLayer))
+        {
+            auto transportGuid = internal::GetDeviceInfoProperty<winrt::guid>(properties, STRING_PKEY_MIDI_TransportLayer, foundation::GuidHelper::Empty());
+
+            m_transportId = transportGuid;
+        }
+
         if (properties.HasKey(STRING_PKEY_MIDI_ServiceAssignedPortNumber))
         {
             // for MIDI Input (Source) ports, we have to subtract 1 because we number in the service starting at 1
