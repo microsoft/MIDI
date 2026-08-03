@@ -40,8 +40,14 @@ public:
     TEST_METHOD(TestEmptySysEx7);
     TEST_METHOD(TestShortSysEx7);
     TEST_METHOD(TestTimingClock);
-    //TEST_METHOD(TestTimingClockPadded);
+    TEST_METHOD(TestTimingClockPadded);
+    TEST_METHOD(TestCCPadded);
+    TEST_METHOD(TestIssueGithub1040CorruptedIncomingSysExIdeal);
+    TEST_METHOD(TestBasicMalformedSysex);
+    
     //TEST_METHOD(TestLongSysEx7);
+
+
 
     void InternalTestBytes(
         _In_ uint8_t const groupIndex,

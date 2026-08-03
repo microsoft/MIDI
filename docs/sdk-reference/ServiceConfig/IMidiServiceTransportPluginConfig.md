@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: IMidiServiceTransportPluginConfig
-namespace: Microsoft.Windows.Devices.Midi2.ServiceConfig
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.ServiceConfig
 type: interface
 description: Information for a transport plugin in the MIDI Service
 ---
@@ -16,10 +15,5 @@ Interface implemented by strongly-typed SDK classes used in configuring transpor
 
 | Property | Description |
 | --- | --- |
-| `TransportID` | The ID of the transport this configuration targets. This is used in the service for routing this config. |
-
-## Functions
-
-| Function | Description |
-| --- | --- |
-| `GetConfigJson` | Returns the json to send to the service |
+| `TransportId` | The GUID of the transport this configuration targets. This is used in the service for routing this config. |
+| `ConfigJson` | Returns the `Windows.Data.Json.JsonObject` to send to the service |

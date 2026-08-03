@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiStreamConfigRequestReceivedEventArgs.idl";
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "MidiFunctionBlock.idl";
+
+
+namespace Windows.Devices.Midi2.Transports.Virtual
+{
+    [contract(MidiTransportsVirtualApiContract, 1)]
+    
+    [interface_name("Windows.Devices.Midi2.Transports.Virtual.IMidiVirtualDevice", UUID_IMidiVirtualDevice)]
+    runtimeclass MidiVirtualDevice : Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin
+    {
+        [noexcept] String DeviceEndpointDeviceId{ get; };
+        //String ClientEndpointDeviceId{ get; };    // this is not available at initial creation time
+        [noexcept] Guid AssociationId{ get; };
+
+        [noexcept] IMapView<UInt8, Windows.Devices.Midi2.Enumeration.MidiFunctionBlock> FunctionBlocks{ get; };
+        
+        [noexcept] Boolean UpdateFunctionBlock(Windows.Devices.Midi2.Enumeration.MidiFunctionBlock block);
+        [noexcept] Boolean UpdateEndpointName(String name);
+
+        [noexcept] Boolean SuppressHandledMessages;
+
+        event Windows.Foundation.TypedEventHandler<MidiVirtualDevice, MidiStreamConfigRequestReceivedEventArgs> StreamConfigRequestReceived;
+    }
+}

@@ -10,7 +10,7 @@
 
 #include "MidiEndpointCustomProperties.h"
 #include "json_transport_command_helper.h"
-#include <mmdeviceapi.h>
+#include <mmdeviceapi.h>    // for E_NOTFOUND
 
 _Use_decl_annotations_
 HRESULT
@@ -38,6 +38,55 @@ CMidi2BasicLoopbackMidiConfigurationManager::Initialize(
 
     return S_OK;
 }
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandListEntries(
+    json::JsonObject const& responseObject)
+{
+    auto definitions = TransportState::Current().GetEndpointTable()->GetDeviceListSnapshot();
+
+    // add the entries to the response object
+
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY
+    //
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY 
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_NAME_KEY
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY
+    //MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY
+
+    auto entriesArray = json::JsonArray();
+
+    for (auto const& def : definitions)
+    {
+        auto obj = json::JsonObject();
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY, 
+            json::JsonValue::CreateStringValue(winrt::to_hstring(def.AssociationId)));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY,
+            json::JsonValue::CreateStringValue(def.CreatedEndpointInterfaceId.c_str()));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_NAME_KEY,
+            json::JsonValue::CreateStringValue(def.EndpointName.c_str()));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
+            json::JsonValue::CreateStringValue(def.EndpointDescription.c_str()));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY,
+            json::JsonValue::CreateBooleanValue(def.IsMuted));
+
+        entriesArray.Append(obj);
+    }
+
+    responseObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY, entriesArray);
+
+    return S_OK;
+}
+
 
 
 _Use_decl_annotations_
@@ -98,7 +147,8 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
-        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);        // mute implies unmute
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, true);
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
@@ -118,7 +168,10 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
 
             if (hr == E_NOTFOUND)
             {
-                internal::SetConfigurationResponseObjectFail(responseObject, L"Endpoint not found");
+                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                    responseObject, 
+                    BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                    internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
             }
             else if (SUCCEEDED(hr))
             {
@@ -131,14 +184,33 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
         }
         else
         {
-            // no endpoint id
-            internal::SetConfigurationResponseObjectFail(responseObject, L"Missing association id");
+            // no association id
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject, 
+                BASIC_LOOPBACK_ERROR_CODE_MISSING_ASSOCIATION_ID,
+                internal::ResourceGetWString(IDS_ERROR_MISSING_ASSOCIATION_ID));
         }
 
     }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES)
+    {
+        auto hr = ExecuteCommandListEntries(responseObject);
+
+        if (SUCCEEDED(hr))
+        {
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
+        else
+        {
+            RETURN_IF_FAILED(hr);
+        }
+    }
     else
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject, 
+            BASIC_LOOPBACK_ERROR_CODE_UNRECOGNIZED_COMMAND,
+            internal::ResourceGetWString(IDS_ERROR_UNRECOGNIZED_COMMAND));
     }
 
     // we return S_OK no matter what, so the response object will be parsed
@@ -207,13 +279,21 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
         std::wstring instanceIdPrefix = MIDI_BASIC_LOOP_INSTANCE_ID_PREFIX;
 
         // we should probably set a property based on this as well.
-
         auto createObject = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
 
         // Create ----------------------------------
 
         if (createObject != nullptr && createObject.Size() > 0)
         {
+            bool processingMultipleCreates { false };
+
+            // this should only happen when working from a config file. The return result object is not
+            // important in that case.
+            if (createObject.Size() > 1)
+            {
+                processingMultipleCreates = true;
+            }
+
             auto o = createObject.First();
 
             while (o.HasCurrent())
@@ -253,12 +333,22 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingWideString(L"Endpoint name missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
-                            responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
-                                json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_MISSING_NAME)));
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_MISSING_ENDPOINT_NAME,
+                                    internal::ResourceGetWString(IDS_ERROR_MISSING_NAME));
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                o.MoveNext();
+                                continue;
+                            }
                         }
 
 
@@ -270,15 +360,26 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unique identifier missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                                TraceLoggingWideString(L"Skipping endpoint with missing or empty unique identifier", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
-                            responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
-                                json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_MISSING_UNIQUE_ID)));
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_MISSING_UNIQUE_ID,
+                                    internal::ResourceGetWString(IDS_ERROR_MISSING_UNIQUE_ID));
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                // skip this one and keep going. Don't return an error for the whole batch just because of one bad entry.
+                                o.MoveNext();
+                                continue;
+                            }
                         }
 
 
@@ -293,17 +394,29 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unique identifier for Loopback Definition A already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(L"Unique identifier for Loopback Definition already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier")
                             );
 
-                            responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
-                                json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_DUPLICATE_UNIQUE_ID)));
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID,
+                                    internal::ResourceGetWString(IDS_ERROR_DUPLICATE_UNIQUE_ID));
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                // skip this one and keep going. Don't return an error for the whole batch just because of one bad entry.
+                                o.MoveNext();
+                                continue;
+                            }
                         }
+
                         allocatedUniqueIds.emplace(definition->EndpointUniqueIdentifier, true);
 
                         if (TransportState::Current().GetEndpointManager() != nullptr && 
@@ -324,11 +437,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 );
 
                                 // all good
-
-                                auto successVal = json::JsonValue::CreateBooleanValue(true);
-                                responseObject.SetNamedValue(
-                                    MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                                    successVal);
+                                internal::SetConfigurationResponseObjectSuccess(responseObject);
 
                                 // update the return json with the new Ids
                                 auto endpointIdAVal = json::JsonValue::CreateStringValue(definition->CreatedEndpointInterfaceId);
@@ -349,12 +458,14 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                     TraceLoggingWideString(L"Failed to create endpoints", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                                 );
 
-                                responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
-                                    json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_CREATION_FAILED)));
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_CREATION_FAILED,
+                                    internal::ResourceGetWString(IDS_ERROR_CREATION_FAILED));
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                return E_FAIL;
+                                return S_FALSE;
                             }
 
                         }
@@ -382,12 +493,14 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                             TraceLoggingWideString(L"Failed to get endpoint from the JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                         );
 
-                        responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
-                            json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_PARSING_JSON)));
+                        internal::SetConfigurationResponseObjectFailWithErrorCode(
+                            responseObject,
+                            BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON,
+                            internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
 
                         internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                        return E_FAIL;
+                        return S_FALSE;
                     }
                 }
                 else
@@ -402,14 +515,19 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(L"Unable to convert association id property to a JsonObject", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     );
 
-                    responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
-                        json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_PARSING_JSON)));
+                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                        responseObject,
+                        BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON,
+                        internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
 
                     internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                    return E_FAIL;
+                    return S_FALSE;
                 }
 
+
+                // Only config file-generated entries have more than one create. If this is sent at
+                // runtime, we only create one endpoint at a time.
                 o.MoveNext();
             }
         }
@@ -437,21 +555,56 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                 auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationIdGuid);
 
-                //auto uniqueId = device->Definition.EndpointUniqueIdentifier;
+                // The association id comes from untrusted client JSON. GetDevice
+                // returns null for an unknown / already-removed id, and a device
+                // that has been shut down but not yet removed has a null
+                // Definition. Guard both before dereferencing.
+                if (device == nullptr || device->Definition == nullptr)
+                {
+                    TraceLoggingWrite(
+                        MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Remove requested for unknown or already-removed association id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(associationId.c_str(), "association id")
+                    );
 
-                auto removalHr = TransportState::Current().GetEndpointManager()->DeleteEndpoint(device->Definition);
+                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                        responseObject,
+                        BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                        internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+
+                    return S_FALSE;
+                }
+
+                auto endpointManager = TransportState::Current().GetEndpointManager();
+                if (endpointManager == nullptr)
+                {
+                    // service is shutting down; nothing more we can do
+                    TraceLoggingWrite(
+                        MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Endpoint manager unavailable during remove", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(associationId.c_str(), "association id")
+                    );
+
+                    return E_FAIL;
+                }
+
+                auto removalHr = endpointManager->DeleteEndpoint(device->Definition);
 
                 LOG_IF_FAILED(removalHr);
 
                 if (SUCCEEDED(removalHr))
                 {
-
                     TransportState::Current().GetEndpointTable()->RemoveDevice(associationIdGuid);
 
-                    auto removeSuccessVal = json::JsonValue::CreateBooleanValue(true);
-                    responseObject.SetNamedValue(
-                        MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                        removeSuccessVal);
+                    internal::SetConfigurationResponseObjectSuccess(responseObject);
                 }
                 else
                 {
@@ -466,28 +619,23 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(L"Failed to remove device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingWideString(configurationJsonSection, "json")
                     );
-                }
-                    
 
+                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                        responseObject,
+                        BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_REMOVAL_FAILED,
+                        internal::ResourceGetWString(IDS_ERROR_ENDPOINT_REMOVAL_FAILED));
+
+                    return S_FALSE;
+                }
 
                 o.MoveNext();
             }
         }
 
-        //auto updateArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY);
 
-        //// Update ----------------------------------
+        // NOTE: There is no update functionality at this time.
 
-        //if (updateArray.Size() > 0)
-        //{
-        //    // TODO
-        //}
-        //else
-        //{
-        //    // TODO : Update endpoints
-        //}
-
-        
+       
         if (response != nullptr)
         {
             internal::JsonStringifyObjectToOutParam(responseObject, response);

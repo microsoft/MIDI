@@ -42,13 +42,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Midi2.ChannelTransform.rgs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Midi2.ChannelTransform.def">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

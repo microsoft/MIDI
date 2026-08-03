@@ -7,8 +7,6 @@
 // ============================================================================
 
 
-using Microsoft.Windows.Devices.Midi2.Endpoints.Virtual;
-using Microsoft.Windows.Devices.Midi2.Messages;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Midi;
 

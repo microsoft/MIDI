@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiClock
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
 description: Used for all timestamps in Windows MIDI Services.
 ---
@@ -22,6 +21,7 @@ You can learn more about high-resolution timestamps in Windows at [https://aka.m
 | `Now` | Returns the current timestamp |
 | `TimestampFrequency` | Returns the number of timestamp ticks per second. This is calculated the first time it is called, and then cached for future calls. |
 | `TimestampConstantSendImmediately` | Returns the constant to use when you want to send messages immediately and bypass outgoing message scheduling. Developers may use this value or simply provide `0` in place of the timestamp when sending messages.  |
+| `TimestampConstantMessageQueueMaximumFutureTicks` | Returns the maximum future timestamp value that the scheduler will accept. Messages scheduled too far in the future will fail to send. |
 
 ## Static Functions for Conversion
 

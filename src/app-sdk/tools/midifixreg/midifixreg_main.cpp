@@ -280,6 +280,10 @@ std::vector<std::wstring> CheckRegistryAndGetValuesToDelete(_In_ std::wstring ke
                         {
                             WriteInfoDetail(L"Found CoolSoft Virtual MIDI Synth '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
                         }
+                        else if (driverName == L"vstmididrv.dll" && valueName != L"midi" && valueName != L"midi1")
+                        {
+                            WriteInfoDetail(L"Found VST MIDI Driver '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
+                        }
                         else
                         {
                             WriteErrorDetail(L"Found value '" + valueName + L"' with value '" + driverName + L"'");
@@ -517,7 +521,7 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
                 WriteBlankLine();
             }
 
-            if (! midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing || !valuesToDeleteWOW.empty())
+            if (midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing || !valuesToDeleteWOW.empty())
             {
                 WriteImportant("Making required changes for 32 bit apps");
                 FixRegistryValues(drivers32WOWHklmKey, valuesToDeleteWOW, midiWOWValueNeedsReplacing, midi1WOWValueNeedsReplacing);

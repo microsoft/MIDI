@@ -43,6 +43,8 @@ public:
             return E_INVALIDARG;
         }
 
+        auto lock = m_lock.lock_exclusive();
+
         m_workItems.emplace(TransportWorkItemWorkType::Create, definition);
 
         return S_OK;
@@ -50,25 +52,26 @@ public:
 
     inline bool GetNextWorkItem(_Inout_ TransportWorkItem& workItem)
     {
-        if (!m_workItems.empty())
+        auto lock = m_lock.lock_exclusive();
+
+        if (m_workItems.empty())
         {
-            // todo: any required locking
-
-            auto item = m_workItems.front();
-
-            workItem.Definition = item.Definition;
-            workItem.Type = item.Type;
-
-            m_workItems.pop();
-
-            return true;
+            return false;
         }
 
-        return false;
+        workItem = m_workItems.front();
+        m_workItems.pop();
+
+        return true;
     }
 
-    bool IsEmpty() { return m_workItems.empty(); }
+    bool IsEmpty()
+    {
+        auto lock = m_lock.lock_shared();
+        return m_workItems.empty();
+    }
 
 private:
+    wil::srwlock m_lock;
     std::queue<TransportWorkItem> m_workItems{};
 };

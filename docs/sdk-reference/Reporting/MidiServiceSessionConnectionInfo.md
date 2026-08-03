@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiSessionConnectionInformation
-namespace: Microsoft.Windows.Devices.Midi2.Reporting
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.Reporting
 type: runtimeclass
 description: Information about an open connection in the service
 ---

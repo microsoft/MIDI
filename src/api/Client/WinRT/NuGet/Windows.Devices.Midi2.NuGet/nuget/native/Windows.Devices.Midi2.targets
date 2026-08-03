@@ -1,0 +1,58 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MidiPlatform>$(Platform)</MidiPlatform>
+  </PropertyGroup>
+  
+	<Target Name="PlatformCheck" Condition=" ( ('$(Platform)' != 'ARM64') AND ('$(Platform)' != 'ARM64EC') AND ('$(Platform)' != 'x64') )">
+		<Error  Text="The Windows MIDI Services SDK does not support '$(Platform)' platform. You need to specify at 64 bit platform (x64, Arm64EC, or Arm64)." />
+	</Target>
+
+    <PropertyGroup>
+        <!-- Add COM extensions headers for convenience -->
+      <ComExtensionsIncludeDir>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)','include\'))</ComExtensionsIncludeDir>
+    </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ComExtensionsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+
+  <Target Name="SetupMIDIServicesSDKReference"
+			BeforeTargets="BeforeResolveReferences">
+      <Message Text="-- Copying Windows MIDI Services references .winmd files" />
+
+      <ItemGroup>
+        <Reference Include="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\..\ref\native\Windows.Devices.Midi2.winmd'))" />
+      </ItemGroup>
+    </Target>
+
+
+  <Target Name="TranslateArm64ECToArm64X" Condition="('$(Platform)' == 'ARM64EC')">
+    <PropertyGroup>
+      <MidiPlatform>arm64</MidiPlatform>
+    </PropertyGroup>
+  </Target>
+
+
+
+  <ItemGroup>
+    <MidiImplementation Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-$(MidiPlatform)\native\Windows.Devices.Midi2.dll" />
+    <MidiResources      Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-$(MidiPlatform)\native\Windows.Devices.Midi2.pri" />
+    <MidiDebugSymbols   Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-$(MidiPlatform)\native\Windows.Devices.Midi2.pdb" />
+
+    <None Include="@(MidiImplementation)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>      
+    </None>
+
+    <None Include="@(MidiResources)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <None Include="@(MidiDebugSymbols)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
+</Project>

@@ -1,0 +1,39 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiServiceConfigEndpointMatchCriteria.idl";
+
+namespace Windows.Devices.Midi2.VirtualPatchBay
+{
+    [experimental]
+    [interface_name("Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayDestinationDefinition")]
+    [static_name("Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayDestinationDefinitionStatics")]
+    runtimeclass MidiVirtualPatchBayDestinationDefinition
+    {
+        MidiVirtualPatchBayDestinationDefinition();
+
+    MidiVirtualPatchBayDestinationDefinition(
+            Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria matchCriteria
+        );
+
+        Boolean IsEnabled;
+
+        Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria EndpointMatchCriteria;
+
+
+        // TODO: Chain of destination transform/filter definitions
+
+
+        static MidiVirtualPatchBayDestinationDefinition CreateFromConfigJson(String jsonSection);
+        Windows.Data.Json.JsonObject GetConfigJson();
+    }
+}

@@ -1,0 +1,75 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+
+
+import "MidiApiContracts.idl";
+
+import "IMidiMessageReceivedEventSource.idl";
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "MidiSendMessageResultsEnum.idl";
+import "MidiEndpointConnectionSettings.idl";
+import "IMidiEndpointConnectionSource.idl";
+
+
+namespace Windows.Devices.Midi2
+{
+    [contract(MidiCoreApiContract,1)]
+    
+    [interface_name("Windows.Devices.Midi2.IMidiEndpointConnection", UUID_IMidiEndpointConnection)]
+    [static_name("Windows.Devices.Midi2.IMidiEndpointConnectionStatics", UUID_IMidiEndpointConnectionStatics)]
+    runtimeclass MidiEndpointConnection : IMidiMessageReceivedEventSource,
+                                          IMidiEndpointConnectionSource,
+                                          Windows.Foundation.IStringable
+    {
+        [noexcept] static String GetDeviceSelector();
+
+        [noexcept] static Boolean SendMessageSucceeded(MidiSendMessageResults sendResult);
+        [noexcept] static Boolean SendMessageFailed(MidiSendMessageResults sendResult);
+
+        // Several properties moved to IMidiEndpointConnectionSource to make it easier to use in event handler
+
+        [noexcept] Boolean LogMessageDataValidationErrorDetails;
+
+        //IMidiEndpointConnectionSettings Settings{ get; };
+
+        [noexcept] Boolean Open();
+
+        [noexcept] IVectorView<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+        [noexcept] void AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);
+        [noexcept] void RemoveMessageProcessingPlugin(Guid id);
+
+        [noexcept] MidiSendMessageResults SendSingleMessagePacket(IMidiUniversalPacket message);
+
+        [noexcept] MidiSendMessageResults SendSingleMessageStruct(UInt64 timestamp, UInt8 wordCount, ref const MidiMessageStruct message);
+
+        [noexcept] MidiSendMessageResults SendSingleMessageWordArray(UInt64 timestamp, UInt32 startIndex, UInt8 wordCount, UInt32[] words);
+
+        [noexcept] MidiSendMessageResults SendSingleMessageWords(UInt64 timestamp, UInt32 word0);
+        [noexcept] MidiSendMessageResults SendSingleMessageWords(UInt64 timestamp, UInt32 word0, UInt32 word1);
+        [noexcept] MidiSendMessageResults SendSingleMessageWords(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        [noexcept] MidiSendMessageResults SendSingleMessageWords(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+
+        [noexcept] MidiSendMessageResults SendSingleMessageBuffer(UInt64 timestamp, UInt32 byteOffset, UInt8 byteCount, Windows.Foundation.IMemoryBuffer buffer);
+
+
+
+        [noexcept] MidiSendMessageResults SendMultipleMessagesWordList(UInt64 timestamp, IIterable<UInt32> words);
+        [noexcept] MidiSendMessageResults SendMultipleMessagesWordArray(UInt64 timestamp, UInt32 startIndex, UInt32 wordCount, UInt32[] words);
+
+        [noexcept] MidiSendMessageResults SendMultipleMessagesPacketList(IIterable<IMidiUniversalPacket> messages);
+
+        [noexcept] MidiSendMessageResults SendMultipleMessagesStructList(UInt64 timestamp, IIterable<MidiMessageStruct> messages);
+        [noexcept] MidiSendMessageResults SendMultipleMessagesStructArray(UInt64 timestamp, UInt32 startIndex, UInt32 messageCount, MidiMessageStruct[] messages);
+
+        [noexcept] MidiSendMessageResults SendMultipleMessagesBuffer(UInt64 timestamp, UInt32 byteOffset, UInt32 byteCount, Windows.Foundation.IMemoryBuffer buffer);
+
+        [noexcept] UInt32 GetSupportedMaxMidiWordsPerTransmission();
+    }
+}

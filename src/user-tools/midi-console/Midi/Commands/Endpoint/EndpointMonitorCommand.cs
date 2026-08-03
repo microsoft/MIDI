@@ -8,9 +8,6 @@
 
 
 
-//using Microsoft.Windows.Devices.Midi2.Initialization;
-using Microsoft.Windows.Devices.Midi2.Messages;
-using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 
 namespace Microsoft.Midi.ConsoleApp
 {
@@ -221,6 +218,10 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.Markup(Strings.MonitorMonitoringOnEndpointLabel);
                 AnsiConsole.Markup(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
 
+                // set the console title, leading with the name of the endpoint being monitored
+                Console.Title = endpointName + " - " + Strings.MonitorConsoleTitleSuffix;
+
+
                 if (settings.AutoReconnect)
                 {
                     AnsiConsole.MarkupLine(" with auto-reconnect");
@@ -261,14 +262,14 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                IMidiEndpointConnectionSettings connectionSettings;
+                MidiEndpointConnectionSettings connectionSettings;
                 if (settings.AutoReconnect)
                 {
-                    connectionSettings = new MidiEndpointConnectionBasicSettings(false, true);
+                    connectionSettings = new MidiEndpointConnectionSettings(false, true);
                 }
                 else
                 {
-                    connectionSettings = new MidiEndpointConnectionBasicSettings(false, false);
+                    connectionSettings = new MidiEndpointConnectionSettings(false, false);
                 }
 
                 var connection = session.CreateEndpointConnection(endpointId, connectionSettings);
@@ -389,10 +390,10 @@ namespace Microsoft.Midi.ConsoleApp
                             index++;
 
 
-                            if (MidiSystemExclusiveMessageHelper.MessageIsSystemExclusive7Message(e.PeekFirstWord()))
-                            {
-                                countSysEx7BytesReceived += MidiSystemExclusiveMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(e.PeekFirstWord());
-                            }
+                            //if (MidiSystemExclusiveMessageHelper.MessageIsSystemExclusive7Message(e.PeekFirstWord()))
+                            //{
+                            //    countSysEx7BytesReceived += MidiSystemExclusiveMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(e.PeekFirstWord());
+                            //}
 
                             var receivedMessage = new ReceivedMidiMessage()
                             {

@@ -7,9 +7,6 @@
 // ============================================================================
 
 
-
-//using Microsoft.Windows.Devices.Midi2.Initialization;
-
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointUpdateCommand : Command<EndpointUpdateCommand.Settings>

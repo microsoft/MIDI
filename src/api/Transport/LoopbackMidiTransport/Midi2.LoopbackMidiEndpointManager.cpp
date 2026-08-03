@@ -200,6 +200,60 @@ CMidi2LoopbackMidiEndpointManager::DeleteSingleEndpoint(
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiEndpointManager::UpdateSingleEndpointMutedStateProperty(
+    _In_ MidiLoopbackDeviceDefinition const& definition,
+    _In_ bool const isMuted)
+{
+    TraceLoggingWrite(
+        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(definition.CreatedEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(isMuted, "is muted")
+    );
+
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
+    std::vector<DEVPROPERTY> interfaceDevProperties{};
+
+    // see if this is going to start off as muted
+    if (isMuted)
+    {
+        interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_IsMuted, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropTrue });
+    }
+    else
+    {
+        interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_IsMuted, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropFalse });
+    }
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
+        definition.CreatedEndpointInterfaceId.c_str(),
+        static_cast<ULONG>(interfaceDevProperties.size()),
+        interfaceDevProperties.data()
+    ));
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(definition.CreatedEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(isMuted, "is muted")
+    );
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT

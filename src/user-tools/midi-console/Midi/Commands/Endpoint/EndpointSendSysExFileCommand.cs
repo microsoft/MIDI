@@ -1,4 +1,13 @@
-﻿using Spectre.Console;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+using ABI.Windows.Devices.Midi2.Utilities.Messages;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,8 +15,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Storage;
-
-using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 
 namespace Microsoft.Midi.ConsoleApp
 {
@@ -20,10 +27,10 @@ namespace Microsoft.Midi.ConsoleApp
             [CommandArgument(1, "<Input File>")]
             public string? InputFile { get; set; }
 
-            [LocalizedDescription("ParameterSendSysExFileVerbose")]
-            [CommandOption("-v|--verbose")]
-            [DefaultValue(false)]
-            public bool Verbose { get; set; }
+            //[LocalizedDescription("ParameterSendSysExFileVerbose")]
+            //[CommandOption("-v|--verbose")]
+            //[DefaultValue(false)]
+            //public bool Verbose { get; set; }
 
             //[EnumLocalizedDescription("ParameterSysExFileFormat", typeof(MidiSystemExclusiveDataReaderFormat))]
             //[CommandOption("-f|--sysex-file-type")]
@@ -36,14 +43,19 @@ namespace Microsoft.Midi.ConsoleApp
             //public MidiSystemExclusiveDataFormat SourceDataFormat { get; set; }
 
             [LocalizedDescription("ParameterSendSysExFileReplaceGroup")]
-            [CommandOption("-g|--new-group-index")]
+            [CommandOption("-g|--group-index|--group")]
             public int? NewGroupIndex { get; set; }
 
 
-            [LocalizedDescription("ParameterSendMessageDelayBetweenMessages")]
+            [LocalizedDescription("ParameterSendSysExFileDelayBetweenTransfers")]
             [CommandOption("-p|--pause|--delay")]
-            [DefaultValue(2)]
+            [DefaultValue(500)]
             public int DelayBetweenMessages { get; set; }
+
+            [LocalizedDescription("ParameterSendSysExFileMessagesPerTransfer")]
+            [CommandOption("-m|--message-transfer-count|--messages")]
+            [DefaultValue(64)]
+            public int MessageTransferCount { get; set; }
 
         }
 
@@ -71,6 +83,10 @@ namespace Microsoft.Midi.ConsoleApp
                     return ValidationResult.Error(Strings.ValidationErrorInvalidGroup);
                 }
             }
+            else
+            {
+                return ValidationResult.Error(Strings.ValidationErrorInvalidGroup);
+            }
 
             return base.Validate(context, settings);
         }
@@ -79,14 +95,6 @@ namespace Microsoft.Midi.ConsoleApp
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
-
-            //if (!MidiServicesInitializer.EnsureServiceAvailable())
-            //{
-            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
-
-            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
-            //}
-
 
             string endpointId = string.Empty;
 
@@ -107,7 +115,7 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.Markup(Strings.SendMessageSendingThroughEndpointLabel);
                 AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
-
+                AnsiConsole.WriteLine();
 
                 using var session = MidiSession.Create($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
                 if (session == null)
@@ -140,11 +148,13 @@ namespace Microsoft.Midi.ConsoleApp
                 var file = await StorageFile.GetFileFromPathAsync(fullFilePath);
                 var props = await file.GetBasicPropertiesAsync();
 
-                AnsiConsole.WriteLine($"{props.Size} bytes");
+               // AnsiConsole.WriteLine($"{props.Size} bytes");
 
                 if (file != null)
                 {
-                    var stream = file.OpenStreamForReadAsync().GetAwaiter().GetResult();
+                    using var stream = await file.OpenStreamForReadAsync();
+
+                    var totalBytesToSend = props.Size;
 
                     if (stream != null)
                     {
@@ -155,34 +165,70 @@ namespace Microsoft.Midi.ConsoleApp
                         var inputStream = stream.AsInputStream();
 
                         MidiGroup? group = null;
-                        bool replaceGroup = false;
 
                         if (settings.NewGroupIndex != null)
                         {
                             group = new MidiGroup((byte)(settings.NewGroupIndex!));
-                            replaceGroup = true;
                         }
 
                         try
                         {
-                            var result = await MidiSystemExclusiveSender.SendDataAsync(
-                                connection,
-                                inputStream,
-                                MidiSystemExclusiveDataReaderFormat.Binary,
-                                MidiSystemExclusiveDataFormat.ByteFormatSystemExclusive7,
-                                (UInt16)settings.DelayBetweenMessages,
-                                replaceGroup,
-                                group
-                            );
+                            var converterState = new global::Windows.Devices.Midi2.Utilities.Messages.MidiBytestreamToUmpMessageConverterState();
 
-                            if (result)
+                            UInt64 countBytesRead = 0;
+                            UInt64 countMessagesSent = 0;
+                            bool success = false;
+
+                            await AnsiConsole.Progress()
+                                .AutoClear(true)
+                                .HideCompleted(true)
+                                .Columns(new ProgressColumn[]
+                                {
+                                    new TaskDescriptionColumn(),    // Task name
+                                    new ProgressBarColumn(),        // Progress bar
+                                    new PercentageColumn(),         // Percentage
+                                    //new RemainingTimeColumn(),      // Estimated remaining time
+                                    new SpinnerColumn()             // Spinner animation
+                                })
+                                .StartAsync(async ctx =>
+                                {
+                                    var senderTask = ctx.AddTask("[green]Transferring data[/]", maxValue: totalBytesToSend);
+
+                                    var operation = MidiSystemExclusiveSender.SendBinarySysEx7ByteDataAsync(
+                                        connection,
+                                        group,
+                                        inputStream,
+                                        (UInt32)settings.MessageTransferCount,
+                                        (UInt16)settings.DelayBetweenMessages,
+                                        converterState
+                                    );
+
+                                    operation.Progress = (op, progress) =>
+                                    {
+                                        countBytesRead = progress.CountBytesRead;
+                                        countMessagesSent = progress.CountMessagesSent;
+
+                                        senderTask.Value = countBytesRead;
+                                       // ctx.Status($"Read {countBytesRead} bytes, sent {countMessagesSent} messages");
+                                    };
+
+                                    success = await operation;
+                                });
+
+                            AnsiConsole.WriteLine();
+
+                            if (success)
                             {
-                                AnsiConsole.WriteLine("Data transferred.");
+                                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Data transfer complete."));
+                                AnsiConsole.MarkupLine($"Read {AnsiMarkupFormatter.FormatGeneralNumber(countBytesRead)} bytes, sent {AnsiMarkupFormatter.FormatGeneralNumber(countMessagesSent)} UMP messages");
                             }
                             else
                             {
-                                AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError("Transfer failed."));
+                                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Transfer failed."));
                             }
+
+                            AnsiConsole.WriteLine();
+
                         }
                         catch (Exception ex)
                         {
@@ -190,13 +236,6 @@ namespace Microsoft.Midi.ConsoleApp
 
                             AnsiConsole.WriteLine($"Exception sending data: {ex.Message}");
                         }
-
-                        //sendDataTask.Progress = (installResult, progress) =>
-                        //{
-                        //    sendTask.Value = progress.BytesRead;
-                        //};
-
-                        //var result = await sendDataTask;
                     }
                 }
 

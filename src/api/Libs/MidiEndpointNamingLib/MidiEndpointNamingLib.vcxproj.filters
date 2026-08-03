@@ -22,7 +22,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Inc\MidiEndpointNameTable.h">
+    <ClInclude Include="$(SolutionDir)Inc\MidiEndpointNameTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

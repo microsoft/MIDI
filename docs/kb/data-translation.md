@@ -7,7 +7,7 @@ audience: everyone
 
 In general, Windows MIDI Services translates MIDI messages only when it absolutely has to (primarily to support MIDI 1.0 devices or MIDI 1.0 APIs). This translation happens in different places, depending upon the driver in use.
 
-Internally, the MIDI service moves messages around in the UMP format. This enables a standard format for message scheduling and processing. In addition, the `Microsoft.Windows.Devices.Midi2*` SDK and the service behind it, both treat all messages as UMP, including ones to/from devices which were MIDI 1.0 byte data format.
+Internally, the MIDI service moves messages around in the UMP format. This enables a standard format for message scheduling and processing. In addition, the `Windows.Devices.Midi2*` API and the service behind it, both treat all messages as UMP, including ones to/from devices which were MIDI 1.0 byte data format.
 
 ## A couple definitions
 

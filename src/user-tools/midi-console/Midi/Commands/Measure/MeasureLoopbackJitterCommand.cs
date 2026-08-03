@@ -6,9 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-//using Microsoft.Windows.Devices.Midi2.Initialization;
-using Microsoft.Windows.Devices.Midi2;
-using Microsoft.Windows.Devices.Midi2.Messages;
 using System.Net;
 using System.Threading.Channels;
 

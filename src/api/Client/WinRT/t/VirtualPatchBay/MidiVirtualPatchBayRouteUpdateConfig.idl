@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+
+namespace Windows.Devices.Midi2.VirtualPatchBay
+{
+    [experimental]
+    [interface_name("Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayRouteUpdateConfig")]
+    runtimeclass MidiVirtualPatchBayRouteUpdateConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiVirtualPatchBayRouteUpdateConfig();
+
+        MidiVirtualPatchBayRouteUpdateConfig(
+            Guid routeId
+        );
+
+        Guid RouteId;
+
+        // todo: all the updates for this config
+        // todo: do we just allow enable/disable for the update, and everything else is a new config?
+
+    }
+}

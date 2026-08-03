@@ -1,10 +1,9 @@
 ---
 layout: sdk_reference_page
 title: MidiGroupEndpointListener
-namespace: Microsoft.Windows.Devices.Midi2.ClientPlugins
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.ClientPlugins
 type: runtimeclass
-implements: Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
+implements: Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Windows.Devices.Midi2.IMidiMessageReceivedEventSource
 description: Provides a way to filter incoming messages by group without opening separate connections
 ---
 
@@ -18,9 +17,10 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 
 | Property | Description |
 | ---- | ---- |
-| `IncludedGroups` | The list of `MidiGroup` numbers that this listener will listen to. |
+| `IncludedGroups` | The list of `MidiGroup`s that this listener will listen to. |
 | `PreventCallingFurtherListeners` | True if this plugin should prevent further listeners from processing a message that is in-scope for this processor. |
 | `PreventFiringMainMessageReceivedEvent` | True if this plugin should prevent the endpoint's `MessageReceived` event from firing if the message was in-scope for this plugin. |
+| `PreventCallingFurtherListeners` | True if this plugin should prevent any plugins after this one from executing if the message was handled by this plugin instance. |
 
 ## Functions
 

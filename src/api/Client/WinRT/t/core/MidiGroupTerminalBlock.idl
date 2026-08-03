@@ -1,0 +1,50 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiGroupTerminalBlockDirectionEnum.idl";
+import "MidiGroupTerminalBlockProtocolEnum.idl";
+import "MidiFunctionBlock.idl";
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiGroupTerminalBlock", UUID_IMidiGroupTerminalBlock)]
+    [static_name("Windows.Devices.Midi2.Enumeration.IMidiGroupTerminalBlockStatics", UUID_IMidiGroupTerminalBlockStatics)]
+    runtimeclass MidiGroupTerminalBlock : Windows.Foundation.IStringable
+    {
+        [noexcept] static String ShortLabel{ get; };
+        [noexcept] static String ShortLabelPlural{ get; };
+        [noexcept] static String LongLabel{ get; };
+        [noexcept] static String LongLabelPlural{ get; };
+
+        [noexcept] UInt8 Number{ get; };
+
+        [noexcept] String Name{ get; };
+
+        [noexcept] MidiGroupTerminalBlockDirection Direction { get; };
+        [noexcept] MidiGroupTerminalBlockProtocol Protocol { get; };
+
+        [noexcept] Windows.Devices.Midi2.MidiGroup FirstGroup{ get; };
+        [noexcept] UInt8 GroupCount{ get; };
+
+        [noexcept] Boolean IncludesGroup(Windows.Devices.Midi2.MidiGroup group);
+
+        [noexcept] UInt16 MaxDeviceInputBandwidthIn4KBitsPerSecondUnits{ get; };
+        [noexcept] UInt16 MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits{ get; };
+
+        [noexcept] UInt32 CalculatedMaxDeviceInputBandwidthBitsPerSecond{ get; };
+        [noexcept] UInt32 CalculatedMaxDeviceOutputBandwidthBitsPerSecond{ get; };
+
+        [noexcept] MidiFunctionBlock AsEquivalentFunctionBlock();
+    }
+}

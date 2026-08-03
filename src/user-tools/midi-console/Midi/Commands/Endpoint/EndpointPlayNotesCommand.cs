@@ -1,4 +1,11 @@
-﻿using Microsoft.Windows.Devices.Midi2.Messages;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -185,14 +192,14 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                IMidiEndpointConnectionSettings connectionSettings;
+                MidiEndpointConnectionSettings connectionSettings;
                 if (settings.AutoReconnect)
                 {
-                    connectionSettings = new MidiEndpointConnectionBasicSettings(false, true);
+                    connectionSettings = new MidiEndpointConnectionSettings(false, true);
                 }
                 else
                 {
-                    connectionSettings = new MidiEndpointConnectionBasicSettings(false, false);
+                    connectionSettings = new MidiEndpointConnectionSettings(false, false);
                 }
 
 

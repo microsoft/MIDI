@@ -71,21 +71,20 @@ CMidi2BasicLoopbackMidiEndpointManager::ProcessWorkQueue()
 
     uint32_t countItemsProcessed{ 0 };
 
-    while (!TransportState::Current().GetEndpointWorkQueue()->IsEmpty())
+    // GetNextWorkItem is now atomic (locked), so drive the loop off its
+    // return value rather than a separate IsEmpty() check, which would be
+    // a TOCTOU against a concurrent enqueue/drain.
+    TransportWorkItem item{ };
+    while (TransportState::Current().GetEndpointWorkQueue()->GetNextWorkItem(item))
     {
-        TransportWorkItem item{ };
-
-        if (TransportState::Current().GetEndpointWorkQueue()->GetNextWorkItem(item))
+        if (item.Type == TransportWorkItemWorkType::Create)
         {
-            if (item.Type == TransportWorkItemWorkType::Create)
-            {
-                LOG_IF_FAILED(CreateEndpoint(item.Definition));
+            LOG_IF_FAILED(CreateEndpoint(item.Definition));
 
-                countItemsProcessed++;
-            }
-
-            // TODO: Process other types of work items
+            countItemsProcessed++;
         }
+
+        // TODO: Process other types of work items
     }
 
     TraceLoggingWrite(
@@ -227,6 +226,10 @@ CMidi2BasicLoopbackMidiEndpointManager::DeleteEndpoint(
 
     RETURN_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(definition->CreatedShortClientInstanceId.c_str()));
 
+    // Also need to remove from internal list
+
+    TransportState::Current().GetEndpointTable()->RemoveDevice(definition->AssociationId);
+
     return S_OK;
 }
 
@@ -264,9 +267,6 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
 
 
     std::wstring transportCode(TRANSPORT_CODE);
-
-    //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     std::wstring endpointName = definition->EndpointName;
     std::wstring endpointDescription = definition->EndpointDescription;
@@ -431,9 +431,46 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     definition->CreatedShortClientInstanceId = instanceId;
     definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
 
+
+    // look up the created ports (an optimization would be for the MIDI device manager to return this vector back to us)
+
+// guids defined in mmdevapi.h
+//#define DEVINTERFACE_MIDI1_OUTPUT_STRING    winrt::hstring{ L"{6DC23320-AB33-4CE4-80D4-BBB3EBBF2814}" }
+//#define DEVINTERFACE_MIDI1_INPUT_STRING     winrt::hstring{ L"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}" }
+
+    //// Get source ports with this device interface id as the parent
+    //auto createdMidi1Sources = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+    //    L"System.Devices.InterfaceClassGuid:=\"" + winrt::to_hstring(DEVINTERFACE_MIDI_INPUT) + L"\" AND " +
+    //    L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True AND " +
+    //    L"System.Devices.Parent:=\"" + std::wstring(newDeviceInterfaceId.get()) + L"\"").get();
+
+    //if (createdMidi1Sources != nullptr && createdMidi1Sources.Size() > 0)
+    //{
+    //    for (const auto& source : createdMidi1Sources)
+    //    {
+    //        definition->CreatedMidi1SourcePorts.push_back(source.Id());
+    //    }
+    //}
+
+    //// Get destination ports with this device interface id as the parent
+    //auto createdMidi1Destinations = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+    //    L"System.Devices.InterfaceClassGuid:=\"" + winrt::to_hstring(DEVINTERFACE_MIDI_OUTPUT) + L"\" AND " +
+    //    L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True AND " +
+    //    L"System.Devices.Parent:=\"" + std::wstring(newDeviceInterfaceId.get()) + L"\"").get();
+
+    //if (createdMidi1Destinations != nullptr && createdMidi1Destinations.Size() > 0)
+    //{
+    //    for (const auto& destination : createdMidi1Destinations)
+    //    {
+    //        definition->CreatedMidi1DestinationPorts.push_back(destination.Id());
+    //    }
+    //}
+
+
     // store for tracking
     auto device = std::make_shared<MidiBasicLoopbackDevice>();
     device->Definition = definition;
+
 
     TransportState::Current().GetEndpointTable()->SetDevice(definition->AssociationId, device);
 

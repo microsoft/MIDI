@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: IMidiMessageReceivedEventSource
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: interface
 description: Interface which contains the event definition used by any class which raises the `MessageReceived` event
 ---
@@ -14,4 +13,10 @@ Interface which contains the event definition used by any class which raises the
 | Event | Description |
 | -------- | ----------- |
 | `MessageReceived(source, args)` | The main message received event definition. |
+
+## Methods
+
+| Method | Description |
+| -------- | ----------- |
+| `GetEndpointConnectionSource()` | Returns the [`IMidiEndpointConnectionSource`](./IMidiEndpointConnectionSource.md) that owns this message source. |
 

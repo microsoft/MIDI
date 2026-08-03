@@ -39,7 +39,7 @@ layout: default
 
                         {% for sdk_page in sdk_pages %}
                             <tr>
-                                <td><a href="{{sdk_page.url}}">{{sdk_page.title}}</a></td>
+                                <td><a href="{{sdk_page.url | relative_url }}">{{sdk_page.title}}</a></td>
                                 <td>{{sdk_page.description}}</td>
                             </tr>
                         {% endfor %}

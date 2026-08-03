@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
 using Windows.Foundation;
 
 namespace Microsoft.Midi.ConsoleApp
@@ -32,11 +30,11 @@ namespace Microsoft.Midi.ConsoleApp
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            var config = new MidiLoopbackEndpointRemovalConfig(settings.AssociationId);
+            var config = new MidiLoopbackRemovalConfig(settings.AssociationId);
 
-            var removalSuccess = MidiLoopbackEndpointManager.RemoveTransientLoopbackEndpoints(config);
+            var removalResponse = MidiLoopbackManager.RemoveTransientLoopback(config);
 
-            if (removalSuccess)
+            if (removalResponse.Success)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.MessageLoopbackRemovalSuccess));
                 AnsiConsole.WriteLine();

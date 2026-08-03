@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiEndpointConnection COM Extensions
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
 implements: IUnknown
 description: Fast and no-allocation message send/receive for a MidiEndpointConnection
@@ -114,7 +113,9 @@ interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
 
 | Function | Description |
 | -------- | ----------- |
-| `MessagesReceived` | Called when one or more messages have been received from the endpoint. How many messages are included in a single call depends largely upon how the endpoint receives and passes them along, and what additional processing is done on the data in the service. 
+| `MessagesReceived` | Called when one or more messages have been received from the endpoint. How many messages are included in a single call depends largely upon how the endpoint receives and passes them along, and what additional processing is done on the data in the service. We guarantee `messages` will not be nullptr, and `wordCount` will be at least 1
+
+**Performance Tip:** When processing the `MessagesReceived` callback, do so quickly. This callback is synchronous. If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
 
 The session id and connection id are provided for convenience when using a centralized message handler. 
 

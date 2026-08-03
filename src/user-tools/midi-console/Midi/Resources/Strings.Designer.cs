@@ -394,7 +394,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to (Experimental Feature) Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint..
+        ///   Looks up a localized string similar to Send a file of MIDI 1.0 binary SysEx 7-bit messages to a compatible endpoint. These are first translated to UMP SysEx 7 for transmission..
         /// </summary>
         internal static string CommandSendSysExFileDescription {
             get {
@@ -466,11 +466,20 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Watch endpoints for add/remove and PnP property change notifications.
+        ///   Looks up a localized string similar to Watch UMP endpoints for add/remove and PnP property change notifications.
         /// </summary>
         internal static string CommandWatchEndpointsDescription {
             get {
                 return ResourceManager.GetString("CommandWatchEndpointsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Watch MIDI 1.0 ports for add/remove and PnP property change notifications.
+        /// </summary>
+        internal static string CommandWatchPortsDescription {
+            get {
+                return ResourceManager.GetString("CommandWatchPortsDescription", resourceCulture);
             }
         }
         
@@ -1026,6 +1035,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MIDI Monitor.
+        /// </summary>
+        internal static string MonitorConsoleTitleSuffix {
+            get {
+                return ResourceManager.GetString("MonitorConsoleTitleSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Timestamp.
         /// </summary>
         internal static string MonitorEndpointResultTableColumnHeaderTimestamp {
@@ -1080,7 +1098,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Endpoint Added.
+        ///   Looks up a localized string similar to UMP Endpoint Added.
         /// </summary>
         internal static string NotificationEndpointDeviceWatcherEndpointAdded {
             get {
@@ -1089,7 +1107,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Endpoint Removed.
+        ///   Looks up a localized string similar to UMP Endpoint Removed.
         /// </summary>
         internal static string NotificationEndpointDeviceWatcherEndpointRemoved {
             get {
@@ -1098,7 +1116,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Endpoint Updated.
+        ///   Looks up a localized string similar to UMP Endpoint Updated.
         /// </summary>
         internal static string NotificationEndpointDeviceWatcherEndpointUpdated {
             get {
@@ -1193,6 +1211,69 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string NotificationEndpointDeviceWatcherStopped {
             get {
                 return ResourceManager.GetString("NotificationEndpointDeviceWatcherStopped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Port name has been updated.
+        /// </summary>
+        internal static string NotificationLegacyPortDeviceWatcherEndpointUpdatedName {
+            get {
+                return ResourceManager.GetString("NotificationLegacyPortDeviceWatcherEndpointUpdatedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WinMM port number has been updated.
+        /// </summary>
+        internal static string NotificationLegacyPortDeviceWatcherEndpointUpdatedNumber {
+            get {
+                return ResourceManager.GetString("NotificationLegacyPortDeviceWatcherEndpointUpdatedNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Initial enumeration of MIDI 1.0 ports has completed.
+        /// </summary>
+        internal static string NotificationLegacyPortDeviceWatcherInitialEnumerationCompleted {
+            get {
+                return ResourceManager.GetString("NotificationLegacyPortDeviceWatcherInitialEnumerationCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 1.0 Port Added.
+        /// </summary>
+        internal static string NotificationLegacyPortDeviceWatcherPortAdded {
+            get {
+                return ResourceManager.GetString("NotificationLegacyPortDeviceWatcherPortAdded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 1.0 Port Removed.
+        /// </summary>
+        internal static string NotificationLegacyPortDeviceWatcherPortRemoved {
+            get {
+                return ResourceManager.GetString("NotificationLegacyPortDeviceWatcherPortRemoved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 1.0 Port Updated.
+        /// </summary>
+        internal static string NotificationLegacyPortDeviceWatcherPortUpdated {
+            get {
+                return ResourceManager.GetString("NotificationLegacyPortDeviceWatcherPortUpdated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Device watcher stopped..
+        /// </summary>
+        internal static string NotificationLegacyPortDeviceWatcherStopped {
+            get {
+                return ResourceManager.GetString("NotificationLegacyPortDeviceWatcherStopped", resourceCulture);
             }
         }
         
@@ -1454,6 +1535,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ParameterEnumLegacyEndpointsIncludeEndpointId {
             get {
                 return ResourceManager.GetString("ParameterEnumLegacyEndpointsIncludeEndpointId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set for detailed output.
+        /// </summary>
+        internal static string ParameterEnumLegacyPortsVerbose {
+            get {
+                return ResourceManager.GetString("ParameterEnumLegacyPortsVerbose", resourceCulture);
             }
         }
         
@@ -1944,7 +2034,34 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to For outgoing UMP format messages, replace the group index with this new value. If missing, the group indexes in the file will be used..
+        ///   Looks up a localized string similar to File name (and path if not in current directory) to the binary SysEx 7 file to send..
+        /// </summary>
+        internal static string ParameterSendSysExFileCommandFile {
+            get {
+                return ResourceManager.GetString("ParameterSendSysExFileCommandFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Milliseconds to pause between transfers (groups) of messages.
+        /// </summary>
+        internal static string ParameterSendSysExFileDelayBetweenTransfers {
+            get {
+                return ResourceManager.GetString("ParameterSendSysExFileDelayBetweenTransfers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of outgoing UMP message packets (typically 6 data bytes each) between pauses..
+        /// </summary>
+        internal static string ParameterSendSysExFileMessagesPerTransfer {
+            get {
+                return ResourceManager.GetString("ParameterSendSysExFileMessagesPerTransfer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set the group index with this new value. .
         /// </summary>
         internal static string ParameterSendSysExFileReplaceGroup {
             get {
@@ -2494,6 +2611,33 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertyTablePropertyLabelDeviceIdentityLastUpdated {
             get {
                 return ResourceManager.GetString("PropertyTablePropertyLabelDeviceIdentityLastUpdated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Driver Inf.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelDriverInfPath {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelDriverInfPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Driver Provider.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelDriverProvider {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelDriverProvider", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Driver Version.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelDriverVersion {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelDriverVersion", resourceCulture);
             }
         }
         

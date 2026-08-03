@@ -27,4 +27,5 @@ struct MidiLoopbackDeviceDefinition
     std::wstring CreatedEndpointInterfaceId{};
 
     bool UMPOnly{ false };
+
 };

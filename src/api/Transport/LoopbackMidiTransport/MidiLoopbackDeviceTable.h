@@ -39,7 +39,7 @@ public:
         }
     }
 
-    void SetDevice(std::wstring associationId, MidiLoopbackDevice device)
+    void SetDevice(_In_ std::wstring const& associationId, _In_ MidiLoopbackDevice const& device)
     {
         std::lock_guard<std::mutex> lock{ m_devicesLock };
 
@@ -48,7 +48,7 @@ public:
         m_devices[cleanId] = std::make_shared<MidiLoopbackDevice>(std::move(device));
     }
 
-    void RemoveDevice(std::wstring associationId)
+    void RemoveDevice(_In_ std::wstring const& associationId)
     {
         std::shared_ptr<MidiLoopbackDevice> deviceToRemove;
 
@@ -71,7 +71,7 @@ public:
     }
 
 
-    bool IsUniqueIdentifierInUseForLoopbackA(std::wstring uniqueIdentifier)
+    bool IsUniqueIdentifierInUseForLoopbackA(_In_ std::wstring const& uniqueIdentifier)
     {
         std::lock_guard<std::mutex> lock{ m_devicesLock };
 
@@ -88,7 +88,7 @@ public:
         return false;
     }
 
-    bool IsUniqueIdentifierInUseForLoopbackB(std::wstring uniqueIdentifier)
+    bool IsUniqueIdentifierInUseForLoopbackB(_In_ std::wstring const& uniqueIdentifier)
     {
         std::lock_guard<std::mutex> lock{ m_devicesLock };
 
@@ -104,4 +104,24 @@ public:
 
         return false;
     }
+
+
+
+    std::vector<MidiLoopbackDevice> GetDeviceListSnapshot()
+    {
+        std::vector<MidiLoopbackDevice> results;
+
+        // lock so no adds/removes happen while building the list
+        // UPDATE THIS with the Loopback locking mechanism that was added through security PR
+//        auto lock = m_devicesLock.lock_shared();
+
+        for (auto const& [key, device] : m_devices)
+        {
+            results.push_back(device);
+        }
+
+        return results;
+    }
+
+
 };

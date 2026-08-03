@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-//using Microsoft.Windows.Devices.Midi2.Initialization;
-
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class WatchEndpointsCommand : Command<WatchEndpointsCommand.Settings>
@@ -111,8 +109,9 @@ namespace Microsoft.Midi.ConsoleApp
 
         private void OnWatcherDeviceRemoved(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationRemovedEventArgs args)
         {
-            AnsiConsole.MarkupLine($"[indianred1]{Strings.NotificationEndpointDeviceWatcherEndpointRemoved}[/]");
-            AnsiConsole.MarkupLine(" - " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.EndpointDeviceId));
+            AnsiConsole.Markup($"[indianred1]{Strings.NotificationEndpointDeviceWatcherEndpointRemoved}[/]");
+            AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.EndpointDeviceId));
+
             AnsiConsole.MarkupLine("");
         }
 
@@ -124,9 +123,10 @@ namespace Microsoft.Midi.ConsoleApp
         {
             var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(args.EndpointDeviceId);
 
-            AnsiConsole.MarkupLine($"[steelblue1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdated}[/]");
+            AnsiConsole.Markup($"[steelblue1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdated}[/]");
+            AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.EndpointDeviceId));
+
             AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatEndpointName(di.Name));
-            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.EndpointDeviceId));
 
             
             if (args.IsNameUpdated)
@@ -196,8 +196,9 @@ namespace Microsoft.Midi.ConsoleApp
 
         private void OnWatcherDeviceAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationAddedEventArgs args)
         {
-            AnsiConsole.MarkupLine(Strings.NotificationEndpointDeviceWatcherEndpointAdded);
-            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.AddedDevice.EndpointDeviceId));
+            AnsiConsole.Markup($"[CadetBlue]{Strings.NotificationEndpointDeviceWatcherEndpointAdded}[/]");
+            AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.AddedDevice.EndpointDeviceId));
+
             AnsiConsole.MarkupLine(_emptyBullet + AnsiMarkupFormatter.FormatEndpointName(args.AddedDevice.Name));
             AnsiConsole.MarkupLine(_emptyBullet + args.AddedDevice.EndpointPurpose.ToString());
             AnsiConsole.MarkupLine("");

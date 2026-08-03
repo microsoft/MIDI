@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
-
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EnumEndpointPropertyKeysCommand : Command<EnumEndpointPropertyKeysCommand.Settings>

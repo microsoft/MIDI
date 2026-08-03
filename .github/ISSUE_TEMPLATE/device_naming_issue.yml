@@ -13,41 +13,35 @@ body:
   attributes:
     value: Thank you for filing a naming bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug.
 
+- type: checkboxes
+  id: steps-completed
+  attributes:
+    label: Report pre-requisites
+    description: These steps must be completed before filing a bug report
+    options:
+    - label: I have searched this repo for existing issues to confirm this is not a duplicate
+      required: true
+    - label: I agree to follow this project's Code of Conduct
+      required: true
+
+- type: checkboxes
+  id: clarity-and-disclosure
+  attributes:
+    label: Clarity and Disclosure
+    description: These steps must be completed before filing a bug report
+    options:
+    - label: I confirm that any AI analysis included in this report is clearly called out / tagged as AI-generated with "AI Generated Content". Reports with suspected AI content may be closed if not disclosed.
+      required: true
+    - label: I confirm that I will quickly follow-up to questions or requests for additional detail, otherwise the issue may be closed
+      required: true
+
 - type: input
   id: windows-version
   attributes:
     label: Windows Version
-    description: For Insider builds, this is at the bottom right of the screen. Example 27788.rs_prerelease. For others, you can get it from Settings > About
+    description: In Windows Settings > System > About. For Insider builds, this is at the bottom right of the screen. Example 27788.rs_prerelease
   validations:
     required: true
-
-- type: dropdown
-  id: service-install-method
-  attributes:
-    label: Service Installation Method
-    description: How was the MIDI Service and components installed?
-    multiple: false
-    options:
-      - In-box In Insider Build
-      - GitHub
-      - Other (please indicate below)
-  validations:
-    required: true
-
-- type: dropdown
-  id: bug-location
-  attributes:
-    label: Location
-    description: Where did you discover this bug?
-    multiple: false
-    options:
-      - App using WinMM MIDI 1.0 (Classic API)
-      - App using WinRT MIDI 1.0 (Windows 10 MIDI)
-      - App using Windows MIDI Services SDK (MIDI 2.0)
-      - Windows MIDI Services SDK or tools
-      - Other or Unsure (please indicate in additional notes section below)
-  validations:
-    required: true   
 
 - type: input
   id: device-model
@@ -73,7 +67,6 @@ body:
     description: The name(s) you expected to see
   validations:
     required: true
-          
     
 - type: textarea
   id: midi-ks-info-output
@@ -84,10 +77,11 @@ body:
     required: true
 
 - type: textarea
-  id: midi-endpoint-properties-output
+  id: mididiag-output
   attributes:
-    label: MIDI endpoint properties
-    description: Please paste the output (text or screenshot) from running `midi endpoint properties` from the SDK, for this endpoint
+    label: Output from the MIDI Diagnostics Tool
+    description: Use the MIDI settings app from https://aka.ms/midi, open the MIDI Settings app, and go to the troubleshooting page. Capture the resulting MIDI system information and paste the entire text here.
+    placeholder: mididiag output
   validations:
     required: true
   

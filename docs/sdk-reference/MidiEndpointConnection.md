@@ -1,10 +1,9 @@
 ---
 layout: sdk_reference_page
 title: MidiEndpointConnection
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
-implements: Windows.Foundation.IStringable, Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource, Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionSource
+implements: Windows.Foundation.IStringable, Windows.Devices.Midi2.IMidiMessageReceivedEventSource, Windows.Devices.Midi2.IMidiEndpointConnectionSource
 description: The primary way to send and receive messages with an endpoint.
 tags: session, connection, endpoint
 ---
@@ -26,7 +25,6 @@ To ensure an application is able to wire up processing plugins and event handler
 | `IsOpen` | True if this connection is currently open. When first created, the connection is not open until the consuming code calls the `Open` method |
 | `Settings` | Settings used to create this connection. Treat this as read-only. |
 | `MessageProcessingPlugins` | Collection of all message processing plugins which will optionally handle incoming messages. |
-| `IsAutoReconnectEnabled` | True if endpoints are automatically reconnected if they are, for example, unplugged and then replugged. The value is set at the session level. |
 
 ## Static Member Functions
 
@@ -106,10 +104,7 @@ This function sends each packet one at a time, because each packet has its own t
 | -------- | ----------- |
 | `MessageReceived (source, args)` | From `IMidiMessageReceivedEventSource`. This is the event for receiving MIDI Messages, one at a time. |
 
-When processing the `MessageReceived` event, do so quickly. This event is synchronous. If you need to do long-running processing of incoming messages, add them to your own incoming queue structure and have them processed by another application thread.
-
-> # Threading: 
-> In a multi-threaded apartment, the thread the `MessageReceived` callback comes in on is not the same thread which created the connection to begin with. Windows MIDI Services uses a high-priority thread in the background, one per connection. For this reason, it's best to use the event only to receive the message and store it, not to do any additional processing on the message. The TAEF test `MidiEndpointCreationThreadTests` in the `Midi2.Client.unittests` project demonstrates how this works.
+**Performance Tip:** When processing the `MessageReceived` event, do so quickly. This event is synchronous. If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
 
 > # Note: 
 > Wire up event handlers and add message processing plugins prior to calling `Open()`. 
@@ -118,72 +113,4 @@ When processing the `MessageReceived` event, do so quickly. This event is synchr
 
 Here's an excerpt from the full "API client basics" sample. It shows sending and receiving messages using the two built-in loopback endpoints. For more information on the loopback endpoints, see [diagnostics endpoints](../../endpoints/diagnostic-endpoints.md).
 
-```cs
-using (var session = MidiSession.CreateSession("API Sample Session"))
-{
-    // get the endpoint Ids. Normally, you'd use enumeration functions to get this
-    // for non-diagnostics endpoints.
-    var endpointAId = MidiDiagnostics.DiagnosticsLoopbackAEndpointId;
-    var endpointBId = MidiDiagnostics.DiagnosticsLoopbackBEndpointId;
-
-    Console.WriteLine("Connecting to Sender UMP Endpoint: " + endpointAId);
-    Console.WriteLine("Connecting to Receiver UMP Endpoint: " + endpointBId);
-
-    var sendEndpoint = session.CreateEndpointConnection(endpointAId);
-    var receiveEndpoint = session.CreateEndpointConnection(endpointBId);
-
-    void MessageReceivedHandler(object sender, MidiMessageReceivedEventArgs args)
-    {
-        var ump = args.GetMessagePacket();
-
-        Console.WriteLine();
-        Console.WriteLine("Received UMP");
-        Console.WriteLine("- Current Timestamp: " + MidiClock.Now);
-        Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
-        Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
-        Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
-        Console.WriteLine("- Message:           " + MidiMessageHelper.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
-
-        if (ump is MidiMessage32)
-        {
-            var ump32 = ump as MidiMessage32;
-
-            if (ump32 != null)
-                Console.WriteLine("- Word 0:            0x{0:X}", ump32.Word0);
-        }
-    };
-
-    // wire up the event handler before opening the endpoint
-    receiveEndpoint.MessageReceived += MessageReceivedHandler;
-
-    Console.WriteLine("Opening endpoint connection");
-
-    receiveEndpoint.Open();
-    sendEndpoint.Open();
-
-    Console.WriteLine("Creating MIDI 1.0 Channel Voice 32-bit UMP...");
-
-    var ump32 = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
-        MidiClock.Now, // use current timestamp
-        5,      // group 4
-        Midi1ChannelVoiceMessageStatus.NoteOn,  // 9
-        3,      // channel 2
-        120,    // note 120 - hex 0x78
-        100);   // velocity 100 hex 0x64
-
-    sendEndpoint.SendSingleMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
-
-    Console.WriteLine(" ** Wait for the message to arrive, and then press enter to cleanup. ** ");
-    Console.ReadLine();
-
-    // you should unregister the event handler as well
-    receiveEndpoint.MessageReceived -= MessageReceivedHandler;
-
-    // not strictly necessary if the session is going out of scope or is in a using block
-    session.DisconnectEndpointConnection(sendEndpoint.ConnectionId);
-    session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId);
-}
-
-```
-
-More complete examples [available on Github](https://aka.ms/midirepo)
+Complete examples [available on Github](https://aka.ms/midirepo)

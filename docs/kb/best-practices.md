@@ -7,10 +7,6 @@ description: Best practices for developers using the Windows MIDI Services SDK
 
 Here's a list of some best practices and performance optimizations for MIDI API-consuming applications.
 
-## Service Startup and WinMM Port creation
-
-One of the things which takes the longest when starting the service is the creation of WinMM and WinRT MIDI 1.0 backwards-compatible ports. If those ports are not needed for a specific MIDI 2.0 endpoint, most transports include an option to turn off creation, or limit the number of ports created. This can significantly speed up service startup.
-
 ## Fast transmission of messages
 
 For maximum compatibility across languages, and for safety, WinRT doesn't allow pointers to be exposed by any properties or as parameters or return types for any function. In addition, the by-value and by-reference semantics for parameters are not always under the control of the API developer.
@@ -23,21 +19,9 @@ The `IMemoryBuffer` approach is a more advanced way to transfer data to and from
 
 The most flexible, but least performant approach, is to use the `IMidiMessage` interface and the methods which return strongly typed messages. These do involve additional type allocations either on the part of the caller or in the API code.
 
-### Data copies
+### COM Extensions
 
-In the underlying implementation, copying of data is unavoidable in places. Here are the main places where it happens.
-
-When sending messages
-
-1. The individual WinRT projection for your language may enforce a copy or translation of the data going into the SDK. This varies. Arrays, in particular, vary here.
-2. The SDK and API copy the data (typically a `memcpy`), regardless of how it is provided, into the cross-process queue for that client endpoint connection. This is shared cross-process memory on Windows. It's also a circular queue, so we can't hold onto pointers for long, which is why 4 below operates how it does.
-3. On the service side, the pointers into the buffer are provided to the client connection and the plugins in that chain. No copying here.
-4. There will be copies of the data created if there are any processing plugins which must significantly manipulate the data (each plugin decides how it deals with the data), or if you schedule the message to be sent in the future (see 2 above). Translation performs copies to/from byte format, for example.
-5. Finally, the messages may be copied when being supplied to the transport. In the case of USB MIDI 2.0, we make a call into a kernel driver, so have another cross process queue for that which requires we copy data into it to supply it to the driver. For USB MIDI 1.0, we make an Ioctl call, so there is no additional queue, however the Ioctl is slower than the queue processing. In the case of networking, we have to copy the data into the network buffers and transmit. In app-to-app / virtual MIDI, and also the built-in loopback endpoints, we typically just send the same message pointers through the entire process and do not copy any data in the transport.
-
-This code is all quite efficient, and the amount of data in a single message is small, so these happen quite quickly. Nevertheless, we're always looking at places where we can further optimize, but still retain the flexibility provided by having a Windows Service which processes the messages.
-
-When receiving messages, the process is almost exactly the opposite of sending. There's no in-bound message scheduling, but there may be data transformations that plugins perform. In addition, endpoints with multiple clients connected do require fanning out those messages into multiple queues, resulting in multiple copies across the different cross-process inbound client connection queues. That is a small price to pay for full multi-client MIDI support.
+For C++ and C++-like languages, we've added the COM extensions for fast allocation-free send and receive of messages. All the normal WinRT types are used for Session and Connection. But when you want to send and receive messages, and can ensure the data integrity of the messages being sent (most cross-platform apps already have code to do this), the COM Extensions are the way to go. There is a C++ example in the repo and examples in the documentation.
 
 ## Displaying connections to your app users
 
@@ -95,9 +79,3 @@ USB MIDI 1.0 devices and some USB MIDI 2.0 devices will not have Function Blocks
 ### Use the Function Block UI Hint to help you decide how to show functions
 
 The UI Hint property of a Function Block was created to give the UI an indication of the intended direction of communication, as a user would see it, for a function block. This shouldn't necessarily block functions from showing up in a list that contains, for example, input devices, but it may be that you want to prioritize the ones with an appropriate UI hint, and have a "see all" option or similar to display the rest.
-
-## Prefer not mixing legacy APIs and Windows MIDI Services in the same session
-
-There's nothing technically preventing you from using winmm or WinRT MIDI 1.0 in the same application, at the same time as the new API, but there's also no need to beyond transitioning code. The new API will do everything the old does, plus a lot more. The older APIs don't have access to a lot of the metadata you'll need for devices, and in the case of MIDI 2.0 endpoints, will require additional message translation in the service. 
-
-Of course, offering a choice between Windows MIDI Services and an older API in your application is perfectly acceptable, based on your use cases, and which versions of the operating systems you need to support.

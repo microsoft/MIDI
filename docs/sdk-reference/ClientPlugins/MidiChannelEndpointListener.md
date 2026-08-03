@@ -1,25 +1,27 @@
 ---
 layout: sdk_reference_page
 title: MidiChannelEndpointListener
-namespace: Microsoft.Windows.Devices.Midi2.ClientPlugins
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2.ClientPlugins
 type: runtimeclass
-implements: Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
+implements: Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Windows.Devices.Midi2.IMidiMessageReceivedEventSource
 description: Provides a way to filter incoming messages by group and channel without opening separate connections
 ---
 
-This class acts as a client-side filter. Incoming messages with the specified group and channel will be provided through the `MessageReceived` event. Other messages will be ignored.
+This class acts as a client-side filter. Incoming messages with the specified group and channel will be provided through the `MessageReceived` event. Other messages will be ignored. 
 
-In addition to the properties and methods in `IMidiEndpointMessageProcessingPlugin`, and the MessageReceived event from `IMidiMessageReceivedEventSource` the class provides the following:
+That means system real-time messages, SysEx messages, and any other messages without an explicit channel field (that we know about at API compile time) will be ignored here by default. If you want any of those, like the real-time messages like Clock, you can set up a `MidiMessageTypeEndpointListener` and have it listen to `MidiMessageType::SystemCommon32` or, just for real-time and system common messages, use the `IncludeSystemCommonAndRealTimeMessages` flag. Please refer to the MIDI UMP Specification for details on what types of messages are included in each message type. You could also set up a `MidiGroupEndpointListener` and get the entire stream of messages for that single group. That behaves most like a classic MIDI 1.0 API Port.
+
+In addition to the properties and methods in `IMidiEndpointMessageProcessingPlugin`, and the `MessageReceived` event from `IMidiMessageReceivedEventSource` the class provides the following:
 
 ## Properties
 
 | Property | Description |
 | ---- | ---- |
-| `IncludedGroup` | The `MidiGroup` that this listener will listen to. |
+| `IncludedGroup` | The single `MidiGroup` that this listener will listen to. If unspecified, all groups will be included in scope and only the channel will be evaluated. |
 | `IncludedChannels` | The channels that this listener will listen to on the group. |
-| `PreventCallingFurtherListeners` | True if this plugin should prevent further listeners from processing a message that is in-scope for this processor. |
+| `IncludeSystemCommonAndRealTimeMessages` | True if this plugin should fire MessageReceived events for system common/real-time messages like clock, which do not have a channel. False by default. |
 | `PreventFiringMainMessageReceivedEvent` | True if this plugin should prevent the endpoint's `MessageReceived` event from firing if the message was in-scope for this plugin. |
+| `PreventCallingFurtherListeners` | True if this plugin should prevent any plugins after this one from executing if the message was handled by this plugin instance. |
 
 ## Functions
 

@@ -29,10 +29,13 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
         TraceLoggingWideString(endpointId, "endpoint id")
         );
 
+    RETURN_HR_IF_NULL(E_INVALIDARG, Callback);
+    RETURN_HR_IF_NULL(E_INVALIDARG, endpointId);
+
     m_callbackContext = Context;
     m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
-    HRESULT hr = S_OK;
+    RETURN_HR_IF(E_INVALIDARG, m_endpointId.empty());
 
     // TODO: This should use SWD properties and not a string search
 
@@ -44,15 +47,14 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Initializing Side-A Bidi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"Initializing Bidi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
         m_device = TransportState::Current().GetEndpointTable()->GetDeviceById(endpointId);
         RETURN_HR_IF_NULL(E_INVALIDARG, m_device);
 
-        m_device->RegisterEndpoint(Callback);
-
+        RETURN_IF_FAILED(m_device->Initialize(Callback));
     }
     else
     {
@@ -68,7 +70,7 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-        return E_FAIL;
+        return E_INVALIDARG;
     }
 
     TraceLoggingWrite(
@@ -77,11 +79,11 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Unable to find matching device in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
     );
 
-    return hr;
+    return S_OK;
 }
 
 HRESULT
@@ -96,7 +98,22 @@ CMidi2BasicLoopbackMidiBidi::Shutdown()
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-    m_device.reset();
+    std::shared_ptr<MidiBasicLoopbackDevice> device;
+    {
+        auto lock = m_deviceLock.lock_exclusive();
+        device = std::move(m_device);
+        m_device.reset();
+    }
+
+    if (device)
+    {
+        // This Bidi represents a single client connection. The device itself
+        // is owned by the endpoint table and must survive so the endpoint can
+        // be reopened. Only detach our callback -- do NOT call device->Shutdown(),
+        // which would reset the shared Definition and permanently disable the
+        // endpoint for future connections (regression: GitHub #1070).
+        LOG_IF_FAILED(device->DisconnectClient());
+    }
 
     return S_OK;
 }
@@ -112,22 +129,24 @@ CMidi2BasicLoopbackMidiBidi::SendMidiMessage(
     LONGLONG Position
 )
 {
-
-    //TraceLoggingWrite(
-    //    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-    //    TraceLoggingBool(m_isEndpointA, "is endpoint A")
-    //);
-
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_device);
 
-    RETURN_IF_FAILED(m_device->SendMessage(optionFlags, Message, Size, Position, m_callbackContext));
+    // UMP payloads are 32-bit words; reject non-word-aligned sizes so we
+    // never forward a malformed buffer to the receiving callback.
+    RETURN_HR_IF(E_INVALIDARG, (Size % sizeof(uint32_t)) != 0);
+
+    // Snapshot the device under the lock so a concurrent Shutdown() can't
+    // reset it between our null check and the call.
+    std::shared_ptr<MidiBasicLoopbackDevice> device;
+    {
+        auto lock = m_deviceLock.lock_shared();
+        device = m_device;
+    }
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, device);
+
+    RETURN_IF_FAILED(device->SendMessage(optionFlags, Message, Size, Position, m_callbackContext));
 
     return S_OK;
 }
@@ -144,21 +163,9 @@ CMidi2BasicLoopbackMidiBidi::Callback(
 )
 {
 
-    //TraceLoggingWrite(
-    //    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
-    //);
-
-    // message received from the client
-
-    //if (m_callback != nullptr)
-    //{
-    //    return m_callback->Callback(optionFlags, Message, Size, Position, Context);
-    //}
+    // we are a bidi to be compatible with the API, but because this is a MIDI 1.0-style loopback device, 
+    // there's no need to implement the callback. Instead, to save one indirection,
+    // we directly wire up to the provided callback in Initialize
 
     return S_OK;
 }

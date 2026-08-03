@@ -187,7 +187,7 @@
     <value>Get the current MIDI clock timestamp value and information about the clock resolution.</value>
   </data>
   <data name="CommandWatchEndpointsDescription" xml:space="preserve">
-    <value>Watch endpoints for add/remove and PnP property change notifications</value>
+    <value>Watch UMP endpoints for add/remove and PnP property change notifications</value>
   </data>
   <data name="CommonStringDirectionSingular" xml:space="preserve">
     <value>Direction</value>
@@ -816,7 +816,7 @@ Timestamp</value>
     <value>Press escape to stop watching for endpoint changes.</value>
   </data>
   <data name="CommandSendSysExFileDescription" xml:space="preserve">
-    <value>(Experimental Feature) Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint.</value>
+    <value>Send a file of MIDI 1.0 binary SysEx 7-bit messages to a compatible endpoint. These are first translated to UMP SysEx 7 for transmission.</value>
   </data>
   <data name="ErrorMidiServiceNotAvailable" xml:space="preserve">
     <value>The MIDI Service is not available.</value>
@@ -828,10 +828,10 @@ Timestamp</value>
     <value>Initial Enumeration Completed</value>
   </data>
   <data name="NotificationEndpointDeviceWatcherEndpointRemoved" xml:space="preserve">
-    <value>Endpoint Removed</value>
+    <value>UMP Endpoint Removed</value>
   </data>
   <data name="NotificationEndpointDeviceWatcherEndpointUpdated" xml:space="preserve">
-    <value>Endpoint Updated</value>
+    <value>UMP Endpoint Updated</value>
   </data>
   <data name="NotificationEndpointDeviceWatcherEndpointUpdatedName" xml:space="preserve">
     <value>Name Updated</value>
@@ -855,7 +855,7 @@ Timestamp</value>
     <value>Additional Capabilities Updated</value>
   </data>
   <data name="NotificationEndpointDeviceWatcherEndpointAdded" xml:space="preserve">
-    <value>Endpoint Added</value>
+    <value>UMP Endpoint Added</value>
   </data>
   <data name="EndpointReconnected" xml:space="preserve">
     <value>Endpoint reconnected</value>
@@ -981,7 +981,7 @@ Timestamp</value>
     <value>Report detailed output when sending the file</value>
   </data>
   <data name="ParameterSendSysExFileReplaceGroup" xml:space="preserve">
-    <value>For outgoing UMP format messages, replace the group index with this new value. If missing, the group indexes in the file will be used.</value>
+    <value>Set the group index with this new value. </value>
   </data>
   <data name="StartingMidiService" xml:space="preserve">
     <value>Starting MIDI Service ...</value>
@@ -1212,5 +1212,54 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   </data>
   <data name="ParameterBridgeEndpointsEndpointIdB" xml:space="preserve">
     <value>Endpoint Identifier of the second endpoint in the bridge</value>
+  </data>
+  <data name="MonitorConsoleTitleSuffix" xml:space="preserve">
+    <value>MIDI Monitor</value>
+  </data>
+  <data name="PropertyTablePropertyLabelDriverProvider" xml:space="preserve">
+    <value>Driver Provider</value>
+  </data>
+  <data name="PropertyTablePropertyLabelDriverInfPath" xml:space="preserve">
+    <value>Driver Inf</value>
+  </data>
+  <data name="PropertyTablePropertyLabelDriverVersion" xml:space="preserve">
+    <value>Driver Version</value>
+    <comment>Driver </comment>
+  </data>
+  <data name="ParameterSendSysExFileMessagesPerTransfer" xml:space="preserve">
+    <value>Number of outgoing UMP message packets (typically 6 data bytes each) between pauses.</value>
+  </data>
+  <data name="ParameterSendSysExFileDelayBetweenTransfers" xml:space="preserve">
+    <value>Milliseconds to pause between transfers (groups) of messages</value>
+  </data>
+  <data name="ParameterSendSysExFileCommandFile" xml:space="preserve">
+    <value>File name (and path if not in current directory) to the binary SysEx 7 file to send.</value>
+  </data>
+  <data name="ParameterEnumLegacyPortsVerbose" xml:space="preserve">
+    <value>Set for detailed output</value>
+  </data>
+  <data name="NotificationLegacyPortDeviceWatcherEndpointUpdatedName" xml:space="preserve">
+    <value>Port name has been updated</value>
+  </data>
+  <data name="NotificationLegacyPortDeviceWatcherEndpointUpdatedNumber" xml:space="preserve">
+    <value>WinMM port number has been updated</value>
+  </data>
+  <data name="NotificationLegacyPortDeviceWatcherInitialEnumerationCompleted" xml:space="preserve">
+    <value>Initial enumeration of MIDI 1.0 ports has completed</value>
+  </data>
+  <data name="NotificationLegacyPortDeviceWatcherStopped" xml:space="preserve">
+    <value>Device watcher stopped.</value>
+  </data>
+  <data name="NotificationLegacyPortDeviceWatcherPortUpdated" xml:space="preserve">
+    <value>MIDI 1.0 Port Updated</value>
+  </data>
+  <data name="NotificationLegacyPortDeviceWatcherPortRemoved" xml:space="preserve">
+    <value>MIDI 1.0 Port Removed</value>
+  </data>
+  <data name="NotificationLegacyPortDeviceWatcherPortAdded" xml:space="preserve">
+    <value>MIDI 1.0 Port Added</value>
+  </data>
+  <data name="CommandWatchPortsDescription" xml:space="preserve">
+    <value>Watch MIDI 1.0 ports for add/remove and PnP property change notifications</value>
   </data>
 </root>

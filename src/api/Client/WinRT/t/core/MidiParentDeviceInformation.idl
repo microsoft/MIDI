@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiEndpointDeviceInformation.idl";
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    
+    [interface_name("Windows.Devices.Midi2.Enumeration.IMidiParentDeviceInformation", UUID_IMidiParentDeviceInformation)]
+    runtimeclass MidiParentDeviceInformation : Windows.Foundation.IStringable
+    {
+        [noexcept] String Id { get; };
+        [noexcept] String Name{ get; };
+        [noexcept] Guid ContainerId{ get; };
+
+        [noexcept] String ParentDeviceInstanceId{ get; };
+
+        [noexcept] String RelatedParentMediaDriverDeviceInstanceId{ get; };
+
+        //String ModelName{ get; };
+        //String Manufacturer{ get; };
+
+        [noexcept] String DriverInfPath{ get; };           // DEVPKEY_Device_DriverInfPath
+        [noexcept] String DriverKey{ get; };               // DEVPKEY_Device_Driver
+        [noexcept] String DriverProvider{ get; };          // DEVPKEY_Device_DriverProvider
+        [noexcept] String ServiceName{ get; };             // DEVPKEY_Device_Service
+        [noexcept] String DriverVersion{ get; };           // DEVPKEY_Device_DriverVersion
+        [noexcept] String EnumeratorName{ get; };          // DEVPKEY_Device_EnumeratorName
+
+        [noexcept] UInt16 UsbVendorId{ get; };             // parsed from device instance id
+        [noexcept] UInt16 UsbProductId{ get; };            // parsed from device instance id
+        [noexcept] String UsbSerialNumber{ get; };         // parsed from device instance id
+
+        [noexcept] UInt32 ReportedDeviceIdsHash {get;};    // DEVPKEY_Device_ReportedDeviceIdsHash
+    }
+}

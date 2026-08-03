@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-
 using Windows.Devices.Enumeration;
 using Windows.Devices.Midi;
 

@@ -10,24 +10,17 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Windows.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.h>
+#include <winrt/Windows.Devices.Midi2.Diagnostics.h>
 
-using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK Core
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
+using namespace winrt::Windows::Devices::Midi2;                  // SDK Core
+using namespace winrt::Windows::Devices::Midi2::Enumeration;     // Enumeration
+using namespace winrt::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
 
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
-
-// This include file has a wrapper for the bootstrapper code. You are welcome to
-// use the .hpp as-is, or work the functionality into your code in whatever way
-// makes the most sense for your application.
-// 
-// The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
-#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
-namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
-
 
 
 std::string BooleanToString(bool value)
@@ -48,37 +41,16 @@ int main()
     // MTA by default
     winrt::init_apartment();
 
-    // this is the initializer in the bootstrapper hpp file
-    std::shared_ptr<init::MidiDesktopAppSdkInitializer> initializer = std::make_shared<init::MidiDesktopAppSdkInitializer>();
-
-    // you can, of course, use guard macros instead of this check
-    if (initializer != nullptr)
+    if (!MidiApi::EnsureServiceAvailable())
     {
-        if (!initializer->InitializeSdkRuntime())
-        {
-            std::cout << "Could not initialize SDK runtime" << std::endl;
-            std::wcout << "Install the latest SDK runtime installer from " << initializer->LatestMidiAppSdkDownloadUrl << std::endl;
-            return 1;
-        }
-
-        if (!initializer->EnsureServiceAvailable())
-        {
-            std::cout << "Could not demand-start the MIDI service" << std::endl;
-            return 1;
-        }
-    }
-    else
-    {
-        // This shouldn't happen, but good to guard
-        std::cout << "Unable to create initializer" << std::endl;
+        std::wcout << L"Could not demand-start the MIDI service" << std::endl;
         return 1;
     }
 
 
-
     bool includeDiagnosticsEndpoints = true;
 
-    std::cout << "Enumerating endpoints..." << std::endl;
+    std::wcout << L"Enumerating endpoints..." << std::endl;
 
     auto filter = 
         MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat |
@@ -98,41 +70,41 @@ int main()
     // if the watcher's Stop method is called
     auto OnWatcherStopped = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
         {
-            std::cout << std::endl;
-            std::cout << "Watcher stopped." << std::endl;
+            std::wcout << std::endl;
+            std::wcout << L"Watcher stopped." << std::endl;
         };
 
     // called when initial enumeration has completed. Endpoints can appear or disappear at any time afterwards. For example,
     // a user can plug in a USB device after enumeration has completed.
     auto OnWatcherEnumerationCompleted = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
         {
-            std::cout << std::endl;
-            std::cout << "Initial enumeration completed." << std::endl;
+            std::wcout << std::endl;
+            std::wcout << L"Initial enumeration completed." << std::endl;
         };
 
 
     // Endpoints can be removed at any time, including after enumeration has completed. This event will fire when they are removed
     auto OnWatcherDeviceRemoved = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationRemovedEventArgs const& args)
         {
-            std::cout << std::endl;
-            std::cout << "Removed: " << winrt::to_string(args.EndpointDeviceId()) << std::endl;
+            std::wcout << std::endl;
+            std::wcout << L"Removed: " << args.EndpointDeviceId().c_str() << std::endl;
         };
 
     // Endpoints can be updated at any time, typically due to protocol negotiation, discovery, or changes the user has made in the settings app
     auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationUpdatedEventArgs const& args)
         {
-            std::cout << std::endl;
-            std::cout << "Updated: " << winrt::to_string(args.EndpointDeviceId()) << std::endl;
+            std::wcout << std::endl;
+            std::wcout << "Updated: " << args.EndpointDeviceId().c_str() << std::endl;
 
             // Show how to use the various data update flags here
 
-            if (args.IsNameUpdated())                     std::cout << "- Name" << std::endl;
-            if (args.IsUserMetadataUpdated())             std::cout << "- User Metadata" << std::endl;
-            if (args.IsEndpointInformationUpdated())      std::cout << "- Endpoint Information" << std::endl;
-            if (args.IsStreamConfigurationUpdated())      std::cout << "- Stream Configuration" << std::endl;
-            if (args.AreFunctionBlocksUpdated())          std::cout << "- Function Blocks" << std::endl;
-            if (args.IsDeviceIdentityUpdated())           std::cout << "- Device Identity" << std::endl;
-            if (args.AreAdditionalCapabilitiesUpdated())  std::cout << "- Additional Capabilities" << std::endl;
+            if (args.IsNameUpdated())                     std::wcout << L"- Name" << std::endl;
+            if (args.IsUserMetadataUpdated())             std::wcout << L"- User Metadata" << std::endl;
+            if (args.IsEndpointInformationUpdated())      std::wcout << L"- Endpoint Information" << std::endl;
+            if (args.IsStreamConfigurationUpdated())      std::wcout << L"- Stream Configuration" << std::endl;
+            if (args.AreFunctionBlocksUpdated())          std::wcout << L"- Function Blocks" << std::endl;
+            if (args.IsDeviceIdentityUpdated())           std::wcout << L"- Device Identity" << std::endl;
+            if (args.AreAdditionalCapabilitiesUpdated())  std::wcout << L"- Additional Capabilities" << std::endl;
 
         };
 
@@ -140,9 +112,9 @@ int main()
     // for any new endpoints added (examples: USB Device plugged in, Virtual Device created by an app, etc.
     auto OnWatcherDeviceAdded = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationAddedEventArgs const& args)
         {
-            std::cout << std::endl;
-            std::cout << "Added  : " << winrt::to_string(args.AddedDevice().Name()) << std::endl;
-            std::cout << "         " << winrt::to_string(args.AddedDevice().EndpointDeviceId()) << std::endl ;
+            std::wcout << std::endl;
+            std::wcout << "Added  : " << args.AddedDevice().Name().c_str() << std::endl;
+            std::wcout << "         " << args.AddedDevice().EndpointDeviceId().c_str() << std::endl ;
         };
 
 
@@ -155,7 +127,7 @@ int main()
 
     watcher.Start();
 
-    std::cout << std::endl << "Plug and unplug devices, update properties etc. Press any key when you have finished." << std::endl << std::endl;
+    std::wcout << std::endl << L"Plug and unplug devices, update properties etc. Press any key when you have finished." << std::endl << std::endl;
 
     system("pause");
 
@@ -169,17 +141,4 @@ int main()
     if (revokeOnWatcherDeviceUpdated) watcher.Updated(revokeOnWatcherDeviceUpdated);
     if (revokeOnWatcherDeviceAdded) watcher.Added(revokeOnWatcherDeviceAdded);
 
-
-    // ensure we release all the WinRT and COM objects before uninitializing COM
-    // otherwise, you can crash when closing down the apartment. You could just put them all in 
-    // a sub-scope which closes before the uninit_apartment call, or you can set them to nullptr.
-    watcher = nullptr;
-
-
-    // clean up the SDK WinRT redirection
-    if (initializer != nullptr)
-    {
-        initializer->ShutdownSdkRuntime();
-        initializer.reset();
-    }
 }

@@ -4,11 +4,11 @@
         {% assign sdk_url_root = "/sdk-reference/" %}
 
         <li class="breadcrumb-item"><a href="{{ sdk_overview_root | relative_url }}">App SDK</a></li>
-        <li class="breadcrumb-item"><a href="{{ sdk_url_root | relative_url }}">Microsoft.Windows.Devices.Midi2</a></li>
+        <li class="breadcrumb-item"><a href="{{ sdk_url_root | relative_url }}">Windows.Devices.Midi2</a></li>
 
-        {% if page.namespace != "Microsoft.Windows.Devices.Midi2" %}
+        {% if page.namespace != "Windows.Devices.Midi2" %}
             {% assign ns_url = sdk_url_root %}
-            {% assign remaining_ns = page.namespace | remove: "Microsoft.Windows.Devices.Midi2." | split: "." %}
+            {% assign remaining_ns = page.namespace | remove: "Windows.Devices.Midi2." | split: "." %}
 
             {% for sub_ns in remaining_ns %}           
                 {% assign ns_url = ns_url | append: sub_ns | append: "/" %}

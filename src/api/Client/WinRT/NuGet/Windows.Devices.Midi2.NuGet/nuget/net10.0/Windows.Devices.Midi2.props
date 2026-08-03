@@ -1,0 +1,11 @@
+<Project>
+  <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
+  <PropertyGroup>
+    <CsWinRTEnabled>true</CsWinRTEnabled>
+    <CsWinRTExcludes></CsWinRTExcludes>
+    <CsWinRTIncludes>
+      Windows.Devices.Midi2
+    </CsWinRTIncludes>
+  </PropertyGroup>
+
+</Project>

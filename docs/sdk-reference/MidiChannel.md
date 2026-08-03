@@ -1,8 +1,7 @@
 ---
 layout: sdk_reference_page
 title: MidiChannel
-namespace: Microsoft.Windows.Devices.Midi2
-library: Microsoft.Windows.Devices.Midi2.dll
+namespace: Windows.Devices.Midi2
 type: runtimeclass
 implements: Windows.Foundation.IStringable
 description: Class used to provide formatting and data validation for MIDI 1.0 and MIDI 2.0 channels.
