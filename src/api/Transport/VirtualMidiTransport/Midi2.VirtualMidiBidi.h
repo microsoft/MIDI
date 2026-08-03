@@ -23,6 +23,8 @@ public:
 
     HRESULT LinkAssociatedCallback(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
+        auto lock = m_callbackLock.lock();
+
         if (m_linkedBidiCallback != nullptr)
         {
             m_linkedBidiCallback.reset();
@@ -35,6 +37,8 @@ public:
 
     HRESULT UnlinkAssociatedCallback()
     {
+        auto lock = m_callbackLock.lock();
+
         if (m_linkedBidi != nullptr)
         {
             m_linkedBidi.reset();
@@ -54,6 +58,8 @@ public:
     //}
 
 private:
+    wil::critical_section m_callbackLock;
+
     wil::com_ptr_nothrow<IMidiBidirectional> m_linkedBidi;
 
     //std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBidi>> m_linkedBidiConnections{};

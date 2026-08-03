@@ -13,6 +13,7 @@ import "WindowsMidiServices.idl";
 
 cpp_quote("#define MIDISRV_LRPC_PROTOCOL  L\"ncalrpc\"")
 cpp_quote("#define MIDISRV_ENDPOINT L\"MidiSrvClientRpc\"")
+cpp_quote("#define MIDISRV_DEVICE_ENUMERATION_COMPLETE_EVENT_NAME L\"Global\\\\Microsoft-Windows-MidiSrv-DeviceEnumerationComplete\"")
 
 typedef [system_handle(sh_section)] HANDLE CP_MMAP_HANDLE;
 typedef [system_handle(sh_event, 0x001F0003L)] HANDLE CP_EVENT_HANDLE;

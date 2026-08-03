@@ -1381,11 +1381,6 @@ void CMidiClientManager::OnDeviceRemoved(
         TraceLoggingValue(static_cast<uint32_t>(interfaceIds.size()), "RemovedInterfaceCount")
     );
 
-    // this lock causes a deadlock in Virtual MIDI device removal because the
-    // code removes both endpoints when the device-side endpoint is removed
-
- //   auto lock = m_ClientManagerLock.lock_exclusive();
-
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -1398,36 +1393,43 @@ void CMidiClientManager::OnDeviceRemoved(
 
     uint32_t countPipesInvalidated{ 0 };
 
-    // When a device is removed, mark its device pipe as invalid
-    for (auto& [key, pipe] : m_DevicePipes)
+    // exclusive lock here causes a deadlock in Virtual MIDI device removal because the
+    // code removes both endpoints when the device-side endpoint is removed,
+    // Lock shared as this is not modifying m_DevicePipes.
     {
-        for (const auto& id : interfaceIds)
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_VERBOSE,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Checking for device pipe with interface id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(id.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-            );
+        auto lock = m_ClientManagerLock.lock_shared();
 
-            if (pipe->MidiDevice().starts_with(id))
+        // When a device is removed, mark its device pipe as invalid
+        for (auto& [key, pipe] : m_DevicePipes)
+        {
+            for (const auto& id : interfaceIds)
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
+                    MIDI_TRACE_EVENT_VERBOSE,
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingWideString(L"Marking pipe invalid and erasing pipe", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(pipe->MidiDevice().c_str(), "PipeDeviceId"),
-                    TraceLoggingWideString(id.c_str(), "RemovedId")
-                    );
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Checking for device pipe with interface id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(id.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
 
-                pipe->Invalidate();
-                countPipesInvalidated++;
-                break;
+                if (pipe->MidiDevice().starts_with(id))
+                {
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingWideString(L"Marking pipe invalid and erasing pipe", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(pipe->MidiDevice().c_str(), "PipeDeviceId"),
+                        TraceLoggingWideString(id.c_str(), "RemovedId")
+                        );
+
+                    pipe->Invalidate();
+                    countPipesInvalidated++;
+                    break;
+                }
             }
         }
     }

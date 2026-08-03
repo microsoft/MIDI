@@ -34,9 +34,11 @@ public:
 private:
     wil::critical_section m_CallbackLock;
 
+    IMidiCallback* m_CallbackA_old;
     wil::com_ptr_nothrow<IMidiCallback> m_CallbackA;
     LONGLONG m_ContextA;
 
+    IMidiCallback* m_CallbackB_old;
     wil::com_ptr_nothrow<IMidiCallback> m_CallbackB;
     LONGLONG m_ContextB;
 

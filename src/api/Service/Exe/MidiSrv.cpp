@@ -9,8 +9,8 @@
 #include "stdafx.h"
 #include "midisrvrpc.h"
 
-#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
 #include "Feature_Servicing_MIDI2LegacyControl.h"
+#include "Feature_Servicing_MIDI2SynchronizedStart.h"
 
 RPC_STATUS RPC_ENTRY MidiSrvRpcIfCallback(
     RPC_IF_HANDLE,
@@ -89,8 +89,32 @@ CMidiSrv::Initialize()
     RETURN_IF_FAILED(m_ConfigurationManager->Initialize());
     RETURN_IF_FAILED(m_ClientManager->Initialize(m_PerformanceManager, m_ProcessManager, m_DeviceManager, m_SessionTracker));
 
-    // initialize this last because it starts enumerating endpoints for all the transports
-    RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager, m_EndpointProtocolManager, m_ConfigurationManager, m_ClientManager));
+    if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+    {
+        // Device manager initialization enumerates endpoints for all transports and can take a while.
+        // Run it on a worker thread so the demand-start RPC interface (registered below) becomes
+        // available promptly and the triggering RPC call does not block long enough to be torn down as
+        // a hang. The worker signals m_DeviceEnumerationCompleteEvent when enumeration finishes, which
+        // clients wait on (in their own process) before assuming all midi ports are present.
+        //
+        // The event is created before RPC registration so that any client which is able to complete the
+        // RPC call is guaranteed to find the event already present.
+        RETURN_IF_FAILED(CreateDeviceEnumerationCompleteEvent());
+
+        m_DeviceManagerInitializeThread.reset(CreateThread(
+            nullptr,
+            0,
+            &CMidiSrv::DeviceManagerInitializeWorker,
+            this,
+            0,
+            nullptr));
+        RETURN_LAST_ERROR_IF_NULL(m_DeviceManagerInitializeThread.get());
+    }
+    else
+    {
+        // initialize this last because it starts enumerating endpoints for all the transports
+        RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager, m_EndpointProtocolManager, m_ConfigurationManager, m_ClientManager));
+    }
 
 
 
@@ -186,6 +210,89 @@ CMidiSrv::Initialize()
 }
 
 HRESULT
+CMidiSrv::CreateDeviceEnumerationCompleteEvent()
+{
+    Feature_Servicing_MIDI2SynchronizedStart::AssertEnabled();
+
+    // The event is set/reset only by midisrv. Every caller of the midi APIs, including AppContainer
+    // applications, may open it to synchronize (wait) and query its state, but may not modify it.
+    // Note that GENERIC_READ does not include SYNCHRONIZE, so the wait/query access is granted with
+    // an explicit access mask (EVENT_QUERY_STATE | SYNCHRONIZE == 0x00100001).
+    //
+    // Only a DACL is specified (no owner). Forcing an explicit owner (e.g. O:SY) fails with
+    // ERROR_INVALID_OWNER (1307) unless the service token can assign that SID; instead the owner
+    // defaults to the creating token, which is correct and matches the RPC endpoint SDDL above.
+    // midisrv runs as LocalService (LS), so full access is granted to LS (the account that
+    // sets/resets the event), not LocalSystem.
+    const PCWSTR eventSddl =
+        L"D:"
+        L"(A;;0x1F0003;;;LS)"   // LocalService (midisrv): EVENT_ALL_ACCESS
+        L"(A;;0x00100001;;;WD)" // World:          EVENT_QUERY_STATE | SYNCHRONIZE
+        L"(A;;0x00100001;;;AC)";// AppContainers:  EVENT_QUERY_STATE | SYNCHRONIZE
+
+    wil::unique_hlocal eventSecurityDescriptor;
+    RETURN_IF_WIN32_BOOL_FALSE(ConvertStringSecurityDescriptorToSecurityDescriptor(
+        eventSddl,
+        SDDL_REVISION_1,
+        &eventSecurityDescriptor,
+        nullptr));
+
+    SECURITY_ATTRIBUTES securityAttributes{};
+    securityAttributes.nLength = sizeof(securityAttributes);
+    securityAttributes.lpSecurityDescriptor = eventSecurityDescriptor.get();
+    securityAttributes.bInheritHandle = FALSE;
+
+    // Manual-reset, initially non-signaled. Once enumeration completes it remains signaled for the
+    // lifetime of the service so that later clients return from their wait immediately.
+    auto deviceEnumerationEventHandle = CreateEventW(
+        &securityAttributes,
+        TRUE,   // manual reset
+        FALSE,  // initially non-signaled
+        MIDISRV_DEVICE_ENUMERATION_COMPLETE_EVENT_NAME);
+    RETURN_LAST_ERROR_IF_NULL(deviceEnumerationEventHandle);
+
+    const DWORD createEventLastError = GetLastError();
+
+    m_DeviceEnumerationCompleteEvent.reset(deviceEnumerationEventHandle);
+
+    // If the named event already exists (e.g., a previous midisrv instance signaled it and a client
+    // still holds a handle), bInitialState is ignored and the event may be left signaled. Reset it so
+    // clients will wait until the new instance finishes enumerating devices.
+    if (createEventLastError == ERROR_ALREADY_EXISTS)
+    {
+        RETURN_IF_WIN32_BOOL_FALSE(ResetEvent(m_DeviceEnumerationCompleteEvent.get()));
+    }
+
+    return S_OK;
+}
+
+DWORD WINAPI
+CMidiSrv::DeviceManagerInitializeWorker(
+    _In_ LPVOID context
+)
+{
+    Feature_Servicing_MIDI2SynchronizedStart::AssertEnabled();
+
+    auto self = static_cast<CMidiSrv*>(context);
+
+    // The device manager creates COM transport objects, so an apartment is required on this thread.
+    auto coUninitialize = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    // CMidiDeviceManager::Initialize logs (but does not fail startup on) individual transport failures.
+    // Log any unexpected failure here for diagnosability.
+    LOG_IF_FAILED(self->m_DeviceManager->Initialize(
+        self->m_PerformanceManager,
+        self->m_EndpointProtocolManager,
+        self->m_ConfigurationManager,
+        self->m_ClientManager));
+
+    // Signal completion regardless of result so waiting clients are released rather than timing out.
+    SetEvent(self->m_DeviceEnumerationCompleteEvent.get());
+
+    return 0;
+}
+
+HRESULT
 CMidiSrv::Shutdown()
 {
     TraceLoggingWrite(
@@ -232,6 +339,25 @@ CMidiSrv::Shutdown()
         m_ClientManager.reset();
     }
 
+    if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+    {
+        // Wait for the device manager initialization worker to finish before tearing down the device
+        // manager it is using. Signal the completion event first so that any client currently waiting on
+        // enumeration is released as the service shuts down. These members are only set when the feature
+        // is enabled, so this is a no-op on the legacy (synchronous) path.
+        if (m_DeviceManagerInitializeThread)
+        {
+            if (m_DeviceEnumerationCompleteEvent)
+            {
+                SetEvent(m_DeviceEnumerationCompleteEvent.get());
+            }
+
+            WaitForSingleObject(m_DeviceManagerInitializeThread.get(), INFINITE);
+            m_DeviceManagerInitializeThread.reset();
+        }
+        m_DeviceEnumerationCompleteEvent.reset();
+    }
+
     if (m_DeviceManager)
     {
         RETURN_IF_FAILED(m_DeviceManager->Shutdown());
@@ -264,13 +390,10 @@ CMidiSrv::Shutdown()
     }
     else
     {
-        if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+        if (m_EndpointProtocolManager)
         {
-            if (m_EndpointProtocolManager)
-            {
-                RETURN_IF_FAILED(m_EndpointProtocolManager->Shutdown());
-                m_EndpointProtocolManager.reset();
-            }
+            RETURN_IF_FAILED(m_EndpointProtocolManager->Shutdown());
+            m_EndpointProtocolManager.reset();
         }
     }
 

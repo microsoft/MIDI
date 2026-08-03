@@ -151,8 +151,10 @@ typedef struct _DEVICE_CONTEXT {
     USHORT                      DevicePID;
     WDFMEMORY                   DeviceConfigDescriptorMemory;
     WDFMEMORY                   DeviceManfMemory;
+    // start remove with Feature_Servicing_MIDI2USBSerial
     WDFMEMORY                   DeviceProductNameMemory;
     WDFMEMORY                   DeviceNameMemory;
+    // end remove with Feature_Servicing_MIDI2USBSerial
     WDFMEMORY                   DeviceSNMemory;
     WDFMEMORY                   DeviceGTBMemory;
     WDFMEMORY                   DeviceInGTBIDs;

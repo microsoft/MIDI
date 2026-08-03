@@ -45,6 +45,8 @@ _Use_decl_annotations_
 std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomPropertiesCache::GetProperties(
     MidiEndpointMatchCriteria& knownEndpointProperties)
 {
+    auto lock = m_entriesMutex.lock_shared();
+
     for (auto const& entry : m_entries)
     {
         if (entry->Match->Matches(knownEndpointProperties))
@@ -63,6 +65,7 @@ _Use_decl_annotations_
 bool MidiEndpointCustomPropertiesCache::Add(
     std::shared_ptr<MidiEndpointMatchCriteria> match, std::shared_ptr<MidiEndpointCustomProperties> properties)
 {
+    auto lock = m_entriesMutex.lock_exclusive();
 
     // Need to make sure we don't already have custom properties for this endpoint. If so, remove them.
     // we only remove one, because if we do this correctly each time, there will never be more than one

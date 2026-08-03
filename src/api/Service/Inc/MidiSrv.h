@@ -70,6 +70,13 @@ public:
     }
 
 private:
+    HRESULT CreateDeviceEnumerationCompleteEvent();
+    static DWORD WINAPI DeviceManagerInitializeWorker(_In_ LPVOID context);
+    // Signaled by DeviceManagerInitializeWorker once device enumeration completes; clients wait on it.
+    wil::unique_event m_DeviceEnumerationCompleteEvent;
+    // Worker thread running m_DeviceManager->Initialize so the demand-start RPC is not blocked.
+    wil::unique_handle m_DeviceManagerInitializeThread;
+
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;
     std::shared_ptr<CMidiDeviceManager> m_DeviceManager;
@@ -85,6 +92,5 @@ private:
     bool m_RpcRegistered{false};
     bool m_RpcBound {false};
     wil::unique_rpc_binding_vector  m_RpcBindingVector;
-
 };
 

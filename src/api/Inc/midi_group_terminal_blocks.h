@@ -17,6 +17,7 @@
 #include <vector>
 #include <ks.h>         // for KSMULTIPLE_ITEM
 
+
 namespace WindowsMidiServicesInternal
 {
     // GTB structures Copied from driver code. This should be a shared file instead.
@@ -52,6 +53,11 @@ namespace WindowsMidiServicesInternal
 #define MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL 0x00
 #define MIDI_GROUP_TERMINAL_BLOCK_INPUT         0x01
 #define MIDI_GROUP_TERMINAL_BLOCK_OUTPUT        0x02
+
+// for a USB descriptor, bLength is 1 byte, bDescriptorType is 1 byte, and the remaining bytes
+// are string, leaving 253 bytes. Divide by 2 for wide characters, and that leaves the max string
+// length as 126. This is the max string length for any strings contained in group terminal blocks
+#define MAX_DESCRIPTOR_STRING_LENGTH 126
 
 
 
@@ -181,6 +187,11 @@ namespace WindowsMidiServicesInternal
             def.GrpTrmBlock.MaxInputBandwidth = block.MaxInputBandwidth;
             def.GrpTrmBlock.MaxOutputBandwidth = block.MaxOutputBandwidth;
             def.GrpTrmBlock.Protocol = block.Protocol;
+
+            if (block.Name.length() > MAX_DESCRIPTOR_STRING_LENGTH)
+            {
+                return false;
+            }
 
             // this needs to include the name including null terminator.
             // if no name, it's 1 character. The additional sizeof(wchar_t) is to account for nul

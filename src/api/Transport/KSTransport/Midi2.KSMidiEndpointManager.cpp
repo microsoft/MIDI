@@ -10,9 +10,8 @@
 #include "pch.h"
 #include "midi2.kstransport.h"
 
-#include "Feature_Servicing_MIDI2FilterCreations.h"
-#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
 #include "Feature_Servicing_MIDI2SWDAbortCrash.h"
+#include "Feature_Servicing_MIDI2FailFast.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -45,11 +44,26 @@ CMidi2KSMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
-    winrt::hstring deviceSelector(
-        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
-        L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
+    if (Feature_Servicing_MIDI2FailFast::IsEnabled())
+    {
+        winrt::hstring deviceSelector(
+            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
+            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-    m_Watcher = DeviceInformation::CreateWatcher(deviceSelector);
+        try
+        {
+            m_Watcher = DeviceInformation::CreateWatcher(deviceSelector);
+        }
+        CATCH_RETURN();
+    }
+    else
+    {
+        winrt::hstring deviceSelector(
+            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
+            L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
+        
+        m_Watcher = DeviceInformation::CreateWatcher(deviceSelector);
+    }
 
     auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSMidiEndpointManager::OnDeviceAdded);
     auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnDeviceRemoved);
@@ -200,24 +214,21 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             continue;
         }
 
-        if (Feature_Servicing_MIDI2FilterCreations::IsEnabled())
+        std::unique_ptr<KSMULTIPLE_ITEM> dataRanges;
+        ULONG dataRangesSize {0};
+
+        // skip this pin if for some reason data ranges aren't valid
+        if (FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+                return RetrieveDataRanges(h, i, (PKSMULTIPLE_ITEM*)&dataRanges, &dataRangesSize);
+            })))
         {
-            std::unique_ptr<KSMULTIPLE_ITEM> dataRanges;
-            ULONG dataRangesSize {0};
+            continue;
+        }
 
-            // skip this pin if for some reason data ranges aren't valid
-            if (FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
-                    return RetrieveDataRanges(h, i, (PKSMULTIPLE_ITEM*)&dataRanges, &dataRangesSize);
-                })))
-            {
-                continue;
-            }
-
-            // Skip this pin if it doesn't support cyclic UMP
-            if (FAILED(DataRangeSupportsTransport(dataRanges.get(), MidiTransport_CyclicUMP)))
-            {
-                continue;
-            }
+        // Skip this pin if it doesn't support cyclic UMP
+        if (FAILED(DataRangeSupportsTransport(dataRanges.get(), MidiTransport_CyclicUMP)))
+        {
+            continue;
         }
 
         // ================== Cyclic UMP Interfaces ===============================================
@@ -973,12 +984,6 @@ CMidi2KSMidiEndpointManager::Shutdown()
         );
 
     TransportState::Current().Shutdown();
-
-    if (!Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
-    {
-        m_AvailableMidiPins.clear();
-    }
-
     m_Watcher.Stop();
     m_EnumerationCompleted.wait(500);
     m_DeviceAdded.revoke();
@@ -990,13 +995,10 @@ CMidi2KSMidiEndpointManager::Shutdown()
     m_midiDeviceManager.reset();
     m_midiProtocolManager.reset();
 
-    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
-    {
-        // Clear pin information after enumeration is shut down
-        // to prevent it from being cleared while in use by the
-        // watcher.
-        m_AvailableMidiPins.clear();
-    }
+    // Clear pin information after enumeration is shut down
+    // to prevent it from being cleared while in use by the
+    // watcher.
+    m_AvailableMidiPins.clear();
 
     return S_OK;
 }

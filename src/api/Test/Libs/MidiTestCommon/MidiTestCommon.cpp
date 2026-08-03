@@ -20,20 +20,6 @@
 
 #include "MidiDefs.h"
 
-#include "Feature_Servicing_MIDI2WinmmNoBufs.h"
-#include "Feature_Servicing_MIDI2MultipleGroups.h"
-#include "Feature_Servicing_MIDI2FilterCreations.h"
-
-#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
-#include "Feature_Servicing_MIDI2RTTimestamp.h"
-#include "Feature_Servicing_MIDI2WinmmAddBufferSizeCheck.h"
-#include "Feature_Servicing_MIDI2ContainerIds.h"
-#include "Feature_Servicing_MIDI2WinRtStartup.h"
-#include "Feature_Servicing_MIDI2DriverHang.h"
-#include "Feature_Servicing_MIDI2LegacyTimestamp.h"
-#include "Feature_Servicing_MIDI2BsToUMPConv.h"
-#include "Feature_Servicing_MIDI2DevCaps2.h"
-
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
 // Default assume group 0 for the messages, tests are responsible for changing the
@@ -120,25 +106,6 @@ void PrintMidiMessage(PVOID payload, UINT32 payloadSize, UINT32 expectedPayloadS
 
 void PrintStagingStates()
 {
-    // 2603
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2WinmmNoBufs);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2MultipleGroups);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2FilterCreations);
-
-    // 2604
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2VirtualPortDriversFix);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2RTTimestamp);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2WinmmAddBufferSizeCheck);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2ContainerIds);
-
-    // 2605
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2WinRtStartup);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2DriverHang);
-
-    // 2605
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2LegacyTimestamp);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2BsToUMPConv);
-    LOG_FEATURE_STATE(Feature_Servicing_MIDI2DevCaps2);
 }
 
 HRESULT StartMIDIService()

@@ -9,56 +9,77 @@
 
 #pragma once
 
+#include <map>
+#include <memory>
+#include <mutex>
+#include <utility>
 
 class MidiLoopbackDeviceTable
 {
 private:
-    std::map<std::wstring, MidiLoopbackDevice> m_devices{};
+    std::map<std::wstring, std::shared_ptr<MidiLoopbackDevice>> m_devices{};
+    mutable std::mutex m_devicesLock;
 
 
 public:
 
-    MidiLoopbackDevice* GetDevice(std::wstring associationId)
+    std::shared_ptr<MidiLoopbackDevice> GetDevice(std::wstring associationId)
     {
+        std::lock_guard<std::mutex> lock{ m_devicesLock };
+
         auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
 
-        if (m_devices.find(cleanId) != m_devices.end())
+        if (auto device = m_devices.find(cleanId); device != m_devices.end())
         {
-            return &m_devices[cleanId];
+            return device->second;
         }
         else
         {
-            return nullptr;
+            return {};
         }
     }
 
     void SetDevice(std::wstring associationId, MidiLoopbackDevice device)
     {
+        std::lock_guard<std::mutex> lock{ m_devicesLock };
+
         auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
 
-        m_devices[cleanId] = device;
+        m_devices[cleanId] = std::make_shared<MidiLoopbackDevice>(std::move(device));
     }
 
     void RemoveDevice(std::wstring associationId)
     {
-        auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
+        std::shared_ptr<MidiLoopbackDevice> deviceToRemove;
 
-        if (auto device = m_devices.find(cleanId); device != m_devices.end())
         {
-            device->second.Shutdown();
+            std::lock_guard<std::mutex> lock{ m_devicesLock };
 
-            m_devices.erase(cleanId);
+            auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
+
+            if (auto device = m_devices.find(cleanId); device != m_devices.end())
+            {
+                deviceToRemove = device->second;
+                m_devices.erase(cleanId);
+            }
+        }
+
+        if (deviceToRemove)
+        {
+            deviceToRemove->Shutdown();
         }
     }
 
 
     bool IsUniqueIdentifierInUseForLoopbackA(std::wstring uniqueIdentifier)
     {
+        std::lock_guard<std::mutex> lock{ m_devicesLock };
+
         auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
 
         for (auto const& [key, device] : m_devices)
         {
-            if (cleanId == internal::ToLowerTrimmedWStringCopy(device.DefinitionA.EndpointUniqueIdentifier))
+            if (cleanId == internal::ToLowerTrimmedWStringCopy(device->DefinitionA.EndpointUniqueIdentifier))
             {
                 return true;
             }
@@ -69,11 +90,13 @@ public:
 
     bool IsUniqueIdentifierInUseForLoopbackB(std::wstring uniqueIdentifier)
     {
+        std::lock_guard<std::mutex> lock{ m_devicesLock };
+
         auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
 
         for (auto const& [key, device] : m_devices)
         {
-            if (cleanId == internal::ToLowerTrimmedWStringCopy(device.DefinitionB.EndpointUniqueIdentifier))
+            if (cleanId == internal::ToLowerTrimmedWStringCopy(device->DefinitionB.EndpointUniqueIdentifier))
             {
                 return true;
             }

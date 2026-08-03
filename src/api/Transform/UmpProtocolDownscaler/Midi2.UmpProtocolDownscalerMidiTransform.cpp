@@ -14,6 +14,8 @@
 
 #include "ump_iterator.h"
 
+#include "Feature_Servicing_MIDI2FailFast.h"
+
 _Use_decl_annotations_
 HRESULT
 CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
@@ -70,22 +72,48 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, devInstanceIdProp);
     deviceInstanceId = winrt::unbox_value<winrt::hstring>(devInstanceIdProp).c_str();
 
-    winrt::hstring deviceSelector(
-        L"System.Devices.DeviceInstanceId:=\"" + deviceInstanceId + L"\" AND " +
-        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " +
-        L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
+    if (Feature_Servicing_MIDI2FailFast::IsEnabled())
+    {
+        winrt::hstring deviceSelector(
+            L"System.Devices.DeviceInstanceId:=\"" + deviceInstanceId + L"\" AND " +
+            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " +
+            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-    // Set up device watcher to check properties to catch when a new protocol is negotiated
-    // See issue #380 in github repo
+        // Set up device watcher to check properties to catch when a new protocol is negotiated
+        // See issue #380 in github repo
 
-    m_Watcher = DeviceInformation::CreateWatcher(deviceSelector, 
-        { 
-            STRING_PKEY_MIDI_EndpointConfiguredProtocol,
-            STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol,
-            STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol,
-        },
-        DeviceInformationKind::DeviceInterface
-    );
+        try
+        {
+            m_Watcher = DeviceInformation::CreateWatcher(deviceSelector, 
+                { 
+                    STRING_PKEY_MIDI_EndpointConfiguredProtocol,
+                    STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol,
+                    STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol,
+                },
+                DeviceInformationKind::DeviceInterface
+            );
+        }
+        CATCH_RETURN();
+    }
+    else
+    {
+        winrt::hstring deviceSelector(
+            L"System.Devices.DeviceInstanceId:=\"" + deviceInstanceId + L"\" AND " +
+            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " +
+            L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
+        
+        // Set up device watcher to check properties to catch when a new protocol is negotiated
+        // See issue #380 in github repo
+        
+        m_Watcher = DeviceInformation::CreateWatcher(deviceSelector, 
+            { 
+                STRING_PKEY_MIDI_EndpointConfiguredProtocol,
+                STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol,
+                STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol,
+            },
+            DeviceInformationKind::DeviceInterface
+        );
+    }
 
     auto deviceAddedHandler = winrt::Windows::Foundation::TypedEventHandler<DeviceWatcher, DeviceInformation>(
         this, &CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceAdded);

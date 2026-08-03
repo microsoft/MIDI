@@ -25,7 +25,8 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    IMidiCallback* m_Callback;
+    wil::critical_section m_CallbackLock;
+    wil::com_ptr_nothrow<IMidiCallback> m_Callback;
     LONGLONG m_Context;
 
     MidiLoopbackBidiDevice* m_LoopbackMidiDevice;

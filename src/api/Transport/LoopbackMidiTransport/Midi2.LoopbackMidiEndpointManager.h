@@ -59,7 +59,6 @@ private:
     HRESULT DeleteSingleEndpoint(_In_ MidiLoopbackDeviceDefinition const& definition);
 
 
-    GUID m_ContainerId{};
     GUID m_TransportTransportId{};
 
     std::wstring m_parentDeviceId{};

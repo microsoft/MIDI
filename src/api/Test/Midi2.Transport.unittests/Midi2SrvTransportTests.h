@@ -77,6 +77,11 @@ public:
 
     TEST_METHOD(MultiThreadedMidiSendTest);
 
+    // a client that does not wait for the device-enumeration-complete event and immediately 
+    // drives the service during startup must not crash midisrv (validates the device manager 
+    // map locking added with the feature).
+    TEST_METHOD(TestMidiSrvSynchronizedStartEarlyClientUseDoesNotCrash);
+
     TEST_METHOD(TestKSAPortEnumeration);
 
     TEST_METHOD(TestWinmmPortEnumeration);
