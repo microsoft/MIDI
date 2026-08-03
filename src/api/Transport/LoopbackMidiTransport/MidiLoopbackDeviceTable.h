@@ -109,11 +109,8 @@ public:
 
     std::vector<MidiLoopbackDevice> GetDeviceListSnapshot()
     {
+        std::lock_guard<std::mutex> lock{ m_devicesLock };
         std::vector<MidiLoopbackDevice> results;
-
-        // lock so no adds/removes happen while building the list
-        // UPDATE THIS with the Loopback locking mechanism that was added through security PR
-//        auto lock = m_devicesLock.lock_shared();
 
         for (auto const& [key, device] : m_devices)
         {
