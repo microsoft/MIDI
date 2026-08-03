@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2WinmmNoBufs
+class Feature_Servicing_MIDI2SynchronizedStart
 {
 public:
     static bool IsEnabled()
