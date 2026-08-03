@@ -15,6 +15,64 @@
 
 #pragma comment(lib, "winmm.lib")
 
+void MidiBasicLoopbackTests::TestUnicodeGtbAndDeviceNames()
+{
+   //SetConsoleOutputCP(CP_WINUNICODE);
+
+    winrt::hstring uniqueId = winrt::to_hstring(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+    auto associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
+    auto name = L"我的虚拟设备";
+
+    MidiBasicLoopbackEndpointDefinition definition;
+    definition.Name(name);
+    definition.UniqueId(uniqueId);
+
+    MidiBasicLoopbackCreationConfig config(associationId, definition);
+
+    auto result = MidiBasicLoopbackManager::CreateTransientLoopback(config);
+    auto endpointDeviceId = result.CreatedLoopbackEntry().EndpointDeviceId();
+    auto endpointInformation = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(endpointDeviceId);
+    //auto gtbName = endpointInformation.GetGroupTerminalBlocks().GetAt(0).Name().c_str();
+
+    // Check name
+
+    std::wcout << L"Sent Device Name Char Codes: " << std::endl;
+    for (wchar_t ch : definition.Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    std::wcout << L"Received Device Name Char Codes: " << std::endl;
+    for (wchar_t ch : endpointInformation.Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    auto nameResult = wcscmp(endpointInformation.Name().c_str(), definition.Name().c_str());
+    VERIFY_IS_TRUE(nameResult == 0);
+
+    // Check group terminal blocks
+
+    std::wcout << L"Sent GTB Char Codes: " << std::endl;
+    for (wchar_t ch : definition.Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    std::wcout << L"Received GTB Char Codes: " << std::endl;
+    for (wchar_t ch : endpointInformation.GetGroupTerminalBlocks().GetAt(0).Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    auto gtbNameResult = wcscmp(endpointInformation.GetGroupTerminalBlocks().GetAt(0).Name().c_str(), definition.Name().c_str());
+    VERIFY_IS_TRUE(gtbNameResult == 0);
+}
+
 
 void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
 {
