@@ -79,24 +79,11 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
                 LPWSTR rpcResponseString{ nullptr };
 
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to initialize config manager", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingPointer(&rpcResponseString, "rpc response string local address")
-                );
-
                 // send up the payload
                 auto callStatus = configManager->UpdateConfiguration(
                     jsonPayload.c_str(), 
                     &rpcResponseString
                 );
-
-
 
 
                 if (SUCCEEDED(callStatus) && rpcResponseString != nullptr && wcslen(rpcResponseString) > 0)

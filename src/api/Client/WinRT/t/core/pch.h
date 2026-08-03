@@ -147,6 +147,8 @@ namespace virt = ::winrt::Windows::Devices::Midi2::Transports::Virtual;
 namespace winrt::Windows::Devices::Midi2::Utilities::Messages {};
 namespace msgs = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
 
+namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer {};
+namespace sysex = ::winrt::Windows::Devices::Midi2::Utilities::SysExTransfer;
 
 
 

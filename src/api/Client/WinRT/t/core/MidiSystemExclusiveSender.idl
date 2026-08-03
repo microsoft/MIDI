@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiSystemExclusiveSendProgress.idl";
+import "MidiGroup.idl";
+import "MidiEndpointConnection.idl";
+import "MidiMessageTypeEnum.idl";
+import "MidiBytestreamToUmpMessageConverterState.idl";
+
+namespace Windows.Devices.Midi2.Utilities.SysExTransfer
+{
+    [contract(MidiSysExTransferUtilityApiContract,1)]
+    [static_name("Windows.Devices.Midi2.Utilities.SysExTransfer.IMidiSystemExclusiveSenderStatics", UUID_IMidiSystemExclusiveSenderStatics)]
+    static runtimeclass MidiSystemExclusiveSender
+    {
+        // progress result is true if succeeded. Progress is number of units 
+        // of data sent (for byte format, it's bytes, for UMP format, it's words)
+        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, MidiSystemExclusiveSendProgress> SendBinarySysEx7ByteDataAsync(
+            Windows.Devices.Midi2.MidiEndpointConnection destinationConnection, 
+            Windows.Devices.Midi2.MidiGroup destinationGroup,
+            Windows.Storage.Streams.IInputStream dataSource,
+            UInt32 preferredSingleTransferMessageCount,
+            UInt16 transferSpacingMilliseconds,
+            Windows.Devices.Midi2.Utilities.Messages.MidiBytestreamToUmpMessageConverterState converterState
+        );
+
+
+
+    }
+}
+

@@ -94,6 +94,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         collections::IMap<winrt::hstring, midi2enum::MidiEndpointDeviceInformation> m_enumeratedEndpointDevices =
             winrt::multi_threaded_map<winrt::hstring, midi2enum::MidiEndpointDeviceInformation>();
 
+        mutable std::mutex m_enumeratedDevicesLock;
+
         enumeration::DeviceWatcher m_watcher{ nullptr };
 
     };

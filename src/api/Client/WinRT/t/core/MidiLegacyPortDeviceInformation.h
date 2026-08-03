@@ -57,6 +57,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         midi2enum::Midi1PortFlow Flow() const noexcept { return m_portFlow; }
         uint32_t Number() const noexcept { return m_portNumber; }
 
+        winrt::guid TransportId() const noexcept{ return m_transportId; }
+
         midi2::MidiGroup Group() const noexcept { return MidiGroup(static_cast<uint8_t>(internal::GetDeviceInfoProperty<UINT32>(m_properties, STRING_PKEY_MIDI_PortAssignedGroupIndex, 0))); }
 
         midi2enum::MidiEndpointNativeDataFormat NativeDataFormat() const noexcept
@@ -105,6 +107,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     private:
         winrt::hstring m_parentDeviceInstanceId{};
         winrt::hstring m_mediaDriverParentDeviceInstanceId{};
+
+        winrt::guid m_transportId{};
 
         winrt::hstring m_name{};
         winrt::hstring m_id{};

@@ -89,6 +89,12 @@ namespace Windows.Devices.Midi2
             apicontract MidiMessageUtilityApiContract { };
         }
 
+        namespace SysExTransfer
+        {
+            [contractversion(1)]
+            apicontract MidiSysExTransferUtilityApiContract { };
+        }
+
     }
 
 }

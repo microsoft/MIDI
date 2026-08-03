@@ -85,7 +85,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         try
         {
-            m_enumeratedEndpointDevices.Clear();
+            {
+                std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
+                m_enumeratedEndpointDevices.Clear();
+            }
 
             if (m_watcher)
             {
@@ -152,6 +155,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         try
         {
+
             auto midiEndpointDeviceInformation = winrt::make_self<MidiEndpointDeviceInformation>();
 
             midiEndpointDeviceInformation->UpdateFromDeviceInformation(args);
@@ -161,6 +165,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
             if (midi2enum::MidiEndpointDeviceInformation::DeviceMatchesFilter(*midiEndpointDeviceInformation, m_endpointFilter))
             {
+                std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
+
                 // add to our map
 
                 auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(midiEndpointDeviceInformation->EndpointDeviceId());
@@ -220,6 +226,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         try
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
+
+            std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
 
             if (m_enumeratedEndpointDevices.HasKey(mapKey))
             {
@@ -371,6 +379,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             auto newArgs = winrt::make_self<MidiEndpointDeviceInformationRemovedEventArgs>();
 
             newArgs->InternalInitialize(args.Id(), args);
+
+            std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
 
             if (m_enumeratedEndpointDevices.HasKey(mapKey))
             {

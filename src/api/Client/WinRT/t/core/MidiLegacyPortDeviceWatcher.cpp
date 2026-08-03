@@ -135,7 +135,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
             return nullptr;
         }
-
     }
 
 
@@ -151,6 +150,20 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
 
             auto legacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
+            if (legacyPortDeviceInformation == nullptr)
+            {
+                LOG_HR_IF_NULL(E_OUTOFMEMORY, legacyPortDeviceInformation);
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Unable to allocate new MidiLegacyPortDeviceInformation", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return;
+            }
 
             legacyPortDeviceInformation->InternalInitialize(args.Name(), args.Id(), args.Properties());
 
