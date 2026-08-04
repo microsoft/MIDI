@@ -85,10 +85,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 
     auto transformId = __uuidof(Midi2BS2UMPTransform);
 
-    // Confirm that this component is either signed, or we are in developer mode.
-    // Else, do not use it. componentFileLock pins the verified DLL across the load.
-    wil::unique_hfile componentFileLock;
-    RETURN_IF_FAILED(internal::IsComponentPermitted(transformId, componentFileLock));
+    RETURN_IF_FAILED(internal::IsComponentPermitted(transformId));
 
     RETURN_IF_FAILED(CoCreateInstance(transformId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformPlugin)));
 

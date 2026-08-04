@@ -45,7 +45,7 @@ public:
 
         auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
 
-        m_devices[cleanId] = std::make_shared<MidiLoopbackDevice>(std::move(device));
+        m_devices[cleanId] = std::make_shared<MidiLoopbackDevice>(device);
     }
 
     void RemoveDevice(_In_ std::wstring const& associationId)
@@ -107,10 +107,10 @@ public:
 
 
 
-    std::vector<MidiLoopbackDevice> GetDeviceListSnapshot()
+    std::vector< std::shared_ptr<MidiLoopbackDevice>> GetDeviceListSnapshot()
     {
         std::lock_guard<std::mutex> lock{ m_devicesLock };
-        std::vector<MidiLoopbackDevice> results;
+        std::vector< std::shared_ptr<MidiLoopbackDevice>> results;
 
         for (auto const& [key, device] : m_devices)
         {

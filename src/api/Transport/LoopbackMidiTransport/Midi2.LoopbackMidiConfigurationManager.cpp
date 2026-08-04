@@ -59,34 +59,34 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandListEntries(
         auto obj = json::JsonObject();
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionA.AssociationId));  // it's the same in DefinitionB
+            json::JsonValue::CreateStringValue(device->DefinitionA.AssociationId));  // it's the same in DefinitionB
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_MUTED_KEY,
-            json::JsonValue::CreateBooleanValue(device.IsMuted));
+            json::JsonValue::CreateBooleanValue(device->IsMuted));
 
 
         auto objEndpointA = json::JsonObject();
 
         objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionA.CreatedEndpointInterfaceId.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionA.CreatedEndpointInterfaceId.c_str()));
 
         objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionA.EndpointName.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionA.EndpointName.c_str()));
 
         objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionA.EndpointDescription.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionA.EndpointDescription.c_str()));
 
 
         auto objEndpointB = json::JsonObject();
 
         objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionB.CreatedEndpointInterfaceId.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionB.CreatedEndpointInterfaceId.c_str()));
 
         objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionB.EndpointName.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionB.EndpointName.c_str()));
 
         objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionB.EndpointDescription.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionB.EndpointDescription.c_str()));
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_A_KEY, objEndpointA);
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_B_KEY, objEndpointB);

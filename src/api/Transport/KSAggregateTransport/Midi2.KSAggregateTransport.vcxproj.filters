@@ -48,9 +48,6 @@
     <ClCompile Include="Midi2.KSAggregateMidiOutProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2KSAggregateTransport.idl">

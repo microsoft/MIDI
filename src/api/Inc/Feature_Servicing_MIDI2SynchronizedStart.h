@@ -11,6 +11,12 @@
 class Feature_Servicing_MIDI2SynchronizedStart
 {
 public:
+
+    static void AssertEnabled()
+    {
+        // always enabled
+    }
+
     static bool IsEnabled()
     {
         return true;
