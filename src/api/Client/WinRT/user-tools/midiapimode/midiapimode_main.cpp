@@ -260,11 +260,42 @@ bool TryRestartComputer()
 }
 
 
+// Discards anything already typed (or auto-repeated from a held-down key) so that a
+// keystroke intended for an earlier prompt can never be consumed by a later one.
+
+void DrainKeyboardInput()
+{
+    // the CRT keeps its own pushback buffer for _getch, so drain that first
+    while (_kbhit())
+    {
+        _getch();
+    }
+
+    auto consoleInput = GetStdHandle(STD_INPUT_HANDLE);
+
+    if (consoleInput != INVALID_HANDLE_VALUE && consoleInput != nullptr)
+    {
+        FlushConsoleInputBuffer(consoleInput);
+    }
+}
+
+
 bool PromptForYes()
 {
+    DrainKeyboardInput();
+
     WritePrompt(internal::ResourceGetWString(IDS_PROMPT_YES_NO_KEYS));
 
     auto ch = _getch();
+
+    if (ch == 0 || ch == 0xE0)
+    {
+        // function or arrow key. Consume the second half of the sequence so it
+        // isn't left behind to be read as an answer to something else
+        _getch();
+
+        return false;
+    }
 
     return (ch == KEY_UPPERCASE_Y || ch == KEY_LOWERCASE_Y);
 }
