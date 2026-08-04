@@ -132,7 +132,7 @@ void LoadWinMMDevices()
         }
         else
         {
-            port.Name = L"** Error **";
+            port.Name = internal::ResourceGetWString(IDS_PORT_NAME_ERROR);
             port.IsError = true;
         }
 
@@ -187,7 +187,7 @@ void LoadWinMMDevices()
         }
         else
         {
-            port.Name = L"** Error **";
+            port.Name = internal::ResourceGetWString(IDS_PORT_NAME_ERROR);
             port.IsError = true;
         }
 
@@ -210,7 +210,7 @@ void DisplayPort(_In_ MidiPort const& port)
 
     fmt::println(L"{:<33} - {}: {}", 
         fmt::styled(port.Name, normalTextStyle), 
-        fmt::styled(L"Dev Interface", fmt::fg(fmt::color::gray)), 
+        fmt::styled(internal::ResourceGetWString(IDS_LABEL_DEVICE_INTERFACE), fmt::fg(fmt::color::gray)), 
         fmt::styled(port.DriverInterface, normalTextStyle));
 
     fmt::println(L"");
@@ -219,8 +219,8 @@ void DisplayPort(_In_ MidiPort const& port)
 void DisplayAllWinMMInputs()
 {
     auto deviceCount = midiInGetNumDevs();
-    WriteInfo(std::format(L" {} ports reported by midiInGetNumDevs", deviceCount));
-    WriteInfo(std::format(L" {} valid Input Ports (MIDI Sources) found.", m_midiInputCountNoErrors));
+    WriteInfo(std::format(L" {} {}", deviceCount, internal::ResourceGetWString(IDS_ENUM_PORTS_REPORTED_BY_MIDIINGETNUMDEVS)));
+    WriteInfo(std::format(L" {} {}", m_midiInputCountNoErrors, internal::ResourceGetWString(IDS_ENUM_VALID_INPUT_PORTS_FOUND)));
     fmt::println(L"");
 
     for (auto const& port : m_midiInputs)
@@ -235,8 +235,8 @@ void DisplayAllWinMMOutputs()
 {
     auto deviceCount = midiOutGetNumDevs();
 
-    WriteInfo(std::format(L" {} ports reported by midiOutGetNumDevs", deviceCount));
-    WriteInfo(std::format(L" {} valid Output Ports (MIDI Destinations) found.", m_midiOutputCountNoErrors));
+    WriteInfo(std::format(L" {} {}", deviceCount, internal::ResourceGetWString(IDS_ENUM_PORTS_REPORTED_BY_MIDIOUTGETNUMDEVS)));
+    WriteInfo(std::format(L" {} {}", m_midiOutputCountNoErrors, internal::ResourceGetWString(IDS_ENUM_VALID_OUTPUT_PORTS_FOUND)));
     fmt::println(L"");
 
     for (auto const& port : m_midiOutputs)
@@ -264,11 +264,11 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
     }
 
     WriteDoubleSeparator();
-    WriteInfo(L" This tool is part of the Windows MIDI Services API and tools");
-    WriteInfo(L" Copyright 2026- Microsoft Corporation.");
-    WriteInfo(L" Information, license, and source available at https://aka.ms/midi");
+    WriteInfo(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
+    WriteInfo(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
+    WriteInfo(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
     WriteDoubleSeparator();
-    WriteInfo(L" List of WinMM/MME ports");
+    WriteInfo(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
     WriteDoubleSeparator();
 
     bool loop{ false };
@@ -307,13 +307,13 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
 
         if (loop)
         {
-            WriteInfo(L"Press space to enumerate again, or escape to close.");
+            WriteInfo(internal::ResourceGetWString(IDS_PROMPT_ENUMERATE_AGAIN));
 
             auto ch = _getch();
 
             if (ch == KEY_ESCAPE)
             {
-                WriteInfo(L"\nClosing");
+                WriteInfo(L"\n" + internal::ResourceGetWString(IDS_STATUS_CLOSING));
                 break;
             }
             else if (ch == KEY_SPACE)
