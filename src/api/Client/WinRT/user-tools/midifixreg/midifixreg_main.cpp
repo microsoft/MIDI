@@ -29,42 +29,57 @@
 #include <winmeta.h>
 //#include <TraceLoggingProvider.h>
 
+#include <io.h>
+#include <fcntl.h>
+
+#include <fmt/base.h>
+#include <fmt/xchar.h>
+#include <fmt/format.h>
+#include <fmt/color.h>
+
+
 #include "wstring_util.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
 
 #pragma warning (pop)
 
-#pragma warning(push)
-#pragma warning(disable: 4244)
-#include "color.hpp"
-#pragma warning(pop)
-
 const wchar_t* VALUE_NAME_MidisrvTransferComplete = L"MidisrvTransferComplete";
+const wchar_t* VALUE_NAME_UseLegacyMidi = L"UseLegacyMidi";
 
 #define LINE_LENGTH 80
 
-void WriteBlankLine()
-{
-    std::cout << std::endl;
-}
+#define LINE_LENGTH 79
 
-void WriteDoubleLineSeparator()
-{
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-}
 
-void WriteInfo(_In_ std::string info)
-{
-    std::cout << dye::aqua(info) << std::endl;
-}
+const auto infoTextStyle = fmt::fg(fmt::color::steel_blue);
+const auto errorTextStyle = fmt::fg(fmt::color::pink);
+const auto normalTextStyle = fmt::fg(fmt::color::light_gray);
+const auto separatorTextStyle = fmt::fg(fmt::color::gray);
 
 void WriteInfo(_In_ std::wstring info)
 {
-    std::cout << hue::aqua;
-    std::wcout << info;
-    std::cout << hue::reset << std::endl;
+    fmt::println(L"{}", fmt::styled(info, infoTextStyle));
 }
+
+
+void WriteError(_In_ std::wstring error)
+{
+    fmt::println(L"{}", fmt::styled(error, errorTextStyle));
+}
+
+void WriteDoubleSeparator()
+{
+    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'='), separatorTextStyle));
+}
+
+void WriteSingleSeparator()
+{
+    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'-'), separatorTextStyle));
+}
+
+
+
 
 void WriteInfoDetail(_In_ std::wstring info)
 {

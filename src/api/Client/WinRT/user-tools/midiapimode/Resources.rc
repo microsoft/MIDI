@@ -1,0 +1,141 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include <windows.h>
+#include <ntverp.h>
+#include "resource.h"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows MIDI Services Tools"
+#define VER_INTERNALNAME_STR        "midiapimode.exe"
+#define VER_ORIGINALFILENAME_STR    "midiapimode.exe"
+#define VER_COMPANYNAME_STR         "Microsoft"
+#define VER_FILEVERSION_STR         "1.0.0.0"
+#define VER_LEGALCOPYRIGHT_STR      "Copyright 2026 Microsoft Corporation"
+#define VER_PRODUCTNAME_STR         "Windows MIDI Services"
+#define VER_PRODUCTVERSION_STR      "1.0.0.0"
+
+// this builds the version resource based on the above
+#include "common.ver"
+
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+
+STRINGTABLE PRELOAD
+BEGIN
+
+// Application banner
+
+IDS_BANNER_TOOL_INFO										L" This tool is part of the Windows MIDI Services API and tools"
+IDS_BANNER_COPYRIGHT										L" Copyright 2026- Microsoft Corporation."
+IDS_BANNER_INFO_URL											L" Information, license, and source available at https://aka.ms/midi"
+IDS_BANNER_DESCRIPTION										L" View or change the Windows MIDI API mode"
+
+// Help text
+
+IDS_HELP_USAGE												L"Usage: midiapimode <mode>   where <mode> is 0, 1, or 2."
+IDS_HELP_MODES_HEADER										L"Available API modes"
+IDS_HELP_MORE_INFO											L"Read the full description of each mode, including the trade-offs, before changing it:"
+IDS_HELP_MORE_INFO_URL										L"https://aka.ms/midiapimode"
+IDS_HELP_ADMIN_REQUIRED										L"Changing the API mode requires running this tool from an administrator command prompt."
+
+// Mode names and descriptions
+
+IDS_MODE_0_NAME												L"Full Windows MIDI Services"
+IDS_MODE_0_DESCRIPTION										L"The default and recommended mode. Multi-client MIDI, built-in loopbacks, Network MIDI 2.0, USB MIDI 2.0 devices, and the new combined MIDI 1.0/MIDI 2.0 driver are all available."
+IDS_MODE_1_NAME												L"Legacy API Mode"
+IDS_MODE_1_DESCRIPTION										L"The MIDI stack as it was before Windows MIDI Services. Ports are not multi-client, and the MIDI service and wdmaud2.drv are not used. Loopbacks, Network MIDI 2.0, Bluetooth LE MIDI, and MIDI 2.0 devices are not available."
+IDS_MODE_2_NAME												L"Hybrid API Mode"
+IDS_MODE_2_DESCRIPTION										L"Use with caution. Devices using MIDI 1.0 drivers are visible only to the old APIs, and devices using the new combined driver are visible only to the new API. The two do not see each other. Not recommended unless you have a clear need."
+IDS_MODE_UNKNOWN_NAME										L"Unknown mode"
+
+// Current and requested mode
+
+IDS_LABEL_CURRENT_MODE										L"Current API mode:"
+IDS_LABEL_REQUESTED_MODE									L"You have asked to change the API mode to:"
+IDS_MODE_NOT_SET_USING_DEFAULT								L"(not set in the registry, so the default is used)"
+IDS_MODE_ALREADY_SET										L"That is already the current API mode. No changes have been made."
+
+// Prompts
+
+IDS_PROMPT_CONFIRM_CHANGE									L"Do you want to change the API mode?"
+IDS_PROMPT_CONFIRM_RESTART									L"The new API mode takes effect after a restart. Do you want to restart the PC now?"
+IDS_PROMPT_YES_NO_KEYS										L"Press Y for yes, or any other key for no."
+
+// Status and results
+
+IDS_STATUS_CANCELLED										L"Cancelled. No changes have been made."
+IDS_STATUS_MODE_CHANGED										L"The API mode has been updated in the registry."
+IDS_STATUS_RESTARTING										L"Restarting the PC. Save your work now."
+IDS_STATUS_RESTART_LATER									L"The new API mode will not take effect until you restart the PC."
+
+// Errors
+
+IDS_ERROR_NOT_ADMINISTRATOR									L"This tool must be run from an administrator command prompt in order to change the API mode."
+IDS_ERROR_INVALID_MODE_PARAMETER							L"The API mode must be 0, 1, or 2."
+IDS_ERROR_UNABLE_TO_READ_REGISTRY							L"Unable to read the API mode from the registry."
+IDS_ERROR_UNABLE_TO_WRITE_REGISTRY							L"Unable to write the API mode to the registry."
+IDS_ERROR_UNABLE_TO_RESTART									L"Unable to restart the PC. Please restart it manually."
+
+END
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE  
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE  
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE  
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
