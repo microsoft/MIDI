@@ -11,10 +11,15 @@
 
 #include "pch.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4244)
-#include "color.hpp"
-#pragma warning(pop)
+#include <io.h>
+#include <fcntl.h>
+
+#include <fmt/base.h>
+#include <fmt/xchar.h>
+#include <fmt/format.h>
+#include <fmt/color.h>
+
+
 
 bool m_showActiveSense{ false };
 bool m_showClock{ false };
@@ -24,30 +29,33 @@ bool m_showClock{ false };
 #define DRV_QUERYDEVICEINTERFACE        (DRV_RESERVED + 12)
 #define DRV_QUERYDEVICEINTERFACESIZE    (DRV_RESERVED + 13)
 
+#define LINE_LENGTH 79
 
-void WriteInfo(std::string info)
+const auto infoTextStyle = fmt::fg(fmt::color::steel_blue);
+const auto errorTextStyle = fmt::fg(fmt::color::pink);
+const auto normalTextStyle = fmt::fg(fmt::color::light_gray);
+const auto separatorTextStyle = fmt::fg(fmt::color::gray);
+
+void WriteInfo(_In_ std::wstring info)
 {
-    std::cout << dye::aqua(info) << std::endl;
+    fmt::println(L"{}", fmt::styled(info, infoTextStyle));
 }
 
 
-void WriteError(std::string error)
+void WriteError(_In_ std::wstring error)
 {
-    std::cout << dye::light_red(error) << std::endl;
+    fmt::println(L"{}", fmt::styled(error, errorTextStyle));
 }
 
-void WriteBrightLabel(std::string label)
+void WriteDoubleSeparator()
 {
-    auto fullLabel = label + ":";
-    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::white(fullLabel);
+    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'='), separatorTextStyle));
 }
 
-void WriteLabel(std::string label)
+void WriteSingleSeparator()
 {
-    auto fullLabel = label + ":";
-    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::grey(fullLabel);
+    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'-'), separatorTextStyle));
 }
-
 
 struct MidiPort
 {
@@ -188,53 +196,32 @@ void LoadWinMMDevices()
 
 }
 
-void DisplayPort(MidiPort const& port)
+
+void DisplayPort(_In_ MidiPort const& port)
 {
     if (port.IsError)
     {
-        std::cout
-            << std::setw(3) << dye::red(port.Index)
-            << dye::grey(" : ");
+        fmt::print(L"{:<3}", fmt::styled(port.Index, errorTextStyle));
     }
     else
     {
-        std::cout
-            << std::setw(3) << dye::yellow(port.Index)
-            << dye::grey(" : ");
+        fmt::print(L"{:<3}", fmt::styled(port.Index, fmt::fg(fmt::color::golden_rod)));
     }
 
-    std::wcout
-        << std::setw(33)
-        << std::left
-        << port.Name;
+    fmt::println(L"{:<33} - {}: {}", 
+        fmt::styled(port.Name, normalTextStyle), 
+        fmt::styled(L"Dev Interface", fmt::fg(fmt::color::gray)), 
+        fmt::styled(port.DriverInterface, normalTextStyle));
 
-    //std::cout
-    //    << dye::grey(" MID: ")
-    //    << std::setw(4)
-    //    << dye::aqua(port.ManufacturerId)
-    //    << dye::grey(", PID: ")
-    //    << std::setw(4)
-    //    << dye::aqua(port.ProductId)
-    //    << dye::grey(", VER: ")
-    //    << std::setw(8)
-    //    << dye::aqua(port.DriverVersion);
-
-    std::cout
-        << dye::grey(" - Dev Interface: ");
-        
-    std::wcout
-        << port.DriverInterface
-        << std::endl;
-
-
+    fmt::println(L"");
 }
 
 void DisplayAllWinMMInputs()
 {
     auto deviceCount = midiInGetNumDevs();
-    WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiInGetNumDevs");
-    WriteInfo(" " + std::to_string(m_midiInputCountNoErrors) + " valid Input Ports (MIDI Sources) found.");
-    std::wcout << std::endl;
+    WriteInfo(std::format(L" {} ports reported by midiInGetNumDevs", deviceCount));
+    WriteInfo(std::format(L" {} valid Input Ports (MIDI Sources) found.", m_midiInputCountNoErrors));
+    fmt::println(L"");
 
     for (auto const& port : m_midiInputs)
     {
@@ -248,9 +235,9 @@ void DisplayAllWinMMOutputs()
 {
     auto deviceCount = midiOutGetNumDevs();
 
-    WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiOutGetNumDevs");
-    WriteInfo(" " + std::to_string(m_midiOutputCountNoErrors) + " valid Output Ports (MIDI Destinations) found.");
-    std::wcout << std::endl;
+    WriteInfo(std::format(L" {} ports reported by midiOutGetNumDevs", deviceCount));
+    WriteInfo(std::format(L" {} valid Output Ports (MIDI Destinations) found.", m_midiOutputCountNoErrors));
+    fmt::println(L"");
 
     for (auto const& port : m_midiOutputs)
     {
@@ -260,21 +247,30 @@ void DisplayAllWinMMOutputs()
     std::wcout << std::endl;
 }
 
-#define LINE_LENGTH 79
+
 
 
 #define RETURN_INVALID_PORT_NUMBER 1
 #define RETURN_UNABLE_TO_OPEN_PORT 2
 
-int __cdecl main(int argc, char* argv[])
+int __cdecl main(_In_ int argc, _In_ char* argv[])
 {
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
-    std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
-    std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" List of WinMM/MME ports") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    auto setModeResult = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT
+    
+    if (setModeResult == -1)   
+    {
+        perror("Unable to set stdout to UTF-16 mode. ");
+        return 1;
+    }
+
+
+    //std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    //std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
+    //std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
+    //std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
+    //std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    //std::cout << dye::aqua(" List of WinMM/MME ports") << std::endl;
+    //std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
 
     bool loop{ false };
 
@@ -305,19 +301,20 @@ int __cdecl main(int argc, char* argv[])
 
         DisplayAllWinMMInputs();
 
-        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+        WriteDoubleSeparator();
+
 
         DisplayAllWinMMOutputs();
 
         if (loop)
         {
-            std::cout << dye::grey("Press space to enumerate again, or escape to close.") << std::endl;
+            WriteInfo(L"Press space to enumerate again, or escape to close.");
 
             auto ch = _getch();
 
             if (ch == KEY_ESCAPE)
             {
-                WriteInfo("\nClosing");
+                WriteInfo(L"\nClosing");
                 break;
             }
             else if (ch == KEY_SPACE)
