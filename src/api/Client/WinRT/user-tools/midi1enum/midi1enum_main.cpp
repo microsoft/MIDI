@@ -36,13 +36,13 @@ const auto errorTextStyle = fmt::fg(fmt::color::pink);
 const auto normalTextStyle = fmt::fg(fmt::color::light_gray);
 const auto separatorTextStyle = fmt::fg(fmt::color::gray);
 
-void WriteInfo(_In_ std::wstring info)
+void WriteInfo(_In_ std::wstring const& info)
 {
     fmt::println(L"{}", fmt::styled(info, infoTextStyle));
 }
 
 
-void WriteError(_In_ std::wstring error)
+void WriteError(_In_ std::wstring const& error)
 {
     fmt::println(L"{}", fmt::styled(error, errorTextStyle));
 }
@@ -228,7 +228,7 @@ void DisplayAllWinMMInputs()
         DisplayPort(port);
     }
 
-    std::wcout << std::endl;
+    fmt::println(L"");
 }
 
 void DisplayAllWinMMOutputs()
@@ -244,7 +244,7 @@ void DisplayAllWinMMOutputs()
         DisplayPort(port);
     }
 
-    std::wcout << std::endl;
+    fmt::println(L"");
 }
 
 
