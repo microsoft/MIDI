@@ -31,6 +31,7 @@ public:
     TEST_METHOD(TestChannelVoiceMessages);
     TEST_METHOD(TestMixedGroupMessages);
     TEST_METHOD(ValidateGithubIssue822);
+    TEST_METHOD(ValidateMidiTimecodeIssue);
 
     void InternalTestMessages(
         _In_ std::vector<uint32_t> words,

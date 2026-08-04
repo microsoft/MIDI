@@ -17,6 +17,7 @@
 #include <vector>
 #include <ks.h>         // for KSMULTIPLE_ITEM
 
+#include "Feature_Servicing_MIDI2UnicodeConversion.h"
 
 namespace WindowsMidiServicesInternal
 {
@@ -135,15 +136,36 @@ namespace WindowsMidiServicesInternal
 
                     int charOffset = sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
 
-                    // TODO this could be much more efficient just pointing to a string instead of char by char
-                    while (charOffset + 1 < pheader->Size)
+                    if (Feature_Servicing_MIDI2UnicodeConversion::IsEnabled())
                     {
-                        wchar_t ch = (wchar_t)(*(ksMultipleItemsDataPointer + offset + charOffset));
+                        while (charOffset + sizeof(wchar_t) <= pheader->Size)
+                        {
+                            wchar_t ch = *reinterpret_cast<const wchar_t*>(
+                                ksMultipleItemsDataPointer + offset + charOffset);
 
-                        gtb.Name += ch;
+                            if (ch == L'\0')
+                            {
+                                break;
+                            }
 
-                        charOffset += sizeof(wchar_t);
+                            gtb.Name += ch;
+
+                            charOffset += sizeof(wchar_t);
+                        }
                     }
+                    else
+                    {
+                        // TODO this could be much more efficient just pointing to a string instead of char by char
+                        while (charOffset + 1 < pheader->Size)
+                        {
+                            wchar_t ch = (wchar_t)(*(ksMultipleItemsDataPointer + offset + charOffset));
+
+                            gtb.Name += ch;
+
+                            charOffset += sizeof(wchar_t);
+                        }
+                    }
+
 
                     blocks.push_back(std::move(gtb));
 

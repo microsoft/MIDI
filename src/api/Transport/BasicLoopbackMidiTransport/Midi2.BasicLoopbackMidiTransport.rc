@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,1,5
- PRODUCTVERSION 1,0,1,5
+ FILEVERSION 1,0,1,6
+ PRODUCTVERSION 1,0,1,6
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -77,8 +77,8 @@ BEGIN
             VALUE "InternalName", "Midi2.BasicLoopbackMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.BasicLoopbackMidiTransport.dll"
 
-            VALUE "FileVersion", "1.0.1.5"
-            VALUE "ProductVersion", "1.0.1.5"
+            VALUE "FileVersion", "1.0.1.6"
+            VALUE "ProductVersion", "1.0.1.6"
 
             VALUE "OLESelfRegister", ""
         END
