@@ -109,6 +109,9 @@
     <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -171,7 +174,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="color.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

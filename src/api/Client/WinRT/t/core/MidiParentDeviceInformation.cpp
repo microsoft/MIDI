@@ -192,8 +192,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         if (Name().empty())
         {
-            // TODO: Move to resources
-            baseName = baseName + L"Unnamed Parent Device";
+            baseName = baseName + internal::ResourceGetHString(IDS_DISPLAY_UNNAMED_PARENT_DEVICE);
         }
         else
         {

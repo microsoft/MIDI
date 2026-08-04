@@ -188,7 +188,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                     result->InternalSetFailure(
                         creationConfig.AssociationId(),
                         bloop::MidiBasicLoopbackErrorCode::NoErrorInformationAvailable,
-                        L"Device creation succeeded but returned device id is empty");
+                        internal::ResourceGetHString(IDS_LOOPBACK_ERROR_EMPTY_RETURNED_DEVICE_ID));
 
                 }
             }
@@ -302,7 +302,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         {
             result->InternalSetFailure(
                 bloop::MidiBasicLoopbackErrorCode::ClientApiException,
-                L"General exception.");
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -396,7 +396,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             {
                 result->InternalSetFailure(
                     bloop::MidiBasicLoopbackErrorCode::ClientApiException,
-                    L"Transport does not support mute operation.");   // TODO: Localize
+                    internal::ResourceGetHString(IDS_LOOPBACK_ERROR_MUTE_NOT_SUPPORTED));
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -467,7 +467,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
             result->InternalSetFailure(
                 bloop::MidiBasicLoopbackErrorCode::ClientApiException,
-                L"General exception.");
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -503,7 +503,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             {
                 result->InternalSetFailure(
                     bloop::MidiBasicLoopbackErrorCode::ClientApiException,
-                    L"Transport does not support unmute operation.");   // TODO: Localize
+                    internal::ResourceGetHString(IDS_LOOPBACK_ERROR_UNMUTE_NOT_SUPPORTED));
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -574,7 +574,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
             result->InternalSetFailure(
                 bloop::MidiBasicLoopbackErrorCode::ClientApiException,
-                L"General exception.");
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),

@@ -263,14 +263,13 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
         return 1;
     }
 
-
-    //std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    //std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
-    //std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
-    //std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
-    //std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    //std::cout << dye::aqua(" List of WinMM/MME ports") << std::endl;
-    //std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    WriteDoubleSeparator();
+    WriteInfo(L" This tool is part of the Windows MIDI Services API and tools");
+    WriteInfo(L" Copyright 2026- Microsoft Corporation.");
+    WriteInfo(L" Information, license, and source available at https://aka.ms/midi");
+    WriteDoubleSeparator();
+    WriteInfo(L" List of WinMM/MME ports");
+    WriteDoubleSeparator();
 
     bool loop{ false };
 

@@ -103,6 +103,9 @@
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);%(AdditionalIncludeDirectories)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -110,7 +113,7 @@
       <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
       <PreprocessorDefinitions>_CONSOLE;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">

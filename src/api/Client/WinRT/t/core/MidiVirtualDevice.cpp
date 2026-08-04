@@ -30,7 +30,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
             m_declaredDeviceIdentity = config.DeclaredDeviceIdentity();
             m_declaredEndpointInfo = config.DeclaredEndpointInfo();
 
-            m_name = L"Virtual: " + m_declaredEndpointInfo.Name();
+            m_name = internal::ResourceGetHString(IDS_DISPLAY_VIRTUAL_DEVICE_NAME_PREFIX) + m_declaredEndpointInfo.Name();
             m_id = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
 
             m_associationId = config.AssociationId();

@@ -11,10 +11,15 @@
 
 #include "pch.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4244)
-#include "color.hpp"
-#pragma warning(pop)
+#include <io.h>
+#include <fcntl.h>
+
+#include <fmt/base.h>
+#include <fmt/xchar.h>
+#include <fmt/format.h>
+#include <fmt/color.h>
+
+
 
 bool m_showActiveSense{ false };
 bool m_showClock{ false };

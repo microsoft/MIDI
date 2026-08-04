@@ -62,7 +62,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                     TraceLoggingWideString(L"Ping count is zero", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
 
-                responseSummary->InternalSetFailed(L"Ping count is zero.");
+                responseSummary->InternalSetFailed(internal::ResourceGetHString(IDS_PING_ERROR_ZERO_PING_COUNT));
                 return *responseSummary;
             }
 
@@ -82,7 +82,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                     TraceLoggingWideString(L"Timeout milliseconds is zero", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
 
-                responseSummary->InternalSetFailed(L"Timeout milliseconds is zero.");
+                responseSummary->InternalSetFailed(internal::ResourceGetHString(IDS_PING_ERROR_ZERO_TIMEOUT));
                 return *responseSummary;
             }
 
@@ -103,7 +103,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                     TraceLoggingWideString(L"Unable to create session", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
 
-                responseSummary->InternalSetFailed(L"Unable to create session.");
+                responseSummary->InternalSetFailed(internal::ResourceGetHString(IDS_PING_ERROR_SESSION_CREATION_FAILED));
                 return *responseSummary;
             }
 
@@ -124,7 +124,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                     TraceLoggingWideString(L"Unable to create ping endpoint", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
 
-                responseSummary->InternalSetFailed(L"Unable to create ping endpoint.");
+                responseSummary->InternalSetFailed(internal::ResourceGetHString(IDS_PING_ERROR_ENDPOINT_CREATION_FAILED));
                 return *responseSummary;
             }
 
@@ -222,7 +222,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                     TraceLoggingWideString(L"Could not open ping endpoint", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
 
-                responseSummary->InternalSetFailed(L"Endpoint open failed. The service may be unavailable.");
+                responseSummary->InternalSetFailed(internal::ResourceGetHString(IDS_PING_ERROR_ENDPOINT_OPEN_FAILED));
 
                 session.DisconnectEndpointConnection(endpoint.ConnectionId());
 
@@ -235,8 +235,6 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
             {
                 internal::PackedPingRequestUmp request;
 
-                auto response = winrt::make_self<MidiServicePingResponse>();
-
                 internal::MidiTimestamp timestamp = MidiClock::Now();
 
                 // Add this info to the tracking before we send, so no race condition
@@ -245,10 +243,9 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                 auto ping = winrt::make_self<MidiServicePingResponse>();
                 ping->InternalInitialize(pingSourceId, pingIndex, timestamp);
 
-                pings[pingIndex] = response;
+                pings[pingIndex] = ping;
 
                 // send the ping
-
                 auto sendMessageResult = endpoint.SendSingleMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
 
                 if (midi2::MidiEndpointConnection::SendMessageFailed(sendMessageResult))
@@ -264,7 +261,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
                         TraceLoggingWideString(L"Ping send message failed", MIDI_SDK_TRACE_MESSAGE_FIELD)
                     );
 
-                    responseSummary->InternalSetFailed(L"Sending message failed");
+                    responseSummary->InternalSetFailed(internal::ResourceGetHString(IDS_PING_ERROR_SEND_MESSAGE_FAILED));
 
                     session.DisconnectEndpointConnection(endpoint.ConnectionId());
 
@@ -283,7 +280,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
 
                 if (!allReceivedFlag)
                 {
-                    responseSummary->InternalSetFailed(L"Not all ping responses received within appropriate time window.");
+                    responseSummary->InternalSetFailed(internal::ResourceGetHString(IDS_PING_ERROR_RESPONSE_TIMEOUT));
 
                     LOG_IF_FAILED(E_FAIL);
 
@@ -311,13 +308,9 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
 
                 for (auto& response : pings)
                 {
-                    // internal::LogInfo(__FUNCTION__, L"Calculating total ping");
-
                     totalPing += response->ClientDeltaTimestamp();
 
                     responseSummary->InternalAddResponse(*response);
-
-                    // does I need to remove the com_ptr ref or will going out of scope be sufficient?
                 }
 
                 uint64_t averagePing = totalPing / responseSummary->Responses().Size();
@@ -370,7 +363,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
 
             if (responseSummary != nullptr)
             {
-                responseSummary->InternalSetFailed(L"Exception pinging service");
+                responseSummary->InternalSetFailed(internal::ResourceGetHString(IDS_PING_ERROR_EXCEPTION));
 
                 return *responseSummary;
             }

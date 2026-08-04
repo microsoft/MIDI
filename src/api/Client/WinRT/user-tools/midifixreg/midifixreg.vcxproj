@@ -109,6 +109,9 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc</ExternalIncludePath>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -179,7 +182,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="color.hpp" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
