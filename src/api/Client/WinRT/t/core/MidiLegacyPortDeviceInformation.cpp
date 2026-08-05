@@ -46,23 +46,22 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         }
     }
 
-    void AddAllPnpObjectEntriesToPortsList(
-        _In_ pnp::PnpObjectCollection const& devices,
-        _Inout_ collections::IVector<legacy::MidiLegacyPortDeviceInformation>& ports)
-    {
-        for (auto const& device : devices)
-        {
-            auto midiLegacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
+    //void AddAllPnpObjectEntriesToPortsList(
+    //    _In_ pnp::PnpObjectCollection const& devices,
+    //    _Inout_ collections::IVector<legacy::MidiLegacyPortDeviceInformation>& ports)
+    //{
+    //    for (auto const& device : devices)
+    //    {
+    //        auto midiLegacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
 
-            if (midiLegacyPortDeviceInformation != nullptr)
-            {
-                // TODO
-
-                midiLegacyPortDeviceInformation->InternalInitialize(L"", device.Id(), device.Properties());
-                ports.Append(*midiLegacyPortDeviceInformation);
-            }
-        }
-    }
+    //        if (midiLegacyPortDeviceInformation != nullptr)
+    //        {
+    //            // TODO
+    //            midiLegacyPortDeviceInformation->InternalInitialize(L"", device.Id(), device.Properties());
+    //            ports.Append(*midiLegacyPortDeviceInformation);
+    //        }
+    //    }
+    //}
 
 
 
@@ -491,11 +490,11 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         auto results = winrt::single_threaded_vector<legacy::MidiLegacyPortDeviceInformation>();
 
-        auto sourceSelector = winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector() + L" AND System.ItemNameDisplay:= \"" + portName + L"\"";
-        auto destinationSelector = winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector() + L" AND System.ItemNameDisplay:= \"" + portName + L"\"";
-
         try
         {
+            auto sourceSelector = winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector() + L" AND System.ItemNameDisplay:= \"" + portName + L"\"";
+            auto destinationSelector = winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector() + L" AND System.ItemNameDisplay:= \"" + portName + L"\"";
+
             for (auto const& selector : { sourceSelector , destinationSelector })
             {
                 // get all sources
@@ -504,8 +503,18 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
                     GetAdditionalPropertiesList(),
                     enumeration::DeviceInformationKind::DeviceInterface).get();
 
-                AddAllDeviceInformationEntriesToPortsList(devices, results);
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(nullptr, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Called FindAllAsync for name", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(portName.c_str(), "port name"),
+                    TraceLoggingUInt32(devices.Size(), "count returned ports")
+                );
 
+                AddAllDeviceInformationEntriesToPortsList(devices, results);
             }
         }
         catch (winrt::hresult_error const& ex)

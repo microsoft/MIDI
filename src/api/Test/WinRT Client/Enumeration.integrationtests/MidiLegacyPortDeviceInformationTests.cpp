@@ -162,16 +162,13 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
             {
                 std::wcout << L"** NO PARENT." << std::endl;
             }
-
-
-
         }
-
     }
-
 }
 
-// This test is failing for unicode names.
+
+// Possible Bug: This fails if there's a unicode MIDI 1 port name, and your PC
+// is not set up for the language of that name.
 void MidiLegacyPortDeviceInformationTests::TestFindAllForName()
 {
     auto devices = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll();

@@ -145,6 +145,12 @@ void MidiBasicLoopbackBenchmarks::BenchmarkComExtensionsSendReceive()
     auto connection = session.CreateEndpointConnection(endpointId);
     VERIFY_IS_NOT_NULL(connection);
 
+    auto cleanupSession = wil::scope_exit([&]
+        {
+            session.DisconnectEndpointConnection(connection.ConnectionId());
+            session.Close();
+        });
+
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -169,6 +175,20 @@ void MidiBasicLoopbackBenchmarks::BenchmarkComExtensionsSendReceive()
 
     auto sendExtension = connection.as<IMidiEndpointConnectionRaw>();
     VERIFY_IS_NOT_NULL(sendExtension);
+
+    // release the COM references before tearing anything else down, even if a
+    // VERIFY macro below halts the benchmark early
+    auto cleanupComExtensions = wil::scope_exit([&]
+        {
+            if (receiveExtension != nullptr)
+            {
+                receiveExtension->RemoveMessagesReceivedCallback();
+            }
+
+            m_midiInCallback = nullptr;
+            receiveExtension = nullptr;
+            sendExtension = nullptr;
+        });
 
     // make sure our batch size is within what the transport will accept
     auto maxWords = sendExtension->GetSupportedMaxMidiWordsPerTransmission();
@@ -222,16 +242,10 @@ void MidiBasicLoopbackBenchmarks::BenchmarkComExtensionsSendReceive()
         BENCHMARK_MESSAGE_COUNT,
         receivedWordCount.load());
 
-    // release the COM references before tearing anything else down
-    receiveExtension->RemoveMessagesReceivedCallback();
-    m_midiInCallback = nullptr;
-    receiveExtension = nullptr;
-    sendExtension = nullptr;
-
     VERIFY_ARE_EQUAL(receivedWordCount.load(), (uint32_t)BENCHMARK_MESSAGE_COUNT);
 
-    session.DisconnectEndpointConnection(connection.ConnectionId());
-    session.Close();
+    // the cleanupComExtensions, cleanupSession, and cleanupLoopback scope_exit
+    // handlers tear everything down, in that order
 }
 
 
