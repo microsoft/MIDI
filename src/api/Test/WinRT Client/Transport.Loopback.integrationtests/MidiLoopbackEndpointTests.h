@@ -43,6 +43,8 @@ public:
     // all of which must be re-openable after being closed.
     TEST_METHOD(TestReopenLegacyWinMMPorts);
 
+    TEST_METHOD(TestUnicodeGtbAndDeviceNames);
+
 
 private:
 

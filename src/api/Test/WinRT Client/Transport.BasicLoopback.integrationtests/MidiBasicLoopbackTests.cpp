@@ -52,7 +52,9 @@ void MidiBasicLoopbackTests::TestUnicodeGtbAndDeviceNames()
 
     auto endpointDeviceId = result.CreatedLoopbackEntry().EndpointDeviceId();
     auto endpointInformation = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(endpointDeviceId);
-    //auto gtbName = endpointInformation.GetGroupTerminalBlocks().GetAt(0).Name().c_str();
+    VERIFY_IS_NOT_NULL(endpointInformation);
+
+    std::wcout << L"Endpoint Name: " << endpointInformation.Name().c_str() << std::endl;
 
     // Check name
 
@@ -96,9 +98,7 @@ void MidiBasicLoopbackTests::TestUnicodeGtbAndDeviceNames()
     // test that we can find a device with this name
 
     auto foundPorts = MidiLegacyPortDeviceInformation::FindAllForName(definition.Name());
-
     VERIFY_IS_TRUE(foundPorts.Size() > 0);
-
     std::wcout << L"Found Port Name: " << foundPorts.GetAt(0).Name().c_str() << std::endl;
 
 }

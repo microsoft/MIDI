@@ -18,7 +18,7 @@
     <ClInclude Include="stdafx.h">
       <Filter>Support</Filter>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackEndpointTests.h">
+    <ClInclude Include="MidiBasicLoopbackTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="DiscordReproTest.h">
@@ -29,7 +29,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiBasicLoopbackEndpointTests.cpp">
+    <ClCompile Include="MidiBasicLoopbackTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="DiscordReproTest.cpp">

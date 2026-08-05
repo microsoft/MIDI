@@ -21,11 +21,13 @@
     <ClInclude Include="MidiLoopbackEndpointTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MidiLoopbackBenchmarks.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiLoopbackEndpointTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="MidiLoopbackBenchmarks.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2ClientTests.rc">

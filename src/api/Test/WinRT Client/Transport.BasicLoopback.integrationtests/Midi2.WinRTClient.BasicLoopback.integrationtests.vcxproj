@@ -155,12 +155,12 @@
   <ItemGroup>
     <ClCompile Include="DiscordReproTest.cpp" />
     <ClCompile Include="MidiBasicLoopbackBenchmarks.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointTests.cpp" />
+    <ClCompile Include="MidiBasicLoopbackTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DiscordReproTest.h" />
     <ClInclude Include="MidiBasicLoopbackBenchmarks.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointTests.h" />
+    <ClInclude Include="MidiBasicLoopbackTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
