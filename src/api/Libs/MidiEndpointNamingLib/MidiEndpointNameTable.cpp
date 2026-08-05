@@ -30,6 +30,8 @@
 
 #include "MidiEndpointNameTable.h"
 
+#include "Feature_Servicing_MIDIPortDisambiguators.h"
+
 namespace WindowsMidiServicesNamingLib
 {
     namespace internal = WindowsMidiServicesInternal;
@@ -52,24 +54,58 @@ std::wstring RemoveJustKSPinGeneratedSuffix(
 {
     std::wstring cleanedPinName{ WindowsMidiServicesInternal::TrimmedWStringCopy(pinName) };
 
-    std::wstring suffixesToRemove[] =
+    if (Feature_Servicing_MIDIPortDisambiguators::IsEnabled())
     {
-        // In most cases I've seen, these are added by our USB and KS stack, not by the device
-        // Originally this went only to 16, but there are vendor driver devices with 32 total ports
-        // that can be configured to be any combo of inputs and outputs. The [:] is an odd one, produced
-        // by our stack when reading the 11th port (0-based number 10) from the ESI M8U eX.
-        L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]",
-        L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
-        L"[17]", L"[18]", L"[19]", L"[20]", L"[21]", L"[22]", L"[23]", L"[24]",
-        L"[25]", L"[26]", L"[27]", L"[28]", L"[29]", L"[30]", L"[31]", L"[32]",
-        L"[:]"
-    };
+        std::vector<std::wstring> suffixesToRemove;
 
-    for (auto const& word : suffixesToRemove)
-    {
-        if (cleanedPinName.ends_with(word))
+        for (int i = 0; i <= 32; i++)
         {
-            cleanedPinName = cleanedPinName.substr(0, cleanedPinName.length() - word.length());
+            // In most cases I've seen, these are added by our USB and KS stack, not by the device
+            // Originally this went only to 16, but there are vendor driver devices with 32 total ports
+            // that can be configured to be any combo of inputs and outputs. The [:] is an odd one, produced
+            // by our stack when reading the 11th port (0-based number 10) from the ESI M8U eX.
+
+            // Ideally, we'd just remove this from the KS logic, but that would almost certainly
+            // break audio devices, and would also need to have a switch to put them back in when
+            // using legacymode or hybrid mode for Windows MIDI Services
+
+            // the space here is important because some devices, like CircuitPython, actually have
+            // [0] as part of the pin name and we don't want to remove that
+            suffixesToRemove.push_back(std::format(L" [{}]", i));
+        }
+
+        // add that weird one from the ESI MIDI interfaces
+        suffixesToRemove.push_back(L" [:]");
+
+        for (auto const& word : suffixesToRemove)
+        {
+            if (cleanedPinName.ends_with(word))
+            {
+                cleanedPinName = cleanedPinName.substr(0, cleanedPinName.length() - word.length());
+            }
+        }
+    }
+    else
+    {
+        std::wstring suffixesToRemove[] =
+        {
+            // In most cases I've seen, these are added by our USB and KS stack, not by the device
+            // Originally this went only to 16, but there are vendor driver devices with 32 total ports
+            // that can be configured to be any combo of inputs and outputs. The [:] is an odd one, produced
+            // by our stack when reading the 11th port (0-based number 10) from the ESI M8U eX.
+            L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]",
+            L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
+            L"[17]", L"[18]", L"[19]", L"[20]", L"[21]", L"[22]", L"[23]", L"[24]",
+            L"[25]", L"[26]", L"[27]", L"[28]", L"[29]", L"[30]", L"[31]", L"[32]",
+            L"[:]"
+        };
+
+        for (auto const& word : suffixesToRemove)
+        {
+            if (cleanedPinName.ends_with(word))
+            {
+                cleanedPinName = cleanedPinName.substr(0, cleanedPinName.length() - word.length());
+            }
         }
     }
 
@@ -86,6 +122,17 @@ std::wstring AddGroupNumberToNameIfNeeded(
 
 )
 {
+    // this fails with loopMIDI which creates each port as a new interface with the filter name = to the port name.
+    // so we're adding disambiguators for no reason here. 
+    //
+    // However, this is absolutely needed for some devices, where there's no way to disambiguate the ports without
+    // adding another index. This was causing problems before this was added.
+    //
+    // This whole port/gtb naming process needs a re-think and a comparison to the values generated in other operating 
+    // systems for the same devices. Additionally, we need to keep the port names and GTB names in sync when customers
+    // rename the MIDI 1 port for a MIDI 1 device. The Settings UI will also need to just treat the GTBs as a background 
+    // artifact when it comes to MIDI 1 devices.
+
     std::wstring newName{ generatedName };
 
     if (generatedName == parentDeviceName || generatedName == filterName)
@@ -285,7 +332,8 @@ std::wstring GenerateFilterPlusPinNameBasedMidi1PortName(
     _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
     _In_ std::wstring const& filterName,
     _In_ std::wstring const& pinName,
-    _In_ uint8_t groupIndex
+    _In_ uint8_t groupIndex,
+    _In_ uint8_t portIndexWithinThisFilterAndDirection
 ) noexcept
 {
     std::wstring generatedName{};
@@ -311,7 +359,17 @@ std::wstring GenerateFilterPlusPinNameBasedMidi1PortName(
         }
     }
 
-    generatedName = AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, generatedName, groupIndex);
+    if (Feature_Servicing_MIDIPortDisambiguators::IsEnabled())
+    {
+        if (portIndexWithinThisFilterAndDirection > 0)
+        {
+            generatedName = AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, generatedName, groupIndex);
+        }
+    }
+    else
+    {
+        generatedName = AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, generatedName, groupIndex);
+    }
 
     return generatedName;
 }
@@ -320,7 +378,8 @@ std::wstring GenerateFilterPlusBlockMidi1PortName(
     _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
     _In_ std::wstring const& filterName,
     _In_ std::wstring const& blockName,
-    _In_ uint8_t groupIndex
+    _In_ uint8_t groupIndex,
+    _In_ uint8_t portIndexWithinThisFilterAndDirection
 ) noexcept
 {
     std::wstring generatedName{};
@@ -352,7 +411,19 @@ std::wstring GenerateFilterPlusBlockMidi1PortName(
         }
     }
 
-    generatedName = AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, generatedName, groupIndex);
+
+    if (Feature_Servicing_MIDIPortDisambiguators::IsEnabled())
+    {
+        if (portIndexWithinThisFilterAndDirection > 0)
+        {
+            generatedName = AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, generatedName, groupIndex);
+        }
+    }
+    else
+    {
+        generatedName = AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, generatedName, groupIndex);
+    }
+
 
     return generatedName;
 }
@@ -631,7 +702,8 @@ MidiEndpointNameTable::PopulateEntryForNativeUmpDevice(
         parentDeviceName,
         filterName,
         blockName,
-        groupIndex
+        groupIndex,
+        portIndexWithinThisFilterAndDirection
     );
 
     std::wstring legacyWinMMName = GenerateLegacyMidi1PortName(
@@ -785,7 +857,8 @@ MidiEndpointNameTable::PopulateEntryForMidi1DeviceUsingUmpDriver(
         parentDeviceName,
         parentDeviceName,
         blockName,
-        groupIndex
+        groupIndex,
+        portIndexWithinThisFilterAndDirection
     );
 
     std::wstring legacyWinMMName = GenerateLegacyMidi1PortName(
@@ -828,12 +901,16 @@ MidiEndpointNameTable::PopulateEntryForMidi1DeviceUsingMidi1Driver(
 {
     auto entry = std::make_shared<Midi1PortNameEntry>();
 
-    // use teh block name directly
+
+    // TODO: The block name should be synchronized with this.
+
+    // use the block name directly
     std::wstring newStyleName = GenerateFilterPlusPinNameBasedMidi1PortName(
         nameFromRegistry,
         filterName,
         pinName,
-        groupIndex
+        groupIndex,
+        portIndexWithinThisFilterAndDirection
     );
 
     std::wstring legacyWinMMName = GenerateLegacyMidi1PortName(
