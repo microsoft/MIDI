@@ -1466,29 +1466,23 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 // =======================================================
 
 #include "Feature_Servicing_MIDI2WinRtStartup.h"
-#include "Feature_Servicing_MIDI2WinmmNoBufs.h"
-#include "Feature_Servicing_MIDI2WinmmAddBufferSizeCheck.h"
-#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
 #include "Feature_Servicing_MIDI2USBSerial.h"
-#include "Feature_Servicing_MIDI2USBDeviceMatch.h"
 #include "Feature_Servicing_MIDI2SWDAbortCrash.h"
-#include "Feature_Servicing_MIDI2SchedulerDetach.h"
 #include "Feature_Servicing_MIDI2RTTimestamp.h"
 #include "Feature_Servicing_MIDI2NumDevsPerf.h"
-#include "Feature_Servicing_MIDI2MultipleGroups.h"
-#include "Feature_Servicing_MIDI2LoopbackBidi.h"
 #include "Feature_Servicing_MIDI2LegacyTimestamp.h"
 #include "Feature_Servicing_MIDI2LegacyControl.h"
 #include "Feature_Servicing_MIDI2KSHandleWrapperCrash.h"
 #include "Feature_Servicing_MIDI2KSATVSFix.h"
 #include "Feature_Servicing_MIDI2IsUniqueIdLock.h"
-#include "Feature_Servicing_MIDI2FilterCreations.h"
 #include "Feature_Servicing_MIDI2FillReadCrash.h"
-#include "Feature_Servicing_MIDI2DriverHang.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
-#include "Feature_Servicing_MIDI2ContainerIds.h"
 #include "Feature_Servicing_MIDI2BsToUMPConv.h"
 
+#include "Feature_Servicing_MIDI2FailFast.h"
+#include "Feature_Servicing_MIDIPortDisambiguators.h"
+#include "Feature_Servicing_MIDI2LoopbackMuteAndList.h"
+#include "Feature_Servicing_MIDI2UnicodeConversion.h"
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -1509,28 +1503,25 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_FEATURE_ENABLEMENT);
 
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinRtStartup::IsEnabled(),             L"MIDI2WinRtStartup");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinmmNoBufs::IsEnabled(),              L"MIDI2WinmmNoBufs");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinmmAddBufferSizeCheck::IsEnabled(),  L"MIDI2WinmmAddBufferSizeCheck");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled(),    L"MIDI2VirtualPortDriversFix");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSerial::IsEnabled(),                L"MIDI2USBSerial");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBDeviceMatch::IsEnabled(),           L"MIDI2USBDeviceMatch");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SWDAbortCrash::IsEnabled(),            L"MIDI2SWDAbortCrash");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SchedulerDetach::IsEnabled(),          L"MIDI2SchedulerDetach");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2RTTimestamp::IsEnabled(),              L"MIDI2RTTimestamp");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2NumDevsPerf::IsEnabled(),              L"MIDI2NumDevsPerf");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2MultipleGroups::IsEnabled(),           L"MIDI2MultipleGroups");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackBidi::IsEnabled(),             L"MIDI2LoopbackBidi");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled(),          L"MIDI2LegacyTimestamp");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyControl::IsEnabled(),            L"MIDI2LegacyControl");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSHandleWrapperCrash::IsEnabled(),     L"MIDI2KSHandleWrapperCrash");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSATVSFix::IsEnabled(),                L"MIDI2KSATVSFix");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2IsUniqueIdLock::IsEnabled(),           L"MIDI2IsUniqueIdLock");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FilterCreations::IsEnabled(),          L"MIDI2FilterCreations");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FillReadCrash::IsEnabled(),            L"MIDI2FillReadCrash");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DriverHang::IsEnabled(),               L"MIDI2DriverHang");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DevCaps2::IsEnabled(),                 L"MIDI2DevCaps2");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ContainerIds::IsEnabled(),             L"MIDI2ContainerIds");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2BsToUMPConv::IsEnabled(),              L"MIDI2BsToUMPConv");
+      OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FailFast::IsEnabled(),               L"MIDI2FailFast");
+
+    // 11d 2026
+
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDIPortDisambiguators::IsEnabled(),        L"MIDIPortDisambiguators");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled(),      L"MIDI2LoopbackMuteAndList");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2UnicodeConversion::IsEnabled(),        L"MIDI2UnicodeConversion");
 
     return true;
 }
