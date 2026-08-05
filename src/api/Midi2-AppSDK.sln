@@ -46,6 +46,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{3DE838
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "in-box-user-tools", "in-box-user-tools", "{1C7F4144-9C66-4AE4-91AB-91DEF04407C2}"
+	ProjectSection(SolutionItems) = preProject
+		Inc\console_tools_shared.h = Inc\console_tools_shared.h
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi2", "Client\WinRT\t\core\Windows.Devices.Midi2.vcxproj", "{9EAA3AF3-7328-4F67-A011-E2DD8FBAA4C4}"
 	ProjectSection(ProjectDependencies) = postProject

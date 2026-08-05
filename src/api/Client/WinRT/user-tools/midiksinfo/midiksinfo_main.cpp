@@ -11,21 +11,18 @@
 
 #include "pch.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4244)
-#include "color.hpp"
-#pragma warning(pop)
+#include "console_tools_shared.h"
 
-void WriteBrightLabel(std::string label)
+void WriteBrightLabel(std::wstring const& label)
 {
-    auto fullLabel = label + ":";
-    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::white(fullLabel);
+    auto fullLabel = label + L":";
+    fmt::print(L"{:<25}", fmt::styled(label, fmt::fg(fmt::color::white)));
 }
 
-void WriteLabel(std::string label)
+void WriteLabel(std::wstring const& label)
 {
-    auto fullLabel = label + ":";
-    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::grey(fullLabel);
+    auto fullLabel = label + L":";
+    fmt::print(L"{:<25}", fmt::styled(label, fmt::fg(fmt::color::gray)));
 }
 
 
@@ -33,7 +30,7 @@ void WriteLabel(std::string label)
 
 
 winrt::hstring 
-GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
+GetStringProperty(_In_ DeviceInformation const& di, _In_ winrt::hstring const& propertyName, _In_ winrt::hstring const& defaultValue)
 {
     auto prop = di.Properties().Lookup(propertyName);
 
@@ -51,8 +48,6 @@ GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _
 
     return value;
 }
-
-#define LINE_LENGTH 131
 
 
 HRESULT
@@ -90,7 +85,7 @@ GetKSDriverSuppliedName(_In_ HANDLE hInstantiatedFilter, _Inout_ std::wstring& n
 
             if (SUCCEEDED(wil::reg::get_value_string_nothrow(HKEY_LOCAL_MACHINE, regKey.c_str(), L"Name", nameFromRegistry)))
             {
-                name = std::wstring(nameFromRegistry) + L" (From: " + regKey + L")";
+                name = std::wstring(nameFromRegistry) + internal::ResourceGetWString(IDS_LABEL_REGISTRY_NAME_SOURCE_PREFIX) + regKey + L")";
                 return S_OK;
             }
         }
@@ -142,13 +137,11 @@ std::vector<MidiKsDeviceInformation> m_devices{ };
 
 void DisplayMidiDevices()
 {
-    std::cout << std::endl;
+    WriteBlankLine();
 
     if (m_devices.size() == 0)
     {
-        std::cout
-            << dye::light_red("No devices with MIDI pins found. This can happen if all devices are MIDI 2.0 and the service is running.")
-            << std::endl;
+        WriteErrorLine(internal::ResourceGetWString(IDS_ERROR_NO_DEVICES_FOUND));
 
         return;
     }
@@ -158,19 +151,17 @@ void DisplayMidiDevices()
     {
         uint16_t indent{ 0 };
 
-        std::cout
-            << std::string(indent, ' ')
-            << dye::grey("Device Name")
-            << " "
-            << dye::light_aqua(winrt::to_string(device.Name)) 
-            << std::endl;
+        fmt::println(L"{}{} {}", 
+            std::wstring(indent, L' '),
+            fmt::styled(internal::ResourceGetWString(IDS_LABEL_DEVICE_NAME), darkLabelTextStyle),
+            fmt::styled(device.Name, highlightTextStyle)
+        );
 
-        std::cout
-            << std::string(indent, ' ')
-            << dye::grey("Instance Id")
-            << " "
-            << dye::yellow(winrt::to_string(device.DeviceInstanceId)) 
-            << std::endl;
+        fmt::println(L"{}{} {}",
+            std::wstring(indent, L' '),
+            fmt::styled(internal::ResourceGetWString(IDS_LABEL_INSTANCE_ID), darkLabelTextStyle),
+            fmt::styled(device.DeviceInstanceId, fmt::fg(fmt::color::golden_rod))
+        );
 
         // we list all the filters once in a short format, to make it easier to read for some devices
         // and then we list each filter and its pins. Only do this if there's more than one filter.
@@ -193,48 +184,43 @@ void DisplayMidiDevices()
 
                 if (firstFilter)
                 {
-                    std::cout << std::endl;
+                    WriteBlankLine();
 
-                    std::cout
-                        << std::string(indent, ' ')
-                        << dye::aqua("Device")
-                        << " "
-                        << dye::light_aqua(winrt::to_string(device.Name))
-                        << " "
-                        << dye::aqua("includes")
-                        << " "
-                        << dye::light_aqua(device.Filters.size())
-                        << " "
-                        << dye::aqua(device.Filters.size() == 1 ? "filter" : "filters")
-                        << " "
-                        << dye::aqua("with MIDI Format Pins")
-                        << std::endl;
+                    fmt::println(L"{}{} {} {} {} {} {}",
+                        std::wstring(indent, L' '),
+                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_DEVICE), infoTextStyle),
+                        fmt::styled(device.Name, highlightTextStyle),
+                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_INCLUDES), infoTextStyle),
+                        fmt::styled(device.Filters.size(), highlightTextStyle),
+                        fmt::styled(internal::ResourceGetWString(device.Filters.size() == 1 ? IDS_LABEL_FILTER_SINGULAR : IDS_LABEL_FILTER_PLURAL), infoTextStyle),
+                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_WITH_MIDI_FORMAT_PINS), infoTextStyle)
+                        );
 
-                    std::cout << std::endl;
+                    WriteBlankLine();
 
                     // header row
 
-                    std::cout
-                        << std::string(indent, ' ')
-                        << std::setw(FilterNameColumnWidth) << std::left << dye::grey("Name")
-                        << std::setw(FilterIdColumnWidth) << std::left << dye::grey("Instance Id")
-                        << std::endl;
+                    fmt::println(L"{}{:<{}}{:<{}}",
+                        std::wstring(indent, L' '),
+                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_NAME), darkLabelTextStyle), FilterNameColumnWidth,
+                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_INSTANCE_ID), darkLabelTextStyle), FilterIdColumnWidth
+                    );
 
-                    std::cout
-                        << std::string(indent, ' ')
-                        << std::setw(FilterNameColumnWidth) << std::left << dye::grey(std::string(FilterNameColumnWidth - 1, '-'))
-                        << std::setw(FilterIdColumnWidth) << std::left << dye::grey(std::string(FilterIdColumnWidth - 1, '-'))
-                        << std::endl;
+                    fmt::println(L"{}{:<{}}{:<{}}",
+                        std::wstring(indent, L' '),
+                        fmt::styled(std::wstring(FilterNameColumnWidth - 1, L'-'), darkLabelTextStyle), FilterNameColumnWidth,
+                        fmt::styled(std::wstring(FilterIdColumnWidth - 1, L'-'), darkLabelTextStyle), FilterIdColumnWidth
+                    );
 
                     firstFilter = false;
                 }
 
 
-                std::cout
-                    << std::string(indent, ' ')
-                    << std::setw(FilterNameColumnWidth) << std::left << dye::light_aqua(winrt::to_string(filter.Name))
-                    << std::setw(FilterIdColumnWidth) << std::left << dye::yellow(winrt::to_string(filter.Id))
-                    << std::endl;
+                fmt::println(L"{}{:<{}}{:<{}}",
+                    std::wstring(indent, L' '),
+                    fmt::styled(filter.Name, highlightTextStyle), FilterNameColumnWidth,
+                    fmt::styled(filter.Id, filterIdFieldValueTextStyle), FilterIdColumnWidth
+                );
 
             }
         }
@@ -248,54 +234,48 @@ void DisplayMidiDevices()
 
             if (firstFilter)
             {
-                std::cout << std::endl;
+                WriteBlankLine();
 
-                std::cout
-                    << std::string(indent, ' ')
-                    << dye::aqua("Details and MIDI Pins for each Filter")
-                    << std::endl;
+                fmt::println(L"{}{}",
+                    std::wstring(indent, L' '),
+                    fmt::styled(internal::ResourceGetWString(IDS_LABEL_FILTER_DETAILS_HEADER), infoTextStyle)
+                );
 
-                std::cout << std::endl;
+                WriteBlankLine();
 
                 firstFilter = false;
             }
 
 
-            std::cout
-                << std::string(indent, ' ') 
-                << std::setw(19) << std::left
-                << dye::grey("Filter Id")
-                << " "
-                << dye::yellow(winrt::to_string(filter.Id)) 
-                << std::endl;
+            fmt::println(L"{}{:<19} {}",
+                std::wstring(indent, L' '),
+                fmt::styled(internal::ResourceGetWString(IDS_LABEL_FILTER_ID), darkLabelTextStyle),
+                fmt::styled(filter.Id, filterIdFieldValueTextStyle)
+            );
 
-            std::cout
-                << std::string(indent, ' ')
-                << std::setw(19) << std::left
-                << dye::grey("Filter Name")
-                << " "
-                << dye::light_aqua(winrt::to_string(filter.Name)) 
-                << std::endl;
+            fmt::println(L"{}{:<19} {}",
+                std::wstring(indent, L' '),
+                fmt::styled(internal::ResourceGetWString(IDS_LABEL_FILTER_NAME), darkLabelTextStyle),
+                fmt::styled(filter.Name, highlightTextStyle)
+            );
 
 
-            std::string nameFromRegistry{};
+            std::wstring nameFromRegistry{};
 
             if (filter.NameFromRegistry.empty())
             {
-                nameFromRegistry = "(Not provided. This is normal for MIDI 2.0 drivers and common with some devices using MIDI 1.0 drivers.)";
+                nameFromRegistry = internal::ResourceGetWString(IDS_VALUE_REGISTRY_NAME_NOT_PROVIDED);
             }
             else
             {
-                nameFromRegistry = winrt::to_string(filter.NameFromRegistry);
+                nameFromRegistry = filter.NameFromRegistry;
             }
 
-            std::cout
-                << std::string(indent, ' ')
-                << std::setw(19) << std::left
-                << dye::grey("Name from Registry")
-                << " "
-                << (filter.NameFromRegistry.empty() ? dye::grey(nameFromRegistry) : dye::light_aqua(nameFromRegistry))
-                << std::endl;
+            fmt::println(L"{}{:<19} {}",
+                std::wstring(indent, L' '),
+                fmt::styled(internal::ResourceGetWString(IDS_LABEL_NAME_FROM_REGISTRY), darkLabelTextStyle),
+                fmt::styled(nameFromRegistry, fmt::fg(filter.NameFromRegistry.empty() ? fmt::color::dark_slate_gray : fmt::color::aqua))
+            );
 
 
             bool firstPin = true;
@@ -310,59 +290,55 @@ void DisplayMidiDevices()
 
                 if (firstPin)
                 {
-                    std::cout << std::endl;
+                    WriteBlankLine();
 
-                    std::cout
-                        << std::string(indent, ' ')
-                        << dye::aqua("Filter")
-                        << " "
-                        << dye::light_aqua(winrt::to_string(filter.Name))
-                        << " "
-                        << dye::aqua("includes")
-                        << " "
-                        << dye::light_aqua(filter.Pins.size())
-                        << " "
-                        << dye::aqua("MIDI Format")
-                        << " "
-                        << dye::aqua(filter.Pins.size() == 1 ? "pin" : "pins")
-                        << std::endl;
+                    fmt::println(L"{}{} {} {} {} {} {}",
+                        std::wstring(indent, L' '),
+                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_FILTER), infoTextStyle),
+                        fmt::styled(filter.Name, highlightTextStyle),
+                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_INCLUDES), infoTextStyle),
+                        fmt::styled(filter.Pins.size(), highlightTextStyle),
+                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_MIDI_FORMAT), infoTextStyle),
+                        fmt::styled(internal::ResourceGetWString(filter.Pins.size() == 1 ? IDS_LABEL_PIN_SINGULAR : IDS_LABEL_PIN_PLURAL), infoTextStyle)
+                    );
 
-                    std::cout << std::endl;
+                    WriteBlankLine();
 
                     // header row
 
-                    std::cout
-                        << std::string(indent, ' ')
-                        << std::setw(PinIndexColumnWidth) << std::left << dye::grey("Index")
-                        << std::setw(PinDataFormatColumnWidth) << std::left << dye::grey("Data Format")
-                        << std::setw(PinDataFlowColumnWidth) << std::left << dye::grey("Data Flow")
-                        << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::grey("Port Type")
-                        << std::setw(PinNameColumnWidth) << std::left << dye::grey("Pin Name (MIDI 1 drivers only)")
-                        << std::endl;
+                    fmt::println(L"{}{:<{}}{:<{}}{:<{}}{:<{}}{:<{}}",
+                        std::wstring(indent, L' '),
+                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_INDEX), fmt::fg(fmt::color::gray)), PinIndexColumnWidth,
+                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_DATA_FORMAT), fmt::fg(fmt::color::gray)), PinDataFormatColumnWidth,
+                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_DATA_FLOW), fmt::fg(fmt::color::gray)), PinDataFlowColumnWidth,
+                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_PORT_TYPE), fmt::fg(fmt::color::gray)), PinDataFlowExplanationColumnWidth,
+                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_NAME), fmt::fg(fmt::color::gray)), PinNameColumnWidth
+                    );
 
-                    std::cout
-                        << std::string(indent, ' ')
-                        << std::setw(PinIndexColumnWidth) << std::left << dye::grey(std::string(PinIndexColumnWidth-1, '-'))
-                        << std::setw(PinDataFormatColumnWidth) << std::left << dye::grey(std::string(PinDataFormatColumnWidth - 1, '-'))
-                        << std::setw(PinDataFlowColumnWidth) << std::left << dye::grey(std::string(PinDataFlowColumnWidth-1, '-'))
-                        << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::grey(std::string(PinDataFlowExplanationColumnWidth - 1, '-'))
-                        << std::setw(PinNameColumnWidth) << std::left << dye::grey(std::string(PinNameColumnWidth-1, '-'))
-                        << std::endl;
+                    fmt::println(L"{}{:<{}}{:<{}}{:<{}}{:<{}}{:<{}}",
+                        std::wstring(indent, L' '),
+                        fmt::styled(std::wstring(PinIndexColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinIndexColumnWidth,
+                        fmt::styled(std::wstring(PinDataFormatColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFormatColumnWidth,
+                        fmt::styled(std::wstring(PinDataFlowColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFlowColumnWidth,
+                        fmt::styled(std::wstring(PinDataFlowExplanationColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFlowExplanationColumnWidth,
+                        fmt::styled(std::wstring(PinNameColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinNameColumnWidth
+                    );
 
                     firstPin = false;
                 }
 
-                std::cout
-                    << std::string(indent, ' ')
-                    << std::setw(PinIndexColumnWidth) << std::left << dye::yellow(pin.Number);
-                    
+                fmt::print(L"{}{:<{}}",
+                    std::wstring(indent, L' '),
+                    fmt::styled(pin.Number, fmt::fg(fmt::color::golden_rod)), PinIndexColumnWidth
+                );
+
                 if (WI_AreAllFlagsSet(pin.DataFormat,MidiDataFormats::MidiDataFormats_ByteStream))
                 {
-                    std::cout << std::setw(PinDataFormatColumnWidth) << std::left << dye::white("MIDI 1 byte format");
+                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MIDI1_BYTE_FORMAT), fmt::fg(fmt::color::light_gray)), PinDataFormatColumnWidth);
                 }
                 else if (WI_AreAllFlagsSet(pin.DataFormat, MidiDataFormats::MidiDataFormats_UMP))
                 {
-                    std::cout << std::setw(PinDataFormatColumnWidth) << std::left << dye::white("MIDI 2 UMP format");
+                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MIDI2_UMP_FORMAT), fmt::fg(fmt::color::light_gray)), PinDataFormatColumnWidth);
                 }
 
 
@@ -370,81 +346,73 @@ void DisplayMidiDevices()
 
                 if (pin.PinFlow == KSPIN_DATAFLOW_IN)
                 {
-                    std::cout << std::setw(PinDataFlowColumnWidth) << std::left << dye::aqua("Message Destination");
-                    std::cout << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::aqua("MIDI Output from PC");
+                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MESSAGE_DESTINATION), infoTextStyle), PinDataFlowColumnWidth);
+                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MIDI_OUTPUT_FROM_PC), infoTextStyle), PinDataFlowExplanationColumnWidth);
                 }
                 else if (pin.PinFlow == KSPIN_DATAFLOW_OUT)
                 {
-                    std::cout << std::setw(PinDataFlowColumnWidth) << std::left << dye::light_purple("Message Source");
-                    std::cout << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::light_purple ("MIDI Input to PC");
+                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MESSAGE_SOURCE), fmt::fg(fmt::color::medium_purple)), PinDataFlowColumnWidth);
+                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MIDI_INPUT_TO_PC), fmt::fg(fmt::color::medium_purple)), PinDataFlowExplanationColumnWidth);
                 }
 
 
                 if (pin.Name.empty())
                 {
-                    std::cout
-                        << std::setw(PinNameColumnWidth) << std::left << dye::grey("(not provided)")
-                        << std::endl;
+                    fmt::println(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_PIN_NAME_NOT_PROVIDED), fmt::fg(fmt::color::gray)), PinNameColumnWidth);
                 }
                 else
                 {
-                    std::cout
-                        << std::setw(PinNameColumnWidth) << std::left << dye::light_aqua(winrt::to_string(pin.Name))
-                        << std::endl;
+                    fmt::println(L"{:<{}}", fmt::styled(pin.Name, highlightTextStyle), PinNameColumnWidth);
                 }
             }
 
             if (filter.Pins.size() > 0)
             {
-                std::cout << std::endl;
+                WriteBlankLine();
             }
 
         }
 
-        std::cout << std::endl;
-        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+        WriteBlankLine();
+        fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'='), fmt::fg(fmt::color::gray)));
 
     }
 
-    std::cout << std::endl;
-    std::cout << dye::yellow("-- End of Information --") << std::endl << std::endl;
+    WriteBlankLine();
+    fmt::println(L"{}", fmt::styled(internal::ResourceGetWString(IDS_STATUS_END_OF_INFORMATION), fmt::fg(fmt::color::golden_rod)));
+    WriteBlankLine();
 
 }
 
 
 int __cdecl main()
 {
+    if (!TrySetConsoleTextMode())
+    {
+        return RETURN_ERROR_SETTING_CONSOLE_MODE;
+    }
+
     winrt::init_apartment();
 
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
-    std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
-    std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" Enumerating MIDI kernel streaming devices, using the MIDI class drivers or a third-party MIDI 1.0/2.0 driver.") << std::endl;
-    std::cout << dye::aqua(" Typically, these devices are USB, but other KS drivers will be included in the enumeration.") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
-    std::cout << dye::aqua(" If the MIDI service is running when you run this utility, some devices may not report all pin properties because they are in-use.") << std::endl;
-    std::cout << dye::aqua(" To see MIDI 2.0 devices, you must stop midisrv (the MIDI service) before running this.") << std::endl << std::endl;
-    std::cout << dye::aqua(" Use ");
-    std::cout << dye::light_green("midi service stop");
-    std::cout << dye::aqua(" or ");
-    std::cout << dye::light_green("net stop midisrv");
-    std::cout << dye::aqua(" from an Administrator command prompt to stop the service.") << std::endl;
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION_1));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION_2));
+    WriteSingleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_SERVICE_RUNNING_WARNING));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_REQUIRED));
+    WriteBlankLine();
 
-    std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
-
-    std::cout
-        << " "
-        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME))
-        << dye::grey(" (")
-        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE))
-        << dye::grey(")")
-        << " -- "
-        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL))
-        << std::endl;
-
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_USE), infoTextStyle));
+    fmt::print(L"{}", fmt::styled(L"midi service stop", fmt::fg(fmt::color::light_green)));
+    fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_OR), infoTextStyle));
+    fmt::print(L"{}", fmt::styled(L"net stop midisrv", fmt::fg(fmt::color::light_green)));
+    fmt::println(L"{}", fmt::styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_ADMIN_PROMPT), infoTextStyle));
+    
+    WriteDoubleSeparatorLine();
 
 
     // {4d36e96c-e325-11ce-bfc1-08002be10318} is the MEDIA class guid

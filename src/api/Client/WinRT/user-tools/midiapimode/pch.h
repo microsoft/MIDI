@@ -17,18 +17,13 @@
 #include <iostream>
 #include <chrono>
 #include <format>
-#include <conio.h>
-#include <stdio.h>
-#include <string>
+
 
 #include <wrl\module.h>
 #include <wrl\event.h>
 #include <wil\com.h>
 #include <wil\resource.h>
-#include <wil\result_macros.h>
-#include <wil\tracelogging.h>
-#include <wil\registry.h>
-#include <wil\registry_helpers.h>
+
 
 #include <atlbase.h>
 #include <atlcom.h>
@@ -49,8 +44,7 @@
 
 namespace internal = ::WindowsMidiServicesInternal;
 
-#define KEY_ESCAPE 0x1B
-#define KEY_SPACE  0x20
+
 
 
 #pragma warning (pop)

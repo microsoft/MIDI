@@ -11,14 +11,7 @@
 
 #include "pch.h"
 
-#include <io.h>
-#include <fcntl.h>
-
-#include <fmt/base.h>
-#include <fmt/xchar.h>
-#include <fmt/format.h>
-#include <fmt/color.h>
-
+#include "console_tools_shared.h"
 
 
 bool m_showActiveSense{ false };
@@ -58,24 +51,6 @@ byte m_buffer[MIDI_BUFFER_SIZE]{ 0 };
 MIDIHDR m_header{ };
 HMIDIIN m_hMidiIn{ };
 
-#define LINE_LENGTH 79
-
-
-const auto infoTextStyle = fmt::fg(fmt::color::steel_blue);
-const auto errorTextStyle = fmt::fg(fmt::color::pink);
-const auto normalTextStyle = fmt::fg(fmt::color::light_gray);
-const auto separatorTextStyle = fmt::fg(fmt::color::gray);
-
-void WriteInfo(_In_ std::wstring info)
-{
-    fmt::println(L"{}", fmt::styled(info, infoTextStyle));
-}
-
-
-void WriteError(_In_ std::wstring error)
-{
-    fmt::println(L"{}", fmt::styled(error, errorTextStyle));
-}
 
 void WriteInputPortSelector(_In_ MidiInputPort const& port)
 {
@@ -90,30 +65,6 @@ void WriteSysExDataByte(_In_ uint8_t const dataByte)
 {
     fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X} ", dataByte), fmt::fg(fmt::color::gray)));
 }
-
-
-//void WriteBrightLabel(std::wstring label)
-//{
-//    auto fullLabel = label + ":";
-//    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::white(fullLabel);
-//}
-//
-//void WriteLabel(std::wstring label)
-//{
-//    auto fullLabel = label + ":";
-//    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::grey(fullLabel);
-//}
-
-void WriteDoubleSeparator()
-{
-    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'='), separatorTextStyle));
-}
-
-void WriteSingleSeparator()
-{
-    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'-'), separatorTextStyle));
-}
-
 
 
 void LoadWinMMDevices()
@@ -141,16 +92,13 @@ void LoadWinMMDevices()
 
 void DisplayAllWinMMInputs()
 {
-    WriteInfo(std::format(L"{} Available Input Ports", m_midiInputs.size()));
+    WriteInfoLine(std::format(L"{} Available Input Ports", m_midiInputs.size()));
 
     for (auto const& port : m_midiInputs)
     {
         WriteInputPortSelector(port);
     }
 }
-
-#define LINE_LENGTH 79
-
 
 
 void DisplayStatusByte(byte status, bool isError)
@@ -536,21 +484,19 @@ std::jthread m_displayThread;
 
 int __cdecl main(int argc, char* argv[])
 {
-    auto setModeResult = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT
-
-    if (setModeResult == -1)
+    if (!TrySetConsoleTextMode())
     {
-        perror("Unable to set stdout to UTF-16 mode. ");
-        return 1;
+        return RETURN_ERROR_SETTING_CONSOLE_MODE;
     }
 
-    WriteDoubleSeparator();
-    WriteInfo(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
-    WriteInfo(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
-    WriteInfo(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
-    WriteDoubleSeparator();
-    WriteInfo(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
-    WriteDoubleSeparator();
+
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
+    WriteDoubleSeparatorLine();
 
     LoadWinMMDevices();
 
@@ -581,8 +527,8 @@ int __cdecl main(int argc, char* argv[])
     {
         DisplayAllWinMMInputs();
 
-        WriteInfo(L"");
-        WriteInfo(internal::ResourceGetWString(IDS_PROMPT_ENTER_PORT_NUMBER));
+        WriteBlankLine();
+        WriteInfoLine(internal::ResourceGetWString(IDS_PROMPT_ENTER_PORT_NUMBER));
         std::wcin >> portNumber;
     }
 
@@ -623,7 +569,7 @@ int __cdecl main(int argc, char* argv[])
     }
     else
     {
-        WriteError(std::format(L"{} is not a valid port number.", portNumber));
+        WriteErrorLine(std::format(L"{} is not a valid port number.", portNumber));
         return RETURN_INVALID_PORT_NUMBER;
     }
 
@@ -648,7 +594,7 @@ int __cdecl main(int argc, char* argv[])
     }
     else
     {
-        WriteError(internal::ResourceGetWString(IDS_ERROR_UNABLE_TO_OPEN_PORT));
+        WriteErrorLine(internal::ResourceGetWString(IDS_ERROR_UNABLE_TO_OPEN_PORT));
         return RETURN_UNABLE_TO_OPEN_PORT;
     }
 
@@ -658,14 +604,14 @@ int __cdecl main(int argc, char* argv[])
 
         if (ch == KEY_ESCAPE)
         {
-            WriteInfo(L"\n" + internal::ResourceGetWString(IDS_STATUS_CLOSING));
+            WriteInfoLine(L"\n" + internal::ResourceGetWString(IDS_STATUS_CLOSING));
             break;
         }
         else if (ch == KEY_SPACE)
         {
             // toggle showing hidden messages
 
-            WriteInfo(L"\n" + internal::ResourceGetWString(IDS_STATUS_TOGGLING_HIDDEN_MESSAGES));
+            WriteInfoLine(L"\n" + internal::ResourceGetWString(IDS_STATUS_TOGGLING_HIDDEN_MESSAGES));
 
             m_showActiveSense = !m_showActiveSense;
             m_showClock = !m_showClock;

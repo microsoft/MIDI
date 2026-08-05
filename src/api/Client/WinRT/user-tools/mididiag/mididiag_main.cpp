@@ -11,46 +11,11 @@
 
 #include "pch.h"
 
-#include <io.h>
-#include <fcntl.h>
-
-#include <fmt/base.h>
-#include <fmt/xchar.h>
-#include <fmt/format.h>
-#include <fmt/color.h>
-
-const auto infoTextStyle = fmt::fg(fmt::color::steel_blue);
-const auto errorTextStyle = fmt::fg(fmt::color::pink);
-const auto normalTextStyle = fmt::fg(fmt::color::light_gray);
-const auto separatorTextStyle = fmt::fg(fmt::color::dim_gray);
-const auto fieldLabelTextStyle = fmt::fg(fmt::color::dark_golden_rod);
-const auto fieldValueTextStyle = fmt::fg(fmt::color::light_gray);
-
-const auto portNumberFieldValueTextStyle = fmt::fg(fmt::color::golden_rod);
-const auto entityIdentifierFieldValueTextStyle = fmt::fg(fmt::color::steel_blue);
-const auto entityNameFieldValueTextStyle = fmt::fg(fmt::color::aquamarine);
-
-
-void WriteInfo(_In_ std::wstring info)
-{
-    fmt::println(L"{}", fmt::styled(info, infoTextStyle));
-}
-
-
-void WriteError(_In_ std::wstring error)
-{
-    fmt::println(L"{}", fmt::styled(error, errorTextStyle));
-}
-
+#include "console_tools_shared.h"
 
 void OutputFieldSeparator()
 {
     fmt::print(L"{}", fmt::styled(MIDIDIAG_FIELD_SEPARATOR, separatorTextStyle));
-}
-
-void OutputBlankLine()
-{
-    fmt::println(L"");
 }
 
 void OutputSectionHeader(_In_ std::wstring const& headerText)
@@ -310,16 +275,6 @@ void OutputError(_In_ std::wstring const& errorMessage)
         << errorMessage
         << std::endl;
 }
-
-
-#define RETURN_SUCCESS return 0
-#define RETURN_FAIL return 1
-
-
-
-
-
-
 
 void OutputRegStringValue(std::wstring label, HKEY const key, std::wstring value)
 {
@@ -837,7 +792,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
             for (auto const& gtb : device.GetGroupTerminalBlocks())
             {
-                OutputBlankLine();
+                WriteBlankLine();
 
                 OutputPortNumberField(MIDIDIAG_FIELD_LABEL_GTB_NUMBER, gtb.Number());
                 OutputEntityNameField(MIDIDIAG_FIELD_LABEL_GTB_NAME, gtb.Name());
@@ -864,7 +819,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
             if (device.GetGroupTerminalBlocks().Size() > 0)
             {
-                OutputBlankLine();
+                WriteBlankLine();
             }
 
 
@@ -1470,7 +1425,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
     TIMECAPS timecaps;
     auto tcresult = ::timeGetDevCaps(&timecaps, sizeof(timecaps));
 
-    OutputBlankLine();
+    WriteBlankLine();
 
     if (tcresult == MMSYSERR_NOERROR)
     {
@@ -1495,7 +1450,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
         double actualResolutionMilliseconds = (double)actualResolution / 10000.0;   // actualResolution is in 100 nanosecond units
 
         // results here are in 100ns units
-        OutputBlankLine();
+        WriteBlankLine();
         OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_MIN_MS, minResolutionMilliseconds, 3);
         OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_MAX_MS, maxResolutionMilliseconds, 3);
         OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_CURRENT_MS, actualResolutionMilliseconds, 3);
@@ -1584,12 +1539,9 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
 
 int __cdecl main()
 {
-    auto setModeResult = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT
-
-    if (setModeResult == -1)
+    if (!TrySetConsoleTextMode())
     {
-        perror("Unable to set stdout to UTF-16 mode. ");
-        return 1;
+        return RETURN_ERROR_SETTING_CONSOLE_MODE;
     }
 
     winrt::init_apartment();
@@ -1603,9 +1555,9 @@ int __cdecl main()
     OutputHeader(L"This tool is part of the Windows MIDI Services SDK and tools");
     OutputHeader(L"Copyright 2026- Microsoft Corporation.");
     OutputHeader(L"Information, license, and source available at https://aka.ms/midi");
-    OutputBlankLine();
+    WriteBlankLine();
     OutputHeader(MIDIDIAG_PRODUCT_NAME);
-    OutputBlankLine();
+    WriteBlankLine();
     //OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_BUILD_SOURCE, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE });
     //OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_NAME, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME });
     //OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_FULL, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL });
@@ -1661,18 +1613,18 @@ int __cdecl main()
         OutputError(L"Exception attempting to gather MIDI information.");
         OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
-        RETURN_FAIL;
+        return RETURN_GENERAL_FAILURE;
     }
 
     OutputSectionHeader(L"*** Successful Run ***");
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
-    RETURN_SUCCESS;
+    return RETURN_SUCCESS;
 
 abort_run:
     OutputSectionHeader(L"Aborted Run");
     OutputError(L"Aborting MIDI Diag run due to failure(s).");
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
-    RETURN_FAIL;
+    return RETURN_GENERAL_FAILURE;
 }

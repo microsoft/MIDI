@@ -11,15 +11,7 @@
 
 #include "pch.h"
 
-#include <io.h>
-#include <fcntl.h>
-
-#include <fmt/base.h>
-#include <fmt/xchar.h>
-#include <fmt/format.h>
-#include <fmt/color.h>
-
-
+#include "console_tools_shared.h"
 
 bool m_showActiveSense{ false };
 bool m_showClock{ false };
@@ -29,33 +21,6 @@ bool m_showClock{ false };
 #define DRV_QUERYDEVICEINTERFACE        (DRV_RESERVED + 12)
 #define DRV_QUERYDEVICEINTERFACESIZE    (DRV_RESERVED + 13)
 
-#define LINE_LENGTH 79
-
-const auto infoTextStyle = fmt::fg(fmt::color::steel_blue);
-const auto errorTextStyle = fmt::fg(fmt::color::pink);
-const auto normalTextStyle = fmt::fg(fmt::color::light_gray);
-const auto separatorTextStyle = fmt::fg(fmt::color::gray);
-
-void WriteInfo(_In_ std::wstring const& info)
-{
-    fmt::println(L"{}", fmt::styled(info, infoTextStyle));
-}
-
-
-void WriteError(_In_ std::wstring const& error)
-{
-    fmt::println(L"{}", fmt::styled(error, errorTextStyle));
-}
-
-void WriteDoubleSeparator()
-{
-    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'='), separatorTextStyle));
-}
-
-void WriteSingleSeparator()
-{
-    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'-'), separatorTextStyle));
-}
 
 struct MidiPort
 {
@@ -213,14 +178,14 @@ void DisplayPort(_In_ MidiPort const& port)
         fmt::styled(internal::ResourceGetWString(IDS_LABEL_DEVICE_INTERFACE), fmt::fg(fmt::color::gray)), 
         fmt::styled(port.DriverInterface, normalTextStyle));
 
-    fmt::println(L"");
+    WriteBlankLine();
 }
 
 void DisplayAllWinMMInputs()
 {
     auto deviceCount = midiInGetNumDevs();
-    WriteInfo(std::format(L" {} {}", deviceCount, internal::ResourceGetWString(IDS_ENUM_PORTS_REPORTED_BY_MIDIINGETNUMDEVS)));
-    WriteInfo(std::format(L" {} {}", m_midiInputCountNoErrors, internal::ResourceGetWString(IDS_ENUM_VALID_INPUT_PORTS_FOUND)));
+    WriteInfoLine(std::format(L" {} {}", deviceCount, internal::ResourceGetWString(IDS_ENUM_PORTS_REPORTED_BY_MIDIINGETNUMDEVS)));
+    WriteInfoLine(std::format(L" {} {}", m_midiInputCountNoErrors, internal::ResourceGetWString(IDS_ENUM_VALID_INPUT_PORTS_FOUND)));
     fmt::println(L"");
 
     for (auto const& port : m_midiInputs)
@@ -228,15 +193,15 @@ void DisplayAllWinMMInputs()
         DisplayPort(port);
     }
 
-    fmt::println(L"");
+    WriteBlankLine();
 }
 
 void DisplayAllWinMMOutputs()
 {
     auto deviceCount = midiOutGetNumDevs();
 
-    WriteInfo(std::format(L" {} {}", deviceCount, internal::ResourceGetWString(IDS_ENUM_PORTS_REPORTED_BY_MIDIOUTGETNUMDEVS)));
-    WriteInfo(std::format(L" {} {}", m_midiOutputCountNoErrors, internal::ResourceGetWString(IDS_ENUM_VALID_OUTPUT_PORTS_FOUND)));
+    WriteInfoLine(std::format(L" {} {}", deviceCount, internal::ResourceGetWString(IDS_ENUM_PORTS_REPORTED_BY_MIDIOUTGETNUMDEVS)));
+    WriteInfoLine(std::format(L" {} {}", m_midiOutputCountNoErrors, internal::ResourceGetWString(IDS_ENUM_VALID_OUTPUT_PORTS_FOUND)));
     fmt::println(L"");
 
     for (auto const& port : m_midiOutputs)
@@ -244,49 +209,45 @@ void DisplayAllWinMMOutputs()
         DisplayPort(port);
     }
 
-    fmt::println(L"");
+    WriteBlankLine();
 }
 
 
 
 
-#define RETURN_INVALID_PORT_NUMBER 1
-#define RETURN_UNABLE_TO_OPEN_PORT 2
 
-int __cdecl main(_In_ int argc, _In_ char* argv[])
+
+int __cdecl main(_In_ int argc, _In_ wchar_t* argv[])
 {
-    auto setModeResult = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT
-    
-    if (setModeResult == -1)   
+    if (!TrySetConsoleTextMode())
     {
-        perror("Unable to set stdout to UTF-16 mode. ");
-        return 1;
+        return RETURN_ERROR_SETTING_CONSOLE_MODE;
     }
 
-    WriteDoubleSeparator();
-    WriteInfo(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
-    WriteInfo(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
-    WriteInfo(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
-    WriteDoubleSeparator();
-    WriteInfo(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
-    WriteDoubleSeparator();
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
+    WriteDoubleSeparatorLine();
 
     bool loop{ false };
 
     if (argc >= 2)
     {
-        std::string loopParam{ "--loop" };
-        std::string loopParamShort{ "-l" };
+        std::wstring loopParam{ L"--loop" };
+        std::wstring loopParamShort{ L"-l" };
 
-        std::string providedParam(argv[1]);
+        std::wstring providedParam(argv[1]);
        
-        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParam.c_str(), static_cast<int>(loopParam.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
+        if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, loopParam.c_str(), static_cast<int>(loopParam.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
             == CSTR_EQUAL)
         {
             loop = true;
         }
 
-        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParamShort.c_str(), static_cast<int>(loopParamShort.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
+        if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, loopParamShort.c_str(), static_cast<int>(loopParamShort.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
             == CSTR_EQUAL)
         {
             loop = true;
@@ -300,20 +261,20 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
 
         DisplayAllWinMMInputs();
 
-        WriteDoubleSeparator();
+        WriteDoubleSeparatorLine();
 
 
         DisplayAllWinMMOutputs();
 
         if (loop)
         {
-            WriteInfo(internal::ResourceGetWString(IDS_PROMPT_ENUMERATE_AGAIN));
+            WriteInfoLine(internal::ResourceGetWString(IDS_PROMPT_ENUMERATE_AGAIN));
 
             auto ch = _getch();
 
             if (ch == KEY_ESCAPE)
             {
-                WriteInfo(L"\n" + internal::ResourceGetWString(IDS_STATUS_CLOSING));
+                WriteInfoLine(L"\n" + internal::ResourceGetWString(IDS_STATUS_CLOSING));
                 break;
             }
             else if (ch == KEY_SPACE)
@@ -329,7 +290,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
     }
 
 
-    return 0;
+    return RETURN_SUCCESS;
 }
 
 
