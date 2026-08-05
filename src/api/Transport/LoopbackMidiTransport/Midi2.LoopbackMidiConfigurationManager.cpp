@@ -178,63 +178,75 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
 
     }
-    else if ((Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled()) && 
-        (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT || commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT))
+    else
     {
-        bool mute = (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
+        // having it in the else block is kludgy, but required for the KIR check.
 
-        // Check to see if we have an endpointdeviceid
-        if (auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID);
-            arg != commandHelper.Arguments()->end())
+        if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
         {
-            auto associationId = internal::StringToGuid(arg->second);
-
-            auto hr = ExecuteCommandChangeMutedState(associationId, mute);
-
-            if (hr == E_NOTFOUND)
+            if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT || 
+                commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT)
             {
-                internal::SetConfigurationResponseObjectFailWithErrorCode(
-                    responseObject,
-                    LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
-                    internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+                bool mute = (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT);
+
+                // Check to see if we have an endpointdeviceid
+                if (auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID);
+                    arg != commandHelper.Arguments()->end())
+                {
+                    auto associationId = internal::StringToGuid(arg->second);
+
+                    auto hr = ExecuteCommandChangeMutedState(associationId, mute);
+
+                    if (hr == E_NOTFOUND)
+                    {
+                        internal::SetConfigurationResponseObjectFailWithErrorCode(
+                            responseObject,
+                            LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                            internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+                    }
+                    else if (SUCCEEDED(hr))
+                    {
+                        internal::SetConfigurationResponseObjectSuccess(responseObject);
+                    }
+                    else
+                    {
+                        RETURN_IF_FAILED(hr);
+                    }
+                }
+                else
+                {
+                    // no association id
+                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                        responseObject,
+                        LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+                        internal::ResourceGetWString(IDS_ERROR_MISSING_ASSOCIATION_ID));
+                }
             }
-            else if (SUCCEEDED(hr))
+            else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES)
             {
-                internal::SetConfigurationResponseObjectSuccess(responseObject);
+                auto hr = ExecuteCommandListEntries(responseObject);
+
+                if (SUCCEEDED(hr))
+                {
+                    internal::SetConfigurationResponseObjectSuccess(responseObject);
+                }
+                else
+                {
+                    RETURN_IF_FAILED(hr);
+                }
             }
             else
             {
-                RETURN_IF_FAILED(hr);
+                internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
             }
+
         }
         else
         {
-            // no association id
-            internal::SetConfigurationResponseObjectFailWithErrorCode(
-                responseObject,
-                LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
-                internal::ResourceGetWString(IDS_ERROR_MISSING_ASSOCIATION_ID));
+            internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
         }
+    }
 
-    }
-    else if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled() && 
-        (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES))
-    {
-        auto hr = ExecuteCommandListEntries(responseObject);
-
-        if (SUCCEEDED(hr))
-        {
-            internal::SetConfigurationResponseObjectSuccess(responseObject);
-        }
-        else
-        {
-            RETURN_IF_FAILED(hr);
-        }
-    }
-    else
-    {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
-    }
 
     // we return S_OK no matter what, so the response object will be parsed
     return S_OK;
