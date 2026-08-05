@@ -32,8 +32,6 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 
-#include "Feature_Servicing_MIDI2USBDeviceMatch.h"
-
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY L"match"
 
 namespace json = ::winrt::Windows::Data::Json;
@@ -288,27 +286,6 @@ bool MidiEndpointMatchCriteria::Matches(MidiEndpointMatchCriteria& matchValues)
     // it was causing tons of problems with multiple devices
     // and also devices with same bogus serial number
     // This was a good idea, but failed in practice.
-    if (!Feature_Servicing_MIDI2USBDeviceMatch::IsEnabled())
-    {
-        // VID/PID/Serial
-        if (matchValues.UsbVendorId > 0 &&
-            matchValues.UsbProductId > 0 && 
-            matchValues.UsbVendorId == UsbVendorId &&
-            matchValues.UsbProductId == UsbProductId)
-        {
-            if (matchValues.UsbSerialNumber.empty() && UsbSerialNumber.empty())
-            {
-                // we're not matching on serial, and VID/PID match, so we're good
-                return true;
-            }
-            else
-            {
-                // we return either way here, because if the info doesn't match, we shouldn't continue
-                return matchValues.UsbSerialNumber == UsbSerialNumber;
-            }
-        }
-    }
-
 
     // Manufacturer and product instance id
     if (!matchValues.DeviceManufacturerName.empty() && 
@@ -340,16 +317,6 @@ bool MidiEndpointMatchCriteria::Matches(MidiEndpointMatchCriteria& matchValues)
     }
 
     // matching on parent device name also didn't work out in the real world
-    if (!Feature_Servicing_MIDI2USBDeviceMatch::IsEnabled())
-    {
-        // Parent device name. This is going to restrict us to a single UMP endpoint per device
-        // so it may need to be removed, or combined with other criteria in the future
-        if (!matchValues.ParentDeviceName.empty() &&
-            !ParentDeviceName.empty())
-        {
-            return matchValues.ParentDeviceName == ParentDeviceName;
-        }
-    }
 
     return false;
 }

@@ -11,6 +11,8 @@
 #ifndef MIDI_ENDPOINT_CUSTOM_PROPERTIES_CACHE_H
 #define MIDI_ENDPOINT_CUSTOM_PROPERTIES_CACHE_H
 
+#include <wil/resource.h>
+
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointMatchCriteria.h"
 
@@ -36,6 +38,7 @@ namespace WindowsMidiServicesPluginConfigurationLib
         // TODO: Do we need a "remove" in here?
 
     private:
+        wil::srwlock m_entriesMutex;
         std::vector<std::shared_ptr<MidiEndpointCustomPropertiesCacheEntry>> m_entries;
 
     };

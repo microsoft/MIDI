@@ -3,8 +3,6 @@
 #include "Midi2TransportTestsBase.h"
 #include "Midi2SrvTransportTests.h"
 
-#include "Feature_Servicing_MIDI2VirtualPortDriversFix.h"
-
 void MidiSrvTransportTests::TestMidiSrvTransport_UMP()
 {
     TestMidiTransport(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, FALSE);
@@ -1321,87 +1319,84 @@ MidiSrvTransportTests::WaitForDeviceCount
 void
 MidiSrvTransportTests::TestKSAPortEnumeration()
 {
-    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
+    std::wstring minmidiInstanceId;
+
+    VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+
+    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker));
+    VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+
+    if (!midiSessionTracker->VerifyConnectivity())
     {
-        WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
-
-        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
-        wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
-        std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
-        std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
-        std::wstring minmidiInstanceId;
-
-        VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
-
-        VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker));
-        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
-
-        if (!midiSessionTracker->VerifyConnectivity())
-        {
-            midiSessionTracker.reset();
-            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
-            return;
-        }
-
-        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestKSAPortEnumeration"));
-
-        GetKSAMinMidiEndpoints(midiInDevices, midiOutDevices);
-
-        if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
-        {
-            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires MinMidi.");
-            return;
-        }
-
-        minmidiInstanceId = midiInDevices[0]->ParentDeviceInstanceId;
-        LOG_OUTPUT(L"Testing %s", minmidiInstanceId.c_str());
-
-        auto cleanup = wil::scope_exit([&]()
-        {
-            // Simulate a surprise removal to restore the driver back to the baseline state in the event this
-            // test fails.
-            SendDriverCommand(KSPROPERTY_MINMIDICONTROL_SURPRISEREMOVESIMULATION, 1);
-            SetDeviceEnabled(minmidiInstanceId.c_str(), false);
-            SetDeviceEnabled(minmidiInstanceId.c_str(), true);
-        });
-
-        // remove all of the endpoints.
-        LOG_OUTPUT(L"Removing all minmidi ports");
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)));
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)));
-
-        // There should be 0
-        LOG_OUTPUT(L"Confirming removed");
-        VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, 0, 0));
-
-        // now enable all available bytestream interfaces on the driver and confirm the ports show up
-        UINT expectedPortcount = 0;
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_ByteStream)))
-        {
-            expectedPortcount++;
-
-            LOG_OUTPUT(L"Enabling port %d", expectedPortcount);
-
-            // A midi in port, a midi out port, and a bidi port are added for the first call, and an in and out
-            // port added from then on up until 16 ports, then for each 17th port an additional bidi is added.
-            UINT expectedCount = expectedPortcount?(expectedPortcount+((INT)((expectedPortcount+15)/16))):0;
-            VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, expectedCount, expectedCount));
-        }
-
-        // disable all the bytestream interfaces and confirm the ports go away
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)))
-        {
-            expectedPortcount--;
-       
-            LOG_OUTPUT(L"Disabling port %d", expectedPortcount);
-            UINT expectedCount = expectedPortcount?(expectedPortcount+((INT)((expectedPortcount+15)/16))):0;
-            VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, expectedCount, expectedCount));
-        }
-
-        // There again should be be 0
-        LOG_OUTPUT(L"Confirming all gone");
-        VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, 0, 0));
+        midiSessionTracker.reset();
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+        return;
     }
+
+    VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestKSAPortEnumeration"));
+
+    GetKSAMinMidiEndpoints(midiInDevices, midiOutDevices);
+
+    if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires MinMidi.");
+        return;
+    }
+
+    minmidiInstanceId = midiInDevices[0]->ParentDeviceInstanceId;
+    LOG_OUTPUT(L"Testing %s", minmidiInstanceId.c_str());
+
+    auto cleanup = wil::scope_exit([&]()
+    {
+        // Simulate a surprise removal to restore the driver back to the baseline state in the event this
+        // test fails.
+        SendDriverCommand(KSPROPERTY_MINMIDICONTROL_SURPRISEREMOVESIMULATION, 1);
+        SetDeviceEnabled(minmidiInstanceId.c_str(), false);
+        SetDeviceEnabled(minmidiInstanceId.c_str(), true);
+    });
+
+    // remove all of the endpoints.
+    LOG_OUTPUT(L"Removing all minmidi ports");
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)));
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)));
+
+    // There should be 0
+    LOG_OUTPUT(L"Confirming removed");
+    VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, 0, 0));
+
+    // now enable all available bytestream interfaces on the driver and confirm the ports show up
+    UINT expectedPortcount = 0;
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_ByteStream)))
+    {
+        expectedPortcount++;
+
+        LOG_OUTPUT(L"Enabling port %d", expectedPortcount);
+
+        // A midi in port, a midi out port, and a bidi port are added for the first call, and an in and out
+        // port added from then on up until 16 ports, then for each 17th port an additional bidi is added.
+        UINT expectedCount = expectedPortcount?(expectedPortcount+((INT)((expectedPortcount+15)/16))):0;
+        VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, expectedCount, expectedCount));
+    }
+
+    // disable all the bytestream interfaces and confirm the ports go away
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)))
+    {
+        expectedPortcount--;
+       
+        LOG_OUTPUT(L"Disabling port %d", expectedPortcount);
+        UINT expectedCount = expectedPortcount?(expectedPortcount+((INT)((expectedPortcount+15)/16))):0;
+        VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, expectedCount, expectedCount));
+    }
+
+    // There again should be be 0
+    LOG_OUTPUT(L"Confirming all gone");
+    VERIFY_SUCCEEDED(WaitForDeviceCount(midiInDevices, midiOutDevices, 0, 0));
 }
 
 void
@@ -1512,85 +1507,200 @@ MidiSrvTransportTests::WaitForWinmmDeviceCount
 void
 MidiSrvTransportTests::TestWinmmPortEnumeration()
 {
-    if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
+    UINT numInDevices {0};
+    UINT numOutDevices {0};
+    std::wstring minmidiInstanceId;
+
+    GetWinmmMinMidiEndpoints(midiInDevices, midiOutDevices, numInDevices, numOutDevices);
+
+    if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
     {
-        WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
-
-        std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
-        std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
-        UINT numInDevices {0};
-        UINT numOutDevices {0};
-        std::wstring minmidiInstanceId;
-
-        GetWinmmMinMidiEndpoints(midiInDevices, midiOutDevices, numInDevices, numOutDevices);
-
-        if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
-        {
-            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires MinMidi.");
-            return;
-        }
-
-        VERIFY_ARE_EQUAL(midiInDevices.size(), numInDevices);
-        VERIFY_ARE_EQUAL(midiOutDevices.size(), numOutDevices);
-
-        minmidiInstanceId = midiInDevices[0]->ParentDeviceInstanceId;
-        LOG_OUTPUT(L"Testing %s", minmidiInstanceId.c_str());
-
-        auto cleanup = wil::scope_exit([&]()
-        {
-            // Simulate a surprise removal to restore the driver back to the baseline state in the event this
-            // test fails.
-            SendDriverCommand(KSPROPERTY_MINMIDICONTROL_SURPRISEREMOVESIMULATION, 1);
-            SetDeviceEnabled(minmidiInstanceId.c_str(), false);
-            SetDeviceEnabled(minmidiInstanceId.c_str(), true);
-        });
-
-        // remove all of the endpoints.
-        LOG_OUTPUT(L"Removing all minmidi ports");
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)));
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)));
-
-        // There should be 0
-        LOG_OUTPUT(L"Confirming removed");
-        VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, 0, 0));
-
-        // now enable all available bytestream interfaces on the driver and confirm the ports show up w/ both the SWD,
-        // and winmm
-        UINT expectedPortcount = 0;
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_ByteStream)))
-        {
-            expectedPortcount++;
-            LOG_OUTPUT(L"Enabling bytestream port %d", expectedPortcount);
-            VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
-        }
-
-        // now enable all available UMP interfaces on the driver and confirm those ports show up w/ both the SWD,
-        // and winmm.
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_UMP)))
-        {
-            expectedPortcount++;
-            LOG_OUTPUT(L"Enabling UMP port %d", expectedPortcount);
-            VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
-        }
-
-        // And disable all the ports and make sure they all go away.
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)))
-        {
-            expectedPortcount--;
-            LOG_OUTPUT(L"Disabling bytestream port %d", expectedPortcount);
-            VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
-        }
-        while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)))
-        {
-            expectedPortcount--;
-            LOG_OUTPUT(L"Disabling UMP port %d", expectedPortcount);
-            VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
-        }
-
-        // There again should be be 0
-        LOG_OUTPUT(L"Confirming all gone");
-        VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, 0, 0));
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires MinMidi.");
+        return;
     }
+
+    VERIFY_ARE_EQUAL(midiInDevices.size(), numInDevices);
+    VERIFY_ARE_EQUAL(midiOutDevices.size(), numOutDevices);
+
+    minmidiInstanceId = midiInDevices[0]->ParentDeviceInstanceId;
+    LOG_OUTPUT(L"Testing %s", minmidiInstanceId.c_str());
+
+    auto cleanup = wil::scope_exit([&]()
+    {
+        // Simulate a surprise removal to restore the driver back to the baseline state in the event this
+        // test fails.
+        SendDriverCommand(KSPROPERTY_MINMIDICONTROL_SURPRISEREMOVESIMULATION, 1);
+        SetDeviceEnabled(minmidiInstanceId.c_str(), false);
+        SetDeviceEnabled(minmidiInstanceId.c_str(), true);
+    });
+
+    // remove all of the endpoints.
+    LOG_OUTPUT(L"Removing all minmidi ports");
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)));
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)));
+
+    // There should be 0
+    LOG_OUTPUT(L"Confirming removed");
+    VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, 0, 0));
+
+    // now enable all available bytestream interfaces on the driver and confirm the ports show up w/ both the SWD,
+    // and winmm
+    UINT expectedPortcount = 0;
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_ByteStream)))
+    {
+        expectedPortcount++;
+        LOG_OUTPUT(L"Enabling bytestream port %d", expectedPortcount);
+        VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
+    }
+
+    // now enable all available UMP interfaces on the driver and confirm those ports show up w/ both the SWD,
+    // and winmm.
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_ADDPORT, (DWORD) MidiDataFormats_UMP)))
+    {
+        expectedPortcount++;
+        LOG_OUTPUT(L"Enabling UMP port %d", expectedPortcount);
+        VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
+    }
+
+    // And disable all the ports and make sure they all go away.
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_ByteStream)))
+    {
+        expectedPortcount--;
+        LOG_OUTPUT(L"Disabling bytestream port %d", expectedPortcount);
+        VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
+    }
+    while (SUCCEEDED(SendDriverCommand(KSPROPERTY_MINMIDICONTROL_REMOVEPORT, (DWORD) MidiDataFormats_UMP)))
+    {
+        expectedPortcount--;
+        LOG_OUTPUT(L"Disabling UMP port %d", expectedPortcount);
+        VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, expectedPortcount, expectedPortcount));
+    }
+
+    // There again should be be 0
+    LOG_OUTPUT(L"Confirming all gone");
+    VERIFY_SUCCEEDED(WaitForWinmmDeviceCount(midiInDevices, midiOutDevices, numInDevices, numOutDevices, 0, 0));
+}
+
+void
+MidiSrvTransportTests::TestMidiSrvSynchronizedStartEarlyClientUseDoesNotCrash()
+{
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    // Regression test for Feature_Servicing_MIDI2SynchronizedStart.
+    //
+    // With that feature, the demand-start RPC interface is registered immediately while the device
+    // manager's Initialize() runs on a worker thread, signalling a named event once endpoint
+    // enumeration completes. A well-behaved client waits on that event (via VerifyConnectivity)
+    // before using the service. This test simulates a misbehaving/legacy client that does NOT wait
+    // and instead immediately drives the service while initialization is still in progress, racing
+    // the worker thread that populates the device manager's transport/endpoint manager maps.
+    //
+    // The service must not crash. Prior to the map locking added with this feature, the
+    // UpdateTransportConfiguration map read could race the Initialize map insert, which is undefined
+    // behavior on std::map.
+
+    // Build a minimal, single-transport configuration payload. A single entry is required for the
+    // MidiSrvUpdateConfiguration RPC to forward into CMidiDeviceManager::UpdateTransportConfiguration,
+    // which reads the transport configuration manager map under the lock.
+    wchar_t transportGuidString[64]{};
+    VERIFY_IS_TRUE(StringFromGUID2(__uuidof(Midi2KSAggregateTransport), transportGuidString, ARRAYSIZE(transportGuidString)) > 0);
+
+    std::wstring configJson = L"{\"endpointTransportPluginSettings\":{\"";
+    configJson += transportGuidString;
+    configJson += L"\":{}}}";
+
+    // Stop midisrv so the racing client calls below demand-start it fresh, recreating the
+    // initialization window. In legacy mode (or without privilege) this will fail; skip in that case.
+    if (FAILED(StopMIDIService()))
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Unable to stop midisrv to recreate the cold-start window (legacy mode or insufficient privilege).");
+        return;
+    }
+
+    constexpr int earlyClientThreadCount = 8;
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < earlyClientThreadCount; i++)
+    {
+        threads.emplace_back([&configJson]()
+        {
+            // Each worker thread needs its own COM apartment.
+            auto coUninit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+            wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+            if (FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))) || !midiTransport)
+            {
+                return;
+            }
+
+            // Intentionally do NOT call VerifyConnectivity(), which would wait for the
+            // device-enumeration-complete event. Go straight to using the service.
+
+            // 1) Drive the configuration RPC, which reads the transport configuration manager map
+            //    while Initialize() is concurrently populating it.
+            wil::com_ptr_nothrow<IMidiTransportConfigurationManager> configManager;
+            if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiTransportConfigurationManager), (void**)&configManager)) && configManager)
+            {
+                // UpdateConfiguration requires the client-side configuration manager to be initialized first.
+                if (SUCCEEDED(configManager->Initialize(__uuidof(Midi2KSAggregateTransport), nullptr, nullptr)))
+                {
+                    LPWSTR response{ nullptr };
+
+                    // The result is irrelevant; the service simply must not crash. Free any returned string.
+                    if (SUCCEEDED(configManager->UpdateConfiguration(configJson.c_str(), &response)) && response != nullptr)
+                    {
+                        ::CoTaskMemFree(response);
+                    }
+                }
+            }
+
+            // 2) Create a client session immediately, exercising the client creation path during startup.
+            wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
+            if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&midiSessionTracker)) && midiSessionTracker)
+            {
+                LOG_IF_FAILED(midiSessionTracker->Initialize());
+
+                GUID sessionId{};
+                if (SUCCEEDED(CoCreateGuid(&sessionId)))
+                {
+                    LOG_IF_FAILED(midiSessionTracker->AddClientSession(sessionId, L"EarlyUseRaceClient"));
+                    LOG_IF_FAILED(midiSessionTracker->RemoveClientSession(sessionId));
+                }
+            }
+        });
+    }
+
+    for (auto& t : threads)
+    {
+        t.join();
+    }
+
+    // Liveness check: after the concurrent early-use barrage during startup, the service must still
+    // be healthy. If midisrv had crashed (e.g. from a data race on the device manager maps), these
+    // calls would fail with an RPC error.
+    wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+    VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
+    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&midiSessionTracker));
+    VERIFY_IS_NOT_NULL(midiSessionTracker.get());
+    VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+
+    if (!midiSessionTracker->VerifyConnectivity())
+    {
+        // Legacy mode / no midisrv connectivity: nothing further to validate.
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+        return;
+    }
+
+    GUID livenessSessionId{};
+    VERIFY_SUCCEEDED(CoCreateGuid(&livenessSessionId));
+    VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(livenessSessionId, L"EarlyUseRaceLivenessCheck"));
+    VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(livenessSessionId));
 }
 
 bool MidiSrvTransportTests::TestSetup()

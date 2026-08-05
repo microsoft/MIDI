@@ -8,45 +8,29 @@
 
 #include "pch.h"
 //#include "MidiLoopbackBidiDevice.h"
-#include <Feature_Servicing_MIDI2LoopbackBidi.h>
 
 HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromAToB(
     _In_ void* message,
     _In_ UINT32 size,
     _In_ LONGLONG timestamp)
 {
-    if (Feature_Servicing_MIDI2LoopbackBidi::IsEnabled())
+    wil::com_ptr_nothrow<IMidiCallback> callback;
+    LONGLONG context;
     {
-        wil::com_ptr_nothrow<IMidiCallback> callback;
-        LONGLONG context;
-        {
-            auto callbackLock = m_CallbackLock.lock();
-            callback = m_CallbackB;
-            context = m_ContextB;
-        }
-
-        // we don't want a fail hresult here as it just means the callback went away
-        if (callback == nullptr) return S_OK;
-
-        RETURN_HR_IF_NULL(E_INVALIDARG, message);
-        RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
-
-        // Sending message from A output to B input
-
-        return callback->Callback(MessageOptionFlags_None, message, size, timestamp, context);
+        auto callbackLock = m_CallbackLock.lock();
+        callback = m_CallbackB;
+        context = m_ContextB;
     }
-    else
-    {
-        // we don't want a fail hresult here as it just means the callback went away
-        if (m_CallbackB == nullptr) return S_OK;
 
-        RETURN_HR_IF_NULL(E_INVALIDARG, message);
-        RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    // we don't want a fail hresult here as it just means the callback went away
+    if (callback == nullptr) return S_OK;
 
-        // Sending message from A output to B input
+    RETURN_HR_IF_NULL(E_INVALIDARG, message);
+    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-        return m_CallbackB->Callback(MessageOptionFlags_None, message, size, timestamp, m_ContextB);
-    }
+    // Sending message from A output to B input
+
+    return callback->Callback(MessageOptionFlags_None, message, size, timestamp, context);
 }
 
 HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
@@ -54,38 +38,23 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
     _In_ UINT32 size,
     _In_ LONGLONG timestamp)
 {
-    if (Feature_Servicing_MIDI2LoopbackBidi::IsEnabled())
+    wil::com_ptr_nothrow<IMidiCallback> callback;
+    LONGLONG context;
     {
-        wil::com_ptr_nothrow<IMidiCallback> callback;
-        LONGLONG context;
-        {
-            auto callbackLock = m_CallbackLock.lock();
-            callback = m_CallbackA;
-            context = m_ContextB;
-        }
-
-        // we don't want a fail hresult here as it just means the callback went away
-        if (callback == nullptr) return S_OK;
-
-        RETURN_HR_IF_NULL(E_INVALIDARG, message);
-        RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
-
-        // Sending message from B output to A input
-
-        return callback->Callback(MessageOptionFlags_None, message, size, timestamp, context);
+        auto callbackLock = m_CallbackLock.lock();
+        callback = m_CallbackA;
+        context = m_ContextB;
     }
-    else
-    {
-        // we don't want a fail hresult here as it just means the callback went away
-        if (m_CallbackA == nullptr) return S_OK;
 
-        RETURN_HR_IF_NULL(E_INVALIDARG, message);
-        RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    // we don't want a fail hresult here as it just means the callback went away
+    if (callback == nullptr) return S_OK;
 
-        // Sending message from B output to A input
+    RETURN_HR_IF_NULL(E_INVALIDARG, message);
+    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-        return m_CallbackA->Callback(MessageOptionFlags_None, message, size, timestamp, m_ContextB);
-    }
+    // Sending message from B output to A input
+
+    return callback->Callback(MessageOptionFlags_None, message, size, timestamp, context);
 }
 
 
@@ -97,32 +66,16 @@ void MidiLoopbackBidiDevice::Shutdown()
 
 void MidiLoopbackBidiDevice::ShutdownA()
 {
-    if (Feature_Servicing_MIDI2LoopbackBidi::IsEnabled())
-    {
-        auto callbackLock = m_CallbackLock.lock();
-        m_CallbackA = nullptr;
-        m_ContextA = 0;
-    }
-    else
-    {
-        m_CallbackA = nullptr;
-        m_ContextA = 0;
-    }
+    auto callbackLock = m_CallbackLock.lock();
+    m_CallbackA = nullptr;
+    m_ContextA = 0;
 }
 
 void MidiLoopbackBidiDevice::ShutdownB()
 {
-    if (Feature_Servicing_MIDI2LoopbackBidi::IsEnabled())
-    {
-        auto callbackLock = m_CallbackLock.lock();
-        m_CallbackB = nullptr;
-        m_ContextB = 0;
-    }
-    else
-    {
-        m_CallbackB = nullptr;
-        m_ContextB = 0;
-    }
+    auto callbackLock = m_CallbackLock.lock();
+    m_CallbackB = nullptr;
+    m_ContextB = 0;
 }
 
 _Use_decl_annotations_
@@ -133,17 +86,9 @@ MidiLoopbackBidiDevice::SetCallbackA
     LONGLONG context
 )
 {
-    if (Feature_Servicing_MIDI2LoopbackBidi::IsEnabled())
-    {
-        auto callbackLock = m_CallbackLock.lock();
-        m_CallbackA = callback;
-        m_ContextA = context;
-    }
-    else
-    {
-        m_CallbackA = callback;
-        m_ContextA = context;
-    }
+    auto callbackLock = m_CallbackLock.lock();
+    m_CallbackA = callback;
+    m_ContextA = context;
 }
 
 _Use_decl_annotations_
@@ -154,17 +99,9 @@ MidiLoopbackBidiDevice::SetCallbackB
     LONGLONG context
 )
 {
-    if (Feature_Servicing_MIDI2LoopbackBidi::IsEnabled())
-    {
-        auto callbackLock = m_CallbackLock.lock();
-        m_CallbackB = callback;
-        m_ContextB = context;
-    }
-    else
-    {
-        m_CallbackB = callback;
-        m_ContextB = context;
-    }
+    auto callbackLock = m_CallbackLock.lock();
+    m_CallbackB = callback;
+    m_ContextB = context;
 }
 
 

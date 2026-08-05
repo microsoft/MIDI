@@ -22,7 +22,6 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    GUID m_ContainerId{};
     GUID m_TransportTransportId{ __uuidof(Midi2DiagnosticsTransport) };
 
     HRESULT CreateLoopbackEndpoint(

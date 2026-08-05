@@ -9,7 +9,6 @@
 
 #include "pch.h"
 //#include "midi2.DiagnosticsTransport.h"
-#include "Feature_Servicing_MIDI2ContainerIds.h"
 
 using namespace wil;
 using namespace Microsoft::WRL;
@@ -40,13 +39,6 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
 
-    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
-    {
-    }
-    else
-    {
-        m_ContainerId = m_TransportTransportId;           // we use the transport ID as the container ID for convenience
-    }
     RETURN_IF_FAILED(CreateParentDevice());
 
     RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_BIDI_A_ID, LOOPBACK_BIDI_A_UNIQUE_ID, DEFAULT_LOOPBACK_BIDI_A_NAME, MidiFlow::MidiFlowBidirectional));
@@ -79,13 +71,6 @@ CMidi2DiagnosticsEndpointManager::CreateParentDevice()
     createInfo.pszInstanceId = parentDeviceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
-    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
-    {
-    }
-    else
-    {
-        createInfo.pContainerId = &m_ContainerId;
-    }
 
     //m_ParentDevice = std::make_unique<MidiEndpointParentDeviceInfo>();
     //RETURN_IF_NULL_ALLOC(m_ParentDevice);

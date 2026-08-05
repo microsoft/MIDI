@@ -16,10 +16,10 @@
 
 #include "midi_ksa_pin_map_property.h"
 
-#include "Feature_Servicing_MIDI2ContainerIds.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
 #include "Feature_Servicing_MIDI2NumDevsPerf.h"
 #include "Feature_Servicing_MIDI2LegacyControl.h"
+#include "Feature_Servicing_MIDI2SynchronizedStart.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -27,9 +27,6 @@ const WCHAR driver32Path[]    = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersio
 const WCHAR midisrvTransferComplete[] =  L"MidisrvTransferComplete";
 
 const WCHAR szzMidiDeviceHardwareIdClass[] =  L"MIDISRV\\MidiEndpoints" L"\0";
-
-// remove with Feature_Servicing_MIDI2ContainerIds
-const WCHAR szzMidiDeviceHardwareId[] =  L"MIDISRV\\MidiEndpointsNonclass" L"\0";
 
 const WCHAR szzMidiDeviceCompatibleId[] =  L"GenericMidiEndpoint" L"\0";
 
@@ -219,8 +216,19 @@ CMidiDeviceManager::Initialize(
                         }
                         else
                         {
-                            // don't std::move this because we sill need it
-                            m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
+                            if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+                            {
+                                {
+                                    auto mapsLock = m_midiManagerMapsLock.lock();
+                                    // don't std::move this because we sill need it
+                                    m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
+                                }
+                            }
+                            else
+                            {
+                                // don't std::move this because we sill need it
+                                m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
+                            }
 
                             if (!transportSettingsJson.empty())
                             {
@@ -345,7 +353,17 @@ CMidiDeviceManager::Initialize(
 
                     if (SUCCEEDED(initializeResult))
                     {
-                        m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
+                        if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+                        {
+                            {
+                                auto mapsLock = m_midiManagerMapsLock.lock();
+                                m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
+                            }
+                        }
+                        else
+                        {
+                            m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
+                        }
 
                         TraceLoggingWrite(
                             MidiSrvTelemetryProvider::Provider(),
@@ -735,11 +753,8 @@ CMidiDeviceManager::ActivateVirtualParentDevice
     devProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue });
 
-    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
-    {
-        devProperties.push_back(DEVPROPERTY{ {DEVPKEY_Device_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(pcreateinfo->pszDeviceDescription) + 1)), (PVOID)(pcreateinfo->pszDeviceDescription) });
-    }
+    devProperties.push_back(DEVPROPERTY{ {DEVPKEY_Device_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(pcreateinfo->pszDeviceDescription) + 1)), (PVOID)(pcreateinfo->pszDeviceDescription) });
 
     RETURN_IF_FAILED(SwDeviceCreate(
         MIDI_DEVICE_ENUMERATOR,                 
@@ -1345,20 +1360,17 @@ CMidiDeviceManager::ActivateEndpointInternal
         interfaceProperties.push_back({ {PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
     }
 
-    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
+    // copy the incoming array into a vector so that we can add additional items.
+    if (deviceDevProperties != nullptr && devPropertyCount > 0)
     {
-        // copy the incoming array into a vector so that we can add additional items.
-        if (deviceDevProperties != nullptr && devPropertyCount > 0)
-        {
-            std::vector<DEVPROPERTY> existingDeviceProperties(deviceDevProperties, deviceDevProperties + devPropertyCount);
+        std::vector<DEVPROPERTY> existingDeviceProperties(deviceDevProperties, deviceDevProperties + devPropertyCount);
         
-            // copy 'em over
-            devProperties = existingDeviceProperties;
-        }
-
-        devProperties.push_back(DEVPROPERTY{ {DEVPKEY_Device_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(internalCreateInfo.pszDeviceDescription) + 1)), (PVOID)(internalCreateInfo.pszDeviceDescription) });
+        // copy 'em over
+        devProperties = existingDeviceProperties;
     }
+
+    devProperties.push_back(DEVPROPERTY{ {DEVPKEY_Device_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(internalCreateInfo.pszDeviceDescription) + 1)), (PVOID)(internalCreateInfo.pszDeviceDescription) });
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
@@ -1412,15 +1424,7 @@ CMidiDeviceManager::ActivateEndpointInternal
     else
     {
         internalCreateInfo.pszzCompatibleIds = szzMidiDeviceCompatibleId;
-
-        if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
-        {
-            internalCreateInfo.pszzHardwareIds = szzMidiDeviceHardwareIdClass;
-        }
-        else
-        {
-            internalCreateInfo.pszzHardwareIds = szzMidiDeviceHardwareId;
-        }
+        internalCreateInfo.pszzHardwareIds = szzMidiDeviceHardwareIdClass;
 
         if (flow == MidiFlowOut)
         {
@@ -1451,32 +1455,16 @@ CMidiDeviceManager::ActivateEndpointInternal
     creationContext.InterfaceDevProperties = interfaceProperties.data();
     creationContext.IntPropertyCount = (ULONG)interfaceProperties.size();
 
-    if (Feature_Servicing_MIDI2ContainerIds::IsEnabled())
-    {
-        // create the devnode for the device
-        midiPort->hr = SwDeviceCreate(
-            midiPort->Enumerator.c_str(),
-            parentInstanceId,
-            &internalCreateInfo,
-            (ULONG)devProperties.size(),            // count of properties
-            (DEVPROPERTY*)devProperties.data(),     // pointer to properties
-            SwMidiPortCreateCallback,
-            &creationContext,
-            wil::out_param(midiPort->SwDevice));
-    }
-    else
-    {
-        // create the devnode for the device
-        midiPort->hr = SwDeviceCreate(
-            midiPort->Enumerator.c_str(),
-            parentInstanceId,
-            &internalCreateInfo,
-            devPropertyCount,
-            devPropertyCount == 0 ? (DEVPROPERTY*)nullptr : deviceDevProperties,
-            SwMidiPortCreateCallback,
-            &creationContext,
-            wil::out_param(midiPort->SwDevice));
-    }
+    // create the devnode for the device
+    midiPort->hr = SwDeviceCreate(
+        midiPort->Enumerator.c_str(),
+        parentInstanceId,
+        &internalCreateInfo,
+        (ULONG)devProperties.size(),            // count of properties
+        (DEVPROPERTY*)devProperties.data(),     // pointer to properties
+        SwMidiPortCreateCallback,
+        &creationContext,
+        wil::out_param(midiPort->SwDevice));
 
     if (SUCCEEDED(midiPort->hr))
     {
@@ -2015,14 +2003,30 @@ CMidiDeviceManager::UpdateTransportConfiguration
             TraceLoggingWideString(configurationJson, "config json")
         );
 
-        if (auto search = m_midiTransportConfigurationManagers.find(transportId); search != m_midiTransportConfigurationManagers.end())
-        {
-            auto configManager = search->second;
+        wil::com_ptr_nothrow<IMidiTransportConfigurationManager> configManager;
 
-            if (configManager)
+        {
+            if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
             {
-                return configManager->UpdateConfiguration(configurationJson, response);
+                auto mapsLock = m_midiManagerMapsLock.lock();
+
+                if (auto search = m_midiTransportConfigurationManagers.find(transportId); search != m_midiTransportConfigurationManagers.end())
+                {
+                    configManager = search->second;
+                }
             }
+            else
+            {
+                if (auto search = m_midiTransportConfigurationManagers.find(transportId); search != m_midiTransportConfigurationManagers.end())
+                {
+                    configManager = search->second;
+                }
+            }
+        }
+
+        if (configManager)
+        {
+            return configManager->UpdateConfiguration(configurationJson, response);
         }
         else
         {
@@ -2077,8 +2081,18 @@ CMidiDeviceManager::Shutdown()
         LOG_IF_FAILED(configurationManager.second->Shutdown());
     }
 
-    m_midiEndpointManagers.clear();
-    m_midiTransportConfigurationManagers.clear();
+
+    if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+    {
+        auto mapsLock = m_midiManagerMapsLock.lock();
+        m_midiEndpointManagers.clear();
+        m_midiTransportConfigurationManagers.clear();
+    }
+    else
+    {
+        m_midiEndpointManagers.clear();
+        m_midiTransportConfigurationManagers.clear();
+    }
 
     m_midiPorts.clear();
 

@@ -10,6 +10,11 @@
 #include "MidiSrvTransport.h"
 #include "Feature_Servicing_MIDI2LegacyControl.h"
 
+#include "Feature_Servicing_MIDI2SynchronizedStart.h"
+
+// Maximum time to wait for the service to finish device enumeration before proceeding best-effort.
+constexpr DWORD g_midiSynchronizedStartTimeoutMs{ 10000 };
+
 _Use_decl_annotations_
 void __RPC_FAR* __RPC_USER midl_user_allocate(size_t byteCount
 )
@@ -512,11 +517,44 @@ CMidi2MidiSrv::VerifyConnectivity()
     {
         return FALSE;
     }
-    else
+
+    if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
     {
-        return TRUE;
+        // The service registers its RPC interface immediately and performs device enumeration on a
+        // worker thread, so the RPC call above returns promptly (avoiding an RPC hang). Wait here, in
+        // the client process, for the service to signal that device enumeration has completed so that
+        // all midi ports are present before the caller continues. The wait is best-effort: if the
+        // event cannot be opened (e.g. the service has not created it) or the wait times out, we still
+        // report connectivity rather than blocking the caller indefinitely.
+        wil::unique_handle enumerationCompleteEvent(OpenEventW(
+            SYNCHRONIZE,
+            FALSE,
+            MIDISRV_DEVICE_ENUMERATION_COMPLETE_EVENT_NAME));
+
+        if (enumerationCompleteEvent)
+        {
+            auto waitResult = WaitForSingleObject(enumerationCompleteEvent.get(), g_midiSynchronizedStartTimeoutMs);
+
+            if (waitResult != WAIT_OBJECT_0)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Timed out or failed waiting for device enumeration to complete; proceeding best-effort.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt32(waitResult, "wait result")
+                );
+            }
+        }
+        else
+        {
+            LOG_LAST_ERROR_MSG("Unable to open device enumeration completion event; proceeding without waiting.");
+        }
     }
 
+    return TRUE;
 }
 
 _Use_decl_annotations_

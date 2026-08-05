@@ -12,6 +12,7 @@
 #include "json_transport_command_helper.h"
 #include <mmdeviceapi.h>    // for E_NOTFOUND
 
+
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiConfigurationManager::Initialize(
@@ -58,34 +59,34 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandListEntries(
         auto obj = json::JsonObject();
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionA.AssociationId));  // it's the same in DefinitionB
+            json::JsonValue::CreateStringValue(device->DefinitionA.AssociationId));  // it's the same in DefinitionB
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_MUTED_KEY,
-            json::JsonValue::CreateBooleanValue(device.IsMuted));
+            json::JsonValue::CreateBooleanValue(device->IsMuted));
 
 
         auto objEndpointA = json::JsonObject();
 
         objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionA.CreatedEndpointInterfaceId.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionA.CreatedEndpointInterfaceId.c_str()));
 
         objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionA.EndpointName.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionA.EndpointName.c_str()));
 
         objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionA.EndpointDescription.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionA.EndpointDescription.c_str()));
 
 
         auto objEndpointB = json::JsonObject();
 
         objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionB.CreatedEndpointInterfaceId.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionB.CreatedEndpointInterfaceId.c_str()));
 
         objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionB.EndpointName.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionB.EndpointName.c_str()));
 
         objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
-            json::JsonValue::CreateStringValue(device.DefinitionB.EndpointDescription.c_str()));
+            json::JsonValue::CreateStringValue(device->DefinitionB.EndpointDescription.c_str()));
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_A_KEY, objEndpointA);
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_B_KEY, objEndpointB);
@@ -352,6 +353,34 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         definitionB->UMPOnly = endpointBObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
 
 
+                        // Validate that the values that came out of the json are constrained to expected limits.
+                        const bool descriptorTooLong =
+                            (definitionA->EndpointName.length() > MAX_DESCRIPTOR_STRING_LENGTH) ||
+                            (definitionA->EndpointDescription.length() > MAX_DESCRIPTOR_STRING_LENGTH) ||
+                            (definitionA->EndpointUniqueIdentifier.length() > MAX_DESCRIPTOR_STRING_LENGTH) ||
+                            (definitionB->EndpointName.length() > MAX_DESCRIPTOR_STRING_LENGTH) ||
+                            (definitionB->EndpointDescription.length() > MAX_DESCRIPTOR_STRING_LENGTH) ||
+                            (definitionB->EndpointUniqueIdentifier.length() > MAX_DESCRIPTOR_STRING_LENGTH);
+
+                        if (descriptorTooLong)
+                        {
+                            TraceLoggingWrite(
+                                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Descriptor value exceeds maximum allowed length", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                            );
+
+                            responseObject.SetNamedValue(
+                                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                                json::JsonValue::CreateStringValue(L"One or more descriptor values exceed the maximum allowed length."));
+
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                            return E_FAIL;
+                        }
 
                         if (definitionA->EndpointName.empty() || definitionB->EndpointName.empty())
                         {
@@ -415,6 +444,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             return E_FAIL;
                         }
+
                         allocatedUniqueIdsA.emplace(definitionA->EndpointUniqueIdentifier, true);
 
                         if (allocatedUniqueIdsB.find(definitionB->EndpointUniqueIdentifier) != allocatedUniqueIdsB.end() || 
@@ -437,6 +467,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             return E_FAIL;
                         }
+                         
                         allocatedUniqueIdsB.emplace(definitionB->EndpointUniqueIdentifier, true);
 
 
@@ -565,10 +596,26 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
             while (o.HasCurrent())
             {
-                // each entry is an association id
+                // each entry is an association id                
 
                 auto associationId = o.Current().GetString();
                 auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationId.c_str());
+
+                if (!device)
+                {
+                    TraceLoggingWrite(
+                        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Requested device removal but association id not found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(associationId.c_str(), "association id")
+                    );
+
+                    o.MoveNext();
+                    continue;
+                }
 
                 auto removalHr = TransportState::Current().GetEndpointManager()->DeleteEndpointPair(device->DefinitionA, device->DefinitionB);
 
@@ -597,8 +644,6 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(configurationJsonSection, "json")
                     );
                 }
-                    
-
 
                 o.MoveNext();
             }
