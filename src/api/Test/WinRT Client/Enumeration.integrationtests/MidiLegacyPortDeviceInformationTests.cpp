@@ -171,7 +171,7 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
 
 }
 
-
+// This test is failing for unicode names.
 void MidiLegacyPortDeviceInformationTests::TestFindAllForName()
 {
     auto devices = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::FindAll();
