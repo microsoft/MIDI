@@ -33,8 +33,11 @@ CMidi2LoopbackMidiBidi::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
     RETURN_HR_IF_NULL(E_INVALIDARG, creationParams);
 
-    m_Callback = callback;
-    m_Context = context;
+    {
+        auto lock = m_CallbackLock.lock();
+        m_Callback = callback;
+        m_Context = context;
+    }
 
     // loopback supports only UMP, reject requests for bytestream
     if (creationParams->DataFormat != MidiDataFormats_UMP && 
@@ -127,8 +130,11 @@ CMidi2LoopbackMidiBidi::Shutdown()
         m_PingMidiDevice = nullptr;
     }
 
-    m_Callback = nullptr;
-    m_Context = 0;
+    {
+        auto lock = m_CallbackLock.lock();
+        m_Callback = nullptr;
+        m_Context = 0;
+    }
 
     return S_OK;
 }
@@ -181,9 +187,18 @@ CMidi2LoopbackMidiBidi::Callback(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF_NULL(E_POINTER, m_Callback);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-    return m_Callback->Callback(optionFlags, message, size, timestamp, m_Context);
+    wil::com_ptr_nothrow<IMidiCallback> callback;
+    LONGLONG context;
+    {
+        auto lock = m_CallbackLock.lock();
+        callback = m_Callback;
+        context = m_Context;
+    }
+
+    RETURN_HR_IF_NULL(E_POINTER, callback.get());
+
+    return callback->Callback(optionFlags, message, size, timestamp, context);
 }
 

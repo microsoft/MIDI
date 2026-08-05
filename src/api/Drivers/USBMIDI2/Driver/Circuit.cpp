@@ -48,8 +48,6 @@ Environment:
 #include "Trace.h"
 #include "Circuit.tmh"
 
-#include "Feature_Servicing_MIDI2FilterCreations.h"
-
 static
 KSDATAFORMAT g_MidiFormat =
 {
@@ -303,15 +301,12 @@ Return Value:
         goto exit;
     }
 
-    if (Feature_Servicing_MIDI2FilterCreations_IsEnabled())
+    status = AcxCircuitInitAssignAcxRequestPreprocessCallback(
+        circuitInit, EvtPinDataRangesCallback, (ACXCONTEXT)Device, AcxRequestTypeProperty, &KSPROPSETID_Pin, KSPROPERTY_PIN_DATARANGES);
+    if (!NT_SUCCESS(status)) 
     {
-        status = AcxCircuitInitAssignAcxRequestPreprocessCallback(
-            circuitInit, EvtPinDataRangesCallback, (ACXCONTEXT)Device, AcxRequestTypeProperty, &KSPROPSETID_Pin, KSPROPERTY_PIN_DATARANGES);
-        if (!NT_SUCCESS(status)) 
-        {
-            ASSERT(FALSE);
-            goto exit;
-        }
+        ASSERT(FALSE);
+        goto exit;
     }
 
     //

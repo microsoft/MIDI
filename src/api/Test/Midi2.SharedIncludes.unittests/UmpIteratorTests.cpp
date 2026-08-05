@@ -12,8 +12,6 @@
 #include "UmpIteratorTests.h"
 using namespace WindowsMidiServicesInternal;
 
-#include <Feature_Servicing_MIDI2MultipleGroups.h>
-
 void UmpIteratorTests::TestBasicIteration()
 {
     uint32_t words[] =
@@ -322,40 +320,37 @@ void UmpIteratorTests::TestCopyWordsToVector()
 
 void UmpIteratorTests::TestGetMessageWordsByIndex()
 {
-    if (Feature_Servicing_MIDI2MultipleGroups::IsEnabled())
+    std::vector<uint32_t> destination{};
+
+    uint32_t words[] =
     {
-        std::vector<uint32_t> destination{};
+        0x20000001,
+        0x40000001, 0x01234567,
+        0xF0000001, 0x18675309, 0x01010101, 0x02020202,
+        0x40000001, 0x01234567,
+        0x10000001,
+        0x00000000,
+    };
 
-        uint32_t words[] =
+    std::vector<uint32_t> readWords{};
+
+    UmpBufferIterator bufferIterator(words, ARRAYSIZE(words));
+    for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
+    {
+        uint8_t currentMessageWordCount = it.CurrentMessageWordCount();
+
+        for (uint8_t i = 0; i < currentMessageWordCount; i++)
         {
-            0x20000001,
-            0x40000001, 0x01234567,
-            0xF0000001, 0x18675309, 0x01010101, 0x02020202,
-            0x40000001, 0x01234567,
-            0x10000001,
-            0x00000000,
-        };
-
-        std::vector<uint32_t> readWords{};
-
-        UmpBufferIterator bufferIterator(words, ARRAYSIZE(words));
-        for (auto it = bufferIterator.begin(); it < bufferIterator.end(); ++it)
-        {
-            uint8_t currentMessageWordCount = it.CurrentMessageWordCount();
-
-            for (uint8_t i = 0; i < currentMessageWordCount; i++)
-            {
-                readWords.push_back(it.GetCurrentMessageWord(i));
-            }
+            readWords.push_back(it.GetCurrentMessageWord(i));
         }
+    }
 
-        VERIFY_ARE_EQUAL(ARRAYSIZE(words), readWords.size());
+    VERIFY_ARE_EQUAL(ARRAYSIZE(words), readWords.size());
 
-        // now, check values
-        for (uint32_t i = 0; i < ARRAYSIZE(words); i++)
-        {
-            VERIFY_ARE_EQUAL(words[i], readWords[i]);
-        }
+    // now, check values
+    for (uint32_t i = 0; i < ARRAYSIZE(words); i++)
+    {
+        VERIFY_ARE_EQUAL(words[i], readWords[i]);
     }
 }
 bool UmpIteratorTests::ClassSetup()

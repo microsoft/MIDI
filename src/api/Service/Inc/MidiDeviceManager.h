@@ -231,6 +231,12 @@ private:
     std::map<GUID, wil::com_ptr_nothrow<IMidiEndpointManager>, GUIDCompare> m_midiEndpointManagers;
     std::map<GUID, wil::com_ptr_nothrow<IMidiTransportConfigurationManager>, GUIDCompare> m_midiTransportConfigurationManagers;
 
+    // Guards m_midiEndpointManagers and m_midiTransportConfigurationManagers. With the synchronized
+    // start feature, Initialize() runs on a worker thread while the demand-start RPC interface is
+    // already registered, so RPC handlers (e.g. UpdateTransportConfiguration) can read these maps
+    // concurrently with Initialize() populating them. This lock serializes that access.
+    wil::critical_section m_midiManagerMapsLock;
+
     wil::critical_section m_midiPortsLock;
     std::vector<std::unique_ptr<MIDIPORT>> m_midiPorts;
     bool m_CreateMidi1Ports {true};

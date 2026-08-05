@@ -19,7 +19,10 @@ HRESULT MidiEndpointTable::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
-    m_endpoints.clear();
+    {
+        auto lock = m_entriesLock.lock();
+        m_endpoints.clear();
+    }
 
     return S_OK;
 }
@@ -47,20 +50,22 @@ HRESULT MidiEndpointTable::AddCreatedEndpointDevice(MidiVirtualDeviceEndpointEnt
     entry.MidiClientBidi = nullptr;
     entry.MidiDeviceBidi = nullptr;
 
-
-    if (auto endpoint = m_endpoints.find(cleanId); endpoint != m_endpoints.end())
     {
-        // we already have an endpoint using this association id, so we need to fail
+        auto lock = m_entriesLock.lock();
 
-        RETURN_IF_FAILED(E_INVALIDARG);
+        if (auto endpoint = m_endpoints.find(cleanId); endpoint != m_endpoints.end())
+        {
+
+            // we already have an endpoint using this association id, so we need to fail
+
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+        else
+        {
+            m_endpoints[cleanId] = entry;
+            return S_OK;
+        }
     }
-    else
-    {
-        m_endpoints[cleanId] = entry;
-
-        return S_OK;
-    }
-
 }
 
 

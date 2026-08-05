@@ -26,7 +26,6 @@
 
 #include "midi_timestamp.h"
 
-#include "Feature_Servicing_MIDI2DriverHang.h"
 #include "Feature_Servicing_MIDI2LegacyTimestamp.h"
 
 KSMidiDevice::~KSMidiDevice()
@@ -299,11 +298,7 @@ KSMidiDevice::PinSetState(
             nullptr);
     }));
 
-    if (Feature_Servicing_MIDI2DriverHang::IsEnabled())
-    {
-        m_CurrentState = pinState;
-    }
-
+    m_CurrentState = pinState;
     return S_OK;
 }
 
@@ -542,17 +537,14 @@ KSMidiInDevice::Shutdown()
 
     if (m_ThreadHandle)
     {
-        if (Feature_Servicing_MIDI2DriverHang::IsEnabled())
+        // If we have a worker thread (standard bytestream), and the pin is open and running
+        // pause the pin prior to stopping the worker thread. This works around an issue
+        // with some drivers cloning stream pointers and not registering for a cancel callback,
+        // which results in their IRP not being completed. Pausing before terminating the worker thread
+        // deletes the stream pointers to get a good cleanup, working around the driver issue.
+        if (m_PinHandleWrapper && m_PinHandleWrapper->IsOpen() && m_CurrentState == KSSTATE_RUN)
         {
-            // If we have a worker thread (standard bytestream), and the pin is open and running
-            // pause the pin prior to stopping the worker thread. This works around an issue
-            // with some drivers cloning stream pointers and not registering for a cancel callback,
-            // which results in their IRP not being completed. Pausing before terminating the worker thread
-            // deletes the stream pointers to get a good cleanup, working around the driver issue.
-            if (m_PinHandleWrapper && m_PinHandleWrapper->IsOpen() && m_CurrentState == KSSTATE_RUN)
-            {
-                RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
-            }
+            RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
         }
 
         // First shut down the worker thread so it will not

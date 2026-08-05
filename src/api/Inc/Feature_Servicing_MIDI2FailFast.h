@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2DriverHang
+class Feature_Servicing_MIDI2FailFast
 {
 public:
     static bool IsEnabled()

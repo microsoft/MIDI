@@ -24,7 +24,6 @@
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 #include "KsHandleWrapper.h"
-#include <Feature_Servicing_MIDI2VirtualPortDriversFix.h>
 #include <Feature_Servicing_MIDI2KSHandleWrapperCrash.h>
 
 // Filter constructor
@@ -129,17 +128,11 @@ HRESULT KsHandleWrapper::Open()
             m_ParentFilterHandle = std::move(filter);
         }
 
-        if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
-        {
-            // ERROR_NO_MATCH indicates it's attempting to open a pin with an unsupported format, not a real error.
-            RETURN_IF_FAILED_WITH_EXPECTED(InstantiateMidiPin(m_ParentFilterHandle.get(), m_PinID, m_Transport, &pin), 
-                HRESULT_FROM_WIN32(ERROR_NO_MATCH),
-                HRESULT_FROM_WIN32(ERROR_GEN_FAILURE));
-        }
-        else
-        {
-            RETURN_IF_FAILED(InstantiateMidiPin(m_ParentFilterHandle.get(), m_PinID, m_Transport, &pin));
-        }
+        // ERROR_NO_MATCH indicates it's attempting to open a pin with an unsupported format, not a real error.
+        RETURN_IF_FAILED_WITH_EXPECTED(InstantiateMidiPin(m_ParentFilterHandle.get(), m_PinID, m_Transport, &pin), 
+            HRESULT_FROM_WIN32(ERROR_NO_MATCH),
+            HRESULT_FROM_WIN32(ERROR_GEN_FAILURE));
+
         m_handle = std::move(pin);
     }
 
@@ -163,10 +156,7 @@ void KsHandleWrapper::Close()
     {
         auto lock = m_lock.lock_exclusive();
         m_handle.reset();
-        if (Feature_Servicing_MIDI2VirtualPortDriversFix::IsEnabled())
-        {
-            m_ParentFilterHandle.reset();
-        }
+        m_ParentFilterHandle.reset();
     }
 }
 

@@ -359,7 +359,6 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.KSAggregateTransport.cpp" />

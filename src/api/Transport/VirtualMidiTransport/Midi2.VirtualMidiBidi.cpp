@@ -32,8 +32,13 @@ CMidi2VirtualMidiBidi::Initialize(
         );
 
     m_sessionId = sessionId;
-    m_callbackContext = context;
-    m_callback = callback;
+
+    {
+        auto lock = m_callbackLock.lock();
+        m_callbackContext = context;
+        m_callback = callback;
+    }
+
     m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
     //if (context != MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT)
@@ -119,8 +124,11 @@ CMidi2VirtualMidiBidi::Shutdown()
         TraceLoggingGuid(m_sessionId, "session id")
     );
 
-    m_callback = nullptr;
-    m_callbackContext = 0;
+    {
+        auto lock = m_callbackLock.lock();
+        m_callback = nullptr;
+        m_callbackContext = 0;
+    }
 
     UnlinkAssociatedCallback();
     //m_linkedBidi = nullptr;
@@ -170,9 +178,17 @@ CMidi2VirtualMidiBidi::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    if (m_linkedBidiCallback != nullptr)
+    wil::com_ptr_nothrow<IMidiCallback> linkedBidiCallback;
+    LONGLONG callbackContext;
     {
-        RETURN_IF_FAILED(m_linkedBidiCallback->Callback(optionFlags, Message, Size, Position, m_callbackContext));
+        auto lock = m_callbackLock.lock();
+        linkedBidiCallback = m_linkedBidiCallback;
+        callbackContext = m_callbackContext;
+    }
+
+    if (linkedBidiCallback != nullptr)
+    {
+        RETURN_IF_FAILED(linkedBidiCallback->Callback(optionFlags, Message, Size, Position, callbackContext));
 
         return S_OK;
     }
@@ -233,9 +249,15 @@ CMidi2VirtualMidiBidi::Callback(
     // message received from the client
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    if (m_callback != nullptr)
+    wil::com_ptr_nothrow<IMidiCallback> callback;
     {
-        RETURN_IF_FAILED(m_callback->Callback(optionFlags, Message, Size, Position, context));
+        auto lock = m_callbackLock.lock();
+        callback = m_callback;
+    }
+
+    if (callback != nullptr)
+    {
+        RETURN_IF_FAILED(callback->Callback(optionFlags, Message, Size, Position, context));
     }
     else
     {

@@ -13,9 +13,9 @@
 #include <sstream>      // for the string stream in parsing of VID/PID/Serial from parent id
 #include <iostream>     // for getline for string parsing of VID/PID/Serial from parent id
 
-#include "Feature_Servicing_MIDI2FilterCreations.h"
 #include "Feature_Servicing_MIDI2KSATVSFix.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
+#include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
 
 using namespace wil;
@@ -74,15 +74,29 @@ CMidi2KSAggregateMidiEndpointManager2::Initialize(
 
 
     // the ksa2603 fix enumerates device interfaces instead of parent devices
+    if (Feature_Servicing_MIDI2FailFast::IsEnabled())
+    {
+        winrt::hstring deviceInterfaceSelector(
+            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
+            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-    winrt::hstring deviceInterfaceSelector(
-        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
-        L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
+        try
+        {
+            m_watcher = DeviceInformation::CreateWatcher(deviceInterfaceSelector);
+        }
+        CATCH_RETURN();
+    }
+    else
+    {
+        winrt::hstring deviceInterfaceSelector(
+            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
+            L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
 
-    auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProps.Append(L"System.Devices.Parent");
+        auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
+        additionalProps.Append(L"System.Devices.Parent");
 
-    m_watcher = DeviceInformation::CreateWatcher(deviceInterfaceSelector);
+        m_watcher = DeviceInformation::CreateWatcher(deviceInterfaceSelector);
+    }
 
     auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded);
     auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved);
@@ -1887,25 +1901,22 @@ bool CMidi2KSAggregateMidiEndpointManager2::ActiveKSAEndpointForDeviceExists(
 
 bool ShouldSkipOpeningKsPin(_In_ KsHandleWrapper& deviceHandleWrapper, _In_ UINT pinIndex)
 {
-    if (Feature_Servicing_MIDI2FilterCreations::IsEnabled())
+    std::unique_ptr<KSMULTIPLE_ITEM> dataRanges;
+    ULONG dataRangesSize{ 0 };
+
+    // skip this pin if for some reason data ranges aren't valid
+    if (FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+        return RetrieveDataRanges(h, pinIndex, (PKSMULTIPLE_ITEM*)&dataRanges, &dataRangesSize);
+        })))
     {
-        std::unique_ptr<KSMULTIPLE_ITEM> dataRanges;
-        ULONG dataRangesSize{ 0 };
+        return true;
+    }
 
-        // skip this pin if for some reason data ranges aren't valid
-        if (FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
-            return RetrieveDataRanges(h, pinIndex, (PKSMULTIPLE_ITEM*)&dataRanges, &dataRangesSize);
-            })))
-        {
-            return true;
-        }
-
-        // Skip this pin if it supports cyclic ump, or if it doesn't support bytestream
-        if (SUCCEEDED(DataRangeSupportsTransport(dataRanges.get(), MidiTransport_CyclicUMP)) ||
-            FAILED(DataRangeSupportsTransport(dataRanges.get(), MidiTransport_StandardByteStream)))
-        {
-            return true;
-        }
+    // Skip this pin if it supports cyclic ump, or if it doesn't support bytestream
+    if (SUCCEEDED(DataRangeSupportsTransport(dataRanges.get(), MidiTransport_CyclicUMP)) ||
+        FAILED(DataRangeSupportsTransport(dataRanges.get(), MidiTransport_StandardByteStream)))
+    {
+        return true;
     }
 
     return false;

@@ -51,8 +51,7 @@ public:
 
 
     HRESULT ConstructEndpointManager();
-    HRESULT ConstructConfigurationManager();
-
+    HRESULT ConstructConfigurationManager(); 
 
 private:
     TransportState();
@@ -63,7 +62,7 @@ private:
     wil::com_ptr<CMidi2LoopbackMidiConfigurationManager> m_configurationManager{ nullptr };
 
     std::shared_ptr<MidiLoopbackDeviceTable> m_endpointTable = std::make_shared<MidiLoopbackDeviceTable>();
-
+ 
     std::shared_ptr<TransportWorkQueue> m_workQueue = std::make_shared<TransportWorkQueue>();
 
 };
