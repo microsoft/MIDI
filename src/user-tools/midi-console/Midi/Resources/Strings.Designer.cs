@@ -403,7 +403,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc. Service management commands must be run from an Administrator console..
+        ///   Looks up a localized string similar to Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc..
         /// </summary>
         internal static string CommandServiceDescription {
             get {
@@ -914,16 +914,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
                 return ResourceManager.GetString("GenericTotal", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please select one of the following.
-        /// </summary>
-        internal static string InteractiveEndpointMenuPleaseSelectOption {
-            get {
-                return ResourceManager.GetString("InteractiveEndpointMenuPleaseSelectOption", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Association Id.
         /// </summary>
@@ -2113,7 +2104,73 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
                 return ResourceManager.GetString("ParameterServiceRestart", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Include sessions which currently have no open connections.
+        /// </summary>
+        internal static string ParameterEnumSessionsIncludeAll {
+            get {
+                return ResourceManager.GetString("ParameterEnumSessionsIncludeAll", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Include additional details for each transport, such as the transport id, image file name, and creation capabilities.
+        /// </summary>
+        internal static string ParameterEnumTransportsVerbose {
+            get {
+                return ResourceManager.GetString("ParameterEnumTransportsVerbose", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The WinRT MIDI 1.0 input port id of the Bluetooth LE device to bridge from.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsWinRTBleInputPortId {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsWinRTBleInputPortId", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The WinRT MIDI 1.0 output port id of the Bluetooth LE device to bridge from. This must be on the same device as the input port.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsWinRTBleOutputPortId {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsWinRTBleOutputPortId", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unique name to use for the newly created UMP endpoint.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsNewEndpointName {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsNewEndpointName", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reduce the amount of information displayed while the bridge is running.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsQuiet {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsQuiet", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Path and filename of the report file to create. The file must not already exist.
+        /// </summary>
+        internal static string ParameterDiagnosticsReportOutputFile {
+            get {
+                return ResourceManager.GetString("ParameterDiagnosticsReportOutputFile", resourceCulture);
+            }
+        }
+
+
+
+
         /// <summary>
         ///   Looks up a localized string similar to Report additional details about the service.
         /// </summary>

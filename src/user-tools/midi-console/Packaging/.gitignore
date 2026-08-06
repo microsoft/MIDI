@@ -1,0 +1,8 @@
+# MSIX packaging intermediates and outputs
+obj/
+output/
+
+# Never commit signing material
+*.pfx
+*.cer
+*.p12

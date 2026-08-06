@@ -166,7 +166,7 @@
     <value>Sends a text file of UMP MIDI words to the specified endpoint. See arguments and options for format and delimiters.</value>
   </data>
   <data name="CommandServiceDescription" xml:space="preserve">
-    <value>Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc. Service management commands must be run from an Administrator console.</value>
+    <value>Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc.</value>
   </data>
   <data name="CommandServicePingDescription" xml:space="preserve">
     <value>Ping the MIDI Windows Service</value>
@@ -275,9 +275,6 @@
   </data>
   <data name="GenericTotal" xml:space="preserve">
     <value>Total</value>
-  </data>
-  <data name="InteractiveEndpointMenuPleaseSelectOption" xml:space="preserve">
-    <value>Please select one of the following</value>
   </data>
   <data name="MessageValidationErrorInvalidUmp" xml:space="preserve">
     <value>The data does not result in a valid UMP</value>
@@ -913,6 +910,27 @@ Timestamp</value>
   </data>
   <data name="ParameterServiceRestart" xml:space="preserve">
     <value>Restart the service when complete</value>
+  </data>
+  <data name="ParameterEnumSessionsIncludeAll" xml:space="preserve">
+    <value>Include sessions which currently have no open connections</value>
+  </data>
+  <data name="ParameterEnumTransportsVerbose" xml:space="preserve">
+    <value>Include additional details for each transport, such as the transport id, image file name, and creation capabilities</value>
+  </data>
+  <data name="ParameterBridgeEndpointsWinRTBleInputPortId" xml:space="preserve">
+    <value>The WinRT MIDI 1.0 input port id of the Bluetooth LE device to bridge from</value>
+  </data>
+  <data name="ParameterBridgeEndpointsWinRTBleOutputPortId" xml:space="preserve">
+    <value>The WinRT MIDI 1.0 output port id of the Bluetooth LE device to bridge from. This must be on the same device as the input port</value>
+  </data>
+  <data name="ParameterBridgeEndpointsNewEndpointName" xml:space="preserve">
+    <value>Unique name to use for the newly created UMP endpoint</value>
+  </data>
+  <data name="ParameterBridgeEndpointsQuiet" xml:space="preserve">
+    <value>Reduce the amount of information displayed while the bridge is running</value>
+  </data>
+  <data name="ParameterDiagnosticsReportOutputFile" xml:space="preserve">
+    <value>Path and filename of the report file to create. The file must not already exist</value>
   </data>
   <data name="DirectionMessageSource" xml:space="preserve">
     <value>Message Source (MIDI In)</value>
