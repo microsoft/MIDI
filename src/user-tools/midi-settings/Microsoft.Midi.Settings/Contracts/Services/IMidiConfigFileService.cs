@@ -26,22 +26,22 @@ public interface IMidiConfigFile
     bool Load();
 
 
-    bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig);
+    bool StoreLoopbackEndpointPair(Windows.Devices.Midi2.Transports.Loopback.MidiLoopbackEndpointCreationConfig creationConfig);
     bool RemoveLoopbackEndpointPair(Guid associationId);
 
-    bool StoreBasicLoopbackEndpoint(Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointCreationConfig creationConfig);
+    bool StoreBasicLoopbackEndpoint(Windows.Devices.Midi2.Transports.BasicLoopback.MidiBasicLoopbackEndpointCreationConfig creationConfig);
     bool RemoveBasicLoopbackEndpoint(Guid associationId);
     bool StoreBasicLoopbackMutedProperty(Guid associationId, bool isMuted);
 
 
-    bool StoreNetworkHost(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkHostCreationConfig creationConfig);
-    bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientConnectConfig creationConfig);
+    bool StoreNetworkHost(Windows.Devices.Midi2.Transports.Network.MidiNetworkHostCreationConfig creationConfig);
+    bool StoreNetworkClient(Windows.Devices.Midi2.Transports.Network.MidiNetworkClientConnectConfig creationConfig);
 
 
 
     bool RemoveNetworkHost(string hostEntryId);
 
-    bool StoreEndpointCustomization(Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig updateConfig);
+    bool StoreEndpointCustomization(Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig updateConfig);
 
 
 }

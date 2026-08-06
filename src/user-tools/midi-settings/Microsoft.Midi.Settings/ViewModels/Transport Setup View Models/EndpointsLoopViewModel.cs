@@ -15,7 +15,7 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Markup;
-using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
+using Windows.Devices.Midi2.Transports.Loopback;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

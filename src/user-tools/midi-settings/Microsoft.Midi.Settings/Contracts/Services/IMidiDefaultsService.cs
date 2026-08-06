@@ -6,8 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
-using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
+using Windows.Devices.Midi2.Transports.Loopback;
+using Windows.Devices.Midi2.Transports.BasicLoopback;
 
 namespace Microsoft.Midi.Settings.Contracts.Services;
 

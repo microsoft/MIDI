@@ -16,9 +16,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Popups;
 
-using Microsoft.Windows.Devices.Midi2.Utilities.Update;
-using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
-
 
 namespace Microsoft.Midi.Settings.Models;
 
