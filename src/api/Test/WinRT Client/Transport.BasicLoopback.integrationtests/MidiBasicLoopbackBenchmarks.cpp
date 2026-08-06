@@ -129,123 +129,136 @@ static void RemoveBenchmarkLoopback(winrt::guid const& associationId)
 // ============================================================================
 void MidiBasicLoopbackBenchmarks::BenchmarkComExtensionsSendReceive()
 {
-    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
-    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+    LOG_OUTPUT(L"This currently fails woth 0xC0000409 if run with all the other tests outside this project. Looks like a test cleanup problem.");
 
-    auto response = CreateBenchmarkLoopback(L"Benchmark Basic Loopback COM");
+    winrt::init_apartment(winrt::apartment_type::multi_threaded);
 
-    auto associationId = response.CreatedLoopbackEntry().AssociationId();
-    auto endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
-
-    auto cleanupLoopback = wil::scope_exit([&] { RemoveBenchmarkLoopback(associationId); });
-
-    auto session = MidiSession::Create(L"Basic Loopback COM Benchmark");
-    VERIFY_IS_NOT_NULL(session);
-
-    auto connection = session.CreateEndpointConnection(endpointId);
-    VERIFY_IS_NOT_NULL(connection);
-
-    auto cleanupSession = wil::scope_exit([&]
-        {
-            session.DisconnectEndpointConnection(connection.ConnectionId());
-            session.Close();
-        });
-
-    wil::unique_event_nothrow allMessagesReceived;
-    allMessagesReceived.create();
-
-    std::atomic<uint32_t> receivedWordCount{ 0 };
-
-    // Each MIDI 1.0 channel voice UMP is a single 32-bit word, so the word count
-    // and the message count are the same here.
-    m_midiInCallback = [&](GUID, GUID, UINT64, UINT32 wordCount, UINT32*)
-        {
-            auto total = receivedWordCount.fetch_add(wordCount) + wordCount;
-
-            if (total >= BENCHMARK_MESSAGE_COUNT)
-            {
-                allMessagesReceived.SetEvent();
-            }
-        };
-
-    auto receiveExtension = connection.as<IMidiEndpointConnectionRaw>();
-    VERIFY_IS_NOT_NULL(receiveExtension);
-
-    receiveExtension->SetMessagesReceivedCallback(this);
-
-    auto sendExtension = connection.as<IMidiEndpointConnectionRaw>();
-    VERIFY_IS_NOT_NULL(sendExtension);
-
-    // release the COM references before tearing anything else down, even if a
-    // VERIFY macro below halts the benchmark early
-    auto cleanupComExtensions = wil::scope_exit([&]
-        {
-            if (receiveExtension != nullptr)
-            {
-                receiveExtension->RemoveMessagesReceivedCallback();
-            }
-
-            m_midiInCallback = nullptr;
-            receiveExtension = nullptr;
-            sendExtension = nullptr;
-        });
-
-    // make sure our batch size is within what the transport will accept
-    auto maxWords = sendExtension->GetSupportedMaxMidiWordsPerTransmission();
-    VERIFY_IS_LESS_THAN_OR_EQUAL((uint32_t)BENCHMARK_COM_BATCH_SIZE, maxWords);
-
-    VERIFY_IS_TRUE(connection.Open());
-
-    // Build one batch of 10 MIDI 1.0 note on messages, reused for every send.
-    uint32_t sendBuffer[BENCHMARK_COM_BATCH_SIZE]{};
-
-    for (uint32_t i = 0; i < BENCHMARK_COM_BATCH_SIZE; i++)
     {
-        sendBuffer[i] = 0x20901500 + i;
-    }
 
-    const uint32_t batchCount = BENCHMARK_MESSAGE_COUNT / BENCHMARK_COM_BATCH_SIZE;
+        VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+        VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
 
-    LOG_OUTPUT(L"Sending messages through the COM extensions");
+        auto response = CreateBenchmarkLoopback(L"Benchmark Basic Loopback COM");
 
-    auto sendStartTimestamp = MidiClock::Now();
+        auto associationId = response.CreatedLoopbackEntry().AssociationId();
+        auto endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
 
-    for (uint32_t batch = 0; batch < batchCount; batch++)
-    {
-        auto sendResult = sendExtension->SendMidiMessagesRaw(
-            MidiClock::TimestampConstantSendImmediately(),
-            BENCHMARK_COM_BATCH_SIZE,
-            sendBuffer);
+        auto cleanupLoopback = wil::scope_exit([&] { RemoveBenchmarkLoopback(associationId); });
 
-        if (FAILED(sendResult))
+        auto session = MidiSession::Create(L"Basic Loopback COM Benchmark");
+        VERIFY_IS_NOT_NULL(session);
+
+        auto connection = session.CreateEndpointConnection(endpointId);
+        VERIFY_IS_NOT_NULL(connection);
+
+        auto cleanupSession = wil::scope_exit([&]
+            {
+                session.DisconnectEndpointConnection(connection.ConnectionId());
+                session.Close();
+            });
+
+        wil::unique_event_nothrow allMessagesReceived;
+        allMessagesReceived.create();
+
+        std::atomic<uint32_t> receivedWordCount{ 0 };
+
+        // Each MIDI 1.0 channel voice UMP is a single 32-bit word, so the word count
+        // and the message count are the same here.
+        m_midiInCallback = [&](GUID, GUID, UINT64, UINT32 wordCount, UINT32*)
+            {
+                auto total = receivedWordCount.fetch_add(wordCount) + wordCount;
+
+                if (total >= BENCHMARK_MESSAGE_COUNT)
+                {
+                    allMessagesReceived.SetEvent();
+                }
+            };
+
+        auto receiveExtension = connection.as<IMidiEndpointConnectionRaw>();
+        VERIFY_IS_NOT_NULL(receiveExtension);
+
+        receiveExtension->SetMessagesReceivedCallback(this);
+
+        auto sendExtension = connection.as<IMidiEndpointConnectionRaw>();
+        VERIFY_IS_NOT_NULL(sendExtension);
+
+        // release the COM references before tearing anything else down, even if a
+        // VERIFY macro below halts the benchmark early
+        auto cleanupComExtensions = wil::scope_exit([&]
+            {
+                LOG_OUTPUT(L"Cleaning Up");
+
+                if (receiveExtension != nullptr)
+                {
+                    receiveExtension->RemoveMessagesReceivedCallback();
+                }
+
+                session.DisconnectEndpointConnection(connection.ConnectionId());
+                session.Close();
+
+                m_midiInCallback = nullptr;
+                receiveExtension = nullptr;
+                sendExtension = nullptr;
+            });
+
+        // make sure our batch size is within what the transport will accept
+        auto maxWords = sendExtension->GetSupportedMaxMidiWordsPerTransmission();
+        VERIFY_IS_LESS_THAN_OR_EQUAL((uint32_t)BENCHMARK_COM_BATCH_SIZE, maxWords);
+
+        VERIFY_IS_TRUE(connection.Open());
+
+        // Build one batch of 10 MIDI 1.0 note on messages, reused for every send.
+        uint32_t sendBuffer[BENCHMARK_COM_BATCH_SIZE]{};
+
+        for (uint32_t i = 0; i < BENCHMARK_COM_BATCH_SIZE; i++)
         {
-            std::cout << "Send failed on batch " << std::dec << batch << std::endl;
-            VERIFY_SUCCEEDED(sendResult);
-            break;
+            sendBuffer[i] = 0x20901500 + i;
         }
+
+        const uint32_t batchCount = BENCHMARK_MESSAGE_COUNT / BENCHMARK_COM_BATCH_SIZE;
+
+        LOG_OUTPUT(L"Sending messages through the COM extensions");
+
+        auto sendStartTimestamp = MidiClock::Now();
+
+        for (uint32_t batch = 0; batch < batchCount; batch++)
+        {
+            auto sendResult = sendExtension->SendMidiMessagesRaw(
+                MidiClock::TimestampConstantSendImmediately(),
+                BENCHMARK_COM_BATCH_SIZE,
+                sendBuffer);
+
+            if (FAILED(sendResult))
+            {
+                std::cout << "Send failed on batch " << std::dec << batch << std::endl;
+                VERIFY_SUCCEEDED(sendResult);
+                break;
+            }
+        }
+
+        auto sendEndTimestamp = MidiClock::Now();
+
+        if (!allMessagesReceived.wait(BENCHMARK_RECEIVE_TIMEOUT_MS))
+        {
+            std::cout << "Timed out waiting for messages." << std::endl;
+        }
+
+        auto receiveEndTimestamp = MidiClock::Now();
+
+        ReportBenchmarkResults(
+            "Basic Loopback - 100,000 MIDI 1.0 UMPs, 10 at a time, COM extensions",
+            sendStartTimestamp,
+            sendEndTimestamp,
+            receiveEndTimestamp,
+            BENCHMARK_MESSAGE_COUNT,
+            receivedWordCount.load());
+
+        VERIFY_ARE_EQUAL(receivedWordCount.load(), (uint32_t)BENCHMARK_MESSAGE_COUNT);
+
     }
 
-    auto sendEndTimestamp = MidiClock::Now();
+    winrt::uninit_apartment();
 
-    if (!allMessagesReceived.wait(BENCHMARK_RECEIVE_TIMEOUT_MS))
-    {
-        std::cout << "Timed out waiting for messages." << std::endl;
-    }
-
-    auto receiveEndTimestamp = MidiClock::Now();
-
-    ReportBenchmarkResults(
-        "Basic Loopback - 100,000 MIDI 1.0 UMPs, 10 at a time, COM extensions",
-        sendStartTimestamp,
-        sendEndTimestamp,
-        receiveEndTimestamp,
-        BENCHMARK_MESSAGE_COUNT,
-        receivedWordCount.load());
-
-    VERIFY_ARE_EQUAL(receivedWordCount.load(), (uint32_t)BENCHMARK_MESSAGE_COUNT);
-
-    // the cleanupComExtensions, cleanupSession, and cleanupLoopback scope_exit
-    // handlers tear everything down, in that order
 }
 
 
