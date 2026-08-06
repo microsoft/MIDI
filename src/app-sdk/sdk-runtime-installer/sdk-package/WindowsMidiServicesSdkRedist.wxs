@@ -1,25 +1,18 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
   <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
-  <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
-  <?include $(StagingVersionIncludeFile) ?>
-
 
   <Package
-          Name="Microsoft Windows MIDI Services (App SDK Runtime) $(var.Platform)"
+          Name="Windows MIDI Services Console Tools $(var.Platform)"
           Manufacturer="Microsoft Corporation"
-          Version="$(MidiSdkAndToolsVersion)"
-          UpgradeCode="297714bb-dd77-4748-a4c1-553ad66da5d0"
+          UpgradeCode="01eda8fd-3bb5-4610-a4f0-160ebbcf8394"
           UpgradeStrategy="majorUpgrade"
           >
 
         <MediaTemplate EmbedCab="yes" />
 
-
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
-                <Directory Id="SDK_INSTALLFOLDER" Name="Desktop App SDK Runtime">
-                </Directory>
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                 </Directory>
                 <Directory Id="COLLECTMIDILOGS_INSTALLFOLDER" Name="Collect MIDI Logs">
@@ -27,159 +20,48 @@
             </Directory>
         </StandardDirectory>
         
-        <!-- Install SDK -->
+        <!-- Install SDK Runtime. Like the rest of this installer, this is temporary -->
 
-        <Component Id="WindowsMidiServicesAppSDK"
-                   Permanent="no"
-                   Bitness="always64"
-                   Directory="SDK_INSTALLFOLDER"
-                   Guid="8016a59d-d844-4984-93e8-fa53f279abba">
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" PatchWholeFile="yes"  SelfRegCost="1"/>
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.winmd" Vital="true" PatchWholeFile="yes"  />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pdb" Vital="true" PatchWholeFile="yes"  />
-
-            <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\WindowsMidiServicesClientInitialization.dll" Vital="true" SelfRegCost="1"/>-->
-            <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\WindowsMidiServicesClientInitialization.tlb" Vital="true"/>-->
-
-        </Component>
-
-        <!-- Install MIDI Diag Utility -->
-        <Component Id="MidiDiagUtility"
+        <Component Id="WindowsMidiServicesConsoleTools"
                    Permanent="no"
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
-                   Guid="a10cb6cb-571a-462e-9df7-f388460da50f"  >
+                   Guid="7061b206-9a9a-4ed4-aace-35beeba89971">
+
+            <!-- these are here just to make the tools work -->
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.pri" Vital="true" PatchWholeFile="yes" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.winmd" Vital="true" PatchWholeFile="yes"  />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.pdb" Vital="true" PatchWholeFile="yes"  />
+
+
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe" Vital="true" PatchWholeFile="yes"  />
-
-            <!-- Add folder to path -->
-            <Environment Id="AddMidiDiagUtilityToSystemPath"
-                            Name="PATH" Action="set" Part="last" System="yes"
-                            Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
-
-            <RegistryKey Root="HKLM"
-                         Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
-              <RegistryValue Type="string" Name="MidiDiag" Value="[TOOLSROOT_INSTALLFOLDER]mididiag.exe" />
-            </RegistryKey>
-        </Component>
-
-        <!-- Install MIDI USB Utility -->
-        <Component Id="MidiUsbUtility"
-                   Permanent="no"
-                   Bitness="always64"
-                   Directory="TOOLSROOT_INSTALLFOLDER"
-                   Guid="704c5cee-8af7-4826-a9b8-d45d14d24684"  >
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiksinfo.exe" Vital="true" PatchWholeFile="yes"  />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1monitor.exe" Vital="true" PatchWholeFile="yes"  />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1enum.exe" Vital="true" PatchWholeFile="yes"  />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midifixreg.exe" Vital="true" PatchWholeFile="yes"  />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiapimode.exe" Vital="true" PatchWholeFile="yes"  />
 
-            <!-- Add folder to path -->
-            <Environment Id="AddMidiUsbUtilityToSystemPath"
-                            Name="PATH" Action="set" Part="last" System="yes"
-                            Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
-        </Component>
-
-        <!-- Install MIDI mDNS Utility -->
-        <Component Id="MidiMdnsUtility"
-                   Permanent="no"
-                   Bitness="always64"
-                   Directory="TOOLSROOT_INSTALLFOLDER"
-                   Guid="246488ea-a9de-45bc-82a0-a01a61c434ff"  >
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midimdnsinfo.exe" Vital="true" PatchWholeFile="yes"  />
 
-            <!-- Add folder to path -->
-            <Environment Id="AddMidiMdnsUtilityToSystemPath"
-                            Name="PATH" Action="set" Part="last" System="yes"
-                            Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
-        </Component>
-
-        <!-- Install MIDI 1 monitor Utility -->
-        <Component Id="Midi1MonitorUtility"
-                   Permanent="no"
-                   Bitness="always64"
-                   Directory="TOOLSROOT_INSTALLFOLDER"
-                   Guid="7f65432f-5f95-4e8d-9e1b-c25405868244"  >
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1monitor.exe" Vital="true" PatchWholeFile="yes"  />
-
-            <!-- Add folder to path -->
-            <Environment Id="AddMidi1MonitorUtilityToSystemPath"
-                            Name="PATH" Action="set" Part="last" System="yes"
-                            Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
-        </Component>
-
-        <!-- Install MIDI 1 enum Utility -->
-        <Component Id="Midi1EnumUtility"
-                   Permanent="no"
-                   Bitness="always64"
-                   Directory="TOOLSROOT_INSTALLFOLDER"
-                   Guid="318aa3ff-3f4c-41c6-bce7-8e343b7b2ae4"  >
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1enum.exe" Vital="true" PatchWholeFile="yes"  />
-
-            <!-- Add folder to path -->
-            <Environment Id="AddMidi1EnumUtilityToSystemPath"
-                            Name="PATH" Action="set" Part="last" System="yes"
-                            Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
-        </Component>
-
-        <!-- Install MIDI fix registry Utility -->
-        <Component Id="MidiFixRegUtility"
-                   Permanent="no"
-                   Bitness="always64"
-                   Directory="TOOLSROOT_INSTALLFOLDER"
-                   Guid="fbafecf6-5bf1-4ee5-bee6-fdec96e0bb04"  >
-          <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midifixreg.exe" Vital="true" PatchWholeFile="yes"  />
 
           <!-- Add folder to path -->
-          <Environment Id="AddMidiFixRegUtilityToSystemPath"
+          <Environment Id="AddToolsToSystemPath"
                           Name="PATH" Action="set" Part="last" System="yes"
                           Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
 
           <RegistryKey Root="HKLM"
                        Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
-            <RegistryValue Type="string" Name="MidiFixReg" Value="[TOOLSROOT_INSTALLFOLDER]midifixreg.exe" />
+            <RegistryValue Type="string" Name="MidiDiag" Value="[TOOLSROOT_INSTALLFOLDER]mididiag.exe" />
           </RegistryKey>
-        </Component>
 
-        <!-- Install MIDI check service Utility -->
-        <Component Id="MidiCheckServiceUtility"
-                   Permanent="no"
-                   Bitness="always64"
-                   Directory="TOOLSROOT_INSTALLFOLDER"
-                   Guid="49384aeb-c8ad-4ad1-8744-b83ad8d51fb1"  >
-          <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midicheckservice.exe" Vital="true" PatchWholeFile="yes"  />
-
-          <!-- Add folder to path -->
-          <Environment Id="AddMidiCheckServiceToSystemPath"
-                          Name="PATH" Action="set" Part="last" System="yes"
-                          Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
-
-            <RegistryKey Root="HKLM"
-               Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
-
-              <RegistryValue Type="string" Name="MidiCheckService" Value="[TOOLSROOT_INSTALLFOLDER]midicheckservice.exe" />
-
-            </RegistryKey>
-        </Component>
-
-    
-    <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
-        <Component Id="WindowsMidiServicesAppSdkImplementationRegEntries"
-                   Permanent="no"
-                   Bitness="always64"
-                   Directory="SDK_INSTALLFOLDER"
-                   Guid="0ce8cde5-b1b8-4825-854d-c31427b91cb5">
-            <RegistryKey Root="HKLM"
-                         Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
-
-                <RegistryValue Type="string" Name="Installed" Value="[SDK_INSTALLFOLDER]" />
-
-            </RegistryKey>
         </Component>
 
     <Component Id="WindowsMidiServicesCollectMidiLogs"
                Permanent="no"
                Bitness="always64"
                Directory="COLLECTMIDILOGS_INSTALLFOLDER"
-               Guid="0686741b-2a74-4c32-9431-942bd23adc33">
+               Guid="f8bb863f-8763-45d3-acdf-23293a83a6e5">
 
         <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\CollectMidiLogs.cmd" Vital="true" PatchWholeFile="yes" />
         <File Source="$(StagingSourceRootFolder)\CollectMidiLogs\CollectMidiLogs.ps1" Vital="true" PatchWholeFile="yes"  />
@@ -195,15 +77,7 @@
     </Component>
 
     <Feature Id="WindowsMIDIServices">
-            <ComponentRef Id="WindowsMidiServicesAppSDK" />
-            <ComponentRef Id="WindowsMidiServicesAppSdkImplementationRegEntries"/>
-            <ComponentRef Id="MidiDiagUtility"/>
-            <ComponentRef Id="MidiUsbUtility"/>
-            <ComponentRef Id="MidiMdnsUtility"/>
-            <ComponentRef Id="Midi1MonitorUtility"/>
-            <ComponentRef Id="Midi1EnumUtility"/>
-            <ComponentRef Id="MidiFixRegUtility"/>
-            <ComponentRef Id="MidiCheckServiceUtility"/>
+            <ComponentRef Id="WindowsMidiServicesConsoleTools" />
             <ComponentRef Id="WindowsMidiServicesCollectMidiLogs"/>
     </Feature>
 

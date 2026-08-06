@@ -242,26 +242,9 @@ app.Configure(config =>
             .WithExample("service", "ping", "--count", "10", "--timeout", "5000", "--verbose")
             ;
 
-        service.AddCommand<ServiceRestartCommand>("restart")
-            .WithDescription(Strings.CommandServiceRestartDescription)
-            .WithExample("service", "restart")
-            ;
-
-        service.AddCommand<ServiceStartCommand>("start")
-            .WithDescription(Strings.CommandServiceStartDescription)
-            .WithExample("service", "start")
-            ;
-
-        service.AddCommand<ServiceStopCommand>("stop")
-            .WithDescription(Strings.CommandServiceStopDescription)
-            .WithExample("service", "stop")
-            ;
-
-        service.AddCommand<ServiceSetAutoStart>("set-auto-start")
-            .WithDescription(Strings.ServiceSetAutoDelayedStartDescription)
-            .WithExample("service", "set-auto-start", "--restart")
-            ;
-
+        // Starting, stopping, restarting, and changing the start type of the MIDI service
+        // are standard service management operations. Use the built-in Windows tools
+        // (services.msc, sc.exe, Start-Service/Stop-Service) for those instead.
 
     }).WithAlias("svc");
 
@@ -323,24 +306,6 @@ app.Configure(config =>
 
     //});
 
-
-    /*
-    config.AddBranch<SimulateCommandSettings>("simulate", cache =>
-    {
-        // TODO: endpoint and function block responders, including static, randomly moving at some interval, etc.
-        // include an interactive mode that has menus for changing the endpoint name etc.
-
-    });
-    */
-
-    /*
-    config.AddBranch<SimulateCommandSettings>("simulate", cache =>
-    {
-        // TODO: endpoint and function block responders, including static, randomly moving at some interval, etc.
-        // include an interactive mode that has menus for changing the endpoint name etc.
-
-    });
-    */
 
     /*
     config.AddCommand<DiagnosticsReportCommand>("diagnostics-report")

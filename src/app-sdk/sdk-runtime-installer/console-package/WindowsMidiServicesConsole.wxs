@@ -46,12 +46,13 @@
           <!-- WinRT Projections -->
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" Vital="true" PatchWholeFile="yes" />
 
-            <!--            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" /> -->
-            <!--<File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" />-->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.pri" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.pdb" />
 
 
 
-            <!-- Spectre Console -->
+          <!-- Spectre Console -->
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.dll" Vital="true" PatchWholeFile="yes" />
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.Cli.dll" Vital="true" PatchWholeFile="yes" />
 
