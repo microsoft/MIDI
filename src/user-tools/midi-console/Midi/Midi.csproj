@@ -11,11 +11,12 @@
     <!--<PlatformTargets>x64, ARM64</PlatformTargets>-->
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 
+      <!-- MSIX requires a loose-file layout, so single-file/trimming/AOT stay off.
+           SelfContained is set by the publish profiles so normal builds and F5 stay framework-dependent. -->
       <PublishSingleFile>false</PublishSingleFile>
-      <PublishSelfContained>false</PublishSelfContained>
-      <SelfContained>false</SelfContained>
       <PublishTrimmed>false</PublishTrimmed>
       <PublishAot>false</PublishAot>
+      <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 
     <Platforms>x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
@@ -25,7 +26,11 @@
       <!-- Needed for System.Management for viewing service details -->
       <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
       
-      <AssemblyVersion></AssemblyVersion>
+      <!-- Keep in sync with the MSIX package version. MSIX requires a 4-part version with revision 0. -->
+      <MidiConsolePackageVersion>1.0.0.0</MidiConsolePackageVersion>
+      <Version>1.0.0</Version>
+      <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      <FileVersion>1.0.0.0</FileVersion>
 
         <!-- needed to copy the required winrt implmentation dlls to bin folder -->
       <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -77,6 +82,6 @@
         </EmbeddedResource>
     </ItemGroup>
 
-  
-    
+
+
 </Project>

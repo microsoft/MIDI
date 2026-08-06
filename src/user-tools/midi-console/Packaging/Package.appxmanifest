@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  Windows MIDI Console - MSIX package manifest TEMPLATE.
+
+  This file is a template. Build-Msix.ps1 replaces the $Token$ placeholders below and
+  writes the result into the per-architecture staging layout. Do not pack this file directly.
+
+    $Version$        - four-part package version, e.g. 1.0.0.0
+    $Architecture$   - x64 or arm64
+    $Publisher$      - full publisher distinguished name, must match the signing certificate subject
+
+  TODO: replace the Identity Name and PublisherDisplayName below with the values assigned by
+  Partner Center for this app before submitting to the Microsoft Store.
+-->
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap5 uap10 rescap">
+
+  <Identity
+    Name="Microsoft.WindowsMidiConsole"
+    Publisher="$Publisher$"
+    Version="$Version$"
+    ProcessorArchitecture="$Architecture$" />
+
+  <Properties>
+    <DisplayName>Windows MIDI Console</DisplayName>
+    <PublisherDisplayName>Microsoft Corporation</PublisherDisplayName>
+    <Description>Command-line console for Windows MIDI Services.</Description>
+    <Logo>Images\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <!-- Windows 11 25H2 (build 26200) and higher only. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.26200.0" MaxVersionTested="10.0.26200.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <!--
+      EntryPoint="Windows.FullTrustApplication" makes this a full-trust desktop application.
+      uap10:Subsystem="console" keeps stdin/stdout/stderr attached to the launching console window.
+    -->
+    <Application
+      Id="MidiConsole"
+      Executable="midi.exe"
+      EntryPoint="Windows.FullTrustApplication"
+      uap10:Subsystem="console"
+      uap10:SupportsMultipleInstances="true">
+
+      <uap:VisualElements
+        DisplayName="Windows MIDI Console"
+        Description="Command-line console for Windows MIDI Services."
+        BackgroundColor="transparent"
+        Square150x150Logo="Images\Square150x150Logo.png"
+        Square44x44Logo="Images\Square44x44Logo.png"
+        AppListEntry="none">
+        <uap:DefaultTile Square310x310Logo="Images\LargeTile.png" Square71x71Logo="Images\SmallTile.png" Wide310x150Logo="Images\Wide310x150Logo.png" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!-- Lets the user type "midi" from any console, in any directory. -->
+        <uap5:Extension
+          Category="windows.appExecutionAlias"
+          Executable="midi.exe"
+          EntryPoint="Windows.FullTrustApplication">
+          <uap5:AppExecutionAlias>
+            <uap5:ExecutionAlias Alias="midi.exe" />
+          </uap5:AppExecutionAlias>
+        </uap5:Extension>
+      </Extensions>
+
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!--
+      Full trust: this is a desktop (non-UWP) application, and several commands read and write
+      user-supplied file paths anywhere on disk (send-sysex-file, send-message-file,
+      monitor capture-to-file, diagnostics report). Running full trust keeps the app outside
+      AppContainer so those paths resolve with the user's normal token.
+
+      Note: broadFileSystemAccess is deliberately NOT declared. It is a UWP/AppContainer
+      capability and is not needed by a full-trust desktop app.
+    -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+</Package>
