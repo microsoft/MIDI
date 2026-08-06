@@ -11,10 +11,8 @@
 
 #include "pch.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4244)
-#include "color.hpp"
-#pragma warning(pop)
+#include "console_tools_shared.h"
+
 
 bool m_showActiveSense{ false };
 bool m_showClock{ false };
@@ -54,31 +52,19 @@ MIDIHDR m_header{ };
 HMIDIIN m_hMidiIn{ };
 
 
-
-void WriteInfo(std::string info)
+void WriteInputPortSelector(_In_ MidiInputPort const& port)
 {
-    std::cout << dye::aqua(info) << std::endl;
+    fmt::println(L"{} : {}",
+        fmt::styled(port.Index, fmt::fg(fmt::color::golden_rod)),
+        fmt::styled(port.Name, fmt::fg(fmt::color::light_gray))
+        );
+
 }
 
-
-void WriteError(std::string error)
+void WriteSysExDataByte(_In_ uint8_t const dataByte)
 {
-    std::cout << dye::light_red(error) << std::endl;
+    fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X} ", dataByte), fmt::fg(fmt::color::gray)));
 }
-
-void WriteBrightLabel(std::string label)
-{
-    auto fullLabel = label + ":";
-    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::white(fullLabel);
-}
-
-void WriteLabel(std::string label)
-{
-    auto fullLabel = label + ":";
-    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::grey(fullLabel);
-}
-
-
 
 
 void LoadWinMMDevices()
@@ -106,42 +92,34 @@ void LoadWinMMDevices()
 
 void DisplayAllWinMMInputs()
 {
-    WriteInfo(std::to_string(m_midiInputs.size()) + " Available Input Ports");
+    WriteInfoLine(std::format(L"{} Available Input Ports", m_midiInputs.size()));
 
     for (auto const& port : m_midiInputs)
     {
-        std::cout
-            << std::setw(3) << dye::yellow(port.Index)
-            << dye::grey(" : ");
-
-        std::wcout
-            << port.Name
-            << std::endl;
+        WriteInputPortSelector(port);
     }
 }
-
-#define LINE_LENGTH 79
-
 
 
 void DisplayStatusByte(byte status, bool isError)
 {
     if (status == MIDI_SYSEX)
     {
-        std::cout << "\n" << std::hex << std::setw(2) << dye::light_green((uint16_t)status);
+        fmt::print(L"\n{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
+
     }
     else if (status == MIDI_EOX)
     {
-        std::cout << " " << std::hex << std::setw(2) << dye::light_green((uint16_t)status);
+        fmt::println(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
     }
     else
     {
-        std::cout << "\n";
+        fmt::println(L"");
     }
 
     if (isError)
     {
-        std::cout << std::hex << std::setw(2) << dye::light_red((uint16_t)status);
+        fmt::println(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::pink)));
         return;
     }
 
@@ -151,58 +129,70 @@ void DisplayStatusByte(byte status, bool isError)
         switch (status & 0xF0)
         {
         case MIDI_NOTEOFF:
-            std::cout << std::hex << std::setw(2) << dye::aqua((uint16_t)status);
+            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::dark_cyan)));
             break;
         case MIDI_NOTEON:
-            std::cout << std::hex << std::setw(2) << dye::light_aqua((uint16_t)status);
+            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::cyan)));
             break;
         case MIDI_MONOAFTERTOUCH:
-            std::cout << std::hex << std::setw(2) << dye::yellow((uint16_t)status);
+            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::golden_rod)));
             break;
         case MIDI_CONTROLCHANGE:
-            std::cout << std::hex << std::setw(2) << dye::light_blue((uint16_t)status);
+            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_blue)));
             break;
         default:
-            std::cout << std::hex << std::setw(2) << dye::light_purple((uint16_t)status);
+            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::magenta)));
         }
     }
     else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
     {
-        std::cout << std::hex << std::setw(2) << dye::grey((uint16_t)status);
+        fmt::println(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::gray)));
     }
 
 }
 
 void DisplayDataByte(byte data, bool isError)
 {
-    std::cout << " ";
-
     if (isError)
     {
-        std::cout << std::setfill('0') << std::hex << std::setw(2) << dye::red((uint16_t)data);
+        fmt::print(L" {}", fmt::styled(fmt::format(L"{:02X}", data), fmt::fg(fmt::color::pink)));
     }
     else
     {
-        std::cout << std::setfill('0') << std::hex << std::setw(2) << dye::grey((uint16_t)data);
+        fmt::print(L" {}", fmt::styled(fmt::format(L"{:02X}", data), fmt::fg(fmt::color::light_gray)));
     }
 }
 
 
-void DisplayDecodedChannelVoiceMessage(std::string messageName, uint8_t channel, std::string labelForByte1, uint8_t byte1)
+void DisplayDecodedChannelVoiceMessage(
+    _In_ std::wstring const& messageName, 
+    _In_ uint8_t const channel, 
+    _In_ std::wstring const& labelForByte1, 
+    _In_ uint8_t const byte1)
 {
-    std::cout << std::left << std::setw(18) << std::setfill(' ') << dye::aqua(messageName) << "  ";
-    std::cout << dye::grey("Channel: ") << std::setw(2) << std::right << std::dec << dye::yellow((uint16_t)channel) << ",  ";
-    std::cout << std::setw(12) << dye::grey(labelForByte1) << ": " << std::setw(3) << std::right << std::dec << dye::yellow((uint16_t)byte1);
-
+    fmt::print(L" {} {} {} {} {}", 
+        fmt::styled(fmt::format(L"{:<18}", messageName), fmt::fg(fmt::color::aqua)),
+        fmt::styled(internal::ResourceGetWString(IDS_LABEL_CHANNEL), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(fmt::format(L"{:>2},", channel), fmt::fg(fmt::color::golden_rod)),
+        fmt::styled(fmt::format(L"{:<12}:", labelForByte1), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(fmt::format(L"{:3}", byte1), fmt::fg(fmt::color::golden_rod))
+        );
 }
 
-void DisplayDecodedChannelVoiceMessage(std::string messageName, uint8_t channel, std::string labelForByte1, uint8_t byte1, std::string labelForByte2, uint8_t byte2)
+void DisplayDecodedChannelVoiceMessage(
+    _In_ std::wstring const& messageName, 
+    _In_ uint8_t const channel, 
+    _In_ std::wstring const& labelForByte1, 
+    _In_ uint8_t const byte1, 
+    _In_ std::wstring const& labelForByte2, 
+    _In_ uint8_t const byte2)
 {
     DisplayDecodedChannelVoiceMessage(messageName, channel, labelForByte1, byte1);
 
-    std::cout << ",  ";
-    std::cout << std::setw(12) << dye::grey(labelForByte2) << ": " << std::setw(3) << std::right << std::dec << dye::yellow((uint16_t)byte2);
-
+    fmt::print(L", {} {}",
+        fmt::styled(fmt::format(L"{:<12}:", labelForByte2), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(fmt::format(L"{:3}", byte2), fmt::fg(fmt::color::golden_rod))
+    );
 }
 
 
@@ -260,7 +250,7 @@ void DisplayMidiMessage(ReceivedMidiMessage& msg)
             spaces = 1;
         }
 
-        std::cout << std::setw(spaces + 2) << std::setfill(' ') << "";
+     //   std::cout << std::setw(spaces + 2) << std::setfill(' ') << "";
 
         if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
         {
@@ -269,25 +259,25 @@ void DisplayMidiMessage(ReceivedMidiMessage& msg)
             switch (status & 0xF0)
             {
             case MIDI_NOTEOFF:
-                DisplayDecodedChannelVoiceMessage("Note Off", channel, "Note", msg.Data[1], "Velocity", msg.Data[2]);
+                DisplayDecodedChannelVoiceMessage(internal::ResourceGetWString(IDS_MESSAGE_NOTE_OFF), channel, internal::ResourceGetWString(IDS_LABEL_NOTE), msg.Data[1], internal::ResourceGetWString(IDS_LABEL_VELOCITY), msg.Data[2]);
                 break;
             case MIDI_NOTEON:
-                DisplayDecodedChannelVoiceMessage("Note On", channel, "Note", msg.Data[1], "Velocity", msg.Data[2]);
+                DisplayDecodedChannelVoiceMessage(internal::ResourceGetWString(IDS_MESSAGE_NOTE_ON), channel, internal::ResourceGetWString(IDS_LABEL_NOTE), msg.Data[1], internal::ResourceGetWString(IDS_LABEL_VELOCITY), msg.Data[2]);
                 break;
             case MIDI_POLYAFTERTOUCH:
-                DisplayDecodedChannelVoiceMessage("Poly Aftertouch", channel, "Note", msg.Data[1], "Pressure", msg.Data[2]);
+                DisplayDecodedChannelVoiceMessage(internal::ResourceGetWString(IDS_MESSAGE_POLY_AFTERTOUCH), channel, internal::ResourceGetWString(IDS_LABEL_NOTE), msg.Data[1], internal::ResourceGetWString(IDS_LABEL_PRESSURE), msg.Data[2]);
                 break;
             case MIDI_CONTROLCHANGE:
-                DisplayDecodedChannelVoiceMessage("Control Change", channel, "Controller", msg.Data[1], "Value", msg.Data[2]);
+                DisplayDecodedChannelVoiceMessage(internal::ResourceGetWString(IDS_MESSAGE_CONTROL_CHANGE), channel, internal::ResourceGetWString(IDS_LABEL_CONTROLLER), msg.Data[1], internal::ResourceGetWString(IDS_LABEL_VALUE), msg.Data[2]);
                 break;
             case MIDI_PROGRAMCHANGE:
-                DisplayDecodedChannelVoiceMessage("Program Change", channel, "Program", msg.Data[1]);
+                DisplayDecodedChannelVoiceMessage(internal::ResourceGetWString(IDS_MESSAGE_PROGRAM_CHANGE), channel, internal::ResourceGetWString(IDS_LABEL_PROGRAM), msg.Data[1]);
                 break;
             case MIDI_MONOAFTERTOUCH:
-                DisplayDecodedChannelVoiceMessage("Channel Pressure", channel, "Pressure", msg.Data[1]);
+                DisplayDecodedChannelVoiceMessage(internal::ResourceGetWString(IDS_MESSAGE_CHANNEL_PRESSURE), channel, internal::ResourceGetWString(IDS_LABEL_PRESSURE), msg.Data[1]);
                 break;
             case MIDI_PITCHBEND:
-                DisplayDecodedChannelVoiceMessage("Pitch Bend", channel, "LSB", msg.Data[1], "MSB", msg.Data[2]);
+                DisplayDecodedChannelVoiceMessage(internal::ResourceGetWString(IDS_MESSAGE_PITCH_BEND), channel, internal::ResourceGetWString(IDS_LABEL_LSB), msg.Data[1], internal::ResourceGetWString(IDS_LABEL_MSB), msg.Data[2]);
                 break;
             default:
                 break;
@@ -298,22 +288,22 @@ void DisplayMidiMessage(ReceivedMidiMessage& msg)
             switch (status)
             {
             case MIDI_TIMINGCLOCK:
-                std::cout << dye::light_aqua("System Real-Time: Clock");
+                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CLOCK), fmt::fg(fmt::color::light_cyan)));
                 break;
             case MIDI_START:
-                std::cout << dye::green("System Real-Time: Start");
+                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_START), fmt::fg(fmt::color::green)));
                 break;
             case MIDI_CONTINUE:
-                std::cout << dye::light_yellow("System Real-Time: Continue");
+                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CONTINUE), fmt::fg(fmt::color::light_yellow)));
                 break;
             case MIDI_STOP:
-                std::cout << dye::red("System Real-Time: Stop");
+                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_STOP), fmt::fg(fmt::color::red)));
                 break;
             case MIDI_ACTIVESENSE:
-                std::cout << dye::grey("System Real-Time: Active Sense");
+                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_ACTIVE_SENSE), fmt::fg(fmt::color::gray)));
                 break;
             case MIDI_RESET:
-                std::cout << dye::light_red("System Real-Time: Reset");
+                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_RESET), fmt::fg(fmt::color::light_salmon)));
                 break;
             }
         }
@@ -494,13 +484,19 @@ std::jthread m_displayThread;
 
 int __cdecl main(int argc, char* argv[])
 {
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
-    std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
-    std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" Monitor a MIDI 1.0 port through WinMM/MME") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    if (!TrySetConsoleTextMode())
+    {
+        return RETURN_ERROR_SETTING_CONSOLE_MODE;
+    }
+
+
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
+    WriteDoubleSeparatorLine();
 
     LoadWinMMDevices();
 
@@ -531,9 +527,9 @@ int __cdecl main(int argc, char* argv[])
     {
         DisplayAllWinMMInputs();
 
-        std::cout << std::endl;
-        WriteInfo("Enter port number to monitor:");
-        std::cin >> portNumber;
+        WriteBlankLine();
+        WriteInfoLine(internal::ResourceGetWString(IDS_PROMPT_ENTER_PORT_NUMBER));
+        std::wcin >> portNumber;
     }
 
 
@@ -541,31 +537,39 @@ int __cdecl main(int argc, char* argv[])
         [&portNumber](const MidiInputPort& p) { return p.Index == portNumber; });
         port != m_midiInputs.end())
     {
-        std::cout << std::endl;
-        std::cout << dye::aqua("Monitoring ");
-        std::wcout << port->Name;
-        std::cout << dye::aqua(" for input. Hit ");
-        std::cout << dye::green("escape");
-        std::cout << dye::aqua(" to cancel. Hit ");
-        std::cout << dye::green("spacebar");
-        std::cout << dye::aqua(" to toggle showing hidden messages.");
-        std::cout << std::endl;
+        fmt::println(L"\n{} {} {} {} {} {} {}",
+            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_MONITORING), fmt::fg(fmt::color::light_gray)),
+            fmt::styled(port->Name, fmt::fg(fmt::color::aqua)),
+            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_FOR_INPUT_HIT), fmt::fg(fmt::color::light_gray)),
+            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_KEY_ESCAPE), fmt::fg(fmt::color::light_green)),
+            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_TO_CANCEL_HIT), fmt::fg(fmt::color::light_gray)),
+            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_KEY_SPACEBAR), fmt::fg(fmt::color::light_green)),
+            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_TO_TOGGLE_HIDDEN_MESSAGES), fmt::fg(fmt::color::light_gray))
+        );
 
         if (!m_showActiveSense)
         {
-            std::cout << dye::aqua("Hiding") << dye::light_red(" active sense ") << dye::aqua("messages. ");
+            fmt::print(L"{} {} {} ",
+                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_HIDING), fmt::fg(fmt::color::light_gray)),
+                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_ACTIVE_SENSE), fmt::fg(fmt::color::pink)),
+                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_MESSAGES), fmt::fg(fmt::color::light_gray))
+            );
         }
 
         if (!m_showClock)
         {
-            std::cout << dye::aqua("Hiding") << dye::light_red(" clock ") << dye::aqua("messages.");
+            fmt::println(L"{} {} {}",
+                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_HIDING), fmt::fg(fmt::color::light_gray)),
+                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_CLOCK), fmt::fg(fmt::color::pink)),
+                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_MESSAGES), fmt::fg(fmt::color::light_gray))
+            );
         }
 
-        std::cout << std::endl << std::endl;
+        fmt::println(L"");
     }
     else
     {
-        WriteError(std::to_string(portNumber) + " is not a valid port number.");
+        WriteErrorLine(std::format(L"{} is not a valid port number.", portNumber));
         return RETURN_INVALID_PORT_NUMBER;
     }
 
@@ -590,7 +594,7 @@ int __cdecl main(int argc, char* argv[])
     }
     else
     {
-        WriteError("Unable to open port for input.");
+        WriteErrorLine(internal::ResourceGetWString(IDS_ERROR_UNABLE_TO_OPEN_PORT));
         return RETURN_UNABLE_TO_OPEN_PORT;
     }
 
@@ -600,14 +604,14 @@ int __cdecl main(int argc, char* argv[])
 
         if (ch == KEY_ESCAPE)
         {
-            WriteInfo("\nClosing");
+            WriteInfoLine(L"\n" + internal::ResourceGetWString(IDS_STATUS_CLOSING));
             break;
         }
         else if (ch == KEY_SPACE)
         {
             // toggle showing hidden messages
 
-            WriteInfo("\nToggling showing active sense and clock messages");
+            WriteInfoLine(L"\n" + internal::ResourceGetWString(IDS_STATUS_TOGGLING_HIDDEN_MESSAGES));
 
             m_showActiveSense = !m_showActiveSense;
             m_showClock = !m_showClock;
@@ -634,19 +638,42 @@ int __cdecl main(int argc, char* argv[])
 
     auto averageMillisecondsPerByte = elapsedMilliseconds / m_countAllBytesReceived ;
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "Total Bytes Received:          " << dye::aqua(m_countAllBytesReceived) << std::endl;
-    std::cout << "Status Bytes Received:         " << dye::aqua(m_countStatusBytesReceived) << std::endl;
-    std::cout << std::endl;
-    std::cout << "Timestamp First Message:       " << dye::green(m_timestampFirstMessageReceived) << std::endl;
-    std::cout << "Timestamp Last Message:        " << dye::green(m_timestampLastMessageReceived) << std::endl;
-    std::cout << "Elapsed Ticks:                 " << dye::green(elapsedTicks) << std::endl;
-    std::cout << std::endl;
-    std::cout << "Elapsed Milliseconds:          " << dye::yellow(elapsedMilliseconds) << std::endl;
-    std::cout << "Average Milliseconds per byte: " << dye::yellow(averageMillisecondsPerByte) << std::endl;
+    fmt::println(L"");
+    fmt::println(L"");
 
-    std::cout << std::endl;
+    fmt::println(L"{:<31} {} ",
+        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_TOTAL_BYTES_RECEIVED), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(m_countAllBytesReceived, fmt::fg(fmt::color::aqua)));
+
+    fmt::println(L"{:<31} {} ",
+        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_STATUS_BYTES_RECEIVED), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(m_countStatusBytesReceived, fmt::fg(fmt::color::aqua)));
+
+    fmt::println(L"");
+
+    fmt::println(L"{:<31} {} ",
+        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_TIMESTAMP_FIRST_MESSAGE), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(m_timestampFirstMessageReceived, fmt::fg(fmt::color::light_green)));
+
+    fmt::println(L"{:<31} {} ",
+        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_TIMESTAMP_LAST_MESSAGE), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(m_timestampLastMessageReceived, fmt::fg(fmt::color::light_green)));
+
+    fmt::println(L"{:<31} {} ",
+        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_ELAPSED_TICKS), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(elapsedTicks, fmt::fg(fmt::color::light_green)));
+
+    fmt::println(L"");
+
+    fmt::println(L"{:<31} {} ",
+        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_ELAPSED_MILLISECONDS), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(elapsedMilliseconds, fmt::fg(fmt::color::yellow)));
+
+    fmt::println(L"{:<31} {} ",
+        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_AVERAGE_MILLISECONDS_PER_BYTE), fmt::fg(fmt::color::light_gray)),
+        fmt::styled(averageMillisecondsPerByte, fmt::fg(fmt::color::yellow)));
+
+    fmt::println(L"");
 
     return 0;
 }

@@ -11,10 +11,7 @@
 
 #include "pch.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4244)
-#include "color.hpp"
-#pragma warning(pop)
+#include "console_tools_shared.h"
 
 bool m_showActiveSense{ false };
 bool m_showClock{ false };
@@ -23,30 +20,6 @@ bool m_showClock{ false };
 #define DRV_RESERVED                    0x0800
 #define DRV_QUERYDEVICEINTERFACE        (DRV_RESERVED + 12)
 #define DRV_QUERYDEVICEINTERFACESIZE    (DRV_RESERVED + 13)
-
-
-void WriteInfo(std::string info)
-{
-    std::cout << dye::aqua(info) << std::endl;
-}
-
-
-void WriteError(std::string error)
-{
-    std::cout << dye::light_red(error) << std::endl;
-}
-
-void WriteBrightLabel(std::string label)
-{
-    auto fullLabel = label + ":";
-    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::white(fullLabel);
-}
-
-void WriteLabel(std::string label)
-{
-    auto fullLabel = label + ":";
-    std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::grey(fullLabel);
-}
 
 
 struct MidiPort
@@ -124,7 +97,7 @@ void LoadWinMMDevices()
         }
         else
         {
-            port.Name = L"** Error **";
+            port.Name = internal::ResourceGetWString(IDS_PORT_NAME_ERROR);
             port.IsError = true;
         }
 
@@ -179,7 +152,7 @@ void LoadWinMMDevices()
         }
         else
         {
-            port.Name = L"** Error **";
+            port.Name = internal::ResourceGetWString(IDS_PORT_NAME_ERROR);
             port.IsError = true;
         }
 
@@ -188,110 +161,93 @@ void LoadWinMMDevices()
 
 }
 
-void DisplayPort(MidiPort const& port)
+
+void DisplayPort(_In_ MidiPort const& port)
 {
     if (port.IsError)
     {
-        std::cout
-            << std::setw(3) << dye::red(port.Index)
-            << dye::grey(" : ");
+        fmt::print(L"{:<3}", fmt::styled(port.Index, errorTextStyle));
     }
     else
     {
-        std::cout
-            << std::setw(3) << dye::yellow(port.Index)
-            << dye::grey(" : ");
+        fmt::print(L"{:<3}", fmt::styled(port.Index, fmt::fg(fmt::color::golden_rod)));
     }
 
-    std::wcout
-        << std::setw(33)
-        << std::left
-        << port.Name;
+    fmt::println(L"{:<33} - {}: {}", 
+        fmt::styled(port.Name, normalTextStyle), 
+        fmt::styled(internal::ResourceGetWString(IDS_LABEL_DEVICE_INTERFACE), fmt::fg(fmt::color::gray)), 
+        fmt::styled(port.DriverInterface, normalTextStyle));
 
-    //std::cout
-    //    << dye::grey(" MID: ")
-    //    << std::setw(4)
-    //    << dye::aqua(port.ManufacturerId)
-    //    << dye::grey(", PID: ")
-    //    << std::setw(4)
-    //    << dye::aqua(port.ProductId)
-    //    << dye::grey(", VER: ")
-    //    << std::setw(8)
-    //    << dye::aqua(port.DriverVersion);
-
-    std::cout
-        << dye::grey(" - Dev Interface: ");
-        
-    std::wcout
-        << port.DriverInterface
-        << std::endl;
-
-
+    WriteBlankLine();
 }
 
 void DisplayAllWinMMInputs()
 {
     auto deviceCount = midiInGetNumDevs();
-    WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiInGetNumDevs");
-    WriteInfo(" " + std::to_string(m_midiInputCountNoErrors) + " valid Input Ports (MIDI Sources) found.");
-    std::wcout << std::endl;
+    WriteInfoLine(std::format(L" {} {}", deviceCount, internal::ResourceGetWString(IDS_ENUM_PORTS_REPORTED_BY_MIDIINGETNUMDEVS)));
+    WriteInfoLine(std::format(L" {} {}", m_midiInputCountNoErrors, internal::ResourceGetWString(IDS_ENUM_VALID_INPUT_PORTS_FOUND)));
+    fmt::println(L"");
 
     for (auto const& port : m_midiInputs)
     {
         DisplayPort(port);
     }
 
-    std::wcout << std::endl;
+    WriteBlankLine();
 }
 
 void DisplayAllWinMMOutputs()
 {
     auto deviceCount = midiOutGetNumDevs();
 
-    WriteInfo(" " + std::to_string(deviceCount) + " ports reported by midiOutGetNumDevs");
-    WriteInfo(" " + std::to_string(m_midiOutputCountNoErrors) + " valid Output Ports (MIDI Destinations) found.");
-    std::wcout << std::endl;
+    WriteInfoLine(std::format(L" {} {}", deviceCount, internal::ResourceGetWString(IDS_ENUM_PORTS_REPORTED_BY_MIDIOUTGETNUMDEVS)));
+    WriteInfoLine(std::format(L" {} {}", m_midiOutputCountNoErrors, internal::ResourceGetWString(IDS_ENUM_VALID_OUTPUT_PORTS_FOUND)));
+    fmt::println(L"");
 
     for (auto const& port : m_midiOutputs)
     {
         DisplayPort(port);
     }
 
-    std::wcout << std::endl;
+    WriteBlankLine();
 }
 
-#define LINE_LENGTH 79
 
 
-#define RETURN_INVALID_PORT_NUMBER 1
-#define RETURN_UNABLE_TO_OPEN_PORT 2
 
-int __cdecl main(int argc, char* argv[])
+
+
+int __cdecl main(_In_ int argc, _In_ wchar_t* argv[])
 {
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
-    std::cout << dye::aqua(" Copyright 2026- Microsoft Corporation.") << std::endl;
-    std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" List of WinMM/MME ports") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    if (!TrySetConsoleTextMode())
+    {
+        return RETURN_ERROR_SETTING_CONSOLE_MODE;
+    }
+
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
+    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
+    WriteDoubleSeparatorLine();
 
     bool loop{ false };
 
     if (argc >= 2)
     {
-        std::string loopParam{ "--loop" };
-        std::string loopParamShort{ "-l" };
+        std::wstring loopParam{ L"--loop" };
+        std::wstring loopParamShort{ L"-l" };
 
-        std::string providedParam(argv[1]);
+        std::wstring providedParam(argv[1]);
        
-        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParam.c_str(), static_cast<int>(loopParam.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
+        if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, loopParam.c_str(), static_cast<int>(loopParam.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
             == CSTR_EQUAL)
         {
             loop = true;
         }
 
-        if (CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, loopParamShort.c_str(), static_cast<int>(loopParamShort.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
+        if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, loopParamShort.c_str(), static_cast<int>(loopParamShort.size() + 1), providedParam.c_str(), static_cast<int>(providedParam.size() + 1))
             == CSTR_EQUAL)
         {
             loop = true;
@@ -305,19 +261,20 @@ int __cdecl main(int argc, char* argv[])
 
         DisplayAllWinMMInputs();
 
-        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+        WriteDoubleSeparatorLine();
+
 
         DisplayAllWinMMOutputs();
 
         if (loop)
         {
-            std::cout << dye::grey("Press space to enumerate again, or escape to close.") << std::endl;
+            WriteInfoLine(internal::ResourceGetWString(IDS_PROMPT_ENUMERATE_AGAIN));
 
             auto ch = _getch();
 
             if (ch == KEY_ESCAPE)
             {
-                WriteInfo("\nClosing");
+                WriteInfoLine(L"\n" + internal::ResourceGetWString(IDS_STATUS_CLOSING));
                 break;
             }
             else if (ch == KEY_SPACE)
@@ -333,7 +290,7 @@ int __cdecl main(int argc, char* argv[])
     }
 
 
-    return 0;
+    return RETURN_SUCCESS;
 }
 
 

@@ -1,1 +1,14 @@
-*.rc diff=UTF-16LE
+# Resource scripts are stored as UTF-16LE. Git's eol conversion (core.autocrlf)
+# rewrites the 0x0A low byte of a UTF-16 LF into a raw CRLF, which misaligns the
+# rest of the file and silently corrupts it on checkout. Marking them -text
+# disables that conversion while keeping the UTF-16LE diff driver so they still
+# produce readable diffs.
+*.rc -text diff=UTF-16LE
+*.rc2 -text diff=UTF-16LE
+
+# Visual Studio resource editor working files are binary
+*.aps binary
+
+# Signing certificates and key files are binary
+*.pfx binary
+*.snk binary

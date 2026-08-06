@@ -21,8 +21,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         if (Name().empty())
         {
-            // TODO: Move to resources
-            baseName = baseName + L"(Unnamed)";
+            baseName = baseName + internal::ResourceGetHString(IDS_DISPLAY_UNNAMED_GROUP_TERMINAL_BLOCK);
         }
         else
         {

@@ -475,6 +475,16 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                             // This happens when the service starts up and the endpoints are in the config file
                             // rather than coming from an SDK call.
 
+                            TraceLoggingWrite(
+                                MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(associationKey.c_str(), "association key"),
+                                TraceLoggingWideString(L"Adding basic loopback entry to work queue", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                            );
+
                             RETURN_IF_FAILED(TransportState::Current().GetEndpointWorkQueue()->CreateEndpoint(definition));
                         }
 

@@ -16,6 +16,9 @@
 #pragma comment(lib, "winmm.lib")
 
 
+#include <io.h>
+#include <fcntl.h>
+
 // Looks up an active loopback entry by association id. Returns nullptr if not found.
 static MidiLoopbackEntry FindActiveLoopbackEntry(winrt::guid const& associationId)
 {
@@ -82,6 +85,161 @@ static void RemoveTestLoopback(winrt::guid const& associationId)
     VERIFY_IS_NOT_NULL(removalResponse);
     VERIFY_IS_TRUE(removalResponse.Success());
 }
+
+
+void MidiLoopbackEndpointTests::TestUnicodeGtbAndDeviceNames()
+{
+    auto setModeResult = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT
+
+    if (setModeResult == -1)
+    {
+        perror("Unable to set stdout to UTF-16 mode. ");
+    }
+
+
+    winrt::hstring uniqueId = winrt::to_hstring(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+    auto associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
+    auto nameA = L"我的虚拟设备";
+    auto nameB = L"ענדפוינט ב";
+
+    MidiLoopbackEndpointDefinition definitionA;
+    definitionA.Name(nameA);
+    definitionA.UniqueId(uniqueId);
+
+    MidiLoopbackEndpointDefinition definitionB;
+    definitionB.Name(nameB);
+    definitionB.UniqueId(uniqueId);
+
+    MidiLoopbackCreationConfig config(associationId, definitionA, definitionB);
+
+    VERIFY_IS_FALSE(config.EndpointDefinitionA().Name().empty());
+    VERIFY_IS_FALSE(config.EndpointDefinitionB().Name().empty());
+
+
+    auto result = MidiLoopbackManager::CreateTransientLoopback(config);
+
+    VERIFY_IS_NOT_NULL(result);
+    VERIFY_IS_TRUE(result.Success());
+
+    // remove the loopback even if a VERIFY macro below halts the method
+    auto cleanupLoopback = wil::scope_exit([&]
+        {
+            MidiLoopbackRemovalConfig removalConfig(associationId);
+            MidiLoopbackManager::RemoveTransientLoopback(removalConfig);
+        });
+
+    auto endpointDeviceIdA = result.CreatedLoopbackEntry().EndpointA().EndpointDeviceId();
+    auto endpointDeviceIdB = result.CreatedLoopbackEntry().EndpointB().EndpointDeviceId();
+
+    VERIFY_IS_FALSE(config.EndpointDefinitionA().Name().empty());
+    VERIFY_IS_FALSE(config.EndpointDefinitionB().Name().empty());
+
+    auto endpointInformationA = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(endpointDeviceIdA);
+    auto endpointInformationB = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(endpointDeviceIdB);
+
+    VERIFY_IS_NOT_NULL(endpointInformationA);
+    VERIFY_IS_NOT_NULL(endpointInformationB);
+
+    std::wcout << L"Endpoint A Name: " << endpointInformationA.Name().c_str() << std::endl;
+    std::wcout << L"Endpoint B Name: " << endpointInformationB.Name().c_str() << std::endl;
+
+    // Check names
+
+    std::wcout << L"Sent Device Name A Char Codes: " << std::endl;
+    for (wchar_t ch : definitionA.Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    std::wcout << L"Sent Device Name B Char Codes: " << std::endl;
+    for (wchar_t ch : definitionB.Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+
+
+    std::wcout << L"Received Device Name A Char Codes: " << std::endl;
+    for (wchar_t ch : endpointInformationA.Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    std::wcout << L"Received Device Name B Char Codes: " << std::endl;
+    for (wchar_t ch : endpointInformationB.Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+
+
+    auto nameAResult = wcscmp(endpointInformationA.Name().c_str(), definitionA.Name().c_str());
+    VERIFY_IS_TRUE(nameAResult == 0);
+
+    auto nameBResult = wcscmp(endpointInformationB.Name().c_str(), definitionB.Name().c_str());
+    VERIFY_IS_TRUE(nameBResult == 0);
+
+
+    // Check group terminal blocks.
+
+    std::wcout << L"Received GTB A Char Codes for first block: " << std::endl;
+    for (wchar_t ch : endpointInformationA.GetGroupTerminalBlocks().GetAt(0).Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    std::wcout << L"Received GTB A Char Codes for second block: " << std::endl;
+    for (wchar_t ch : endpointInformationA.GetGroupTerminalBlocks().GetAt(1).Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    std::wcout << L"Received GTB B Char Codes for first block: " << std::endl;
+    for (wchar_t ch : endpointInformationB.GetGroupTerminalBlocks().GetAt(0).Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    std::wcout << L"Received GTB B Char Codes for second block: " << std::endl;
+    for (wchar_t ch : endpointInformationB.GetGroupTerminalBlocks().GetAt(1).Name())
+    {
+        std::wcout << std::hex << std::setw(4) << (int)ch << ", ";
+    }
+    std::wcout << std::endl;
+
+    auto gtbNameA0Result = wcscmp(endpointInformationA.GetGroupTerminalBlocks().GetAt(0).Name().c_str(), definitionA.Name().c_str());
+    VERIFY_IS_TRUE(gtbNameA0Result == 0);
+
+    auto gtbNameA1Result = wcscmp(endpointInformationA.GetGroupTerminalBlocks().GetAt(1).Name().c_str(), definitionA.Name().c_str());
+    VERIFY_IS_TRUE(gtbNameA1Result == 0);
+
+    auto gtbNameB0Result = wcscmp(endpointInformationB.GetGroupTerminalBlocks().GetAt(0).Name().c_str(), definitionB.Name().c_str());
+    VERIFY_IS_TRUE(gtbNameB0Result == 0);
+
+    auto gtbNameB1Result = wcscmp(endpointInformationB.GetGroupTerminalBlocks().GetAt(1).Name().c_str(), definitionB.Name().c_str());
+    VERIFY_IS_TRUE(gtbNameB1Result == 0);
+
+    // test that we can find a MIDI 1 device with this name. 
+
+    auto foundAPorts = MidiLegacyPortDeviceInformation::FindAllForName(definitionA.Name());
+    VERIFY_IS_TRUE(foundAPorts.Size() > 0);
+    std::wcout << L"Found Port Name: " << foundAPorts.GetAt(0).Name().c_str() << std::endl;
+
+    auto foundBPorts = MidiLegacyPortDeviceInformation::FindAllForName(definitionB.Name());
+    VERIFY_IS_TRUE(foundBPorts.Size() > 0);
+    std::wcout << L"Found Port Name: " << foundBPorts.GetAt(0).Name().c_str() << std::endl;
+
+}
+
+
+
 
 
 // ============================================================================

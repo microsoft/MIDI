@@ -57,6 +57,9 @@
 
 #include "wstring_util.h"
 #include "midi1_message_defs.h"
+#include "resource_util.h"
+
+#include "resource.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
 

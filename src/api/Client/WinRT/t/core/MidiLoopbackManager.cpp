@@ -86,7 +86,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
             {
                 result->InternalSetFailure(
                     loop::MidiLoopbackErrorCode::ClientApiException,
-                    L"Transport does not support mute operation.");   // TODO: Localize
+                    internal::ResourceGetHString(IDS_LOOPBACK_ERROR_MUTE_NOT_SUPPORTED));
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -157,7 +157,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
             result->InternalSetFailure(
                 loop::MidiLoopbackErrorCode::ClientApiException,
-                L"General exception.");
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -194,7 +194,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
             {
                 result->InternalSetFailure(
                     loop::MidiLoopbackErrorCode::ClientApiException,
-                    L"Transport does not support unmute operation.");   // TODO: Localize
+                    internal::ResourceGetHString(IDS_LOOPBACK_ERROR_UNMUTE_NOT_SUPPORTED));
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -265,7 +265,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
             result->InternalSetFailure(
                 loop::MidiLoopbackErrorCode::ClientApiException,
-                L"General exception.");
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -411,19 +411,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
         if (creationConfig == nullptr)
         {
-            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, L"Invalid creation argument. Creation Config is null");  // TODO: Localize
+            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, internal::ResourceGetHString(IDS_LOOPBACK_ERROR_NULL_CREATION_CONFIG));
             return *result;
         }
 
         if (creationConfig.EndpointDefinitionA() == nullptr)
         {
-            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, L"Invalid creation argument. Endpoint Definition A is null");  // TODO: Localize
+            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, internal::ResourceGetHString(IDS_LOOPBACK_ERROR_NULL_ENDPOINT_DEFINITION_A));
             return *result;
         }
 
         if (creationConfig.EndpointDefinitionB() == nullptr)
         {
-            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, L"Invalid creation argument. Endpoint Definition B is null");  // TODO: Localize
+            result->InternalSetFailure(MidiLoopbackErrorCode::InvalidArgument, internal::ResourceGetHString(IDS_LOOPBACK_ERROR_NULL_ENDPOINT_DEFINITION_B));
             return *result;
         }
 
@@ -481,7 +481,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                 auto createdLoopbackEntry = winrt::make_self<MidiLoopbackEntry>();
                 if (createdLoopbackEntry == nullptr)
                 {
-                    result->InternalSetFailure(MidiLoopbackErrorCode::ClientApiAllocationFailure, L"Unable to create MidiLoopbackEntry. Value is null.");  // TODO: Localize
+                    result->InternalSetFailure(MidiLoopbackErrorCode::ClientApiAllocationFailure, internal::ResourceGetHString(IDS_LOOPBACK_ERROR_ENTRY_ALLOCATION_FAILED));
                     return *result;
                 }
 
@@ -531,7 +531,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                             TraceLoggingGuid(creationConfig.AssociationId(), "association id")
                         );
 
-                        result->InternalSetFailure(MidiLoopbackErrorCode::ClientApiAllocationFailure, L"Unable to create endpoint entries. Value is null.");  // TODO: Localize
+                        result->InternalSetFailure(MidiLoopbackErrorCode::ClientApiAllocationFailure, internal::ResourceGetHString(IDS_LOOPBACK_ERROR_ENDPOINT_ENTRY_ALLOCATION_FAILED));
                         return *result;
                     }
 
@@ -558,7 +558,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
                     result->InternalSetFailure(
                         MidiLoopbackErrorCode::EndpointCreationFailed, 
-                        L"Device creation succeeded but returned device ids are empty");  // TODO: Localize
+                        internal::ResourceGetHString(IDS_LOOPBACK_ERROR_EMPTY_RETURNED_DEVICE_IDS));
 
                     return *result;
                 }
@@ -569,7 +569,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
                 if (errorMessage.empty())
                 {
-                    errorMessage = L"Service call failed, but did not return an error message.";    // TODO: Localize
+                    errorMessage = internal::ResourceGetHString(IDS_ERROR_SERVICE_CALL_FAILED_NO_MESSAGE);
                 }
 
                 result->InternalSetFailure(
@@ -614,7 +614,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         {
             result->InternalSetFailure(
                 MidiLoopbackErrorCode::ClientApiException, 
-                L"General exception/error.");
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
 
             TraceLoggingWrite(

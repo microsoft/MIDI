@@ -17,6 +17,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
 
         uint32_t SourceId() const noexcept { return m_sourceId; }
         uint32_t Index() const noexcept { return m_index; }
+
         internal::MidiTimestamp ClientSendMidiTimestamp() const noexcept { return m_clientSendMidiTimestamp; }
         internal::MidiTimestamp ServiceReportedMidiTimestamp() const noexcept { return m_serviceReportedMidiTimestamp; }
         internal::MidiTimestamp ClientReceiveMidiTimestamp() const noexcept { return m_clientReceiveMidiTimestamp; }
@@ -46,6 +47,7 @@ namespace winrt::Windows::Devices::Midi2::Diagnostics::implementation
     private:
         uint32_t m_sourceId{ 0 };
         uint32_t m_index{ 0 };
+
         internal::MidiTimestamp m_clientSendMidiTimestamp{ 0 };
         internal::MidiTimestamp m_serviceReportedMidiTimestamp{ 0 };
         internal::MidiTimestamp m_clientReceiveMidiTimestamp{ 0 };

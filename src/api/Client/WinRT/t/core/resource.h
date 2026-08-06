@@ -9,11 +9,6 @@
 
 #define IDS_MIDI2_CLIENT 100
 
-
-//{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by Microsoft.Devices.Midi2.rc
-
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
@@ -223,6 +218,18 @@
 #define IDS_MESSAGE_DESC_MTF_UNKNOWN								51999
 
 
+// Display strings used when building names for presentation to the user
+
+#define IDS_DISPLAY_IDS_BASE_INDEX                                  52000
+
+#define IDS_DISPLAY_UNNAMED_ENDPOINT                                IDS_DISPLAY_IDS_BASE_INDEX + 0
+#define IDS_DISPLAY_UNNAMED_FUNCTION_BLOCK                          IDS_DISPLAY_IDS_BASE_INDEX + 1
+#define IDS_DISPLAY_UNNAMED_GROUP_TERMINAL_BLOCK                    IDS_DISPLAY_IDS_BASE_INDEX + 2
+#define IDS_DISPLAY_UNNAMED_PARENT_DEVICE                           IDS_DISPLAY_IDS_BASE_INDEX + 3
+
+#define IDS_DISPLAY_VIRTUAL_DEVICE_NAME_PREFIX                      IDS_DISPLAY_IDS_BASE_INDEX + 10
+
+
 // CC Mode messages
 // these are the base index + the CC number
 
@@ -250,6 +257,40 @@
 #define IDS_VALIDATION_ERROR_LOOPBACK_MISSING_ENDPOINT_UNIQUEID_B   IDS_VALIDATION_ERROR_IDS_BASE_INDEX + 41
 
 #define IDS_ERROR_UNKNOWN                                           IDS_VALIDATION_ERROR_IDS_BASE_INDEX + 50
+#define IDS_ERROR_GENERAL_EXCEPTION                                 IDS_VALIDATION_ERROR_IDS_BASE_INDEX + 51
+#define IDS_ERROR_SERVICE_CALL_FAILED_NO_MESSAGE                    IDS_VALIDATION_ERROR_IDS_BASE_INDEX + 52
+
+
+// Loopback and Basic Loopback transport errors
+
+#define IDS_LOOPBACK_ERROR_IDS_BASE_INDEX                           61100
+
+#define IDS_LOOPBACK_ERROR_MUTE_NOT_SUPPORTED                       IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 0
+#define IDS_LOOPBACK_ERROR_UNMUTE_NOT_SUPPORTED                     IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 1
+
+#define IDS_LOOPBACK_ERROR_NULL_CREATION_CONFIG                     IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 10
+#define IDS_LOOPBACK_ERROR_NULL_ENDPOINT_DEFINITION_A               IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 11
+#define IDS_LOOPBACK_ERROR_NULL_ENDPOINT_DEFINITION_B               IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 12
+
+#define IDS_LOOPBACK_ERROR_ENTRY_ALLOCATION_FAILED                  IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 20
+#define IDS_LOOPBACK_ERROR_ENDPOINT_ENTRY_ALLOCATION_FAILED         IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 21
+
+#define IDS_LOOPBACK_ERROR_EMPTY_RETURNED_DEVICE_ID                 IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 30
+#define IDS_LOOPBACK_ERROR_EMPTY_RETURNED_DEVICE_IDS                IDS_LOOPBACK_ERROR_IDS_BASE_INDEX + 31
+
+
+// Diagnostics / service ping errors
+
+#define IDS_PING_ERROR_IDS_BASE_INDEX                               61200
+
+#define IDS_PING_ERROR_ZERO_PING_COUNT                              IDS_PING_ERROR_IDS_BASE_INDEX + 0
+#define IDS_PING_ERROR_ZERO_TIMEOUT                                 IDS_PING_ERROR_IDS_BASE_INDEX + 1
+#define IDS_PING_ERROR_SESSION_CREATION_FAILED                      IDS_PING_ERROR_IDS_BASE_INDEX + 2
+#define IDS_PING_ERROR_ENDPOINT_CREATION_FAILED                     IDS_PING_ERROR_IDS_BASE_INDEX + 3
+#define IDS_PING_ERROR_ENDPOINT_OPEN_FAILED                         IDS_PING_ERROR_IDS_BASE_INDEX + 4
+#define IDS_PING_ERROR_SEND_MESSAGE_FAILED                          IDS_PING_ERROR_IDS_BASE_INDEX + 5
+#define IDS_PING_ERROR_RESPONSE_TIMEOUT                             IDS_PING_ERROR_IDS_BASE_INDEX + 6
+#define IDS_PING_ERROR_EXCEPTION                                    IDS_PING_ERROR_IDS_BASE_INDEX + 7
 
 // SysEx Transfer Errors
 

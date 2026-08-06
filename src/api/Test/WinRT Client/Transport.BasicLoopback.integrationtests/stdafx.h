@@ -124,7 +124,7 @@ inline bool TryResolveMidi1PortDeviceId(
 
 #include <functional>
 
-#include "MidiBasicLoopbackEndpointTests.h"
+#include "MidiBasicLoopbackTests.h"
 #include "MidiBasicLoopbackBenchmarks.h"
 
 

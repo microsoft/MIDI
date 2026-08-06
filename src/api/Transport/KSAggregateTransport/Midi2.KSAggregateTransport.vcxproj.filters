@@ -103,9 +103,6 @@
     <ClInclude Include="Midi2.KSAggregateMidiOutProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.KSAggregateTransport.rc">

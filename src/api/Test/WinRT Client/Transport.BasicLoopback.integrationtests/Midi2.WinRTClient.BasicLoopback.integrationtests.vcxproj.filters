@@ -18,18 +18,24 @@
     <ClInclude Include="stdafx.h">
       <Filter>Support</Filter>
     </ClInclude>
-    <ClInclude Include="MidiBasicLoopbackEndpointTests.h">
+    <ClInclude Include="MidiBasicLoopbackTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="DiscordReproTest.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackBenchmarks.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiBasicLoopbackEndpointTests.cpp">
+    <ClCompile Include="MidiBasicLoopbackTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="DiscordReproTest.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackBenchmarks.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

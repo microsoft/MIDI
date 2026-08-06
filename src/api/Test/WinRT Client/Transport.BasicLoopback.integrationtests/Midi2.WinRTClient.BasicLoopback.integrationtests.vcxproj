@@ -109,6 +109,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -120,6 +121,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -131,6 +133,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -143,6 +146,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>Disabled</Optimization>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -151,12 +155,12 @@
   <ItemGroup>
     <ClCompile Include="DiscordReproTest.cpp" />
     <ClCompile Include="MidiBasicLoopbackBenchmarks.cpp" />
-    <ClCompile Include="MidiBasicLoopbackEndpointTests.cpp" />
+    <ClCompile Include="MidiBasicLoopbackTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DiscordReproTest.h" />
     <ClInclude Include="MidiBasicLoopbackBenchmarks.h" />
-    <ClInclude Include="MidiBasicLoopbackEndpointTests.h" />
+    <ClInclude Include="MidiBasicLoopbackTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

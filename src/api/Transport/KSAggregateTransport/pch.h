@@ -114,7 +114,6 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "Midi2UMP2BSTransform.h"
 #include "Midi2UMP2BSTransform_i.c"
 
-class CMidi2KSAggregateMidiEndpointManager;
 class CMidi2KSAggregateMidiEndpointManager2;
 class CMidi2KSAggregateMidiInProxy;
 class CMidi2KSAggregateMidiOutProxy;

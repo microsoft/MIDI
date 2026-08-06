@@ -22,6 +22,11 @@ namespace WindowsMidiServicesInternal
         return hModule;
     }
 
+    // Returns the string resource as a winrt::hstring.
+    //
+    // Only available when C++/WinRT is in scope. Some of the command line tools which
+    // use this header have no WinRT dependency and use ResourceGetWString instead.
+#if defined(CPPWINRT_VERSION)
     inline winrt::hstring ResourceGetHString(_In_ UINT resourceId)
     {
         // TODO: Consider if we should pre-load all these strings
@@ -46,6 +51,7 @@ namespace WindowsMidiServicesInternal
             return winrt::hstring{ };
         }
     }
+#endif
 
     inline std::wstring ResourceGetWString(_In_ UINT resourceId)
     {
@@ -70,6 +76,10 @@ namespace WindowsMidiServicesInternal
         }
     }
 
+    // Copies the string resource into a newly allocated CoTaskMem string.
+    //
+    // Only available when ATL is in scope, as it uses CComBSTR to load the string.
+#if defined(__ATLBASE_H__)
     inline HRESULT ResourceCopyToCoString(_In_ UINT resourceId, LPWSTR* coString)
     {
         ATL::CComBSTR ccbstr;
@@ -91,7 +101,7 @@ namespace WindowsMidiServicesInternal
         }
 
     }
-
+#endif
 
 
 }

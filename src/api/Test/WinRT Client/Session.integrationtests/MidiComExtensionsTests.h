@@ -26,7 +26,7 @@ public:
     //TEST_METHOD_SETUP(TestSetup);
     //TEST_METHOD_CLEANUP(TestCleanup);
 
-    TEST_METHOD(TestSendReceiveMessages);
+    TEST_METHOD(TestComExtensionsSendReceiveMessages);
 
     STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
     {

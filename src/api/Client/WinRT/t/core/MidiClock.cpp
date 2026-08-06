@@ -44,7 +44,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp timestampValue, 
         int64_t offsetTicks)
     {
-        // TODO: should also check for future wrap
         return timestampValue + offsetTicks < 0 ? 0 : timestampValue + offsetTicks;
     }
 

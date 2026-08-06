@@ -17,12 +17,18 @@
 packages.config text eol=crlf
 *.idl text eol=crlf
 *.rgs text eol=crlf
-*.rc text eol=crlf
 *.json text eol=crlf
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
 *.wprp text eol=crlf
 *.psm1 text eol=crlf
+
+# Resource scripts are stored as UTF-16LE. Line ending conversion rewrites the
+# 0x0A low byte of a UTF-16 LF into a raw CRLF, which misaligns the rest of the
+# file and silently corrupts it on checkout. These must NOT be treated as text.
+# The UTF-16LE diff driver keeps them producing readable diffs.
+*.rc -text diff=UTF-16LE
+*.rc2 -text diff=UTF-16LE
 
 # Denote all files that are truly binary and should not be modified.
 *.png binary
