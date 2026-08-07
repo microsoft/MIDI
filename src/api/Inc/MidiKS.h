@@ -59,6 +59,7 @@ protected:
     ULONG m_BufferSize {0};
     MessageOptionFlags m_OptionFlags {MessageOptionFlags_None};
     void OnRemoveCallback();
+    virtual void OnRemoveCallbackInternal() {}
     void OnRestoreCallback();
 
     std::unique_ptr<KsHandleWrapper> m_FilterHandleWrapper;
@@ -148,6 +149,9 @@ public:
     virtual
     HRESULT Shutdown();
 
+protected:
+    void OnRemoveCallbackInternal() override;
+
 private:
     wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;
     LONGLONG m_MidiInCallbackContext{};
@@ -157,9 +161,17 @@ private:
 
     HRESULT ProcessLoopedMidiIn();
     HRESULT SendRequestToDriver();
+    HRESULT ReadAbandonableMidiData();
+
+    static constexpr ULONG ReadCancelGraceMilliseconds{ 500 };
 
     wil::unique_event m_ThreadTerminateEvent;
     wil::unique_event m_ThreadStartedEvent;
+
+    // Signals that the worker is done touching this object. Deliberately not the same thing
+    // as the thread having terminated, which a driver can block indefinitely.
+    wil::unique_event m_ThreadExitedEvent;
+
     wil::unique_handle m_ThreadHandle;
     BOOL m_Running{ TRUE };
 
