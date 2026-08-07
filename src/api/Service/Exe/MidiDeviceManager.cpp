@@ -2417,6 +2417,18 @@ CMidiDeviceManager::AssignPortNumber(
     newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
                         DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(assignedPortNumber)) });
 
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Port number assigned", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(flow), "flow"),
+        TraceLoggingUInt32(assignedPortNumber, "assigned port number")
+    );
+
     RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
         SwDevice,
         deviceInterfaceId,
