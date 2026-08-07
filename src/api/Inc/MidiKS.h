@@ -64,6 +64,9 @@ protected:
     std::unique_ptr<KsHandleWrapper> m_FilterHandleWrapper;
     std::unique_ptr<KsHandleWrapper> m_PinHandleWrapper;
 
+    // Lets shutdown/removal break a write that the device is not completing.
+    wil::unique_event m_WriteTerminateEvent;
+
     wil::unique_cotaskmem_string m_FilterFilename;
     UINT m_PinID {0};
     MidiTransport m_Transport {MidiTransport_Invalid};
@@ -97,7 +100,18 @@ public:
         _In_ LONGLONG);
 
 private:
+    // Timeout scales with payload because a byte stream pin can be as slow as a 31.25 kbaud DIN link.
+    static constexpr ULONG WriteTimeoutBaseMilliseconds{ 4000 };
+    static constexpr ULONG WriteTimeoutMillisecondsPerByte{ 1 };
+    static constexpr ULONG ConsecutiveWriteTimeoutLimit{ 3 };
+    static constexpr ULONG WriteCancelGraceMilliseconds{ 500 };
+
     HRESULT WritePacketMidiData(
+        _In_ void *,
+        _In_ UINT32,
+        _In_ LONGLONG);
+
+    HRESULT WriteAbandonablePacketMidiData(
         _In_ void *,
         _In_ UINT32,
         _In_ LONGLONG);
@@ -106,6 +120,9 @@ private:
         _In_ void *,
         _In_ UINT32,
         _In_ LONGLONG);
+
+    std::atomic<bool> m_OutputDisabled{ false };
+    std::atomic<ULONG> m_ConsecutiveWriteTimeouts{ 0 };
 };
 
 class KSMidiInDevice : public KSMidiDevice

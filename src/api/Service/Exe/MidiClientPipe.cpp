@@ -202,8 +202,17 @@ CMidiClientPipe::Shutdown()
 
     if (m_MidiPump)
     {
-        m_MidiPump->Shutdown();
-        m_MidiPump.reset();
+        // S_FALSE means the pump abandoned a worker that can never terminate. Releasing
+        // rather than destroying is required: that thread may still reference the pump.
+        // Calling reset() here instead reintroduces a use-after-free on a zombie thread.
+        if (m_MidiPump->Shutdown() == S_FALSE)
+        {
+            m_MidiPump.release();
+        }
+        else
+        {
+            m_MidiPump.reset();
+        }
     }
 
     RETURN_IF_FAILED(CMidiPipe::Shutdown());
