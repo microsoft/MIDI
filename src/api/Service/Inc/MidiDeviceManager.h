@@ -184,6 +184,9 @@ private:
         _In_ MidiFlow
     );
 
+    HRESULT RefreshPortNumberCache(_In_ MidiFlow flow);
+    void InvalidatePortNumberCache();
+
     HRESULT GetFunctionBlockPortInfo(
         _In_ LPCWSTR umpDeviceInterfaceId,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
@@ -240,6 +243,13 @@ private:
     wil::critical_section m_midiPortsLock;
     std::vector<std::unique_ptr<MIDIPORT>> m_midiPorts;
     bool m_CreateMidi1Ports {true};
+
+    // Port numbers in use, indexed by MidiFlow. midisrv is the only assigner of
+    // PKEY_MIDI_ServiceAssignedPortNumber, so this can stand in for re-enumerating
+    // every MIDI 1 device on every assignment.
+    wil::critical_section m_portNumberCacheLock;
+    std::map<UINT32, std::wstring> m_assignedPortNumbers[2];
+    bool m_portNumberCacheValid[2] { false, false };
 
     std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_midiParents;
 
