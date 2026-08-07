@@ -27,6 +27,27 @@
 #include "midi_timestamp.h"
 
 #include "Feature_Servicing_MIDI2LegacyTimestamp.h"
+#include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
+
+namespace
+{
+    // Context for a KS write that the driver may never complete. On abandon this whole
+    // struct is deliberately leaked by WriteAbandonablePacketMidiData, because the kernel
+    // keeps writing into Overlapped/Header/Payload and signalling CompletionEvent until
+    // the IRP finally completes.
+    //
+    // Do not give this RAII cleanup, a destructor, or move it back onto the stack. Freeing
+    // it while the IRP is outstanding lets the kernel write into freed memory, which shows
+    // up later as random heap corruption in midisrv, far away from this code.
+    struct KsAbandonableWrite
+    {
+        OVERLAPPED Overlapped{};
+        KSSTREAM_HEADER Header{};
+        std::unique_ptr<BYTE[]> Payload;
+        wil::unique_event CompletionEvent;
+        wil::unique_handle PinHandle;
+    };
+}
 
 KSMidiDevice::~KSMidiDevice()
 {
@@ -97,6 +118,12 @@ KSMidiDevice::Initialize(
 void
 KSMidiDevice::OnRemoveCallback()
 {
+    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled() && m_WriteTerminateEvent)
+    {
+        // Must happen before the lock, which an uncompleted write is holding shared.
+        m_WriteTerminateEvent.SetEvent();
+    }
+
     // Block until initialization and any pending message sends
     // have completed
     auto lock = m_lock.lock_exclusive();
@@ -134,6 +161,17 @@ KSMidiDevice::OnRestoreCallback()
 HRESULT
 KSMidiDevice::OpenStream()
 {
+    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled())
+    {
+        if (!m_WriteTerminateEvent)
+        {
+            m_WriteTerminateEvent.create(wil::EventOptions::ManualReset);
+        }
+
+        // Re-arm after a query remove cancel, otherwise every later write aborts immediately.
+        m_WriteTerminateEvent.ResetEvent();
+    }
+
     auto cleanupOnFailure = wil::scope_exit([&]() {
         if (m_CrossProcessMidiPump)
         {
@@ -231,6 +269,12 @@ KSMidiDevice::OpenStream()
 HRESULT
 KSMidiDevice::Shutdown()
 {
+    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled() && m_WriteTerminateEvent)
+    {
+        // Must happen before the lock, which an uncompleted write is holding shared.
+        m_WriteTerminateEvent.SetEvent();
+    }
+
     {
         auto lock = m_lock.lock_exclusive();
 
@@ -459,6 +503,11 @@ KSMidiOutDevice::WritePacketMidiData(
     LONGLONG position
 )
 {
+    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled())
+    {
+        return WriteAbandonablePacketMidiData(midiData, length, position);
+    }
+
     if (Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
     {
         // For legacy midi 1, the position is not provided to
@@ -524,6 +573,142 @@ KSMidiOutDevice::WritePacketMidiData(
             kssh.Size,
             nullptr);
     });
+
+    RETURN_IF_FAILED(hr);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+KSMidiOutDevice::WriteAbandonablePacketMidiData(
+    void* midiData,
+    UINT32 length,
+    LONGLONG position
+)
+{
+    if (m_OutputDisabled.load())
+    {
+        return HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE);
+    }
+
+    if (!m_PinHandleWrapper)
+    {
+        return E_HANDLE;
+    }
+
+    UINT32 totalLength = DWORD_ALIGN(sizeof(KSMUSICFORMAT) + length);
+
+    auto context = std::make_unique<KsAbandonableWrite>();
+
+    context->Payload.reset(new (std::nothrow) BYTE[totalLength]{0});
+    RETURN_IF_NULL_ALLOC(context->Payload);
+
+    auto musicFormat = reinterpret_cast<KSMUSICFORMAT*>(context->Payload.get());
+    musicFormat->ByteCount = length;
+    CopyMemory(musicFormat + 1, midiData, length);
+
+    context->Header.Size = sizeof(KSSTREAM_HEADER);
+    context->Header.PresentationTime.Numerator = 1;
+    context->Header.PresentationTime.Denominator = 1;
+
+    if (!Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
+    {
+        context->Header.PresentationTime.Time = position;
+    }
+    else
+    {
+        UNREFERENCED_PARAMETER(position);
+    }
+
+    context->Header.DataUsed = context->Header.FrameExtent = totalLength;
+    context->Header.Data = context->Payload.get();
+
+    // Owning a duplicate keeps the wrapper lock from being held across the write.
+    context->PinHandle.reset(m_PinHandleWrapper->GetHandle());
+    RETURN_HR_IF_NULL(E_HANDLE, context->PinHandle);
+
+    context->CompletionEvent.create(wil::EventOptions::ManualReset);
+    context->Overlapped.hEvent = context->CompletionEvent.get();
+
+    ULONG bytesReturned{ 0 };
+
+    if (DeviceIoControl(
+            context->PinHandle.get(),
+            IOCTL_KS_WRITE_STREAM,
+            nullptr,
+            0,
+            &context->Header,
+            context->Header.Size,
+            &bytesReturned,
+            &context->Overlapped))
+    {
+        m_ConsecutiveWriteTimeouts = 0;
+        return S_OK;
+    }
+
+    DWORD lastError = GetLastError();
+    if (lastError != ERROR_IO_PENDING)
+    {
+        m_ConsecutiveWriteTimeouts = 0;
+        RETURN_IF_FAILED(HRESULT_FROM_WIN32(lastError));
+    }
+
+    HANDLE waitHandles[] = { context->CompletionEvent.get(), m_WriteTerminateEvent.get() };
+    DWORD waitCount = m_WriteTerminateEvent ? ARRAYSIZE(waitHandles) : 1;
+    ULONG timeout = WriteTimeoutBaseMilliseconds + (totalLength * WriteTimeoutMillisecondsPerByte);
+
+    DWORD waitResult = WaitForMultipleObjects(waitCount, waitHandles, FALSE, timeout);
+
+    if (waitResult == WAIT_OBJECT_0)
+    {
+        HRESULT completionResult = S_OK;
+        if (!GetOverlappedResult(context->PinHandle.get(), &context->Overlapped, &bytesReturned, FALSE))
+        {
+            completionResult = HRESULT_FROM_WIN32(GetLastError());
+        }
+
+        m_ConsecutiveWriteTimeouts = 0;
+        RETURN_IF_FAILED(completionResult);
+
+        return S_OK;
+    }
+
+    HRESULT hr = (waitResult == WAIT_TIMEOUT) ?
+        HRESULT_FROM_WIN32(ERROR_TIMEOUT) :
+        HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED);
+
+    CancelIoEx(context->PinHandle.get(), &context->Overlapped);
+
+    if (WaitForSingleObject(context->CompletionEvent.get(), WriteCancelGraceMilliseconds) != WAIT_OBJECT_0)
+    {
+        // Intentional leak. Some devices (seen on Arduino/CircuitPython USB MIDI) ignore
+        // both CancelIoEx and cleanup, so this IRP stays outstanding until the hardware is
+        // physically removed. The kernel still owns the payload, overlapped and completion
+        // event, so calling the destructor here corrupts the heap when the IRP completes.
+        //
+        // The pin handle is the one thing that must NOT be leaked. The IRP can only
+        // complete once every handle to the pin is closed, and the thread that issued it
+        // cannot finish terminating until then, because thread exit waits on its own
+        // pending IRPs. Leaking this handle deadlocks client teardown.
+        context->PinHandle.reset();
+        context.release();
+
+        m_OutputDisabled = true;
+
+        // Dropping the last pin handle triggers IRP_MJ_CLEANUP, the only remaining chance
+        // for the driver to release the abandoned write.
+        m_PinHandleWrapper->Close();
+    }
+    else if (hr == HRESULT_FROM_WIN32(ERROR_TIMEOUT))
+    {
+        // A wedged pin stops completing write IRPs entirely, so retiring it keeps senders
+        // and client teardown from blocking on every subsequent message.
+        if (m_ConsecutiveWriteTimeouts.fetch_add(1) + 1 >= ConsecutiveWriteTimeoutLimit)
+        {
+            m_OutputDisabled = true;
+        }
+    }
 
     RETURN_IF_FAILED(hr);
 

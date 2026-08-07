@@ -76,6 +76,8 @@ public:
                           _In_ LONGLONG,
                           _In_ BOOL);
 
+    // Returns S_FALSE when the worker could not be terminated and the pump was abandoned.
+    // Callers must then leak this object rather than destroy it. See MidiXProc.cpp.
     HRESULT Shutdown();
 
     HRESULT

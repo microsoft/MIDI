@@ -27,6 +27,10 @@
 #include <TraceLoggingProvider.h>
 #include "MidiXProc.h"
 #include "ump_iterator.h"
+#include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
+
+// A worker holding an IRP that a driver refuses to release can never finish terminating.
+#define MIDI_XPROC_WORKER_EXIT_TIMEOUT 10000
 
 class MidiXProcTelemetryProvider : public wil::TraceLoggingProvider
 {
@@ -474,7 +478,44 @@ CMidiXProc::Shutdown()
         // once the pin was closed it'll unblock and exit the worker thread
         // due to the ioctl failure, allowing for cleanup to complete
         m_ThreadTerminateEvent.SetEvent();
-        RETURN_LAST_ERROR_IF(WAIT_OBJECT_0 != WaitForSingleObject(m_ThreadHandle.get(), INFINITE));
+
+        if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled())
+        {
+            if (WAIT_OBJECT_0 != WaitForSingleObject(m_ThreadHandle.get(), MIDI_XPROC_WORKER_EXIT_TIMEOUT))
+            {
+                TraceLoggingWrite(
+                    MidiXProcTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"MidiXProc worker could not terminate, abandoning pump.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+
+                // Intentional leak. The worker has already left its loop but is stuck in
+                // thread termination, because the kernel waits for the pending IRPs of an
+                // exiting thread and this device's driver will not complete one. It will
+                // never become joinable, so the pump is abandoned instead.
+                //
+                // Two things break if this is "cleaned up":
+                //   - restoring the INFINITE join hangs teardown while m_ClientManagerLock
+                //     is held, so no client can connect or disconnect and the service
+                //     cannot stop until the device is physically unplugged
+                //   - freeing the pipes lets the zombie thread touch freed memory
+                //
+                // S_FALSE tells the caller this object must outlive the pump.
+                m_ThreadHandle.release();
+                m_MidiIn.release();
+                m_MidiOut.release();
+
+                return S_FALSE;
+            }
+        }
+        else
+        {
+            RETURN_LAST_ERROR_IF(WAIT_OBJECT_0 != WaitForSingleObject(m_ThreadHandle.get(), INFINITE));
+        }
+
         m_ThreadHandle.reset();
     }
 
