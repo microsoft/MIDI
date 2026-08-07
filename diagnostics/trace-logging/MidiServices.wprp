@@ -1,8 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WindowsPerformanceRecorder Version="1.0" Author="Microsoft Corporation" Copyright="Microsoft Corporation" Company="Microsoft Corporation">
   <Profiles>
+  <!--
+    <SystemCollector Id="SystemCollector" Name="System Collector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="256" />
+    </SystemCollector>
+
+    <SystemProvider Id="SystemProvider">
+      <Keywords>
+        <Keyword Value="Drivers" />
+        <Keyword Value="Registry" />
+      </Keywords>
+    </SystemProvider>
+    -->
 
     <EventCollector Id="EventCollector_MidiSrvSimple" Name="Windows MIDI Services Events">
+      <BufferSize Value="256" />
+      <Buffers Value="64" />
+    </EventCollector>
+
+    <!-- Kernel-mode providers cannot log into paged-memory buffers, so they get their own session. -->
+    <EventCollector Id="EventCollector_MidiSrvKernel" Name="Windows MIDI Services Kernel Events">
       <BufferSize Value="256" />
       <Buffers Value="64" />
     </EventCollector>
@@ -23,8 +42,7 @@
     <EventProvider Id="EventProvider_BasicLoopbackMidiTransport" Name="*Microsoft.Windows.Midi2.BasicLoopbackMidiTransport"/>
     <EventProvider Id="EventProvider_WdmAud2" Name="*Microsoft.Windows.Midi2.WdmAud2" />
     <EventProvider Id="EventProvider_SDK" Name="*Microsoft.Windows.Midi2.Sdk"/>
-    <EventProvider Id="EventProvider_SDKInitialization" Name="*Microsoft.Windows.Midi2.MidiClientInitializer"/>
-
+    
     <EventProvider Id="EventProvider_BS2UMPTransform" Name="*Microsoft.Windows.Midi2.BS2UMPTransform"/>
     <EventProvider Id="EventProvider_EndpointMetadataListenerTransform" Name="*Microsoft.Windows.Midi2.EndpointMetadataListenerTransform"/>
     <EventProvider Id="EventProvider_JitterReductionGeneratorTransform" Name="*Microsoft.Windows.Midi2.JitterReductionGeneratorTransform"/>
@@ -35,9 +53,38 @@
     <EventProvider Id="EventProvider_SettingsApp" Name="*Microsoft.Midi.Settings"/>
     <EventProvider Id="EventProvider_ConsoleApp" Name="*Microsoft.Midi.Console"/>
 
+    <!-- Microsoft-Windows-Kernel-PnP -->
+    <EventProvider Id="EventProvider_KernelPnP" Name="9C205A39-1250-487D-ABD7-E831C6290539" NonPagedMemory="true" Level="5" />
+
+    <!-- Microsoft-Windows-Kernel-PnP-Rundown. Only emits during a capture state (rundown). -->
+    <EventProvider Id="EventProvider_KernelPnPRundown" Name="B3A0C2C8-83BB-4DDF-9F8D-4B22D3C38AD7" NonPagedMemory="true" Level="5" CaptureStateOnly="true">
+      <CaptureStateOnStart>
+        <Keyword Value="0xFFFFFFFFFFFFFFFF" />
+      </CaptureStateOnStart>
+      <CaptureStateOnSave>
+        <Keyword Value="0xFFFFFFFFFFFFFFFF" />
+      </CaptureStateOnSave>
+    </EventProvider>
+
+    <!-- Microsoft-Windows-UserPnp -->
+    <EventProvider Id="EventProvider_UserPnP" Name="96F4A050-7E31-453C-88BE-9634F4E02139" Level="5" />
+
+    <!-- Microsoft-Windows-DriverFrameworks-UserMode -->
+    <EventProvider Id="EventProvider_UmdfDriverFrameworks" Name="2E35AAEB-857F-4BEB-A418-2E6C0E54D988" Level="5" />
+
+    <!-- USB stack. Kernel-mode, so these belong in the non-paged collector. -->
+    <EventProvider Id="EventProvider_UsbHub3" Name="AC52AD17-CC01-4F85-8DF5-4DCE4333C99B" NonPagedMemory="true" Level="5" />
+    <EventProvider Id="EventProvider_UsbUcx" Name="36DA592D-E43A-4E28-AF6F-4BC57C5A11E8" NonPagedMemory="true" Level="5" />
+    <EventProvider Id="EventProvider_UsbXhci" Name="30E1D284-5D88-459C-83FD-6345B39B19EC" NonPagedMemory="true" Level="5" />
+
      <Profile Id="MidiSrv.Verbose.File" Name="MidiSrv" DetailLevel="Verbose" Description="Windows MIDI Services trace profile" LoggingMode="File">
       <Collectors>
-    
+      <!--
+        <SystemCollectorId Value="SystemCollector">
+          <SystemProviderId Value="SystemProvider" />
+        </SystemCollectorId>   
+      -->
+
         <EventCollectorId Value="EventCollector_MidiSrvSimple">
           <EventProviders>
             <EventProviderId Value="EventProvider_MidiSrv"/>
@@ -56,8 +103,7 @@
             <EventProviderId Value="EventProvider_WdmAud2"/>
 
             <EventProviderId Value="EventProvider_SDK"/>
-            <EventProviderId Value="EventProvider_SDKInitialization"/>
-
+            
             <EventProviderId Value="EventProvider_BS2UMPTransform"/>
             <EventProviderId Value="EventProvider_EndpointMetadataListenerTransform"/>
             <EventProviderId Value="EventProvider_JitterReductionGeneratorTransform"/>
@@ -68,6 +114,19 @@
             <EventProviderId Value="EventProvider_SettingsApp"/>
             <EventProviderId Value="EventProvider_ConsoleApp"/>
 
+            <EventProviderId Value="EventProvider_UserPnP"/>
+            <EventProviderId Value="EventProvider_UmdfDriverFrameworks"/>
+
+          </EventProviders>
+        </EventCollectorId>
+
+        <EventCollectorId Value="EventCollector_MidiSrvKernel">
+          <EventProviders>
+            <EventProviderId Value="EventProvider_KernelPnP"/>
+            <EventProviderId Value="EventProvider_KernelPnPRundown"/>
+            <EventProviderId Value="EventProvider_UsbHub3"/>
+            <EventProviderId Value="EventProvider_UsbUcx"/>
+            <EventProviderId Value="EventProvider_UsbXhci"/>
           </EventProviders>
         </EventCollectorId>
       </Collectors>

@@ -115,6 +115,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "Midi2UMP2BSTransform_i.c"
 
 class CMidi2KSAggregateMidiEndpointManager2;
+class CMidi2KSAggregateMidiEndpointManager3;
 class CMidi2KSAggregateMidiInProxy;
 class CMidi2KSAggregateMidiOutProxy;
 class CMidi2KSAggregateMidiConfigurationManager;
@@ -127,6 +128,7 @@ class TransportState;
 #include "Midi2.KSAggregateMidi.h"
 #include "Midi2.KSAggregateMidiBidi.h"
 #include "Midi2.KSAggregateMidiEndpointManager2.h"
+#include "Midi2.KSAggregateMidiEndpointManager3.h"
 #include "Midi2.KSAggregateMidiConfigurationManager.h"
 #include "Midi2.KSAggregateMidiPluginMetadataProvider.h"
 

@@ -8,6 +8,8 @@
 
 #include "pch.h"
 
+#include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
+
 
 TransportState::TransportState() = default;
 TransportState::~TransportState() = default;
@@ -25,9 +27,51 @@ TransportState& TransportState::Current()
 HRESULT
 TransportState::ConstructEndpointManager()
 {
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiEndpointManager2>(&m_endpointManager2));
+    if (Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled())
+    {
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiEndpointManager3>(&m_endpointManager3));
+    }
+    else
+    {
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiEndpointManager2>(&m_endpointManager2));
+    }
 
     return S_OK;
+}
+
+
+wil::com_ptr<IMidiEndpointManager>
+TransportState::GetActiveEndpointManager()
+{
+    if (m_endpointManager3 != nullptr)
+    {
+        return m_endpointManager3.query<IMidiEndpointManager>();
+    }
+
+    if (m_endpointManager2 != nullptr)
+    {
+        return m_endpointManager2.query<IMidiEndpointManager>();
+    }
+
+    return nullptr;
+}
+
+
+_Use_decl_annotations_
+winrt::hstring
+TransportState::FindMatchingInstantiatedEndpoint(WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
+{
+    if (m_endpointManager3 != nullptr)
+    {
+        return m_endpointManager3->FindMatchingInstantiatedEndpoint(criteria);
+    }
+
+    if (m_endpointManager2 != nullptr)
+    {
+        return m_endpointManager2->FindMatchingInstantiatedEndpoint(criteria);
+    }
+
+    return L"";
 }
 
 

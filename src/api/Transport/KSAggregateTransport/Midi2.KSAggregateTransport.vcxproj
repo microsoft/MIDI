@@ -370,6 +370,7 @@
     <ClCompile Include="Midi2.KSAggregateMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidiEndpointManager2.cpp" />
+    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2KSAggregateTransport.idl">
@@ -402,6 +403,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Midi2.KSAggregateMidiEndpointManager2.h" />
+    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager3.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.KSAggregateTransport.rc" />
