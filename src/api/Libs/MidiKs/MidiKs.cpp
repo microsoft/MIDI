@@ -28,6 +28,7 @@
 
 #include "Feature_Servicing_MIDI2LegacyTimestamp.h"
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
+#include "Feature_Servicing_MIDI2KSInputRemovalDeadlock.h"
 
 namespace
 {
@@ -118,6 +119,10 @@ KSMidiDevice::Initialize(
 void
 KSMidiDevice::OnRemoveCallback()
 {
+    // Runs before KsHandleWrapper::Close, which is the only chance to release anything
+    // still holding the pin wrapper lock.
+    OnRemoveCallbackInternal();
+
     if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled() && m_WriteTerminateEvent)
     {
         // Must happen before the lock, which an uncompleted write is holding shared.
@@ -715,6 +720,20 @@ KSMidiOutDevice::WriteAbandonablePacketMidiData(
     return S_OK;
 }
 
+void
+KSMidiInDevice::OnRemoveCallbackInternal()
+{
+    if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
+    {
+        // The worker holds the pin wrapper lock shared for the whole blocking read, and the
+        // PnP thread is about to call KsHandleWrapper::Close, which needs it exclusive.
+        // SyncIoctl waits on this event, so signalling it releases the reader no matter what
+        // the driver does with the cancel. Without this, the cfgmgr32 callback deadlocks and
+        // PnP can never finish removing the device, which needs a reboot to clear.
+        m_ThreadTerminateEvent.SetEvent();
+    }
+}
+
 HRESULT
 KSMidiInDevice::Shutdown()
 {
@@ -722,22 +741,52 @@ KSMidiInDevice::Shutdown()
 
     if (m_ThreadHandle)
     {
-        // If we have a worker thread (standard bytestream), and the pin is open and running
-        // pause the pin prior to stopping the worker thread. This works around an issue
-        // with some drivers cloning stream pointers and not registering for a cancel callback,
-        // which results in their IRP not being completed. Pausing before terminating the worker thread
-        // deletes the stream pointers to get a good cleanup, working around the driver issue.
-        if (m_PinHandleWrapper && m_PinHandleWrapper->IsOpen() && m_CurrentState == KSSTATE_RUN)
+        if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
         {
-            RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
-        }
+            // Ordering matters. The worker holds the pin wrapper lock shared until this event
+            // wakes it, and PinSetState below needs that same lock. Signalling afterwards
+            // deadlocks against a concurrent KsHandleWrapper::Close.
+            m_ThreadTerminateEvent.SetEvent();
 
-        // First shut down the worker thread so it will not
-        // attempt to use the pin/filter/swr lock after they've
-        // been cleaned up by the base clase.
-        m_ThreadTerminateEvent.SetEvent();
-        WaitForSingleObject(m_ThreadHandle.get(), INFINITE);
-        m_ThreadHandle.reset();
+            // Pausing the pin works around drivers that clone stream pointers without
+            // registering a cancel callback. It is best effort: on a surprise removal the pin
+            // is already gone, and failing here must not abandon the rest of the teardown.
+            if (m_PinHandleWrapper && m_PinHandleWrapper->IsOpen() && m_CurrentState == KSSTATE_RUN)
+            {
+                LOG_IF_FAILED(PinSetState(KSSTATE_PAUSE));
+            }
+
+            // Wait for the worker to finish using this object rather than for the thread to
+            // terminate. A driver holding the worker's read IRP blocks thread termination
+            // forever, and joining the thread handle would hang every client behind this.
+            if (m_ThreadExitedEvent)
+            {
+                WaitForSingleObject(m_ThreadExitedEvent.get(), INFINITE);
+            }
+
+            // Closing a thread handle does not wait, so a thread still stuck in termination is
+            // left to unwind whenever its IRP is finally released.
+            m_ThreadHandle.reset();
+        }
+        else
+        {
+            // If we have a worker thread (standard bytestream), and the pin is open and running
+            // pause the pin prior to stopping the worker thread. This works around an issue
+            // with some drivers cloning stream pointers and not registering for a cancel callback,
+            // which results in their IRP not being completed. Pausing before terminating the worker thread
+            // deletes the stream pointers to get a good cleanup, working around the driver issue.
+            if (m_PinHandleWrapper && m_PinHandleWrapper->IsOpen() && m_CurrentState == KSSTATE_RUN)
+            {
+                RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
+            }
+
+            // First shut down the worker thread so it will not
+            // attempt to use the pin/filter/swr lock after they've
+            // been cleaned up by the base clase.
+            m_ThreadTerminateEvent.SetEvent();
+            WaitForSingleObject(m_ThreadHandle.get(), INFINITE);
+            m_ThreadHandle.reset();
+        }
     }
 
     // safe to clean up the base class now that any looped
@@ -760,9 +809,141 @@ typedef struct
     BYTE            abInputBuffer[MIDI_DATA_BUFFER_LENGTH];
 } MIDI_EVENT;
 
+namespace
+{
+    // Same rationale as KsAbandonableWrite: if a driver will not complete the read IRP, the
+    // kernel keeps owning Overlapped/Header/Event, so on abandon the struct is leaked rather
+    // than freed. Do not give this RAII cleanup or move it back onto the stack.
+    struct KsAbandonableRead
+    {
+        OVERLAPPED Overlapped{};
+        KSSTREAM_HEADER Header{};
+        MIDI_EVENT Event{};
+        wil::unique_event CompletionEvent;
+        wil::unique_handle PinHandle;
+    };
+}
+
+HRESULT
+KSMidiInDevice::ReadAbandonableMidiData()
+{
+    if (!m_PinHandleWrapper)
+    {
+        return E_HANDLE;
+    }
+
+    // Allocated once per worker, not per message, so the steady state costs no more than the
+    // original stack based read.
+    auto context = std::make_unique<KsAbandonableRead>();
+
+    // Owning a duplicate is what keeps the pin wrapper lock from being held across the read.
+    // Holding it there let a cfgmgr32 PnP callback deadlock against this thread, which wedges
+    // device removal badly enough to need a reboot.
+    context->PinHandle.reset(m_PinHandleWrapper->GetHandle());
+    RETURN_HR_IF_NULL(E_HANDLE, context->PinHandle);
+
+    context->CompletionEvent.create(wil::EventOptions::ManualReset);
+
+    while (m_Running)
+    {
+        // The KSSTREAM_HEADER must be reinitialized before each call
+        ZeroMemory(&context->Header, sizeof(context->Header));
+        context->Header.Size = sizeof(KSSTREAM_HEADER);
+        context->Header.PresentationTime.Numerator = 1;
+        context->Header.PresentationTime.Denominator = 1;
+        context->Header.FrameExtent = sizeof(context->Event);
+        context->Header.Data = &context->Event;
+
+        ZeroMemory(&context->Overlapped, sizeof(context->Overlapped));
+        context->CompletionEvent.ResetEvent();
+        context->Overlapped.hEvent = context->CompletionEvent.get();
+
+        ULONG bytesReturned{ 0 };
+        HRESULT hr = S_OK;
+
+        if (!DeviceIoControl(
+                context->PinHandle.get(),
+                IOCTL_KS_READ_STREAM,
+                nullptr,
+                0,
+                &context->Header,
+                context->Header.Size,
+                &bytesReturned,
+                &context->Overlapped))
+        {
+            DWORD lastError = GetLastError();
+
+            if (lastError != ERROR_IO_PENDING)
+            {
+                LOG_IF_FAILED(HRESULT_FROM_WIN32(lastError));
+                return HRESULT_FROM_WIN32(lastError);
+            }
+
+            HANDLE waitHandles[] = { context->CompletionEvent.get(), m_ThreadTerminateEvent.get() };
+
+            if (WAIT_OBJECT_0 != WaitForMultipleObjects(ARRAYSIZE(waitHandles), waitHandles, FALSE, INFINITE))
+            {
+                // Terminating. CancelIoEx targets just this request and returns immediately,
+                // where CancelIo waits for the cancelled IRPs to complete and therefore never
+                // returns against a driver that does not complete them.
+                CancelIoEx(context->PinHandle.get(), &context->Overlapped);
+
+                if (WaitForSingleObject(context->CompletionEvent.get(), ReadCancelGraceMilliseconds) != WAIT_OBJECT_0)
+                {
+                    // Intentional leak, see KsAbandonableRead. The handle is the exception and
+                    // must be closed, because the IRP only completes once every handle to the
+                    // pin is gone.
+                    context->PinHandle.reset();
+                    context.release();
+                }
+
+                return HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED);
+            }
+
+            if (!GetOverlappedResult(context->PinHandle.get(), &context->Overlapped, &bytesReturned, FALSE))
+            {
+                hr = HRESULT_FROM_WIN32(GetLastError());
+            }
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            UINT32 payloadSize = context->Event.ksMusicFormat.ByteCount;
+            PVOID data = reinterpret_cast<BYTE*>(&context->Event.ksMusicFormat + 1);
+
+            if (m_MidiInCallback && payloadSize > 0)
+            {
+                if (Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
+                {
+                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, m_StartTime + (context->Event.ksMusicFormat.TimeDeltaMs * (m_qpcFrequency / MILLISECONDS_PER_SECOND)), m_MidiInCallbackContext));
+                }
+                else
+                {
+                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, context->Header.PresentationTime.Time, m_MidiInCallbackContext));
+                }
+            }
+        }
+        else if (hr == HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED))
+        {
+            return hr;
+        }
+        else
+        {
+            LOG_IF_FAILED(hr);
+        }
+    }
+
+    return S_OK;
+}
+
 HRESULT
 KSMidiInDevice::SendRequestToDriver()
 {
+    if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
+    {
+        return ReadAbandonableMidiData();
+    }
+
     while (m_Running)
     {
         MIDI_EVENT event {0};
@@ -848,6 +1029,16 @@ KSMidiInDevice::MidiInWorker(
     KSMidiInDevice *This = reinterpret_cast<KSMidiInDevice*>(param);
     if (This)
     {
+        // Must fire on every path, including the EnableMmcss failure below, or shutdown waits
+        // forever.
+        auto signalExit = wil::scope_exit([This]()
+            {
+                if (This->m_ThreadExitedEvent)
+                {
+                    This->m_ThreadExitedEvent.SetEvent();
+                }
+            });
+
         // Enable MMCSS for the midi in worker thread
         if (SUCCEEDED(EnableMmcss(This->m_ThreadOwnedMmcssHandle, This->m_MmcssTaskId)))
         {
@@ -901,7 +1092,10 @@ KSMidiInDevice::Initialize(
         m_ThreadTerminateEvent.create(wil::EventOptions::ManualReset);
         m_ThreadStartedEvent.create(wil::EventOptions::ManualReset);
 
-        // grab the callback/lambda that was passed in, for use later for message callbacks.
+    if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
+    {
+        m_ThreadExitedEvent.create(wil::EventOptions::ManualReset);
+    }
         m_MidiInCallback = callback;
         m_MidiInCallbackContext = context;
 
