@@ -34,6 +34,8 @@ public:
     HRESULT Shutdown();
 
 private:
+    static constexpr uint64_t SlowWriteTelemetryThresholdMilliseconds{ 250 };
+
     std::wstring m_endpointDeviceId{};
     std::atomic<uint64_t> m_countMidiMessageSent{};
 

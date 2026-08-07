@@ -9,6 +9,7 @@
 #pragma once
 
 #include "pch.h"
+#include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 
 
 _Use_decl_annotations_
@@ -198,7 +199,56 @@ CMidi2KSAggregateMidiOutProxy::Callback(
 #endif
 
     // Send transformed message to device
-    RETURN_IF_FAILED(m_device->SendMidiMessage(optionFlags, data, length, timestamp));
+    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled())
+    {
+        auto writeStart = std::chrono::steady_clock::now();
+        HRESULT hr = m_device->SendMidiMessage(optionFlags, data, length, timestamp);
+        auto writeMilliseconds = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - writeStart).count());
+
+        if (FAILED(hr))
+        {
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unable to send MIDI data to KS output pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingUInt8(m_groupIndex, "Group index"),
+                TraceLoggingUInt32(length, "Length bytes"),
+                TraceLoggingUInt64(writeMilliseconds, "Write duration ms"),
+                TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+            );
+
+            return hr;
+        }
+
+        // Slow-but-successful writes are how the timeout constants get tuned against real devices.
+        if (writeMilliseconds >= SlowWriteTelemetryThresholdMilliseconds)
+        {
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Slow KS output pin write completed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingUInt8(m_groupIndex, "Group index"),
+                TraceLoggingUInt32(length, "Length bytes"),
+                TraceLoggingUInt64(writeMilliseconds, "Write duration ms")
+            );
+        }
+
+        ++m_countMidiMessageSent;
+    }
+    else
+    {
+        RETURN_IF_FAILED(m_device->SendMidiMessage(optionFlags, data, length, timestamp));
+    }
 
     return S_OK;
 }
