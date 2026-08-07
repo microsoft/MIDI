@@ -42,6 +42,9 @@
     <ClCompile Include="Midi2.KSAggregateMidiEndpointManager2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.KSAggregateMidiEndpointManager3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Midi2.KSAggregateMidiInProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -95,6 +98,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.KSAggregateMidiEndpointManager2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.KSAggregateMidiEndpointManager3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.KSAggregateMidiInProxy.h">

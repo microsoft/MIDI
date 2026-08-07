@@ -45,12 +45,15 @@ CMidi2KSAggregateTransport::Activate(
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (TransportState::Current().GetEndpointManager2() == nullptr)
+        if (TransportState::Current().GetActiveEndpointManager() == nullptr)
         {
             TransportState::Current().ConstructEndpointManager();
         }
 
-        RETURN_IF_FAILED(TransportState::Current().GetEndpointManager2()->QueryInterface(iid, activatedInterface));
+        auto endpointManager = TransportState::Current().GetActiveEndpointManager();
+        RETURN_HR_IF_NULL(E_FAIL, endpointManager);
+
+        RETURN_IF_FAILED(endpointManager->QueryInterface(iid, activatedInterface));
     }
     else if (__uuidof(IMidiTransportConfigurationManager) == iid)
     {

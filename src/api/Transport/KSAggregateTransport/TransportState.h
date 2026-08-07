@@ -25,6 +25,16 @@ public:
         return m_endpointManager2;
     }
 
+    wil::com_ptr<CMidi2KSAggregateMidiEndpointManager3> GetEndpointManager3()
+    {
+        return m_endpointManager3;
+    }
+
+    // whichever implementation the KIR selected
+    wil::com_ptr<IMidiEndpointManager> GetActiveEndpointManager();
+
+    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
+
     wil::com_ptr<CMidi2KSAggregateMidiConfigurationManager> GetConfigurationManager()
     {
         return m_configurationManager;
@@ -34,6 +44,7 @@ public:
     HRESULT Shutdown()
     {
         m_endpointManager2.reset();
+        m_endpointManager3.reset();
         m_configurationManager.reset();
 
         return S_OK;
@@ -49,6 +60,7 @@ private:
     ~TransportState();
 
     wil::com_ptr<CMidi2KSAggregateMidiEndpointManager2> m_endpointManager2 { nullptr };
+    wil::com_ptr<CMidi2KSAggregateMidiEndpointManager3> m_endpointManager3 { nullptr };
 
     wil::com_ptr<CMidi2KSAggregateMidiConfigurationManager> m_configurationManager;
 

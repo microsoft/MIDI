@@ -259,10 +259,10 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                 // Resolve the EndpointDeviceId in case we matched on something else
                 winrt::hstring matchingEndpointDeviceId{};
 
-                auto em = TransportState::Current().GetEndpointManager2();
+                auto em = TransportState::Current().GetActiveEndpointManager();
                 if (em != nullptr)
                 {
-                    matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
+                    matchingEndpointDeviceId = TransportState::Current().FindMatchingInstantiatedEndpoint(*matchCriteria);
                 }
 
                 // process all the custom props like Name, Description, Image, etc.
