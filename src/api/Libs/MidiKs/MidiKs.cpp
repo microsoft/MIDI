@@ -846,6 +846,11 @@ KSMidiInDevice::ReadAbandonableMidiData()
 
     while (m_Running)
     {
+        // Both of these must be cleared before every read. Some drivers accumulate into the
+        // event buffer rather than overwriting it from zero, so reusing a dirty buffer makes
+        // each read return the whole history again plus the new message.
+        ZeroMemory(&context->Event, sizeof(context->Event));
+
         // The KSSTREAM_HEADER must be reinitialized before each call
         ZeroMemory(&context->Header, sizeof(context->Header));
         context->Header.Size = sizeof(KSSTREAM_HEADER);
