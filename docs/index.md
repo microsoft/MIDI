@@ -3,12 +3,7 @@ layout: home
 ---
 # About Windows MIDI Services
 
-Windows MIDI Services is the new MIDI API, Service, and SDK in Microsoft Windows. It's delivered in two parts:
-
-- In-box MIDI Service and plugins, the new MIDI 2.0 kernel driver, plus backwards-compatibility support for WinMM and WinRT MIDI 1.0 APIs. You get this when you install Windows.
-- An out-of-band shipped SDK Runtime and Tools package. You need to download and install this yourself.
-
-We ship the runtime and tools out-of-band to enable us to move quickly and continue providing new features and capabilities for customers and apps.
+Windows MIDI Services is the new MIDI API, Service, and SDK in Microsoft Windows. 
 
 ## Benefits for everyone
 
@@ -21,7 +16,7 @@ We ship the runtime and tools out-of-band to enable us to move quickly and conti
 * **More Deterministic**. Speaking of latency compensation, the new API enables timestamp-based message scheduling for outbound messages for any apps using the new API. In addition, incoming messages are tagged with a timestamp when received by the service.
 * **App-to-App and Virtual Device MIDI**. Windows MIDI Services includes built-in virtual / app-to-app MIDI 2.0 to enable lightning fast communication between apps on the PC.
 * **Better tools**. We supply the `midi.exe` Windows MIDI Services Console for developers and power users, or anyone comfortable with the command line. You can use it to monitor endpoints, send and receive messages, send/capture SysEx data and much more. We also include the MIDI Settings GUI app for renaming devices, configuring your MIDI setup, testing, and more.
-* **Built-in Scripting** Built-in support for scripting MIDI using PowerShell. Want to automate synchronization between mixers? Want to set up a script to initialize all your devices for a show? All this can be done via the PowerShell Cmdlets.
+* **Scripting** Support for scripting MIDI using PowerShell. Want to automate synchronization between mixers? Want to set up a script to initialize all your devices for a show? All this can be done via the PowerShell Cmdlets.
 
 ## Developer Benefits
 
