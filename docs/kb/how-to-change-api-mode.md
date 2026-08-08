@@ -7,9 +7,13 @@ audience: everyone
 
 # API Modes
 
-With the June 2026 Week "D" 30-day CFR in KB5095093, we've introduced the ability to roll back to the old MIDI stack in Windows. That means that "seekers" (people who go into Windows Update and look for updates) will have this feature enabled by the end of July 2026. Others will have it enabled by mid-August 2026.
+With the June 2026 Week "D" 30-day CFR (Controlled Feature Rollout) in KB5095093, we've introduced the ability to roll back to the old MIDI stack in Windows. That means that "seekers" (people who go into Windows Update and look for updates) will have this feature enabled by the end of July 2026. Others will have it enabled by mid-August 2026.
 
-You must be fully up to date with a healthy Windows 11 system to use this feature. If you have uninstalled any updates or used Vive tool or similar, please repair your PC using Windows Settings > System > Recovery > "Fix problems using Windows Update".
+You must be fully up to date with a healthy Windows 11 system to use this feature. **If you have uninstalled any updates or used Vive tool or similar, please repair your PC using Windows Settings > System > Recovery > "Fix problems using Windows Update".**
+
+> Note: If your PC is joined to a domain rather than using your Microsoft Account to log in, you will probably not yet have this feature. CFRs are blocked on domain-joined PCs by domain policy by default.
+
+> Note2: Some Insider builds are not getting these KBs. For example, Insider Canary did not receive that KB. Without that, you will not have this feature.
 
 ## Mode 0: Full Windows MIDI Services
 
@@ -52,6 +56,12 @@ This will eventually be in the MIDI Settings app, once the feature is fully enab
 4. Right click on that value, and choose "Modify"
 5. Set the value: one of the above modes: 0, 1, 2
 6. Reboot for it to take effect.
+
+## Important tips
+
+- Do not use the current MIDI tools (MIDI Console, MIDI Settings) if you are in Legacy Mode. Some of these try to force start the service.
+- Do not use `midicheckservice`
+- To verify that your PC is in Legacy Mode, after rebooting, use a MIDI 1.0 app, and check to see if midisrv is running (either in the Services app, or in the details tab of Task Manager). If you are sending/receiving MIDI and midsrv is not running, you are in legacy mode.
 
 # Important note for hardware/software manufacturers and support
 
