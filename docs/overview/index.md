@@ -3,10 +3,7 @@ layout: doc
 title: Windows MIDI Services Overview
 ---
 
-Windows MIDI Services is the new MIDI API, Service, and SDK in Microsoft Windows. It's delivered in two parts:
-- In-box MIDI Service and plugins, the new MIDI 2.0 kernel driver, plus backwards-compatibility support for WinMM and WinRT MIDI 1.0 APIs. You get this when you install Windows.
-- An out-of-band shipped SDK Runtime and Tools package. You need to download and install this yourself.
-We ship the runtime and tools out-of-band to enable us to move quickly and continue providing new features and capabilities for customers and apps.
+Windows MIDI Services is the new MIDI API, Service, and SDK in Microsoft Windows.
 
 ## Changes from the past
 
