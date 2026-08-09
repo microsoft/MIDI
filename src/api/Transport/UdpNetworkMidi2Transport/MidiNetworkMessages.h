@@ -78,12 +78,15 @@ enum MidiNetworkCommandRetransmitErrorReason : byte
 };
 
 
+// Spec 6.4. This is a bitmap, not a set of alternatives: a client may advertise support for
+// more than one authentication method in a single invitation.
 enum MidiNetworkCommandInvitationCapabilities : byte
 {
     Capabilities_None = 0x00,
     Capabilities_ClientSupportsInvitationWithAuthentication = 0x01,
     Capabilities_ClientSupportsInvitationWithUserAuthentication = 0x02,
 };
+DEFINE_ENUM_FLAG_OPERATORS(MidiNetworkCommandInvitationCapabilities);
 
 
 // The order of elements in this is super important. It's

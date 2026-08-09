@@ -47,12 +47,17 @@ CMidi2NetworkMidiTransport::Activate(
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (TransportState::Current().GetEndpointManager() == nullptr)
+        auto endpointManager = TransportState::Current().GetEndpointManager();
+
+        if (endpointManager == nullptr)
         {
-            TransportState::Current().ConstructEndpointManager();
+            RETURN_IF_FAILED(TransportState::Current().ConstructEndpointManager());
+
+            endpointManager = TransportState::Current().GetEndpointManager();
         }
 
-        RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->QueryInterface(riid, requestedInterface));
+        RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+        RETURN_IF_FAILED(endpointManager->QueryInterface(riid, requestedInterface));
     }
 
 
@@ -68,12 +73,17 @@ CMidi2NetworkMidiTransport::Activate(
         );
 
         // check to see if this is the first time we're creating the configuration manager. If so, create it.
-        if (TransportState::Current().GetConfigurationManager() == nullptr)
+        auto configurationManager = TransportState::Current().GetConfigurationManager();
+
+        if (configurationManager == nullptr)
         {
-            TransportState::Current().ConstructConfigurationManager();
+            RETURN_IF_FAILED(TransportState::Current().ConstructConfigurationManager());
+
+            configurationManager = TransportState::Current().GetConfigurationManager();
         }
 
-        RETURN_IF_FAILED(TransportState::Current().GetConfigurationManager()->QueryInterface(riid, requestedInterface));
+        RETURN_HR_IF_NULL(E_UNEXPECTED, configurationManager);
+        RETURN_IF_FAILED(configurationManager->QueryInterface(riid, requestedInterface));
     }
 
     else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == riid)

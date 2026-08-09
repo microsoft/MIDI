@@ -34,6 +34,10 @@ namespace foundation = ::winrt::Windows::Foundation;
 //#include <ks.h>
 //#include <ksmedia.h>
 #include <avrt.h>
+// Must precede the other wil headers. Without it WIL cannot identify a winrt::hresult_error,
+// reports it as ERROR_UNHANDLED_EXCEPTION and FAIL FASTS, so every CATCH_LOG around a WinRT
+// call becomes a service crash rather than a logged error.
+#include <wil\cppwinrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
@@ -41,6 +45,10 @@ namespace foundation = ::winrt::Windows::Foundation;
 #include <ppltasks.h>
 
 #include <SDKDDKVer.h>
+
+#include <atomic>
+#include <thread>
+#include <stop_token>
 
 #define _ATL_APARTMENT_THREADED
 #define _ATL_NO_AUTOMATIC_NAMESPACE
@@ -101,7 +109,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 // subset of boost is installed via vcpkg https://vcpkg.io/en/package/boost-circular-buffer.html
 #include "boost/circular_buffer.hpp"
 
-#include "transport_defs.h"
+#include "net2udp_transport_defs.h"
 #include "network_json_defs.h"
 #include "MidiSequenceNumber.h"
 
@@ -119,6 +127,8 @@ struct MidiNetworkHostDefinition;
 
 #include "MidiNetworkMessages.h"
 
+#include "MidiNetworkCredentials.h"
+#include "MidiNetworkRateLimiter.h"
 #include "MidiNetworkDataWriter.h"
 #include "MidiNetworkConnection.h"
 

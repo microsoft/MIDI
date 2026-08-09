@@ -16,10 +16,51 @@ MidiNetworkDataWriter::Send()
 
     auto lock = m_dataWriterLock.lock();
 
-    m_dataWriter.StoreAsync().get();
+    try
+    {
+        m_dataWriter.StoreAsync().get();
+    }
+    catch (...)
+    {
+        // an unreachable or torn-down remote must not take the service down
+        auto hr = wil::ResultFromCaughtException();
 
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception storing datagram to the output stream", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+
+        RETURN_IF_FAILED(hr);
+    }
 
     m_countNetworkPacketsSent++;
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkDataWriter::DiscardPendingData()
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+
+    auto lock = m_dataWriterLock.lock();
+
+    try
+    {
+        if (m_dataWriter.UnstoredBufferLength() > 0)
+        {
+            m_dataWriter.DetachBuffer();
+        }
+    }
+    catch (...)
+    {
+        RETURN_IF_FAILED(wil::ResultFromCaughtException());
+    }
 
     return S_OK;
 }
@@ -484,21 +525,34 @@ MidiNetworkDataWriter::WriteCommandUmpMessages(
     std::vector<uint32_t> words
 )
 {
+    RETURN_HR_IF(E_INVALIDARG, words.size() > MIDI_MAX_UMP_WORDS_PER_PACKET);
+
+    return WriteCommandUmpMessages(sequenceNumber, words.data(), static_cast<uint8_t>(words.size()));
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandUmpMessages(
+    MidiSequenceNumber sequenceNumber,
+    uint32_t const* words,
+    uint8_t const wordCount
+)
+{
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
 
-    RETURN_HR_IF(E_INVALIDARG, words.size() > MIDI_MAX_UMP_WORDS_PER_PACKET);
-
+    RETURN_HR_IF(E_INVALIDARG, wordCount > MIDI_MAX_UMP_WORDS_PER_PACKET);
+    RETURN_HR_IF(E_INVALIDARG, wordCount > 0 && words == nullptr);
 
     auto lock = m_dataWriterLock.lock();
-    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_UmpData, static_cast<byte>(words.size()), sequenceNumber.Value()));
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_UmpData, wordCount, sequenceNumber.Value()));
 
     // we make the assumption that the calling code has already validated that the words
     // are complete messages, or zero-length. We don't check again here.
 
-    for (auto const& word : words)
+    for (uint8_t i = 0; i < wordCount; i++)
     {
-        m_dataWriter.WriteUInt32(word);
+        m_dataWriter.WriteUInt32(words[i]);
     }
 
     return S_OK;
@@ -511,7 +565,15 @@ MidiNetworkDataWriter::Shutdown()
 
     if (m_dataWriter != nullptr)
     {
-        m_dataWriter.Close();
+        try
+        {
+            // the stream belongs to the socket, which may be shared with other connections
+            // and outlive us. DataWriter::Close() would close it, so detach it first.
+            m_dataWriter.DetachStream();
+            m_dataWriter.Close();
+        }
+        CATCH_LOG();
+
         m_dataWriter = nullptr;
     }
 
