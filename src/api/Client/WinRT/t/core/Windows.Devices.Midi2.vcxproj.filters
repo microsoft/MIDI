@@ -48,6 +48,7 @@
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClInclude>
+    <ClInclude Include="midi_network_defs.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
@@ -386,6 +387,81 @@
     <Midl Include="MidiSystemExclusiveSendProgress.idl">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </Midl>
+    <Midl Include="MidiNetworkAdvertisedHost.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostUpdatedEventArgs.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostWatcher.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAuthenticationTypeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientConnectConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientConnectResult.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientConnectResultErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientDisconnectConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientDisconnectResult.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientDisconnectResultErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientMatchCriteria.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkConfiguredClient.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkConfiguredHost.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostCreationConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostCreationResult.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostCreationResultErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostRemovalConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostRemovalResult.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostRemovalResultErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostUpdateResult.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostUpdateResultErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkTransportManager.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -452,6 +528,9 @@
     </Filter>
     <Filter Include="SDK\Utilities\SysEx Transfer">
       <UniqueIdentifier>{84ec9bf5-bdec-41bc-a6dc-0031372b044b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Network">
+      <UniqueIdentifier>{80d8fe1a-9b35-4010-8499-114cd6e4c1ea}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
