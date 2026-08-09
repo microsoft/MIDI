@@ -16,11 +16,23 @@
 #include <cwctype>
 #include <algorithm>
 
+#include "Feature_Servicing_MIDI2StringCharacterSets.h"
+
 // these specifically do not include whitespace characters
-#define CHARACTER_STRING_ALPHAUPPER             L"ABCDEFGHIJKLMNOPQRSTUVWZYZ"
+#define CHARACTER_STRING_ALPHAUPPER             L"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #define CHARACTER_STRING_ALPHALOWER             L"abcdefghijklmnopqrstuvwxyz"
 #define CHARACTER_STRING_DIGITS                 L"0123456789"
-#define CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED  L"-_" CHARACTER_STRING_ALPHAUPPER CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS
+#define CHARACTER_STRING_ALPHANUMERIC           CHARACTER_STRING_ALPHAUPPER CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS
+#define CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED  L"-_" CHARACTER_STRING_ALPHANUMERIC
+
+// Pre-fix character sets, kept only so a servicing rollback restores the previous behavior
+// exactly. The uppercase set was missing X and repeated Z, and the alphanumeric set listed the
+// lowercase letters twice instead of including the uppercase ones.
+// REMOVE THESE, and the branches which use them, when Feature_Servicing_MIDI2StringCharacterSets
+// is removed.
+#define CHARACTER_STRING_ALPHAUPPER_LEGACY              L"ABCDEFGHIJKLMNOPQRSTUVWZYZ"
+#define CHARACTER_STRING_ALPHANUMERIC_LEGACY            CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS
+#define CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED_LEGACY   L"-_" CHARACTER_STRING_ALPHAUPPER_LEGACY CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS
 
 namespace WindowsMidiServicesInternal
 {
@@ -38,12 +50,26 @@ namespace WindowsMidiServicesInternal
 
     inline std::wstring RemoveInvalidSWDUniqueIdCharacters(_In_ std::wstring const& uniqueId)
     {
-        return RemoveDisallowedStringCharacters(uniqueId, CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED);
+        if (Feature_Servicing_MIDI2StringCharacterSets::IsEnabled())
+        {
+            return RemoveDisallowedStringCharacters(uniqueId, CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED);
+        }
+        else
+        {
+            return RemoveDisallowedStringCharacters(uniqueId, CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED_LEGACY);
+        }
     }
 
     inline std::wstring RemoveNonAlphaNumericCharacters(_In_ std::wstring const& source)
     {
-        return RemoveDisallowedStringCharacters(source, CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS);
+        if (Feature_Servicing_MIDI2StringCharacterSets::IsEnabled())
+        {
+            return RemoveDisallowedStringCharacters(source, CHARACTER_STRING_ALPHANUMERIC);
+        }
+        else
+        {
+            return RemoveDisallowedStringCharacters(source, CHARACTER_STRING_ALPHANUMERIC_LEGACY);
+        }
     }
 
 

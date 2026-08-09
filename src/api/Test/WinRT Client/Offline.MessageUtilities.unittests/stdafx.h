@@ -30,6 +30,7 @@ using namespace winrt::Windows::Devices::Midi2::Enumeration;
 #include <vector>
 
 #include <avrt.h>
+#include <wil\cppwinrt.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <ppltasks.h>

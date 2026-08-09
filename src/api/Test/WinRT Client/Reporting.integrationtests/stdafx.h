@@ -36,6 +36,7 @@ using namespace winrt::Windows::Devices::Midi2::Reporting;
 
 #include <avrt.h>
 #include <wil\winrt.h>
+#include <wil\cppwinrt.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <ppltasks.h>

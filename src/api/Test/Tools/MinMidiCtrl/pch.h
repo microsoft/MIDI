@@ -24,6 +24,9 @@
 
 #include <wrl\module.h>
 #include <wrl\event.h>
+// Must precede the other wil headers: without it WIL cannot identify winrt::hresult_error
+// and fail fasts instead of logging, which kills the test process instead of failing a test.
+#include <wil\cppwinrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>

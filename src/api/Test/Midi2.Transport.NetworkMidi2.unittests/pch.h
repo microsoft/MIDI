@@ -10,16 +10,58 @@
 #define PCH_H
 
 // add headers that you want to pre-compile here
+
+// winsock2 must come before windows.h, otherwise windows.h pulls in the original winsock.h and
+// every socket type is defined twice
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+
 #include "windows.h"
 
+#include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <deque>
+#include <map>
+#include <mutex>
+#include <optional>
+#include <stop_token>
+#include <string>
+#include <thread>
+#include <vector>
+
+// Must precede the other wil headers: without it WIL cannot identify winrt::hresult_error
+// and fail fasts instead of logging, which kills the test process instead of failing a test.
+#include <wil\cppwinrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <ppltasks.h>
 #include <WexTestClass.h>
 
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Networking.h>
+#include <winrt/Windows.Networking.Connectivity.h>
+
 #include "MidiSequenceNumber.h" // this is in the network midi project
 
 #include "SequenceNumberTests.h"
+
+#include "NetworkMidiTestProtocol.h"
+#include "NetworkMidiTestMdns.h"
+#include "NetworkMidiTestClient.h"
+#include "NetworkMidiTestHostLocator.h"
+#include "NetworkMidiTestContext.h"
+#include "NetworkMidiSessionTests.h"
+#include "NetworkMidiErrorTests.h"
+#include "NetworkMidiMalformedTests.h"
 
 #endif //PCH_H
