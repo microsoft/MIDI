@@ -156,7 +156,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -174,7 +174,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -192,7 +192,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -229,7 +229,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -246,7 +246,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -273,7 +273,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -294,6 +294,7 @@
     <ClCompile Include="Midi2.NetworkMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="MidiNetworkAdvertiser.cpp" />
     <ClCompile Include="MidiNetworkClient.cpp" />
+    <ClCompile Include="MidiNetworkCredentials.cpp" />
     <ClCompile Include="MidiNetworkHost.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
@@ -312,7 +313,7 @@
     <ClInclude Include="MidiSequenceNumber.h" />
     <ClInclude Include="network_json_defs.h" />
     <ClInclude Include="TransportState.h" />
-    <ClInclude Include="transport_defs.h" />
+    <ClInclude Include="net2udp_transport_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.NetworkMidiTransport.h" />
     <ClInclude Include="Midi2.NetworkMidiConfigurationManager.h" />
@@ -321,6 +322,7 @@
     <ClInclude Include="Midi2.NetworkMidiPluginMetadataProvider.h" />
     <ClInclude Include="MidiNetworkAdvertiser.h" />
     <ClInclude Include="MidiNetworkClient.h" />
+    <ClInclude Include="MidiNetworkCredentials.h" />
     <ClInclude Include="MidiNetworkHost.h" />
     <ClInclude Include="MidiNetworkMessages.h" />
     <ClInclude Include="pch.h" />

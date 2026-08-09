@@ -673,6 +673,14 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiLastRemotePort, 921);        // DEVPR
 #define STRING_PKEY_MIDI_DriverName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"922"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DriverName, 922);        // DEVPROP_TYPE_STRING
 
+// Which side initiated the network session. The endpoint instance id no longer encodes this,
+// because a device connecting in both roles is one device and must resolve to one endpoint.
+#define STRING_PKEY_MIDI_NetworkMidiConnectionRole MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"923"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiConnectionRole, 923);        // DEVPROP_TYPE_UINT32
+
+#define MIDI_NETWORK_CONNECTION_ROLE_WINDOWS_IS_HOST                    ((uint32_t)0)
+#define MIDI_NETWORK_CONNECTION_ROLE_WINDOWS_IS_CLIENT                  ((uint32_t)1)
+
 // MIDI 1.0 Port Naming Properties  ==========================================================
 // Starts at 950
 

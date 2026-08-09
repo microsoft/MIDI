@@ -39,9 +39,7 @@
                                                     SuppressOptionsUI="true"
                                                     SuppressRepair="true"
                                                     ShowVersion="true"
-                                                    LogoFile="midi_installer_logo_square.png"/>
-
-        
+                                                    LogoFile="midi_installer_logo_square.png"/>        
         </BootstrapperApplication>
 
         <Chain>

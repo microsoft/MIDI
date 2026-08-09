@@ -69,14 +69,16 @@ CMidi2NetworkMidiBidi::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    // TODO: This causes the service to crash when the remote network endpoint disconnects. Need to look into this further.
+    // The connection holds a reference on us. Dropping it via DisconnectMidiCallback can be the
+    // last one, so we hold ourselves alive until this call returns.
+    Microsoft::WRL::ComPtr<IMidiBidirectional> keepAlive(this);
 
     if (auto ptr = m_connection.lock())
     {
-        ptr->DisconnectMidiCallback();
-        m_connection.reset();
+        LOG_IF_FAILED(ptr->DisconnectMidiCallback());
     }
 
+    m_connection.reset();
     m_callback = nullptr;
     m_context = 0;
 
@@ -164,10 +166,13 @@ CMidi2NetworkMidiBidi::Callback(
     );
 #endif
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_callback);
+    RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    RETURN_IF_FAILED(m_callback->Callback(optionFlags, data, length, timestamp, context));
+    auto callback = m_callback;
+    RETURN_HR_IF_NULL(E_UNEXPECTED, callback);
+
+    RETURN_IF_FAILED(callback->Callback(optionFlags, data, length, timestamp, context));
 
     return S_OK;
 }

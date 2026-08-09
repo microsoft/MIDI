@@ -45,54 +45,59 @@ void MidiNetworkClient::OnMessageReceived(
 {
     UNREFERENCED_PARAMETER(sender);
 
-    auto reader = args.GetDataReader();
-
-    if (reader != nullptr && reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
+    try
     {
-        // not a message we understand. Needs to be at least the size of the 
-        // MIDI header plus a command packet header. Really it needs to be larger, but
-        // just trying to weed out blips
+        auto reader = args.GetDataReader();
 
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_WARNING,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Undersized packet", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
+        // the null check has to short-circuit, otherwise a null reader falls through to the read below
+        if (reader == nullptr || reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
+        {
+            // not a message we understand. Needs to be at least the size of the 
+            // MIDI header plus a command packet header. Really it needs to be larger, but
+            // just trying to weed out blips
 
-        // todo: does the reader need to be cleared?
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Undersized packet", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
 
-        return;
+            return;
+        }
+
+        uint32_t udpHeader = reader.ReadUInt32();
+
+        if (udpHeader != MIDI_UDP_PAYLOAD_HEADER)
+        {
+            // not a message we understand
+
+            return;
+        }
+
+        uint32_t firstCommandHeaderWord = reader.ReadUInt32();
+
+        auto connection = GetConnection();
+
+        if (connection)
+        {
+            LOG_IF_FAILED(connection->ProcessIncomingMessage(reader, firstCommandHeaderWord));
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Message received from remote client, connection is nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        }
     }
-
-    uint32_t udpHeader = reader.ReadUInt32();
-
-    if (udpHeader != MIDI_UDP_PAYLOAD_HEADER)
-    {
-        // not a message we understand
-
-        return;
-    }
-
-
-    if (m_networkConnection)
-    {
-        m_networkConnection->ProcessIncomingMessage(reader);
-    }
-    else
-    {
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Message received from remote client, connection is nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-    }
-
+    CATCH_LOG();
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -126,19 +131,30 @@ MidiNetworkClient::Start(
     auto conn = std::make_shared<MidiNetworkConnection>();
     RETURN_IF_NULL_ALLOC(conn);
 
-    {
-        //m_socket = winrt::make<DatagramSocket>();
+    DatagramSocket socket;
+    socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
+    socket.Control().DontFragment(true);
 
-        DatagramSocket socket;
+    {
+        auto lock = m_socketLock.lock();
         m_socket = socket;
-        m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
-        m_socket.Control().DontFragment(true);
     }
 
+    // The delegate holds a weak reference, not a raw this. Revoking the token does not drain
+    // handlers already dispatched, so the object has to be able to outlive the revoke.
+    std::weak_ptr<MidiNetworkClient> weakThis{ weak_from_this() };
+    RETURN_HR_IF_MSG(E_UNEXPECTED, weakThis.expired(), "Client must be owned by a shared_ptr before Start");
 
+    auto messageReceivedHandler = winrt::Windows::Foundation::TypedEventHandler<DatagramSocket, DatagramSocketMessageReceivedEventArgs>(
+        [weakThis](DatagramSocket const& sender, DatagramSocketMessageReceivedEventArgs const& args)
+        {
+            if (auto strongThis = weakThis.lock())
+            {
+                strongThis->OnMessageReceived(sender, args);
+            }
+        });
 
-    auto messageReceivedHandler = winrt::Windows::Foundation::TypedEventHandler<DatagramSocket, DatagramSocketMessageReceivedEventArgs>(this, &MidiNetworkClient::OnMessageReceived);
-    m_messageReceivedEventToken = m_socket.MessageReceived(messageReceivedHandler);
+    m_messageReceivedEventToken = socket.MessageReceived(messageReceivedHandler);
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -153,11 +169,35 @@ MidiNetworkClient::Start(
     // establish the remote connection
     try
     {
-        // this throws if the address can't be resolved or if 
+        // this throws if the address can't be resolved or if
         // the connect otherwise fails
 
-        //m_socket.ConnectAsync(pair).get();
-        m_socket.ConnectAsync(remoteHostName, remotePort).get();
+        auto connectOperation = socket.ConnectAsync(remoteHostName, remotePort);
+
+        auto status = connectOperation.wait_for(
+            std::chrono::milliseconds(MIDI_NETWORK_CLIENT_CONNECT_TIMEOUT_MILLISECONDS));
+
+        if (status == winrt::Windows::Foundation::AsyncStatus::Started)
+        {
+            // still running, so it is not coming back in a useful timeframe
+            connectOperation.Cancel();
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Timed out connecting to the remote host. Giving up on this attempt.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(remoteHostName.ToString().c_str(), "remote hostname"),
+                TraceLoggingWideString(remotePort.c_str(), "remote port")
+            );
+
+            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_TIMEOUT));
+        }
+
+        // rethrows the failure for the catch blocks below
+        connectOperation.GetResults();
     }
     catch (winrt::hresult_error err)
     {
@@ -204,7 +244,7 @@ MidiNetworkClient::Start(
 
     RETURN_IF_FAILED(conn->InitializeForClient(
         m_configIdentifier,
-        m_socket,
+        socket,
         remoteHostName,
         remotePort,
         m_thisEndpointName,
@@ -216,7 +256,10 @@ MidiNetworkClient::Start(
 
     TransportState::Current().AddNetworkConnection(remoteHostName, remotePort, conn);
 
-    m_networkConnection = conn;
+    {
+        auto lock = m_connectionLock.lock();
+        m_networkConnection = conn;
+    }
 
     // try to establish connection in-protocol
 
@@ -273,15 +316,34 @@ MidiNetworkClient::Shutdown()
     // now remove all those connections
     RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier));
 
+    // may not be in the list above if Start failed part way through. Shutdown is idempotent.
+    std::shared_ptr<MidiNetworkConnection> connection{ nullptr };
 
-    LOG_IF_FAILED(m_networkConnection->Shutdown());
-    m_networkConnection.reset();
-
-    if (m_socket)
     {
-        m_socket.MessageReceived(m_messageReceivedEventToken);
-        m_socket.Close();
-        m_socket = nullptr;
+        auto lock = m_connectionLock.lock();
+        connection.swap(m_networkConnection);
+    }
+
+    if (connection != nullptr)
+    {
+        LOG_IF_FAILED(connection->Shutdown());
+    }
+
+    winrt::Windows::Networking::Sockets::DatagramSocket socket{ nullptr };
+
+    {
+        auto lock = m_socketLock.lock();
+        std::swap(socket, m_socket);
+    }
+
+    if (socket)
+    {
+        try
+        {
+            socket.MessageReceived(m_messageReceivedEventToken);
+            socket.Close();
+        }
+        CATCH_LOG();
     }
 
 

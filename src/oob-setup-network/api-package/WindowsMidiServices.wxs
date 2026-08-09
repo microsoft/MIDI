@@ -59,16 +59,19 @@
                     </RegistryKey>
                     -->
                         
+                    <!--
+                      No Permission element here, deliberately. WiX's Permission REPLACES the
+                      ACL rather than adding to it, so granting Administrators removed read
+                      access for everyone else, including the service account. midisrv running
+                      as LOCAL SERVICE could then not see this plugin at all, and silently
+                      loaded no network transport. Inheriting from the parent gives
+                      Administrators/SYSTEM full control and Users read, which is what the
+                      other transports use.
+                    -->
                     <RegistryKey Key="Midi2NetworkMidiTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}">
-                          <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
-                        <RegistryValue Type="integer" Name="Enabled" Value="1">
-                          <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
+                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
-                    
-
                 </RegistryKey>
             </RegistryKey>
         </Component>
@@ -78,42 +81,5 @@
         <ComponentRef Id="WindowsServiceAbstractions"/>
         <ComponentRef Id="ConfigurationRegistryEntries"/>
       </Feature>
-
-      
-      <Binary Id="CustomActionBinary"
-              SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
-
-      <CustomAction Id="Action_TakeRegistryOwnership"
-                    Impersonate="no"
-                    Execute="deferred"
-                    BinaryRef="CustomActionBinary"
-                    DllEntry="TakeRegistryOwnership"
-                    Return="check"/>
-
-      <!--
-      <CustomAction Id="Action_TakeWdmaud2Ownership"
-                    Impersonate="no"
-                    Execute="deferred"
-                    BinaryRef="CustomActionBinary"
-                    DllEntry="TakeWdmaud2Ownership"
-                    Return="check"/>
-
-      <CustomAction Id="Action_RemoveInBoxService"
-                    Impersonate="no"
-                    Execute="deferred"
-                    BinaryRef="CustomActionBinary"
-                    DllEntry="RemoveInBoxService"
-                    Return="check"/>
-      -->
-
-
-
-      <InstallExecuteSequence>
-        <Custom Action="Action_TakeRegistryOwnership"
-                Before="CreateFolders"
-                Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
-
-      </InstallExecuteSequence>      
-      
     </Package>
 </Wix>

@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,0,2
+ PRODUCTVERSION 1,0,0,2
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -71,12 +71,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Microsoft Corporation"
             VALUE "FileDescription", "Windows MIDI Services Plugin"
-            VALUE "FileVersion", "1.0.0.1"
             VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation.  All rights reserved."
             VALUE "InternalName", "Midi2.NetworkMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.NetworkMidiTransport.dll"
             VALUE "ProductName", "Windows MIDI Services"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "FileVersion", "1.0.0.2"
+            VALUE "ProductVersion", "1.0.0.2"
             VALUE "OLESelfRegister", ""
         END
     END
@@ -101,11 +101,30 @@ BEGIN
     IDS_PLUGIN_METADATA_AUTHOR          "Microsoft"
 
 
-    IDS_ERROR_PARSING_JSON              "Error parsing JSON. Is it valid?"
-    IDS_ERROR_MISSING_ENTRY_IDENTIFIER  "Missing entry identifier."
-    IDS_ERROR_MISSING_NAME              "Missing or blank endpoint name."
-    IDS_ERROR_CREATION_FAILED           "Endpoint creation failed for an unknown reason."
-    IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."
+    IDS_ERROR_PARSING_JSON                          "Error parsing JSON. Is it valid?"
+    IDS_ERROR_MISSING_ENTRY_IDENTIFIER              "Missing entry identifier."
+    IDS_ERROR_MISSING_NAME                          "Missing or blank endpoint name."
+    IDS_ERROR_CREATION_FAILED                       "Endpoint creation failed for an unknown reason."
+    IDS_ERROR_UNRECOGNIZED_COMMAND                  "Unrecognized command."
+    IDS_ERROR_MISSING_PRODUCT_INSTANCE_ID           "Missing or blank product instance id."
+    IDS_ERROR_CONNECTION_POLICY_RANGE_ENTRY_COUNT   "Connection policy IP address range needs exactly two valid entries to define the range."
+    IDS_ERROR_CONNECTION_POLICY_LIST_ENTRY_COUNT    "Connection policy IP address list needs at least one valid entry."
+    IDS_ERROR_MISSING_CREDENTIAL_IDENTIFIER         "Authentication was requested for this host, but no credential identifier was supplied."
+    IDS_ERROR_INVALID_CREDENTIAL_IDENTIFIER         "The supplied authentication credential identifier is not valid."
+    IDS_ERROR_AUTHENTICATION_NOT_IMPLEMENTED        "Network MIDI 2.0 authentication is not yet implemented. Configure this host for no authentication."
+    IDS_ERROR_HOST_NOT_FOUND                        "Host not found."
+    IDS_ERROR_UNABLE_TO_STOP_HOST                   "Unable to stop host."
+    IDS_ERROR_UNABLE_TO_START_HOST                  "Unable to start host."
+    IDS_ERROR_MISSING_REMOTE_ADDRESS                "Missing remote address."
+    IDS_ERROR_MISSING_REMOTE_PORT                   "Missing remote port."
+    IDS_ERROR_INVALID_REMOTE_PORT                   "Invalid remote port."
+    IDS_ERROR_MISSING_COMMAND                       "Missing command."
+    IDS_ERROR_FEC_PACKET_COUNT_OUT_OF_RANGE         "Forward error correction packet count is out of range."
+    IDS_ERROR_RETRANSMIT_BUFFER_SIZE_OUT_OF_RANGE   "Retransmit buffer size is out of range."
+    IDS_ERROR_PING_INTERVAL_OUT_OF_RANGE            "Outbound ping interval is out of range."
+    IDS_ERROR_MAX_HOST_CONNECTIONS_OUT_OF_RANGE     "Maximum host connections is out of range."
+    IDS_ERROR_INVALID_NETWORK_PROTOCOL              "Invalid network protocol specified. Only 'udp' is supported."
+    IDS_ERROR_MISSING_MATCH_ENTRY                   "Missing match entry."
 END
 
 IDR_MIDI2NETWORKMIDITRANSPORT REGISTRY "Midi2.NetworkMidiTransport.rgs"

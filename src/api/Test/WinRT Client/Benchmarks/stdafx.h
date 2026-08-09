@@ -33,6 +33,7 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 
 
 #include <avrt.h>
+#include <wil\cppwinrt.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <ppltasks.h>

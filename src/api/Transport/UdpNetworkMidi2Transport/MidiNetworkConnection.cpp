@@ -23,7 +23,9 @@ MidiNetworkConnection::InitializeForHost(
     std::wstring const& thisProductInstanceId,
     uint16_t const retransmitBufferMaxCommandPacketCount,
     uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-    bool createUmpEndpointsOnly
+    bool createUmpEndpointsOnly,
+    MidiNetworkAuthenticationKind const authenticationKind,
+    MidiNetworkCredentialIdentifier const& credentialIdentifier
 )
 {
     return Initialize(
@@ -37,7 +39,9 @@ MidiNetworkConnection::InitializeForHost(
         thisProductInstanceId,
         retransmitBufferMaxCommandPacketCount,
         maxForwardErrorCorrectionCommandPacketCount,
-        createUmpEndpointsOnly
+        createUmpEndpointsOnly,
+        authenticationKind,
+        credentialIdentifier
     );
 }
 
@@ -66,7 +70,9 @@ MidiNetworkConnection::InitializeForClient(
         thisProductInstanceId,
         retransmitBufferMaxCommandPacketCount,
         maxForwardErrorCorrectionCommandPacketCount,
-        createUmpEndpointsOnly
+        createUmpEndpointsOnly,
+        MidiNetworkAuthenticationKind::None,
+        MidiNetworkCredentialIdentifier{}
     );
 
 }
@@ -84,7 +90,9 @@ MidiNetworkConnection::Initialize(
     std::wstring const& thisProductInstanceId,
     uint16_t const retransmitBufferMaxCommandPacketCount,
     uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-    bool createUmpEndpointsOnly
+    bool createUmpEndpointsOnly,
+    MidiNetworkAuthenticationKind const authenticationKind,
+    MidiNetworkCredentialIdentifier const& credentialIdentifier
 )
 {
     TraceLoggingWrite(
@@ -108,11 +116,17 @@ MidiNetworkConnection::Initialize(
 
     m_createUmpEndpointsOnly = createUmpEndpointsOnly;
 
+    m_authenticationKind = authenticationKind;
+    m_credentialIdentifier = credentialIdentifier;
+
     m_thisEndpointName = thisEndpointName;
     m_thisProductInstanceId = thisProductInstanceId;
 
     m_retransmitBufferMaxCommandPacketCount = retransmitBufferMaxCommandPacketCount;
     m_maxForwardErrorCorrectionCommandPacketCount = maxForwardErrorCorrectionCommandPacketCount;
+
+    // gives the idle reclaim check a meaningful starting point
+    m_lastIncomingValidUdpPacketTimestamp = internal::GetCurrentMidiTimestamp();
 
     m_outgoingUmpMessages.reserve(MIDI_NETWORK_STARTING_OUTBOUND_UMP_QUEUE_CAPACITY);
 
@@ -141,7 +155,41 @@ MidiNetworkConnection::Initialize(
     // create the data writer
     m_writer = std::make_shared<MidiNetworkDataWriter>();
     RETURN_IF_NULL_ALLOC(m_writer);
-    RETURN_IF_FAILED(m_writer->Initialize(socket.GetOutputStreamAsync(hostName, port).get()));
+
+    try
+    {
+        // A client socket has already been ConnectAsync'd to the remote, so it has a single
+        // output stream. Only a host socket, which serves many remotes from one bound port,
+        // needs a per-remote stream.
+        if (role == MidiNetworkConnectionRole::ConnectionWindowsIsClient)
+        {
+            RETURN_IF_FAILED(m_writer->Initialize(socket.OutputStream()));
+        }
+        else
+        {
+            RETURN_IF_FAILED(m_writer->Initialize(socket.GetOutputStreamAsync(hostName, port).get()));
+        }
+    }
+    catch (...)
+    {
+        auto hr = wil::ResultFromCaughtException();
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception obtaining the output stream for the remote endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(hostName.ToString().c_str(), "remote hostname"),
+            TraceLoggingWideString(port.c_str(), "remote port"),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+
+        m_writer.reset();
+
+        RETURN_IF_FAILED(hr);
+    }
 
     RETURN_IF_FAILED(StartConnectionWatchdogThread());
 
@@ -158,37 +206,56 @@ MidiNetworkConnection::Initialize(
 }
 
 
+_Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::ConnectionWatcherThreadWorker()
+MidiNetworkConnection::ConnectionWatcherThreadWorker(std::stop_token stopToken)
 {
-    auto stopToken = m_connectionWatcherThread.get_stop_token();
-
-
-    bool continueWatching = true;
-
     // if we haven't received any UDP messages in a certain amount of time,
     // send a ping to the remote
 
-
-    while (!m_shuttingDown && continueWatching && !stopToken.stop_requested())
+    while (!m_shuttingDown && !stopToken.stop_requested())
     {
         auto threadWaitStartTimestamp = internal::GetCurrentMidiTimestamp();
         m_connectionTimeoutEvent.wait(m_outgoingPingIntervalMilliseconds);
+
+        if (m_shuttingDown || stopToken.stop_requested())
+        {
+            break;
+        }
+
+        // We only monitor the liveness of an established session. Pinging a remote which has
+        // never established a session would let a single spoofed datagram generate traffic
+        // toward a forged address.
+        if (!m_sessionActive)
+        {
+            {
+                auto lock = m_pingTrackingLock.lock();
+                m_outgoingPingTracking.clear();
+            }
+
+            // an invitation we sent may still be unanswered
+            LOG_IF_FAILED(ServicePendingInvitation());
+
+            continue;
+        }
 
         if (m_lastIncomingValidUdpPacketTimestamp > threadWaitStartTimestamp)
         {
             // all good. Wait again
             m_connectionTimeoutEvent.ResetEvent();
-            continueWatching = true;
+
+            continue;
         }
-        else
+
+        uint16_t consecutiveFailures{ 0 };
+
         {
-            uint16_t consecutiveFailures{ 0 };
+            auto lock = m_pingTrackingLock.lock();
 
             // check our ping entries. We want to check the last N entries and if all of them
             // have been ignored, we will take action.
-            for (auto pingEntry = m_outgoingPingTracking.rbegin(); 
-                !stopToken.stop_requested() && !m_shuttingDown && pingEntry != m_outgoingPingTracking.rend() && consecutiveFailures <= m_outgoingPingMaxIgnoredBeforeDisconnect; pingEntry++)
+            for (auto pingEntry = m_outgoingPingTracking.rbegin();
+                pingEntry != m_outgoingPingTracking.rend() && consecutiveFailures <= m_outgoingPingMaxIgnoredBeforeDisconnect; pingEntry++)
             {
                 if (!pingEntry->Received)
                 {
@@ -200,32 +267,30 @@ MidiNetworkConnection::ConnectionWatcherThreadWorker()
                     break;
                 }
             }
+        }
 
-            if (!m_shuttingDown && !stopToken.stop_requested())
-            {
-                if (consecutiveFailures >= m_outgoingPingMaxIgnoredBeforeDisconnect)
-                {
-                    // disconnect
-                    continueWatching = false;
+        if (m_shuttingDown || stopToken.stop_requested())
+        {
+            break;
+        }
 
-                    if (m_sessionActive)
-                    {
-                        RETURN_IF_FAILED(EndActiveSessionDueToTimeout());
-                    }
-                    else
-                    {
-                        // TODO: Check spec. Do we send a bye?
+        if (consecutiveFailures >= m_outgoingPingMaxIgnoredBeforeDisconnect)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Remote endpoint stopped responding to pings. Ending session.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt16(consecutiveFailures, "consecutive missed pings")
+            );
 
-                    }
-                }
-                else
-                {
-                    if (!stopToken.stop_requested())
-                    {
-                        LOG_IF_FAILED(SendPing());
-                    }
-                }
-            }
+            LOG_IF_FAILED(EndActiveSessionDueToTimeout());
+        }
+        else
+        {
+            LOG_IF_FAILED(SendPing());
         }
     }
 
@@ -257,7 +322,16 @@ MidiNetworkConnection::StartOutboundMidiMessageProcessingThread()
 
     m_newMessagesInQueueEvent.ResetEvent();
 
-    m_outboundProcessingThread = std::jthread (std::bind_front(&MidiNetworkConnection::OutboundProcessingThreadWorker, this));
+    // The stop token must come from jthread itself, not from reading the member back out of
+    // the object we are in the middle of assigning to.
+    m_outboundProcessingThread = std::jthread([this](std::stop_token stopToken)
+        {
+            try
+            {
+                LOG_IF_FAILED(OutboundProcessingThreadWorker(stopToken));
+            }
+            CATCH_LOG();
+        });
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -284,7 +358,56 @@ MidiNetworkConnection::StartConnectionWatchdogThread()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_connectionWatcherThread = std::jthread(std::bind_front(&MidiNetworkConnection::ConnectionWatcherThreadWorker, this));
+    m_connectionWatcherThread = std::jthread([this](std::stop_token stopToken)
+        {
+            try
+            {
+                LOG_IF_FAILED(ConnectionWatcherThreadWorker(stopToken));
+            }
+            CATCH_LOG();
+        });
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+void
+MidiNetworkConnection::LogSendFailure(HRESULT const hr)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Unable to send datagram to remote endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_remoteHostName != nullptr ? m_remoteHostName.ToString().c_str() : L"", "remote hostname"),
+        TraceLoggingWideString(m_remotePort.c_str(), "remote port"),
+        TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+    );
+}
+
+HRESULT
+MidiNetworkConnection::StopAndJoinWorkerThreads()
+{
+    m_connectionWatcherThread.request_stop();
+    m_outboundProcessingThread.request_stop();
+
+    // wake both workers so they see the stop request instead of sleeping out their intervals
+    m_connectionTimeoutEvent.SetEvent();
+    m_newMessagesInQueueEvent.SetEvent();
+
+    // A worker can reach here indirectly (session teardown on the watchdog thread), and joining
+    // ourselves would deadlock. The remaining teardown is safe against a still-running worker.
+    if (m_connectionWatcherThread.joinable() && m_connectionWatcherThread.get_id() != std::this_thread::get_id())
+    {
+        m_connectionWatcherThread.join();
+    }
+
+    if (m_outboundProcessingThread.joinable() && m_outboundProcessingThread.get_id() != std::this_thread::get_id())
+    {
+        m_outboundProcessingThread.join();
+    }
 
     return S_OK;
 }
@@ -309,12 +432,16 @@ MidiNetworkConnection::ConnectMidiCallback(
 
     // the previous callback wasn't disconnected. Something 
     // is not as it should be, so we'll fail.
-    if (m_callback != nullptr)
     {
-        RETURN_IF_FAILED(E_UNEXPECTED);
-    }
+        auto lock = m_callbackLock.lock();
 
-    m_callback = callback;
+        if (m_callback != nullptr)
+        {
+            RETURN_IF_FAILED(E_UNEXPECTED);
+        }
+
+        m_callback = callback;
+    }
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -340,10 +467,9 @@ MidiNetworkConnection::DisconnectMidiCallback()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    if (m_callback != nullptr)
-    {
-        m_callback = nullptr;
-    }
+    // Released outside the lock: this drops our reference on the Bidi, which can be the last one.
+    auto callback = DetachCallback();
+    callback.reset();
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -376,28 +502,50 @@ MidiNetworkConnection::HandleIncomingUmpData(
     );
 
 
+    // A strong local reference keeps the Bidi alive for the duration of the callback even if
+    // another thread tears the session down underneath us.
+    auto callback = GetCallback();
+
     // empty UMP packets are a keep-alive approach
     // callback can be null if there are no open connections
     // from the client, but the remote device is sending messages
-    if (m_sessionActive && words.size() > 0 && m_callback != nullptr)
+    if (m_sessionActive && words.size() > 0 && callback != nullptr)
     {
         // this may have more than one message, so we need to tease it apart here
         // and send the individual messages
 
-        auto it = words.begin();
+        size_t index{ 0 };
 
-        while (it < words.end())
+        while (index < words.size())
         {
-            uint8_t messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(*it);
+            uint8_t messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words[index]);
 
-            LOG_IF_FAILED(m_callback->Callback(
+            // The message type nibble is remote-supplied and can claim a length longer than what
+            // was actually sent. Reading it would hand adjacent heap memory to every client.
+            if (messageWordCount == 0 || index + messageWordCount > words.size())
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Truncated or malformed UMP message from remote endpoint. Discarding remainder of command.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt8(messageWordCount, "declared word count"),
+                    TraceLoggingUInt64(static_cast<uint64_t>(words.size() - index), "words remaining")
+                );
+
+                break;
+            }
+
+            LOG_IF_FAILED(callback->Callback(
                 MessageOptionFlags::MessageOptionFlags_None,
-                (PVOID)(&(*it)),
+                (PVOID)(&words[index]),
                 (UINT)(messageWordCount * sizeof(uint32_t)),
                 timestamp, 
                 (LONGLONG)0));            // todo: may need to pass along the context
 
-            it += messageWordCount;
+            index += messageWordCount;
         }
     }
 
@@ -435,16 +583,25 @@ MidiNetworkConnection::ResetSequenceNumbers()
 HRESULT
 MidiNetworkConnection::EndActiveSessionDueToTimeout()
 {
-    // TODO: this should send multiple BYE messages if we don't get a response.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Ending session due to timeout", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
-    RETURN_IF_FAILED(EndActiveSession(false));
+    // Tell the remote first. Ending the session tears down the state this needs.
+    LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+        {
+            // TODO: Move string to resources for localization
+            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Timeout, L"Session timed out (missed pings or other messages)."));
 
-    auto lock = m_socketWriterLock.lock();
-    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-    RETURN_IF_FAILED(m_writer->WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Timeout, L"Session timed out due to timeout (missed pings or other messages)."));
-    RETURN_IF_FAILED(m_writer->Send());
+            return S_OK;
+        }));
 
-    // TODO: This should do more, causing the entire connection to go away
+    LOG_IF_FAILED(EndActiveSession(false));
 
     return S_OK;
 }
@@ -463,38 +620,62 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
     );
 
     m_sessionActive = false;
-    m_outboundProcessingThread.request_stop();
+
+    // Release our reference to the client callback before anything that can re-enter. Deleting
+    // the endpoint synchronously shuts down the Bidi, which calls back into this connection.
+    auto callback = DetachCallback();
+    callback.reset();
 
     // clear the outbound queue
-    m_outgoingUmpMessages.clear();
-    
-    LOG_IF_FAILED(ResetSequenceNumbers());
+    {
+        auto queueLock = m_outgoingUmpMessageQueueLock.lock();
+        m_outgoingUmpMessages.clear();
+    }
 
-    // TODO: Reset connection watchdog timers, pings, etc.
+    {
+        auto lock = m_socketWriterLock.lock();
+        LOG_IF_FAILED(ResetSequenceNumbers());
+    }
 
-
-    m_callback = nullptr;
-    RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteEndpoint(m_sessionDeviceInstanceId));
-    m_sessionDeviceInstanceId.clear();
+    {
+        auto lock = m_pingTrackingLock.lock();
+        m_outgoingPingTracking.clear();
+    }
 
     if (respondWithByeReply)
     {
-        // send bye reply
-        auto lock = m_socketWriterLock.lock();
-        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-        RETURN_IF_FAILED(m_writer->WriteCommandByeReply());
-        RETURN_IF_FAILED(m_writer->Send());
+        LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+            {
+                RETURN_IF_FAILED(writer.WriteCommandByeReply());
+
+                return S_OK;
+            }));
+    }
+
+    if (!m_sessionDeviceInstanceId.empty())
+    {
+        auto endpointManager = TransportState::Current().GetEndpointManager();
+
+        if (endpointManager != nullptr)
+        {
+            LOG_IF_FAILED(endpointManager->DeleteEndpoint(m_sessionDeviceInstanceId));
+        }
+
+        m_sessionDeviceInstanceId.clear();
     }
 
     // clear the association with the SWD
-    RETURN_IF_FAILED(TransportState::Current().DisassociateMidiEndpointFromConnection(m_sessionEndpointDeviceInterfaceId));
-    m_sessionEndpointDeviceInterfaceId.clear();
+    if (!m_sessionEndpointDeviceInterfaceId.empty())
+    {
+        LOG_IF_FAILED(TransportState::Current().DisassociateMidiEndpointFromConnection(m_sessionEndpointDeviceInterfaceId));
+        m_sessionEndpointDeviceInterfaceId.clear();
+    }
 
     // TODO: if the endpoint is in our discovery list, mark it as not created
 
-    LOG_IF_FAILED(m_writer->Shutdown());
-    m_writer.reset();
-
+    // The writer deliberately outlives the session. A session ending is not the connection
+    // ending: the same remote address and port may send a fresh invitation, and destroying the
+    // writer here is what previously made the connection permanently unusable.
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -510,34 +691,26 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
 
 
 HRESULT
-MidiNetworkConnection::AttemptPoliteByeSequence()
+MidiNetworkConnection::SendShutdownBye()
 {
-    // TODO: This likely needs to be a new thread
-
-    if (m_writer != nullptr)
+    // Nothing to say if the session already ended - the remote either sent us the Bye or timed
+    // out, and an unsolicited Bye would just earn a "session not established" refusal.
+    if (!m_sessionActive)
     {
-        m_inSelfInitiatedByeSequence = true;
-
-        bool continueTrying { true };
-        uint16_t attempts = 5;
-        DWORD attemptDelayMS = 200;
-
-        while (continueTrying)
-        {
-            auto lock = m_socketWriterLock.lock();
-            RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-
-            // we use "Power Down" here because things like "User terminated" tend to clear information on the other side,
-            RETURN_IF_FAILED(m_writer->WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_PowerDown, L"Connection closing."));
-            RETURN_IF_FAILED(m_writer->Send());
-
-            Sleep(attemptDelayMS);
-
-            continueTrying = ((--attempts > 0) && !m_byeReplyReceived);
-        }
-
-        m_inSelfInitiatedByeSequence = false;
+        return S_FALSE;
     }
+
+    // Fire and forget. Waiting for a Bye Reply here only delays a shutdown that is already
+    // under way, and with many sessions those waits add up against the service stop timeout.
+    // If the datagram is lost the remote falls back to its own ping timeout.
+    LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+        {
+            // "Power Down" rather than "User terminated", because the latter tends to make the
+            // remote discard what it knows about us.
+            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_PowerDown, L"Service is shutting down."));
+
+            return S_OK;
+        }));
 
     return S_OK;
 }
@@ -545,15 +718,7 @@ MidiNetworkConnection::AttemptPoliteByeSequence()
 HRESULT
 MidiNetworkConnection::HandleIncomingByeReply()
 {
-    if (m_inSelfInitiatedByeSequence)
-    {
-        m_byeReplyReceived = true;
-    }
-    else
-    {
-        // TODO: NAK this?
-    }
-
+    // Nothing to do. Our own Bye is sent fire-and-forget, so nothing is waiting on this.
     return S_OK;
 }
 
@@ -569,12 +734,12 @@ MidiNetworkConnection::HandleIncomingBye()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
-    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
+    // whatever the outcome, the remote has answered us
+    m_invitationPending = false;
 
     if (m_sessionActive)
     {
-        RETURN_IF_FAILED(EndActiveSession(true));
+        LOG_IF_FAILED(EndActiveSession(true));
     }
     else
     {
@@ -614,6 +779,9 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
 
     if (m_role == MidiNetworkConnectionRole::ConnectionWindowsIsClient)
     {
+        // the host answered, so stop repeating the invitation
+        m_invitationPending = false;
+
         if (m_sessionActive)
         {
             // per protocol, if we've already accepted this, then just ignore it
@@ -629,12 +797,19 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
         std::wstring newDeviceInstanceId{ };
         std::wstring newEndpointDeviceInterfaceId{ };
 
-        if (TransportState::Current().GetEndpointManager()->IsInitialized())
+        // Captured once. It can be torn down while a datagram is in flight, and each call to
+        // GetEndpointManager() is a fresh read, so re-reading it per use is a null deref waiting
+        // to happen.
+        auto endpointManager = TransportState::Current().GetEndpointManager();
+
+        RETURN_HR_IF_NULL(S_FALSE, endpointManager);
+
+        if (endpointManager->IsInitialized())
         {
             // Create the endpoint for Windows MIDI Services clients
             HRESULT hr = S_OK;
 
-            hr = TransportState::Current().GetEndpointManager()->CreateNewClientEndpointToRemoteHost(
+            hr = endpointManager->CreateNewClientEndpointToRemoteHost(
                 m_configIdentifier.c_str(),
                 remoteHostUmpEndpointName,
                 remoteHostProductInstanceId,
@@ -660,6 +835,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
                 m_sessionDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
 
                 m_sessionActive = true;
+                m_sessionEverEstablished = true;
 
                 // this is what the Bidi uses when it is created
                 RETURN_IF_FAILED(TransportState::Current().AssociateMidiEndpointWithConnection(m_sessionEndpointDeviceInterfaceId.c_str(), m_remoteHostName, m_remotePort.c_str()));
@@ -669,7 +845,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
                 // protocol negotiation needs to happen here, not in the endpoint creation
                 // because we need to wire up the connection first. Bit of a race.
 
-                LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->InitiateDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
+                LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
             }
             else
             {
@@ -685,11 +861,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
 
                 // let the other side know that we can't create the session
 
-                auto lock = m_socketWriterLock.lock();
-                RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-                // TODO: Move string to resources for localization
-                RETURN_IF_FAILED(m_writer->WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined, L"Error attempting to create endpoint. Bad data?"));
-                RETURN_IF_FAILED(m_writer->Send());
+                LOG_IF_FAILED(RefuseSessionForEndpointCreationFailure(hr));
 
                 // exit out of here, and log while we're at it
                 RETURN_IF_FAILED(hr);
@@ -709,12 +881,13 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
         );
 
         // we are a host, not a client, so NAK this per spec 6.4
-        auto lock = m_socketWriterLock.lock();
-        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+        LOG_IF_FAILED(SendToNetwork([&header](MidiNetworkDataWriter& writer)
+            {
+                // TODO: Move string to resources for localization
+                RETURN_IF_FAILED(writer.WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"Unexpected invitation accept sent to host."));
 
-        // TODO: Move string to resources for localization
-        RETURN_IF_FAILED(m_writer->WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"Unexpected invitation accept sent to host."));
-        RETURN_IF_FAILED(m_writer->Send());
+                return S_OK;
+            }));
     }
 
     TraceLoggingWrite(
@@ -747,27 +920,44 @@ MidiNetworkConnection::HandleIncomingInvitation(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    UNREFERENCED_PARAMETER(capabilities);
-
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
     RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
 
     if (m_role == MidiNetworkConnectionRole::ConnectionWindowsIsHost)
     {
+        // Spec 6.4. If this host was configured to require authentication we must challenge,
+        // never accept. Configuration validation refuses to start such a host today, so this is
+        // defence in depth rather than the primary control.
+        // TODO: https://github.com/microsoft/MIDI/issues/733
+        if (m_authenticationKind != MidiNetworkAuthenticationKind::None)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Host requires authentication, which is not yet implemented. Refusing the invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt8(capabilities, "client advertised capabilities")
+            );
+
+            return RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonHostToClient_NoMatchingAuthenticationMethod);
+        }
+
         if (m_sessionActive)
         {
             // if the session is already active, we simply accept it again
 
-            auto lock = m_socketWriterLock.lock();
-            RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-            RETURN_IF_FAILED(m_writer->WriteCommandInvitationReplyAccepted(m_thisEndpointName, m_thisProductInstanceId));
-            RETURN_IF_FAILED(m_writer->Send());
+            LOG_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
+                {
+                    RETURN_IF_FAILED(writer.WriteCommandInvitationReplyAccepted(m_thisEndpointName, m_thisProductInstanceId));
+
+                    return S_OK;
+                }));
 
             return S_OK;
         }
 
         // TODO: will we accept a session invitation from the specified hostname?
-        // TODO: Also need to check auth mechanism and follow instructions in 6.4 and send a Bye if not supported
 
         // todo: see if we already have a session active for this remote. If so, use it.
         // otherwise, we need to spin up a new session
@@ -775,7 +965,13 @@ MidiNetworkConnection::HandleIncomingInvitation(
         std::wstring newDeviceInstanceId{ };
         std::wstring newEndpointDeviceInterfaceId{ };
 
-        if (TransportState::Current().GetEndpointManager()->IsInitialized())
+        // Captured once. It can be torn down while a datagram is in flight, and each call to
+        // GetEndpointManager() is a fresh read.
+        auto endpointManager = TransportState::Current().GetEndpointManager();
+
+        RETURN_HR_IF_NULL(S_FALSE, endpointManager);
+
+        if (endpointManager->IsInitialized())
         {
             // Create the endpoint for Windows MIDI Services clients
             // This will also kick off discovery and protocol negotiation
@@ -784,7 +980,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
 
             //UNREFERENCED_PARAMETER(clientProductInstanceId);
             //UNREFERENCED_PARAMETER(clientUmpEndpointName);
-            hr = TransportState::Current().GetEndpointManager()->CreateNewHostEndpointToRemoteClient(
+            hr = endpointManager->CreateNewHostEndpointToRemoteClient(
                 m_configIdentifier.c_str(),
                 m_parentDeviceInstanceId,
                 clientUmpEndpointName,
@@ -808,26 +1004,25 @@ MidiNetworkConnection::HandleIncomingInvitation(
 
                 // protocol negotiation needs to happen here, not in the endpoint creation
                 // because we need to wire up the connection first. Bit of a race.
-                LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->InitiateDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
+                LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
 
                 // Tell the remote endpoint we've accepted the invitation
 
-                auto lock = m_socketWriterLock.lock();
-                RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-                RETURN_IF_FAILED(m_writer->WriteCommandInvitationReplyAccepted(m_thisEndpointName, m_thisProductInstanceId));
-                RETURN_IF_FAILED(m_writer->Send());
+                RETURN_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
+                    {
+                        RETURN_IF_FAILED(writer.WriteCommandInvitationReplyAccepted(m_thisEndpointName, m_thisProductInstanceId));
+
+                        return S_OK;
+                    }));
 
                 m_sessionActive = true;
+                m_sessionEverEstablished = true;
             }
             else
             {
                 // let the other side know that we can't create the session
 
-                auto lock = m_socketWriterLock.lock();
-                RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-                // TODO: Move string to resources for localization
-                RETURN_IF_FAILED(m_writer->WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined, L"Error attempting to create endpoint. Bad data?"));
-                RETURN_IF_FAILED(m_writer->Send());
+                LOG_IF_FAILED(RefuseSessionForEndpointCreationFailure(hr));
 
                 // exit out of here, and log while we're at it
                 RETURN_IF_FAILED(hr);
@@ -837,22 +1032,25 @@ MidiNetworkConnection::HandleIncomingInvitation(
         {
             // this shouldn't happen, but we handle it anyway
 
-            auto lock = m_socketWriterLock.lock();
-            RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-            // TODO: Move string to resources for localization
-            RETURN_IF_FAILED(m_writer->WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined, L"Host is unable to accept invitations at this time."));
-            RETURN_IF_FAILED(m_writer->Send());
+            LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+                {
+                    // TODO: Move string to resources for localization
+                    RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined, L"Host is unable to accept invitations at this time."));
+
+                    return S_OK;
+                }));
         }
     }
     else
     {
         // we are a client, not a host, so NAK this per spec 6.4
-        auto lock = m_socketWriterLock.lock();
-        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+        LOG_IF_FAILED(SendToNetwork([&header](MidiNetworkDataWriter& writer)
+            {
+                // TODO: Move string to resources for localization
+                RETURN_IF_FAILED(writer.WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"Unexpected invitation sent to client."));
 
-        // TODO: Move string to resources for localization
-        RETURN_IF_FAILED(m_writer->WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"Unexpected invitation sent to client."));
-        RETURN_IF_FAILED(m_writer->Send());
+                return S_OK;
+            }));
     }
 
     TraceLoggingWrite(
@@ -863,6 +1061,381 @@ MidiNetworkConnection::HandleIncomingInvitation(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+    return S_OK;
+}
+
+
+void
+MidiNetworkConnection::AbandonCurrentRetransmitRequest()
+{
+    // Forcing the attempt count to the limit makes the next gapped UMP Data command
+    // resynchronize instead of asking again.
+    m_retransmitRequestAttempts = MIDI_NETWORK_MAX_RETRANSMIT_REQUEST_ATTEMPTS;
+}
+
+void
+MidiNetworkConnection::ResetRetransmitRequestState()
+{
+    m_retransmitRequestOutstanding = false;
+    m_retransmitRequestAttempts = 0;
+    m_retransmitRequestSequenceNumber = 0;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::HandleIncomingNAK(
+    MidiNetworkCommandNAKReason const reason,
+    MidiNetworkCommandPacketHeader const& originalCommandHeader,
+    std::wstring const& text)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Remote endpoint sent a NAK", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt8(reason, "reason"),
+        TraceLoggingUInt8(originalCommandHeader.HeaderData.CommandCode, "NAKed command code"),
+        TraceLoggingWideString(text.c_str(), "text")
+    );
+
+    if (originalCommandHeader.HeaderData.CommandCode == MidiNetworkCommandCode::CommandCommon_RetransmitRequest)
+    {
+        if (reason == MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotSupported)
+        {
+            // Spec 7.2.3: the remote does not implement retransmit, so we must stop asking
+            // for the rest of the session and just live with the gaps.
+            m_remoteSupportsRetransmit = false;
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Remote endpoint does not support retransmit. No further retransmit requests will be sent for this session.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        }
+
+        AbandonCurrentRetransmitRequest();
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::HandleIncomingRetransmitError(
+    MidiNetworkCommandRetransmitErrorReason const reason,
+    uint16_t const sequenceNumber)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Remote endpoint cannot fulfill the retransmit request. Accepting the loss.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt8(reason, "reason"),
+        TraceLoggingUInt16(sequenceNumber, "earliest available sequence number")
+    );
+
+    // The data is gone. Waiting for it would stall the session permanently.
+    AbandonCurrentRetransmitRequest();
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkConnection::HandleIncomingSessionReset()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Remote endpoint requested a session reset", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    {
+        auto lock = m_socketWriterLock.lock();
+        LOG_IF_FAILED(ResetSequenceNumbers());
+    }
+
+    ResetRetransmitRequestState();
+
+    // spec 6.13: the reset is only complete once we have acknowledged it
+    RETURN_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+        {
+            RETURN_IF_FAILED(writer.WriteCommandSessionResetReply());
+
+            return S_OK;
+        }));
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkConnection::HandleIncomingSessionResetReply()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Remote endpoint acknowledged our session reset", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    {
+        auto lock = m_socketWriterLock.lock();
+        LOG_IF_FAILED(ResetSequenceNumbers());
+    }
+
+    ResetRetransmitRequestState();
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::RefuseSessionForEndpointCreationFailure(HRESULT const creationResult)
+{
+    bool alreadyAttached = (creationResult == HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED));
+
+    MidiNetworkCommandByeReason reason{ MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined };
+    std::wstring message{ L"Unable to create a MIDI endpoint for this session." };
+
+    if (alreadyAttached)
+    {
+        // Spec 6.4 nominates 0x40 for a host declining an invitation. A client withdrawing its
+        // own invitation uses 0x80 instead.
+        reason = m_role == MidiNetworkConnectionRole::ConnectionWindowsIsHost ?
+            MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions :
+            MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled;
+
+        message = L"This device is already connected to this PC.";
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Declining session because the MIDI endpoint could not be created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(message.c_str(), "reason text"),
+        TraceLoggingHResult(creationResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
+    );
+
+    LOG_IF_FAILED(SendToNetwork([&reason, &message](MidiNetworkDataWriter& writer)
+        {
+            // TODO: Move string to resources for localization
+            RETURN_IF_FAILED(writer.WriteCommandBye(reason, message));
+
+            return S_OK;
+        }));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::RefuseInvitationForAuthentication(MidiNetworkCommandByeReason const reason)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Refusing invitation because authentication is not supported", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt8(reason, "bye reason")
+    );
+
+    RETURN_IF_FAILED(SendToNetwork([&reason](MidiNetworkDataWriter& writer)
+        {
+            // TODO: Move string to resources for localization
+            RETURN_IF_FAILED(writer.WriteCommandBye(reason, L"Authentication is not supported by this endpoint."));
+
+            return S_OK;
+        }));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::HandleIncomingInvitationWithAuthentication(
+    MidiNetworkCommandPacketHeader const& header,
+    MidiNetworkAuthenticationKind const kind)
+{
+    UNREFERENCED_PARAMETER(header);
+    UNREFERENCED_PARAMETER(kind);
+
+    // We never challenged, so a client answering a challenge is either confused or probing.
+    // Spec 6.4 says to Bye rather than leave it hanging.
+    // TODO: https://github.com/microsoft/MIDI/issues/733
+    return RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonHostToClient_NoMatchingAuthenticationMethod);
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::HandleIncomingInvitationReplyAuthenticationRequired(
+    MidiNetworkCommandPacketHeader const& header,
+    MidiNetworkAuthenticationKind const kind)
+{
+    UNREFERENCED_PARAMETER(header);
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Remote host requires authentication, which is not yet implemented. Cancelling the invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(kind), "authentication kind")
+    );
+
+    // The host is challenging us. Once this is implemented the sequence is: resolve the secret
+    // for m_credentialIdentifier, compute the digest over the supplied nonce, and reply with
+    // InvitationWithAuthentication. Until then we withdraw politely rather than time out.
+    // TODO: https://github.com/microsoft/MIDI/issues/733
+    return RefuseInvitationForAuthentication(MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled);
+}
+
+HRESULT
+MidiNetworkConnection::HandleIncomingInvitationReplyPending()
+{
+    // Spec 6.8. The host is telling us it needs more time, typically because a person has to
+    // approve the connection. Nothing to do but keep waiting, which the watchdog already allows
+    // for since any valid datagram counts as liveness.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Remote host accepted the invitation as pending", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::ComputeAuthenticationDigest(
+    uint8_t const* nonce,
+    size_t const nonceByteCount,
+    MidiNetworkSecret const& secret,
+    uint8_t* digest,
+    size_t const digestByteCount)
+{
+    UNREFERENCED_PARAMETER(nonce);
+    UNREFERENCED_PARAMETER(nonceByteCount);
+    UNREFERENCED_PARAMETER(secret);
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, digest);
+    RETURN_HR_IF(E_INVALIDARG, digestByteCount == 0);
+
+    SecureZeroMemory(digest, digestByteCount);
+
+    // Must follow spec Appendix B exactly, including the order the nonce and secret are fed to
+    // the hash. Approximating it would interoperate with nothing and would look like it worked.
+    // TODO: https://github.com/microsoft/MIDI/issues/733
+    return E_NOTIMPL;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::SendByeSessionNotEstablished(uint8_t const commandCode)
+{
+    // One remote per connection, so a constant key is all that is needed here. Without this a
+    // peer can make us emit a refusal for every command in every datagram it sends.
+    if (!m_replyRateLimiter.ShouldSend(0))
+    {
+        return S_FALSE;
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_WARNING,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Command received outside an established session", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt8(commandCode, "Command Code")
+    );
+
+    RETURN_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+        {
+            // TODO: Move string to resources for localization
+            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_SessionNotEstablished, L"No session is established with this endpoint."));
+
+            return S_OK;
+        }));
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkConnection::SendInvitationCommand()
+{
+    RETURN_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)
+        {
+            // TODO: When we support authentication, advertise it in the capabilities bitmap
+            RETURN_IF_FAILED(writer.WriteCommandInvitation(MidiNetworkCommandInvitationCapabilities::Capabilities_None, m_thisEndpointName, m_thisProductInstanceId));
+
+            return S_OK;
+        }));
+
+    return S_OK;
+}
+
+// Driven by the watchdog tick. Spec 6.4 requires the invitation to be repeated until a reply
+// arrives, and requires a Bye with reason 0x80 once the client gives up.
+HRESULT
+MidiNetworkConnection::ServicePendingInvitation()
+{
+    if (!m_invitationPending || m_sessionActive)
+    {
+        return S_OK;
+    }
+
+    if (m_invitationAttempts >= MIDI_NETWORK_MAX_INVITATION_ATTEMPTS)
+    {
+        m_invitationPending = false;
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Remote host never answered our invitation. Cancelling.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_remoteHostName != nullptr ? m_remoteHostName.ToString().c_str() : L"", "remote hostname"),
+            TraceLoggingWideString(m_remotePort.c_str(), "remote port")
+        );
+
+        LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+            {
+                // TODO: Move string to resources for localization
+                RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled, L"No reply to invitation."));
+
+                return S_OK;
+            }));
+
+        return S_OK;
+    }
+
+    m_invitationAttempts++;
+
+    LOG_IF_FAILED(SendInvitationCommand());
 
     return S_OK;
 }
@@ -881,13 +1454,12 @@ MidiNetworkConnection::HandleIncomingPing(uint32_t const pingId)
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
+    RETURN_IF_FAILED(SendToNetwork([&pingId](MidiNetworkDataWriter& writer)
+        {
+            RETURN_IF_FAILED(writer.WriteCommandPingReply(pingId));
 
-    auto lock = m_socketWriterLock.lock();
-
-    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-    RETURN_IF_FAILED(m_writer->WriteCommandPingReply(pingId));
-    RETURN_IF_FAILED(m_writer->Send());
+            return S_OK;
+        }));
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -914,31 +1486,29 @@ MidiNetworkConnection::HandleIncomingPingReply(uint32_t const pingId)
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    UNREFERENCED_PARAMETER(pingId);
-
     auto timestamp = internal::GetCurrentMidiTimestamp();
 
-    // todo: check that the id is in the recent list
-
-    for (auto& pingEntry : m_outgoingPingTracking)
     {
-        if (pingEntry.PingId == pingId)
+        auto lock = m_pingTrackingLock.lock();
+
+        for (auto& pingEntry : m_outgoingPingTracking)
         {
-            pingEntry.PingReceiveTimestamp = timestamp;
-            pingEntry.Received = true;
+            if (pingEntry.PingId == pingId)
+            {
+                pingEntry.PingReceiveTimestamp = timestamp;
+                pingEntry.Received = true;
 
-            // calculate latency
-            AddLatencyToAverageLatencyTicks(pingEntry.PingReceiveTimestamp - pingEntry.PingSendTimestamp);
+                // calculate latency
+                AddLatencyToAverageLatencyTicks(pingEntry.PingReceiveTimestamp - pingEntry.PingSendTimestamp);
 
-            // we may want to do a running average here instead of just the last.
-             
-            // todo: update the latency properties used in the scheduler
+                // we may want to do a running average here instead of just the last.
 
-            break;
+                // todo: update the latency properties used in the scheduler
+
+                break;
+            }
         }
     }
-
-
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -955,28 +1525,69 @@ MidiNetworkConnection::HandleIncomingPingReply(uint32_t const pingId)
 
 
 _Use_decl_annotations_
-std::wstring MidiNetworkConnection::ReadUtf8String(
-    winrt::Windows::Storage::Streams::DataReader reader, 
-    size_t const byteCount)
+HRESULT
+MidiNetworkConnection::ReadUtf8String(
+    winrt::Windows::Storage::Streams::DataReader const& reader, 
+    size_t const byteCount,
+    std::wstring& value)
 {
+    value.clear();
+
+    if (byteCount == 0)
+    {
+        return S_OK;
+    }
+
+    // the length is remote-supplied, so it is never trusted against the actual datagram
+    RETURN_HR_IF(E_INVALIDARG, byteCount > reader.UnconsumedBufferLength());
+
     auto bytes = std::vector<byte>(byteCount);
-    reader.ReadBytes(bytes);
 
-    std::string s(bytes.begin(), bytes.end());
+    try
+    {
+        reader.ReadBytes(bytes);
+    }
+    catch (...)
+    {
+        RETURN_IF_FAILED(wil::ResultFromCaughtException());
+    }
 
+    // strings on the wire are zero-padded out to a 32-bit word boundary. Without trimming, the
+    // padding becomes embedded nulls and every later comparison against the string fails.
+    auto stringEnd = std::find(bytes.begin(), bytes.end(), (byte)0);
+
+    std::string s(bytes.begin(), stringEnd);
+
+    try
+    {
 #pragma warning (push)
 #pragma warning (disable: 4996)
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
-    auto ws = convert.from_bytes(s);
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
+        value = convert.from_bytes(s);
 #pragma warning (pop)
+    }
+    catch (...)
+    {
+        // malformed UTF-8 from the remote. Recoverable, but we can't use the string.
+        value.clear();
 
-    return ws;
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Remote endpoint sent a string which is not valid UTF-8", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION));
+    }
+
+    return S_OK;
 }
 
-// TODO: This needs some checking. If we call this too many times, we
-// should close the connection. Also, if there's a retransmit request
-// already in progress, we shouldn't be asking for more if there's any
-// overlap at all.
+// Attempt counting and give-up live in the caller, which is the only place that knows the
+// sequence numbers involved.
 HRESULT
 MidiNetworkConnection::RequestMissingPackets()
 {
@@ -989,13 +1600,15 @@ MidiNetworkConnection::RequestMissingPackets()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    auto lock = m_socketWriterLock.lock();
-
     // this requests all packets after the last one we received
+    auto startingSequenceNumber = m_lastReceivedUmpCommandSequenceNumber + 1;
 
-    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-    RETURN_IF_FAILED(m_writer->WriteCommandRetransmitRequest(m_lastReceivedUmpCommandSequenceNumber + 1, 0));
-    RETURN_IF_FAILED(m_writer->Send());
+    RETURN_IF_FAILED(SendToNetwork([&startingSequenceNumber](MidiNetworkDataWriter& writer)
+        {
+            RETURN_IF_FAILED(writer.WriteCommandRetransmitRequest(startingSequenceNumber, 0));
+
+            return S_OK;
+        }));
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1012,7 +1625,8 @@ MidiNetworkConnection::RequestMissingPackets()
 _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::ProcessIncomingMessage(
-    winrt::Windows::Storage::Streams::DataReader const& reader
+    winrt::Windows::Storage::Streams::DataReader const& reader,
+    uint32_t const firstCommandHeaderWord
 )
 {
     TraceLoggingWrite(
@@ -1026,203 +1640,449 @@ MidiNetworkConnection::ProcessIncomingMessage(
 
     m_totalNetworkPacketsReceived++;
 
+    // Datagrams for the same remote can be dispatched on more than one thread pool thread, so
+    // parsing is serialized here. Sequence tracking and the retransmit buffer are not reentrant.
+    auto incomingLock = m_incomingMessageLock.lock();
+
     // we've received a new message, so reset our disconnect event
     // this also sets the timestamp of the incoming
     LOG_IF_FAILED(SignalHealthyConnectionAndUpdateArrivalTimestamp());
 
+    // one retransmit request per datagram at most, no matter how many gaps it exposes
+    bool alreadyRequestedRetransmit{ false };
 
-    while (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
+    // and one Bye per datagram, so a peer talking to a dead session can't make us flood it
+    bool alreadySentSessionNotEstablished{ false };
+
+    try
     {
-        uint32_t commandHeaderWord = reader.ReadUInt32();
+        uint32_t commandHeaderWord = firstCommandHeaderWord;
+        bool haveCommand = true;
 
-        MidiNetworkCommandPacketHeader commandHeader;
-        commandHeader.HeaderWord = commandHeaderWord;
-
-        switch (commandHeader.HeaderData.CommandCode)
+        while (haveCommand)
         {
-        case CommandCommon_NAK:
-            // we should probably do something with this based on the last commands sent
-            break;
+            MidiNetworkCommandPacketHeader commandHeader;
+            commandHeader.HeaderWord = commandHeaderWord;
 
-        case CommandCommon_Ping:
-            HandleIncomingPing(reader.ReadUInt32());
-            break;
+            // Everything below this point is remote-supplied. Validating the declared payload
+            // length against what actually arrived is what keeps every handler in bounds.
+            uint32_t const payloadLengthInBytes = static_cast<uint32_t>(commandHeader.HeaderData.CommandPayloadLength) * sizeof(uint32_t);
 
-        case CommandCommon_PingReply:
-            HandleIncomingPingReply(reader.ReadUInt32());
-            break;
-
-        case CommandCommon_Bye:
-            LOG_IF_FAILED(HandleIncomingBye());
-            break;
-
-        case CommandCommon_ByeReply:
-            LOG_IF_FAILED(HandleIncomingByeReply());
-            break;
-
-        case CommandClientToHost_Invitation:
-        {
-            uint16_t endpointNameLengthInBytes = commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte1 * sizeof(uint32_t);
-            uint16_t productInstanceIdLengthInBytes = commandHeader.HeaderData.CommandPayloadLength * sizeof(uint32_t) - endpointNameLengthInBytes;
-            auto capabilities = static_cast<MidiNetworkCommandInvitationCapabilities>(commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte2);
-
-            auto clientEndpointName = ReadUtf8String(reader, endpointNameLengthInBytes);
-            auto clientProductInstanceId = ReadUtf8String(reader, productInstanceIdLengthInBytes);
-
-            LOG_IF_FAILED(HandleIncomingInvitation(commandHeader, capabilities, clientEndpointName, clientProductInstanceId));
-        }
-            break;
-
-
-        case CommandClientToHost_InvitationWithAuthentication:
-            // TODO
-            break;
-
-        case CommandClientToHost_InvitationWithUserAuthentication:
-            // TODO
-            break;
-
-        case CommandCommon_UmpData:
-        {
-            // todo: If the session isn't active, we should reject any UMP data and NAK or BYE (see spec)
-
-            uint8_t numberOfWords = commandHeader.HeaderData.CommandPayloadLength;
-            MidiSequenceNumber sequenceNumber(commandHeader.HeaderData.CommandSpecificData.AsUInt16);
-
-            std::vector<uint32_t> words{ };
-
-            // TODO: a message can have zero MIDI words, but a valid sequence number. Need to handle that.
-
-            if (sequenceNumber <= m_lastReceivedUmpCommandSequenceNumber)
+            if (payloadLengthInBytes > reader.UnconsumedBufferLength())
             {
-                if (numberOfWords > 0)
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Command declares a payload longer than the datagram. Discarding remainder.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt8(commandHeader.HeaderData.CommandCode, "Command Code"),
+                    TraceLoggingUInt32(payloadLengthInBytes, "declared payload bytes"),
+                    TraceLoggingUInt32(reader.UnconsumedBufferLength(), "bytes remaining")
+                );
+
+                break;
+            }
+
+            uint32_t const unconsumedLengthAfterCommand = reader.UnconsumedBufferLength() - payloadLengthInBytes;
+
+            switch (commandHeader.HeaderData.CommandCode)
+            {
+            case CommandCommon_NAK:
+            {
+                auto reason = static_cast<MidiNetworkCommandNAKReason>(commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte1);
+
+                // payload is the original command header word, optionally followed by text
+                if (payloadLengthInBytes >= sizeof(uint32_t))
                 {
-                    // Skip all words in this command message because it is FEC.
-                    for (uint8_t i = 0; i < numberOfWords && reader.UnconsumedBufferLength() >= sizeof(uint32_t); i++)
+                    MidiNetworkCommandPacketHeader originalCommandHeader;
+                    originalCommandHeader.HeaderWord = reader.ReadUInt32();
+
+                    std::wstring text{ };
+                    LOG_IF_FAILED(ReadUtf8String(reader, payloadLengthInBytes - sizeof(uint32_t), text));
+
+                    LOG_IF_FAILED(HandleIncomingNAK(reason, originalCommandHeader, text));
+                }
+            }
+                break;
+
+            case CommandCommon_Ping:
+                if (payloadLengthInBytes >= sizeof(uint32_t))
+                {
+                    LOG_IF_FAILED(HandleIncomingPing(reader.ReadUInt32()));
+                }
+                break;
+
+            case CommandCommon_PingReply:
+                if (payloadLengthInBytes >= sizeof(uint32_t))
+                {
+                    LOG_IF_FAILED(HandleIncomingPingReply(reader.ReadUInt32()));
+                }
+                break;
+
+            case CommandCommon_Bye:
+                LOG_IF_FAILED(HandleIncomingBye());
+                break;
+
+            case CommandCommon_ByeReply:
+                LOG_IF_FAILED(HandleIncomingByeReply());
+                break;
+
+            case CommandClientToHost_Invitation:
+            {
+                uint32_t endpointNameLengthInBytes = static_cast<uint32_t>(commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte1) * sizeof(uint32_t);
+                auto capabilities = static_cast<MidiNetworkCommandInvitationCapabilities>(commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte2);
+
+                // the name length is a portion of the payload. If it claims more, the product
+                // instance id length would underflow
+                if (endpointNameLengthInBytes <= payloadLengthInBytes)
+                {
+                    uint32_t productInstanceIdLengthInBytes = payloadLengthInBytes - endpointNameLengthInBytes;
+
+                    std::wstring clientEndpointName{ };
+                    std::wstring clientProductInstanceId{ };
+
+                    if (SUCCEEDED(ReadUtf8String(reader, endpointNameLengthInBytes, clientEndpointName)) &&
+                        SUCCEEDED(ReadUtf8String(reader, productInstanceIdLengthInBytes, clientProductInstanceId)))
                     {
-                        reader.ReadUInt32();
+                        LOG_IF_FAILED(HandleIncomingInvitation(commandHeader, capabilities, clientEndpointName, clientProductInstanceId));
                     }
                 }
                 else
                 {
-                    // empty UMP message. This is fine
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Invitation declares an endpoint name longer than its payload. Ignoring.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
                 }
             }
-            else if (sequenceNumber == m_lastReceivedUmpCommandSequenceNumber + 1)
+                break;
+
+
+            case CommandClientToHost_InvitationWithAuthentication:
+                LOG_IF_FAILED(HandleIncomingInvitationWithAuthentication(commandHeader, MidiNetworkAuthenticationKind::SharedSecret));
+                break;
+
+            case CommandClientToHost_InvitationWithUserAuthentication:
+                LOG_IF_FAILED(HandleIncomingInvitationWithAuthentication(commandHeader, MidiNetworkAuthenticationKind::UserCredential));
+                break;
+
+            case CommandCommon_UmpData:
             {
-                // Process UMP data because this is the next expected sequence number
-
-                m_lastReceivedUmpCommandSequenceNumber = sequenceNumber;
-
-                if (numberOfWords > 0)
+                if (!m_sessionActive)
                 {
+                    if (!alreadySentSessionNotEstablished)
+                    {
+                        alreadySentSessionNotEstablished = true;
+                        LOG_IF_FAILED(SendByeSessionNotEstablished(commandHeader.HeaderData.CommandCode));
+                    }
+
+                    // the payload is skipped by the resynchronization below
+                    break;
+                }
+
+                uint8_t numberOfWords = commandHeader.HeaderData.CommandPayloadLength;
+                MidiSequenceNumber sequenceNumber(commandHeader.HeaderData.CommandSpecificData.AsUInt16);
+
+                std::vector<uint32_t> words{ };
+
+                if (sequenceNumber <= m_lastReceivedUmpCommandSequenceNumber)
+                {
+                    // already seen. This is FEC or a retransmit, so the payload is skipped below.
+                }
+                else if (sequenceNumber == m_lastReceivedUmpCommandSequenceNumber + 1)
+                {
+                    // Process UMP data because this is the next expected sequence number
+                    // a command with zero words is a valid keep-alive and still advances the sequence
+
+                    m_lastReceivedUmpCommandSequenceNumber = sequenceNumber;
+
+                    // we're back in sequence, so any gap we were chasing is resolved
+                    ResetRetransmitRequestState();
+
+                    words.reserve(numberOfWords);
+
                     for (uint8_t i = 0; i < numberOfWords; i++)
                     {
-                        if (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
+                        words.push_back(reader.ReadUInt32());
+                    }
+                }
+                else
+                {
+                    // A gap, which means we lost more datagrams than the forward error correction
+                    // window covers. We ask for a retransmit a bounded number of times, then accept
+                    // the loss and carry on. A remote that cannot or will not retransmit must never
+                    // be able to wedge the session by leaving us stuck on a sequence number.
+
+                    auto expectedSequenceNumber = m_lastReceivedUmpCommandSequenceNumber + 1;
+
+                    if (!m_retransmitRequestOutstanding || !(m_retransmitRequestSequenceNumber == expectedSequenceNumber))
+                    {
+                        // a different gap than the one we were chasing
+                        m_retransmitRequestOutstanding = true;
+                        m_retransmitRequestSequenceNumber = expectedSequenceNumber;
+                        m_retransmitRequestAttempts = 0;
+                    }
+
+                    bool waitForRetransmit{ false };
+
+                    if (m_remoteSupportsRetransmit && m_retransmitRequestAttempts < MIDI_NETWORK_MAX_RETRANSMIT_REQUEST_ATTEMPTS)
+                    {
+                        if (alreadyRequestedRetransmit)
                         {
-                            // add to our vector
-                            words.push_back(reader.ReadUInt32());
+                            // already asked once for this datagram. Wait for the answer.
+                            waitForRetransmit = true;
                         }
                         else
                         {
-                            // bad / incomplete packet
+                            m_retransmitRequestAttempts++;
+                            alreadyRequestedRetransmit = true;
 
-                            auto lock = m_socketWriterLock.lock();
-                            RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-                            RETURN_IF_FAILED(m_writer->WriteCommandNAK(commandHeader.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandMalformed, L"Packet data incomplete"));
-                            RETURN_IF_FAILED(m_writer->Send());
-
-                            // TODO: We should request a retransmit of this packet
-
-                            RETURN_IF_FAILED(E_FAIL);
+                            waitForRetransmit = SUCCEEDED(RequestMissingPackets());
                         }
+                    }
+
+                    if (!waitForRetransmit)
+                    {
+                        TraceLoggingWrite(
+                            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_WARNING,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Giving up on missing UMP data and resynchronizing to the current sequence number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingUInt16(expectedSequenceNumber.Value(), "expected sequence number"),
+                            TraceLoggingUInt16(sequenceNumber.Value(), "received sequence number"),
+                            TraceLoggingBoolean(m_remoteSupportsRetransmit, "remote supports retransmit")
+                        );
+
+                        m_lastReceivedUmpCommandSequenceNumber = sequenceNumber;
+
+                        ResetRetransmitRequestState();
+
+                        words.reserve(numberOfWords);
+
+                        for (uint8_t i = 0; i < numberOfWords; i++)
+                        {
+                            words.push_back(reader.ReadUInt32());
+                        }
+                    }
+                }
+
+                if (words.size() > 0)
+                {
+                    LOG_IF_FAILED(HandleIncomingUmpData(m_lastIncomingValidUdpPacketTimestamp, words));
+                }
+            }
+                break;
+
+            case CommandCommon_RetransmitRequest:
+            {
+                if (!m_sessionActive)
+                {
+                    if (!alreadySentSessionNotEstablished)
+                    {
+                        alreadySentSessionNotEstablished = true;
+                        LOG_IF_FAILED(SendByeSessionNotEstablished(commandHeader.HeaderData.CommandCode));
+                    }
+                }
+                else if (payloadLengthInBytes >= sizeof(uint32_t))
+                {
+                    uint16_t sequenceNumber = commandHeader.HeaderData.CommandSpecificData.AsUInt16;
+                    uint16_t numberOfUmpCommands = reader.ReadUInt16();
+
+                    reader.ReadUInt16();    // reserved
+
+                    LOG_IF_FAILED(HandleIncomingRetransmitRequest(commandHeader, sequenceNumber, numberOfUmpCommands));
+                }
+            }
+                break;
+            case CommandCommon_RetransmitError:
+            {
+                if (!m_sessionActive)
+                {
+                    if (!alreadySentSessionNotEstablished)
+                    {
+                        alreadySentSessionNotEstablished = true;
+                        LOG_IF_FAILED(SendByeSessionNotEstablished(commandHeader.HeaderData.CommandCode));
+                    }
+                }
+                else if (payloadLengthInBytes >= sizeof(uint32_t))
+                {
+                    auto reason = static_cast<MidiNetworkCommandRetransmitErrorReason>(commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte1);
+                    uint16_t earliestAvailableSequenceNumber = reader.ReadUInt16();
+
+                    reader.ReadUInt16();    // reserved
+
+                    LOG_IF_FAILED(HandleIncomingRetransmitError(reason, earliestAvailableSequenceNumber));
+                }
+            }
+                break;
+
+            case CommandCommon_SessionReset:
+                if (m_sessionActive)
+                {
+                    LOG_IF_FAILED(HandleIncomingSessionReset());
+                }
+                else if (!alreadySentSessionNotEstablished)
+                {
+                    alreadySentSessionNotEstablished = true;
+                    LOG_IF_FAILED(SendByeSessionNotEstablished(commandHeader.HeaderData.CommandCode));
+                }
+                break;
+
+            case CommandCommon_SessionResetReply:
+                if (m_sessionActive)
+                {
+                    LOG_IF_FAILED(HandleIncomingSessionResetReply());
+                }
+                else if (!alreadySentSessionNotEstablished)
+                {
+                    alreadySentSessionNotEstablished = true;
+                    LOG_IF_FAILED(SendByeSessionNotEstablished(commandHeader.HeaderData.CommandCode));
+                }
+                break;
+
+            case CommandHostToClient_InvitationReplyAccepted:
+            {
+                uint32_t endpointNameLengthInBytes = static_cast<uint32_t>(commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte1) * sizeof(uint32_t);
+
+                if (endpointNameLengthInBytes <= payloadLengthInBytes)
+                {
+                    uint32_t productInstanceIdLengthInBytes = payloadLengthInBytes - endpointNameLengthInBytes;
+
+                    std::wstring hostEndpointName{ };
+                    std::wstring hostProductInstanceId{ };
+
+                    if (SUCCEEDED(ReadUtf8String(reader, endpointNameLengthInBytes, hostEndpointName)) &&
+                        SUCCEEDED(ReadUtf8String(reader, productInstanceIdLengthInBytes, hostProductInstanceId)))
+                    {
+                        LOG_IF_FAILED(HandleIncomingInvitationReplyAccepted(commandHeader, hostEndpointName, hostProductInstanceId));
                     }
                 }
                 else
                 {
-                    // empty UMP messages. That's fine.
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Invitation reply declares an endpoint name longer than its payload. Ignoring.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
                 }
             }
-            else if (sequenceNumber > m_lastReceivedUmpCommandSequenceNumber + 1)
-            {
-                // skipped data. Re-request missing packets
+                break;
 
-                // TODO: We should make sure we don't keep calling this for each
-                // UMP Data message within the same UDP packet.
+            case CommandHostToClient_InvitationReplyPending:
+                LOG_IF_FAILED(HandleIncomingInvitationReplyPending());
+                break;
 
-                RETURN_IF_FAILED(RequestMissingPackets());
+            case CommandHostToClient_InvitationReplyAuthenticationRequired:
+                LOG_IF_FAILED(HandleIncomingInvitationReplyAuthenticationRequired(commandHeader, MidiNetworkAuthenticationKind::SharedSecret));
+                break;
+
+            case CommandHostToClient_InvitationReplyUserAuthenticationRequired:
+                LOG_IF_FAILED(HandleIncomingInvitationReplyAuthenticationRequired(commandHeader, MidiNetworkAuthenticationKind::UserCredential));
+                break;
+
+
+            default:
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unexpected network MIDI 2.0 command code", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt8(commandHeader.HeaderData.CommandCode, "Command Code")
+                );
+
+                // Spec 6.15. Only answered inside an established session, so unsolicited junk
+                // from an arbitrary source doesn't get a reply.
+                if (m_sessionActive)
+                {
+                    LOG_IF_FAILED(SendToNetwork([&commandHeader](MidiNetworkDataWriter& writer)
+                        {
+                            // TODO: Move string to resources for localization
+                            RETURN_IF_FAILED(writer.WriteCommandNAK(
+                                commandHeader.HeaderWord,
+                                MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotSupported,
+                                L"Command code not supported."));
+
+                            return S_OK;
+                        }));
+                }
+
+                break;
+
             }
 
-            if (words.size() > 0)
+            if (reader.UnconsumedBufferLength() < unconsumedLengthAfterCommand)
             {
-                LOG_IF_FAILED(HandleIncomingUmpData(m_lastIncomingValidUdpPacketTimestamp, words));
+                // a handler read past its own payload. We can no longer locate the next command.
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Command handler over-consumed its payload. Discarding remainder of datagram.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt8(commandHeader.HeaderData.CommandCode, "Command Code")
+                );
+
+                break;
+            }
+
+            // Skip whatever this command's payload holds that the handler didn't consume. Without
+            // this, payload bytes of an unhandled command get parsed as the next command header.
+            while (reader.UnconsumedBufferLength() > unconsumedLengthAfterCommand)
+            {
+                auto excess = reader.UnconsumedBufferLength() - unconsumedLengthAfterCommand;
+
+                if (excess >= sizeof(uint32_t))
+                {
+                    reader.ReadUInt32();
+                }
+                else if (excess >= sizeof(uint16_t))
+                {
+                    reader.ReadUInt16();
+                }
+                else
+                {
+                    reader.ReadByte();
+                }
+            }
+
+            if (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
+            {
+                commandHeaderWord = reader.ReadUInt32();
+            }
+            else
+            {
+                haveCommand = false;
             }
         }
-            break;
+    }
+    catch (...)
+    {
+        // a malformed datagram must never take the service down
+        auto hr = wil::ResultFromCaughtException();
 
-        case CommandCommon_RetransmitRequest:
-        {
-            //uint8_t payloadLengthWords = commandHeader.HeaderData.CommandPayloadLength;
-            uint16_t sequenceNumber = commandHeader.HeaderData.CommandSpecificData.AsUInt16;
-            uint16_t numberOfUmpCommands = reader.ReadUInt16();
-
-            reader.ReadUInt16();    // reserved
-
-            LOG_IF_FAILED(HandleIncomingRetransmitRequest(sequenceNumber, numberOfUmpCommands));
-
-        }
-            break;
-        case CommandCommon_RetransmitError:
-            // TODO: handle retransmitting data
-            break;
-
-        case CommandCommon_SessionReset:
-        case CommandCommon_SessionResetReply:
-            // TODO: handle session reset
-            break;
-
-        case CommandHostToClient_InvitationReplyAccepted:
-        {
-            uint16_t endpointNameLengthInBytes = commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte1 * sizeof(uint32_t);
-            uint16_t productInstanceIdLengthInBytes = commandHeader.HeaderData.CommandPayloadLength * sizeof(uint32_t) - endpointNameLengthInBytes;
-
-            auto hostEndpointName = ReadUtf8String(reader, endpointNameLengthInBytes);
-            auto hostProductInstanceId = ReadUtf8String(reader, productInstanceIdLengthInBytes);
-
-            LOG_IF_FAILED(HandleIncomingInvitationReplyAccepted(commandHeader, hostEndpointName, hostProductInstanceId));
-        }
-            break;
-
-        case CommandHostToClient_InvitationReplyPending:
-            // TODO: not sure we need to do anything with this
-            break;
-
-        case CommandHostToClient_InvitationReplyAuthenticationRequired:
-            // TODO
-            break;
-
-        case CommandHostToClient_InvitationReplyUserAuthenticationRequired:
-            // TODO
-            break;
-
-
-        default:
-            // TODO: unexpected command code. Send NAK.
-
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unexpected network MIDI 2.0 command code", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingUInt8(commandHeader.HeaderData.CommandCode, "Command Code")
-            );
-
-            break;
-
-        }
-
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception processing inbound datagram. Datagram discarded.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
     }
 
     TraceLoggingWrite(
@@ -1241,18 +2101,75 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::AddUmpPacketToRetransmitBuffer(MidiSequenceNumber const sequenceNumber, std::vector<uint32_t> const& words)
 {
+    return AddUmpPacketToRetransmitBuffer(sequenceNumber, words.data(), words.size());
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::AddUmpPacketToRetransmitBuffer(
+    MidiSequenceNumber const sequenceNumber,
+    uint32_t const* words,
+    size_t const wordCount)
+{
+    if (m_retransmitBuffer.capacity() == 0)
+    {
+        return S_OK;
+    }
+
     MidiRetransmitBufferEntry entry;
     entry.SequenceNumber = sequenceNumber;
-    entry.Words = words;
 
-    m_retransmitBuffer.push_back(entry);
+    if (wordCount > 0 && words != nullptr)
+    {
+        entry.Words.assign(words, words + wordCount);
+    }
+
+    m_retransmitBuffer.push_back(std::move(entry));
 
     return S_OK;
 }
 
 _Use_decl_annotations_
+size_t
+MidiNetworkConnection::CalculateWholeUmpMessageWordCount(
+    std::vector<uint32_t> const& words,
+    size_t const position,
+    size_t const maxWords)
+{
+    size_t count{ 0 };
+
+    while (position + count < words.size())
+    {
+        auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words[position + count]);
+
+        if (messageWordCount == 0)
+        {
+            break;
+        }
+
+        // never split a UMP message across two commands
+        if (position + count + messageWordCount > words.size())
+        {
+            break;
+        }
+
+        if (count + messageWordCount > maxWords)
+        {
+            break;
+        }
+
+        count += messageWordCount;
+    }
+
+    return count;
+}
+
+_Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::HandleIncomingRetransmitRequest(uint16_t const startingSequenceNumber, uint16_t const retransmitPacketCount)
+MidiNetworkConnection::HandleIncomingRetransmitRequest(
+    MidiNetworkCommandPacketHeader const& header,
+    uint16_t const startingSequenceNumber, 
+    uint16_t const retransmitPacketCount)
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1263,54 +2180,93 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(uint16_t const startingSe
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
+    // the retransmit buffer is guarded by the socket writer lock
+    auto lock = m_socketWriterLock.lock();
 
+    // Spec 7.2.3: if we don't implement retransmit at all, the answer is a NAK rather than a
+    // retransmit error, and the remote is expected to stop asking.
+    if (m_retransmitBuffer.capacity() == 0)
+    {
+        RETURN_IF_FAILED(SendToNetwork([&header](MidiNetworkDataWriter& writer)
+            {
+                // TODO: Move string to resources for localization
+                RETURN_IF_FAILED(writer.WriteCommandNAK(
+                    header.HeaderWord,
+                    MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotSupported,
+                    L"Retransmit buffering is disabled on this endpoint."));
+
+                return S_OK;
+            }));
+
+        return S_OK;
+    }
 
     // find the starting sequence number in the circular buffer
-
     auto firstPacket = std::find_if(m_retransmitBuffer.begin(), m_retransmitBuffer.end(), [&](const MidiRetransmitBufferEntry& s) { return s.SequenceNumber == startingSequenceNumber; });
-
-    auto lock = m_socketWriterLock.lock();
 
     if (firstPacket == m_retransmitBuffer.end())
     {
-
         // Send a retransmit error
 
-        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+        auto earliestAvailable = m_retransmitBuffer.size() > 0 ? m_retransmitBuffer.begin()->SequenceNumber : MidiSequenceNumber(0);
 
-        if (m_retransmitBuffer.size() > 0)
-        {
-            RETURN_IF_FAILED(m_writer->WriteCommandRetransmitError(m_retransmitBuffer.begin()->SequenceNumber, MidiNetworkCommandRetransmitErrorReason::RetransmitErrorReason_DataNotAvailable));
-        }
-        else
-        {
-            RETURN_IF_FAILED(m_writer->WriteCommandRetransmitError(0, MidiNetworkCommandRetransmitErrorReason::RetransmitErrorReason_DataNotAvailable));
-        }
+        RETURN_IF_FAILED(SendToNetwork([&earliestAvailable](MidiNetworkDataWriter& writer)
+            {
+                RETURN_IF_FAILED(writer.WriteCommandRetransmitError(earliestAvailable, MidiNetworkCommandRetransmitErrorReason::RetransmitErrorReason_DataNotAvailable));
 
-        RETURN_IF_FAILED(m_writer->Send());
+                return S_OK;
+            }));
     }
     else
     {
-        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+        // A count larger than what we hold, or the "send everything" value of zero, is clamped
+        // to what is actually in the buffer. Advancing the iterator past end() is undefined.
+        size_t const availableCount = static_cast<size_t>(std::distance(firstPacket, m_retransmitBuffer.end()));
+        size_t countRemaining = (retransmitPacketCount == 0) ? availableCount : min(static_cast<size_t>(retransmitPacketCount), availableCount);
 
-        auto endPacket = firstPacket + retransmitPacketCount;
+        auto it = firstPacket;
 
-        // packet count of 0 means to send everything we've got
-
-        if (retransmitPacketCount == 0x0000)
+        // Spread the reply across as many datagrams as it takes. DontFragment is set, so one
+        // oversized datagram would simply be dropped and the remote would ask again forever.
+        while (countRemaining > 0)
         {
-            endPacket = m_retransmitBuffer.end();
+            size_t budgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) };
+            size_t countThisDatagram{ 0 };
+
+            for (auto probe = it; countThisDatagram < countRemaining && probe != m_retransmitBuffer.end(); probe++)
+            {
+                size_t cost = sizeof(uint32_t) + (probe->Words.size() * sizeof(uint32_t));
+
+                if (cost > budgetBytes)
+                {
+                    break;
+                }
+
+                budgetBytes -= cost;
+                countThisDatagram++;
+            }
+
+            if (countThisDatagram == 0)
+            {
+                // a single stored packet larger than a whole datagram should be impossible
+                break;
+            }
+
+            RETURN_IF_FAILED(SendToNetwork([&it, &countThisDatagram](MidiNetworkDataWriter& writer)
+                {
+                    auto writeIterator = it;
+
+                    for (size_t i = 0; i < countThisDatagram; i++, writeIterator++)
+                    {
+                        RETURN_IF_FAILED(writer.WriteCommandUmpMessages(writeIterator->SequenceNumber, writeIterator->Words.data(), static_cast<uint8_t>(writeIterator->Words.size())));
+                    }
+
+                    return S_OK;
+                }));
+
+            std::advance(it, countThisDatagram);
+            countRemaining -= countThisDatagram;
         }
-
-        for (auto& it = firstPacket; it != m_retransmitBuffer.end() && it < endPacket && it->SequenceNumber >= startingSequenceNumber; it++)
-        {
-            // TODO: We need to account for UDP packet size here
-
-            RETURN_IF_FAILED(m_writer->WriteCommandUmpMessages(it->SequenceNumber, it->Words));
-        }
-
-        RETURN_IF_FAILED(m_writer->Send());
     }
 
     TraceLoggingWrite(
@@ -1338,21 +2294,22 @@ MidiNetworkConnection::SendPing()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
-
-    auto lock = m_socketWriterLock.lock();
-
-
     MidiOutgoingPingTrackingEntry pingInfo;
 
     pingInfo.PingSendTimestamp = internal::GetCurrentMidiTimestamp();
     pingInfo.PingId = (uint32_t)(pingInfo.PingSendTimestamp & 0xFFFFFFFF);
 
-    m_outgoingPingTracking.push_back(pingInfo);
+    {
+        auto lock = m_pingTrackingLock.lock();
+        m_outgoingPingTracking.push_back(pingInfo);
+    }
 
-    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-    RETURN_IF_FAILED(m_writer->WriteCommandPing(pingInfo.PingId));
-    RETURN_IF_FAILED(m_writer->Send());
+    RETURN_IF_FAILED(SendToNetwork([&pingInfo](MidiNetworkDataWriter& writer)
+        {
+            RETURN_IF_FAILED(writer.WriteCommandPing(pingInfo.PingId));
+
+            return S_OK;
+        }));
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1379,13 +2336,10 @@ MidiNetworkConnection::SendInvitation()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    auto lock = m_socketWriterLock.lock();
+    m_invitationPending = true;
+    m_invitationAttempts = 1;
 
-    // TODO: When we support security, need to update the capabilities
-
-    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-    RETURN_IF_FAILED(m_writer->WriteCommandInvitation(MidiNetworkCommandInvitationCapabilities::Capabilities_None, m_thisEndpointName, m_thisProductInstanceId));
-    RETURN_IF_FAILED(m_writer->Send());
+    RETURN_IF_FAILED(SendInvitationCommand());
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1403,11 +2357,10 @@ MidiNetworkConnection::SendInvitation()
 
 
 
+_Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::OutboundProcessingThreadWorker()
+MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
 {
-    auto stopToken = m_outboundProcessingThread.get_stop_token();
-
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -1460,24 +2413,7 @@ MidiNetworkConnection::OutboundProcessingThreadWorker()
                 TraceLoggingWideString(L"Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
-            auto hr = SendQueuedMidiMessagesToNetwork();
-
-            if (FAILED(hr))
-            {
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Send failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
-                );
-
-                // TODO: Consider creating a END_SESSION_IF_FAILED macro
-
-                LOG_IF_FAILED(hr);   // this locks the queue, sends empty messages if needed, and clears the queue
-            }
+            LOG_IF_FAILED(SendQueuedMidiMessagesToNetwork());
         }
 
         // we're done processing, so reset the event for the next round
@@ -1520,42 +2456,147 @@ MidiNetworkConnection::SendQueuedMidiMessagesToNetwork()
         return S_OK;
     }
 
-
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
-
     auto queueLock = m_outgoingUmpMessageQueueLock.lock();
-
-    auto sequenceNumber = ++m_lastSentUmpCommandSequenceNumber;
     auto lock = m_socketWriterLock.lock();
 
-    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+    constexpr size_t commandHeaderBytes{ sizeof(uint32_t) };
 
-    if (m_retransmitBuffer.size() > 0)
+    HRESULT hr = S_OK;
+    size_t position{ 0 };
+    bool sentAtLeastOneDatagram{ false };
+
+    // Fill datagrams with as many whole UMP messages as fit, and keep going until the queue is
+    // drained. An empty queue still produces one datagram, which is the keep-alive.
+    while (SUCCEEDED(hr) && !m_shuttingDown && (position < m_outgoingUmpMessages.size() || !sentAtLeastOneDatagram))
     {
-        // write the Forward Error Correction packets using the retransmit buffer stored data
+        size_t budgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) };   // less the UDP packet header
 
-        size_t numberOfForwardErrorCorrectionPackets{ 0 };
-        numberOfForwardErrorCorrectionPackets = min(m_retransmitBuffer.size(), m_maxForwardErrorCorrectionCommandPacketCount);
+        // Forward error correction repeats the most recent packets, so when the budget is tight
+        // we keep the newest and drop the oldest.
+        std::vector<size_t> forwardErrorCorrectionIndexes;
 
-        for (size_t pos = m_retransmitBuffer.size() - numberOfForwardErrorCorrectionPackets; pos < m_retransmitBuffer.size(); pos++)
+        if (m_retransmitBuffer.size() > 0)
         {
-            RETURN_IF_FAILED(m_writer->WriteCommandUmpMessages(m_retransmitBuffer.at(pos).SequenceNumber, m_retransmitBuffer.at(pos).Words));
+            size_t maxCount = min(m_retransmitBuffer.size(), static_cast<size_t>(m_maxForwardErrorCorrectionCommandPacketCount));
+
+            for (size_t i = 0; i < maxCount; i++)
+            {
+                size_t index = m_retransmitBuffer.size() - 1 - i;
+                size_t cost = commandHeaderBytes + (m_retransmitBuffer.at(index).Words.size() * sizeof(uint32_t));
+
+                if (cost > budgetBytes)
+                {
+                    break;
+                }
+
+                budgetBytes -= cost;
+                forwardErrorCorrectionIndexes.push_back(index);
+            }
+
+            // the receiver processes in sequence order, so write oldest first
+            std::reverse(forwardErrorCorrectionIndexes.begin(), forwardErrorCorrectionIndexes.end());
         }
+
+        struct OutboundChunk
+        {
+            size_t Offset;
+            size_t WordCount;
+            MidiSequenceNumber SequenceNumber;
+        };
+
+        std::vector<OutboundChunk> chunks;
+        auto nextSequenceNumber = m_lastSentUmpCommandSequenceNumber;
+
+        while (position < m_outgoingUmpMessages.size() && budgetBytes > commandHeaderBytes)
+        {
+            size_t maxWordsForBudget = (budgetBytes - commandHeaderBytes) / sizeof(uint32_t);
+            size_t maxWords = min(maxWordsForBudget, static_cast<size_t>(MIDI_MAX_UMP_WORDS_PER_PACKET));
+
+            size_t wordCount = CalculateWholeUmpMessageWordCount(m_outgoingUmpMessages, position, maxWords);
+
+            if (wordCount == 0)
+            {
+                // Either the next message needs a fresh datagram, or the tail of the queue is a
+                // partial message we can never send. Only the latter can stall the loop.
+                if (maxWords >= MIDI_MAX_UMP_WORDS_PER_PACKET)
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Incomplete UMP message at the end of the outbound queue. Discarding it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingUInt64(static_cast<uint64_t>(m_outgoingUmpMessages.size() - position), "words discarded")
+                    );
+
+                    position = m_outgoingUmpMessages.size();
+                }
+
+                break;
+            }
+
+            nextSequenceNumber = nextSequenceNumber + 1;
+
+            chunks.push_back({ position, wordCount, nextSequenceNumber });
+
+            budgetBytes -= commandHeaderBytes + (wordCount * sizeof(uint32_t));
+            position += wordCount;
+        }
+
+        if (chunks.empty())
+        {
+            if (sentAtLeastOneDatagram)
+            {
+                // nothing left that we can send
+                break;
+            }
+
+            // keep-alive: a UMP Data command with no words, which still advances the sequence
+            nextSequenceNumber = nextSequenceNumber + 1;
+            chunks.push_back({ 0, 0, nextSequenceNumber });
+        }
+
+        hr = SendToNetwork([&](MidiNetworkDataWriter& writer)
+            {
+                for (auto const& index : forwardErrorCorrectionIndexes)
+                {
+                    auto const& entry = m_retransmitBuffer.at(index);
+
+                    RETURN_IF_FAILED(writer.WriteCommandUmpMessages(entry.SequenceNumber, entry.Words.data(), static_cast<uint8_t>(entry.Words.size())));
+                }
+
+                for (auto const& chunk : chunks)
+                {
+                    RETURN_IF_FAILED(writer.WriteCommandUmpMessages(
+                        chunk.SequenceNumber,
+                        chunk.WordCount > 0 ? m_outgoingUmpMessages.data() + chunk.Offset : nullptr,
+                        static_cast<uint8_t>(chunk.WordCount)));
+                }
+
+                return S_OK;
+            });
+
+        if (hr == S_OK)
+        {
+            // only committed once the datagram is actually on the wire
+            for (auto const& chunk : chunks)
+            {
+                m_lastSentUmpCommandSequenceNumber = chunk.SequenceNumber;
+
+                LOG_IF_FAILED(AddUmpPacketToRetransmitBuffer(
+                    chunk.SequenceNumber,
+                    chunk.WordCount > 0 ? m_outgoingUmpMessages.data() + chunk.Offset : nullptr,
+                    chunk.WordCount));
+            }
+        }
+
+        sentAtLeastOneDatagram = true;
     }
 
-    // write the actual data we have
-
-
-    // TODO: Use the UMP iterator to fill up the UDP packet with as many whole messages
-    // as we can fit without going over. Then, if the queue is not empty, keep going until
-    // we're done.
-
-
-    RETURN_IF_FAILED(m_writer->WriteCommandUmpMessages(sequenceNumber, m_outgoingUmpMessages));
-    RETURN_IF_FAILED(m_writer->Send());
-
-    // everything has gone well, so add this to our retransmit buffer
-    LOG_IF_FAILED(AddUmpPacketToRetransmitBuffer(sequenceNumber, m_outgoingUmpMessages));
+    // The queue is drained either way. Holding on to messages we could not send would let an
+    // unreachable remote grow it without bound.
+    m_outgoingUmpMessages.clear();
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1566,10 +2607,7 @@ MidiNetworkConnection::SendQueuedMidiMessagesToNetwork()
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-
-    m_outgoingUmpMessages.clear();
-
-    return S_OK;
+    return hr;
 }
 
 
@@ -1667,37 +2705,42 @@ MidiNetworkConnection::Shutdown()
     );
 
 
-    // don't process any more MIDI UMP messages
-    if (m_callback)
+    if (m_shuttingDown.exchange(true))
     {
-        m_callback = nullptr;
+        // already shut down. This is called from both the owning host/client and from
+        // TransportState cleanup, so it has to be safe to repeat.
+        return S_OK;
     }
 
-    // stop pings
-    m_connectionWatcherThread.request_stop();
-    m_connectionTimeoutEvent.SetEvent();
+    // don't process any more MIDI UMP messages
+    auto callback = DetachCallback();
+    callback.reset();
 
-    // say bye
-    LOG_IF_FAILED(AttemptPoliteByeSequence());
+    // say bye while the writer is still up
+    LOG_IF_FAILED(SendShutdownBye());
 
-    m_shuttingDown = true;
-
-    // cleanup
+    // cleanup. Does not tear down the writer.
     LOG_IF_FAILED(EndActiveSession(false));
 
-    m_outboundProcessingThread.request_stop();
+    // Both workers must be stopped before anything they touch is released.
+    LOG_IF_FAILED(StopAndJoinWorkerThreads());
 
-    // in case the threads were sleeping
-    m_retransmitBuffer.clear();
-    m_outgoingUmpMessages.clear();
-    m_newMessagesInQueueEvent.SetEvent();
+    {
+        auto lock = m_socketWriterLock.lock();
 
+        m_retransmitBuffer.clear();
 
+        if (m_writer != nullptr)
+        {
+            LOG_IF_FAILED(m_writer->Shutdown());
+            m_writer.reset();
+        }
+    }
 
-    // TODO: Need to remove this from the list in TransportState.Current()
-
-
-
+    {
+        auto queueLock = m_outgoingUmpMessageQueueLock.lock();
+        m_outgoingUmpMessages.clear();
+    }
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

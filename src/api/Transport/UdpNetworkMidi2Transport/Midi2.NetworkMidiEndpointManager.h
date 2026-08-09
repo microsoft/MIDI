@@ -22,6 +22,16 @@ public:
 
     STDMETHOD(InitiateDiscoveryAndNegotiation(_In_ std::wstring const& endpointDeviceInterfaceId));
 
+    // Defers the above to the background worker. Discovery and negotiation call into the
+    // service and take service-wide locks, and endpoint creation raises PnP notifications whose
+    // callbacks take those same locks. Doing that on the socket receive callback deadlocked the
+    // whole receive path, so nothing on that thread may block on the service.
+    HRESULT QueueDiscoveryAndNegotiation(_In_ std::wstring const& endpointDeviceInterfaceId);
+
+    // Shutting a connection down joins its two worker threads, so it cannot be done on the
+    // socket receive callback without stalling every other datagram behind it.
+    HRESULT QueueConnectionShutdown(_In_ std::shared_ptr<MidiNetworkConnection> connection);
+
     // endpoint for a remote client connected to this host
     STDMETHOD(CreateNewHostEndpointToRemoteClient(
         _In_ std::wstring const& configIdentifier,
@@ -110,9 +120,17 @@ private:
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
 
-    std::jthread m_backgroundEndpointCreatorThread;
-    //std::stop_token m_backgroundEndpointCreatorThreadStopToken;
     wil::slim_event_manual_reset m_backgroundEndpointCreatorThreadWakeup;
     HRESULT EndpointCreatorWorker(_In_ std::stop_token stopToken);
+
+    wil::critical_section m_pendingNegotiationsLock;
+    std::vector<std::wstring> m_pendingNegotiations;
+
+    wil::critical_section m_pendingConnectionShutdownsLock;
+    std::vector<std::shared_ptr<MidiNetworkConnection>> m_pendingConnectionShutdowns;
+
+    // Must remain the last member. Members are destroyed in reverse declaration order, so this
+    // guarantees the worker is joined before the wakeup event it waits on is destroyed.
+    std::jthread m_backgroundEndpointCreatorThread;
 
 };

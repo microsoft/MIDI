@@ -89,8 +89,6 @@ MidiNetworkHostConnectionPolicyFromJsonString(_In_ winrt::hstring const& jsonStr
 }
 
 
-// TODO: Move all strings to resources
-
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
@@ -118,36 +116,55 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 
     if (definition.ProductInstanceId.empty())
     {
-        errorMessage = L"Missing Product Instance Id";
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_PRODUCT_INSTANCE_ID);
         return E_INVALIDARG;
     }
 
-    //if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange)
-    //{
-    //    // validate that there are exactly two entries
+    if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange)
+    {
+        // validate that there are exactly two entries
 
-    //    if (definition.IpAddresses.size() != 2)
-    //    {
-    //        errorMessage = L"Connection policy IP address range needs exactly two valid entries to define the range.";
-    //        return E_INVALIDARG;
-    //    }
-    //}
-    //else if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList)
-    //{
-    //    // validate that there is at least one entry
+        if (definition.ConnectionPolicyAddresses.size() != 2)
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_CONNECTION_POLICY_RANGE_ENTRY_COUNT);
+            return E_INVALIDARG;
+        }
+    }
+    else if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList)
+    {
+        // validate that there is at least one entry
 
-    //    if (definition.IpAddresses.size() < 1)
-    //    {
-    //        errorMessage = L"Connection policy IP address list needs at least one valid entry.";
-    //        return E_INVALIDARG;
-    //    }
-
-    //}
+        if (definition.ConnectionPolicyAddresses.size() < 1)
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_CONNECTION_POLICY_LIST_ENTRY_COUNT);
+            return E_INVALIDARG;
+        }
+    }
 
 
     // validate user authentication
+    if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
+    {
+        if (definition.AuthenticationCredentialIdentifier.empty())
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_CREDENTIAL_IDENTIFIER);
+            return E_INVALIDARG;
+        }
 
+        MidiNetworkCredentialIdentifier identifier{ std::wstring{ definition.AuthenticationCredentialIdentifier } };
 
+        if (!identifier.IsWellFormed())
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_CREDENTIAL_IDENTIFIER);
+            return E_INVALIDARG;
+        }
+
+        // Refused rather than silently downgraded. Accepting unauthenticated invitations on a
+        // host the user asked to protect would be worse than refusing to start it.
+        // https://github.com/microsoft/MIDI/issues/733
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_AUTHENTICATION_NOT_IMPLEMENTED);
+        return E_NOTIMPL;
+    }
 
     return S_OK;
 
@@ -164,7 +181,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandStopHost(
 
     if (host == nullptr)
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Host not found.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_HOST_NOT_FOUND));
         return S_OK;
     }
 
@@ -175,7 +192,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandStopHost(
     }
     else
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Unable to stop host.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_UNABLE_TO_STOP_HOST));
         return S_OK;
     }
 }
@@ -190,7 +207,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandStartHost(
 
     if (host == nullptr)
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Host not found.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_HOST_NOT_FOUND));
         return S_OK;
     }
 
@@ -203,9 +220,13 @@ CMidi2NetworkMidiConfigurationManager::RunCommandStartHost(
     }
     else
     {
-        auto error = L"Unable to start host. HRESULT: " + std::to_wstring(startHr);
+        // the HRESULT goes in the response error code rather than the message, so the message
+        // stays localizable
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            static_cast<uint32_t>(startHr),
+            internal::ResourceGetWString(IDS_ERROR_UNABLE_TO_START_HOST));
 
-        internal::SetConfigurationResponseObjectFail(responseObject, error);
         return S_OK;
     }
 }
@@ -224,13 +245,13 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
 
     if (remoteAddress.empty())
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing remote address.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_MISSING_REMOTE_ADDRESS));
         return S_OK;
     }
 
     if (remotePort.empty())
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing remote port.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_MISSING_REMOTE_PORT));
         return S_OK;
     }
 
@@ -239,7 +260,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     auto num = wcstol(remotePort.c_str(), NULL, 10);
     if (num > WORD_MAX || num < 1)
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Invalid remote port.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_INVALID_REMOTE_PORT));
         return S_OK;
     }
     else
@@ -258,7 +279,11 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     clientDefinition->MatchDirectPort = remotePort;
     clientDefinition->LocalEndpointName = umpEndpointName;
 
-    TransportState::Current().GetEndpointManager()->StartNewClient(
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+
+    endpointManager->StartNewClient(
         clientDefinition, 
         remoteAddress,
         remotePortNumeric);
@@ -279,7 +304,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandDisconnectClient(
 
     if (configEntryId.empty())
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing entry id.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_MISSING_ENTRY_IDENTIFIER));
         return S_OK;
     }
 
@@ -502,7 +527,7 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
 
     if (commandHelper.Command().empty())
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing command.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_MISSING_COMMAND));
 
         // we S_OK this because the response object is valid and should be read
     }
@@ -513,7 +538,10 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS, false);
 
-        // revisit these once the functions are added in
+        // These are the generic per-endpoint verbs, which this transport does not implement. It
+        // exposes network-specific verbs instead (start-host, stop-host, connect-direct,
+        // disconnect-client), because starting a host and connecting a client are not the same
+        // operation and cannot share one endpoint-level verb.
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
@@ -598,7 +626,7 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
     }
     else
     {
-        internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_UNRECOGNIZED_COMMAND));
     }
 
     // we return S_OK no matter what, so the response object will be parsed
@@ -753,25 +781,59 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         uint32_t fecPackets{ };
         uint32_t retransmitBuffer{};
         uint32_t outboundPingInterval{};
+        uint32_t maxHostConnections{};
 
         fecPackets = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY, MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT));
         retransmitBuffer = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT));
         outboundPingInterval = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT));
+        maxHostConnections = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_HOST_CONNECTIONS_KEY, MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT));
 
-        // Validate the above values
+        // Validate the above values. Out-of-range values are reported rather than quietly
+        // clamped, so a user who mistypes a setting finds out instead of wondering why it had
+        // no effect.
+        std::wstring settingsErrorMessage{ };
+        if (fecPackets < MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND || fecPackets > MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND)
+        {
+            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_FEC_PACKET_COUNT_OUT_OF_RANGE);
+        }
+        else if (retransmitBuffer < MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND || retransmitBuffer > MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND)
+        {
+            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_RETRANSMIT_BUFFER_SIZE_OUT_OF_RANGE);
+        }
+        else if (outboundPingInterval < MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND || outboundPingInterval > MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND)
+        {
+            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_PING_INTERVAL_OUT_OF_RANGE);
+        }
+        else if (maxHostConnections < MIDI_NETWORK_HOST_MAX_CONNECTIONS_LOWER_BOUND || maxHostConnections > MIDI_NETWORK_HOST_MAX_CONNECTIONS_ABSOLUTE_MAX)
+        {
+            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_MAX_HOST_CONNECTIONS_OUT_OF_RANGE);
+        }
 
-        fecPackets = max(fecPackets, MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND);
-        fecPackets = min(fecPackets, MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND);
+        if (!settingsErrorMessage.empty())
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Invalid transport setting in configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(settingsErrorMessage.c_str(), "error"),
+                TraceLoggingUInt32(fecPackets, "fec packets"),
+                TraceLoggingUInt32(retransmitBuffer, "retransmit buffer"),
+                TraceLoggingUInt32(outboundPingInterval, "ping interval")
+            );
 
-        retransmitBuffer = max(retransmitBuffer, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND);
-        retransmitBuffer = min(retransmitBuffer, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND);
+            internal::SetConfigurationResponseObjectFail(responseObject, settingsErrorMessage);
+            internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-        outboundPingInterval = max(outboundPingInterval, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND);
-        outboundPingInterval = min(outboundPingInterval, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND);
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
 
         TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount = static_cast<uint8_t>(fecPackets);
         TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount = static_cast<uint16_t>(retransmitBuffer);
         TransportState::Current().TransportSettings.OutboundPingInterval = static_cast<uint32_t>(outboundPingInterval);
+        TransportState::Current().TransportSettings.MaxHostConnections = static_cast<uint16_t>(maxHostConnections);
     }
 
     // "create" entries
@@ -779,6 +841,32 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     {
         auto hostsSection = createSection.GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY, nullptr);
         auto clientsSection = createSection.GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, nullptr);
+
+        // An invalid entry is skipped rather than aborting the whole update, because earlier
+        // entries have already been added by the time we find it. The first failure is what
+        // gets reported back, so the response is a failure if any entry was rejected.
+        bool anyEntryFailed{ false };
+        winrt::hstring firstEntryErrorMessage{ };
+
+        auto reportEntryFailure = [&](winrt::hstring const& entryIdentifier, winrt::hstring const& message)
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Invalid configuration entry. Entry skipped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(entryIdentifier.c_str(), "entry identifier"),
+                    TraceLoggingWideString(message.c_str(), "error")
+                );
+
+                if (!anyEntryFailed)
+                {
+                    anyEntryFailed = true;
+                    firstEntryErrorMessage = message;
+                }
+            };
 
         // we typically have one host, but a user may create more than one if needed.
         // External clients connect to the host, which has a single port and IP address
@@ -798,7 +886,8 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                 {
-                    validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
+                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL));
+                    continue;
                 }
 
                 definition->EntryIdentifier = internal::TrimmedHStringCopy(it.Current().Key());
@@ -817,35 +906,44 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 definition->ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY));
 
                 // read the list of ip info
-                //if (definition.ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
-                //{
-                //    auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
+                if (definition->ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
+                {
+                    json::JsonArray addressArray{ nullptr };
 
-                //    for (uint32_t j = 0; j < addressArray.Size(); j++)
-                //    {
-                //        auto addressEntry = addressArray.GetStringAt(j);
+                    if (hostEntry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY))
+                    {
+                        addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY, nullptr);
+                    }
 
-                //        HostName address(addressEntry);
+                    if (addressArray != nullptr)
+                    {
+                        for (uint32_t j = 0; j < addressArray.Size(); j++)
+                        {
+                            auto addressEntry = internal::ToLowerTrimmedHStringCopy(addressArray.GetStringAt(j));
 
-                //        definition.IpAddresses.push_back(address);
-                //    }
-                //}
+                            if (!addressEntry.empty())
+                            {
+                                definition->ConnectionPolicyAddresses.push_back(addressEntry);
+                            }
+                        }
+                    }
+                }
 
                 // read authentication information
                 if (definition->Authentication != MidiNetworkHostAuthentication::NoAuthentication)
                 {
-
+                    // Only the identifier ever reaches the service. The secret itself is stored
+                    // by the Settings app. See MidiNetworkCredentials.h for the open questions
+                    // on where that store lives and how the service reads it.
                     if (definition->Authentication == MidiNetworkHostAuthentication::PasswordAuthentication)
                     {
-                        // TODO: Read the password vault key
+                        definition->AuthenticationCredentialIdentifier = internal::TrimmedHStringCopy(
+                            hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_GLOBAL_PASSWORD_KEY, L""));
                     }
                     else if (definition->Authentication == MidiNetworkHostAuthentication::UserAuthentication)
                     {
-                        // TODO: Read username/password vault key
-                    }
-                    else
-                    {
-                        // no authentication provided
+                        definition->AuthenticationCredentialIdentifier = internal::TrimmedHStringCopy(
+                            hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_USER_AUTH_KEY, L""));
                     }
                 }
 
@@ -930,7 +1028,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 }
                 else
                 {
-                    // invalid entry
+                    reportEntryFailure(it.Current().Key(), validationErrorMessage);
                 }
             }
 
@@ -948,14 +1046,12 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 auto definition = std::make_shared<MidiNetworkClientDefinition>();
                 RETURN_IF_NULL_ALLOC(definition);
 
-                winrt::hstring validationErrorMessage{ };
-
                 // currently, UDP is the only allowed protocol
                 auto protocol = internal::ToLowerTrimmedHStringCopy(clientEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
 
                 if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                 {
-                    validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
+                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL));
                 }
                 else
                 {
@@ -1011,13 +1107,17 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     else
                     {
                         // we have no way to match against endpoints, so this is a failure
-                        validationErrorMessage = L"Missing match entry";
+                        reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_MISSING_MATCH_ENTRY));
                     }
                 }
 
             }
         }
 
+        if (anyEntryFailed)
+        {
+            internal::SetConfigurationResponseObjectFail(responseObject, std::wstring{ firstEntryErrorMessage });
+        }
     }
 
     // "update" entries

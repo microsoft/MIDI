@@ -49,6 +49,15 @@ public:
 
     HRESULT WriteCommandUmpMessages(_In_ MidiSequenceNumber sequenceNumber, _In_ std::vector<uint32_t> words);
 
+    HRESULT WriteCommandUmpMessages(
+        _In_ MidiSequenceNumber sequenceNumber,
+        _In_reads_(wordCount) uint32_t const* words,
+        _In_ uint8_t const wordCount);
+
+    // Throws away any bytes buffered but not yet stored, so a failed or abandoned packet
+    // is never prepended to the next one.
+    HRESULT DiscardPendingData();
+
     HRESULT Shutdown();
 
 
@@ -65,59 +74,70 @@ private:
 #pragma warning (push)
 #pragma warning (disable: 4996)
         std::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
-        auto utf8 = convert.to_bytes(s).substr(0, maxByteCount);
+        auto utf8 = convert.to_bytes(s);
 #pragma warning (pop)
 
+        auto cap = EffectiveMaxByteCount(maxByteCount);
+
+        if (utf8.size() > cap)
+        {
+            utf8.resize(cap);
+
+            // Truncating at a fixed byte count can land in the middle of a multi-byte sequence,
+            // which would put invalid UTF-8 on the wire. Back up to the last whole character.
+            while (!utf8.empty() && (static_cast<unsigned char>(utf8.back()) & 0xC0) == 0x80)
+            {
+                utf8.pop_back();
+            }
+
+            // and drop the lead byte of the sequence we just cut into
+            if (!utf8.empty() && (static_cast<unsigned char>(utf8.back()) & 0x80) != 0)
+            {
+                utf8.pop_back();
+            }
+        }
+
         return utf8;
+    }
+
+    // The declared length and the bytes actually written must always agree, otherwise every
+    // field after this one in the datagram is misaligned. Caps are therefore rounded down to a
+    // whole number of 32-bit words.
+    static inline size_t EffectiveMaxByteCount(_In_ size_t maxByteCount)
+    {
+        if (maxByteCount > 255 * sizeof(uint32_t))
+        {
+            maxByteCount = 255 * sizeof(uint32_t);
+        }
+
+        return (maxByteCount / sizeof(uint32_t)) * sizeof(uint32_t);
     }
 
     inline void WritePaddedString(_In_ std::string s, _In_ size_t maxByteCount)
     {
         // don't lock here. Calling method will lock
-        //auto lock = m_dataWriterLock.lock();
 
-        size_t count{ 0 };
+        auto byteCount = min(s.size(), EffectiveMaxByteCount(maxByteCount));
 
-        for (auto const& ch : s)
+        for (size_t i = 0; i < byteCount; i++)
         {
-            m_dataWriter.WriteByte(ch);
-            count++;
-
-            // we assume maxByteCount is a multiple of sizeof(uint32_t)
-            if (count == maxByteCount) return;
+            m_dataWriter.WriteByte(s[i]);
         }
 
-        if (count % sizeof(uint32_t) != 0)
+        auto paddingByteCount = (sizeof(uint32_t) - (byteCount % sizeof(uint32_t))) % sizeof(uint32_t);
+
+        for (size_t i = 0; i < paddingByteCount; i++)
         {
-            for (int i = 0; i < sizeof(uint32_t) - (count % sizeof(uint32_t)); i++)
-            {
-                m_dataWriter.WriteByte(0);
-            }
+            m_dataWriter.WriteByte(0);
         }
     }
 
     // 255 is largest this can be
     inline byte CalculatePaddedStringSizeIn32BitWords(_In_ std::string s, _In_ size_t maxByteCount)
     {
-        if (maxByteCount > 255 * 4)
-        {
-            maxByteCount = 255 * 4;
-        }
+        auto byteCount = min(s.size(), EffectiveMaxByteCount(maxByteCount));
 
-        if (s.size() >= maxByteCount)
-        {
-            return static_cast<byte>(maxByteCount / sizeof(uint32_t));
-        }
-
-        if (s.size() % sizeof(uint32_t) != 0)
-        {
-            // round up to next 32-bit word
-            return static_cast<byte>(s.size() / sizeof(uint32_t) + 1);
-        }
-        else
-        {
-            return static_cast<byte>(s.size() / sizeof(uint32_t));
-        }
+        return static_cast<byte>((byteCount + sizeof(uint32_t) - 1) / sizeof(uint32_t));
     }
 
     HRESULT InternalWriteCommandHeader(_In_ MidiNetworkCommandCode commandCode, _In_ byte payloadLength, _In_ uint16_t commandSpecificData);
