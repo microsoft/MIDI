@@ -153,55 +153,38 @@
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
                 <RegistryKey Key="Endpoint Processing Plugins" ForceCreateOnInstall="yes">
-                    <Permission GenericAll="yes" User="Administrators"/>
                     <!-- TODO: Any processing plugins -->
                 </RegistryKey>
 
+                <!--
+                  No Permission elements below, deliberately. WiX's Permission REPLACES the ACL
+                  rather than adding to it, so granting Administrators removed read access for
+                  everyone else. That was harmless while midisrv ran as LOCAL SYSTEM (a member
+                  of Administrators), but the in-box service runs as LOCAL SERVICE and could
+                  then not enumerate these keys at all, silently loading no transports.
+                  Inheriting from the parent gives Administrators/SYSTEM full control and
+                  Users read, which is what the service needs.
+                -->
                 <RegistryKey Key="Transport Plugins" ForceCreateOnInstall="yes">
-                    <Permission GenericAll="yes" User="Administrators"/>
 
                     <RegistryKey Key="Midi2KSTransport" ForceCreateOnInstall="yes">
-                        <Permission GenericAll="yes" User="Administrators"/>
-
-                        <RegistryValue Type="string" Name="CLSID" Value="{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}">
-                            <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
-                        <RegistryValue Type="integer" Name="Enabled" Value="1">
-                            <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
+                        <RegistryValue Type="string" Name="CLSID" Value="{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
                     <RegistryKey Key="Midi2KSAggregateTransport" ForceCreateOnInstall="yes">
-                        <Permission GenericAll="yes" User="Administrators"/>
-
-                        <RegistryValue Type="string" Name="CLSID" Value="{0f273b18-e372-4d95-87ac-c31c3d22e937}">
-                            <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
-                        <RegistryValue Type="integer" Name="Enabled" Value="1">
-                            <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
+                        <RegistryValue Type="string" Name="CLSID" Value="{0f273b18-e372-4d95-87ac-c31c3d22e937}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
                     <RegistryKey Key="Midi2VirtualMidiTransport" ForceCreateOnInstall="yes">
-                        <Permission GenericAll="yes" User="Administrators"/>
-
-                        <RegistryValue Type="string" Name="CLSID" Value="{8FEAAD91-70E1-4A19-997A-377720A719C1}">
-                            <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
-                        <RegistryValue Type="integer" Name="Enabled" Value="1">
-                            <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
+                        <RegistryValue Type="string" Name="CLSID" Value="{8FEAAD91-70E1-4A19-997A-377720A719C1}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
                     <RegistryKey Key="Midi2LoopbackMidiTransport" ForceCreateOnInstall="yes">
-                        <Permission GenericAll="yes" User="Administrators"/>
-
-                        <RegistryValue Type="string" Name="CLSID" Value="{942BF02D-93C0-4EA8-B03E-D51156CA75E1}">
-                            <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
-                        <RegistryValue Type="integer" Name="Enabled" Value="1">
-                            <Permission GenericAll="yes" User="Administrators"/>
-                        </RegistryValue>
+                        <RegistryValue Type="string" Name="CLSID" Value="{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
                 </RegistryKey>
