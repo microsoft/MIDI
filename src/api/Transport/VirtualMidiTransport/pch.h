@@ -33,6 +33,9 @@
 //#include <ks.h>
 //#include <ksmedia.h>
 #include <avrt.h>
+// Must precede the other wil headers: without it WIL cannot identify winrt::hresult_error
+// and fail fasts instead of logging, turning every catch site into a process crash.
+#include <wil\cppwinrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
