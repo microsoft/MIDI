@@ -9,6 +9,8 @@
 #pragma once
 #include "Transports.Network.MidiNetworkHostRemovalConfig.g.h"
 
+#include "..\..\..\..\Transport\UdpNetworkMidi2Transport\net2udp_transport_defs.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkHostRemovalConfig : MidiNetworkHostRemovalConfigT<MidiNetworkHostRemovalConfig>
@@ -17,7 +19,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
         
-        json::JsonObject GetConfigJson() const noexcept;
+        json::JsonObject ConfigJson() const noexcept;
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::Network::factory_implementation

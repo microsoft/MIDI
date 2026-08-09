@@ -700,14 +700,23 @@ MidiNetworkConnection::SendShutdownBye()
         return S_FALSE;
     }
 
+    // teardown is two-phase, so this can arrive twice for the same connection
+    if (m_shutdownByeSent.exchange(true))
+    {
+        return S_FALSE;
+    }
+
     // Fire and forget. Waiting for a Bye Reply here only delays a shutdown that is already
     // under way, and with many sessions those waits add up against the service stop timeout.
     // If the datagram is lost the remote falls back to its own ping timeout.
     LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
         {
             // "Power Down" rather than "User terminated", because the latter tends to make the
-            // remote discard what it knows about us.
-            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_PowerDown, L"Service is shutting down."));
+            // remote discard what it knows about us. This path covers both service shutdown and
+            // an explicit disconnect, so the message says neither.
+            RETURN_IF_FAILED(writer.WriteCommandBye(
+                MidiNetworkCommandByeReason::CommandByeReasonCommon_PowerDown,
+                internal::ResourceGetWString(IDS_MESSAGE_CONNECTION_ENDED).c_str()));
 
             return S_OK;
         }));
@@ -716,9 +725,64 @@ MidiNetworkConnection::SendShutdownBye()
 }
 
 HRESULT
+MidiNetworkConnection::SendUserTerminatedByeAndAwaitReply()
+{
+    if (!m_sessionActive || m_shuttingDown)
+    {
+        return S_FALSE;
+    }
+
+    m_byeReplyEvent.ResetEvent();
+
+    bool replyReceived{ false };
+    uint16_t attempts{ 0 };
+
+    while (attempts < MIDI_NETWORK_BYE_MAX_ATTEMPTS && !m_shuttingDown)
+    {
+        attempts++;
+
+        LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+            {
+                RETURN_IF_FAILED(writer.WriteCommandBye(
+                    MidiNetworkCommandByeReason::CommandByeReasonCommon_UserTerminated,
+                    internal::ResourceGetWString(IDS_MESSAGE_USER_DISCONNECTED).c_str()));
+
+                return S_OK;
+            }));
+
+        if (m_byeReplyEvent.wait(MIDI_NETWORK_BYE_REPLY_TIMEOUT_MILLISECONDS))
+        {
+            // Shutdown sets this too, so a wake is only a reply if we are not shutting down
+            replyReceived = !m_shuttingDown;
+            break;
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"User-initiated disconnect", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingBoolean(replyReceived, "bye reply received"),
+        TraceLoggingUInt16(attempts, "attempts"),
+        TraceLoggingBoolean(m_shuttingDown, "shutting down")
+    );
+
+    // The session is over whether or not the remote acknowledged, and marking it ended here is
+    // what stops Shutdown() from sending a second Bye with a different reason.
+    LOG_IF_FAILED(EndActiveSession(false));
+
+    return replyReceived ? S_OK : S_FALSE;
+}
+
+HRESULT
 MidiNetworkConnection::HandleIncomingByeReply()
 {
-    // Nothing to do. Our own Bye is sent fire-and-forget, so nothing is waiting on this.
+    // Only a user-initiated disconnect waits on this. The shutdown Bye is fire-and-forget.
+    m_byeReplyEvent.SetEvent();
+
     return S_OK;
 }
 
@@ -736,6 +800,7 @@ MidiNetworkConnection::HandleIncomingBye()
 
     // whatever the outcome, the remote has answered us
     m_invitationPending = false;
+    m_invitationReplyPendingReceived = false;
 
     if (m_sessionActive)
     {
@@ -781,6 +846,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
     {
         // the host answered, so stop repeating the invitation
         m_invitationPending = false;
+        m_invitationReplyPendingReceived = false;
 
         if (m_sessionActive)
         {
@@ -1312,15 +1378,23 @@ HRESULT
 MidiNetworkConnection::HandleIncomingInvitationReplyPending()
 {
     // Spec 6.8. The host is telling us it needs more time, typically because a person has to
-    // approve the connection. Nothing to do but keep waiting, which the watchdog already allows
-    // for since any valid datagram counts as liveness.
+    // approve the connection. Re-inviting now would just make it ask again, so the retry loop
+    // stops here and we wait for Accepted or Bye.
+    bool const alreadyPending = m_invitationReplyPendingReceived.exchange(true);
+
+    if (!alreadyPending)
+    {
+        m_invitationReplyPendingTimestamp = internal::GetCurrentMidiTimestamp();
+    }
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Remote host accepted the invitation as pending", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Remote host accepted the invitation as pending. Waiting for it to be approved.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingBoolean(alreadyPending, "repeat pending reply")
     );
 
     return S_OK;
@@ -1407,6 +1481,46 @@ MidiNetworkConnection::ServicePendingInvitation()
         return S_OK;
     }
 
+    // The host answered Pending, so it is waiting on a person rather than ignoring us. Keep
+    // waiting without re-inviting, but do not wait forever.
+    if (m_invitationReplyPendingReceived)
+    {
+        auto const elapsedMilliseconds = internal::ConvertTimestampToWholeMilliseconds(
+            internal::GetCurrentMidiTimestamp() - m_invitationReplyPendingTimestamp,
+            internal::GetMidiTimestampFrequency());
+
+        if (elapsedMilliseconds < TransportState::Current().TransportSettings.InvitationPendingTimeout)
+        {
+            return S_OK;
+        }
+
+        m_invitationPending = false;
+        m_invitationReplyPendingReceived = false;
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Invitation was never approved by the remote host. Cancelling.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_remoteHostName != nullptr ? m_remoteHostName.ToString().c_str() : L"", "remote hostname"),
+            TraceLoggingWideString(m_remotePort.c_str(), "remote port"),
+            TraceLoggingUInt64(elapsedMilliseconds, "elapsed milliseconds")
+        );
+
+        LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+            {
+                RETURN_IF_FAILED(writer.WriteCommandBye(
+                    MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled,
+                    internal::ResourceGetWString(IDS_ERROR_INVITATION_NOT_APPROVED).c_str()));
+
+                return S_OK;
+            }));
+
+        return S_OK;
+    }
+
     if (m_invitationAttempts >= MIDI_NETWORK_MAX_INVITATION_ATTEMPTS)
     {
         m_invitationPending = false;
@@ -1424,8 +1538,9 @@ MidiNetworkConnection::ServicePendingInvitation()
 
         LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
             {
-                // TODO: Move string to resources for localization
-                RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled, L"No reply to invitation."));
+                RETURN_IF_FAILED(writer.WriteCommandBye(
+                    MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled,
+                    internal::ResourceGetWString(IDS_ERROR_NO_REPLY_TO_INVITATION).c_str()));
 
                 return S_OK;
             }));
@@ -2338,6 +2453,8 @@ MidiNetworkConnection::SendInvitation()
 
     m_invitationPending = true;
     m_invitationAttempts = 1;
+    m_invitationReplyPendingReceived = false;
+    m_invitationReplyPendingTimestamp = 0;
 
     RETURN_IF_FAILED(SendInvitationCommand());
 
@@ -2711,6 +2828,9 @@ MidiNetworkConnection::Shutdown()
         // TransportState cleanup, so it has to be safe to repeat.
         return S_OK;
     }
+
+    // release a user-initiated disconnect which is mid-retry
+    m_byeReplyEvent.SetEvent();
 
     // don't process any more MIDI UMP messages
     auto callback = DetachCallback();

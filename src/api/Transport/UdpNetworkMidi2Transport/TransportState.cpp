@@ -91,6 +91,14 @@ TransportState::ShutdownHostsClientsAndConnections()
     {
         if (connection != nullptr)
         {
+            LOG_IF_FAILED(connection->SendShutdownBye());
+        }
+    }
+
+    for (auto const& connection : connections)
+    {
+        if (connection != nullptr)
+        {
             LOG_IF_FAILED(connection->Shutdown());
         }
     }
@@ -110,6 +118,32 @@ TransportState::Shutdown()
     m_configurationManager.reset();
 
     return S_OK;
+}
+
+
+std::wstring
+TransportState::GetEffectiveProductInstanceId()
+{
+    if (!TransportSettings.ProductInstanceId.empty())
+    {
+        return TransportSettings.ProductInstanceId;
+    }
+
+    // reserve() does not change size(), so the name has to be sized before it is written into
+    // and resized to the returned length afterward. Otherwise every read of it sees an empty
+    // string and the generated identity degrades to "-midisrv".
+    DWORD nameLength = MAX_COMPUTERNAME_LENGTH + 1;
+    std::wstring machineName;
+    machineName.resize(nameLength);
+
+    if (GetComputerName(machineName.data(), &nameLength))
+    {
+        machineName.resize(nameLength);
+
+        return internal::ToLowerTrimmedWStringCopy(machineName) + L"-midisrv";
+    }
+
+    return L"windows-midisrv";
 }
 
 

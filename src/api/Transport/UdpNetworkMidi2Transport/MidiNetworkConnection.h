@@ -59,6 +59,16 @@ public:
 
     HRESULT Shutdown();
 
+    // Phase one of teardown. Fire-and-forget, idempotent, and safe to call on every connection
+    // before shutting any of them down, so no remote waits behind another's teardown.
+    // Shutdown() calls this itself if it has not already run.
+    HRESULT SendShutdownBye();
+
+    // Spec 6.16 "should": repeat the Bye until a Bye Reply arrives or we run out of attempts.
+    // Only for a disconnect the user asked for. Shutdown paths must not block, so they use the
+    // fire-and-forget Bye inside Shutdown() instead. Returns S_FALSE if no reply arrived.
+    HRESULT SendUserTerminatedByeAndAwaitReply();
+
     // The caller has already consumed the UDP header and the first command header word, so that
     // it can decide whether this remote is allowed a connection at all before one is created.
     HRESULT ProcessIncomingMessage(
@@ -177,13 +187,13 @@ private:
     HRESULT ResetSequenceNumbers();
 
     std::atomic<bool> m_shuttingDown{ false };
+    std::atomic<bool> m_shutdownByeSent{ false };
 
     wil::critical_section m_latencyLock;
     uint64_t m_latencyTotalTicks{ 0 };
     uint32_t m_latencyCountEntries{ 0 };
     std::atomic<uint64_t> m_totalNetworkPacketsReceived{ 0 };
 
-    HRESULT SendShutdownBye();
     HRESULT EndActiveSession(_In_ bool respondWithByeReply);
 
     HRESULT RequestMissingPackets();
@@ -196,6 +206,12 @@ private:
     // message parsing.
     std::atomic<bool> m_invitationPending{ false };
     std::atomic<uint16_t> m_invitationAttempts{ 0 };
+
+    // Set once the host answers with Invitation Reply: Pending. Re-inviting after that would
+    // be pestering a host which has already told us it is waiting on a person.
+    std::atomic<bool> m_invitationReplyPendingReceived{ false };
+    std::atomic<uint64_t> m_invitationReplyPendingTimestamp{ 0 };
+
     HRESULT SendInvitationCommand();
     HRESULT ServicePendingInvitation();
 
@@ -422,6 +438,10 @@ private:
 
     //const uint16_t m_maxMillisecondsWithoutResponseBeforeDisconnect{ 15000 };       // Milliseconds of silence (no pings or any other message) before disconnect
     wil::slim_event_manual_reset m_connectionTimeoutEvent;
+
+    // Only waited on by SendUserTerminatedByeAndAwaitReply. Also set by Shutdown so a disconnect
+    // in progress gives up immediately rather than holding the shutdown for its full retries.
+    wil::slim_event_manual_reset m_byeReplyEvent;
     std::atomic<uint64_t> m_lastIncomingValidUdpPacketTimestamp{ 0 };
 
     HRESULT SignalHealthyConnectionAndUpdateArrivalTimestamp();

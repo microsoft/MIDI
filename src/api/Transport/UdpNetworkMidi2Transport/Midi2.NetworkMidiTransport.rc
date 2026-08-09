@@ -125,6 +125,13 @@ BEGIN
     IDS_ERROR_MAX_HOST_CONNECTIONS_OUT_OF_RANGE     "Maximum host connections is out of range."
     IDS_ERROR_INVALID_NETWORK_PROTOCOL              "Invalid network protocol specified. Only 'udp' is supported."
     IDS_ERROR_MISSING_MATCH_ENTRY                   "Missing match entry."
+    IDS_ERROR_NO_REPLY_TO_INVITATION                "No reply to invitation."
+    IDS_ERROR_INVITATION_NOT_APPROVED               "Invitation was not approved in time."
+    IDS_ERROR_INVITATION_PENDING_TIMEOUT_OUT_OF_RANGE "Invitation pending timeout is out of range."
+    IDS_ERROR_DIRECT_CONNECTION_SCAN_INTERVAL_OUT_OF_RANGE "Direct connection scan interval is out of range."
+
+    IDS_MESSAGE_CONNECTION_ENDED                    "Windows MIDI Services ended this connection."
+    IDS_MESSAGE_USER_DISCONNECTED                   "Disconnected by the user."
 END
 
 IDR_MIDI2NETWORKMIDITRANSPORT REGISTRY "Midi2.NetworkMidiTransport.rgs"

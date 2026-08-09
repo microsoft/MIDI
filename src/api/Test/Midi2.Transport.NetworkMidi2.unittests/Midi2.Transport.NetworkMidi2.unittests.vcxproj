@@ -99,7 +99,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Transport\UdpNetworkMidi2Transport;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Transport\UdpNetworkMidi2Transport;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,7 +118,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Transport\UdpNetworkMidi2Transport;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Transport\UdpNetworkMidi2Transport;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -139,7 +139,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Transport\UdpNetworkMidi2Transport;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Transport\UdpNetworkMidi2Transport;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -158,7 +158,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Transport\UdpNetworkMidi2Transport;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Transport\UdpNetworkMidi2Transport;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -172,26 +172,32 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="NetworkMidiClientTests.h" />
     <ClInclude Include="NetworkMidiErrorTests.h" />
     <ClInclude Include="NetworkMidiMalformedTests.h" />
     <ClInclude Include="NetworkMidiSessionTests.h" />
     <ClInclude Include="NetworkMidiTestClient.h" />
     <ClInclude Include="NetworkMidiTestContext.h" />
+    <ClInclude Include="NetworkMidiTestFakeHost.h" />
     <ClInclude Include="NetworkMidiTestHostLocator.h" />
     <ClInclude Include="NetworkMidiTestProtocol.h" />
+    <ClInclude Include="NetworkMidiTestServiceConfig.h" />
     <ClInclude Include="NetworkMidiTestMdns.h" />
     <ClInclude Include="SequenceNumberTests.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="NetworkMidiClientTests.cpp" />
     <ClCompile Include="NetworkMidiErrorTests.cpp" />
     <ClCompile Include="NetworkMidiMalformedTests.cpp" />
     <ClCompile Include="NetworkMidiSessionTests.cpp" />
     <ClCompile Include="NetworkMidiTestClient.cpp" />
     <ClCompile Include="NetworkMidiTestContext.cpp" />
+    <ClCompile Include="NetworkMidiTestFakeHost.cpp" />
     <ClCompile Include="NetworkMidiTestHostLocator.cpp" />
     <ClCompile Include="NetworkMidiTestProtocol.cpp" />
+    <ClCompile Include="NetworkMidiTestServiceConfig.cpp" />
     <ClCompile Include="NetworkMidiTestMdns.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

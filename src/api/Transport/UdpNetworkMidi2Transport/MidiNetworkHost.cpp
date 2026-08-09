@@ -361,12 +361,16 @@ MidiNetworkHost::Stop()
         m_advertiser.reset();
     }
 
-    // disconnect clients and send goodbye messages
-    // TODO: send "bye" to all sessions, and then unbind the socket
-    // but we need to restrict to this host, not every host/client
-    // so we need to keep a reference / id for this host in with each
-    // connection
-    for (auto& connection: TransportState::Current().GetAllNetworkConnectionsForHost(m_hostDefinition.EntryIdentifier))
+    // Two phases. Every remote is told first, because a Bye held up behind another connection's
+    // endpoint teardown is a Bye the remote may never see before its own timeout.
+    auto connections = TransportState::Current().GetAllNetworkConnectionsForHost(m_hostDefinition.EntryIdentifier);
+
+    for (auto& connection : connections)
+    {
+        LOG_IF_FAILED(connection->SendShutdownBye());
+    }
+
+    for (auto& connection : connections)
     {
         LOG_IF_FAILED(connection->Shutdown());
     }

@@ -18,7 +18,27 @@ MidiNetworkDataWriter::Send()
 
     try
     {
-        m_dataWriter.StoreAsync().get();
+        auto storeOperation = m_dataWriter.StoreAsync();
+
+        if (storeOperation.wait_for(std::chrono::milliseconds(MIDI_NETWORK_SEND_TIMEOUT_MILLISECONDS)) ==
+            winrt::Windows::Foundation::AsyncStatus::Started)
+        {
+            storeOperation.Cancel();
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Timed out storing datagram to the output stream. Abandoning it.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            // deliberately no GetResults() here: the operation was cancelled, not completed
+            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_TIMEOUT));
+        }
+
+        storeOperation.GetResults();
     }
     catch (...)
     {

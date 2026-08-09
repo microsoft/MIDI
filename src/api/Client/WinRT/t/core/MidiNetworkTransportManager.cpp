@@ -13,10 +13,21 @@
 #include "..\..\api\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
 #include "MidiNetworkAdvertisedHost.h"
+
 #include "MidiNetworkHostCreationConfig.h"
-#include "MidiNetworkHostRemovalConfig.h"
+#include "MidiNetworkHostCreationResult.h"
+
 #include "MidiNetworkHostUpdateResult.h"
+
+#include "MidiNetworkHostRemovalConfig.h"
 #include "MidiNetworkHostRemovalResult.h"
+
+#include "MidiNetworkClientConnectConfig.h"
+#include "MidiNetworkClientConnectResult.h"
+#include "MidiNetworkClientDisconnectConfig.h"
+#include "MidiNetworkClientDisconnectResult.h"
+
+#include "MidiReporting.h"
 
 #include "MidiServiceTransportPluginConfigManager.h"
 
@@ -26,11 +37,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     bool MidiNetworkTransportManager::IsTransportAvailable() noexcept
     {
-        auto transports = rept::MidiReporting::GetInstalledTransportPlugins();
+        auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
 
         for (auto const& transport: transports)
         {
-            if (transport.Id == TransportId())
+            if (transport.TransportId() == TransportId())
             {
                 return true;
             }
@@ -201,39 +212,35 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 auto responseJson = response.ResponseJson();
 
-                json::JsonObject responseObject;
-                if (json::JsonObject::TryParse(responseJson, responseObject))
+                if (responseJson.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HOSTS_ARRAY_KEY))
                 {
-                    if (responseObject.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HOSTS_ARRAY_KEY))
+                    auto hostsArray = responseJson.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HOSTS_ARRAY_KEY);
+
+                    for (auto const& entry : hostsArray)
                     {
-                        auto hostsArray = responseObject.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HOSTS_ARRAY_KEY);
+                        auto entryObject = entry.GetObject();
 
-                        for (auto const& entry : hostsArray)
+                        if (entryObject != nullptr)
                         {
-                            auto entryObject = entry.GetObject();
+                            network::MidiNetworkConfiguredHost host;
 
-                            if (entryObject != nullptr)
-                            {
-                                network::MidiNetworkConfiguredHost host;
+                            host.HostId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY, L"");
+                            host.IsEnabled = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_IS_ENABLED_KEY, false);
+                            host.HasStarted = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY, false);
+                            host.ActualAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY, L"");
+                            host.ActualPort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY, L"");
+                            host.UmpEndpointName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY, L"");
+                            host.ProductInstanceId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY, L"");
+                            host.CreateMidi1Ports = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY, false);
+                            host.ServiceInstanceName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY, L"");
 
-                                host.HostId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY, L"");
-                                host.IsEnabled = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_IS_ENABLED_KEY, false);
-                                host.HasStarted = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY, false);
-                                host.ActualAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY, L"");
-                                host.ActualPort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY, L"");
-                                host.UmpEndpointName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY, L"");
-                                host.ProductInstanceId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY, L"");
-                                host.CreateMidi1Ports = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY, false);
-                                host.ServiceInstanceName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY, L"");
-
-                                results.Append(host);
-                            }
+                            results.Append(host);
                         }
                     }
-                    else
-                    {
-                        // no response array
-                    }
+                }
+                else
+                {
+                    // no response array
                 }
             }
             else
@@ -290,55 +297,51 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 auto responseJson = response.ResponseJson();
 
-                json::JsonObject responseObject;
-                if (json::JsonObject::TryParse(responseJson, responseObject))
+                if (responseJson.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CLIENTS_ARRAY_KEY))
                 {
-                    if (responseObject.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CLIENTS_ARRAY_KEY))
+                    auto hostsArray = responseJson.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CLIENTS_ARRAY_KEY);
+
+                    for (auto const& entry : hostsArray)
                     {
-                        auto hostsArray = responseObject.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CLIENTS_ARRAY_KEY);
+                        auto entryObject = entry.GetObject();
 
-                        for (auto const& entry : hostsArray)
+                        if (entryObject != nullptr)
                         {
-                            auto entryObject = entry.GetObject();
+                            network::MidiNetworkConfiguredClient client;
 
-                            if (entryObject != nullptr)
-                            {
-                                network::MidiNetworkConfiguredClient client;
+                            client.Id = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY, L"");
+                            client.IsSessionActive = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY, false);
 
-                                client.Id = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY, L"");
-                                client.IsSessionActive = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY, false);
-
-                                client.ConnectedRemoteAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY, L"");
-                                client.ConnectedRemotePort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY, L"");
-                                client.ConnectedLocalAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_ADDRESS_KEY, L"");
-                                client.ConnectedLocalPort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_PORT_KEY, L"");
-                                client.EndpointDeviceId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_UMP_ENDPOINT_ID_KEY, L"");
+                            client.ConnectedRemoteAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY, L"");
+                            client.ConnectedRemotePort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY, L"");
+                            client.ConnectedLocalAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_ADDRESS_KEY, L"");
+                            client.ConnectedLocalPort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_PORT_KEY, L"");
+                            client.EndpointDeviceId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_UMP_ENDPOINT_ID_KEY, L"");
 
 
-                                client.CurrentLatencyTicks = static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_LATENCY_KEY, 0));
-                                client.RetransmitCount = static_cast<uint32_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY, 0));
-                                client.RetransmitRequestCount = static_cast<uint32_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY, 0));
+                            client.CurrentLatencyTicks = static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_LATENCY_KEY, 0));
+                            client.RetransmitCount = static_cast<uint32_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY, 0));
+                            client.RetransmitRequestCount = static_cast<uint32_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY, 0));
 
-                                client.TotalCountNetworkPacketsSent = static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_SENT_KEY, 0));
-                                client.TotalCountNetworkPacketsReceived = static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_RECEIVED_KEY, 0));
+                            client.TotalCountNetworkPacketsSent = static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_SENT_KEY, 0));
+                            client.TotalCountNetworkPacketsReceived = static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_RECEIVED_KEY, 0));
 
 
-                                //client.HasStarted = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY, false);
-                                //client.ActualAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY, L"");
-                                //client.ActualPort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY, L"");
-                                //client.UmpEndpointName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY, L"");
-                                //client.ProductInstanceId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY, L"");
-                                //client.CreateMidi1Ports = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY, false);
-                                //client.ServiceInstanceName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY, L"");
+                            //client.HasStarted = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY, false);
+                            //client.ActualAddress = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY, L"");
+                            //client.ActualPort = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY, L"");
+                            //client.UmpEndpointName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY, L"");
+                            //client.ProductInstanceId = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY, L"");
+                            //client.CreateMidi1Ports = entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY, false);
+                            //client.ServiceInstanceName = entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY, L"");
 
-                                results.Append(client);
-                            }
+                            results.Append(client);
                         }
                     }
-                    else
-                    {
-                        // no response array
-                    }
+                }
+                else
+                {
+                    // no response array
                 }
             }
             else
@@ -509,7 +512,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     _Use_decl_annotations_
     foundation::IAsyncOperation<network::MidiNetworkClientDisconnectResult>
     MidiNetworkTransportManager::DisconnectNetworkClientAsync(
-        network::MidiNetworkClientDisconnectConfig const& removalConfig) noexcept
+        network::MidiNetworkClientDisconnectConfig const& disconnectConfig) noexcept
     {
         auto result = winrt::make_self<MidiNetworkClientDisconnectResult>();
 
@@ -517,11 +520,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         {
             svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
             cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT);
-            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, removalConfig.Id());
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, disconnectConfig.Id());
 
             auto response = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
 
-            if (response.Status == svc::MidiServiceConfigResponseStatus::Success)
+            if (response.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
                 result->InternalSetSuccess();
             }

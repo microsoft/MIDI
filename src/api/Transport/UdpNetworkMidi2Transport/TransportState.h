@@ -12,10 +12,15 @@
 struct MidiTransportSettings
 {
     uint32_t OutboundPingInterval{ MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT };
+    uint32_t InvitationPendingTimeout{ MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT };
     uint16_t MaxHostConnections{ MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT };
     uint16_t RetransmitBufferMaxCommandPacketCount{ MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT };
     uint8_t ForwardErrorCorrectionMaxCommandPacketCount{ MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT };
     uint32_t DirectConnectionScanInterval{ MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT };
+
+    // Machine-wide identity shared by every host and by this PC's client identity. Empty means
+    // the configuration did not supply one, so the machine-derived default is used instead.
+    std::wstring ProductInstanceId{ };
 };
 
 
@@ -39,6 +44,10 @@ public:
     TransportState& operator=(_In_ const TransportState&) = delete;
 
     MidiTransportSettings TransportSettings{ };
+
+    // The configured machine-wide product instance id, or a machine-derived one if the
+    // configuration did not supply it. Never empty.
+    std::wstring GetEffectiveProductInstanceId();
 
 
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> GetEndpointManager();

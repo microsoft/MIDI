@@ -9,6 +9,9 @@
 #pragma once
 #include "Transports.Network.MidiNetworkTransportManager.g.h"
 
+#include "..\..\..\..\Transport\UdpNetworkMidi2Transport\net2udp_transport_defs.h"
+
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkTransportManager

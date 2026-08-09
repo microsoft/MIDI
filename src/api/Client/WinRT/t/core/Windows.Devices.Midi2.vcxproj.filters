@@ -387,80 +387,80 @@
     <Midl Include="MidiSystemExclusiveSendProgress.idl">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </Midl>
-    <Midl Include="MidiNetworkAdvertisedHost.idl">
-      <Filter>SDK\Transports\Network</Filter>
-    </Midl>
-    <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl">
-      <Filter>SDK\Transports\Network</Filter>
-    </Midl>
-    <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl">
-      <Filter>SDK\Transports\Network</Filter>
-    </Midl>
-    <Midl Include="MidiNetworkAdvertisedHostUpdatedEventArgs.idl">
-      <Filter>SDK\Transports\Network</Filter>
-    </Midl>
-    <Midl Include="MidiNetworkAdvertisedHostWatcher.idl">
-      <Filter>SDK\Transports\Network</Filter>
-    </Midl>
     <Midl Include="MidiNetworkAuthenticationTypeEnum.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Shared</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientConnectConfig.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientConnectResult.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientConnectResultErrorCodeEnum.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientDisconnectConfig.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientDisconnectResult.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientDisconnectResultErrorCodeEnum.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientMatchCriteria.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkConfiguredClient.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkConfiguredHost.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostCreationConfig.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostCreationResult.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostCreationResultErrorCodeEnum.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostRemovalConfig.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostRemovalResult.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostRemovalResultErrorCodeEnum.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostUpdateResult.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostUpdateResultErrorCodeEnum.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkTransportManager.idl">
-      <Filter>SDK\Transports\Network</Filter>
+      <Filter>SDK\Transports\Network\Shared</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHost.idl">
+      <Filter>SDK\Transports\Network\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl">
+      <Filter>SDK\Transports\Network\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl">
+      <Filter>SDK\Transports\Network\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostUpdatedEventArgs.idl">
+      <Filter>SDK\Transports\Network\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostWatcher.idl">
+      <Filter>SDK\Transports\Network\Watcher</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -531,6 +531,18 @@
     </Filter>
     <Filter Include="SDK\Transports\Network">
       <UniqueIdentifier>{80d8fe1a-9b35-4010-8499-114cd6e4c1ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Network\Host">
+      <UniqueIdentifier>{def2aab6-6a9b-4273-a7bc-b39697901c33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Network\Client">
+      <UniqueIdentifier>{283511ef-61e4-4247-9b66-44f367ee89e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Network\Shared">
+      <UniqueIdentifier>{99d3198f-a483-4458-aed9-2c6cf881efb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Network\Watcher">
+      <UniqueIdentifier>{dcb148ef-e48f-4b38-b946-4fd4c4faf594}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

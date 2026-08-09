@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 
+// TODO: Change to runtimeclass
 
 namespace Windows.Devices.Midi2.Transports.Network
 {

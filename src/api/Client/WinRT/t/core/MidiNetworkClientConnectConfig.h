@@ -18,7 +18,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         MidiNetworkClientConnectConfig() = default;
 
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
-        json::JsonObject GetConfigJson() const noexcept;
+        json::JsonObject ConfigJson() const noexcept;
 
         winrt::hstring Comment() const noexcept { return m_comment; }
         void Comment(_In_ winrt::hstring const& value) { m_comment = value; }

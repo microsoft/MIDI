@@ -487,7 +487,8 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
 
     if (clientDefinition->LocalProductInstanceId.empty())
     {
-        clientDefinition->LocalProductInstanceId = L"unspecified-" + root;
+        // shared with the hosts, so a remote sees one identity for this PC in either role
+        clientDefinition->LocalProductInstanceId = TransportState::Current().GetEffectiveProductInstanceId();
     }
 
     if (clientDefinition->LocalEndpointName.empty())

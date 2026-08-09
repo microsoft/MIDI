@@ -54,6 +54,10 @@ public:
 
     HRESULT Shutdown();
 
+    // Says goodbye properly first, per spec 6.16, then shuts down. Only for a disconnect the
+    // user asked for; every other path uses Shutdown() directly so nothing blocks.
+    HRESULT DisconnectByUser();
+
     MidiNetworkClientDefinition GetDefinition() { return m_clientDefinition; }
 
     winrt::hstring RemoteAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().RemoteAddress().DisplayName() : L""; }

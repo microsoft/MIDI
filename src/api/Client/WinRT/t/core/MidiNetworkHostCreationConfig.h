@@ -9,6 +9,8 @@
 #pragma once
 #include "Transports.Network.MidiNetworkHostCreationConfig.g.h"
 
+#include "..\..\..\..\Transport\UdpNetworkMidi2Transport\net2udp_transport_defs.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkHostCreationConfig : MidiNetworkHostCreationConfigT<MidiNetworkHostCreationConfig>
@@ -16,7 +18,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         MidiNetworkHostCreationConfig() = default;
 
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
-        json::JsonObject  GetConfigJson() const noexcept;
+        json::JsonObject  ConfigJson() const noexcept;
 
         winrt::hstring Id() const noexcept { return m_id; }
         void Id(_In_ winrt::hstring const& value) { m_id = value; }

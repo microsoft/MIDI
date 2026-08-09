@@ -13,8 +13,11 @@
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     
-    json::JsonObject MidiNetworkHostRemovalConfig::GetConfigJson() const noexcept
+    json::JsonObject MidiNetworkHostRemovalConfig::ConfigJson() const noexcept
     {
+        // TODO: Implement this
+
+
         return nullptr;
     }
 }

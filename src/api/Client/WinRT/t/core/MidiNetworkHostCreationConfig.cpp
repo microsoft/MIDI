@@ -17,7 +17,7 @@
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
 
-    json::JsonObject MidiNetworkHostCreationConfig::GetConfigJson() const noexcept
+    json::JsonObject MidiNetworkHostCreationConfig::ConfigJson() const noexcept
     {
         json::JsonObject hostObject{};
 

@@ -20,6 +20,7 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY                       L"maxForwardErrorCorrectionCommandPackets"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY                L"maxRetransmitBufferCommandPackets"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY                L"outboundPingInterval"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_INVITATION_PENDING_TIMEOUT_KEY           L"invitationPendingTimeout"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_HOST_CONNECTIONS_KEY                  L"maxHostConnections"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_DIRECT_CONNECTION_SCAN_INTERVAL_KEY       L"directConnectionScanInterval"
 
@@ -57,6 +58,10 @@
 
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY              L"productInstanceId"
+
+// same key name, but in the transportSettings section. Machine-wide identity used by every
+// host and by this PC's client identity when they do not specify their own.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_MACHINE_PRODUCT_INSTANCE_ID_KEY           MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY
 
 
 

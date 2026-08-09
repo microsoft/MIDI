@@ -9,7 +9,7 @@
 #pragma once
 #include "Transports.Network.MidiNetworkHostCreationResult.g.h"
 
-namespace winrt::Windows::Devices::Midi2::Endpoints::Transports::implementation
+namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkHostCreationResult : MidiNetworkHostCreationResultT<MidiNetworkHostCreationResult>
     {

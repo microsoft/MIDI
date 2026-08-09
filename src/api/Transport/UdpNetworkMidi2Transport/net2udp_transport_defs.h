@@ -12,6 +12,7 @@
 // The full Id comes back from the swdevicecreate callback
 
 #define TRANSPORT_LAYER_GUID __uuidof(Midi2NetworkMidiTransport);
+#define MIDI_NETWORK_TRANSPORT_ID                                       L"{c95dcd1f-cde3-4c2d-913c-528cb8a4cbe6}" // for the client API which doesn't know about the internal types here
 
 #define TRANSPORT_MANUFACTURER                                          L"Microsoft"
 #define TRANSPORT_CODE                                                  L"NET2UDP"
@@ -25,13 +26,12 @@
 // follows it is what actually provides uniqueness.
 #define MIDI_NETWORK_ENDPOINT_INSTANCE_ID_NAME_MAX_CHARS                24
 
-// TODO: Names should be moved to .rc for localization
 
-#define TRANSPORT_HOST_PARENT_NAME_PREFIX                               L"MIDI 2.0 Network Local Host: "
+#define TRANSPORT_HOST_PARENT_NAME_PREFIX                               L"MIDI 2.0 Network Local Host: "    // TODO: Names should be moved to .rc for localization
 #define TRANSPORT_HOST_PARENT_ID_PREFIX                                 L"MIDIU_NET2UDP_HOST_"
 
 #define TRANSPORT_CLIENT_PARENT_ID                                      L"MIDIU_NET2UDP_TRANSPORT"
-#define TRANSPORT_CLIENT_PARENT_DEVICE_NAME                             L"MIDI 2.0 Network Remote Hosts"
+#define TRANSPORT_CLIENT_PARENT_DEVICE_NAME                             L"MIDI 2.0 Network Remote Hosts"    // TODO: Names should be moved to .rc for localization
 
 #define ULTIMATE_PARENT_ROOT                                            L"HTREE\\ROOT\\0"
 #define TRANSPORT_ENUMERATOR                                            L"MIDISRV"
@@ -69,6 +69,26 @@
 // Retries are driven by the connection watchdog tick, so this is that many ticks.
 #define MIDI_NETWORK_MAX_INVITATION_ATTEMPTS                            5
 
+// Spec 6.8: Invitation Reply: Pending means the host received the invitation but needs time,
+// typically because a person has to approve it on the device. Once we have that reply we stop
+// re-inviting and simply wait, so this timeout is scaled to a human walking over to a device
+// and clicking accept, not to network round trips.
+#define MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT                 120000
+#define MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_UPPER_BOUND             600000
+#define MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_LOWER_BOUND             1000
+
+// Spec 6.16: "The Bye Command should be sent repeatedly until a Bye Reply Command is received,
+// or until a timeout occurs." Only the user-initiated disconnect path does this. Shutdown paths
+// send once and move on, because waiting there runs against the service stop timeout and, with
+// many sessions, would multiply.
+#define MIDI_NETWORK_BYE_MAX_ATTEMPTS                                   3
+#define MIDI_NETWORK_BYE_REPLY_TIMEOUT_MILLISECONDS                     500
+
+// Storing a datagram to a socket output stream normally completes immediately. This bound only
+// exists so that a stack or remote which never completes the store cannot hold the writer lock,
+// and with it a session teardown, forever.
+#define MIDI_NETWORK_SEND_TIMEOUT_MILLISECONDS                          2000
+
 #define MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT                           2
 #define MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND                       10
 #define MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND                       0
@@ -82,6 +102,8 @@
 #define MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND                 250
 
 #define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT            20000       // how frequently we try to open a remote IP and port
+#define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_UPPER_BOUND        300000
+#define MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_LOWER_BOUND        250
 
 // Connecting to a remote host resolves a name and can stall with no timeout of its own. Client
 // startup runs on the shared background worker, so one unreachable host would otherwise hold up

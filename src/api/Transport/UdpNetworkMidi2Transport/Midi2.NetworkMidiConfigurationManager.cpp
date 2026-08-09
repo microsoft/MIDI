@@ -313,7 +313,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandDisconnectClient(
 
     if (client != nullptr)
     {
-        LOG_IF_FAILED(client->Shutdown());
+        LOG_IF_FAILED(client->DisconnectByUser());
     }
 
     TransportState::Current().RemoveClient(configEntryId);
@@ -641,8 +641,11 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
 //    {
 //        "maxForwardErrorCorrectionCommandPackets": 2,
 //        "maxRetransmitBufferCommandPackets": 50,
-//        "outboundPingInterval": 2000.
-//        "directConnectionScanInterval": 20000
+//        "outboundPingInterval": 2000,
+//        "directConnectionScanInterval": 20000,
+//        "maxHostConnections": 64,
+//        "invitationPendingTimeout": 120000,
+//        "productInstanceId": "optional machine-wide identity, shared by hosts and clients"
 //    },
 //    "create":
 //    {
@@ -782,11 +785,15 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         uint32_t retransmitBuffer{};
         uint32_t outboundPingInterval{};
         uint32_t maxHostConnections{};
+        uint32_t invitationPendingTimeout{};
+        uint32_t directConnectionScanInterval{};
 
         fecPackets = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY, MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT));
         retransmitBuffer = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT));
         outboundPingInterval = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT));
         maxHostConnections = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_HOST_CONNECTIONS_KEY, MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT));
+        invitationPendingTimeout = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_INVITATION_PENDING_TIMEOUT_KEY, MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT));
+        directConnectionScanInterval = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_DIRECT_CONNECTION_SCAN_INTERVAL_KEY, MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT));
 
         // Validate the above values. Out-of-range values are reported rather than quietly
         // clamped, so a user who mistypes a setting finds out instead of wondering why it had
@@ -808,6 +815,14 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         {
             settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_MAX_HOST_CONNECTIONS_OUT_OF_RANGE);
         }
+        else if (invitationPendingTimeout < MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_LOWER_BOUND || invitationPendingTimeout > MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_UPPER_BOUND)
+        {
+            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_INVITATION_PENDING_TIMEOUT_OUT_OF_RANGE);
+        }
+        else if (directConnectionScanInterval < MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_LOWER_BOUND || directConnectionScanInterval > MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_UPPER_BOUND)
+        {
+            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_DIRECT_CONNECTION_SCAN_INTERVAL_OUT_OF_RANGE);
+        }
 
         if (!settingsErrorMessage.empty())
         {
@@ -821,7 +836,9 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 TraceLoggingWideString(settingsErrorMessage.c_str(), "error"),
                 TraceLoggingUInt32(fecPackets, "fec packets"),
                 TraceLoggingUInt32(retransmitBuffer, "retransmit buffer"),
-                TraceLoggingUInt32(outboundPingInterval, "ping interval")
+                TraceLoggingUInt32(outboundPingInterval, "ping interval"),
+                TraceLoggingUInt32(maxHostConnections, "max host connections"),
+                TraceLoggingUInt32(invitationPendingTimeout, "invitation pending timeout")
             );
 
             internal::SetConfigurationResponseObjectFail(responseObject, settingsErrorMessage);
@@ -834,6 +851,12 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount = static_cast<uint16_t>(retransmitBuffer);
         TransportState::Current().TransportSettings.OutboundPingInterval = static_cast<uint32_t>(outboundPingInterval);
         TransportState::Current().TransportSettings.MaxHostConnections = static_cast<uint16_t>(maxHostConnections);
+        TransportState::Current().TransportSettings.InvitationPendingTimeout = invitationPendingTimeout;
+        TransportState::Current().TransportSettings.DirectConnectionScanInterval = directConnectionScanInterval;
+
+        // Optional. Left empty here means TransportState supplies the machine-derived default.
+        TransportState::Current().TransportSettings.ProductInstanceId = internal::TrimmedWStringCopy(
+            std::wstring{ transportSettingsSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_MACHINE_PRODUCT_INSTANCE_ID_KEY, L"") });
     }
 
     // "create" entries
@@ -899,6 +922,11 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 definition->UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
                 definition->ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
+
+                if (definition->ProductInstanceId.empty())
+                {
+                    definition->ProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
+                }
 
                 definition->Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
 
@@ -1078,7 +1106,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     // TODO: we may want to provide the local product instance id as a system-wide setting. Same with name
                     if (localProductInstanceId.empty())
                     {
-                        localProductInstanceId = L"8675309-OU812";
+                        localProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
                     }
 
                     definition->LocalEndpointName = localEndpointName;
