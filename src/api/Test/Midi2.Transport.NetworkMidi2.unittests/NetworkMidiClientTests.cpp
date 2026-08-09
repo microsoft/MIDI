@@ -28,6 +28,10 @@ namespace NetworkMidiTest
         // the watchdog tick, so five attempts is roughly ten seconds.
         constexpr size_t MaxInvitationAttempts{ 5 };
 
+        // Matches MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT. Restated rather than
+        // included, so the tests do not depend on the transport's private headers.
+        constexpr uint32_t DefaultDirectConnectionScanInterval{ 20000 };
+
         bool g_serviceAvailable{ false };
 
 
@@ -97,12 +101,13 @@ namespace NetworkMidiTest
         };
 
 
-        // Skips rather than fails when there is no service to talk to.
+        // Not a skip. If the service is unreachable nothing was verified, and a run of skips
+        // reads as green, which is how a broken environment stays invisible.
         bool RequireService()
         {
             if (!g_serviceAvailable)
             {
-                Log::Result(TestResults::Skipped, L"Windows MIDI Service is not reachable, or the network transport is not enabled.");
+                Log::Error(L"Windows MIDI Service is not reachable, or the network transport is not enabled.");
                 return false;
             }
 
@@ -117,6 +122,8 @@ namespace NetworkMidiTest
             {
                 return false;
             }
+
+            auto started = std::chrono::steady_clock::now();
 
             auto invitation = client.Host().WaitForCommand(CommandCode::Invitation, InvitationTimeout);
 
@@ -135,6 +142,13 @@ namespace NetworkMidiTest
                 Log::Error(L"The service never sent UMP Data, so the session did not establish.");
                 return false;
             }
+
+            // The endpoint creator both tears down connections and starts new ones, so this is
+            // where an unrelated endpoint deletion shows up. Reported, never fatal.
+            WarnIfSlowerThan(
+                L"Client session establishment",
+                std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - started),
+                std::chrono::milliseconds(8000));
 
             return true;
         }
@@ -157,7 +171,8 @@ namespace NetworkMidiTest
 
         if (!g_serviceAvailable)
         {
-            Log::Warning(L"The Windows MIDI Service could not be reached. Client tests will skip.");
+            // Reported per test as a failure. Warning here so the cause appears once, up front.
+            Log::Warning(L"The Windows MIDI Service could not be reached. Every client test will fail.");
             return true;
         }
 
@@ -179,7 +194,7 @@ namespace NetworkMidiTest
     {
         if (g_serviceAvailable)
         {
-            SetDirectConnectionScanInterval(MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT);
+            SetDirectConnectionScanInterval(DefaultDirectConnectionScanInterval);
         }
 
         return true;
@@ -727,8 +742,14 @@ namespace NetworkMidiTest
         ClientUnderTest client;
         VERIFY_IS_TRUE(EstablishClientSession(client));
 
-        // A second socket pretending to be the host, sending a Bye. If the client acted on it,
-        // an unrelated peer could tear down someone else's session.
+        auto clientPort = client.Host().RemotePort();
+        VERIFY_ARE_NOT_EQUAL(static_cast<uint16_t>(0), clientPort, L"The host should know the client's source port.");
+
+        Log::Comment(String().Format(L"Service is using source port %u for this session", clientPort));
+
+        // A third party sending a Bye straight to the service's session port. Its source port is
+        // not the host's, so the service must not act on it. If it did, anything on the machine
+        // could tear down someone else's session with one datagram.
         SOCKET impostor = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         VERIFY_ARE_NOT_EQUAL(INVALID_SOCKET, impostor);
 
@@ -736,12 +757,9 @@ namespace NetworkMidiTest
 
         sockaddr_in target{ };
         target.sin_family = AF_INET;
-        target.sin_port = htons(client.Host().Port());
+        target.sin_port = htons(clientPort);
         InetPtonW(AF_INET, L"127.0.0.1", &target.sin_addr);
 
-        // we do not know the client's port, so this is aimed at the fake host's port from a
-        // different source. The service should never see it, which is the point: the check is
-        // that the established session is undisturbed.
         PacketBuilder builder;
         builder.StartPacket().AddBye(ByeReason::UserTerminated, "impostor");
 
@@ -755,11 +773,12 @@ namespace NetworkMidiTest
 
         closesocket(impostor);
 
+        // the real host should see no Bye Reply, and the session should still work
         client.Host().ClearHistory();
         VERIFY_IS_TRUE(client.Host().SendPing(0x99AABBCC));
 
         auto packet = client.Host().WaitForCommand(CommandCode::PingReply, ShortTimeout);
 
-        VERIFY_IS_TRUE(packet.has_value(), L"The established session must be undisturbed.");
+        VERIFY_IS_TRUE(packet.has_value(), L"The established session must be undisturbed by a datagram from another peer.");
     }
 }

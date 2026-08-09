@@ -92,7 +92,9 @@ namespace NetworkMidiTest
 
         if (!m_available)
         {
-            Log::Result(TestResults::Skipped, L"No local Network MIDI 2.0 host is available to test against.");
+            // Not a skip. A missing host means nothing was verified, and a run of skips reads
+            // as green, which is how a broken environment stays invisible.
+            Log::Error(L"No local Network MIDI 2.0 host is available to test against.");
         }
 
         return m_available;
@@ -107,6 +109,27 @@ namespace NetworkMidiTest
     void LogNoPacket(std::wstring const& label)
     {
         Log::Comment(String().Format(L"%s <no packet received>", label.c_str()));
+    }
+
+
+    void WarnIfSlowerThan(
+        std::wstring const& label,
+        std::chrono::milliseconds const actual,
+        std::chrono::milliseconds const budget)
+    {
+        if (actual <= budget)
+        {
+            return;
+        }
+
+        // Deliberately not a failure. How quickly the service responds is a quality of service
+        // question, and machine load or an unrelated endpoint teardown can move it. Correctness
+        // is asserted separately.
+        Log::Warning(String().Format(
+            L"PERF: %s took %lldms, over the %lldms budget.",
+            label.c_str(),
+            static_cast<long long>(actual.count()),
+            static_cast<long long>(budget.count())));
     }
 
     void LogSpecRequirement(std::wstring const& requirement)
@@ -143,6 +166,8 @@ namespace NetworkMidiTest
             return false;
         }
 
+        auto started = std::chrono::steady_clock::now();
+
         auto reply = client.WaitForCommand(CommandCode::InvitationReplyAccepted, timeout);
 
         if (!reply.has_value())
@@ -151,6 +176,11 @@ namespace NetworkMidiTest
 
             return false;
         }
+
+        WarnIfSlowerThan(
+            L"Session establishment",
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - started),
+            std::chrono::milliseconds(5000));
 
         LogPacket(L"Session established. Reply:", reply.value());
 

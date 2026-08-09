@@ -15,8 +15,12 @@ using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 using namespace NetworkMidiTest;
 
-#define SKIP_IF_NO_HOST() \
+// A missing host is a connection failure, not a skip. EnsureHostAvailable logs the error.
+#define REQUIRE_HOST() \
     if (!ProtocolTestContext::Current().EnsureHostAvailable()) { return; }
+
+// historical name, still used by the tests below
+#define SKIP_IF_NO_HOST() REQUIRE_HOST()
 
 namespace
 {
@@ -32,24 +36,51 @@ namespace
         // Retry a couple of times: a single dropped datagram on a busy machine is not a crash.
         bool responded{ false };
 
+        auto started = std::chrono::steady_clock::now();
+
         for (int attempt = 0; attempt < 3 && !responded; attempt++)
         {
             UdpTestClient client;
             VERIFY_IS_TRUE(client.Open(context.Host()));
 
+            auto attemptStarted = std::chrono::steady_clock::now();
+
             // A distinct identity per attempt. Reusing one name means that once the first
             // attempt's endpoint is eventually created, every retry collides with it and is
             // refused, so the retries could never succeed.
+            //
+            // The timeout is long because these tests deliberately leave the service with a lot
+            // of endpoints to create and tear down, and that work is serialized. The question
+            // here is whether it recovers at all; how long it takes is reported separately.
             responded = EstablishSession(
                 client,
                 context.MakeUniqueEndpointName("Live" + std::to_string(attempt)),
-                context.MakeUniqueProductInstanceId("L" + std::to_string(attempt)));
+                context.MakeUniqueProductInstanceId("L" + std::to_string(attempt)),
+                std::chrono::milliseconds(45000));
+
+            auto attemptMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - attemptStarted).count();
+
+            // Which attempt succeeded matters more than the total. A first attempt that times
+            // out and a second that returns immediately says the host ignored the first
+            // invitation outright, which a single total would hide.
+            Log::Comment(String().Format(
+                L"Liveness attempt %d after %s: %s after %lldms",
+                attempt + 1,
+                afterWhat.c_str(),
+                responded ? L"accepted" : L"no reply",
+                static_cast<long long>(attemptMilliseconds)));
 
             if (responded)
             {
                 EndSession(client);
             }
         }
+
+        WarnIfSlowerThan(
+            L"Recovery after " + afterWhat,
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - started),
+            std::chrono::milliseconds(10000));
 
         if (!responded)
         {
@@ -394,7 +425,7 @@ void NetworkMidiMalformedTests::UmpMessageClaimsMoreWordsThanSent()
         context.MakeUniqueEndpointName("OverRead"),
         context.MakeUniqueProductInstanceId("OR")))
     {
-        Log::Result(TestResults::Skipped, L"Could not establish a session for the over-read test.");
+        Log::Error(L"Could not establish a session for the over-read test.");
 
         return;
     }
@@ -449,7 +480,7 @@ void NetworkMidiMalformedTests::UmpDataWithTruncatedFinalMessage()
         context.MakeUniqueEndpointName("Truncated"),
         context.MakeUniqueProductInstanceId("TR")))
     {
-        Log::Result(TestResults::Skipped, L"Could not establish a session for the truncated message test.");
+        Log::Error(L"Could not establish a session for the truncated message test.");
 
         return;
     }
@@ -541,7 +572,7 @@ void NetworkMidiMalformedTests::ByeFollowedByMoreCommandsDoesNotMisparse()
         context.MakeUniqueEndpointName("ByeCompound"),
         context.MakeUniqueProductInstanceId("BC")))
     {
-        Log::Result(TestResults::Skipped, L"Could not establish a session for the compound Bye test.");
+        Log::Error(L"Could not establish a session for the compound Bye test.");
 
         return;
     }

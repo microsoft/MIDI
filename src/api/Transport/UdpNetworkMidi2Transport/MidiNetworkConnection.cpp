@@ -808,8 +808,15 @@ MidiNetworkConnection::HandleIncomingBye()
     }
     else
     {
-        // not an active session. Nothing to clean up
-        // we ignore this (protocol says not to NAK)
+        // Spec 6.16: "Because the Bye Command might be repeated, the Bye Reply shall also be
+        // sent if there is no Pending or Established Session." Staying silent here leaves the
+        // sender repeating until its own timeout.
+        LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
+            {
+                RETURN_IF_FAILED(writer.WriteCommandByeReply());
+
+                return S_OK;
+            }));
     }
 
     TraceLoggingWrite(

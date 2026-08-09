@@ -121,6 +121,7 @@ namespace NetworkMidiTest
         }
 
         m_remoteKnown = false;
+        m_remotePort = 0;
         m_port = 0;
     }
 
@@ -160,11 +161,31 @@ namespace NetworkMidiTest
                 continue;
             }
 
-            // The client picks its own source port and may change it per session (spec 3.3), so
-            // the remote is whatever last spoke to us.
-            m_remoteAddress = from;
-            m_remoteAddressLength = fromLength;
-            m_remoteKnown = true;
+            // A Session is keyed on the remote address and port, so the first sender owns this
+            // host for the rest of the run. Without latching, anything else on the machine
+            // could redirect our replies just by sending us a datagram.
+            bool fromLatchedRemote{ true };
+
+            if (!m_remoteKnown)
+            {
+                m_remoteAddress = from;
+                m_remoteAddressLength = fromLength;
+                m_remoteKnown = true;
+
+                if (from.ss_family == AF_INET)
+                {
+                    m_remotePort = ntohs(reinterpret_cast<sockaddr_in const*>(&from)->sin_port);
+                }
+            }
+            else if (from.ss_family == AF_INET && m_remoteAddress.ss_family == AF_INET)
+            {
+                auto const* incoming = reinterpret_cast<sockaddr_in const*>(&from);
+                auto const* latched = reinterpret_cast<sockaddr_in const*>(&m_remoteAddress);
+
+                fromLatchedRemote =
+                    incoming->sin_port == latched->sin_port &&
+                    incoming->sin_addr.S_un.S_addr == latched->sin_addr.S_un.S_addr;
+            }
 
             auto packet = ParsePacket(buffer.data(), static_cast<size_t>(received));
 
@@ -174,6 +195,12 @@ namespace NetworkMidiTest
             }
 
             m_historySignal.notify_all();
+
+            if (!fromLatchedRemote)
+            {
+                m_ignoredFromOtherSource++;
+                continue;
+            }
 
             if (packet.SignatureValid)
             {

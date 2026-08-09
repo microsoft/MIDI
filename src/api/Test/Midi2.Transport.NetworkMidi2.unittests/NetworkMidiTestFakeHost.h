@@ -126,6 +126,13 @@ namespace NetworkMidiTest
         // True once a datagram has arrived, meaning the remote address is known and Send works.
         bool HasRemote() const { return m_remoteKnown; }
 
+        // The source port the service is using for this session. Zero until first contact.
+        uint16_t RemotePort() const { return m_remotePort; }
+
+        // Datagrams received from anything other than the latched remote. A real host keys a
+        // session on address and port, so these are counted and otherwise ignored.
+        size_t IgnoredFromOtherSourceCount() const { return m_ignoredFromOtherSource; }
+
         // Sending ----------------------------------------------------------------------
 
         bool Send(_In_ std::vector<uint8_t> const& bytes);
@@ -150,6 +157,8 @@ namespace NetworkMidiTest
         sockaddr_storage m_remoteAddress{ };
         int m_remoteAddressLength{ 0 };
         std::atomic<bool> m_remoteKnown{ false };
+        std::atomic<uint16_t> m_remotePort{ 0 };
+        std::atomic<size_t> m_ignoredFromOtherSource{ 0 };
 
         std::string m_endpointName{ };
         std::string m_productInstanceId{ };

@@ -66,6 +66,9 @@
     <ClCompile Include="MidiNetworkHost.cpp">
       <Filter>Source Files\Service</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkCredentials.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Midi2.NetworkMidiTransport.rgs">
@@ -132,6 +135,9 @@
     <ClInclude Include="network_json_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MidiNetworkCredentials.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.NetworkMidiTransport.rc">
@@ -142,5 +148,9 @@
     <Midl Include="Midi2NetworkMidiTransport.idl">
       <Filter>Source Files</Filter>
     </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

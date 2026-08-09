@@ -61,10 +61,14 @@ public:
 
     STDMETHOD(StartRemoteHostWatcher)();
     STDMETHOD(StartBackgroundEndpointCreator)();
+    STDMETHOD(StartBackgroundConnectionShutdown)();
+    STDMETHOD(StartBackgroundNegotiation)();
 
     bool IsInitialized() { return m_initialized; }
 
     STDMETHOD(WakeupBackgroundEndpointCreatorThread)();
+    STDMETHOD(WakeupBackgroundConnectionShutdownThread)();
+    STDMETHOD(WakeupBackgroundNegotiationThread)();
 
     HRESULT CreateParentDeviceForHost(
         _In_ winrt::hstring const& name,
@@ -126,11 +130,30 @@ private:
     wil::critical_section m_pendingNegotiationsLock;
     std::vector<std::wstring> m_pendingNegotiations;
 
+    // Negotiation calls into the service and can block there indefinitely, so it gets its own
+    // thread. On the endpoint creator thread a wedged negotiation stopped every configured
+    // client from connecting.
+    wil::slim_event_manual_reset m_backgroundNegotiationThreadWakeup;
+
+    // Set by the worker as it leaves. Shutdown waits on this rather than joining the thread,
+    // because a negotiation blocked in the service would otherwise hold up service stop.
+    wil::slim_event_manual_reset m_negotiationThreadExitedEvent;
+
+    HRESULT NegotiationWorker(_In_ std::stop_token stopToken);
+
+    // Teardown runs on its own thread. Deactivating an endpoint is slow, and it has no ordering
+    // relationship with starting a new connection, so sharing one worker meant a disconnecting
+    // device delayed an unrelated device connecting.
+    wil::slim_event_manual_reset m_backgroundConnectionShutdownThreadWakeup;
+    HRESULT ConnectionShutdownWorker(_In_ std::stop_token stopToken);
+
     wil::critical_section m_pendingConnectionShutdownsLock;
     std::vector<std::shared_ptr<MidiNetworkConnection>> m_pendingConnectionShutdowns;
 
-    // Must remain the last member. Members are destroyed in reverse declaration order, so this
-    // guarantees the worker is joined before the wakeup event it waits on is destroyed.
+    // Must remain the last members. Members are destroyed in reverse declaration order, so this
+    // guarantees the workers are joined before the wakeup events they wait on are destroyed.
     std::jthread m_backgroundEndpointCreatorThread;
+    std::jthread m_backgroundConnectionShutdownThread;
+    std::jthread m_backgroundNegotiationThread;
 
 };

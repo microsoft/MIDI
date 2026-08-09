@@ -854,6 +854,10 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         TransportState::Current().TransportSettings.InvitationPendingTimeout = invitationPendingTimeout;
         TransportState::Current().TransportSettings.DirectConnectionScanInterval = directConnectionScanInterval;
 
+        // A settings-only update has now done everything it was asked to do. Without this the
+        // response still says failure, because success is otherwise only set while creating.
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+
         // Optional. Left empty here means TransportState supplies the machine-derived default.
         TransportState::Current().TransportSettings.ProductInstanceId = internal::TrimmedWStringCopy(
             std::wstring{ transportSettingsSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_MACHINE_PRODUCT_INSTANCE_ID_KEY, L"") });

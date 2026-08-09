@@ -60,6 +60,13 @@ namespace NetworkMidiTest
     // log so a run doubles as a conformance report.
     void LogSpecRequirement(_In_ std::wstring const& requirement);
 
+    // Reports a missed timing budget as a warning. Timing is a quality of service concern, so
+    // it never fails a run on its own; protocol and connection problems do.
+    void WarnIfSlowerThan(
+        _In_ std::wstring const& label,
+        _In_ std::chrono::milliseconds const actual,
+        _In_ std::chrono::milliseconds const budget);
+
     // Opens a client socket and completes a session with the host. Returns false if the host
     // never accepted, having already logged the reason. The timeout is generous because the
     // host creates a MIDI endpoint device before it replies, which is not quick.

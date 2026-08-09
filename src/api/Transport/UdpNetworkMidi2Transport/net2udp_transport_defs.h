@@ -89,6 +89,11 @@
 // and with it a session teardown, forever.
 #define MIDI_NETWORK_SEND_TIMEOUT_MILLISECONDS                          2000
 
+// How long shutdown waits for the negotiation thread to leave before abandoning it. Negotiation
+// blocks inside the service and cannot be cancelled, so this only has to be long enough for a
+// thread that is not stuck.
+#define MIDI_NETWORK_NEGOTIATION_THREAD_EXIT_TIMEOUT_MILLISECONDS       2000
+
 #define MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT                           2
 #define MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND                       10
 #define MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND                       0

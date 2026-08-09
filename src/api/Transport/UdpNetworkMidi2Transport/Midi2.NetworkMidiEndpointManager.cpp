@@ -47,6 +47,8 @@ CMidi2NetworkMidiEndpointManager::Initialize(
 
     // start background thread that creates endpoints
     RETURN_IF_FAILED(StartBackgroundEndpointCreator());
+    RETURN_IF_FAILED(StartBackgroundConnectionShutdown());
+    RETURN_IF_FAILED(StartBackgroundNegotiation());
 
     // start the device watcher so we see new hosts come online
     RETURN_IF_FAILED(StartRemoteHostWatcher());
@@ -375,6 +377,158 @@ CMidi2NetworkMidiEndpointManager::WakeupBackgroundEndpointCreatorThread()
 }
 
 HRESULT
+CMidi2NetworkMidiEndpointManager::WakeupBackgroundConnectionShutdownThread()
+{
+    m_backgroundConnectionShutdownThreadWakeup.SetEvent();
+
+    return S_OK;
+}
+
+HRESULT
+CMidi2NetworkMidiEndpointManager::WakeupBackgroundNegotiationThread()
+{
+    m_backgroundNegotiationThreadWakeup.SetEvent();
+
+    return S_OK;
+}
+
+HRESULT
+CMidi2NetworkMidiEndpointManager::StartBackgroundNegotiation()
+{
+    m_backgroundNegotiationThread = std::jthread(std::bind_front(&CMidi2NetworkMidiEndpointManager::NegotiationWorker, this));
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::NegotiationWorker(std::stop_token stopToken)
+{
+    // DiscoverAndNegotiate is a COM call into the service
+    winrt::init_apartment();
+
+    while (!stopToken.stop_requested())
+    {
+        if (m_backgroundNegotiationThreadWakeup.is_signaled())
+        {
+            m_backgroundNegotiationThreadWakeup.ResetEvent();
+        }
+
+        std::vector<std::wstring> negotiations;
+
+        {
+            auto lock = m_pendingNegotiationsLock.lock();
+            negotiations.swap(m_pendingNegotiations);
+        }
+
+        for (auto const& endpointDeviceInterfaceId : negotiations)
+        {
+            if (stopToken.stop_requested())
+            {
+                break;
+            }
+
+            LOG_IF_FAILED(InitiateDiscoveryAndNegotiation(endpointDeviceInterfaceId));
+        }
+
+        if (!stopToken.stop_requested())
+        {
+            m_backgroundNegotiationThreadWakeup.wait();
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    m_negotiationThreadExitedEvent.SetEvent();
+
+    return S_OK;
+}
+
+HRESULT
+CMidi2NetworkMidiEndpointManager::StartBackgroundConnectionShutdown()
+{
+    m_backgroundConnectionShutdownThread = std::jthread(std::bind_front(&CMidi2NetworkMidiEndpointManager::ConnectionShutdownWorker, this));
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::ConnectionShutdownWorker(std::stop_token stopToken)
+{
+    // Shutdown writes a Bye through the WinRT socket and calls RemoveEndpoint on the service,
+    // both of which need an initialized apartment on this thread. Without it they fail with
+    // CO_E_NOTINITIALIZED and endpoints are never released.
+    winrt::init_apartment();
+
+    while (!stopToken.stop_requested())
+    {
+        if (m_backgroundConnectionShutdownThreadWakeup.is_signaled())
+        {
+            m_backgroundConnectionShutdownThreadWakeup.ResetEvent();
+        }
+
+        // Connections released by the receive path. Drained into a local copy so the lock is not
+        // held across Shutdown, which joins worker threads and calls into the service.
+        std::vector<std::shared_ptr<MidiNetworkConnection>> shutdowns;
+
+        {
+            auto lock = m_pendingConnectionShutdownsLock.lock();
+            shutdowns.swap(m_pendingConnectionShutdowns);
+        }
+
+        for (auto const& connection : shutdowns)
+        {
+            if (connection != nullptr)
+            {
+                LOG_IF_FAILED(connection->Shutdown());
+            }
+        }
+
+        if (!stopToken.stop_requested())
+        {
+            m_backgroundConnectionShutdownThreadWakeup.wait();
+        }
+    }
+
+    // anything queued as we were asked to stop still needs releasing
+    std::vector<std::shared_ptr<MidiNetworkConnection>> remaining;
+
+    {
+        auto lock = m_pendingConnectionShutdownsLock.lock();
+        remaining.swap(m_pendingConnectionShutdowns);
+    }
+
+    for (auto const& connection : remaining)
+    {
+        if (connection != nullptr)
+        {
+            LOG_IF_FAILED(connection->Shutdown());
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return S_OK;
+}
+
+HRESULT
 CMidi2NetworkMidiEndpointManager::StartBackgroundEndpointCreator()
 {
     TraceLoggingWrite(
@@ -565,33 +719,8 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
             m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
         }
 
-        // Negotiations queued from the socket receive callback. Drained into a local copy so
-        // the lock is not held across a call into the service.
-        std::vector<std::wstring> negotiations;
-
-        {
-            auto lock = m_pendingNegotiationsLock.lock();
-            negotiations.swap(m_pendingNegotiations);
-        }
-
-        for (auto const& endpointDeviceInterfaceId : negotiations)
-        {
-            LOG_IF_FAILED(InitiateDiscoveryAndNegotiation(endpointDeviceInterfaceId));
-        }
-
-        // Connections released by the receive path. Shutdown joins their worker threads, so it
-        // happens here rather than stalling the socket callback.
-        std::vector<std::shared_ptr<MidiNetworkConnection>> shutdowns;
-
-        {
-            auto lock = m_pendingConnectionShutdownsLock.lock();
-            shutdowns.swap(m_pendingConnectionShutdowns);
-        }
-
-        for (auto const& connection : shutdowns)
-        {
-            LOG_IF_FAILED(connection->Shutdown());
-        }
+        // Negotiation runs on its own thread. It calls into the service and can block there
+        // behind a PnP notification, which used to stop this loop creating any client at all.
 
         // run through host entries
 
@@ -992,7 +1121,7 @@ CMidi2NetworkMidiEndpointManager::QueueConnectionShutdown(
         m_pendingConnectionShutdowns.push_back(connection);
     }
 
-    LOG_IF_FAILED(WakeupBackgroundEndpointCreatorThread());
+    LOG_IF_FAILED(WakeupBackgroundConnectionShutdownThread());
 
     return S_OK;
 }
@@ -1017,7 +1146,7 @@ CMidi2NetworkMidiEndpointManager::QueueDiscoveryAndNegotiation(
         }
     }
 
-    LOG_IF_FAILED(WakeupBackgroundEndpointCreatorThread());
+    LOG_IF_FAILED(WakeupBackgroundNegotiationThread());
 
     return S_OK;
 }
@@ -1445,6 +1574,44 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
     if (m_backgroundEndpointCreatorThread.joinable() && m_backgroundEndpointCreatorThread.get_id() != std::this_thread::get_id())
     {
         m_backgroundEndpointCreatorThread.join();
+    }
+
+    // Joined after the creator, because a connection released during the creator's last pass is
+    // queued here and still has to be shut down.
+    m_backgroundConnectionShutdownThread.request_stop();
+    m_backgroundConnectionShutdownThreadWakeup.SetEvent();
+
+    if (m_backgroundConnectionShutdownThread.joinable() && m_backgroundConnectionShutdownThread.get_id() != std::this_thread::get_id())
+    {
+        m_backgroundConnectionShutdownThread.join();
+    }
+
+    // Deliberately not joined. A negotiation blocked inside the service cannot be cancelled from
+    // here, and waiting on it is what previously left the service unable to stop at all. Wait a
+    // short time for a clean exit, and abandon the thread if it is stuck.
+    m_backgroundNegotiationThread.request_stop();
+    m_backgroundNegotiationThreadWakeup.SetEvent();
+
+    if (m_backgroundNegotiationThread.joinable() && m_backgroundNegotiationThread.get_id() != std::this_thread::get_id())
+    {
+        if (m_negotiationThreadExitedEvent.wait(MIDI_NETWORK_NEGOTIATION_THREAD_EXIT_TIMEOUT_MILLISECONDS))
+        {
+            m_backgroundNegotiationThread.join();
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Negotiation thread is blocked in the service. Abandoning it so shutdown can continue.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            // the jthread destructor would join, which is exactly what must not happen here
+            m_backgroundNegotiationThread.detach();
+        }
     }
 
     m_initialized = false;
