@@ -202,6 +202,26 @@ namespace
     }
 
 
+    bool WaitForConnectionReleased(
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            if (!PollConnectionState(umpEndpointName, productInstanceId).Present)
+            {
+                return true;
+            }
+
+            std::this_thread::sleep_for(PendingPollInterval);
+        }
+
+        return false;
+    }
+
+
     // Sends one invitation and returns the first reply. Auto ping reply stays on so the host
     // does not reap the connection while a test is deciding.
     std::optional<ParsedPacket> Invite(
@@ -457,8 +477,18 @@ void NetworkMidiApprovalTests::ApproveAlwaysIsRememberedForTheNextConnection()
             WaitForCommand(client, CommandCode::InvitationReplyAccepted, PendingPollTimeout),
             L"Host accepted the invitation after the user approved it");
 
+        // The endpoint identity is a hash of product instance id and endpoint name, deliberately
+        // with no port in it, so the same device cannot hold two sessions at once. Closing the
+        // socket does not tell the host anything, so the session is ended properly and the
+        // endpoint waited out before the same identity comes back.
+        EndSession(client);
+
         client.Close();
     }
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionReleased(name, productInstanceId),
+        L"The first session was released before the client returns");
 
     // A new socket means a new source port, which is a different connection to the host. The
     // identity is what was remembered, so this one must not be held for a second decision.
@@ -468,12 +498,24 @@ void NetworkMidiApprovalTests::ApproveAlwaysIsRememberedForTheNextConnection()
     auto reply = Invite(returning, name, productInstanceId);
 
     VERIFY_IS_TRUE(reply.has_value(), L"Host replied to the returning client");
-    VERIFY_IS_TRUE(
-        reply->Contains(CommandCode::InvitationReplyAccepted),
-        L"A client on the allow list is accepted without waiting for approval again");
-    VERIFY_IS_FALSE(
-        reply->Contains(CommandCode::InvitationReplyPending),
-        L"A client on the allow list is never put back into the pending state");
+
+    // Reaching Accepted is itself the proof, and the only reliable one. InvitationReplyPending
+    // means two different things on the wire - awaiting a user, and awaiting endpoint creation -
+    // so its presence says nothing. What matters is that no approval command is issued anywhere
+    // in this block: a client still needing approval would sit pending until the timeout.
+    if (!reply->Contains(CommandCode::InvitationReplyAccepted))
+    {
+        Log::Comment(String().Format(
+            L"First reply to the returning client: %s", DescribePacket(reply.value()).c_str()));
+
+        VERIFY_IS_TRUE(
+            WaitForCommand(returning, CommandCode::InvitationReplyAccepted, PendingPollTimeout),
+            L"A client on the allow list is accepted without any further approval");
+    }
+
+    // The approval-specific state, which the feed reports separately from the wire command.
+    auto state = PollConnectionState(name, productInstanceId);
+    VERIFY_IS_FALSE(state.PendingApproval, L"A client on the allow list is never awaiting approval");
 
     returning.Close();
 }
