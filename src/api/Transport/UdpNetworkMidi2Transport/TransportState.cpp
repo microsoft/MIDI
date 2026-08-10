@@ -249,6 +249,65 @@ TransportState::GetHost(winrt::hstring hostEntryIdentifier)
 }
 
 _Use_decl_annotations_
+bool
+TransportState::IsHostServiceInstanceNameInUse(
+    std::wstring const& serviceInstanceName,
+    std::wstring const& excludingEntryIdentifier)
+{
+    if (serviceInstanceName.empty())
+    {
+        return false;
+    }
+
+    auto wanted = internal::ToLowerTrimmedWStringCopy(serviceInstanceName);
+    auto excluding = internal::ToLowerTrimmedWStringCopy(excludingEntryIdentifier);
+
+    // Snapshotted first: the accessors take the state lock, and comparing definitions calls into
+    // the hosts, which must never happen while that lock is held.
+    for (auto const& host : GetHosts())
+    {
+        if (host == nullptr)
+        {
+            continue;
+        }
+
+        auto definition = host->GetDefinition();
+
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition.EntryIdentifier }) == excluding)
+        {
+            continue;
+        }
+
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition.ServiceInstanceName }) == wanted)
+        {
+            return true;
+        }
+    }
+
+    // Definitions which have been accepted but not yet started count too, otherwise two entries
+    // in the same configuration update would both be admitted.
+    for (auto const& definition : GetPendingHostDefinitions())
+    {
+        if (definition == nullptr)
+        {
+            continue;
+        }
+
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition->EntryIdentifier }) == excluding)
+        {
+            continue;
+        }
+
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition->ServiceInstanceName }) == wanted)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+_Use_decl_annotations_
 std::shared_ptr<MidiNetworkClient>
 TransportState::GetClient(winrt::hstring clientEntryIdentifier)
 {

@@ -47,6 +47,7 @@
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Data.Json.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Networking.h>
 #include <winrt/Windows.Networking.Connectivity.h>
@@ -68,6 +69,7 @@
 #include "NetworkMidiTestHostLocator.h"
 #include "NetworkMidiTestContext.h"
 #include "NetworkMidiSessionTests.h"
+#include "NetworkMidiApprovalTests.h"
 #include "NetworkMidiErrorTests.h"
 #include "NetworkMidiMalformedTests.h"
 #include "NetworkMidiClientTests.h"

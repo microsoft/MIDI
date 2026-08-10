@@ -128,6 +128,7 @@ BEGIN
     IDS_ERROR_INVITATION_PENDING_TIMEOUT_OUT_OF_RANGE "Invitation pending timeout is out of range."
     IDS_ERROR_DIRECT_CONNECTION_SCAN_INTERVAL_OUT_OF_RANGE "Direct connection scan interval is out of range."
     IDS_ERROR_MISSING_REMOTE_CLIENT_IDENTITY        "A remote client decision needs both the UMP endpoint name and the product instance id of the client."
+    IDS_ERROR_SERVICE_INSTANCE_NAME_IN_USE          "Another host is already using this service instance name. Each host needs its own, because the name identifies the host on the network and names its parent device."
 
     IDS_MESSAGE_CONNECTION_ENDED                    "Windows MIDI Services ended this connection."
     IDS_MESSAGE_USER_DISCONNECTED                   "Disconnected by the user."

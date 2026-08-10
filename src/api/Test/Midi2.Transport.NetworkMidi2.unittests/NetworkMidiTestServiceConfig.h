@@ -60,6 +60,39 @@ namespace NetworkMidiTest
     // every 20 seconds. Tests shorten it so a connection attempt is prompt.
     ServiceConfigResult SetDirectConnectionScanInterval(_In_ uint32_t const milliseconds);
 
+    // Creates a host on an automatically chosen port. requireApproval puts remote clients into
+    // the pending state instead of accepting them, which is what the approval tests need.
+    // serviceInstanceName must be unique across hosts: it becomes the DNS-SD instance and the
+    // virtual parent device id, and defaulting it lands on the machine name the real host uses.
+    ServiceConfigResult CreateHost(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::wstring const& umpEndpointName,
+        _In_ std::wstring const& productInstanceId,
+        _In_ std::wstring const& serviceInstanceName,
+        _In_ bool const requireApproval);
+
+    ServiceConfigResult StartHost(_In_ std::wstring const& entryIdentifier);
+
+    // Safe to call for a host which is already stopped or was never created.
+    ServiceConfigResult StopHost(_In_ std::wstring const& entryIdentifier);
+
+    // Returns the enumerateHosts response, which carries the per-host connections array the
+    // settings app polls: remote identity, session state, and pendingApproval.
+    ServiceConfigResult EnumerateHosts();
+
+    // A user's decision about a remote client. scope is one of once / always / untilRestart.
+    ServiceConfigResult ApproveRemoteClient(
+        _In_ std::wstring const& hostEntryIdentifier,
+        _In_ std::wstring const& umpEndpointName,
+        _In_ std::wstring const& productInstanceId,
+        _In_ std::wstring const& scope);
+
+    ServiceConfigResult DenyRemoteClient(
+        _In_ std::wstring const& hostEntryIdentifier,
+        _In_ std::wstring const& umpEndpointName,
+        _In_ std::wstring const& productInstanceId,
+        _In_ std::wstring const& scope);
+
     // A fresh GUID string in the "{...}" form the configuration uses.
     std::wstring MakeEntryIdentifier();
 }

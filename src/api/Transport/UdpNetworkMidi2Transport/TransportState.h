@@ -74,6 +74,12 @@ public:
 
     std::shared_ptr<MidiNetworkHost> GetHost(_In_ winrt::hstring hostEntryIdentifier);
 
+    // The service instance name becomes both the DNS-SD instance and the virtual parent device
+    // id, so two host entries cannot share one. Compared case-insensitively.
+    bool IsHostServiceInstanceNameInUse(
+        _In_ std::wstring const& serviceInstanceName,
+        _In_ std::wstring const& excludingEntryIdentifier);
+
 
 
 

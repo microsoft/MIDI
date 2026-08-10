@@ -1129,11 +1129,30 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
         &createInfo,
         &newParentDeviceId
     );
-    RETURN_IF_FAILED(activateHr);
 
+    if (FAILED(activateHr))
+    {
+        // The instance id is derived from the service instance name, so it is known whether or
+        // not activation just created it. Returning it anyway is what lets a host restart:
+        // the caller gets a usable parent instead of an empty string it would silently build
+        // every one of its endpoints on.
+        createdNewDeviceInstanceId = parentDeviceId;
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Parent device could not be activated. Reusing the existing instance id, which is the expected result of restarting a host.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(parentDeviceId.c_str(), "parent device instance id"),
+            TraceLoggingHResult(activateHr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+
+        return S_FALSE;
+    }
 
     createdNewDeviceInstanceId = newParentDeviceId.get();
-    //createdNewDeviceInstanceId = parentDeviceId;
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

@@ -413,16 +413,12 @@ MidiNetworkHost::Start()
         parentDeviceInstanceId
     );
 
-    if (SUCCEEDED(createParentHR))
-    {
-        m_parentDeviceInstanceId = parentDeviceInstanceId;
-    }
-    else
-    {
-        // working around the fact that virtual parent removal isn't yet implemented in the MIDI Device Manager
-        // in most cases, the failure will be because the parent already exists.
-        LOG_IF_FAILED(createParentHR);
-    }
+    // Every endpoint this host creates is parented to this id. Continuing without one used to be
+    // tolerated, and produced a host which looked healthy but failed to create any endpoint.
+    RETURN_IF_FAILED(createParentHR);
+    RETURN_HR_IF(E_UNEXPECTED, parentDeviceInstanceId.empty());
+
+    m_parentDeviceInstanceId = parentDeviceInstanceId;
    
     // HostName's constructor throws on an empty string, which would escape this HRESULT
     // function. A null HostName is valid for DNS-SD registration.

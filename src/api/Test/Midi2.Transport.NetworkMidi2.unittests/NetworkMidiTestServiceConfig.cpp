@@ -248,4 +248,126 @@ namespace NetworkMidiTest
 
         return SendNetworkTransportConfig(json);
     }
+
+
+    ServiceConfigResult CreateHost(
+        std::wstring const& entryIdentifier,
+        std::wstring const& umpEndpointName,
+        std::wstring const& productInstanceId,
+        std::wstring const& serviceInstanceName,
+        bool const requireApproval)
+    {
+        // advertise is off so these short-lived test hosts do not appear over mDNS and get
+        // picked up by anything else on the network.
+        // serviceInstanceName is set explicitly because it otherwise defaults to the machine
+        // name, which the machine's own host is already using, and the parent device is created
+        // from it. That collision is now rejected outright by the configuration manager.
+        std::wstring json =
+            L"{\"create\":{\"hosts\":{\"" + EscapeJsonString(entryIdentifier) + L"\":{"
+            L"\"name\":\"" + EscapeJsonString(umpEndpointName) + L"\","
+            L"\"productInstanceId\":\"" + EscapeJsonString(productInstanceId) + L"\","
+            L"\"serviceInstanceName\":\"" + EscapeJsonString(serviceInstanceName) + L"\","
+            L"\"networkProtocol\":\"udp\","
+            L"\"port\":\"auto\","
+            L"\"enabled\":true,"
+            L"\"advertise\":false,"
+            L"\"remoteClientPolicy\":\"" +
+                std::wstring(requireApproval ? L"requireApproval" : L"allowAny") + L"\""
+            L"}}}}";
+
+        Log::Comment(String().Format(
+            L"Creating host %s (%s) serviceInstanceName=%s policy=%s",
+            entryIdentifier.c_str(),
+            umpEndpointName.c_str(),
+            serviceInstanceName.c_str(),
+            requireApproval ? L"requireApproval" : L"allowAny"));
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
+    ServiceConfigResult StartHost(std::wstring const& entryIdentifier)
+    {
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"startHost\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(entryIdentifier) + L"\""
+            L"}}}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
+    ServiceConfigResult StopHost(std::wstring const& entryIdentifier)
+    {
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"stopHost\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(entryIdentifier) + L"\""
+            L"}}}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
+    ServiceConfigResult EnumerateHosts()
+    {
+        return SendNetworkTransportConfig(
+            L"{\"transportCommand\":{\"commandName\":\"enumerateHosts\"}}");
+    }
+
+
+    namespace
+    {
+        ServiceConfigResult RemoteClientDecision(
+            std::wstring const& verb,
+            std::wstring const& hostEntryIdentifier,
+            std::wstring const& umpEndpointName,
+            std::wstring const& productInstanceId,
+            std::wstring const& scope)
+        {
+            std::wstring json =
+                L"{\"transportCommand\":{"
+                L"\"commandName\":\"" + verb + L"\","
+                L"\"commandArguments\":{"
+                L"\"entryIdentifier\":\"" + EscapeJsonString(hostEntryIdentifier) + L"\","
+                L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\","
+                L"\"productInstanceId\":\"" + EscapeJsonString(productInstanceId) + L"\","
+                L"\"scope\":\"" + EscapeJsonString(scope) + L"\""
+                L"}}}";
+
+            Log::Comment(String().Format(
+                L"%s %s (%s) scope=%s",
+                verb.c_str(),
+                umpEndpointName.c_str(),
+                productInstanceId.c_str(),
+                scope.c_str()));
+
+            return SendNetworkTransportConfig(json);
+        }
+    }
+
+
+    ServiceConfigResult ApproveRemoteClient(
+        std::wstring const& hostEntryIdentifier,
+        std::wstring const& umpEndpointName,
+        std::wstring const& productInstanceId,
+        std::wstring const& scope)
+    {
+        return RemoteClientDecision(
+            L"approveRemoteClient", hostEntryIdentifier, umpEndpointName, productInstanceId, scope);
+    }
+
+
+    ServiceConfigResult DenyRemoteClient(
+        std::wstring const& hostEntryIdentifier,
+        std::wstring const& umpEndpointName,
+        std::wstring const& productInstanceId,
+        std::wstring const& scope)
+    {
+        return RemoteClientDecision(
+            L"denyRemoteClient", hostEntryIdentifier, umpEndpointName, productInstanceId, scope);
+    }
 }

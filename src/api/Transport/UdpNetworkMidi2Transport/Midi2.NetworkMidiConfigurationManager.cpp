@@ -1077,8 +1077,9 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         // gets reported back, so the response is a failure if any entry was rejected.
         bool anyEntryFailed{ false };
         winrt::hstring firstEntryErrorMessage{ };
+        uint32_t firstEntryErrorCode{ 0 };
 
-        auto reportEntryFailure = [&](winrt::hstring const& entryIdentifier, winrt::hstring const& message)
+        auto reportEntryFailure = [&](winrt::hstring const& entryIdentifier, winrt::hstring const& message, HRESULT const errorCode)
             {
                 TraceLoggingWrite(
                     MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1088,13 +1089,15 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Invalid configuration entry. Entry skipped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(entryIdentifier.c_str(), "entry identifier"),
-                    TraceLoggingWideString(message.c_str(), "error")
+                    TraceLoggingWideString(message.c_str(), "error"),
+                    TraceLoggingHResult(errorCode, MIDI_TRACE_EVENT_HRESULT_FIELD)
                 );
 
                 if (!anyEntryFailed)
                 {
                     anyEntryFailed = true;
                     firstEntryErrorMessage = message;
+                    firstEntryErrorCode = static_cast<uint32_t>(errorCode);
                 }
             };
 
@@ -1116,7 +1119,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                 {
-                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL));
+                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL), E_INVALIDARG);
                     continue;
                 }
 
@@ -1184,7 +1187,21 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 definition->ServiceInstanceName = serviceInstanceNamePrefix;
 
-                // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number. Keep trying until unused one is found
+                // The name becomes the DNS-SD instance and the virtual parent device id, so a
+                // second host claiming it cannot work. This used to be an unimplemented TODO, and
+                // the collision surfaced much later as a host which started but could never
+                // create an endpoint.
+                if (TransportState::Current().IsHostServiceInstanceNameInUse(
+                        std::wstring{ definition->ServiceInstanceName },
+                        std::wstring{ definition->EntryIdentifier }))
+                {
+                    reportEntryFailure(
+                        it.Current().Key(),
+                        internal::ResourceGetHString(IDS_ERROR_SERVICE_INSTANCE_NAME_IN_USE),
+                        HRESULT_FROM_WIN32(ERROR_DUP_NAME));
+
+                    continue;
+                }
 
                 //definition.HostName = definition.ServiceInstanceName + L"._midi2._udp.local";
 
@@ -1242,7 +1259,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 }
                 else
                 {
-                    reportEntryFailure(it.Current().Key(), validationErrorMessage);
+                    reportEntryFailure(it.Current().Key(), validationErrorMessage, E_INVALIDARG);
                 }
             }
 
@@ -1265,7 +1282,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                 {
-                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL));
+                    reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_INVALID_NETWORK_PROTOCOL), E_INVALIDARG);
                 }
                 else
                 {
@@ -1321,7 +1338,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     else
                     {
                         // we have no way to match against endpoints, so this is a failure
-                        reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_MISSING_MATCH_ENTRY));
+                        reportEntryFailure(it.Current().Key(), internal::ResourceGetHString(IDS_ERROR_MISSING_MATCH_ENTRY), E_INVALIDARG);
                     }
                 }
 
@@ -1330,7 +1347,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
         if (anyEntryFailed)
         {
-            internal::SetConfigurationResponseObjectFail(responseObject, std::wstring{ firstEntryErrorMessage });
+            internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, firstEntryErrorCode, std::wstring{ firstEntryErrorMessage });
         }
     }
 
