@@ -77,6 +77,13 @@ namespace Windows.Devices.Midi2
             [contractversion(1)]
             apicontract MidiTransportsVirtualApiContract { };
         }
+
+        namespace Network
+        {
+            [contractversion(1)]
+            apicontract MidiTransportsNetworkApiContract { };
+        }
+
     }
 
 

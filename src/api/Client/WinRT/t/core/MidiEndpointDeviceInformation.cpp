@@ -207,8 +207,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
             additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName);
             additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemotePort);
-
-
+            additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiConnectionRole);
 
 
             // WinMM / Naming properties ==========================================================

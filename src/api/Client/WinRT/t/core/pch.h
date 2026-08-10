@@ -150,6 +150,8 @@ namespace msgs = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
 namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer {};
 namespace sysex = ::winrt::Windows::Devices::Midi2::Utilities::SysExTransfer;
 
+namespace winrt::Windows::Devices::Midi2::Transports::Network {};
+namespace network = ::winrt::Windows::Devices::Midi2::Transports::Network;
 
 
 #define SAFE_COTASKMEMFREE(p) \
@@ -178,3 +180,6 @@ namespace sysex = ::winrt::Windows::Devices::Midi2::Utilities::SysExTransfer;
 #include "winrt_memory_buffer.h"
 
 #include <shared_mutex>
+
+
+

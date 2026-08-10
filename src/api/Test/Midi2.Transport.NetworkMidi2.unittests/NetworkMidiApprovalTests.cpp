@@ -1,0 +1,715 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "pch.h"
+
+using namespace WEX::Common;
+using namespace WEX::Logging;
+using namespace WEX::TestExecution;
+using namespace NetworkMidiTest;
+
+namespace json = winrt::Windows::Data::Json;
+
+namespace
+{
+    // The host these tests create. One per class: the allow and deny lists live on the host, so
+    // each test uses a distinct client identity rather than a fresh host.
+    std::wstring g_hostEntryIdentifier{ };
+    uint16_t g_hostPort{ 0 };
+    bool g_hostReady{ false };
+
+    // Shared with the collision tests, which deliberately try to claim it a second time.
+    constexpr wchar_t HostServiceInstanceName[]{ L"midi2-approval-test" };
+
+    std::unique_ptr<WinsockScope> g_winsock;
+
+    constexpr auto PendingPollInterval = std::chrono::milliseconds(250);
+    constexpr auto PendingPollTimeout = std::chrono::milliseconds(20000);
+    constexpr auto ReplyTimeout = std::chrono::milliseconds(8000);
+
+
+    std::wstring Widen(_In_ std::string const& value)
+    {
+        return std::wstring(value.begin(), value.end());
+    }
+
+
+    HostEndpointAddress LocalHostAddress()
+    {
+        HostEndpointAddress address{ };
+
+        address.HostNameOrAddress = L"127.0.0.1";
+        address.Port = g_hostPort;
+        address.DiscoveredVia = L"created by the approval tests";
+
+        return address;
+    }
+
+
+    std::optional<json::JsonObject> ParseResponse(_In_ ServiceConfigResult const& result)
+    {
+        json::JsonObject parsed{ nullptr };
+
+        if (!json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, parsed))
+        {
+            return std::nullopt;
+        }
+
+        return parsed;
+    }
+
+
+    // The host entry this class created, from an enumerateHosts response.
+    std::optional<json::JsonObject> FindOurHost(_In_ json::JsonObject const& response)
+    {
+        if (!response.HasKey(L"hosts"))
+        {
+            return std::nullopt;
+        }
+
+        auto hosts = response.GetNamedArray(L"hosts", nullptr);
+
+        if (hosts == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        for (uint32_t i = 0; i < hosts.Size(); i++)
+        {
+            auto host = hosts.GetObjectAt(i);
+
+            if (host != nullptr &&
+                std::wstring{ host.GetNamedString(L"entryIdentifier", L"") } == g_hostEntryIdentifier)
+            {
+                return host;
+            }
+        }
+
+        return std::nullopt;
+    }
+
+
+    struct ConnectionState
+    {
+        bool Present{ false };
+        bool PendingApproval{ false };
+        bool SessionActive{ false };
+    };
+
+
+    // What the polling feed currently says about one remote identity. This is exactly the call
+    // the settings app will make on its timer.
+    ConnectionState PollConnectionState(
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        ConnectionState state{ };
+
+        auto response = ParseResponse(EnumerateHosts());
+
+        if (!response.has_value())
+        {
+            return state;
+        }
+
+        auto host = FindOurHost(response.value());
+
+        if (!host.has_value() || !host->HasKey(L"connections"))
+        {
+            return state;
+        }
+
+        auto connections = host->GetNamedArray(L"connections", nullptr);
+
+        if (connections == nullptr)
+        {
+            return state;
+        }
+
+        auto wantName = Widen(umpEndpointName);
+        auto wantProductInstanceId = Widen(productInstanceId);
+
+        for (uint32_t i = 0; i < connections.Size(); i++)
+        {
+            auto connection = connections.GetObjectAt(i);
+
+            if (connection == nullptr)
+            {
+                continue;
+            }
+
+            if (std::wstring{ connection.GetNamedString(L"umpEndpointName", L"") } == wantName &&
+                std::wstring{ connection.GetNamedString(L"productInstanceId", L"") } == wantProductInstanceId)
+            {
+                state.Present = true;
+                state.PendingApproval = connection.GetNamedBoolean(L"pendingApproval", false);
+                state.SessionActive = connection.GetNamedBoolean(L"sessionActive", false);
+
+                return state;
+            }
+        }
+
+        return state;
+    }
+
+
+    bool WaitForPending(
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            auto state = PollConnectionState(umpEndpointName, productInstanceId);
+
+            if (state.Present && state.PendingApproval)
+            {
+                return true;
+            }
+
+            std::this_thread::sleep_for(PendingPollInterval);
+        }
+
+        return false;
+    }
+
+
+    bool WaitForSessionActive(
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            auto state = PollConnectionState(umpEndpointName, productInstanceId);
+
+            if (state.Present && state.SessionActive)
+            {
+                return true;
+            }
+
+            std::this_thread::sleep_for(PendingPollInterval);
+        }
+
+        return false;
+    }
+
+
+    bool WaitForConnectionReleased(
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            if (!PollConnectionState(umpEndpointName, productInstanceId).Present)
+            {
+                return true;
+            }
+
+            std::this_thread::sleep_for(PendingPollInterval);
+        }
+
+        return false;
+    }
+
+
+    // Sends one invitation and returns the first reply. Auto ping reply stays on so the host
+    // does not reap the connection while a test is deciding.
+    std::optional<ParsedPacket> Invite(
+        _In_ UdpTestClient& client,
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        PacketBuilder builder;
+        builder.StartPacket().AddInvitation(umpEndpointName, productInstanceId);
+
+        if (!client.Send(builder))
+        {
+            return std::nullopt;
+        }
+
+        return client.ReceivePacket(ReplyTimeout);
+    }
+
+
+    // A reply may legitimately take more than one datagram to arrive, because the host answers
+    // Pending first and the decision follows later. Everything drained is logged: a Bye from a
+    // failed endpoint creation and no reply at all are both "not Accepted", and the difference
+    // matters when this fails.
+    bool WaitForCommand(
+        _In_ UdpTestClient& client,
+        _In_ CommandCode const wanted,
+        _In_ std::chrono::milliseconds const timeout)
+    {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(
+                deadline - std::chrono::steady_clock::now());
+
+            auto packet = client.ReceivePacket(remaining);
+
+            if (!packet.has_value())
+            {
+                Log::Comment(String().Format(
+                    L"Nothing further received while waiting for %s", CommandCodeToString(wanted).c_str()));
+
+                return false;
+            }
+
+            Log::Comment(String().Format(
+                L"While waiting for %s, received: %s",
+                CommandCodeToString(wanted).c_str(),
+                DescribePacket(packet.value()).c_str()));
+
+            if (packet->Contains(wanted))
+            {
+                return true;
+            }
+        }
+
+        Log::Comment(String().Format(
+            L"Timed out waiting for %s", CommandCodeToString(wanted).c_str()));
+
+        return false;
+    }
+
+
+    // Distinct per test so one test's allow or deny entry cannot decide another's outcome.
+    std::string UniqueName(_In_ std::string const& suffix)
+    {
+        return "ApprovalTest-" + suffix;
+    }
+
+    std::string UniqueProductInstanceId(_In_ std::string const& suffix)
+    {
+        return "APPROVALTEST-" + suffix;
+    }
+}
+
+
+bool NetworkMidiApprovalTests::ClassSetup()
+{
+    g_hostReady = false;
+
+    if (!IsServiceAvailable())
+    {
+        Log::Error(L"Windows MIDI Services is not reachable, so the approval flow cannot be tested.");
+        return false;
+    }
+
+    g_winsock = std::make_unique<WinsockScope>();
+
+    g_hostEntryIdentifier = MakeEntryIdentifier();
+
+    auto created = CreateHost(
+        g_hostEntryIdentifier,
+        L"Approval Test Host",
+        L"APPROVALTESTHOST",
+        HostServiceInstanceName,
+        true);
+
+    if (!created.IsSuccess())
+    {
+        Log::Error(String().Format(
+            L"Could not create the approval test host: %s", created.ResponseJson.c_str()));
+        return false;
+    }
+
+    // Creation may or may not start it depending on when the endpoint creator wakes, so this
+    // asks explicitly and tolerates "already started".
+    StartHost(g_hostEntryIdentifier);
+
+    auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+
+    while (std::chrono::steady_clock::now() < deadline)
+    {
+        auto response = ParseResponse(EnumerateHosts());
+
+        if (response.has_value())
+        {
+            auto host = FindOurHost(response.value());
+
+            if (host.has_value() && host->GetNamedBoolean(L"hasStarted", false))
+            {
+                auto portText = std::wstring{ host->GetNamedString(L"actualPort", L"") };
+
+                if (!portText.empty())
+                {
+                    g_hostPort = static_cast<uint16_t>(std::stoul(portText));
+                }
+
+                break;
+            }
+        }
+
+        std::this_thread::sleep_for(PendingPollInterval);
+    }
+
+    if (g_hostPort == 0)
+    {
+        Log::Error(L"The approval test host never reported a started state with a port.");
+        return false;
+    }
+
+    Log::Comment(String().Format(L"Approval test host listening on 127.0.0.1:%u", g_hostPort));
+
+    g_hostReady = true;
+
+    return true;
+}
+
+
+bool NetworkMidiApprovalTests::ClassCleanup()
+{
+    if (!g_hostEntryIdentifier.empty())
+    {
+        StopHost(g_hostEntryIdentifier);
+    }
+
+    g_winsock.reset();
+
+    return true;
+}
+
+
+void NetworkMidiApprovalTests::InvitationIsHeldPendingAndAppearsInEnumerateHosts()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    LogSpecRequirement(L"6.6 - A Host may reply Invitation Reply Pending while permission is sought, and follow with Accepted or Bye.");
+
+    auto name = UniqueName("Pending");
+    auto productInstanceId = UniqueProductInstanceId("Pending");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+    auto reply = Invite(client, name, productInstanceId);
+
+    VERIFY_IS_TRUE(reply.has_value(), L"Host replied to the invitation");
+    VERIFY_IS_TRUE(
+        reply->Contains(CommandCode::InvitationReplyPending),
+        L"Host replied Pending rather than accepting a client which needs approval");
+    VERIFY_IS_FALSE(
+        reply->Contains(CommandCode::InvitationReplyAccepted),
+        L"Host did not accept a client which needs approval");
+
+    // This is the poll the settings app performs on its timer.
+    VERIFY_IS_TRUE(
+        WaitForPending(name, productInstanceId),
+        L"Pending client is visible in the enumerateHosts feed");
+
+    auto state = PollConnectionState(name, productInstanceId);
+    VERIFY_IS_FALSE(state.SessionActive, L"A pending client has no active session");
+
+    // leave nothing behind for the next test
+    DenyRemoteClient(g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"untilRestart");
+
+    client.Close();
+}
+
+
+void NetworkMidiApprovalTests::ApproveOnceAcceptsTheWaitingClient()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("ApproveOnce");
+    auto productInstanceId = UniqueProductInstanceId("ApproveOnce");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+    auto reply = Invite(client, name, productInstanceId);
+    VERIFY_IS_TRUE(reply.has_value() && reply->Contains(CommandCode::InvitationReplyPending));
+
+    VERIFY_IS_TRUE(WaitForPending(name, productInstanceId), L"Client is pending before approval");
+
+    auto approved = ApproveRemoteClient(
+        g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"once");
+
+    VERIFY_IS_TRUE(approved.IsSuccess(), L"approveRemoteClient reported success");
+
+    VERIFY_IS_TRUE(
+        WaitForCommand(client, CommandCode::InvitationReplyAccepted, PendingPollTimeout),
+        L"Host accepted the invitation after the user approved it");
+
+    VERIFY_IS_TRUE(
+        WaitForSessionActive(name, productInstanceId),
+        L"Approved client shows an active session in the feed");
+
+    client.Close();
+}
+
+
+void NetworkMidiApprovalTests::ApproveAlwaysIsRememberedForTheNextConnection()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("ApproveAlways");
+    auto productInstanceId = UniqueProductInstanceId("ApproveAlways");
+
+    {
+        UdpTestClient client;
+        VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+        auto reply = Invite(client, name, productInstanceId);
+        VERIFY_IS_TRUE(reply.has_value() && reply->Contains(CommandCode::InvitationReplyPending));
+
+        VERIFY_IS_TRUE(WaitForPending(name, productInstanceId), L"Client is pending before approval");
+
+        auto approved = ApproveRemoteClient(
+            g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"always");
+
+        VERIFY_IS_TRUE(approved.IsSuccess(), L"approveRemoteClient reported success");
+
+        VERIFY_IS_TRUE(
+            WaitForCommand(client, CommandCode::InvitationReplyAccepted, PendingPollTimeout),
+            L"Host accepted the invitation after the user approved it");
+
+        // The endpoint identity is a hash of product instance id and endpoint name, deliberately
+        // with no port in it, so the same device cannot hold two sessions at once. Closing the
+        // socket does not tell the host anything, so the session is ended properly and the
+        // endpoint waited out before the same identity comes back.
+        EndSession(client);
+
+        client.Close();
+    }
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionReleased(name, productInstanceId),
+        L"The first session was released before the client returns");
+
+    // A new socket means a new source port, which is a different connection to the host. The
+    // identity is what was remembered, so this one must not be held for a second decision.
+    UdpTestClient returning;
+    VERIFY_IS_TRUE(returning.Open(LocalHostAddress()));
+
+    auto reply = Invite(returning, name, productInstanceId);
+
+    VERIFY_IS_TRUE(reply.has_value(), L"Host replied to the returning client");
+
+    // Reaching Accepted is itself the proof, and the only reliable one. InvitationReplyPending
+    // means two different things on the wire - awaiting a user, and awaiting endpoint creation -
+    // so its presence says nothing. What matters is that no approval command is issued anywhere
+    // in this block: a client still needing approval would sit pending until the timeout.
+    if (!reply->Contains(CommandCode::InvitationReplyAccepted))
+    {
+        Log::Comment(String().Format(
+            L"First reply to the returning client: %s", DescribePacket(reply.value()).c_str()));
+
+        VERIFY_IS_TRUE(
+            WaitForCommand(returning, CommandCode::InvitationReplyAccepted, PendingPollTimeout),
+            L"A client on the allow list is accepted without any further approval");
+    }
+
+    // The approval-specific state, which the feed reports separately from the wire command.
+    auto state = PollConnectionState(name, productInstanceId);
+    VERIFY_IS_FALSE(state.PendingApproval, L"A client on the allow list is never awaiting approval");
+
+    returning.Close();
+}
+
+
+void NetworkMidiApprovalTests::DenyUntilRestartRefusesTheWaitingClient()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("DenyUntilRestart");
+    auto productInstanceId = UniqueProductInstanceId("DenyUntilRestart");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+    auto reply = Invite(client, name, productInstanceId);
+    VERIFY_IS_TRUE(reply.has_value() && reply->Contains(CommandCode::InvitationReplyPending));
+
+    VERIFY_IS_TRUE(WaitForPending(name, productInstanceId), L"Client is pending before denial");
+
+    auto denied = DenyRemoteClient(
+        g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"untilRestart");
+
+    VERIFY_IS_TRUE(denied.IsSuccess(), L"denyRemoteClient reported success");
+
+    VERIFY_IS_TRUE(
+        WaitForCommand(client, CommandCode::Bye, PendingPollTimeout),
+        L"Host sent Bye after the user denied the invitation");
+
+    client.Close();
+
+    // Held in memory until the service restarts, so a second attempt is refused too.
+    UdpTestClient returning;
+    VERIFY_IS_TRUE(returning.Open(LocalHostAddress()));
+
+    auto secondReply = Invite(returning, name, productInstanceId);
+
+    VERIFY_IS_TRUE(secondReply.has_value(), L"Host replied to the returning denied client");
+    VERIFY_IS_FALSE(
+        secondReply->Contains(CommandCode::InvitationReplyAccepted),
+        L"A client denied until restart is not accepted on a later attempt");
+
+    returning.Close();
+}
+
+
+void NetworkMidiApprovalTests::DenyAlwaysIsRememberedForTheNextConnection()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("DenyAlways");
+    auto productInstanceId = UniqueProductInstanceId("DenyAlways");
+
+    {
+        UdpTestClient client;
+        VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+        auto reply = Invite(client, name, productInstanceId);
+        VERIFY_IS_TRUE(reply.has_value() && reply->Contains(CommandCode::InvitationReplyPending));
+
+        VERIFY_IS_TRUE(WaitForPending(name, productInstanceId), L"Client is pending before denial");
+
+        auto denied = DenyRemoteClient(
+            g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"always");
+
+        VERIFY_IS_TRUE(denied.IsSuccess(), L"denyRemoteClient reported success");
+
+        VERIFY_IS_TRUE(
+            WaitForCommand(client, CommandCode::Bye, PendingPollTimeout),
+            L"Host sent Bye after the user denied the invitation");
+
+        client.Close();
+    }
+
+    // On the deny list, so this must be refused outright rather than parked for another decision.
+    UdpTestClient returning;
+    VERIFY_IS_TRUE(returning.Open(LocalHostAddress()));
+
+    auto reply = Invite(returning, name, productInstanceId);
+
+    VERIFY_IS_TRUE(reply.has_value(), L"Host replied to the returning denied client");
+    VERIFY_IS_TRUE(
+        reply->Contains(CommandCode::Bye),
+        L"A client on the deny list is refused with Bye");
+    VERIFY_IS_FALSE(
+        reply->Contains(CommandCode::InvitationReplyPending),
+        L"A client on the deny list is not put into the pending state again");
+    VERIFY_IS_FALSE(
+        reply->Contains(CommandCode::InvitationReplyAccepted),
+        L"A client on the deny list is never accepted");
+
+    returning.Close();
+}
+
+
+void NetworkMidiApprovalTests::DecisionForAnUnknownIdentityLeavesThePendingClientWaiting()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("Untouched");
+    auto productInstanceId = UniqueProductInstanceId("Untouched");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+    auto reply = Invite(client, name, productInstanceId);
+    VERIFY_IS_TRUE(reply.has_value() && reply->Contains(CommandCode::InvitationReplyPending));
+
+    VERIFY_IS_TRUE(WaitForPending(name, productInstanceId), L"Client is pending");
+
+    // An approval aimed at somebody else entirely.
+    ApproveRemoteClient(
+        g_hostEntryIdentifier,
+        Widen(UniqueName("NobodyIsWaitingUnderThisName")),
+        Widen(UniqueProductInstanceId("NOBODY")),
+        L"once");
+
+    // The waiting client must be exactly where it was.
+    auto state = PollConnectionState(name, productInstanceId);
+
+    VERIFY_IS_TRUE(state.Present, L"The pending client is still tracked");
+    VERIFY_IS_TRUE(state.PendingApproval, L"The pending client is still awaiting its own decision");
+    VERIFY_IS_FALSE(state.SessionActive, L"The pending client was not accepted by somebody else's approval");
+
+    DenyRemoteClient(g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"untilRestart");
+
+    client.Close();
+}
+
+
+void NetworkMidiApprovalTests::SecondHostWithTheSameServiceInstanceNameIsRejected()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    // The class host already holds this name.
+    auto duplicateEntryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        duplicateEntryIdentifier,
+        L"Duplicate Service Instance Host",
+        L"DUPLICATESERVICEINSTANCE",
+        HostServiceInstanceName,
+        false);
+
+    // Stopping it regardless: if the check ever regresses and the host is created, the next run
+    // must not inherit it.
+    auto cleanup = wil::scope_exit([&]() { StopHost(duplicateEntryIdentifier); });
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The configuration call itself completed");
+
+    VERIFY_IS_FALSE(
+        result.ReportedSuccess,
+        L"A host claiming a service instance name already in use is rejected");
+
+    auto response = ParseResponse(result);
+    VERIFY_IS_TRUE(response.has_value(), L"The rejection came back as parseable JSON");
+
+    // The caller needs something it can act on, not just a false.
+    auto message = std::wstring{ response->GetNamedString(L"message", L"") };
+
+    VERIFY_IS_FALSE(message.empty(), L"The rejection carries a description");
+    Log::Comment(String().Format(L"Reported message: %s", message.c_str()));
+
+    VERIFY_IS_TRUE(response->HasKey(L"errorCode"), L"The rejection carries an error code");
+
+    auto errorCode = static_cast<uint32_t>(response->GetNamedNumber(L"errorCode", 0));
+
+    Log::Comment(String().Format(L"Reported errorCode: 0x%08X", errorCode));
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(HRESULT_FROM_WIN32(ERROR_DUP_NAME)),
+        errorCode,
+        L"The error code identifies a duplicate name rather than a generic failure");
+}
+
+
+void NetworkMidiApprovalTests::HostWithAnUnusedServiceInstanceNameIsAccepted()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    // Without this, a check which rejected every host would pass the collision test.
+    auto entryIdentifier = MakeEntryIdentifier();
+    auto serviceInstanceName = std::wstring{ L"midi2-approval-test-unused-" } + std::to_wstring(GetTickCount64());
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"Unused Service Instance Host",
+        L"UNUSEDSERVICEINSTANCE",
+        serviceInstanceName,
+        false);
+
+    auto cleanup = wil::scope_exit([&]() { StopHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(
+        result.IsSuccess(),
+        L"A host with a service instance name nobody else holds is accepted");
+}

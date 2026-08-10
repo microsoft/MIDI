@@ -17,6 +17,7 @@ build/dependencies/**/*.*
 # Dump files
 *.etl
 *.dmp
+diagnostics/trace-logging/_analysis
 
 # User-specific files
 *.rsuser

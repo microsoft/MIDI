@@ -1,0 +1,53 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#pragma once
+
+// Exercises the remote client approval flow end to end against the real service: a host
+// configured for requireApproval, a raw UDP client which invites, the polling feed the settings
+// app will use to notice the pending client, and each of the four user decisions.
+//
+// These create their own host rather than using the discovered one, because the policy has to be
+// set at creation and the machine's configured host is whatever the user left it as.
+class NetworkMidiApprovalTests : public WEX::TestClass<NetworkMidiApprovalTests>
+{
+public:
+    BEGIN_TEST_CLASS(NetworkMidiApprovalTests)
+        TEST_CLASS_PROPERTY(L"TestClassification", L"Integration")
+    END_TEST_CLASS()
+
+    TEST_CLASS_SETUP(ClassSetup);
+    TEST_CLASS_CLEANUP(ClassCleanup);
+
+    // The client is held pending and shows up in the polling feed rather than being accepted.
+    TEST_METHOD(InvitationIsHeldPendingAndAppearsInEnumerateHosts);
+
+    // "Allow just this time" - accepted now, nothing remembered.
+    TEST_METHOD(ApproveOnceAcceptsTheWaitingClient);
+
+    // "Allow always" - accepted now, and a later invitation from the same identity is accepted
+    // without ever entering the pending state.
+    TEST_METHOD(ApproveAlwaysIsRememberedForTheNextConnection);
+
+    // "Deny until restart" - refused now, and still refused on a later attempt.
+    TEST_METHOD(DenyUntilRestartRefusesTheWaitingClient);
+
+    // "Deny always" - refused now, and a later invitation is refused immediately rather than
+    // being held for another decision.
+    TEST_METHOD(DenyAlwaysIsRememberedForTheNextConnection);
+
+    // A decision naming an identity nobody is waiting under must not disturb the pending client.
+    TEST_METHOD(DecisionForAnUnknownIdentityLeavesThePendingClientWaiting);
+
+    // Two hosts cannot share a service instance name: it is the DNS-SD instance and the virtual
+    // parent device id. The rejection has to carry a code and a description.
+    TEST_METHOD(SecondHostWithTheSameServiceInstanceNameIsRejected);
+
+    // The control for the test above. A distinct name must still be accepted.
+    TEST_METHOD(HostWithAnUnusedServiceInstanceNameIsAccepted);
+};

@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+#include "Transports.Network.MidiNetworkHostRemovalConfig.g.h"
+
+#include "..\..\..\..\Transport\UdpNetworkMidi2Transport\net2udp_transport_defs.h"
+
+namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
+{
+    struct MidiNetworkHostRemovalConfig : MidiNetworkHostRemovalConfigT<MidiNetworkHostRemovalConfig>
+    {
+        MidiNetworkHostRemovalConfig() = default;
+
+        winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
+        
+        json::JsonObject ConfigJson() const noexcept;
+    };
+}
+namespace winrt::Windows::Devices::Midi2::Transports::Network::factory_implementation
+{
+    struct MidiNetworkHostRemovalConfig : MidiNetworkHostRemovalConfigT<MidiNetworkHostRemovalConfig, implementation::MidiNetworkHostRemovalConfig>
+    {
+    };
+}

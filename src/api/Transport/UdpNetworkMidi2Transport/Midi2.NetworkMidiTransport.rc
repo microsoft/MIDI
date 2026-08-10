@@ -107,8 +107,6 @@ BEGIN
     IDS_ERROR_CREATION_FAILED                       "Endpoint creation failed for an unknown reason."
     IDS_ERROR_UNRECOGNIZED_COMMAND                  "Unrecognized command."
     IDS_ERROR_MISSING_PRODUCT_INSTANCE_ID           "Missing or blank product instance id."
-    IDS_ERROR_CONNECTION_POLICY_RANGE_ENTRY_COUNT   "Connection policy IP address range needs exactly two valid entries to define the range."
-    IDS_ERROR_CONNECTION_POLICY_LIST_ENTRY_COUNT    "Connection policy IP address list needs at least one valid entry."
     IDS_ERROR_MISSING_CREDENTIAL_IDENTIFIER         "Authentication was requested for this host, but no credential identifier was supplied."
     IDS_ERROR_INVALID_CREDENTIAL_IDENTIFIER         "The supplied authentication credential identifier is not valid."
     IDS_ERROR_AUTHENTICATION_NOT_IMPLEMENTED        "Network MIDI 2.0 authentication is not yet implemented. Configure this host for no authentication."
@@ -125,6 +123,16 @@ BEGIN
     IDS_ERROR_MAX_HOST_CONNECTIONS_OUT_OF_RANGE     "Maximum host connections is out of range."
     IDS_ERROR_INVALID_NETWORK_PROTOCOL              "Invalid network protocol specified. Only 'udp' is supported."
     IDS_ERROR_MISSING_MATCH_ENTRY                   "Missing match entry."
+    IDS_ERROR_NO_REPLY_TO_INVITATION                "No reply to invitation."
+    IDS_ERROR_INVITATION_NOT_APPROVED               "Invitation was not approved in time."
+    IDS_ERROR_INVITATION_PENDING_TIMEOUT_OUT_OF_RANGE "Invitation pending timeout is out of range."
+    IDS_ERROR_DIRECT_CONNECTION_SCAN_INTERVAL_OUT_OF_RANGE "Direct connection scan interval is out of range."
+    IDS_ERROR_MISSING_REMOTE_CLIENT_IDENTITY        "A remote client decision needs both the UMP endpoint name and the product instance id of the client."
+    IDS_ERROR_SERVICE_INSTANCE_NAME_IN_USE          "Another host is already using this service instance name. Each host needs its own, because the name identifies the host on the network and names its parent device."
+
+    IDS_MESSAGE_CONNECTION_ENDED                    "Windows MIDI Services ended this connection."
+    IDS_MESSAGE_USER_DISCONNECTED                   "Disconnected by the user."
+    IDS_MESSAGE_INVITATION_DENIED                   "The invitation was not approved."
 END
 
 IDR_MIDI2NETWORKMIDITRANSPORT REGISTRY "Midi2.NetworkMidiTransport.rgs"

@@ -50,6 +50,15 @@ private:
         _In_ winrt::hstring const& clientConfigEntryId,
         _In_ json::JsonObject& responseObject) noexcept;
 
+    // A user's approve or deny decision for a remote client on one of our hosts. persist means
+    // the caller chose "always", which is also written to the configuration file by the caller.
+    HRESULT RunCommandRemoteClientDecision(
+        _In_ winrt::hstring const& hostEntryId,
+        _In_ MidiNetworkRemoteClientIdentity const& identity,
+        _In_ bool const approve,
+        _In_ bool const persist,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
 };

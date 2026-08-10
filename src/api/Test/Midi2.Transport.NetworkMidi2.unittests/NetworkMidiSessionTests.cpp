@@ -13,8 +13,12 @@ using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 using namespace NetworkMidiTest;
 
-#define SKIP_IF_NO_HOST() \
+// A missing host is a connection failure, not a skip. EnsureHostAvailable logs the error.
+#define REQUIRE_HOST() \
     if (!ProtocolTestContext::Current().EnsureHostAvailable()) { return; }
+
+// historical name, still used by the tests below
+#define SKIP_IF_NO_HOST() REQUIRE_HOST()
 
 
 void NetworkMidiSessionTests::HostIsDiscoverable()
@@ -52,7 +56,9 @@ void NetworkMidiSessionTests::HostAdvertisesRequiredTxtRecords()
 
     if (host.DiscoveredVia.find(L"mDNS") == std::wstring::npos)
     {
-        Log::Result(TestResults::Skipped, L"Host was supplied by environment override, so there are no TXT records to check.");
+        // Neither a protocol nor a connection problem, but it does mean the advertisement was
+        // not verified, so it must be visible rather than silent.
+        Log::Warning(L"Host was supplied by environment override, so mDNS TXT records were not checked.");
 
         return;
     }

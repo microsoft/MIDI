@@ -47,21 +47,31 @@
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Data.Json.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Networking.h>
 #include <winrt/Windows.Networking.Connectivity.h>
 
 #include "MidiSequenceNumber.h" // this is in the network midi project
 
+// generated service interfaces, so tests can push configuration the same way the SDK does
+#include <WindowsMidiServices.h>
+#include <WindowsMidiServices_i.c>
+#include <Midi2MidiSrvTransport.h>
+
 #include "SequenceNumberTests.h"
 
 #include "NetworkMidiTestProtocol.h"
 #include "NetworkMidiTestMdns.h"
 #include "NetworkMidiTestClient.h"
+#include "NetworkMidiTestFakeHost.h"
+#include "NetworkMidiTestServiceConfig.h"
 #include "NetworkMidiTestHostLocator.h"
 #include "NetworkMidiTestContext.h"
 #include "NetworkMidiSessionTests.h"
+#include "NetworkMidiApprovalTests.h"
 #include "NetworkMidiErrorTests.h"
 #include "NetworkMidiMalformedTests.h"
+#include "NetworkMidiClientTests.h"
 
 #endif //PCH_H

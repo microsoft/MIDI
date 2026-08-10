@@ -10,6 +10,7 @@
 //#include "Midi2MidiSrvTransport.h"
 
 #include "Feature_Servicing_MIDI2FailFast.h"
+#include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
 
 // Note: This class only works if these type F messages aren't swallowed up
 // by some endpoint transform / processor. We'll need to have code in here
@@ -280,6 +281,60 @@ CMidiEndpointProtocolManager::RemoveWorkerIfPresent(std::wstring endpointInterfa
 
     auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointInterfaceId);
 
+    if (Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled())
+    {
+        ProtocolNegotiationWorkerThreadEntry entry{ };
+
+        {
+            std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
+
+            auto val = m_endpointWorkers.find(cleanEndpointId);
+
+            if (val == m_endpointWorkers.end())
+            {
+                return S_OK;
+            }
+
+            entry = val->second;
+
+            m_endpointWorkers.erase(val);
+        }
+
+        // Deliberately outside the map lock. Worker shutdown waits on the worker's own lock,
+        // which the negotiation thread holds while it calls back into the device manager, and
+        // that can block behind a PnP callback. Holding the map lock across it strands every
+        // other DiscoverAndNegotiate caller and the service control thread.
+        if (entry.Worker != nullptr)
+        {
+            entry.Worker->EndProcessing();      // this sets an event that tells the thread to quit
+        }
+
+        if (entry.Thread != nullptr && entry.Thread->joinable())
+        {
+            entry.Thread->join();
+        }
+
+        if (entry.Worker != nullptr)
+        {
+            LOG_IF_FAILED(entry.Worker->Shutdown());
+        }
+
+        entry.Worker.reset();
+        entry.Thread.reset();
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Worker removed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanEndpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+        return S_OK;
+    }
+
     std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
 
     auto val = m_endpointWorkers.find(cleanEndpointId);
@@ -346,12 +401,41 @@ CMidiEndpointProtocolManager::Shutdown()
         // processes have any given device open.
         m_sessionTracker->RemoveClientSession(m_sessionId, GetCurrentProcessId());
 
-        for (auto& [key, val] : m_endpointWorkers)
+        if (Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled())
         {
-            LOG_IF_FAILED(RemoveWorkerIfPresent(key));
-        }
+            // RemoveWorkerIfPresent erases from this map, so iterating it directly while
+            // calling that invalidates the iterator underneath us.
+            std::vector<std::wstring> keys;
 
-        m_endpointWorkers.clear();
+            {
+                std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
+
+                for (auto const& [key, val] : m_endpointWorkers)
+                {
+                    keys.push_back(key);
+                }
+            }
+
+            for (auto const& key : keys)
+            {
+                LOG_IF_FAILED(RemoveWorkerIfPresent(key));
+            }
+
+            {
+                std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
+
+                m_endpointWorkers.clear();
+            }
+        }
+        else
+        {
+            for (auto& [key, val] : m_endpointWorkers)
+            {
+                LOG_IF_FAILED(RemoveWorkerIfPresent(key));
+            }
+
+            m_endpointWorkers.clear();
+        }
     }
 
     m_clientManager.reset();

@@ -91,6 +91,14 @@ TransportState::ShutdownHostsClientsAndConnections()
     {
         if (connection != nullptr)
         {
+            LOG_IF_FAILED(connection->SendShutdownBye());
+        }
+    }
+
+    for (auto const& connection : connections)
+    {
+        if (connection != nullptr)
+        {
             LOG_IF_FAILED(connection->Shutdown());
         }
     }
@@ -110,6 +118,32 @@ TransportState::Shutdown()
     m_configurationManager.reset();
 
     return S_OK;
+}
+
+
+std::wstring
+TransportState::GetEffectiveProductInstanceId()
+{
+    if (!TransportSettings.ProductInstanceId.empty())
+    {
+        return TransportSettings.ProductInstanceId;
+    }
+
+    // reserve() does not change size(), so the name has to be sized before it is written into
+    // and resized to the returned length afterward. Otherwise every read of it sees an empty
+    // string and the generated identity degrades to "-midisrv".
+    DWORD nameLength = MAX_COMPUTERNAME_LENGTH + 1;
+    std::wstring machineName;
+    machineName.resize(nameLength);
+
+    if (GetComputerName(machineName.data(), &nameLength))
+    {
+        machineName.resize(nameLength);
+
+        return internal::ToLowerTrimmedWStringCopy(machineName) + L"-midisrv";
+    }
+
+    return L"windows-midisrv";
 }
 
 
@@ -212,6 +246,65 @@ TransportState::GetHost(winrt::hstring hostEntryIdentifier)
     }
 
     return nullptr;
+}
+
+_Use_decl_annotations_
+bool
+TransportState::IsHostServiceInstanceNameInUse(
+    std::wstring const& serviceInstanceName,
+    std::wstring const& excludingEntryIdentifier)
+{
+    if (serviceInstanceName.empty())
+    {
+        return false;
+    }
+
+    auto wanted = internal::ToLowerTrimmedWStringCopy(serviceInstanceName);
+    auto excluding = internal::ToLowerTrimmedWStringCopy(excludingEntryIdentifier);
+
+    // Snapshotted first: the accessors take the state lock, and comparing definitions calls into
+    // the hosts, which must never happen while that lock is held.
+    for (auto const& host : GetHosts())
+    {
+        if (host == nullptr)
+        {
+            continue;
+        }
+
+        auto definition = host->GetDefinition();
+
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition.EntryIdentifier }) == excluding)
+        {
+            continue;
+        }
+
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition.ServiceInstanceName }) == wanted)
+        {
+            return true;
+        }
+    }
+
+    // Definitions which have been accepted but not yet started count too, otherwise two entries
+    // in the same configuration update would both be admitted.
+    for (auto const& definition : GetPendingHostDefinitions())
+    {
+        if (definition == nullptr)
+        {
+            continue;
+        }
+
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition->EntryIdentifier }) == excluding)
+        {
+            continue;
+        }
+
+        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition->ServiceInstanceName }) == wanted)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 _Use_decl_annotations_
@@ -525,10 +618,22 @@ TransportState::ReapIdleNetworkConnections(winrt::hstring const& configEntryIden
         }
     }
 
-    // shutdown blocks and re-enters this class, so it happens outside the lock
+    // Shutdown blocks on midisrv (DeleteEndpoint -> RemoveEndpoint), and this is called from the
+    // socket receive callback, so it is queued rather than run here. Reaping ~40 aged-out
+    // connections inline left the host unable to receive anything for the whole reap.
+    auto endpointManager = GetEndpointManager();
+
     for (auto const& connection : reclaimed)
     {
-        LOG_IF_FAILED(connection->Shutdown());
+        if (endpointManager != nullptr)
+        {
+            LOG_IF_FAILED(endpointManager->QueueConnectionShutdown(connection));
+        }
+        else
+        {
+            // no manager means we are tearing down anyway, so there is no callback left to stall
+            LOG_IF_FAILED(connection->Shutdown());
+        }
     }
 
     return S_OK;

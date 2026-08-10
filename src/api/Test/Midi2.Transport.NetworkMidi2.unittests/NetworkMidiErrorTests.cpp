@@ -13,8 +13,12 @@ using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 using namespace NetworkMidiTest;
 
-#define SKIP_IF_NO_HOST() \
+// A missing host is a connection failure, not a skip. EnsureHostAvailable logs the error.
+#define REQUIRE_HOST() \
     if (!ProtocolTestContext::Current().EnsureHostAvailable()) { return; }
+
+// historical name, still used by the tests below
+#define SKIP_IF_NO_HOST() REQUIRE_HOST()
 
 namespace
 {
@@ -264,7 +268,9 @@ void NetworkMidiErrorTests::RetransmitRequestStopsAfterNakCommandNotSupported()
 
     if (!request.has_value())
     {
-        Log::Result(TestResults::Skipped, L"Host did not request a retransmit, so there is nothing to NAK.");
+        // Spec 7.2: a receiver which detects a gap asks for the missing packets. Without that
+        // there is nothing to NAK, so this test cannot verify anything and must not pass.
+        Log::Error(L"Host did not request a retransmit after a 499 packet sequence gap.");
 
         EndSession(client);
 

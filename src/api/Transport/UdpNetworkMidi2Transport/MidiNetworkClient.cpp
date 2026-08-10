@@ -292,6 +292,36 @@ MidiNetworkClient::Start(
 
 
 
+HRESULT
+MidiNetworkClient::DisconnectByUser()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    for (auto& connection : TransportState::Current().GetAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier))
+    {
+        LOG_IF_FAILED(connection->SendUserTerminatedByeAndAwaitReply());
+    }
+
+    {
+        auto lock = m_connectionLock.lock();
+
+        if (m_networkConnection != nullptr)
+        {
+            LOG_IF_FAILED(m_networkConnection->SendUserTerminatedByeAndAwaitReply());
+        }
+    }
+
+    return Shutdown();
+}
+
+
 HRESULT 
 MidiNetworkClient::Shutdown()
 {
@@ -304,11 +334,14 @@ MidiNetworkClient::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    auto connections = TransportState::Current().GetAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier);
 
+    for (auto& connection : connections)
+    {
+        LOG_IF_FAILED(connection->SendShutdownBye());
+    }
 
-
-
-    for (auto& connection : TransportState::Current().GetAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier))
+    for (auto& connection : connections)
     {
         LOG_IF_FAILED(connection->Shutdown());
     }
