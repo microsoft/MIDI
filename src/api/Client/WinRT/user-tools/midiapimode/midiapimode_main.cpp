@@ -149,10 +149,10 @@ bool TryRestartComputer()
 void DisplayMode(_In_ uint32_t const mode)
 {
     fmt::println(L"{} {}",
-        fmt::styled(fmt::format(L"{}:", mode), fmt::fg(fmt::color::golden_rod)),
-        fmt::styled(GetModeName(mode), highlightTextStyle));
+        Styled(fmt::format(L"{}:", mode), fmt::fg(fmt::color::golden_rod)),
+        Styled(GetModeName(mode), highlightTextStyle));
 
-    fmt::println(L"   {}", fmt::styled(GetModeDescription(mode), normalTextStyle));
+    fmt::println(L"   {}", Styled(GetModeDescription(mode), normalTextStyle));
 
     WriteBlankLine();
 }
@@ -181,9 +181,9 @@ void DisplayHelp()
 void DisplayCurrentMode(_In_ uint32_t const currentMode)
 {
     fmt::println(L"{} {} {}",
-        fmt::styled(internal::ResourceGetWString(IDS_LABEL_CURRENT_MODE), normalTextStyle),
-        fmt::styled(currentMode, fmt::fg(fmt::color::golden_rod)),
-        fmt::styled(GetModeName(currentMode), highlightTextStyle));
+        Styled(internal::ResourceGetWString(IDS_LABEL_CURRENT_MODE), normalTextStyle),
+        Styled(currentMode, fmt::fg(fmt::color::golden_rod)),
+        Styled(GetModeName(currentMode), highlightTextStyle));
 
     WriteBlankLine();
 }

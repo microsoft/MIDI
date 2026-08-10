@@ -44,24 +44,24 @@ const wchar_t* VALUE_NAME_UseLegacyMidi = L"UseLegacyMidi";
 
 void WriteInfoDetailLine(_In_ std::wstring const& info)
 {
-    fmt::println(L"- {}", fmt::styled(info, infoTextStyle));
+    fmt::println(L"- {}", Styled(info, infoTextStyle));
 }
 
 void WriteErrorDetailLine(_In_ std::wstring const& info)
 {
-    fmt::println(L"- {}", fmt::styled(info, errorTextStyle));
+    fmt::println(L"- {}", Styled(info, errorTextStyle));
 }
 
 void WriteBrightLabel(_In_ std::wstring const& label)
 {
     auto fullLabel = label + L":";
-    fmt::print(L"- {:<25}", fmt::styled(fullLabel, fmt::fg(fmt::color::white)));
+    fmt::print(L"- {:<25}", Styled(fullLabel, fmt::fg(fmt::color::white)));
 }
 
 void WriteLabel(_In_ std::wstring const& label)
 {
     auto fullLabel = label + L":";
-    fmt::print(L"- {:<25}", fmt::styled(fullLabel, fmt::fg(fmt::color::gray)));
+    fmt::print(L"- {:<25}", Styled(fullLabel, fmt::fg(fmt::color::gray)));
 }
 
 

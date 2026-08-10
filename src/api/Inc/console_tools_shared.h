@@ -66,6 +66,26 @@ const auto filterIdFieldValueTextStyle = fmt::fg(fmt::color::golden_rod);
 const auto entityIdentifierFieldValueTextStyle = fmt::fg(fmt::color::steel_blue);
 const auto entityNameFieldValueTextStyle = fmt::fg(fmt::color::aquamarine);
 
+
+// Styling is emitted as ANSI escape sequences. Those are fine on a console but land in a
+// redirected file as literal escape codes, so they are suppressed when output is not a console.
+// Set once by TrySetConsoleTextMode.
+inline bool& ConsoleStylingEnabled()
+{
+    static bool enabled{ true };
+
+    return enabled;
+}
+
+// Use this in place of fmt::styled everywhere in the console tools. An empty text_style makes
+// fmt emit no escape sequences at all, so suppression costs nothing at the call site and none
+// of the column widths or multi-styled lines have to change.
+template <typename TValue>
+inline auto Styled(TValue const& value, fmt::text_style const& style)
+{
+    return fmt::styled(value, ConsoleStylingEnabled() ? style : fmt::text_style{});
+}
+
 #define KEY_ESCAPE 0x1B
 #define KEY_SPACE  0x20
 
@@ -82,8 +102,6 @@ enum RegistryApiMode
 
 inline RegistryApiMode GetRegistryApiMode()
 {
-    uint32_t registryValue{ 0 };
-
     wil::unique_hkey key;
 
     auto openResult = RegOpenKeyExW(
@@ -137,11 +155,18 @@ inline RegistryApiMode GetRegistryApiMode()
 
 inline bool TrySetConsoleTextMode()
 {
-    auto setModeResult = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT
+    // _O_U16TEXT reaches a real console through WriteConsoleW, with no code page involved, but
+    // redirected output then lands in the file as BOM-less UTF-16LE which many tools misread.
+    DWORD consoleMode{ 0 };
+    bool const writingToConsole = GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &consoleMode) != 0;
+
+    ConsoleStylingEnabled() = writingToConsole;
+
+    auto setModeResult = _setmode(_fileno(stdout), writingToConsole ? _O_U16TEXT : _O_U8TEXT);
 
     if (setModeResult == -1)
     {
-        perror("Unable to set stdout to UTF-16 mode. ");
+        perror("Unable to set stdout to Unicode mode. ");
         return false;
     }
 
@@ -151,48 +176,48 @@ inline bool TrySetConsoleTextMode()
 
 inline void WriteInfoLine(_In_ std::wstring const& info)
 {
-    fmt::println(L"{}", fmt::styled(info, infoTextStyle));
+    fmt::println(L"{}", Styled(info, infoTextStyle));
 }
 
 inline void WriteNormalLine(_In_ std::wstring const& text)
 {
-    fmt::println(L"{}", fmt::styled(text, normalTextStyle));
+    fmt::println(L"{}", Styled(text, normalTextStyle));
 }
 
 inline void WriteHighlightLine(_In_ std::wstring const& text)
 {
-    fmt::println(L"{}", fmt::styled(text, highlightTextStyle));
+    fmt::println(L"{}", Styled(text, highlightTextStyle));
 }
 
 inline void WriteHighlightLine2(_In_ std::wstring const& text)
 {
-    fmt::println(L"{}", fmt::styled(text, highlightTextStyle));
+    fmt::println(L"{}", Styled(text, highlightTextStyle));
 }
 
 
 inline void WriteWarningLine(_In_ std::wstring const& text)
 {
-    fmt::println(L"{}", fmt::styled(text, warningTextStyle));
+    fmt::println(L"{}", Styled(text, warningTextStyle));
 }
 
 inline void WritePromptLine(_In_ std::wstring const& text)
 {
-    fmt::println(L"{}", fmt::styled(text, promptTextStyle));
+    fmt::println(L"{}", Styled(text, promptTextStyle));
 }
 
 inline void WriteErrorLine(_In_ std::wstring const& error)
 {
-    fmt::println(L"{}", fmt::styled(error, errorTextStyle));
+    fmt::println(L"{}", Styled(error, errorTextStyle));
 }
 
 inline void WriteDoubleSeparatorLine()
 {
-    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'='), separatorTextStyle));
+    fmt::println(L"{}", Styled(std::wstring(LINE_LENGTH, L'='), separatorTextStyle));
 }
 
 inline void WriteSingleSeparatorLine()
 {
-    fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'-'), separatorTextStyle));
+    fmt::println(L"{}", Styled(std::wstring(LINE_LENGTH, L'-'), separatorTextStyle));
 }
 
 inline void WriteBlankLine()

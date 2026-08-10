@@ -166,17 +166,17 @@ void DisplayPort(_In_ MidiPort const& port)
 {
     if (port.IsError)
     {
-        fmt::print(L"{:<3}", fmt::styled(port.Index, errorTextStyle));
+        fmt::print(L"{:<3}", Styled(port.Index, errorTextStyle));
     }
     else
     {
-        fmt::print(L"{:<3}", fmt::styled(port.Index, fmt::fg(fmt::color::golden_rod)));
+        fmt::print(L"{:<3}", Styled(port.Index, fmt::fg(fmt::color::golden_rod)));
     }
 
     fmt::println(L"{:<33} - {}: {}", 
-        fmt::styled(port.Name, normalTextStyle), 
-        fmt::styled(internal::ResourceGetWString(IDS_LABEL_DEVICE_INTERFACE), fmt::fg(fmt::color::gray)), 
-        fmt::styled(port.DriverInterface, normalTextStyle));
+        Styled(port.Name, normalTextStyle), 
+        Styled(internal::ResourceGetWString(IDS_LABEL_DEVICE_INTERFACE), fmt::fg(fmt::color::gray)), 
+        Styled(port.DriverInterface, normalTextStyle));
 
     WriteBlankLine();
 }

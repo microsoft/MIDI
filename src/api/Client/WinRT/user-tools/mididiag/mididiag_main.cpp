@@ -15,16 +15,16 @@
 
 void OutputFieldSeparator()
 {
-    fmt::print(L"{}", fmt::styled(MIDIDIAG_FIELD_SEPARATOR, separatorTextStyle));
+    fmt::print(L"{}", Styled(MIDIDIAG_FIELD_SEPARATOR, separatorTextStyle));
 }
 
 void OutputSectionHeader(_In_ std::wstring const& headerText)
 {
     const auto sectionHeaderSeparator = std::wstring(MIDIDIAG_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDIAG_SECTION_HEADER_SEPARATOR_CHAR);
 
-    fmt::println(L"{}", fmt::styled(sectionHeaderSeparator, separatorTextStyle));
-    fmt::println(L"{}", fmt::styled(headerText, infoTextStyle));
-    fmt::println(L"{}", fmt::styled(sectionHeaderSeparator, separatorTextStyle));
+    fmt::println(L"{}", Styled(sectionHeaderSeparator, separatorTextStyle));
+    fmt::println(L"{}", Styled(headerText, infoTextStyle));
+    fmt::println(L"{}", Styled(sectionHeaderSeparator, separatorTextStyle));
     fmt::println(L"");
 }
 
@@ -32,7 +32,7 @@ void OutputItemSeparator()
 {
     const auto itemSeparator = std::wstring(MIDIDIAG_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDIAG_ITEM_SEPARATOR_CHAR);
 
-    fmt::println(L"{}", fmt::styled(itemSeparator, separatorTextStyle));
+    fmt::println(L"{}", Styled(itemSeparator, separatorTextStyle));
 }
 
 void OutputHeader(_In_ std::wstring const& headerText)
@@ -45,7 +45,7 @@ void OutputHeader(_In_ std::wstring const& headerText)
 
 void OutputFieldLabel(_In_ std::wstring const& fieldName)
 {
-    fmt::print(L"{:<36}", fmt::styled(fieldName, fieldLabelTextStyle));
+    fmt::print(L"{:<36}", Styled(fieldName, fieldLabelTextStyle));
 
 }
 
@@ -54,7 +54,7 @@ void OutputEntityNameField(_In_ std::wstring const& fieldName, _In_ winrt::hstri
     OutputFieldLabel(fieldName);
     OutputFieldSeparator();
 
-    fmt::println(L"{}", fmt::styled(std::wstring{ value.c_str() }, entityNameFieldValueTextStyle));
+    fmt::println(L"{}", Styled(std::wstring{ value.c_str() }, entityNameFieldValueTextStyle));
 }
 
 void OutputEntityIdentifierField(_In_ std::wstring const& fieldName, _In_ winrt::hstring const& value)
@@ -62,7 +62,7 @@ void OutputEntityIdentifierField(_In_ std::wstring const& fieldName, _In_ winrt:
     OutputFieldLabel(fieldName);
     OutputFieldSeparator();
 
-    fmt::println(L"{}", fmt::styled(std::wstring{ value.c_str() }, entityIdentifierFieldValueTextStyle));
+    fmt::println(L"{}", Styled(std::wstring{ value.c_str() }, entityIdentifierFieldValueTextStyle));
 }
 
 void OutputPortNumberField(_In_ std::wstring const& fieldName, _In_ uint32_t const& value)
@@ -70,7 +70,7 @@ void OutputPortNumberField(_In_ std::wstring const& fieldName, _In_ uint32_t con
     OutputFieldLabel(fieldName);
     OutputFieldSeparator();
 
-    fmt::println(L"{}", fmt::styled(value, portNumberFieldValueTextStyle));
+    fmt::println(L"{}", Styled(value, portNumberFieldValueTextStyle));
 }
 
 
@@ -80,9 +80,9 @@ void OutputCompactMidi1PortInfo(_In_ std::wstring const& fieldName, _In_ uint32_
     OutputFieldSeparator();
 
     fmt::println(L"{:<3} - {:<31} - {}",
-        fmt::styled(portNumber, portNumberFieldValueTextStyle),
-        fmt::styled(std::wstring{ portName.c_str() }, entityNameFieldValueTextStyle),
-        fmt::styled(std::wstring{ portDeviceId.c_str() }, entityIdentifierFieldValueTextStyle));
+        Styled(portNumber, portNumberFieldValueTextStyle),
+        Styled(std::wstring{ portName.c_str() }, entityNameFieldValueTextStyle),
+        Styled(std::wstring{ portDeviceId.c_str() }, entityIdentifierFieldValueTextStyle));
 }
 
 
@@ -93,7 +93,7 @@ void OutputStringField(_In_ std::wstring const& fieldName, _In_ winrt::hstring c
     OutputFieldLabel(fieldName);
     OutputFieldSeparator();
 
-    fmt::println(L"{}", fmt::styled(std::wstring{ value.c_str() }, fieldValueTextStyle));
+    fmt::println(L"{}", Styled(std::wstring{ value.c_str() }, fieldValueTextStyle));
 }
 
 void OutputStringField(_In_ std::wstring const& fieldName, _In_ std::wstring const& value)
@@ -101,7 +101,7 @@ void OutputStringField(_In_ std::wstring const& fieldName, _In_ std::wstring con
     OutputFieldLabel(fieldName);
     OutputFieldSeparator();
 
-    fmt::println(L"{}", fmt::styled(value, fieldValueTextStyle));
+    fmt::println(L"{}", Styled(value, fieldValueTextStyle));
 }
 
 void OutputBooleanField(_In_ std::wstring const& fieldName, _In_ bool const& value)
@@ -142,7 +142,7 @@ void OutputTimestampField(_In_ std::wstring const& fieldName, _In_ uint64_t cons
     OutputFieldLabel(fieldName);
     OutputFieldSeparator();
 
-    fmt::println(L"{}", fmt::styled(value, fieldValueTextStyle));
+    fmt::println(L"{}", Styled(value, fieldValueTextStyle));
 }
 
 void OutputNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t const value)
@@ -1479,10 +1479,16 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2DevCaps2.h"
 #include "Feature_Servicing_MIDI2BsToUMPConv.h"
 
+// 11D 2026 (planned)
 #include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDIPortDisambiguators.h"
 #include "Feature_Servicing_MIDI2LoopbackMuteAndList.h"
 #include "Feature_Servicing_MIDI2UnicodeConversion.h"
+#include "Feature_Servicing_MIDI2KSInputRemovalDeadlock.h"
+#include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
+#include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
+#include "Feature_Servicing_MIDI2PortNumberCache.h"
+
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -1505,23 +1511,32 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinRtStartup::IsEnabled(),             L"MIDI2WinRtStartup");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSerial::IsEnabled(),                L"MIDI2USBSerial");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SWDAbortCrash::IsEnabled(),            L"MIDI2SWDAbortCrash");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2RTTimestamp::IsEnabled(),              L"MIDI2RTTimestamp");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2NumDevsPerf::IsEnabled(),              L"MIDI2NumDevsPerf");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2RTTimestamp::IsEnabled(),              L"MIDI2RTTimestamp (fix WinRT MIDI 1.0 timestamps)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2NumDevsPerf::IsEnabled(),              L"MIDI2NumDevsPerf (move WinMM device enum to async)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled(),          L"MIDI2LegacyTimestamp");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyControl::IsEnabled(),            L"MIDI2LegacyControl");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyControl::IsEnabled(),            L"MIDI2LegacyControl (support for UseLegacyMidi)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSHandleWrapperCrash::IsEnabled(),     L"MIDI2KSHandleWrapperCrash");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSATVSFix::IsEnabled(),                L"MIDI2KSATVSFix");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2IsUniqueIdLock::IsEnabled(),           L"MIDI2IsUniqueIdLock");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FillReadCrash::IsEnabled(),            L"MIDI2FillReadCrash");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FillReadCrash::IsEnabled(),            L"MIDI2FillReadCrash (usbmidi2-acx driver crash)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DevCaps2::IsEnabled(),                 L"MIDI2DevCaps2");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2BsToUMPConv::IsEnabled(),              L"MIDI2BsToUMPConv");
-      OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FailFast::IsEnabled(),               L"MIDI2FailFast");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FailFast::IsEnabled(),                 L"MIDI2FailFast");
 
-    // 11d 2026
+    // 11d 2026 (planned)
 
     OutputSingleFeatureEnablement(Feature_Servicing_MIDIPortDisambiguators::IsEnabled(),        L"MIDIPortDisambiguators");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled(),      L"MIDI2LoopbackMuteAndList");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2UnicodeConversion::IsEnabled(),        L"MIDI2UnicodeConversion");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled(),   L"MIDI2KSInputRemovalDeadlock (workaround surprise removal for InMusic drivers)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled(),        L"MIDI2KSOutputWriteHang (fix for declared midi out when none present)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled(),      L"MIDI2KSAWatcherHardening (fix for MONTAGE M / MODX usb port move)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNumberCache::IsEnabled(),          L"MIDI2PortNumberCache (greatly speeds up service startup)");
+
+    
+        
+        
+        
 
     return true;
 }
