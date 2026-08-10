@@ -427,7 +427,6 @@ namespace Microsoft.Midi.ConsoleApp
                             }
                             lastMessageTimestamp = e.Timestamp;
 
-
                             receivedMessage.NumWords = e.FillWords(
                                 out receivedMessage.Word0,
                                 out receivedMessage.Word1,

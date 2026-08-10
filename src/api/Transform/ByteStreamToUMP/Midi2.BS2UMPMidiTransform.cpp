@@ -134,6 +134,22 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
 
     if (translatedWords.size() > 0)
     {
+#ifdef _DEBUG
+        // Debug builds only. Logging message data in a shipping binary is a privacy violation.
+        TraceLoggingWrite(
+            MidiBS2UMPTransformTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Translated MIDI 1.0 bytes to UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHexUInt32Array(translatedWords.data(), static_cast<uint16_t>(translatedWords.size()), "translated words"),
+            TraceLoggingUInt32(static_cast<uint32_t>(translatedWords.size()), "translated word count"),
+            TraceLoggingUInt8(m_BS2UMP.defaultGroup, "group index"),
+            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+#endif
+
         // send the message. The context contains the group index
         // If the message contained running status, it no longer does
 

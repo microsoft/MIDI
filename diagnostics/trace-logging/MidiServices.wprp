@@ -30,6 +30,9 @@
     <EventProvider Id="EventProvider_MidiSrv" Stack="true" ProcessExeFilter="Midisrv.exe" Name="*Microsoft.Windows.Midi2.MidiSrv"/>
     <EventProvider Id="EventProvider_MidiSrvTransport" Name="*Microsoft.Windows.Midi2.MidiSrvTransport"/>
 
+    <!-- Statically linked into midisrv.exe, the transports and wdmaud2, so this covers both sides of the shared ring buffer. -->
+    <EventProvider Id="EventProvider_MidiXproc" Name="*Microsoft.Windows.Midi2.MidiXproc"/>
+
     <EventProvider Id="EventProvider_KSTransport" Name="*Microsoft.Windows.Midi2.KSTransport"/>
     <EventProvider Id="EventProvider_KSAggregateTransport" Name="*Microsoft.Windows.Midi2.KSAggregateTransport"/>
     <EventProvider Id="EventProvider_DiagnosticsTransport" Name="*Microsoft.Windows.Midi2.DiagnosticsTransport"/>
@@ -49,6 +52,10 @@
     <EventProvider Id="EventProvider_JitterReductionListenerTransform" Name="*Microsoft.Windows.Midi2.JitterReductionListenerTransform"/>
     <EventProvider Id="EventProvider_SchedulerTransform" Name="*Microsoft.Windows.Midi2.SchedulerTransform"/>
     <EventProvider Id="EventProvider_UMP2BSTransform" Name="*Microsoft.Windows.Midi2.UMP2BSTransform"/>
+    <EventProvider Id="EventProvider_UmpProtocolDownscalerTransform" Name="*Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform"/>
+    <EventProvider Id="EventProvider_ChannelTransform" Name="*Microsoft.Windows.Midi2.ChannelTransform"/>
+    <EventProvider Id="EventProvider_GroupTransform" Name="*Microsoft.Windows.Midi2.GroupTransform"/>
+    <EventProvider Id="EventProvider_MessageTypeFilterTransform" Name="*Microsoft.Windows.Midi2.MessageTypeFilterTransform"/>
 
     <EventProvider Id="EventProvider_SettingsApp" Name="*Microsoft.Midi.Settings"/>
     <EventProvider Id="EventProvider_ConsoleApp" Name="*Microsoft.Midi.Console"/>
@@ -89,6 +96,7 @@
           <EventProviders>
             <EventProviderId Value="EventProvider_MidiSrv"/>
             <EventProviderId Value="EventProvider_MidiSrvTransport"/>
+            <EventProviderId Value="EventProvider_MidiXproc"/>
 
             <EventProviderId Value="EventProvider_KSTransport"/>
             <EventProviderId Value="EventProvider_KSAggregateTransport"/>
@@ -110,6 +118,10 @@
             <EventProviderId Value="EventProvider_JitterReductionListenerTransform"/>
             <EventProviderId Value="EventProvider_SchedulerTransform"/>
             <EventProviderId Value="EventProvider_UMP2BSTransform"/>
+            <EventProviderId Value="EventProvider_UmpProtocolDownscalerTransform"/>
+            <EventProviderId Value="EventProvider_ChannelTransform"/>
+            <EventProviderId Value="EventProvider_GroupTransform"/>
+            <EventProviderId Value="EventProvider_MessageTypeFilterTransform"/>
 
             <EventProviderId Value="EventProvider_SettingsApp"/>
             <EventProviderId Value="EventProvider_ConsoleApp"/>
@@ -120,6 +132,7 @@
           </EventProviders>
         </EventCollectorId>
 
+        <!--
         <EventCollectorId Value="EventCollector_MidiSrvKernel">
           <EventProviders>
             <EventProviderId Value="EventProvider_KernelPnP"/>
@@ -129,6 +142,8 @@
             <EventProviderId Value="EventProvider_UsbXhci"/>
           </EventProviders>
         </EventCollectorId>
+        -->
+        
       </Collectors>
     </Profile>
 

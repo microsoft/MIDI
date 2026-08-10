@@ -254,16 +254,26 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     LONGLONG timestamp
 )
 {
-    //TraceLoggingWrite(
-    //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this")
-    //);
-
     // only 1 message may be downscaled at a time
     auto lock = m_SendLock.lock();
+
+#ifdef _DEBUG
+    // Debug builds only. Logging message data in a shipping binary is a privacy violation.
+    TraceLoggingWrite(
+        MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Downscaler input", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingHexUInt32Array(static_cast<uint32_t*>(inputData), static_cast<uint16_t>(length / sizeof(uint32_t)), "input words"),
+        TraceLoggingUInt32(length, "input length bytes"),
+        TraceLoggingBool(m_downscalingRequiredForEndpoint, "downscaling required"),
+        TraceLoggingBool(m_upscalingRequiredForEndpoint, "upscaling required"),
+        TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    );
+#endif
 
     // if downscaling and upscaling aren't required, quickly move on
     if (!m_downscalingRequiredForEndpoint && !m_upscalingRequiredForEndpoint)
@@ -308,6 +318,22 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
             }
 
         }
+
+#ifdef _DEBUG
+        // Debug builds only. Logging message data in a shipping binary is a privacy violation.
+        TraceLoggingWrite(
+            MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Downscaler output", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingHexUInt32Array(translatedWords.data(), static_cast<uint16_t>(translatedWords.size()), "output words"),
+            TraceLoggingUInt32(static_cast<uint32_t>(translatedWords.size()), "output word count"),
+            TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+#endif
 
         // send all the translated or copied messages
         RETURN_IF_FAILED(m_Callback->Callback(

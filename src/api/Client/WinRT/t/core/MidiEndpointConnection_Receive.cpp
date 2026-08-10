@@ -22,6 +22,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
         RETURN_HR_IF_NULL(E_INVALIDARG, data);
         RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
+#ifdef _DEBUG
+        // Debug builds only. Logging message data in a shipping binary is a privacy violation.
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Buffer received from service.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(size / sizeof(uint32_t)), "data words"),
+            TraceLoggingUInt32(size, MIDI_SDK_TRACE_MESSAGE_SIZE_BYTES_FIELD),
+            TraceLoggingInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD)
+        );
+#endif
+
         // COM Extension Handling ===================================================================================
         {
             std::lock_guard<std::mutex> guard(m_comCallbackLock);

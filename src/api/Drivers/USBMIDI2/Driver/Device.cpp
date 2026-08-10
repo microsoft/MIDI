@@ -48,6 +48,7 @@ Environment:
 #include "Device.tmh"
 
 #include "Feature_Servicing_MIDI2USBSerial.h"
+#include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
 
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
 
@@ -3501,6 +3502,17 @@ Return Value:
             umpPkt->umpData.umpBytes[1] = pBuffer[1];
             firstByte = 1;
             lastByte = 1;
+
+            if (Feature_Servicing_MIDI2USBSystemRealTimeUmpSize_IsEnabled())
+            {
+                // UMP_MT_SYSTEM is one word. The shared tail below belongs to UMP_MT_DATA_64,
+                // which is two, and the extra word reaches clients as a spurious NOOP.
+                umpPkt->umpData.umpBytes[2] = 0x00;
+                umpPkt->umpData.umpBytes[3] = 0x00;
+                umpPkt->wordCount = 1;
+                break;
+            }
+
             goto COMPLETE_1BYTE;
         }
 
