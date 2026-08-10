@@ -1,5 +1,12 @@
 # Overlay of the upstream libmidi2 port. Identical to the registry port except for the
-# patch below. Delete this overlay once the upstream fix ships in a released version.
+# patches below. Delete this overlay once the upstream fixes ship in a released version.
+#
+# This must stay under src/api: the internal Windows build repo is rooted there and cannot
+# see anything above it.
+#
+# The internal build repo carries its own libmidi2 overlay with at least one patch that is
+# not here (malformed SysEx handling, which MidiBSToUMPTransformTests::TestBasicMalformedSysex
+# covers). Treat this port as a subset until the two are reconciled.
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
