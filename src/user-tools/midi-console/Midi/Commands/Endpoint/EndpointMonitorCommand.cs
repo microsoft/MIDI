@@ -107,6 +107,11 @@ namespace Microsoft.Midi.ConsoleApp
             [DefaultValue(false)]
             public bool IncludeRealTimeMessages { get; set; }
 
+            [LocalizedDescription("ParameterMonitorEndpointIncludeUtilityMessages")]
+            [CommandOption("-u|--include-utility-messages")]
+            [DefaultValue(true)]
+            public bool IncludeUtilityMessages { get; set; }
+
 
 
 
@@ -311,6 +316,10 @@ namespace Microsoft.Midi.ConsoleApp
                 UInt64 lastMessageReceivedEventTimestamp = 0;
                 UInt32 countMessagesReceived = 0;
 
+                // Tallied before display filtering, so these remain accurate when the messages are hidden.
+                UInt32 countTimingClockMessages = 0;
+                UInt32 countNoopMessages = 0;
+
                 UInt64 maxDeltaBetweenMessages = UInt64.MinValue;
                 UInt64 minDeltaBetweenMessages = UInt64.MaxValue;
                 UInt64 totalDeltaBetweenMessages = 0;
@@ -351,6 +360,21 @@ namespace Microsoft.Midi.ConsoleApp
 
                         connection.MessageReceived += (s, e) =>
                         {
+                            if (e.MessageType == MidiMessageType.SystemCommon32)
+                            {
+                                if (MidiMessageHelper.GetStatusFromSystemCommonMessage(e.PeekFirstWord()) == 0xF8)
+                                {
+                                    countTimingClockMessages++;
+                                }
+                            }
+                            else if (e.MessageType == MidiMessageType.UtilityMessage32)
+                            {
+                                if (MidiMessageHelper.GetStatusFromUtilityMessage(e.PeekFirstWord()) == 0x0)
+                                {
+                                    countNoopMessages++;
+                                }
+                            }
+
                             if (!settings.IncludeRealTimeMessages && e.MessageType == MidiMessageType.SystemCommon32)
                             {
                                 var status = MidiMessageHelper.GetStatusFromSystemCommonMessage(e.PeekFirstWord());
@@ -362,12 +386,10 @@ namespace Microsoft.Midi.ConsoleApp
                                     return;
                             }
 
-
-                            //if (!settings.IncludeRealTimeMessages &&  e.MessageType == MidiMessageType.UtilityMessage32)
-                            //{
-                            //    // TODO: filter out JR Clock etc
-                            //}
-
+                            if (!settings.IncludeUtilityMessages && e.MessageType == MidiMessageType.UtilityMessage32)
+                            {
+                                return;
+                            }
 
                             countMessagesReceived++;
 
@@ -666,6 +688,48 @@ namespace Microsoft.Midi.ConsoleApp
                     }
 
                     AnsiConsole.MarkupLine(message);
+                }
+
+                if (countTimingClockMessages > 0)
+                {
+                    string message = "➡️ [steelblue1]";
+
+                    if (countTimingClockMessages == 1)
+                    {
+                        message += "One Timing Clock message received";
+                    }
+                    else
+                    {
+                        message += $"{countTimingClockMessages.ToString("N0")} Timing Clock messages received";
+                    }
+                    if (!settings.IncludeRealTimeMessages)
+                    {
+                        message += " (hidden)";
+                    }
+                    message += "[/]";
+
+                    AnsiConsole.MarkupLine(message);
+                }
+
+                if (countNoopMessages > 0)
+                {
+                    string message = "❎ ";
+
+                    if (countNoopMessages == 1)
+                    {
+                        message += "One NOOP message received";
+                    }
+                    else
+                    {
+                        message += $"{countNoopMessages.ToString("N0")} NOOP messages received";
+                    }
+                    if (!settings.IncludeUtilityMessages)
+                    {
+                        message += " (hidden)";
+                    }
+                    message += ". NOOP is valid, but receiving them usually indicates a bug in an upstream component.";
+
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(message));
                 }
 
                 if (countMessagesReceived > 1)

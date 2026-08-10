@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!-- Points every vcpkg manifest project under src/api at the patched libmidi2 port.
+       Remove the overlay and this property once the upstream fix for the uninitialized
+       bytestreamToUMP running status bytes reaches the vcpkg registry. -->
+  <PropertyGroup>
+    <VcpkgAdditionalInstallOptions>$(VcpkgAdditionalInstallOptions) --overlay-ports="$(MSBuildThisFileDirectory)..\..\build\vcpkg-overlay-ports"</VcpkgAdditionalInstallOptions>
+  </PropertyGroup>
+
+</Project>

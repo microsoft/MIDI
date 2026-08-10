@@ -1488,7 +1488,8 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 #include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
-
+#include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
+#include "Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs.h"
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -1532,10 +1533,11 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled(),        L"MIDI2KSOutputWriteHang (fix for declared midi out when none present)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled(),      L"MIDI2KSAWatcherHardening (fix for MONTAGE M / MODX usb port move)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNumberCache::IsEnabled(),          L"MIDI2PortNumberCache (greatly speeds up service startup)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeUmpSize::IsEnabled(), L"MIDI2USBSystemRealTimeUmpSize (fix timing clock coming in as NOOP on MIDI2 driver)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs::IsEnabled(), L"MIDI2BsToUMPConvDisallowNOOPs (ensure over-stated MIDI 1 packet size doesn't result in trailing NOOPs)");
 
     
-        
-        
+    
         
 
     return true;

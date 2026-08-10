@@ -1,0 +1,28 @@
+Initialize the running status bytes d0 and d1.
+
+Neither is initialized by the constructor (clearAll() only touches the bank and RPN
+arrays) and resetBuffer() assigns d1 but never d0. A converter with automatic or
+dynamic storage therefore starts with indeterminate values, and the first data byte
+received before any status byte is turned into a fabricated MIDI 1.0 Channel Voice
+message built from that uninitialized memory.
+
+d1 = 255 is the library's own "no pending data byte" sentinel and d0 = 0 its "no
+running status" state, so this just gives them the values the rest of the parser
+already assumes.
+
+Upstream: https://github.com/midi2-dev/AM_MIDI2.0Lib
+
+diff --git a/include/bytestreamToUMP.h b/include/bytestreamToUMP.h
+--- a/include/bytestreamToUMP.h
++++ b/include/bytestreamToUMP.h
+@@ -29,8 +29,8 @@
+ class bytestreamToUMP{
+ 
+ 	private:
+-		uint8_t d0;
+-		uint8_t d1;
++		uint8_t d0 = 0;
++		uint8_t d1 = 255;
+ 		
+ 		uint8_t sysex7State = 0;
+ 		uint8_t sysex7Pos = 0;

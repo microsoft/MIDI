@@ -63,25 +63,29 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
             {
                 countWordsCreated++;
 
-                if (countWordsCreated > expectedWords.size())
+                std::cout
+                    << std::dec << std::setw(3) << countWordsCreated
+                    << ", Received: " << std::setfill('0') << std::setw(8) << std::hex << receivedWords[i];
+
+                if (expectedWordsIndex < expectedWords.size())
                 {
-                    std::cout << "More words created than expected" << std::endl;
-                    VERIFY_FAIL();
+
+                    std::cout 
+                        << ", Expected: " << std::setfill('0') << std::setw(8) << std::hex << expectedWords[expectedWordsIndex];
                 }
                 else
                 {
-                    std::cout
-                        << std::dec << std::setw(3) << countWordsCreated
-                        << ", Received: " << std::setfill('0') << std::setw(8) << std::hex << receivedWords[i]
-                        << ", Expected: " << std::setfill('0') << std::setw(8) << std::hex << expectedWords[expectedWordsIndex]
-                        << std::endl;
-
-                    VERIFY_ARE_EQUAL(expectedWords[expectedWordsIndex], receivedWords[i]);
-
-                    expectedWordsIndex++;
+                    std::cout << ", Expected: <none>";
                 }
+
+                std::cout << std::endl;
+
+                VERIFY_ARE_EQUAL(expectedWords[expectedWordsIndex], receivedWords[i]);
+
+                expectedWordsIndex++;
             }
 
+            VERIFY_ARE_EQUAL(expectedWords.size(), countWordsCreated);
 
             std::cout << std::endl;
 
@@ -221,6 +225,7 @@ void MidiBSToUMPTransformTests::TestTimingClock()
 
     InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
 }
+
 
 void MidiBSToUMPTransformTests::TestTimingClockPadded()
 {
