@@ -9,6 +9,7 @@
 #include "stdafx.h"
 #include "ump_iterator.h"
 #include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
+#include "Feature_Servicing_MIDI2StreamTextUtf8.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -702,7 +703,7 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
     {
         MidiFunctionBlockName name{ };
 
-        name.Name = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
+        name.Name = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
         name.IsComplete = true;
 
         m_functionBlockNames.insert_or_assign(functionBlockNumber, name);
@@ -741,7 +742,7 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
         if (m_functionBlockNames.find(functionBlockNumber) != m_functionBlockNames.end())
         {
             auto& name = m_functionBlockNames.find(functionBlockNumber)->second;
-            name.Name = internal::TrimmedWStringCopy(name.Name + ParseStreamTextMessage(ump));
+            name.Name = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(name.Name + ParseStreamTextMessage(ump)));
             name.IsComplete = true;
 
             RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name.Name));
@@ -779,7 +780,7 @@ CMidiEndpointProtocolWorker::ProcessProductInstanceIdNotificationMessage(interna
     switch (internal::GetFormFromStreamMessageFirstWord(ump.word0))
     {
     case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
-        m_productInstanceId = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
+        m_productInstanceId = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
         RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
 
         m_taskEndpointProductInstanceIdReceived = true;
@@ -805,7 +806,7 @@ CMidiEndpointProtocolWorker::ProcessProductInstanceIdNotificationMessage(interna
     case MIDI_STREAM_MESSAGE_MULTI_FORM_END: // end of multi-part name message. Finish name and update property
         if (!m_productInstanceId.empty())
         {
-            m_productInstanceId = internal::TrimmedWStringCopy(m_productInstanceId + ParseStreamTextMessage(ump));
+            m_productInstanceId = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(m_productInstanceId + ParseStreamTextMessage(ump)));
             RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
             m_taskEndpointProductInstanceIdReceived = true;
         }
@@ -842,7 +843,7 @@ CMidiEndpointProtocolWorker::ProcessEndpointNameNotificationMessage(internal::Pa
     switch (internal::GetFormFromStreamMessageFirstWord(ump.word0))
     {
     case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
-        m_endpointName = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
+        m_endpointName = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
         RETURN_IF_FAILED(UpdateEndpointNameProperty());
         m_taskEndpointNameReceived = true;
         break;
@@ -867,7 +868,7 @@ CMidiEndpointProtocolWorker::ProcessEndpointNameNotificationMessage(internal::Pa
     case MIDI_STREAM_MESSAGE_MULTI_FORM_END: // end of multi-part name message. Finish name and update property
         if (!m_endpointName.empty())
         {
-            m_endpointName = internal::TrimmedWStringCopy(m_endpointName + ParseStreamTextMessage(ump));
+            m_endpointName = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(m_endpointName + ParseStreamTextMessage(ump)));
 
             RETURN_IF_FAILED(UpdateEndpointNameProperty());
             m_taskEndpointNameReceived = true;
@@ -891,6 +892,64 @@ CMidiEndpointProtocolWorker::ProcessEndpointNameNotificationMessage(internal::Pa
 
 
 
+
+
+_Use_decl_annotations_
+std::wstring
+CMidiEndpointProtocolWorker::DecodeAccumulatedStreamText(std::wstring const& accumulated)
+{
+    if (!Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled())
+    {
+        // previous behaviour: each UTF-8 byte was left widened into its own character, so any
+        // name outside ASCII arrived mangled
+        return accumulated;
+    }
+
+    if (accumulated.empty())
+    {
+        return accumulated;
+    }
+
+    std::string bytes;
+    bytes.reserve(accumulated.length());
+
+    for (auto const c : accumulated)
+    {
+        bytes.push_back(static_cast<char>(c & 0xFF));
+    }
+
+    auto requiredLength = MultiByteToWideChar(
+        CP_UTF8, MB_ERR_INVALID_CHARS, bytes.data(), static_cast<int>(bytes.length()), nullptr, 0);
+
+    if (requiredLength <= 0)
+    {
+        // Not valid UTF-8. The device is out of spec, but keeping the raw text is more useful to
+        // a user than discarding the name.
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Stream text is not valid UTF-8. Keeping it undecoded.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+        return accumulated;
+    }
+
+    std::wstring decoded;
+    decoded.resize(requiredLength);
+
+    if (MultiByteToWideChar(
+            CP_UTF8, MB_ERR_INVALID_CHARS, bytes.data(), static_cast<int>(bytes.length()),
+            decoded.data(), requiredLength) <= 0)
+    {
+        return accumulated;
+    }
+
+    return decoded;
+}
 
 
 HRESULT
