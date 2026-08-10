@@ -26,7 +26,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         bool const updatedUserMetadata,
         bool const updatedAdditionalCapabilities,
         bool const updatedUniqueIds,
-        bool const updatedGroupTerminalBlocks
+        bool const updatedGroupTerminalBlocks,
+        bool const updatedMutedState
     ) noexcept
     {
 
@@ -44,6 +45,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         m_updatedUniqueIds = updatedUniqueIds;
 
         m_updatedGroupTerminalBlocks = updatedGroupTerminalBlocks;
+
+        m_updatedMutedState = updatedMutedState;
     }
 
 }

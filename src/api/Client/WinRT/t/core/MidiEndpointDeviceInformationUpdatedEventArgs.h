@@ -29,6 +29,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         bool AreGroupTerminalBlocksUpdated() const noexcept { return m_updatedGroupTerminalBlocks; }
 
+        bool IsMutedStateUpdated() const noexcept { return m_updatedMutedState; }
+
         enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
 
         void InternalInitialize(
@@ -42,7 +44,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             _In_ bool const updatedUserMetadata,
             _In_ bool const updatedAdditionalCapabilities,
             _In_ bool const updatedUniqueIds,
-            _In_ bool const updatedGroupTerminalBlocks
+            _In_ bool const updatedGroupTerminalBlocks,
+            _In_ bool const updatedMutedState
         ) noexcept;
 
     private:
@@ -56,6 +59,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         bool m_updatedUniqueIds{ false };
 
         bool m_updatedGroupTerminalBlocks{ false };
+
+        bool m_updatedMutedState{ false };
 
         winrt::hstring m_endpointDeviceId{};
         enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };

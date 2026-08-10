@@ -290,7 +290,6 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     std::wstring transportCode(TRANSPORT_CODE);
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     std::wstring endpointName = definition->EndpointName;
     std::wstring endpointDescription = definition->EndpointDescription;
@@ -321,6 +320,14 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (definition->AssociationId.length() + 1)), (PVOID)definition->AssociationId.c_str() });
 
     // Device properties
+
+    if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
+        interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_IsMuted, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropFalse });
+    }
 
 
     SW_DEVICE_CREATE_INFO createInfo = {};
