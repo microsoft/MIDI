@@ -55,15 +55,15 @@ HMIDIIN m_hMidiIn{ };
 void WriteInputPortSelector(_In_ MidiInputPort const& port)
 {
     fmt::println(L"{} : {}",
-        fmt::styled(port.Index, fmt::fg(fmt::color::golden_rod)),
-        fmt::styled(port.Name, fmt::fg(fmt::color::light_gray))
+        Styled(port.Index, fmt::fg(fmt::color::golden_rod)),
+        Styled(port.Name, fmt::fg(fmt::color::light_gray))
         );
 
 }
 
 void WriteSysExDataByte(_In_ uint8_t const dataByte)
 {
-    fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X} ", dataByte), fmt::fg(fmt::color::gray)));
+    fmt::print(L"{}", Styled(fmt::format(L"{:02X} ", dataByte), fmt::fg(fmt::color::gray)));
 }
 
 
@@ -105,12 +105,12 @@ void DisplayStatusByte(byte status, bool isError)
 {
     if (status == MIDI_SYSEX)
     {
-        fmt::print(L"\n{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
+        fmt::print(L"\n{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
 
     }
     else if (status == MIDI_EOX)
     {
-        fmt::println(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
+        fmt::println(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
     }
     else
     {
@@ -119,7 +119,7 @@ void DisplayStatusByte(byte status, bool isError)
 
     if (isError)
     {
-        fmt::println(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::pink)));
+        fmt::println(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::pink)));
         return;
     }
 
@@ -129,24 +129,24 @@ void DisplayStatusByte(byte status, bool isError)
         switch (status & 0xF0)
         {
         case MIDI_NOTEOFF:
-            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::dark_cyan)));
+            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::dark_cyan)));
             break;
         case MIDI_NOTEON:
-            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::cyan)));
+            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::cyan)));
             break;
         case MIDI_MONOAFTERTOUCH:
-            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::golden_rod)));
+            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::golden_rod)));
             break;
         case MIDI_CONTROLCHANGE:
-            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_blue)));
+            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_blue)));
             break;
         default:
-            fmt::print(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::magenta)));
+            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::magenta)));
         }
     }
     else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
     {
-        fmt::println(L"{}", fmt::styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::gray)));
+        fmt::println(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::gray)));
     }
 
 }
@@ -155,11 +155,11 @@ void DisplayDataByte(byte data, bool isError)
 {
     if (isError)
     {
-        fmt::print(L" {}", fmt::styled(fmt::format(L"{:02X}", data), fmt::fg(fmt::color::pink)));
+        fmt::print(L" {}", Styled(fmt::format(L"{:02X}", data), fmt::fg(fmt::color::pink)));
     }
     else
     {
-        fmt::print(L" {}", fmt::styled(fmt::format(L"{:02X}", data), fmt::fg(fmt::color::light_gray)));
+        fmt::print(L" {}", Styled(fmt::format(L"{:02X}", data), fmt::fg(fmt::color::light_gray)));
     }
 }
 
@@ -171,11 +171,11 @@ void DisplayDecodedChannelVoiceMessage(
     _In_ uint8_t const byte1)
 {
     fmt::print(L" {} {} {} {} {}", 
-        fmt::styled(fmt::format(L"{:<18}", messageName), fmt::fg(fmt::color::aqua)),
-        fmt::styled(internal::ResourceGetWString(IDS_LABEL_CHANNEL), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(fmt::format(L"{:>2},", channel), fmt::fg(fmt::color::golden_rod)),
-        fmt::styled(fmt::format(L"{:<12}:", labelForByte1), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(fmt::format(L"{:3}", byte1), fmt::fg(fmt::color::golden_rod))
+        Styled(fmt::format(L"{:<18}", messageName), fmt::fg(fmt::color::aqua)),
+        Styled(internal::ResourceGetWString(IDS_LABEL_CHANNEL), fmt::fg(fmt::color::light_gray)),
+        Styled(fmt::format(L"{:>2},", channel), fmt::fg(fmt::color::golden_rod)),
+        Styled(fmt::format(L"{:<12}:", labelForByte1), fmt::fg(fmt::color::light_gray)),
+        Styled(fmt::format(L"{:3}", byte1), fmt::fg(fmt::color::golden_rod))
         );
 }
 
@@ -190,8 +190,8 @@ void DisplayDecodedChannelVoiceMessage(
     DisplayDecodedChannelVoiceMessage(messageName, channel, labelForByte1, byte1);
 
     fmt::print(L", {} {}",
-        fmt::styled(fmt::format(L"{:<12}:", labelForByte2), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(fmt::format(L"{:3}", byte2), fmt::fg(fmt::color::golden_rod))
+        Styled(fmt::format(L"{:<12}:", labelForByte2), fmt::fg(fmt::color::light_gray)),
+        Styled(fmt::format(L"{:3}", byte2), fmt::fg(fmt::color::golden_rod))
     );
 }
 
@@ -288,22 +288,22 @@ void DisplayMidiMessage(ReceivedMidiMessage& msg)
             switch (status)
             {
             case MIDI_TIMINGCLOCK:
-                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CLOCK), fmt::fg(fmt::color::light_cyan)));
+                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CLOCK), fmt::fg(fmt::color::light_cyan)));
                 break;
             case MIDI_START:
-                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_START), fmt::fg(fmt::color::green)));
+                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_START), fmt::fg(fmt::color::green)));
                 break;
             case MIDI_CONTINUE:
-                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CONTINUE), fmt::fg(fmt::color::light_yellow)));
+                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CONTINUE), fmt::fg(fmt::color::light_yellow)));
                 break;
             case MIDI_STOP:
-                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_STOP), fmt::fg(fmt::color::red)));
+                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_STOP), fmt::fg(fmt::color::red)));
                 break;
             case MIDI_ACTIVESENSE:
-                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_ACTIVE_SENSE), fmt::fg(fmt::color::gray)));
+                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_ACTIVE_SENSE), fmt::fg(fmt::color::gray)));
                 break;
             case MIDI_RESET:
-                fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_RESET), fmt::fg(fmt::color::light_salmon)));
+                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_RESET), fmt::fg(fmt::color::light_salmon)));
                 break;
             }
         }
@@ -538,30 +538,30 @@ int __cdecl main(int argc, char* argv[])
         port != m_midiInputs.end())
     {
         fmt::println(L"\n{} {} {} {} {} {} {}",
-            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_MONITORING), fmt::fg(fmt::color::light_gray)),
-            fmt::styled(port->Name, fmt::fg(fmt::color::aqua)),
-            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_FOR_INPUT_HIT), fmt::fg(fmt::color::light_gray)),
-            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_KEY_ESCAPE), fmt::fg(fmt::color::light_green)),
-            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_TO_CANCEL_HIT), fmt::fg(fmt::color::light_gray)),
-            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_KEY_SPACEBAR), fmt::fg(fmt::color::light_green)),
-            fmt::styled(internal::ResourceGetWString(IDS_MONITORING_TO_TOGGLE_HIDDEN_MESSAGES), fmt::fg(fmt::color::light_gray))
+            Styled(internal::ResourceGetWString(IDS_MONITORING_MONITORING), fmt::fg(fmt::color::light_gray)),
+            Styled(port->Name, fmt::fg(fmt::color::aqua)),
+            Styled(internal::ResourceGetWString(IDS_MONITORING_FOR_INPUT_HIT), fmt::fg(fmt::color::light_gray)),
+            Styled(internal::ResourceGetWString(IDS_MONITORING_KEY_ESCAPE), fmt::fg(fmt::color::light_green)),
+            Styled(internal::ResourceGetWString(IDS_MONITORING_TO_CANCEL_HIT), fmt::fg(fmt::color::light_gray)),
+            Styled(internal::ResourceGetWString(IDS_MONITORING_KEY_SPACEBAR), fmt::fg(fmt::color::light_green)),
+            Styled(internal::ResourceGetWString(IDS_MONITORING_TO_TOGGLE_HIDDEN_MESSAGES), fmt::fg(fmt::color::light_gray))
         );
 
         if (!m_showActiveSense)
         {
             fmt::print(L"{} {} {} ",
-                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_HIDING), fmt::fg(fmt::color::light_gray)),
-                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_ACTIVE_SENSE), fmt::fg(fmt::color::pink)),
-                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_MESSAGES), fmt::fg(fmt::color::light_gray))
+                Styled(internal::ResourceGetWString(IDS_MONITORING_HIDING), fmt::fg(fmt::color::light_gray)),
+                Styled(internal::ResourceGetWString(IDS_MONITORING_ACTIVE_SENSE), fmt::fg(fmt::color::pink)),
+                Styled(internal::ResourceGetWString(IDS_MONITORING_MESSAGES), fmt::fg(fmt::color::light_gray))
             );
         }
 
         if (!m_showClock)
         {
             fmt::println(L"{} {} {}",
-                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_HIDING), fmt::fg(fmt::color::light_gray)),
-                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_CLOCK), fmt::fg(fmt::color::pink)),
-                fmt::styled(internal::ResourceGetWString(IDS_MONITORING_MESSAGES), fmt::fg(fmt::color::light_gray))
+                Styled(internal::ResourceGetWString(IDS_MONITORING_HIDING), fmt::fg(fmt::color::light_gray)),
+                Styled(internal::ResourceGetWString(IDS_MONITORING_CLOCK), fmt::fg(fmt::color::pink)),
+                Styled(internal::ResourceGetWString(IDS_MONITORING_MESSAGES), fmt::fg(fmt::color::light_gray))
             );
         }
 
@@ -642,36 +642,36 @@ int __cdecl main(int argc, char* argv[])
     fmt::println(L"");
 
     fmt::println(L"{:<31} {} ",
-        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_TOTAL_BYTES_RECEIVED), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(m_countAllBytesReceived, fmt::fg(fmt::color::aqua)));
+        Styled(internal::ResourceGetWString(IDS_SUMMARY_TOTAL_BYTES_RECEIVED), fmt::fg(fmt::color::light_gray)),
+        Styled(m_countAllBytesReceived, fmt::fg(fmt::color::aqua)));
 
     fmt::println(L"{:<31} {} ",
-        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_STATUS_BYTES_RECEIVED), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(m_countStatusBytesReceived, fmt::fg(fmt::color::aqua)));
+        Styled(internal::ResourceGetWString(IDS_SUMMARY_STATUS_BYTES_RECEIVED), fmt::fg(fmt::color::light_gray)),
+        Styled(m_countStatusBytesReceived, fmt::fg(fmt::color::aqua)));
 
     fmt::println(L"");
 
     fmt::println(L"{:<31} {} ",
-        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_TIMESTAMP_FIRST_MESSAGE), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(m_timestampFirstMessageReceived, fmt::fg(fmt::color::light_green)));
+        Styled(internal::ResourceGetWString(IDS_SUMMARY_TIMESTAMP_FIRST_MESSAGE), fmt::fg(fmt::color::light_gray)),
+        Styled(m_timestampFirstMessageReceived, fmt::fg(fmt::color::light_green)));
 
     fmt::println(L"{:<31} {} ",
-        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_TIMESTAMP_LAST_MESSAGE), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(m_timestampLastMessageReceived, fmt::fg(fmt::color::light_green)));
+        Styled(internal::ResourceGetWString(IDS_SUMMARY_TIMESTAMP_LAST_MESSAGE), fmt::fg(fmt::color::light_gray)),
+        Styled(m_timestampLastMessageReceived, fmt::fg(fmt::color::light_green)));
 
     fmt::println(L"{:<31} {} ",
-        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_ELAPSED_TICKS), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(elapsedTicks, fmt::fg(fmt::color::light_green)));
+        Styled(internal::ResourceGetWString(IDS_SUMMARY_ELAPSED_TICKS), fmt::fg(fmt::color::light_gray)),
+        Styled(elapsedTicks, fmt::fg(fmt::color::light_green)));
 
     fmt::println(L"");
 
     fmt::println(L"{:<31} {} ",
-        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_ELAPSED_MILLISECONDS), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(elapsedMilliseconds, fmt::fg(fmt::color::yellow)));
+        Styled(internal::ResourceGetWString(IDS_SUMMARY_ELAPSED_MILLISECONDS), fmt::fg(fmt::color::light_gray)),
+        Styled(elapsedMilliseconds, fmt::fg(fmt::color::yellow)));
 
     fmt::println(L"{:<31} {} ",
-        fmt::styled(internal::ResourceGetWString(IDS_SUMMARY_AVERAGE_MILLISECONDS_PER_BYTE), fmt::fg(fmt::color::light_gray)),
-        fmt::styled(averageMillisecondsPerByte, fmt::fg(fmt::color::yellow)));
+        Styled(internal::ResourceGetWString(IDS_SUMMARY_AVERAGE_MILLISECONDS_PER_BYTE), fmt::fg(fmt::color::light_gray)),
+        Styled(averageMillisecondsPerByte, fmt::fg(fmt::color::yellow)));
 
     fmt::println(L"");
 

@@ -16,13 +16,13 @@
 void WriteBrightLabel(std::wstring const& label)
 {
     auto fullLabel = label + L":";
-    fmt::print(L"{:<25}", fmt::styled(label, fmt::fg(fmt::color::white)));
+    fmt::print(L"{:<25}", Styled(label, fmt::fg(fmt::color::white)));
 }
 
 void WriteLabel(std::wstring const& label)
 {
     auto fullLabel = label + L":";
-    fmt::print(L"{:<25}", fmt::styled(label, fmt::fg(fmt::color::gray)));
+    fmt::print(L"{:<25}", Styled(label, fmt::fg(fmt::color::gray)));
 }
 
 
@@ -153,14 +153,14 @@ void DisplayMidiDevices()
 
         fmt::println(L"{}{} {}", 
             std::wstring(indent, L' '),
-            fmt::styled(internal::ResourceGetWString(IDS_LABEL_DEVICE_NAME), darkLabelTextStyle),
-            fmt::styled(device.Name, highlightTextStyle)
+            Styled(internal::ResourceGetWString(IDS_LABEL_DEVICE_NAME), darkLabelTextStyle),
+            Styled(device.Name, highlightTextStyle)
         );
 
         fmt::println(L"{}{} {}",
             std::wstring(indent, L' '),
-            fmt::styled(internal::ResourceGetWString(IDS_LABEL_INSTANCE_ID), darkLabelTextStyle),
-            fmt::styled(device.DeviceInstanceId, fmt::fg(fmt::color::golden_rod))
+            Styled(internal::ResourceGetWString(IDS_LABEL_INSTANCE_ID), darkLabelTextStyle),
+            Styled(device.DeviceInstanceId, fmt::fg(fmt::color::golden_rod))
         );
 
         // we list all the filters once in a short format, to make it easier to read for some devices
@@ -188,12 +188,12 @@ void DisplayMidiDevices()
 
                     fmt::println(L"{}{} {} {} {} {} {}",
                         std::wstring(indent, L' '),
-                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_DEVICE), infoTextStyle),
-                        fmt::styled(device.Name, highlightTextStyle),
-                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_INCLUDES), infoTextStyle),
-                        fmt::styled(device.Filters.size(), highlightTextStyle),
-                        fmt::styled(internal::ResourceGetWString(device.Filters.size() == 1 ? IDS_LABEL_FILTER_SINGULAR : IDS_LABEL_FILTER_PLURAL), infoTextStyle),
-                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_WITH_MIDI_FORMAT_PINS), infoTextStyle)
+                        Styled(internal::ResourceGetWString(IDS_LABEL_DEVICE), infoTextStyle),
+                        Styled(device.Name, highlightTextStyle),
+                        Styled(internal::ResourceGetWString(IDS_LABEL_INCLUDES), infoTextStyle),
+                        Styled(device.Filters.size(), highlightTextStyle),
+                        Styled(internal::ResourceGetWString(device.Filters.size() == 1 ? IDS_LABEL_FILTER_SINGULAR : IDS_LABEL_FILTER_PLURAL), infoTextStyle),
+                        Styled(internal::ResourceGetWString(IDS_LABEL_WITH_MIDI_FORMAT_PINS), infoTextStyle)
                         );
 
                     WriteBlankLine();
@@ -202,14 +202,14 @@ void DisplayMidiDevices()
 
                     fmt::println(L"{}{:<{}}{:<{}}",
                         std::wstring(indent, L' '),
-                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_NAME), darkLabelTextStyle), FilterNameColumnWidth,
-                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_INSTANCE_ID), darkLabelTextStyle), FilterIdColumnWidth
+                        Styled(internal::ResourceGetWString(IDS_HEADER_NAME), darkLabelTextStyle), FilterNameColumnWidth,
+                        Styled(internal::ResourceGetWString(IDS_HEADER_INSTANCE_ID), darkLabelTextStyle), FilterIdColumnWidth
                     );
 
                     fmt::println(L"{}{:<{}}{:<{}}",
                         std::wstring(indent, L' '),
-                        fmt::styled(std::wstring(FilterNameColumnWidth - 1, L'-'), darkLabelTextStyle), FilterNameColumnWidth,
-                        fmt::styled(std::wstring(FilterIdColumnWidth - 1, L'-'), darkLabelTextStyle), FilterIdColumnWidth
+                        Styled(std::wstring(FilterNameColumnWidth - 1, L'-'), darkLabelTextStyle), FilterNameColumnWidth,
+                        Styled(std::wstring(FilterIdColumnWidth - 1, L'-'), darkLabelTextStyle), FilterIdColumnWidth
                     );
 
                     firstFilter = false;
@@ -218,8 +218,8 @@ void DisplayMidiDevices()
 
                 fmt::println(L"{}{:<{}}{:<{}}",
                     std::wstring(indent, L' '),
-                    fmt::styled(filter.Name, highlightTextStyle), FilterNameColumnWidth,
-                    fmt::styled(filter.Id, filterIdFieldValueTextStyle), FilterIdColumnWidth
+                    Styled(filter.Name, highlightTextStyle), FilterNameColumnWidth,
+                    Styled(filter.Id, filterIdFieldValueTextStyle), FilterIdColumnWidth
                 );
 
             }
@@ -238,7 +238,7 @@ void DisplayMidiDevices()
 
                 fmt::println(L"{}{}",
                     std::wstring(indent, L' '),
-                    fmt::styled(internal::ResourceGetWString(IDS_LABEL_FILTER_DETAILS_HEADER), infoTextStyle)
+                    Styled(internal::ResourceGetWString(IDS_LABEL_FILTER_DETAILS_HEADER), infoTextStyle)
                 );
 
                 WriteBlankLine();
@@ -249,14 +249,14 @@ void DisplayMidiDevices()
 
             fmt::println(L"{}{:<19} {}",
                 std::wstring(indent, L' '),
-                fmt::styled(internal::ResourceGetWString(IDS_LABEL_FILTER_ID), darkLabelTextStyle),
-                fmt::styled(filter.Id, filterIdFieldValueTextStyle)
+                Styled(internal::ResourceGetWString(IDS_LABEL_FILTER_ID), darkLabelTextStyle),
+                Styled(filter.Id, filterIdFieldValueTextStyle)
             );
 
             fmt::println(L"{}{:<19} {}",
                 std::wstring(indent, L' '),
-                fmt::styled(internal::ResourceGetWString(IDS_LABEL_FILTER_NAME), darkLabelTextStyle),
-                fmt::styled(filter.Name, highlightTextStyle)
+                Styled(internal::ResourceGetWString(IDS_LABEL_FILTER_NAME), darkLabelTextStyle),
+                Styled(filter.Name, highlightTextStyle)
             );
 
 
@@ -273,8 +273,8 @@ void DisplayMidiDevices()
 
             fmt::println(L"{}{:<19} {}",
                 std::wstring(indent, L' '),
-                fmt::styled(internal::ResourceGetWString(IDS_LABEL_NAME_FROM_REGISTRY), darkLabelTextStyle),
-                fmt::styled(nameFromRegistry, fmt::fg(filter.NameFromRegistry.empty() ? fmt::color::dark_slate_gray : fmt::color::aqua))
+                Styled(internal::ResourceGetWString(IDS_LABEL_NAME_FROM_REGISTRY), darkLabelTextStyle),
+                Styled(nameFromRegistry, fmt::fg(filter.NameFromRegistry.empty() ? fmt::color::dark_slate_gray : fmt::color::aqua))
             );
 
 
@@ -294,12 +294,12 @@ void DisplayMidiDevices()
 
                     fmt::println(L"{}{} {} {} {} {} {}",
                         std::wstring(indent, L' '),
-                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_FILTER), infoTextStyle),
-                        fmt::styled(filter.Name, highlightTextStyle),
-                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_INCLUDES), infoTextStyle),
-                        fmt::styled(filter.Pins.size(), highlightTextStyle),
-                        fmt::styled(internal::ResourceGetWString(IDS_LABEL_MIDI_FORMAT), infoTextStyle),
-                        fmt::styled(internal::ResourceGetWString(filter.Pins.size() == 1 ? IDS_LABEL_PIN_SINGULAR : IDS_LABEL_PIN_PLURAL), infoTextStyle)
+                        Styled(internal::ResourceGetWString(IDS_LABEL_FILTER), infoTextStyle),
+                        Styled(filter.Name, highlightTextStyle),
+                        Styled(internal::ResourceGetWString(IDS_LABEL_INCLUDES), infoTextStyle),
+                        Styled(filter.Pins.size(), highlightTextStyle),
+                        Styled(internal::ResourceGetWString(IDS_LABEL_MIDI_FORMAT), infoTextStyle),
+                        Styled(internal::ResourceGetWString(filter.Pins.size() == 1 ? IDS_LABEL_PIN_SINGULAR : IDS_LABEL_PIN_PLURAL), infoTextStyle)
                     );
 
                     WriteBlankLine();
@@ -308,20 +308,20 @@ void DisplayMidiDevices()
 
                     fmt::println(L"{}{:<{}}{:<{}}{:<{}}{:<{}}{:<{}}",
                         std::wstring(indent, L' '),
-                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_INDEX), fmt::fg(fmt::color::gray)), PinIndexColumnWidth,
-                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_DATA_FORMAT), fmt::fg(fmt::color::gray)), PinDataFormatColumnWidth,
-                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_DATA_FLOW), fmt::fg(fmt::color::gray)), PinDataFlowColumnWidth,
-                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_PORT_TYPE), fmt::fg(fmt::color::gray)), PinDataFlowExplanationColumnWidth,
-                        fmt::styled(internal::ResourceGetWString(IDS_HEADER_PIN_NAME), fmt::fg(fmt::color::gray)), PinNameColumnWidth
+                        Styled(internal::ResourceGetWString(IDS_HEADER_PIN_INDEX), fmt::fg(fmt::color::gray)), PinIndexColumnWidth,
+                        Styled(internal::ResourceGetWString(IDS_HEADER_PIN_DATA_FORMAT), fmt::fg(fmt::color::gray)), PinDataFormatColumnWidth,
+                        Styled(internal::ResourceGetWString(IDS_HEADER_PIN_DATA_FLOW), fmt::fg(fmt::color::gray)), PinDataFlowColumnWidth,
+                        Styled(internal::ResourceGetWString(IDS_HEADER_PIN_PORT_TYPE), fmt::fg(fmt::color::gray)), PinDataFlowExplanationColumnWidth,
+                        Styled(internal::ResourceGetWString(IDS_HEADER_PIN_NAME), fmt::fg(fmt::color::gray)), PinNameColumnWidth
                     );
 
                     fmt::println(L"{}{:<{}}{:<{}}{:<{}}{:<{}}{:<{}}",
                         std::wstring(indent, L' '),
-                        fmt::styled(std::wstring(PinIndexColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinIndexColumnWidth,
-                        fmt::styled(std::wstring(PinDataFormatColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFormatColumnWidth,
-                        fmt::styled(std::wstring(PinDataFlowColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFlowColumnWidth,
-                        fmt::styled(std::wstring(PinDataFlowExplanationColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFlowExplanationColumnWidth,
-                        fmt::styled(std::wstring(PinNameColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinNameColumnWidth
+                        Styled(std::wstring(PinIndexColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinIndexColumnWidth,
+                        Styled(std::wstring(PinDataFormatColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFormatColumnWidth,
+                        Styled(std::wstring(PinDataFlowColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFlowColumnWidth,
+                        Styled(std::wstring(PinDataFlowExplanationColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinDataFlowExplanationColumnWidth,
+                        Styled(std::wstring(PinNameColumnWidth - 1, L'-'), fmt::fg(fmt::color::gray)), PinNameColumnWidth
                     );
 
                     firstPin = false;
@@ -329,16 +329,16 @@ void DisplayMidiDevices()
 
                 fmt::print(L"{}{:<{}}",
                     std::wstring(indent, L' '),
-                    fmt::styled(pin.Number, fmt::fg(fmt::color::golden_rod)), PinIndexColumnWidth
+                    Styled(pin.Number, fmt::fg(fmt::color::golden_rod)), PinIndexColumnWidth
                 );
 
                 if (WI_AreAllFlagsSet(pin.DataFormat,MidiDataFormats::MidiDataFormats_ByteStream))
                 {
-                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MIDI1_BYTE_FORMAT), fmt::fg(fmt::color::light_gray)), PinDataFormatColumnWidth);
+                    fmt::print(L"{:<{}}", Styled(internal::ResourceGetWString(IDS_VALUE_MIDI1_BYTE_FORMAT), fmt::fg(fmt::color::light_gray)), PinDataFormatColumnWidth);
                 }
                 else if (WI_AreAllFlagsSet(pin.DataFormat, MidiDataFormats::MidiDataFormats_UMP))
                 {
-                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MIDI2_UMP_FORMAT), fmt::fg(fmt::color::light_gray)), PinDataFormatColumnWidth);
+                    fmt::print(L"{:<{}}", Styled(internal::ResourceGetWString(IDS_VALUE_MIDI2_UMP_FORMAT), fmt::fg(fmt::color::light_gray)), PinDataFormatColumnWidth);
                 }
 
 
@@ -346,23 +346,23 @@ void DisplayMidiDevices()
 
                 if (pin.PinFlow == KSPIN_DATAFLOW_IN)
                 {
-                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MESSAGE_DESTINATION), infoTextStyle), PinDataFlowColumnWidth);
-                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MIDI_OUTPUT_FROM_PC), infoTextStyle), PinDataFlowExplanationColumnWidth);
+                    fmt::print(L"{:<{}}", Styled(internal::ResourceGetWString(IDS_VALUE_MESSAGE_DESTINATION), infoTextStyle), PinDataFlowColumnWidth);
+                    fmt::print(L"{:<{}}", Styled(internal::ResourceGetWString(IDS_VALUE_MIDI_OUTPUT_FROM_PC), infoTextStyle), PinDataFlowExplanationColumnWidth);
                 }
                 else if (pin.PinFlow == KSPIN_DATAFLOW_OUT)
                 {
-                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MESSAGE_SOURCE), fmt::fg(fmt::color::medium_purple)), PinDataFlowColumnWidth);
-                    fmt::print(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_MIDI_INPUT_TO_PC), fmt::fg(fmt::color::medium_purple)), PinDataFlowExplanationColumnWidth);
+                    fmt::print(L"{:<{}}", Styled(internal::ResourceGetWString(IDS_VALUE_MESSAGE_SOURCE), fmt::fg(fmt::color::medium_purple)), PinDataFlowColumnWidth);
+                    fmt::print(L"{:<{}}", Styled(internal::ResourceGetWString(IDS_VALUE_MIDI_INPUT_TO_PC), fmt::fg(fmt::color::medium_purple)), PinDataFlowExplanationColumnWidth);
                 }
 
 
                 if (pin.Name.empty())
                 {
-                    fmt::println(L"{:<{}}", fmt::styled(internal::ResourceGetWString(IDS_VALUE_PIN_NAME_NOT_PROVIDED), fmt::fg(fmt::color::gray)), PinNameColumnWidth);
+                    fmt::println(L"{:<{}}", Styled(internal::ResourceGetWString(IDS_VALUE_PIN_NAME_NOT_PROVIDED), fmt::fg(fmt::color::gray)), PinNameColumnWidth);
                 }
                 else
                 {
-                    fmt::println(L"{:<{}}", fmt::styled(pin.Name, highlightTextStyle), PinNameColumnWidth);
+                    fmt::println(L"{:<{}}", Styled(pin.Name, highlightTextStyle), PinNameColumnWidth);
                 }
             }
 
@@ -374,12 +374,12 @@ void DisplayMidiDevices()
         }
 
         WriteBlankLine();
-        fmt::println(L"{}", fmt::styled(std::wstring(LINE_LENGTH, L'='), fmt::fg(fmt::color::gray)));
+        fmt::println(L"{}", Styled(std::wstring(LINE_LENGTH, L'='), fmt::fg(fmt::color::gray)));
 
     }
 
     WriteBlankLine();
-    fmt::println(L"{}", fmt::styled(internal::ResourceGetWString(IDS_STATUS_END_OF_INFORMATION), fmt::fg(fmt::color::golden_rod)));
+    fmt::println(L"{}", Styled(internal::ResourceGetWString(IDS_STATUS_END_OF_INFORMATION), fmt::fg(fmt::color::golden_rod)));
     WriteBlankLine();
 
 }
@@ -406,11 +406,11 @@ int __cdecl main()
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_REQUIRED));
     WriteBlankLine();
 
-    fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_USE), infoTextStyle));
-    fmt::print(L"{}", fmt::styled(L"midi service stop", fmt::fg(fmt::color::light_green)));
-    fmt::print(L"{}", fmt::styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_OR), infoTextStyle));
-    fmt::print(L"{}", fmt::styled(L"net stop midisrv", fmt::fg(fmt::color::light_green)));
-    fmt::println(L"{}", fmt::styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_ADMIN_PROMPT), infoTextStyle));
+    fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_USE), infoTextStyle));
+    fmt::print(L"{}", Styled(L"midi service stop", fmt::fg(fmt::color::light_green)));
+    fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_OR), infoTextStyle));
+    fmt::print(L"{}", Styled(L"net stop midisrv", fmt::fg(fmt::color::light_green)));
+    fmt::println(L"{}", Styled(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_ADMIN_PROMPT), infoTextStyle));
     
     WriteDoubleSeparatorLine();
 

@@ -67,8 +67,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             json::JsonValue::CreateStringValue(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));  // "none" is only allowed value at the moment
 
         hostObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_KEY,
-            json::JsonValue::CreateStringValue(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY));  // "allowAny" is only allowed value at the moment
+            MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY,
+            json::JsonValue::CreateStringValue(MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
 
 
         json::JsonObject hostsContainer{};
