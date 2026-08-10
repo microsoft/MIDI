@@ -914,7 +914,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
                 return ResourceManager.GetString("GenericTotal", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Association Id.
         /// </summary>
@@ -1287,6 +1287,42 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unique name to use for the newly created UMP endpoint.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsNewEndpointName {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsNewEndpointName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reduce the amount of information displayed while the bridge is running.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsQuiet {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsQuiet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The WinRT MIDI 1.0 input port id of the Bluetooth LE device to bridge from.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsWinRTBleInputPortId {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsWinRTBleInputPortId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The WinRT MIDI 1.0 output port id of the Bluetooth LE device to bridge from. This must be on the same device as the input port.
+        /// </summary>
+        internal static string ParameterBridgeEndpointsWinRTBleOutputPortId {
+            get {
+                return ResourceManager.GetString("ParameterBridgeEndpointsWinRTBleOutputPortId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to True to annotate messages written to the file. Annotations begin with the # sign and are written on the line before the UMP data line. The annotation includes timestamp information as well as the specific message type..
         /// </summary>
         internal static string ParameterCaptureMessagesAnnotate {
@@ -1431,6 +1467,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Path and filename of the report file to create. The file must not already exist.
+        /// </summary>
+        internal static string ParameterDiagnosticsReportOutputFile {
+            get {
+                return ResourceManager.GetString("ParameterDiagnosticsReportOutputFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Include the list of possible MIDI 1.0 port names generated on endpoint creation or customization..
         /// </summary>
         internal static string ParameterEndpointPropertiesIncludeNameTable {
@@ -1539,6 +1584,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include sessions which currently have no open connections.
+        /// </summary>
+        internal static string ParameterEnumSessionsIncludeAll {
+            get {
+                return ResourceManager.GetString("ParameterEnumSessionsIncludeAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include additional details for each transport, such as the transport id, image file name, and creation capabilities.
+        /// </summary>
+        internal static string ParameterEnumTransportsVerbose {
+            get {
+                return ResourceManager.GetString("ParameterEnumTransportsVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to (not yet implemented).
         /// </summary>
         internal static string ParameterListenerMessagesFilter {
@@ -1629,7 +1692,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Include frequent/noisy messages like Clock pulse and Active Sense.
+        ///   Looks up a localized string similar to Include frequent/noisy system real-time messages like Clock pulse and Active Sense. Other real-time messages are included regardless of this setting..
         /// </summary>
         internal static string ParameterMonitorEndpointIncludeRealTimeMessages {
             get {
@@ -1643,6 +1706,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ParameterMonitorEndpointIncludeTimestamp {
             get {
                 return ResourceManager.GetString("ParameterMonitorEndpointIncludeTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include Type 0 utility messages, like NOOP.
+        /// </summary>
+        internal static string ParameterMonitorEndpointIncludeUtilityMessages {
+            get {
+                return ResourceManager.GetString("ParameterMonitorEndpointIncludeUtilityMessages", resourceCulture);
             }
         }
         
@@ -2104,73 +2176,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
                 return ResourceManager.GetString("ParameterServiceRestart", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Include sessions which currently have no open connections.
-        /// </summary>
-        internal static string ParameterEnumSessionsIncludeAll {
-            get {
-                return ResourceManager.GetString("ParameterEnumSessionsIncludeAll", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Include additional details for each transport, such as the transport id, image file name, and creation capabilities.
-        /// </summary>
-        internal static string ParameterEnumTransportsVerbose {
-            get {
-                return ResourceManager.GetString("ParameterEnumTransportsVerbose", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The WinRT MIDI 1.0 input port id of the Bluetooth LE device to bridge from.
-        /// </summary>
-        internal static string ParameterBridgeEndpointsWinRTBleInputPortId {
-            get {
-                return ResourceManager.GetString("ParameterBridgeEndpointsWinRTBleInputPortId", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The WinRT MIDI 1.0 output port id of the Bluetooth LE device to bridge from. This must be on the same device as the input port.
-        /// </summary>
-        internal static string ParameterBridgeEndpointsWinRTBleOutputPortId {
-            get {
-                return ResourceManager.GetString("ParameterBridgeEndpointsWinRTBleOutputPortId", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Unique name to use for the newly created UMP endpoint.
-        /// </summary>
-        internal static string ParameterBridgeEndpointsNewEndpointName {
-            get {
-                return ResourceManager.GetString("ParameterBridgeEndpointsNewEndpointName", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Reduce the amount of information displayed while the bridge is running.
-        /// </summary>
-        internal static string ParameterBridgeEndpointsQuiet {
-            get {
-                return ResourceManager.GetString("ParameterBridgeEndpointsQuiet", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Path and filename of the report file to create. The file must not already exist.
-        /// </summary>
-        internal static string ParameterDiagnosticsReportOutputFile {
-            get {
-                return ResourceManager.GetString("ParameterDiagnosticsReportOutputFile", resourceCulture);
-            }
-        }
-
-
-
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Report additional details about the service.
         /// </summary>

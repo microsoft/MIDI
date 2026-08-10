@@ -7,6 +7,7 @@
 #pragma warning(pop)
 #include "midi2.BS2UMPtransform.h"
 #include <Feature_Servicing_MIDI2BsToUMPConv.h>
+#include <Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs.h>
 
 _Use_decl_annotations_
 HRESULT
@@ -110,6 +111,10 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         m_BS2UMP.enableRunningStatus = (optionFlags & MessageOptionFlags_HasRunningStatus);
     }
 
+    // Words remaining in the multi-word message currently being copied out of the converter.
+    // Only a message's first word can identify a NOOP.
+    uint8_t remainingMessageWords{ 0 };
+
     for (UINT i = 0; i < length; i++)
     {
         // Send the bytestream byte(s) to the parser. The way the parser works, we need
@@ -128,7 +133,30 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         // retrieve the UMP(s) from the parser and add to the outgoing message
         while (m_BS2UMP.availableUMP())
         {
-            translatedWords.push_back(m_BS2UMP.readUMP());
+            auto word = m_BS2UMP.readUMP();
+
+            if (Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs::IsEnabled())
+            {
+                if (remainingMessageWords == 0)
+                {
+                    // Drop only a whole message type 0 status 0. Later words of a multi-word
+                    // message are payload and are legitimately zero, for example the second
+                    // word of a SysEx7 carrying two or fewer data bytes.
+                    if (internal::GetUmpMessageTypeFromFirstWord(word) == 0 && MIDIWORDNIBBLE3(word) == 0)
+                    {
+                        continue;
+                    }
+
+                    remainingMessageWords = internal::GetUmpLengthInMidiWordsFromFirstWord(word);
+                }
+
+                if (remainingMessageWords > 0)
+                {
+                    remainingMessageWords--;
+                }
+            }
+
+            translatedWords.push_back(word);
         }
     }
 

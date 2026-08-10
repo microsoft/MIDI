@@ -1113,7 +1113,7 @@ Timestamp</value>
     <value>Include the timestamp in the displayed output</value>
   </data>
   <data name="ParameterMonitorEndpointIncludeRealTimeMessages" xml:space="preserve">
-    <value>Include frequent/noisy messages like Clock pulse and Active Sense</value>
+    <value>Include frequent/noisy system real-time messages like Clock pulse and Active Sense. Other real-time messages are included regardless of this setting.</value>
   </data>
   <data name="ParameterCreateLoopbackAssociationId" xml:space="preserve">
     <value>Id (must be a valid GUID) used to associate the two endpoints. Also used when removing the loopback pair.</value>
@@ -1279,5 +1279,8 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   </data>
   <data name="CommandWatchPortsDescription" xml:space="preserve">
     <value>Watch MIDI 1.0 ports for add/remove and PnP property change notifications</value>
+  </data>
+  <data name="ParameterMonitorEndpointIncludeUtilityMessages" xml:space="preserve">
+    <value>Include Type 0 utility messages, like NOOP</value>
   </data>
 </root>

@@ -1,0 +1,2 @@
+# Patch context must match the upstream sources, which are LF.
+*.patch text eol=lf
