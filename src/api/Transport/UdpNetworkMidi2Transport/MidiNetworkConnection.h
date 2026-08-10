@@ -25,7 +25,9 @@ struct MidiOutgoingPingTrackingEntry
     bool Received{ false };
 };
 
-class MidiNetworkConnection
+// Always created with make_shared. The endpoint creation worker holds a reference to the
+// connection while it works, so the connection has to be able to hand out its own shared_ptr.
+class MidiNetworkConnection : public std::enable_shared_from_this<MidiNetworkConnection>
 {
 public:
 
@@ -64,6 +66,22 @@ public:
     // Shutdown() calls this itself if it has not already run.
     HRESULT SendShutdownBye();
 
+    // Called by the endpoint creation worker once the MIDI endpoint exists, to finish accepting
+    // an invitation that was answered with Invitation Reply: Pending.
+    HRESULT CompleteHostSessionAfterEndpointCreated(
+        _In_ std::wstring const& newDeviceInstanceId,
+        _In_ std::wstring const& newEndpointDeviceInterfaceId);
+
+    // Performs the creation itself, on the worker rather than the receive callback.
+    HRESULT CreateHostEndpointForPendingInvitation(
+        _In_ std::wstring const& clientUmpEndpointName,
+        _In_ std::wstring const& clientProductInstanceId,
+        _Out_ std::wstring& newDeviceInstanceId,
+        _Out_ std::wstring& newEndpointDeviceInterfaceId);
+
+    // Called by the same worker when the endpoint could not be created.
+    HRESULT FailHostSessionEndpointCreation(_In_ HRESULT const failure);
+
     // Spec 6.16 "should": repeat the Bye until a Bye Reply arrives or we run out of attempts.
     // Only for a disconnect the user asked for. Shutdown paths must not block, so they use the
     // fire-and-forget Bye inside Shutdown() instead. Returns S_FALSE if no reply arrived.
@@ -96,6 +114,27 @@ public:
 
     bool IsSessionActive() { return m_sessionActive; }
     std::wstring GetEndpointDeviceId() { return m_sessionEndpointDeviceInterfaceId; }
+
+    // Host role. The remote's own identity, as supplied in its invitation.
+    MidiNetworkRemoteClientIdentity GetRemoteClientIdentity()
+    {
+        auto lock = m_remoteIdentityLock.lock();
+
+        return MidiNetworkRemoteClientIdentity{ m_remoteEndpointName, m_remoteProductInstanceId };
+    }
+
+    // Host role. The remote has been answered with an Invitation Reply Pending and is waiting
+    // on a user decision.
+    bool IsAwaitingUserApproval() { return m_awaitingUserApproval; }
+
+    winrt::Windows::Networking::HostName GetRemoteHostName() { return m_remoteHostName; }
+    std::wstring GetRemotePort() { return m_remotePort; }
+
+    // A user allowed this pending remote. Resumes the invitation where the approval gate left it.
+    HRESULT ApproveByUser();
+
+    // A user refused this pending remote. Sends the Bye the spec has for exactly this.
+    HRESULT DenyByUser();
 
     // True once a session existed and has now ended. The owner releases the connection at that
     // point instead of leaving it to the idle reaper: a remote normally reconnects from a new
@@ -188,6 +227,10 @@ private:
 
     std::atomic<bool> m_shuttingDown{ false };
     std::atomic<bool> m_shutdownByeSent{ false };
+
+    // Host role. Set while an endpoint is being created for an invitation we answered with
+    // Pending, so a repeated invitation does not queue the work a second time.
+    std::atomic<bool> m_hostEndpointCreationPending{ false };
 
     wil::critical_section m_latencyLock;
     uint64_t m_latencyTotalTicks{ 0 };
@@ -313,6 +356,17 @@ private:
 
     std::wstring m_thisEndpointName{ };
     std::wstring m_thisProductInstanceId{ };
+
+    // Identity the remote supplied in its invitation. Host role only. This is what the user
+    // approves and what the allow and deny lists match on. Written on the socket receive thread
+    // and read by the configuration manager, so it is guarded.
+    wil::critical_section m_remoteIdentityLock;
+    std::wstring m_remoteEndpointName{ };
+    std::wstring m_remoteProductInstanceId{ };
+
+    // Host role: the remote has been told its invitation is pending and is waiting for a user
+    // to approve or deny it. No endpoint exists yet.
+    std::atomic<bool> m_awaitingUserApproval{ false };
 
     std::shared_ptr<MidiNetworkDataWriter> m_writer{ nullptr };
 

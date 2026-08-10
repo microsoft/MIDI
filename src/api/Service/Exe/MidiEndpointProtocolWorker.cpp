@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include "ump_iterator.h"
+#include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -267,8 +268,29 @@ CMidiEndpointProtocolWorker::Start(
         // start initial negotiation. Return when timed out or when we have all the requested info.
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
-        // hang out until all info comes in or we time out
-        m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(m_discoveryTimeoutMS);
+        if (Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled())
+        {
+            // Everything from here on blocks, and none of it mutates state Shutdown() touches,
+            // so the lock is dropped rather than held for the life of the worker.
+            lock.reset();
+
+            // Waking on m_endProcessing as well is the point. Shutdown() signals it before it
+            // takes m_lock, but the old code was parked on the discovery event alone, so a
+            // teardown arriving mid-discovery had to wait out the entire timeout first.
+            HANDLE waits[]{ m_allInitialDiscoveryAndNegotiationMessagesReceived.get(), m_endProcessing.get() };
+
+            WaitForMultipleObjects(ARRAYSIZE(waits), waits, FALSE, m_discoveryTimeoutMS);
+
+            if (m_endProcessing.is_signaled())
+            {
+                return S_OK;
+            }
+        }
+        else
+        {
+            // hang out until all info comes in or we time out
+            m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(m_discoveryTimeoutMS);
+        }
 
         RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
 

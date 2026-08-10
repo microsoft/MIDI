@@ -14,13 +14,6 @@ using namespace winrt::Windows::Networking::ServiceDiscovery::Dnssd;
 
 #include <queue>
 
-enum MidiNetworkHostConnectionPolicy
-{
-    PolicyAllowAllConnections = 0,
-    PolicyAllowFromIpList,
-    PolicyAllowFromIpRange,
-};
-
 enum MidiNetworkHostAuthentication
 {
     NoAuthentication = 0,
@@ -53,11 +46,12 @@ struct MidiNetworkHostDefinition
     bool CreateMidi1Ports{ MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT };
 
     // connection rules
-    MidiNetworkHostConnectionPolicy ConnectionPolicy{ MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections };
+    MidiNetworkRemoteClientPolicy RemoteClientPolicy{ MidiNetworkRemoteClientPolicy::PolicyAllowAny };
 
-    // For PolicyAllowFromIpList these are the permitted addresses. For PolicyAllowFromIpRange
-    // there are exactly two, being the inclusive start and end of the range.
-    std::vector<winrt::hstring> ConnectionPolicyAddresses{};
+    // Identity keys, as produced by MidiNetworkRemoteClientIdentity::Key(). Populated from the
+    // configuration and added to at runtime when a user approves or denies a client.
+    std::vector<std::wstring> AllowedClientKeys{};
+    std::vector<std::wstring> DeniedClientKeys{};
 
     // protocol
     MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
@@ -98,6 +92,16 @@ public:
 
     winrt::hstring ActualPort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalPort() : L""; }
     winrt::hstring ActualAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalAddress().DisplayName() : L""; }
+
+    // What should happen to an invitation from this client, given the policy and the lists.
+    MidiNetworkRemoteClientDecision EvaluateRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity);
+
+    MidiNetworkRemoteClientPolicy GetRemoteClientPolicy() const { return m_hostDefinition.RemoteClientPolicy; }
+
+    // A user decision arriving through the configuration manager. Persisting it is the caller's
+    // job; these take effect immediately either way.
+    HRESULT AddRemoteClientToAllowList(_In_ MidiNetworkRemoteClientIdentity const& identity);
+    HRESULT AddRemoteClientToDenyList(_In_ MidiNetworkRemoteClientIdentity const& identity);
 
 private:
 //    winrt::hstring m_configIdentifier{};
@@ -152,8 +156,10 @@ private:
         _In_ MidiNetworkCommandByeReason const reason,
         _In_ std::wstring const& message);
 
-    bool IsRemoteAllowedByConnectionPolicy(_In_ winrt::Windows::Networking::HostName const& remoteHostName);
-
     MidiNetworkReplyRateLimiter m_refusalRateLimiter;
+
+    // Guards the allow and deny lists, which a user can change at any time through the
+    // configuration manager while the receive path is reading them.
+    wil::critical_section m_remoteClientListsLock;
 
 };

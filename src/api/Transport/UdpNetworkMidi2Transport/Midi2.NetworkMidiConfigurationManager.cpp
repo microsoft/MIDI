@@ -64,27 +64,66 @@ MidiNetworkHostAuthenticationFromJsonString(_In_ winrt::hstring const& jsonStrin
 }
 
 
-MidiNetworkHostConnectionPolicy 
-MidiNetworkHostConnectionPolicyFromJsonString(_In_ winrt::hstring const& jsonString)
+MidiNetworkRemoteClientPolicy
+MidiNetworkRemoteClientPolicyFromJsonString(_In_ winrt::hstring const& jsonString)
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
-    if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY)
+    if (value == internal::ToLowerTrimmedHStringCopy(winrt::hstring{ MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL }))
     {
-        return MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections;
+        return MidiNetworkRemoteClientPolicy::PolicyRequireApproval;
     }
-    else if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_LIST)
+
+    // default is to allow any, which is what a host with no configured policy has always done
+    return MidiNetworkRemoteClientPolicy::PolicyAllowAny;
+}
+
+// Reads an array of { umpEndpointName, productInstanceId } objects into comparison keys.
+// Entries missing either field cannot identify a device, so they are skipped rather than
+// stored as something which would match nothing or, worse, everything.
+void
+ReadRemoteClientIdentityList(
+    _In_ json::JsonObject const& parent,
+    _In_ std::wstring const& arrayKey,
+    _Inout_ std::vector<std::wstring>& keys)
+{
+    if (!parent.HasKey(arrayKey))
     {
-        return MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList;
+        return;
     }
-    else if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_RANGE)
+
+    auto entries = parent.GetNamedArray(arrayKey, nullptr);
+
+    if (entries == nullptr)
     {
-        return MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange;
+        return;
     }
-    else
+
+    for (uint32_t i = 0; i < entries.Size(); i++)
     {
-        // default is any
-        return MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections;
+        auto entry = entries.GetObjectAt(i);
+
+        if (entry == nullptr)
+        {
+            continue;
+        }
+
+        MidiNetworkRemoteClientIdentity identity{};
+
+        identity.UmpEndpointName = internal::TrimmedWStringCopy(std::wstring{ entry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L"") });
+        identity.ProductInstanceId = internal::TrimmedWStringCopy(std::wstring{ entry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L"") });
+
+        if (!identity.IsValid())
+        {
+            continue;
+        }
+
+        auto key = identity.Key();
+
+        if (std::find(keys.begin(), keys.end(), key) == keys.end())
+        {
+            keys.push_back(key);
+        }
     }
 }
 
@@ -119,28 +158,6 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
         errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_PRODUCT_INSTANCE_ID);
         return E_INVALIDARG;
     }
-
-    if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange)
-    {
-        // validate that there are exactly two entries
-
-        if (definition.ConnectionPolicyAddresses.size() != 2)
-        {
-            errorMessage = internal::ResourceGetHString(IDS_ERROR_CONNECTION_POLICY_RANGE_ENTRY_COUNT);
-            return E_INVALIDARG;
-        }
-    }
-    else if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList)
-    {
-        // validate that there is at least one entry
-
-        if (definition.ConnectionPolicyAddresses.size() < 1)
-        {
-            errorMessage = internal::ResourceGetHString(IDS_ERROR_CONNECTION_POLICY_LIST_ENTRY_COUNT);
-            return E_INVALIDARG;
-        }
-    }
-
 
     // validate user authentication
     if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
@@ -324,6 +341,91 @@ CMidi2NetworkMidiConfigurationManager::RunCommandDisconnectClient(
 }
 
 
+// A user decision about a remote client, arriving from the settings app after it polled and saw
+// something in the pending state. The identity, not the address, is what is recorded: a client
+// reconnects from a new ephemeral port every time.
+//
+// "always" and "denyAlways" also need writing to the configuration file by the caller so they
+// survive a restart. The service applies every scope immediately, and holds "untilRestart"
+// denials only in memory, which is exactly what that scope means.
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandRemoteClientDecision(
+    winrt::hstring const& hostEntryId,
+    MidiNetworkRemoteClientIdentity const& identity,
+    bool const approve,
+    bool const persist,
+    json::JsonObject& responseObject) noexcept
+{
+    if (hostEntryId.empty())
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_MISSING_ENTRY_IDENTIFIER));
+        return S_OK;
+    }
+
+    if (!identity.IsValid())
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_MISSING_REMOTE_CLIENT_IDENTITY));
+        return S_OK;
+    }
+
+    auto host = TransportState::Current().GetHost(hostEntryId);
+
+    if (host == nullptr)
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_HOST_NOT_FOUND));
+        return S_OK;
+    }
+
+    // "once" is deliberately not recorded anywhere. It authorizes the connection which is
+    // waiting right now and nothing beyond it.
+    if (persist)
+    {
+        if (approve)
+        {
+            LOG_IF_FAILED(host->AddRemoteClientToAllowList(identity));
+        }
+        else
+        {
+            LOG_IF_FAILED(host->AddRemoteClientToDenyList(identity));
+        }
+    }
+    else if (!approve)
+    {
+        // "untilRestart". Held in memory only, so a service restart clears it.
+        LOG_IF_FAILED(host->AddRemoteClientToDenyList(identity));
+    }
+
+    // Release, or refuse, whatever is parked for this identity. There can be more than one if the
+    // client retried from a new port while the user was deciding.
+    auto key = identity.Key();
+
+    for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForHost(hostEntryId))
+    {
+        if (connection == nullptr || !connection->IsAwaitingUserApproval())
+        {
+            continue;
+        }
+
+        if (connection->GetRemoteClientIdentity().Key() != key)
+        {
+            continue;
+        }
+
+        if (approve)
+        {
+            LOG_IF_FAILED(connection->ApproveByUser());
+        }
+        else
+        {
+            LOG_IF_FAILED(connection->DenyByUser());
+        }
+    }
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
 
 
 //
@@ -506,6 +608,64 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY,
             json::JsonValue::CreateStringValue(def.ServiceInstanceName));
 
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REMOTE_CLIENT_POLICY_KEY,
+            json::JsonValue::CreateStringValue(
+                def.RemoteClientPolicy == MidiNetworkRemoteClientPolicy::PolicyRequireApproval ?
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL :
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
+
+        // Remote clients on this host, so an app polling every few seconds can show what is
+        // connected and, more importantly, what is waiting on a user decision. Absence from this
+        // list is how a caller learns a client went away; nothing tracks departures separately.
+        json::JsonArray connectionsArray;
+
+        for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForHost(def.EntryIdentifier))
+        {
+            if (connection == nullptr)
+            {
+                continue;
+            }
+
+            json::JsonObject connectionObject;
+
+            auto identity = connection->GetRemoteClientIdentity();
+
+            connectionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                json::JsonValue::CreateStringValue(identity.UmpEndpointName));
+
+            connectionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                json::JsonValue::CreateStringValue(identity.ProductInstanceId));
+
+            auto remoteHostName = connection->GetRemoteHostName();
+
+            connectionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY,
+                json::JsonValue::CreateStringValue(remoteHostName != nullptr ? remoteHostName.CanonicalName() : L""));
+
+            connectionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_PORT_KEY,
+                json::JsonValue::CreateStringValue(connection->GetRemotePort()));
+
+            connectionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SESSION_ACTIVE_KEY,
+                json::JsonValue::CreateBooleanValue(connection->IsSessionActive()));
+
+            connectionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_PENDING_APPROVAL_KEY,
+                json::JsonValue::CreateBooleanValue(connection->IsAwaitingUserApproval()));
+
+            connectionObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_UMP_ENDPOINT_ID_KEY,
+                json::JsonValue::CreateStringValue(connection->GetEndpointDeviceId()));
+
+            connectionsArray.Append(connectionObject);
+        }
+
+        hostObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY, connectionsArray);
+
         hostsArray.Append(hostObject);
     }
 
@@ -624,6 +784,44 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
             RETURN_IF_FAILED(E_INVALIDARG);
         }
     }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT ||
+             commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT)
+    {
+        bool const approve = (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT);
+
+        auto hostEntryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
+        auto name = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY);
+        auto productInstanceId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY);
+        auto scope = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE);
+
+        if (hostEntryId != commandHelper.Arguments()->end() &&
+            name != commandHelper.Arguments()->end() &&
+            productInstanceId != commandHelper.Arguments()->end() &&
+            scope != commandHelper.Arguments()->end())
+        {
+            auto scopeValue = internal::ToLowerTrimmedWStringCopy(scope->second);
+
+            // Only "always" is written down. "once" authorizes the waiting connection and
+            // nothing else, and "untilRestart" is a memory-only denial by definition.
+            bool const persist = (scopeValue == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ALWAYS);
+
+            MidiNetworkRemoteClientIdentity identity{};
+
+            identity.UmpEndpointName = internal::TrimmedWStringCopy(name->second);
+            identity.ProductInstanceId = internal::TrimmedWStringCopy(productInstanceId->second);
+
+            RETURN_IF_FAILED(RunCommandRemoteClientDecision(
+                hostEntryId->second.c_str(),
+                identity,
+                approve,
+                persist,
+                responseObject));
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
     else
     {
         internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_UNRECOGNIZED_COMMAND));
@@ -661,7 +859,12 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
 //                "enabled": true,
 //                "advertise": true,
 //                "authentication": "none",
-//                "connectionPolicyIpv4": "allowAny"
+//                "remoteClientPolicy": "requireApproval",
+//                "allowedClients":
+//                [
+//                    { "umpEndpointName": "BomeBox", "productInstanceId": "CC851C0080257A96" }
+//                ],
+//                "deniedClients": []
 //            }
 //        },
 //        "clients":
@@ -935,31 +1138,10 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 definition->Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
 
                 definition->Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
-                definition->ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY));
+                definition->RemoteClientPolicy = MidiNetworkRemoteClientPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
 
-                // read the list of ip info
-                if (definition->ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
-                {
-                    json::JsonArray addressArray{ nullptr };
-
-                    if (hostEntry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY))
-                    {
-                        addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY, nullptr);
-                    }
-
-                    if (addressArray != nullptr)
-                    {
-                        for (uint32_t j = 0; j < addressArray.Size(); j++)
-                        {
-                            auto addressEntry = internal::ToLowerTrimmedHStringCopy(addressArray.GetStringAt(j));
-
-                            if (!addressEntry.empty())
-                            {
-                                definition->ConnectionPolicyAddresses.push_back(addressEntry);
-                            }
-                        }
-                    }
-                }
+                ReadRemoteClientIdentityList(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, definition->AllowedClientKeys);
+                ReadRemoteClientIdentityList(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, definition->DeniedClientKeys);
 
                 // read authentication information
                 if (definition->Authentication != MidiNetworkHostAuthentication::NoAuthentication)

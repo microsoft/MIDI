@@ -17,6 +17,39 @@
 #define TRANSPORT_MANUFACTURER                                          L"Microsoft"
 #define TRANSPORT_CODE                                                  L"NET2UDP"
 
+// A remote client is identified by the pair the specification gives us for recalling a device:
+// its UMP Endpoint Name and Product Instance Id. Not its address, which moves.
+struct MidiNetworkRemoteClientIdentity
+{
+    std::wstring UmpEndpointName;
+    std::wstring ProductInstanceId;
+
+    bool IsValid() const { return !UmpEndpointName.empty() && !ProductInstanceId.empty(); }
+
+    // Case-insensitive, and separated by a character neither field may contain.
+    std::wstring Key() const
+    {
+        return internal::ToLowerTrimmedWStringCopy(ProductInstanceId) + L"|" +
+            internal::ToLowerTrimmedWStringCopy(UmpEndpointName);
+    }
+};
+
+enum MidiNetworkRemoteClientPolicy
+{
+    // accept any remote client without asking anyone
+    PolicyAllowAny = 0,
+
+    // hold the client in a pending state until a user approves or denies it
+    PolicyRequireApproval,
+};
+
+enum MidiNetworkRemoteClientDecision
+{
+    DecisionAllow = 0,
+    DecisionDeny,
+    DecisionRequireApproval,
+};
+
 // Endpoint identity is deliberately role-free. A device which connects in both the Host and the
 // Client role presents identical identity in both (spec section 12), and the spec expects us to
 // recognize that rather than create two unrelated endpoints.

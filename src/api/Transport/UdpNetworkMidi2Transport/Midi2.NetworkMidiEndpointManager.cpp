@@ -49,6 +49,7 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(StartBackgroundEndpointCreator());
     RETURN_IF_FAILED(StartBackgroundConnectionShutdown());
     RETURN_IF_FAILED(StartBackgroundNegotiation());
+    RETURN_IF_FAILED(StartBackgroundHostEndpointCreation());
 
     // start the device watcher so we see new hosts come online
     RETURN_IF_FAILED(StartRemoteHostWatcher());
@@ -396,6 +397,125 @@ HRESULT
 CMidi2NetworkMidiEndpointManager::StartBackgroundNegotiation()
 {
     m_backgroundNegotiationThread = std::jthread(std::bind_front(&CMidi2NetworkMidiEndpointManager::NegotiationWorker, this));
+
+    return S_OK;
+}
+
+HRESULT
+CMidi2NetworkMidiEndpointManager::StartBackgroundHostEndpointCreation()
+{
+    m_backgroundHostEndpointCreationThread = std::jthread(std::bind_front(&CMidi2NetworkMidiEndpointManager::HostEndpointCreationWorker, this));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::QueueHostEndpointCreation(
+    std::shared_ptr<MidiNetworkConnection> connection,
+    std::wstring const& clientUmpEndpointName,
+    std::wstring const& clientProductInstanceId
+)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, connection);
+
+    {
+        auto lock = m_pendingHostEndpointCreationsLock.lock();
+
+        m_pendingHostEndpointCreations.push_back(
+            PendingHostEndpointCreation{ connection, clientUmpEndpointName, clientProductInstanceId });
+    }
+
+    m_backgroundHostEndpointCreationThreadWakeup.SetEvent();
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::HostEndpointCreationWorker(std::stop_token stopToken)
+{
+    // endpoint activation is a COM call into the service
+    winrt::init_apartment();
+
+    while (!stopToken.stop_requested())
+    {
+        if (m_backgroundHostEndpointCreationThreadWakeup.is_signaled())
+        {
+            m_backgroundHostEndpointCreationThreadWakeup.ResetEvent();
+        }
+
+        std::vector<PendingHostEndpointCreation> requests;
+
+        {
+            auto lock = m_pendingHostEndpointCreationsLock.lock();
+            requests.swap(m_pendingHostEndpointCreations);
+        }
+
+        for (auto const& request : requests)
+        {
+            if (request.Connection == nullptr)
+            {
+                continue;
+            }
+
+            if (stopToken.stop_requested())
+            {
+                LOG_IF_FAILED(request.Connection->FailHostSessionEndpointCreation(E_ABORT));
+                continue;
+            }
+
+            std::wstring newDeviceInstanceId{ };
+            std::wstring newEndpointDeviceInterfaceId{ };
+
+            auto hr = request.Connection->CreateHostEndpointForPendingInvitation(
+                request.ClientUmpEndpointName,
+                request.ClientProductInstanceId,
+                newDeviceInstanceId,
+                newEndpointDeviceInterfaceId);
+
+            if (SUCCEEDED(hr))
+            {
+                LOG_IF_FAILED(request.Connection->CompleteHostSessionAfterEndpointCreated(
+                    newDeviceInstanceId,
+                    newEndpointDeviceInterfaceId));
+            }
+            else
+            {
+                LOG_IF_FAILED(request.Connection->FailHostSessionEndpointCreation(hr));
+            }
+        }
+
+        if (!stopToken.stop_requested())
+        {
+            m_backgroundHostEndpointCreationThreadWakeup.wait();
+        }
+    }
+
+    // anything still queued was promised a reply
+    std::vector<PendingHostEndpointCreation> remaining;
+
+    {
+        auto lock = m_pendingHostEndpointCreationsLock.lock();
+        remaining.swap(m_pendingHostEndpointCreations);
+    }
+
+    for (auto const& request : remaining)
+    {
+        if (request.Connection != nullptr)
+        {
+            LOG_IF_FAILED(request.Connection->FailHostSessionEndpointCreation(E_ABORT));
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
@@ -1584,6 +1704,14 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
     if (m_backgroundConnectionShutdownThread.joinable() && m_backgroundConnectionShutdownThread.get_id() != std::this_thread::get_id())
     {
         m_backgroundConnectionShutdownThread.join();
+    }
+
+    m_backgroundHostEndpointCreationThread.request_stop();
+    m_backgroundHostEndpointCreationThreadWakeup.SetEvent();
+
+    if (m_backgroundHostEndpointCreationThread.joinable() && m_backgroundHostEndpointCreationThread.get_id() != std::this_thread::get_id())
+    {
+        m_backgroundHostEndpointCreationThread.join();
     }
 
     // Deliberately not joined. A negotiation blocked inside the service cannot be cancelled from

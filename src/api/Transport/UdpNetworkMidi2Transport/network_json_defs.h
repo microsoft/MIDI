@@ -41,12 +41,20 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO                   L"auto"
 
 
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_KEY                     L"connectionPolicyIpv4"
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY    L"allowAny"
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_LIST   L"allowList"
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_RANGE  L"allowRange"
+// Remote client approval. The old connectionPolicyIpv4 list and range options were never
+// really implemented, and an address is the wrong thing to approve anyway: a device is
+// identified by its UMP Endpoint Name and Product Instance Id, and its address moves.
+// Older keys are simply not read, so a configuration containing them still loads.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY                  L"remoteClientPolicy"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY      L"allowAny"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL L"requireApproval"
 
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY      L"addresses"             // list, range . We keep this simple. Anything more complex should be done with the firewall
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY                       L"allowedClients"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY                        L"deniedClients"
+
+// identity of a remote client in the allow and deny lists, and in approval commands
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY                  L"umpEndpointName"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY   L"productInstanceId"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY                   L"authentication"        // password, user, none
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE            L"none"
@@ -82,6 +90,17 @@
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT                L"disconnectClient"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT                   L"connectDirect"
+
+// Approval of a remote client which is waiting in the pending state, or pre-approval of one
+// which has not connected yet. "always" and "denyAlways" also need writing to the config file
+// by the caller; the service applies them immediately either way.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT            L"approveRemoteClient"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT               L"denyRemoteClient"
+
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE              L"scope"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ONCE                   L"once"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ALWAYS                 L"always"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_UNTIL_RESTART          L"untilRestart"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS              L"remoteAddress"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT                 L"remotePort"
@@ -122,6 +141,16 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY   MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY    MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY
+
+// Per-host list of remote clients, so a polling app can show what is connected and what is
+// waiting for the user to decide.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY     L"connections"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REMOTE_CLIENT_POLICY_KEY  MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_PENDING_APPROVAL_KEY               L"pendingApproval"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SESSION_ACTIVE_KEY                 L"sessionActive"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY                 L"remoteAddress"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_PORT_KEY                    L"remotePort"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_UMP_ENDPOINT_ID_KEY                L"endpointDeviceId"
 
 
 

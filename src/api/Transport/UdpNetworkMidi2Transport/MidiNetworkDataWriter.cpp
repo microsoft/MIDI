@@ -474,14 +474,28 @@ MidiNetworkDataWriter::WriteCommandInvitationReplyPending(
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
 
-    UNREFERENCED_PARAMETER(hostUmpEndpointName);
-    UNREFERENCED_PARAMETER(hostProductInstanceId);
+    RETURN_HR_IF(E_INVALIDARG, hostUmpEndpointName.empty());
+    RETURN_HR_IF(E_INVALIDARG, hostProductInstanceId.empty());
+
+    // Spec 6.6. Same payload framing as Invitation Reply: Accepted.
+    byte payloadLengthIn32BitWords{ 0 };
+
+    auto endpointNameUtf8 = ConvertWStringToUTF8(hostUmpEndpointName, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+    byte umpEndpointNameLengthIn32BitWords{ CalculatePaddedStringSizeIn32BitWords(endpointNameUtf8, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT) };
+    payloadLengthIn32BitWords += umpEndpointNameLengthIn32BitWords;
+
+    auto productInstanceIdUtf8 = ConvertWStringToUTF8(hostProductInstanceId, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
+    byte productInstanceIdLengthIn32BitWords{ CalculatePaddedStringSizeIn32BitWords(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT) };
+    payloadLengthIn32BitWords += productInstanceIdLengthIn32BitWords;
 
     auto lock = m_dataWriterLock.lock();
 
-    // TODO
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandHostToClient_InvitationReplyPending, payloadLengthIn32BitWords, umpEndpointNameLengthIn32BitWords, 0));
 
-    return E_NOTIMPL;
+    WritePaddedString(endpointNameUtf8, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+    WritePaddedString(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
+
+    return S_OK;
 }
 
 // todo: change authenticationState to an enum (see spec page 31)

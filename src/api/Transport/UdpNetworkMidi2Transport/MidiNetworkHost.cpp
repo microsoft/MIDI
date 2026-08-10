@@ -154,115 +154,79 @@ MidiNetworkHost::SendUnconnectedBye(
     return S_OK;
 }
 
-// IPv4 dotted-quad to a comparable value. Returns false for anything that isn't one.
-static bool TryParseIPv4Address(_In_ std::wstring const& address, _Out_ uint32_t& value)
+_Use_decl_annotations_
+MidiNetworkRemoteClientDecision
+MidiNetworkHost::EvaluateRemoteClient(MidiNetworkRemoteClientIdentity const& identity)
 {
-    value = 0;
-
-    uint32_t result{ 0 };
-    uint32_t octet{ 0 };
-    int octetCount{ 0 };
-    int digitCount{ 0 };
-
-    for (size_t i = 0; i <= address.length(); i++)
+    // Spec 6.4 requires both fields in an invitation. Without them there is nothing a user
+    // could recognise or a list could match, so it is refused rather than approved.
+    if (!identity.IsValid())
     {
-        if (i == address.length() || address[i] == L'.')
+        return MidiNetworkRemoteClientDecision::DecisionDeny;
+    }
+
+    auto key = identity.Key();
+
+    {
+        auto lock = m_remoteClientListsLock.lock();
+
+        if (std::find(m_hostDefinition.DeniedClientKeys.begin(), m_hostDefinition.DeniedClientKeys.end(), key) != m_hostDefinition.DeniedClientKeys.end())
         {
-            if (digitCount == 0 || octet > 255)
-            {
-                return false;
-            }
-
-            result = (result << 8) | octet;
-            octetCount++;
-
-            octet = 0;
-            digitCount = 0;
+            return MidiNetworkRemoteClientDecision::DecisionDeny;
         }
-        else if (address[i] >= L'0' && address[i] <= L'9')
-        {
-            octet = (octet * 10) + static_cast<uint32_t>(address[i] - L'0');
-            digitCount++;
 
-            if (digitCount > 3)
-            {
-                return false;
-            }
-        }
-        else
+        if (std::find(m_hostDefinition.AllowedClientKeys.begin(), m_hostDefinition.AllowedClientKeys.end(), key) != m_hostDefinition.AllowedClientKeys.end())
         {
-            return false;
+            return MidiNetworkRemoteClientDecision::DecisionAllow;
         }
     }
 
-    if (octetCount != 4)
+    if (m_hostDefinition.RemoteClientPolicy == MidiNetworkRemoteClientPolicy::PolicyAllowAny)
     {
-        return false;
+        return MidiNetworkRemoteClientDecision::DecisionAllow;
     }
 
-    value = result;
-
-    return true;
+    return MidiNetworkRemoteClientDecision::DecisionRequireApproval;
 }
 
 _Use_decl_annotations_
-bool
-MidiNetworkHost::IsRemoteAllowedByConnectionPolicy(HostName const& remoteHostName)
+HRESULT
+MidiNetworkHost::AddRemoteClientToAllowList(MidiNetworkRemoteClientIdentity const& identity)
 {
-    if (m_hostDefinition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
+    RETURN_HR_IF(E_INVALIDARG, !identity.IsValid());
+
+    auto key = identity.Key();
+
+    auto lock = m_remoteClientListsLock.lock();
+
+    std::erase(m_hostDefinition.DeniedClientKeys, key);
+
+    if (std::find(m_hostDefinition.AllowedClientKeys.begin(), m_hostDefinition.AllowedClientKeys.end(), key) == m_hostDefinition.AllowedClientKeys.end())
     {
-        return true;
+        m_hostDefinition.AllowedClientKeys.push_back(key);
     }
 
-    if (remoteHostName == nullptr)
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHost::AddRemoteClientToDenyList(MidiNetworkRemoteClientIdentity const& identity)
+{
+    RETURN_HR_IF(E_INVALIDARG, !identity.IsValid());
+
+    auto key = identity.Key();
+
+    auto lock = m_remoteClientListsLock.lock();
+
+    std::erase(m_hostDefinition.AllowedClientKeys, key);
+
+    if (std::find(m_hostDefinition.DeniedClientKeys.begin(), m_hostDefinition.DeniedClientKeys.end(), key) == m_hostDefinition.DeniedClientKeys.end())
     {
-        return false;
+        m_hostDefinition.DeniedClientKeys.push_back(key);
     }
 
-    auto remote = internal::ToLowerTrimmedWStringCopy(std::wstring{ remoteHostName.CanonicalName() });
-
-    if (m_hostDefinition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList)
-    {
-        for (auto const& allowed : m_hostDefinition.ConnectionPolicyAddresses)
-        {
-            if (remote == internal::ToLowerTrimmedWStringCopy(std::wstring{ allowed }))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    if (m_hostDefinition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange)
-    {
-        // the definition is validated at configuration time to hold exactly two entries
-        if (m_hostDefinition.ConnectionPolicyAddresses.size() != 2)
-        {
-            return false;
-        }
-
-        uint32_t remoteValue{ 0 };
-        uint32_t firstValue{ 0 };
-        uint32_t lastValue{ 0 };
-
-        if (!TryParseIPv4Address(remote, remoteValue) ||
-            !TryParseIPv4Address(std::wstring{ m_hostDefinition.ConnectionPolicyAddresses[0] }, firstValue) ||
-            !TryParseIPv4Address(std::wstring{ m_hostDefinition.ConnectionPolicyAddresses[1] }, lastValue))
-        {
-            return false;
-        }
-
-        if (firstValue > lastValue)
-        {
-            std::swap(firstValue, lastValue);
-        }
-
-        return remoteValue >= firstValue && remoteValue <= lastValue;
-    }
-
-    // unknown policy. Fail closed.
-    return false;
+    return S_OK;
 }
 
 static MidiNetworkAuthenticationKind AuthenticationKindFromHostAuthentication(_In_ MidiNetworkHostAuthentication const authentication)
@@ -669,21 +633,6 @@ void MidiNetworkHost::OnMessageReceived(
                     TraceLoggingWideString(L"First command from an unknown remote was not an invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingBool(refused, "refused with Bye"),
                     TraceLoggingUInt8(firstCommandHeader.HeaderData.CommandCode, "Command Code"),
-                    TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
-                );
-
-                return;
-            }
-
-            if (!IsRemoteAllowedByConnectionPolicy(args.RemoteAddress()))
-            {
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Invitation rejected by the host connection policy", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
                 );
 

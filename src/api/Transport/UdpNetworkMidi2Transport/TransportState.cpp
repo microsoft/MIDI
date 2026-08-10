@@ -559,10 +559,22 @@ TransportState::ReapIdleNetworkConnections(winrt::hstring const& configEntryIden
         }
     }
 
-    // shutdown blocks and re-enters this class, so it happens outside the lock
+    // Shutdown blocks on midisrv (DeleteEndpoint -> RemoveEndpoint), and this is called from the
+    // socket receive callback, so it is queued rather than run here. Reaping ~40 aged-out
+    // connections inline left the host unable to receive anything for the whole reap.
+    auto endpointManager = GetEndpointManager();
+
     for (auto const& connection : reclaimed)
     {
-        LOG_IF_FAILED(connection->Shutdown());
+        if (endpointManager != nullptr)
+        {
+            LOG_IF_FAILED(endpointManager->QueueConnectionShutdown(connection));
+        }
+        else
+        {
+            // no manager means we are tearing down anyway, so there is no callback left to stall
+            LOG_IF_FAILED(connection->Shutdown());
+        }
     }
 
     return S_OK;

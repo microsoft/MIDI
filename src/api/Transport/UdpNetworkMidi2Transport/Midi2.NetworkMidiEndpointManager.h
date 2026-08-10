@@ -63,12 +63,21 @@ public:
     STDMETHOD(StartBackgroundEndpointCreator)();
     STDMETHOD(StartBackgroundConnectionShutdown)();
     STDMETHOD(StartBackgroundNegotiation)();
+    STDMETHOD(StartBackgroundHostEndpointCreation)();
 
     bool IsInitialized() { return m_initialized; }
 
     STDMETHOD(WakeupBackgroundEndpointCreatorThread)();
     STDMETHOD(WakeupBackgroundConnectionShutdownThread)();
     STDMETHOD(WakeupBackgroundNegotiationThread)();
+
+    // Creating an endpoint takes over a second when several arrive at once, and it used to run
+    // on the socket receive callback, so one burst of invitations stalled every datagram behind
+    // it. The connection is answered with Invitation Reply: Pending and completed from here.
+    HRESULT QueueHostEndpointCreation(
+        _In_ std::shared_ptr<MidiNetworkConnection> connection,
+        _In_ std::wstring const& clientUmpEndpointName,
+        _In_ std::wstring const& clientProductInstanceId);
 
     HRESULT CreateParentDeviceForHost(
         _In_ winrt::hstring const& name,
@@ -150,10 +159,24 @@ private:
     wil::critical_section m_pendingConnectionShutdownsLock;
     std::vector<std::shared_ptr<MidiNetworkConnection>> m_pendingConnectionShutdowns;
 
+    struct PendingHostEndpointCreation
+    {
+        std::shared_ptr<MidiNetworkConnection> Connection;
+        std::wstring ClientUmpEndpointName;
+        std::wstring ClientProductInstanceId;
+    };
+
+    wil::slim_event_manual_reset m_backgroundHostEndpointCreationThreadWakeup;
+    HRESULT HostEndpointCreationWorker(_In_ std::stop_token stopToken);
+
+    wil::critical_section m_pendingHostEndpointCreationsLock;
+    std::vector<PendingHostEndpointCreation> m_pendingHostEndpointCreations;
+
     // Must remain the last members. Members are destroyed in reverse declaration order, so this
     // guarantees the workers are joined before the wakeup events they wait on are destroyed.
     std::jthread m_backgroundEndpointCreatorThread;
     std::jthread m_backgroundConnectionShutdownThread;
     std::jthread m_backgroundNegotiationThread;
+    std::jthread m_backgroundHostEndpointCreationThread;
 
 };
