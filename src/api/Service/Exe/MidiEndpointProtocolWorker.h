@@ -123,6 +123,11 @@ private:
 
     std::wstring ParseStreamTextMessage(_In_ internal::PackedUmp128& message);
 
+    // ParseStreamTextMessage unpacks one UTF-8 byte per element. Call this exactly once, on the
+    // fully accumulated text: a multi-byte sequence can straddle two stream messages, so it
+    // cannot be decoded per message.
+    std::wstring DecodeAccumulatedStreamText(_In_ std::wstring const& accumulated);
+
     DEVPROPKEY FunctionBlockPropertyKeyFromNumber(_In_ uint8_t functionBlockNumber);
     DEVPROPKEY FunctionBlockNamePropertyKeyFromNumber(_In_ uint8_t functionBlockNumber);
 

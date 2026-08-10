@@ -11,6 +11,8 @@ using System.Runtime.Versioning;
 using Microsoft.Midi.ConsoleApp;
 
 
+// UTF-16 is not a valid console code page, so Encoding.Unicode silently leaves the console on
+// whatever it was. UTF-8 is the supported way to get non-ASCII output through.
 Console.InputEncoding = System.Text.Encoding.UTF8;
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
