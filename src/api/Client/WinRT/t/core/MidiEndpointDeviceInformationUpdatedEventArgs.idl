@@ -32,6 +32,8 @@ namespace Windows.Devices.Midi2.Enumeration
         [noexcept] Boolean AreUniqueIdsUpdated{ get; };
         [noexcept] Boolean AreGroupTerminalBlocksUpdated{ get; };
 
+        [noexcept] Boolean IsMutedStateUpdated{ get; };
+
     }
 }
 
