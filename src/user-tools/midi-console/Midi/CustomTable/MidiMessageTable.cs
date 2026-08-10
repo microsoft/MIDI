@@ -228,6 +228,7 @@ namespace Microsoft.Midi.ConsoleApp
             string word2 = string.Empty;
             string word3 = string.Empty;
 
+
             word0 = string.Format("{0:X8}", message.Word0);
 
 

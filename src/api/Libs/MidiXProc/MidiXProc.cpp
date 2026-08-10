@@ -600,6 +600,38 @@ CMidiXProc::SendMidiMessageInternal(
     ULONG bufferWrittenPosition {0};
     ULONG startingReadPosition {0};
 
+#ifdef _DEBUG
+    // Debug builds only. Logging message data in a shipping binary is a privacy violation.
+    if (m_MidiOut->DataFormat == MidiDataFormats_UMP)
+    {
+        TraceLoggingWrite(
+            MidiXProcTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Writing to cross-process queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHexUInt32Array(static_cast<uint32_t*>(midiData), static_cast<uint16_t>(length / sizeof(uint32_t)), "words"),
+            TraceLoggingUInt32(length, "length bytes"),
+            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiXProcTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Writing to cross-process queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHexUInt8Array(static_cast<uint8_t*>(midiData), static_cast<uint16_t>(length), "bytes"),
+            TraceLoggingUInt32(length, "length bytes"),
+            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+    }
+#endif
+
     {
         // only 1 caller may add a message to the xproc queue at a time
         auto lock = m_MessageSendLock.lock();
@@ -903,6 +935,38 @@ CMidiXProc::ProcessMidiIn()
 
                     PVOID data = (PVOID)(((BYTE*)header) + sizeof(LOOPEDDATAFORMAT));
                     HRESULT hr = S_OK;
+
+#ifdef _DEBUG
+                    // Debug builds only. Logging message data in a shipping binary is a privacy violation.
+                    if (m_MidiIn->DataFormat == MidiDataFormats_UMP)
+                    {
+                        TraceLoggingWrite(
+                            MidiXProcTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Read from cross-process queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(dataSize / sizeof(uint32_t)), "words"),
+                            TraceLoggingUInt32(dataSize, "length bytes"),
+                            TraceLoggingUInt64(static_cast<uint64_t>(header->Position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+                        );
+                    }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            MidiXProcTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Read from cross-process queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(dataSize), "bytes"),
+                            TraceLoggingUInt32(dataSize, "length bytes"),
+                            TraceLoggingUInt64(static_cast<uint64_t>(header->Position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+                        );
+                    }
+#endif
 
                     if (m_MidiInCallback)
                     {
