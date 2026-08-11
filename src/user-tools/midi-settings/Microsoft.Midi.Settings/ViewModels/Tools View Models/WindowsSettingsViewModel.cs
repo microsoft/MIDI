@@ -15,7 +15,6 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.Windows.Devices.Midi2.Utilities.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

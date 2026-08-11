@@ -117,7 +117,7 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
                 port.Glyph = SourcePortGlyph;
                 port.DestinationKey = typeof(DeviceDetailViewModel).FullName!;
-                port.DisplayText = sourcePort.PortName;
+                port.DisplayText = sourcePort.Name;
                 port.ResultType = "MIDI 1.0 Source/Input Port";
                 port.Parameter = endpoint;
 
@@ -136,7 +136,7 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
                 port.Keywords.AddRange(result.Keywords);    // all parent keywords
                 //port.AddKeyword(sourcePort.PortName);
                 port.AddKeyword("winmm");
-                port.AddKeyword("mma");
+                port.AddKeyword("mme");
 
                 AllItems.Add(port);
             }
@@ -147,7 +147,7 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
                 port.Glyph = DestinationPortGlyph;
                 port.DestinationKey = typeof(DeviceDetailViewModel).FullName!;
-                port.DisplayText = destinationPort.PortName;
+                port.DisplayText = destinationPort.Name;
                 port.ResultType = "MIDI 1.0 Destination/Output Port";
                 port.Parameter = endpoint;
 
@@ -166,7 +166,7 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
                 port.Keywords.AddRange(result.Keywords);    // all parent keywords
                 //port.AddKeyword(destinationPort.PortName);
                 port.AddKeyword("winmm");
-                port.AddKeyword("mma");
+                port.AddKeyword("mme");
 
                 AllItems.Add(port);
             }

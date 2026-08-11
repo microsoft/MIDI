@@ -47,8 +47,6 @@ namespace Microsoft.Midi.Settings.Views
 
             ViewModel = App.GetService<HomeViewModel>();
 
-            ViewModel.UpdateFailed += ViewModel_UpdateFailed;
-
             try
             {
                 InitializeComponent();
@@ -58,29 +56,6 @@ namespace Microsoft.Midi.Settings.Views
                 _loggingService.LogError("Error initializing page", ex);
             }
         }
-
-        private void ViewModel_UpdateFailed(object? sender, string e)
-        {
-            _loggingService.LogError("Update failed.");
-
-            Dialog_DownloadingUpdate_Progress.Visibility = Visibility.Collapsed;
-            Dialog_DownloadingUpdate_MainText.Text = "Download Failed...";               // TODO: Bind this to VM and have it set from a resource
-
-            Dialog_DownloadingUpdate.PrimaryButtonText = "Close";
-            Dialog_DownloadingUpdate.IsPrimaryButtonEnabled = true;
-        }
-
-#pragma warning disable 4014
-        private void UpdateSdkRuntime_Click(object sender, RoutedEventArgs e)
-        {
-            _loggingService.LogError("Enter.");
-
-            // we show the dialog but do not wait on it
-            Dialog_DownloadingUpdate.ShowAsync();
-
-            ViewModel.StartSdkUpdate();
-        }
-#pragma warning restore 4014
 
     }
 }

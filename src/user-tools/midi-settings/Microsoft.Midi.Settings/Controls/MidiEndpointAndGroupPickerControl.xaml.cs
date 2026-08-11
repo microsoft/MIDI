@@ -194,30 +194,32 @@ namespace Microsoft.Midi.Settings.Controls
 
                                     if (block.Direction == MidiGroupTerminalBlockDirection.BlockOutput)
                                     {
-                                        var portInfo = SelectedEndpoint.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(group, Midi1PortFlow.MidiMessageSource);
+                                        ////var portInfo = SelectedEndpoint.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(group, Midi1PortFlow.MidiMessageSource);
 
-                                        if (portInfo != null)
-                                        {
-                                            groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group, portInfo.PortName);
-                                        }
-                                        else
-                                        {
-                                            groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group);
-                                        }
+                                        //var portInfo = MidiLegacyPortDeviceInformation.FindAllForAssociatedEndpoint(SelectedEndpoint.Id, Midi1PortFlow.MidiMessageSource);
+
+                                        //if (portInfo != null)
+                                        //{
+                                        //    groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group, portInfo.PortName);
+                                        //}
+                                        //else
+                                        //{
+                                        //    groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group);
+                                        //}
 
                                     }
                                     else
                                     {
-                                        var portInfo = SelectedEndpoint.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(group, Midi1PortFlow.MidiMessageDestination);
+                                        //var portInfo = SelectedEndpoint.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(group, Midi1PortFlow.MidiMessageDestination);
 
-                                        if (portInfo != null)
-                                        {
-                                            groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group, portInfo.PortName);
-                                        }
-                                        else
-                                        {
-                                            groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group);
-                                        }
+                                        //if (portInfo != null)
+                                        //{
+                                        //    groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group, portInfo.PortName);
+                                        //}
+                                        //else
+                                        //{
+                                        //    groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group);
+                                        //}
                                     }
 
 

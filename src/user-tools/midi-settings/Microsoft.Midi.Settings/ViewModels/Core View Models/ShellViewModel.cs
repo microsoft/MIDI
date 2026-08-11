@@ -14,7 +14,6 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Navigation;
-using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 using System.ComponentModel;
 
 namespace Microsoft.Midi.Settings.ViewModels;
@@ -29,7 +28,6 @@ public partial class ShellViewModel : ObservableRecipient
     private readonly IMidiConfigFileService _configFileService;
     private readonly IMidiSdkService _sdkService;
 
-    public string SdkVersionString => MidiRuntimeInformation.GetInstalledVersion().ToString();
 
     public string? CurrentConfigName => _configFileService?.CurrentConfig?.FileName;
 

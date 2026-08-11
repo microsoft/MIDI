@@ -14,8 +14,8 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.AppLifecycle;
-using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
-using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
+using global::Windows.Devices.Midi2.Transports.BasicLoopback;
+using global::Windows.Devices.Midi2.Transports.Loopback;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -155,16 +155,16 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     // Create the MIDI 2.0 loopback
 
-                    var midi2result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(midi2CreationConfig);
+                    var midi2result = MidiLoopbackManager.CreateTransientLoopback(midi2CreationConfig);
 
                     if (midi2result.Success)
                     {
-                        _configFileService.CurrentConfig.StoreLoopbackEndpointPair(midi2CreationConfig);
+                        _configFileService.CurrentConfig.StoreLoopback(midi2CreationConfig);
                     }
                     else
                     {
                         // update error information
-                        ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI2 Bidirectional) " + midi2result.ErrorInformation;
+                        ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI2 Bidirectional) " + midi2result.ErrorMessage;
                     }
 
 
@@ -172,16 +172,16 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     var midi1CreationConfig = _defaultsService.GetDefaultBasicLoopbackCreationConfig();
 
-                    var midi1Result = MidiBasicLoopbackEndpointManager.CreateTransientLoopbackEndpoint(midi1CreationConfig);
+                    var midi1Result = MidiBasicLoopbackManager.CreateTransientLoopback(midi1CreationConfig);
 
                     if (midi1Result.Success)
                     {
-                        _configFileService.CurrentConfig.StoreBasicLoopbackEndpoint(midi1CreationConfig);
+                        _configFileService.CurrentConfig.StoreBasicLoopback(midi1CreationConfig);
                     }
                     else
                     {
                         // update error information
-                        ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI1 Basic) " + midi1Result.ErrorInformation;
+                        ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI1 Basic) " + midi1Result.ErrorMessage;
 
                     }
 

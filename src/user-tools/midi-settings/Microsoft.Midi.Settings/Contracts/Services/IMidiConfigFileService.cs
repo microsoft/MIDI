@@ -26,22 +26,22 @@ public interface IMidiConfigFile
     bool Load();
 
 
-    bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig);
-    bool RemoveLoopbackEndpointPair(Guid associationId);
+    bool StoreLoopback(MidiLoopbackCreationConfig creationConfig);
+    bool RemoveLoopback(Guid associationId);
 
-    bool StoreBasicLoopbackEndpoint(Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointCreationConfig creationConfig);
-    bool RemoveBasicLoopbackEndpoint(Guid associationId);
+    bool StoreBasicLoopback(MidiBasicLoopbackCreationConfig creationConfig);
+    bool RemoveBasicLoopback(Guid associationId);
     bool StoreBasicLoopbackMutedProperty(Guid associationId, bool isMuted);
 
 
-    bool StoreNetworkHost(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkHostCreationConfig creationConfig);
-    bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientConnectConfig creationConfig);
+    bool StoreNetworkHost(MidiNetworkHostCreationConfig creationConfig);
+    bool StoreNetworkClient(MidiNetworkClientConnectConfig creationConfig);
 
 
 
     bool RemoveNetworkHost(string hostEntryId);
 
-    bool StoreEndpointCustomization(Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig updateConfig);
+    bool StoreEndpointCustomization(MidiServiceEndpointCustomizationConfig updateConfig);
 
 
 }

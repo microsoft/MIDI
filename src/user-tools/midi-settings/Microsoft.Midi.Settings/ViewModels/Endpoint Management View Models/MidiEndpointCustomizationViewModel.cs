@@ -3,7 +3,6 @@ using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.Windows.Devices.Midi2.Utilities.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -95,8 +94,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 // use the image in the wrapper
 
-                HasImage = Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.EndpointHasValidCustomImageAsset(EndpointWrapper.DeviceInformation);
-                ImageFullPath = Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.GetImageFullPathForEndpoint(EndpointWrapper.DeviceInformation);
+   //             HasImage = MidiImageAssetHelper.EndpointHasValidCustomImageAsset(EndpointWrapper.DeviceInformation);
+   //             ImageFullPath = MidiImageAssetHelper.GetImageFullPathForEndpoint(EndpointWrapper.DeviceInformation);
             }
 
 
@@ -148,9 +147,9 @@ namespace Microsoft.Midi.Settings.ViewModels
                 vm.CalculatedOldStyleName = nameTableEntry.LegacyCompatibleName;
                 vm.CalculatedNewStyleName = nameTableEntry.NewStyleName;
 
-                vm.Group = new MidiGroup(nameTableEntry.GroupIndex);
+                vm.Group = nameTableEntry.Group;
 
-                vm.CurrentDisplayName = EndpointWrapper.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(vm.Group, nameTableEntry.Flow).PortName;
+    //            vm.CurrentDisplayName = EndpointWrapper.DeviceInformation.FindAssociatedMidi1PortForGroupForThisEndpoint(vm.Group, nameTableEntry.Flow).PortName;
 
                 if (nameTableEntry.Flow == Midi1PortFlow.MidiMessageSource)
                 {

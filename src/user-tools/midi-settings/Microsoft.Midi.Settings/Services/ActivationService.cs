@@ -138,15 +138,7 @@ public class ActivationService : IActivationService
         // actually show up if it has been displayed.
         await Task.Run(() =>
         {
-            if (!_sdkService.InitializeSdk())
-            {
-                _loggingService.LogError("Unable to initialize SDK");
-
-                _messageBoxService.ShowError("Error_UnableToInitializeMidiRuntime".GetLocalized(), "Error_StartupMessageBoxTitle".GetLocalized());
-
-                return;
-            }
-            else if (!_sdkService.InitializeService())
+            if (!_sdkService.InitializeService())
             {
                 _loggingService.LogError("Unable to initialize Service");
 
@@ -159,12 +151,6 @@ public class ActivationService : IActivationService
                 _enumerationService.Start();
             }
         });
-
-        if (!_sdkService.IsRuntimeInitialized /* || !_sdkService.IsServiceInitialized */)
-        {
-            _loggingService.LogError("Runtime and/or service are not initialized");
-            return false;
-        }
 
         _loggingService.LogInfo("Closing splash screen");
         if (splash != null)

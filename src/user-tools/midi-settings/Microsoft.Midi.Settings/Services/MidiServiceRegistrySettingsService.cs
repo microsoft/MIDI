@@ -7,7 +7,6 @@
 // ============================================================================
 
 using Microsoft.Midi.Settings.Contracts.Services;
-using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 
 
 namespace Microsoft.Midi.Settings.Services;
@@ -205,13 +204,6 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
         }
     }
 
-    //private bool DeleteRegistryValue(string regKey, string regValue)
-    //{
-    //    // TODO
-
-    //    return false;
-    //}
-
     const string ValueName_DefaultMidi1PortNaming = "DefaultMidi1PortNaming";
 
     const string ValueName_Midi2DiscoveryEnabled = "Midi2DiscoveryEnabled";
@@ -219,11 +211,7 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
     const string ValueName_UseMMCSS = "UseMMCSS";
     const string ValueName_CurrentConfig = "CurrentConfig";
 
-    const string ValueName_AutoCheckForRuntimeUpdates = "AutoCheckForRuntimeUpdates";
 
-    const string ValueName_PreferredRuntimeReleaseType = "PreferredRuntimeReleaseType";
-    const string Value_PreferredRuntimeReleaseType_Preview = "preview";
-    const string Value_PreferredRuntimeReleaseType_Stable = "stable";
 
     public bool IsConfigFileSpecified()
     {
@@ -239,67 +227,6 @@ public class MidiServiceRegistrySettingsService : IMidiServiceRegistrySettingsSe
     {
         return SetRegistryStringValue(MidiRootRegKey, ValueName_CurrentConfig, configFileName);
     }
-
-
-
-    public MidiRuntimeReleaseTypes GetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes defaultIfMissing)
-    {
-        _loggingService.LogInfo($"Enter");
-
-        var value = GetRegistryStringValue(
-            MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, "").ToLower().Trim();
-
-        if (string.IsNullOrEmpty(value))
-        {
-            return defaultIfMissing;
-        }
-
-
-        if (value == Value_PreferredRuntimeReleaseType_Preview)
-        {
-            return MidiRuntimeReleaseTypes.Preview;
-        }
-        else if (value == Value_PreferredRuntimeReleaseType_Stable)
-        { 
-            return MidiRuntimeReleaseTypes.Stable; 
-        }
-
-        return MidiRuntimeReleaseTypes.Unknown;
-    }
-
-
-    public bool SetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes releaseType)
-    {
-        _loggingService.LogInfo($"Enter");
-
-        if (releaseType == MidiRuntimeReleaseTypes.Preview)
-        {
-            return SetRegistryStringValue(MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, Value_PreferredRuntimeReleaseType_Preview);
-        }
-        else // we default to stable
-        {
-            return SetRegistryStringValue(MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, Value_PreferredRuntimeReleaseType_Stable);
-        }
-    }
-
-
-
-
-    public bool GetAutoCheckForUpdatesEnabled()
-    {
-        _loggingService.LogInfo($"Enter");
-
-        return GetRegistryBooleanDWORDValue(MidiSdkRootRegKey, ValueName_AutoCheckForRuntimeUpdates, true);
-    }
-
-    public bool SetAutoCheckForUpdatesEnabled(bool newValue)
-    {
-        _loggingService.LogInfo($"Enter");
-
-        return SetRegistryBooleanDWORDValue(MidiSdkRootRegKey, ValueName_AutoCheckForRuntimeUpdates, newValue);
-    }
-
-
 
 
 

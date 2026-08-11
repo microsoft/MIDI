@@ -9,7 +9,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
-using Microsoft.Windows.Devices.Midi2.Diagnostics;
+using global::Windows.Devices.Midi2.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

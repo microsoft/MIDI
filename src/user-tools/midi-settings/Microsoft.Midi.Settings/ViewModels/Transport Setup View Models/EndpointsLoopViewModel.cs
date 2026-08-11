@@ -15,7 +15,7 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Markup;
-using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
+using global::Windows.Devices.Midi2.Transports.Loopback;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -62,15 +62,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                         return;
                     }
 
-                    var associationId = MidiLoopbackEndpointManager.GetAssociationId(LoopA!.DeviceInformation);
+                    var associationId = MidiLoopbackManager.GetAssociationId(LoopA!.DeviceInformation);
 
                     if (associationId != Guid.Empty)
                     {
-                        var config = new MidiLoopbackEndpointRemovalConfig(associationId);
+                        var config = new MidiLoopbackRemovalConfig(associationId);
 
-                        var response = MidiLoopbackEndpointManager.RemoveTransientLoopbackEndpoints(config);
+                        var response = MidiLoopbackManager.RemoveTransientLoopback(config);
 
-                        if (!response)
+                        if (!response.Success)
                         {
                             _messageBoxService.ShowError("Error_UnableToRemoveLoopbackFromService".GetLocalized());
 
@@ -79,7 +79,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                         if (_configFileService.CurrentConfig != null)
                         {
-                            var configResponse = _configFileService.CurrentConfig.RemoveLoopbackEndpointPair(associationId);
+                            var configResponse = _configFileService.CurrentConfig.RemoveLoopback(associationId);
 
                             if (!configResponse)
                             {
@@ -406,9 +406,9 @@ namespace Microsoft.Midi.Settings.ViewModels
             // descriptions are optional
             var associationId = GuidHelper.CreateNewGuid();
 
-            var creationConfig = new MidiLoopbackEndpointCreationConfig(associationId, endpointA, endpointB);
+            var creationConfig = new MidiLoopbackCreationConfig(associationId, endpointA, endpointB);
 
-            var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
+            var result = MidiLoopbackManager.CreateTransientLoopback(creationConfig);
 
             // TODO: if that worked, and these are persistent, add to configuration file
 
@@ -418,7 +418,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     if (_configFileService.CurrentConfig != null)
                     {
-                        _configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+                        _configFileService.CurrentConfig.StoreLoopback(creationConfig);
 
                         //RefreshDeviceCollection();
                         LoadExistingEndpointPairs();
@@ -433,7 +433,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
                 else
                 {
-                    _messageBoxService.ShowError("Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " " + result.ErrorInformation);
+                    _messageBoxService.ShowError("Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " " + result.ErrorMessage);
                 }
             }
 
@@ -469,7 +469,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpointPairs() (UI) : Acquired lock. Updating endpoints.");
 
-                    var endpoints = _enumerationService.GetEndpointsForTransportId(MidiLoopbackEndpointManager.TransportId);
+                    var endpoints = _enumerationService.GetEndpointsForTransportId(MidiLoopbackManager.TransportId);
 
                     // this keeps track of ids for dedup purposes
                     var ids = new Dictionary<string, bool>();
@@ -478,7 +478,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     foreach (var endpoint in endpoints)
                     {
-                        var associated = MidiLoopbackEndpointManager.GetAssociatedLoopbackEndpoint(endpoint.DeviceInformation);
+                        var associated = MidiLoopbackManager.GetAssociatedLoopbackEndpoint(endpoint.DeviceInformation);
 
                         if (associated != null)
                         {
@@ -571,7 +571,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     var creationConfig = _defaultsService.GetDefaultLoopbackCreationConfig();
 
-                    var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
+                    var result = MidiLoopbackManager.CreateTransientLoopback(creationConfig);
 
                     // TODO: Display error if needed
 
@@ -579,7 +579,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     {
                         if (_configFileService.CurrentConfig != null)
                         {
-                            _configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+                            _configFileService.CurrentConfig.StoreLoopback(creationConfig);
                         }
                         else
                         {
@@ -597,7 +597,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 _loggingService.LogInfo($"Enter");
 
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' updated.");
-                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
+                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackManager.TransportId)
                 {
                     LoadExistingEndpointPairs();
                 }
@@ -608,7 +608,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 _loggingService.LogInfo($"Enter");
 
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' added.");
-                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
+                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackManager.TransportId)
                 {
                     LoadExistingEndpointPairs();
                 }
@@ -619,7 +619,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 _loggingService.LogInfo($"Enter");
 
                 System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' removed.");
-                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
+                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackManager.TransportId)
                 {
                     LoadExistingEndpointPairs();
                 }

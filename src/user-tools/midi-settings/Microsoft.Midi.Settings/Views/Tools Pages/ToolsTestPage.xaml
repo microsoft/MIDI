@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:Microsoft.Midi.Settings.Views"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
-    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
+    xmlns:midi2="using:global::Windows.Devices.Midi2"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:midicontrols="using:Microsoft.Midi.Settings.Controls"

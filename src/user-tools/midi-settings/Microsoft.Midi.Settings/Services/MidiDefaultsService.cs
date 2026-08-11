@@ -7,8 +7,8 @@
 // ============================================================================
 
 using Microsoft.Midi.Settings.Contracts.Services;
-using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
-using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
+using global::Windows.Devices.Midi2.Transports.BasicLoopback;
+using global::Windows.Devices.Midi2.Transports.Loopback;
 using Windows.Foundation;
 
 namespace Microsoft.Midi.Settings.Services;
@@ -35,7 +35,7 @@ public class MidiDefaultsService : IMidiDefaultsService
         _loggingService = loggingService;
     }
 
-    public MidiLoopbackEndpointCreationConfig GetDefaultLoopbackCreationConfig()
+    public MidiLoopbackCreationConfig GetDefaultLoopbackCreationConfig()
     {
         _loggingService.LogInfo($"Enter");
 
@@ -61,12 +61,12 @@ public class MidiDefaultsService : IMidiDefaultsService
 
         var associationId = GuidHelper.CreateNewGuid();
 
-        var creationConfig = new MidiLoopbackEndpointCreationConfig(associationId, endpointA, endpointB);
+        var creationConfig = new MidiLoopbackCreationConfig(associationId, endpointA, endpointB);
 
         return creationConfig;
     }
 
-    public MidiBasicLoopbackEndpointCreationConfig GetDefaultBasicLoopbackCreationConfig()
+    public MidiBasicLoopbackCreationConfig GetDefaultBasicLoopbackCreationConfig()
     {
         _loggingService.LogInfo($"Enter");
 
@@ -83,7 +83,7 @@ public class MidiDefaultsService : IMidiDefaultsService
 
         var associationId = GuidHelper.CreateNewGuid();
 
-        var creationConfig = new MidiBasicLoopbackEndpointCreationConfig(associationId, endpoint);
+        var creationConfig = new MidiBasicLoopbackCreationConfig(associationId, endpoint);
 
         return creationConfig;
     }
@@ -92,13 +92,13 @@ public class MidiDefaultsService : IMidiDefaultsService
     {
         _loggingService.LogInfo($"Enter");
 
-        if (Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.DoesLoopbackAExist(DefaultLoopbackAUniqueId))
+        if (MidiLoopbackManager.DoesLoopbackAExist(DefaultLoopbackAUniqueId))
         {
             return true;
         }
         else
         {
-            return Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.DoesLoopbackBExist(DefaultLoopbackBUniqueId);
+            return MidiLoopbackManager.DoesLoopbackBExist(DefaultLoopbackBUniqueId);
         }
     }
 
@@ -106,7 +106,7 @@ public class MidiDefaultsService : IMidiDefaultsService
     {
         _loggingService.LogInfo($"Enter");
 
-        return Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.DoesLoopbackExist(DefaultBasicLoopbackUniqueId);
+        return MidiBasicLoopbackManager.DoesLoopbackExist(DefaultBasicLoopbackUniqueId);
     }
 
 }

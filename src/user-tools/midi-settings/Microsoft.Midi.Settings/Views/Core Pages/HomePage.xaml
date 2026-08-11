@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="using:Microsoft.Midi.Settings.Views"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
-    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
+    xmlns:midi2="using:Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -69,73 +69,6 @@
 
 
                             <!-- SDK Update -->
-
-                            <InfoBar Margin="0,0,15,15"
-                                     CornerRadius="8"
-                                     IsOpen="{x:Bind ViewModel.IsNewerSdkRuntimeDownloadAvailable, Mode=OneWay}"
-                                     Title="New Windows MIDI Services Runtime Available"
-                                     Severity="Informational"
-                                     >
-                                <InfoBar.Content>
-                                    <StackPanel Orientation="Vertical">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-                                            <TextBlock Text="Installed Version" 
-                                                       Grid.Column="0" 
-                                                       Grid.Row="0" 
-                                                       Style="{StaticResource SmallPropertyLabel}"/>
-                                            <TextBlock Text="{x:Bind ViewModel.MidiSdkCurrentReleaseVersionString, Mode=OneWay}" 
-                                                       Grid.Column="1" 
-                                                       Grid.Row="0"
-                                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
-
-                                            <TextBlock Text="New Version" 
-                                                       Grid.Column="0" 
-                                                       Grid.Row="1" 
-                                                       Style="{StaticResource SmallPropertyLabel}"/>
-                                            <TextBlock Text="{x:Bind ViewModel.MidiSdkNewReleaseVersionString, Mode=OneWay}" 
-                                                       Grid.Column="1" 
-                                                       Grid.Row="1"
-                                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
-
-                                            <TextBlock Text="Build Date" 
-                                                       Grid.Column="0" 
-                                                       Grid.Row="2" 
-                                                       Style="{StaticResource SmallPropertyLabel}"/>
-                                            <TextBlock Text="{x:Bind ViewModel.MidiSdkNewReleaseDateString, Mode=OneWay}" 
-                                                       Grid.Column="1" 
-                                                       Grid.Row="2"
-                                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
-
-                                            <TextBlock TextWrapping="WrapWholeWords"
-                                                       Margin="32,2,2,2"
-                                                       Grid.Row="0"
-                                                       Grid.Column="2"
-                                                       Grid.RowSpan="2">
-                                                <Run Text="{x:Bind ViewModel.NewSdkRuntimeDownloadAvailableMessage, Mode=OneWay}" />
-                                                <Hyperlink NavigateUri="{x:Bind ViewModel.MidiSdkReleaseNotesUri}">Learn more...</Hyperlink>
-                                            </TextBlock>
-
-                                        </Grid>
-
-                                        <Button Content="Update SDK Runtime"
-                                                Margin="0,12,0,16"
-                                                Click="UpdateSdkRuntime_Click"
-                                                IsEnabled="{x:Bind ViewModel.IsSdkDownloadInProgress, Mode=OneWay,Converter={StaticResource BoolNegationConverter}}"
-                                                />
-                                    </StackPanel>
-                                </InfoBar.Content>
-
-                            </InfoBar>
 
 
 

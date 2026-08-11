@@ -82,8 +82,6 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
     [ObservableProperty]
     private string settingsAppArchitecture;
 
-    [ObservableProperty]
-    private string midiSdkVersion;
 
     [ObservableProperty]
     private string windowsAppSdkVersion;
@@ -107,7 +105,6 @@ public partial class TroubleshootingViewModel : ObservableRecipient, INavigation
         WindowsArchitecture = RuntimeInformation.OSArchitecture.ToString();
 
         SettingsAppArchitecture = RuntimeInformation.ProcessArchitecture.ToString();
-        MidiSdkVersion = _sdkService.InstalledRuntimeDetailedVersionString;
 
         DotNetRuntimeVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
 

@@ -13,7 +13,7 @@ using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
-using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
+using global::Windows.Devices.Midi2.Transports.Network;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -435,7 +435,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             config.CreateOnlyUmpEndpoints = !NewClientEnableMidi1Ports;
 
             System.Diagnostics.Debug.WriteLine("");
-            System.Diagnostics.Debug.WriteLine(config.GetConfigJson());
+            System.Diagnostics.Debug.WriteLine(config.ConfigJson);
             System.Diagnostics.Debug.WriteLine("");
 
             var result = MidiNetworkTransportManager.ConnectNetworkClientAsync(config).GetAwaiter().GetResult();

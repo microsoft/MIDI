@@ -21,7 +21,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using Windows.Storage.Pickers;
 using Windows.Storage;
-using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
+using global::Windows.Devices.Midi2.Utilities.SysExTransfer;
 using Microsoft.Extensions.Logging.Abstractions;
 using Windows.Foundation;
 using Microsoft.Midi.Settings.Services;
@@ -101,36 +101,36 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             await Task.Run(async () =>
             {
-                _loggingService.LogInfo($"Enter");
+                //_loggingService.LogInfo($"Enter");
 
-                var connection = _sessionService.GetConnection(SelectedEndpoint.Id);
+                //var connection = _sessionService.GetConnection(SelectedEndpoint.Id);
 
-                if (connection == null)
-                {
-                    // TODO: Set error display
-                    return;
-                }
+                //if (connection == null)
+                //{
+                //    // TODO: Set error display
+                //    return;
+                //}
 
-                var op = MidiSystemExclusiveSender.SendDataAsync(
-                    connection,
-                    stream.AsInputStream(),
-                    MidiSystemExclusiveDataReaderFormat.Binary,
-                    MidiSystemExclusiveDataFormat.ByteFormatSystemExclusive7,
-                    _delayBetweenMessagesMilliseconds,
-                    true,
-                    SelectedGroup.Group);
+                //var op = MidiSystemExclusiveSender.SendDataAsync(
+                //    connection,
+                //    stream.AsInputStream(),
+                //    MidiSystemExclusiveDataReaderFormat.Binary,
+                //    MidiSystemExclusiveDataFormat.ByteFormatSystemExclusive7,
+                //    _delayBetweenMessagesMilliseconds,
+                //    true,
+                //    SelectedGroup.Group);
 
-                op.Progress = new AsyncOperationProgressHandler<bool, MidiSystemExclusiveSendProgress>(
-                    (info, progress) =>
-                    {
-                        DispatcherQueue?.TryEnqueue(() =>
-                        {
-                            TransferBytesRead = (double)(progress.BytesRead);
-                            TransferMessagesSent = progress.MessagesSent;
-                        });
-                    });
+                //op.Progress = new AsyncOperationProgressHandler<bool, MidiSystemExclusiveSendProgress>(
+                //    (info, progress) =>
+                //    {
+                //        DispatcherQueue?.TryEnqueue(() =>
+                //        {
+                //            TransferBytesRead = (double)(progress.BytesRead);
+                //            TransferMessagesSent = progress.MessagesSent;
+                //        });
+                //    });
 
-                await op;
+                //await op;
             });
 
         }

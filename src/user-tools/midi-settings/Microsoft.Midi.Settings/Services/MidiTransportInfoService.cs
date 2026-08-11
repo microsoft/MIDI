@@ -53,7 +53,7 @@ class MidiTransportInfoService : IMidiTransportInfoService
             _transports = MidiReporting.GetInstalledTransportPlugins();
         }
 
-        return _transports.Where(p => p.Id == transportId).FirstOrDefault<MidiServiceTransportPluginInfo>();
+        return _transports.Where(p => p.TransportId == transportId).FirstOrDefault<MidiServiceTransportPluginInfo>();
     }
 
 
