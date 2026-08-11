@@ -1,0 +1,34 @@
+Ignore a SysEx end byte that arrives before any SysEx start, and reset sysex7Pos
+when a SysEx completes.
+
+A stray 0xF7 with sysex7State == 0 still emitted a two word SysEx7 UMP built from
+empty accumulator state, which desynchronises every message after it. Separately,
+sysex7Pos was not reset on completion, so the next SysEx resumed at a stale offset.
+
+This mirrors the upstream fix for issue #36, already in main but not yet in a
+released version.
+
+Upstream: https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/36
+
+diff --git a/include/bytestreamToUMP.h b/include/bytestreamToUMP.h
+--- a/include/bytestreamToUMP.h
++++ b/include/bytestreamToUMP.h
+@@ -154,6 +154,10 @@
+ 					dumpSysex7State(true);
+ 				}
+                 else if (midi1Byte == SYSEX_STOP){
++                    if (sysex7State == 0) {
++                        //This is a bad Sysex End Byte - received before a 0xF0
++                        return;
++                    }
+                     umpMess[writeIndex] = ((UMP_SYSEX7 << 4) + defaultGroup + 0L) << 24;
+                     umpMess[writeIndex] +=  ((sysex7State == 1?0:3) + 0L) << 20;
+                     umpMess[writeIndex] +=  ((sysex7Pos + 0L) << 16) ;
+@@ -162,6 +166,7 @@
+                     umpMess[writeIndex] = ((sysex[2] + 0L) << 24) + ((sysex[3] + 0L)<< 16) + (sysex[4] << 8) + sysex[5];
+                     increaseWrite();
+                     sysex7State = 0;
++                    sysex7Pos = 0;
+                     M2Utils::clear(sysex, 0, sizeof(sysex));
+                 }
+ 			} else if(sysex7State >= 1){

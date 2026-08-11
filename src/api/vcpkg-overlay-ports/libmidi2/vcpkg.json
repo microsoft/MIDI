@@ -1,7 +1,7 @@
 {
   "name": "libmidi2",
   "version": "0.16",
-  "port-version": 1,
+  "port-version": 2,
   "description": "General purpose Midi 2 library for bytestream conversions and midi-ci",
   "homepage": "https://github.com/midi2-dev/AM_MIDI2.0Lib",
   "license": "MIT",

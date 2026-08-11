@@ -7,6 +7,7 @@
 // ============================================================================
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -44,7 +45,15 @@ namespace Microsoft.Midi.Settings.Views
         {
             ViewModel.DispatcherQueue = this.DispatcherQueue;
 
-            ViewModel.RefreshHostsCollection();
+            if (ViewModel.IsCompatibleNetworkMidi2ServicePluginRunning())
+            {
+                ViewModel.RefreshHostsCollection();
+            }
+            else
+            {
+         //       App.GetService<MessageBoxService>().ShowError("Compatible Network MIDI 2.0 service transport plugin not found.");
+            }
+
         }
 
 
@@ -66,6 +75,8 @@ namespace Microsoft.Midi.Settings.Views
             {
                 _loggingService.LogError("Error initializing page", ex);
             }
+
+
         }
 
         private void UpdateDialogSize(ContentDialog dialog)

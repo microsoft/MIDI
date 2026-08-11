@@ -128,7 +128,26 @@
                                            
                                         </Grid>
 
+                                        
+                                        
+                                        
+                                        
                                         <StackPanel Orientation="Horizontal" Grid.Column="1" Width="150">
+                                            
+                                            <!-- Buttons need to be:
+                                                If not currently connected:
+                                                    Connect
+                                                If currently connected:
+                                                    Disconnect
+                                                If pending approval:
+                                                    Drop-down button with
+                                                        Approve Always
+                                                        Approve Once
+                                                        Deny Always
+                                                        Deny Once
+                                            -->
+                                            
+                                            
                                             <Button Content="Connect" Tag="{x:Bind AdvertisedHost.DeviceId, Mode=OneTime}"
                                                     HorizontalAlignment="Right"
                                                     Visibility="{x:Bind IsConnected, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
