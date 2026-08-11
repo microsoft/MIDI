@@ -119,15 +119,20 @@ KSMidiDevice::Initialize(
 void
 KSMidiDevice::OnRemoveCallback()
 {
-    // Runs before KsHandleWrapper::Close, which is the only chance to release anything
-    // still holding the pin wrapper lock. Deliberately unconditional: the override carries its
-    // own KIR gate, and that fix must not be disabled by rolling back an unrelated one.
-    OnRemoveCallbackInternal();
-
-    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled() && m_WriteTerminateEvent)
+    if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
     {
-        // Must happen before the lock, which an uncompleted write is holding shared.
-        m_WriteTerminateEvent.SetEvent();
+        // Runs before KsHandleWrapper::Close, which is the only chance to release anything
+        // still holding the pin wrapper lock.
+        OnRemoveCallbackInternal();
+    }
+
+    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled())
+    {
+        if (m_WriteTerminateEvent)
+        {
+            // Must happen before the lock, which an uncompleted write is holding shared.
+            m_WriteTerminateEvent.SetEvent();
+        }
     }
 
     // Block until initialization and any pending message sends
@@ -275,10 +280,13 @@ KSMidiDevice::OpenStream()
 HRESULT
 KSMidiDevice::Shutdown()
 {
-    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled() && m_WriteTerminateEvent)
+    if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled())
     {
-        // Must happen before the lock, which an uncompleted write is holding shared.
-        m_WriteTerminateEvent.SetEvent();
+        if (m_WriteTerminateEvent)
+        {
+            // Must happen before the lock, which an uncompleted write is holding shared.
+            m_WriteTerminateEvent.SetEvent();
+        }
     }
 
     {
@@ -724,15 +732,12 @@ KSMidiOutDevice::WriteAbandonablePacketMidiData(
 void
 KSMidiInDevice::OnRemoveCallbackInternal()
 {
-    if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
-    {
-        // The worker holds the pin wrapper lock shared for the whole blocking read, and the
-        // PnP thread is about to call KsHandleWrapper::Close, which needs it exclusive.
-        // SyncIoctl waits on this event, so signalling it releases the reader no matter what
-        // the driver does with the cancel. Without this, the cfgmgr32 callback deadlocks and
-        // PnP can never finish removing the device, which needs a reboot to clear.
-        m_ThreadTerminateEvent.SetEvent();
-    }
+    // The worker holds the pin wrapper lock shared for the whole blocking read, and the
+    // PnP thread is about to call KsHandleWrapper::Close, which needs it exclusive.
+    // SyncIoctl waits on this event, so signalling it releases the reader no matter what
+    // the driver does with the cancel. Without this, the cfgmgr32 callback deadlocks and
+    // PnP can never finish removing the device, which needs a reboot to clear.
+    m_ThreadTerminateEvent.SetEvent();
 }
 
 HRESULT
@@ -1039,9 +1044,12 @@ KSMidiInDevice::MidiInWorker(
         // forever.
         auto signalExit = wil::scope_exit([This]()
             {
-                if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled() && This->m_ThreadExitedEvent)
+                if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
                 {
-                    This->m_ThreadExitedEvent.SetEvent();
+                    if (This->m_ThreadExitedEvent)
+                    {
+                        This->m_ThreadExitedEvent.SetEvent();
+                    }
                 }
             });
 
