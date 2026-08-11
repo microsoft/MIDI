@@ -183,28 +183,16 @@
     <Midl Include="MidiEndpointDeviceInformation.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiEndpointDevicePropertyHelper.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiEndpointDevicePurposeEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceWatcher.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl">
@@ -462,6 +450,18 @@
     <Midl Include="MidiNetworkAdvertisedHostWatcher.idl">
       <Filter>SDK\Transports\Network\Watcher</Filter>
     </Midl>
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
+      <Filter>SDK\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
+      <Filter>SDK\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
+      <Filter>SDK\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceWatcher.idl">
+      <Filter>SDK\Enumeration\Watcher</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -543,6 +543,9 @@
     </Filter>
     <Filter Include="SDK\Transports\Network\Watcher">
       <UniqueIdentifier>{dcb148ef-e48f-4b38-b946-4fd4c4faf594}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Enumeration\Watcher">
+      <UniqueIdentifier>{69dd6957-6d79-416f-aede-6191ea108b05}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

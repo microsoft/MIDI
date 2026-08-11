@@ -297,6 +297,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
                     newArgs->InternalInitialize(
                         *port,
+                        args,
                         updatedName,
                         updatedPortNumber
                     );

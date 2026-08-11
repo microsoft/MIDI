@@ -17,21 +17,26 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         legacy::MidiLegacyPortDeviceInformation UpdatedDevice() const noexcept { return m_device; }
 
+        winrt::Windows::Devices::Enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
+
         bool IsNameUpdated() const noexcept { return m_isNameUpdated; }
         bool IsNumberUpdated() const noexcept { return m_isPortNumberUpdated; }
 
         void InternalInitialize(
             legacy::MidiLegacyPortDeviceInformation const& device,
+            enumeration::DeviceInformationUpdate const& deviceInformationUpdate,
             bool isNameUpdated,
             bool isPortNumberUpdated) noexcept
         {
             m_device = device;
             m_isNameUpdated = isNameUpdated;
             m_isPortNumberUpdated = isPortNumberUpdated;
+            m_deviceInformationUpdate = deviceInformationUpdate;
         }
 
     private:
         legacy::MidiLegacyPortDeviceInformation m_device{ nullptr };
+        enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
         bool m_isNameUpdated{ false };
         bool m_isPortNumberUpdated{ false };
     };
