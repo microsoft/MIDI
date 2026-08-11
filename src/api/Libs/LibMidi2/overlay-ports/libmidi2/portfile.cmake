@@ -4,11 +4,12 @@
 # reach the internal build repo, so expect this overlay to live for a while.
 #
 # This must stay under src/api: the internal Windows build repo is rooted there and cannot
-# see anything above it.
+# see anything above it. The path mirrors that repo's existing overlay location so the two
+# can be kept in sync as a single port rather than two competing ones.
 #
-# The internal build repo carries its own libmidi2 overlay, in a location dictated by that
-# repo's own placement rules rather than mirroring this path. The two have not been compared,
-# so confirm they are equivalent before assuming either can be removed or is redundant.
+# The internal repo's overlay previously held one patch adding enableRunningStatus. 0.16
+# contains that verbatim, so it is superseded by the version this port pins, and neither of
+# the patches below was present there.
 #
 # Before deleting this, note two deliberate differences from upstream main, both of which
 # take effect the moment the overlay is dropped:
