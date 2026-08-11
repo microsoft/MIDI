@@ -132,7 +132,7 @@
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.2" />
       <PackageReference Include="System.Text.Json" Version="10.0.2" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-      <PackageReference Include="global::Windows.Devices.Midi2" Version="0.99.46-devpreview.5" />
+      <PackageReference Include="Windows.Devices.Midi2" Version="0.99.48-devpreview.5" />
 
       <PackageReference Include="WinUIEx" Version="2.9.0" />
 	  
