@@ -411,16 +411,13 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
             if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
-                if (serviceResponse.ResponseJson().HasKey(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES))
+                auto capabilitiesJson = serviceResponse.ResponseJson().GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES);
+
+                if (capabilitiesJson.HasKey(capabilityQueryKey))
                 {
-                    auto capabilitiesJson = serviceResponse.ResponseJson().GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES);
+                    auto supportsCapability = capabilitiesJson.GetNamedBoolean(capabilityQueryKey);
 
-                    if (capabilitiesJson.HasKey(capabilityQueryKey))
-                    {
-                        auto supportsCapability = capabilitiesJson.GetNamedBoolean(capabilityQueryKey);
-
-                        return supportsCapability;
-                    }
+                    return supportsCapability;
                 }
             }
             else
