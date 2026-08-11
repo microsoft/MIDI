@@ -1,12 +1,20 @@
 # Overlay of the upstream libmidi2 port. Identical to the registry port except for the
-# patches below. Delete this overlay once the upstream fixes ship in a released version.
+# patches below, which mirror upstream fixes for AM_MIDI2.0Lib issues #39 and #36. Both are
+# in upstream main but not in a released version, and a vcpkg publish takes over a month to
+# reach the internal build repo, so expect this overlay to live for a while.
 #
 # This must stay under src/api: the internal Windows build repo is rooted there and cannot
 # see anything above it.
 #
-# The internal build repo carries its own libmidi2 overlay with at least one patch that is
-# not here (malformed SysEx handling, which MidiBSToUMPTransformTests::TestBasicMalformedSysex
-# covers). Treat this port as a subset until the two are reconciled.
+# The internal build repo carries its own libmidi2 overlay, in a location dictated by that
+# repo's own placement rules rather than mirroring this path. The two have not been compared,
+# so confirm they are equivalent before assuming either can be removed or is redundant.
+#
+# Before deleting this, note two deliberate differences from upstream main, both of which
+# take effect the moment the overlay is dropped:
+#   - upstream initializes d1 to 0 rather than the 255 "no pending data byte" sentinel. That
+#     works only because bsToUMP(0,0,x) happens to emit nothing.
+#   - upstream also resets d0/d1 in clearAll(). Nothing here calls clearAll().
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
@@ -16,6 +24,7 @@ vcpkg_from_github(
     HEAD_REF main
     PATCHES
         fix-uninitialized-running-status.patch
+        fix-stray-sysex-end-byte.patch
 )
 
 if(VCPKG_TARGET_IS_WINDOWS)
