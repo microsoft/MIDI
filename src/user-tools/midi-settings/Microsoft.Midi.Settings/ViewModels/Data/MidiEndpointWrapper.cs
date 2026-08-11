@@ -11,7 +11,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Windows.Devices.Midi2.Utilities.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -130,7 +129,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         [ObservableProperty]
-        private DeviceInformation? parentDeviceInformation;
+        private MidiParentDeviceInformation? parentDeviceInformation;
 
         [ObservableProperty]
         private bool hasParent;
@@ -142,8 +141,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private MidiEndpointDeviceInformation deviceInformation;
 
-        public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1InputPorts { get; private set; } = [];
-        public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1OutputPorts { get; private set; } = [];
+        public ObservableCollection<MidiLegacyPortDeviceInformation> Midi1InputPorts { get; private set; } = [];
+        public ObservableCollection<MidiLegacyPortDeviceInformation> Midi1OutputPorts { get; private set; } = [];
 
         public void RefreshData(MidiEndpointDeviceInformation deviceInformation)
         {
@@ -297,17 +296,17 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // small image
 
-                string imagePath = string.Empty;
-                if (MidiImageAssetHelper.EndpointHasValidCustomImageAsset(DeviceInformation))
-                {
-                    imagePath = MidiImageAssetHelper.GetImageFullPathForEndpoint(DeviceInformation);
-                }
-                else
-                {
-                    imagePath = MidiImageAssetHelper.GetDefaultImageFullPathForEndpoint(DeviceInformation);
-                }
+                //string imagePath = string.Empty;
+                //if (MidiImageAssetHelper.EndpointHasValidCustomImageAsset(DeviceInformation))
+                //{
+                //    imagePath = MidiImageAssetHelper.GetImageFullPathForEndpoint(DeviceInformation);
+                //}
+                //else
+                //{
+                //    imagePath = MidiImageAssetHelper.GetDefaultImageFullPathForEndpoint(DeviceInformation);
+                //}
 
-                Image = App.GetService<IMidiEndpointImageService>().GetImageSource(imagePath);
+                //Image = App.GetService<IMidiEndpointImageService>().GetImageSource(imagePath);
 
                 lock (FunctionBlocks)
                 {
@@ -345,53 +344,53 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Getting MIDI 1.0 Ports");
 
-                // MIDI 1.0 Input Ports / Sources
-                var inputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageSource);
-                var outputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
+                //// MIDI 1.0 Input Ports / Sources
+                //var inputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageSource);
+                //var outputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
 
-                System.Diagnostics.Debug.WriteLine($"MidiEndpointWrapper: Returned {Name} MIDI 1 input ports:  {inputPorts.Count}");
-                System.Diagnostics.Debug.WriteLine($"MidiEndpointWrapper: Returned {Name} MIDI 1 output ports: {outputPorts.Count}");
+                //System.Diagnostics.Debug.WriteLine($"MidiEndpointWrapper: Returned {Name} MIDI 1 input ports:  {inputPorts.Count}");
+                //System.Diagnostics.Debug.WriteLine($"MidiEndpointWrapper: Returned {Name} MIDI 1 output ports: {outputPorts.Count}");
 
-                context.Post(_ =>
-                {
-                    System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread to update MIDI 1 port list");
+                //context.Post(_ =>
+                //{
+                //    System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread to update MIDI 1 port list");
 
-                    lock (Midi1InputPorts)
-                    {
-                        Midi1InputPorts.Clear();
-                        foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
-                        {
-                            Midi1InputPorts.Add(source);
-                        }
-                        CountMidi1InputPorts = Midi1InputPorts.Count;
-                        HasSingleInputPort = CountMidi1InputPorts == 1;
+                //    lock (Midi1InputPorts)
+                //    {
+                //        Midi1InputPorts.Clear();
+                //        foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
+                //        {
+                //            Midi1InputPorts.Add(source);
+                //        }
+                //        CountMidi1InputPorts = Midi1InputPorts.Count;
+                //        HasSingleInputPort = CountMidi1InputPorts == 1;
 
-                        if (HasSingleInputPort)
-                        {
-                            SingleInputPortName = inputPorts[0].PortName;
-                        }
-                    }
+                //        if (HasSingleInputPort)
+                //        {
+                //            SingleInputPortName = inputPorts[0].PortName;
+                //        }
+                //    }
 
-                    lock (Midi1OutputPorts)
-                    {
-                        Midi1OutputPorts.Clear();
-                        // MIDI 1.0 Output Ports / Destinations
-                        foreach (var destination in outputPorts.OrderBy((p) => p.PortNumber))
-                        {
-                            Midi1OutputPorts.Add(destination);
-                        }
-                        CountMidi1OutputPorts = Midi1OutputPorts.Count;
-                        HasSingleOutputPort = CountMidi1OutputPorts == 1;
+                //    lock (Midi1OutputPorts)
+                //    {
+                //        Midi1OutputPorts.Clear();
+                //        // MIDI 1.0 Output Ports / Destinations
+                //        foreach (var destination in outputPorts.OrderBy((p) => p.PortNumber))
+                //        {
+                //            Midi1OutputPorts.Add(destination);
+                //        }
+                //        CountMidi1OutputPorts = Midi1OutputPorts.Count;
+                //        HasSingleOutputPort = CountMidi1OutputPorts == 1;
 
-                        if (HasSingleOutputPort)
-                        {
-                            SingleOutputPortName = outputPorts[0].PortName;
-                        }
-                    }
+                //        if (HasSingleOutputPort)
+                //        {
+                //            SingleOutputPortName = outputPorts[0].PortName;
+                //        }
+                //    }
 
-                    System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Completed posting to UI Thread");
+                //    System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Completed posting to UI Thread");
 
-                 }, null);
+                // }, null);
 
             });
 

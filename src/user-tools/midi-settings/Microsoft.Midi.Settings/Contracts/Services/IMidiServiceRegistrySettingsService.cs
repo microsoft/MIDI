@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
-
 
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
@@ -27,16 +25,6 @@ public interface IMidiServiceRegistrySettingsService
 
     UInt32 GetMidi2DiscoveryTimeoutMS();
     bool SetMidi2DiscoveryTimeoutMS(UInt32 newValue);
-
-
-    MidiRuntimeReleaseTypes GetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes defaultIfMissing);
-    bool SetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes releaseType);
-
-
-    bool GetAutoCheckForUpdatesEnabled();
-    bool SetAutoCheckForUpdatesEnabled(bool newValue);
-    
-
 
 
     bool IsConfigFileSpecified();

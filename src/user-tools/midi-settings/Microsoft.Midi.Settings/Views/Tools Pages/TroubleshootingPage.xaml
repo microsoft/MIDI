@@ -8,7 +8,7 @@
     xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
+    xmlns:midi2="using:Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"   
     xmlns:serviceContracts="using:Microsoft.Midi.Settings.Contracts.Services"
@@ -97,11 +97,7 @@
                                        IsTextSelectionEnabled="True"
                                        Grid.Column="3"
                                        Grid.Row="1"/>
-                            <TextBlock Text="{x:Bind ViewModel.MidiSdkVersion}"
-                                       Style="{StaticResource SmallEmphasizedPropertyValue}"
-                                       IsTextSelectionEnabled="True"
-                                       Grid.Column="3"
-                                       Grid.Row="2"/>
+
 
 
                         </Grid>

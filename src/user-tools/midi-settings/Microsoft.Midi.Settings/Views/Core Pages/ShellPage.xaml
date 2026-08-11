@@ -276,11 +276,6 @@
                         <TextBlock Text="Installed MIDI Runtime" 
                                    FontSize="{StaticResource SmallFontSize}"
                                    Opacity="0.75"/>
-                        <TextBlock Text="{x:Bind ViewModel.SdkVersionString}"
-                                   FontSize="{StaticResource SmallFontSize}"
-                                   Foreground="{StaticResource MidiIconBaseColorBlueBrush}"
-                                   Margin="0,4,0,0"/>
-
 
                         <!--<TextBlock Text="Current Configuration File"
                                    FontSize="{StaticResource SmallFontSize}"

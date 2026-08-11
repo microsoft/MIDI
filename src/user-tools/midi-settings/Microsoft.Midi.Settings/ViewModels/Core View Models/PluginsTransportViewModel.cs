@@ -67,7 +67,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 var vm = new MidiServiceTransportPluginViewModel();
 
-                vm.Id = plugin.Id;
+                vm.Id = plugin.TransportId;
                 vm.TransportCode = plugin.TransportCode;
                 vm.Name = plugin.Name;
                 vm.Description = plugin.Description;
@@ -75,7 +75,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 vm.Version = plugin.Version;
 
                 // Get the COM registration information
-                var path = RegistryHelper.GetImplementationPathForComClass(plugin.Id);
+                var path = RegistryHelper.GetImplementationPathForComClass(plugin.TransportId);
 
                 if (path != null)
                 {

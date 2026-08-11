@@ -124,7 +124,6 @@ public partial class App : Application
                     services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
                     services.AddSingleton<IMidiEndpointCustomizationService, MidiEndpointCustomizationService>();
 
-                    services.AddSingleton<IMidiUpdateService, MidiUpdateService>();
                     services.AddSingleton<IMidiSdkService, MidiSdkService>();
 
                     services.AddSingleton<IMidiSettingsSearchService, MidiSettingsSearchService>();

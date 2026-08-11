@@ -16,7 +16,7 @@ using Microsoft.Midi.Settings.Controls;
 using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
-using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
+using global::Windows.Devices.Midi2.Utilities.SysExTransfer;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

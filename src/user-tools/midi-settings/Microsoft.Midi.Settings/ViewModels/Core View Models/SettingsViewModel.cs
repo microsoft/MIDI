@@ -18,8 +18,7 @@ using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml;
-using Microsoft.Windows.Devices.Midi2.Common;
-using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
+
 using Windows.ApplicationModel;
 
 namespace Microsoft.Midi.Settings.ViewModels;
@@ -45,14 +44,12 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IGeneralSettingsService _generalSettingsService;
-    private readonly IMidiUpdateService _midiUpdateService;
+
 
     private ElementTheme _elementTheme;
-    //private bool _showDeveloperOptions;
-    private string _versionDescription;
 
-    private bool _isPreviewChannelEnabled = false;
-    private bool _isUpdateCheckingEnabled = true;
+
+
     private bool _arePreviewToolsEnabled = false;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
@@ -64,36 +61,6 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
     //    set => _generalSettingsService.ShowDeveloperOptions = value;
     //}
 
-
-    public bool IsPreviewChannelEnabled
-    {
-        get => _midiUpdateService.GetCurrentPreferredChannel() == MidiRuntimeReleaseTypes.Preview;
-        set => SetProperty(_isPreviewChannelEnabled, value, (newValue) => 
-        { 
-            //_isPreviewChannelEnabled = newValue;  
-
-            if (newValue)
-            {
-                _midiUpdateService.SetCurrentPreferredChannel(Windows.Devices.Midi2.Utilities.RuntimeInformation.MidiRuntimeReleaseTypes.Preview);
-            }
-            else
-            {
-                _midiUpdateService.SetCurrentPreferredChannel(Windows.Devices.Midi2.Utilities.RuntimeInformation.MidiRuntimeReleaseTypes.Stable);
-            }
-        });
-    }
-
-    
-    public bool IsUpdateCheckingEnabled
-    {
-        get => _midiUpdateService.GetAutoCheckForUpdatesEnabled();
-        set => SetProperty(_isUpdateCheckingEnabled, value, (newValue) => 
-        { 
-            _midiUpdateService.SetAutoCheckForUpdatesEnabled(newValue);
-
-            _isUpdateCheckingEnabled = newValue;
-        });
-    }
 
     
     public bool ArePreviewToolsEnabled
@@ -113,12 +80,6 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
         set => SetProperty(ref _elementTheme, value);
     }
 
-    public string VersionDescription
-    {
-        get => _versionDescription;
-        set => SetProperty(ref _versionDescription, value);
-    }
-
     public ICommand SwitchThemeCommand
     {
         get;
@@ -127,20 +88,17 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
     private readonly ILoggingService _loggingService;
     public SettingsViewModel(
         IThemeSelectorService themeSelectorService, 
-        IMidiUpdateService midiUpdateService,
         ILocalSettingsService localSettingsService, 
         IGeneralSettingsService generalSettingsService,
         ILoggingService loggingService)
     {
         
         _loggingService = loggingService;
-        _midiUpdateService = midiUpdateService;
         _themeSelectorService = themeSelectorService;
         _localSettingsService = localSettingsService;
         _generalSettingsService = generalSettingsService;
 
         _elementTheme = _themeSelectorService.Theme;
-        _versionDescription = GetVersionDescription();
 
         SwitchThemeCommand = new RelayCommand<ElementTheme>(
             async (param) =>
@@ -152,16 +110,9 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
                 }
             });
 
-        _isUpdateCheckingEnabled = _midiUpdateService.GetAutoCheckForUpdatesEnabled();
 
         _arePreviewToolsEnabled = _generalSettingsService.GetPreviewToolsEnabled();
 
-        _isPreviewChannelEnabled = 
-            (_midiUpdateService.GetCurrentPreferredChannel() == MidiRuntimeReleaseTypes.Preview);
     }
 
-    private static string GetVersionDescription()
-    {
-        return MidiRuntimeInformation.GetInstalledVersion().ToString();
-    }
 }

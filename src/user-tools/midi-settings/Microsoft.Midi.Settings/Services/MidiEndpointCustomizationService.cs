@@ -31,9 +31,9 @@ public class MidiEndpointCustomizationService : IMidiEndpointCustomizationServic
 
         // build the json and send up through the transport
 
-        System.Diagnostics.Debug.WriteLine(configUpdate.GetConfigJson());
+        System.Diagnostics.Debug.WriteLine(configUpdate.ConfigJson);
 
-        var response = MidiServiceConfig.UpdateTransportPluginConfig(configUpdate);
+        var response = MidiServiceTransportPluginConfigManager.SendUpdate(configUpdate);
 
         if (response.Status == MidiServiceConfigResponseStatus.Success)
         {

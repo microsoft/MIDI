@@ -9,7 +9,6 @@
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.Windows.Devices.Midi2.Utilities.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -150,7 +149,7 @@ public class MidiEndpointImageService : IMidiEndpointImageService
 
         string fullPath = Path.Combine(GetImagesFolder(), Path.GetFileName(imageFileName));
 
-        //return Microsoft.Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.EndpointHasValidCustomImageAsset(endpoint);
+        //return global::Windows.Devices.Midi2.Utilities.Metadata.MidiImageAssetHelper.EndpointHasValidCustomImageAsset(endpoint);
 
 
         return File.Exists(fullPath);

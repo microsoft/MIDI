@@ -10,10 +10,8 @@ using Microsoft.Midi.Settings.Contracts.Services;
 
 using Windows.Data.Json;
 using Microsoft.Midi.Settings.Config;
-using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
 using Windows.ApplicationModel.Contacts;
 using Windows.Devices.PointOfService;
-using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;    // we use the WinRT JSON libraries to be consistent with the service code
 
 namespace Microsoft.Midi.Settings.Services;
 
@@ -558,7 +556,7 @@ public class MidiConfigFile : IMidiConfigFile
 
 
 
-    public bool RemoveBasicLoopbackEndpoint(Guid associationId)
+    public bool RemoveBasicLoopback(Guid associationId)
     {
         try
         {
@@ -566,7 +564,7 @@ public class MidiConfigFile : IMidiConfigFile
 
             if (m_config == null) return false;
 
-            var transportSection = FindExistingTransportSection(m_config, Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointManager.TransportId);
+            var transportSection = FindExistingTransportSection(m_config, MidiBasicLoopbackManager.TransportId);
             if (transportSection == null) return false;
 
             var createSection = FindExistingTransportCreateObject(transportSection);
@@ -599,7 +597,7 @@ public class MidiConfigFile : IMidiConfigFile
 
 
     // this assumes the config has already been run against the service to create the pair. We're just storing them here.
-    public bool StoreBasicLoopbackEndpoint(Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback.MidiBasicLoopbackEndpointCreationConfig creationConfig)
+    public bool StoreBasicLoopback(MidiBasicLoopbackCreationConfig creationConfig)
     {
         try
         {
@@ -615,7 +613,7 @@ public class MidiConfigFile : IMidiConfigFile
                 return false;
             }
 
-            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.ConfigJson))
             {
                 // write the property
                 _loggingService.LogInfo($"Saving. Association Id {creationConfig.AssociationId}");
@@ -652,7 +650,7 @@ public class MidiConfigFile : IMidiConfigFile
             }
 
             // there's never an update object for loopbacks, only create objects.
-            var createObject = FindExistingTransportCreateObject(MidiBasicLoopbackEndpointManager.TransportId, associationId);
+            var createObject = FindExistingTransportCreateObject(MidiBasicLoopbackManager.TransportId, associationId);
             if (createObject == null) return false;
 
             var endpointObject = createObject.GetNamedObject(MidiConfigConstants.JsonKeys.Endpoint, null);
@@ -673,7 +671,7 @@ public class MidiConfigFile : IMidiConfigFile
         }
     }
 
-    public bool RemoveLoopbackEndpointPair(Guid associationId)
+    public bool RemoveLoopback(Guid associationId)
     {
         try
         {
@@ -681,7 +679,7 @@ public class MidiConfigFile : IMidiConfigFile
 
             if (m_config == null) return false;
 
-            var transportSection = FindExistingTransportSection(m_config, Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.TransportId);
+            var transportSection = FindExistingTransportSection(m_config, MidiLoopbackManager.TransportId);
             if (transportSection == null) return false;
 
             var createSection = FindExistingTransportCreateObject(transportSection);
@@ -711,7 +709,7 @@ public class MidiConfigFile : IMidiConfigFile
 
 
     // this assumes the config has already been run against the service to create the pair. We're just storing them here.
-    public bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig)
+    public bool StoreLoopback(MidiLoopbackCreationConfig creationConfig)
     {
         try
         {
@@ -727,7 +725,7 @@ public class MidiConfigFile : IMidiConfigFile
                 return false;
             }
 
-            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.ConfigJson))
             {
                 // write the property
 
@@ -747,7 +745,7 @@ public class MidiConfigFile : IMidiConfigFile
     }
 
 
-    public bool StoreNetworkHost(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkHostCreationConfig creationConfig)
+    public bool StoreNetworkHost(MidiNetworkHostCreationConfig creationConfig)
     {
         try
         {
@@ -763,7 +761,7 @@ public class MidiConfigFile : IMidiConfigFile
                 return false;
             }
 
-            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.ConfigJson))
             {
                 // write the property
 
@@ -830,7 +828,7 @@ public class MidiConfigFile : IMidiConfigFile
 
 
 
-    public bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientConnectConfig creationConfig)
+    public bool StoreNetworkClient(MidiNetworkClientConnectConfig creationConfig)
     {
         try
         {
@@ -846,7 +844,7 @@ public class MidiConfigFile : IMidiConfigFile
                 return false;
             }
 
-            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.GetConfigJson()))
+            if (MergeEndpointTransportSectionIntoJsonObject(m_config, creationConfig.ConfigJson))
             {
                 // write the property
 
@@ -868,7 +866,7 @@ public class MidiConfigFile : IMidiConfigFile
     }
 
 
-    public bool StoreEndpointCustomization(Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig updateConfig)
+    public bool StoreEndpointCustomization(MidiServiceEndpointCustomizationConfig updateConfig)
     {
         try
         {
@@ -898,14 +896,14 @@ public class MidiConfigFile : IMidiConfigFile
                 {
                     var existingMatchJson = existingUpdateObject.GetNamedObject(MidiConfigConstants.JsonKeys.Match);
 
-                    var existingMatchObject = Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria.FromJson(existingMatchJson.Stringify());
+                    var existingMatchObject = MidiServiceConfigEndpointMatchCriteria.FromJson(existingMatchJson.Stringify());
 
                     if (updateConfig.MatchCriteria.Matches(existingMatchObject))
                     {
                         System.Diagnostics.Debug.WriteLine("We match");
 
                         // this object has the full structure including endpointTransportPluginSettings and the transportId
-                        var newTransportSection = FindExistingTransportSection(updateConfig.GetConfigJson(), updateConfig.TransportId);
+                        var newTransportSection = FindExistingTransportSection(updateConfig.ConfigJson, updateConfig.TransportId);
 
                         if (newTransportSection != null)
                         {
@@ -937,7 +935,7 @@ public class MidiConfigFile : IMidiConfigFile
 
             // no matches found, so add as new
 
-            var newTransportObject = FindExistingTransportSection(updateConfig.GetConfigJson(), updateConfig.TransportId);
+            var newTransportObject = FindExistingTransportSection(updateConfig.ConfigJson, updateConfig.TransportId);
             if (newTransportObject == null) return false;
 
             var newUpdateArray = FindExistingTransportUpdateArray(newTransportObject);
@@ -1067,26 +1065,6 @@ class MidiConfigFileService : IMidiConfigFileService
         return null;
     }
 
-    //public bool UpdateRegistryCurrentConfigFile(string configFileName)
-    //{
-    //    try
-    //    {
-    //        Registry.SetValue(MidiConfigConstants.Reg.ConfigFileRegKey, MidiConfigConstants.Reg.ConfigFileCurrentRegValue, configFileName, RegistryValueKind.String);
-
-    //        var config = LoadCurrentConfigFileFromRegistry();
-
-    //        // set the config as current
-    //        m_currentConfigFile = config;
-
-    //        return true;
-    //    }
-    //    catch (Exception)
-    //    {
-
-    //    }
-
-    //    return false;
-    //}
 
     public string GetDefaultConfigName()
     {

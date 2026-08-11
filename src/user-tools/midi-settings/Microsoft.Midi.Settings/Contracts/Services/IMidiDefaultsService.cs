@@ -6,8 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
-using Microsoft.Windows.Devices.Midi2.Endpoints.BasicLoopback;
+using global::Windows.Devices.Midi2.Transports.Loopback;
+using global::Windows.Devices.Midi2.Transports.BasicLoopback;
 
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
@@ -16,8 +16,8 @@ public interface IMidiDefaultsService
     string GetDefaultMidiConfigName();
     string GetDefaultMidiConfigFileName();
 
-    MidiLoopbackEndpointCreationConfig GetDefaultLoopbackCreationConfig();
-    MidiBasicLoopbackEndpointCreationConfig GetDefaultBasicLoopbackCreationConfig();
+    MidiLoopbackCreationConfig GetDefaultLoopbackCreationConfig();
+    MidiBasicLoopbackCreationConfig GetDefaultBasicLoopbackCreationConfig();
 
     bool DoesDefaultLoopbackAlreadyExist();
 

@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
-using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
+using global::Windows.Devices.Midi2.Transports.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;

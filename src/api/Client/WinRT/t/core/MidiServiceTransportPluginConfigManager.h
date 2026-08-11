@@ -30,6 +30,10 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             _In_ winrt::guid const& transportId,
             _In_ winrt::hstring const& capabilityQueryKey) noexcept;
 
+
+        static collections::IMapView<winrt::hstring, bool> QueryAllCapabilities(
+            _In_ winrt::guid const& transportId);
+
     private:
 
         static json::JsonObject InternalSendConfigJsonAndGetResponse(

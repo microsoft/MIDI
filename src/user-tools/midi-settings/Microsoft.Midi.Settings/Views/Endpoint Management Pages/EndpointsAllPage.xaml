@@ -4,8 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="using:Microsoft.Midi.Settings.Views"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
-    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
-    xmlns:midi2Reporting="using:Microsoft.Windows.Devices.Midi2.Reporting"
+    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:midi2Enum="using:Windows.Devices.Midi2.Enumeration"
+    xmlns:midi2Legacy="using:Windows.Devices.Midi2.Enumeration.Legacy"
+    xmlns:midi2Config="using:Windows.Devices.Midi2.ServiceConfig"
+    xmlns:midi2Reporting="using:Windows.Devices.Midi2.Reporting"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:midicontrols="using:Microsoft.Midi.Settings.Controls"
@@ -58,7 +61,7 @@
 
             <!-- MIDI 1 ports flyout -->
             <DataTemplate x:Key="Midi1FlyoutPortTemplate" 
-                          x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
+                          x:DataType="midi2Legacy:MidiLegacyPortDeviceInformation">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="{StaticResource Midi1PortListPortNumberColumnWidth}" />
@@ -66,14 +69,14 @@
                     </Grid.ColumnDefinitions>
                    
                     <TextBlock Grid.Column="0" 
-                               Text="{x:Bind PortNumber, Mode=OneWay}" 
+                               Text="{x:Bind Number, Mode=OneWay}" 
                                TextAlignment="Left" 
                                Foreground="{StaticResource TextFillColorDisabledBrush}"
                                VerticalAlignment="Center"
                                HorizontalAlignment="Left"/>
 
                     <TextBlock Grid.Column="1" 
-                               Text="{x:Bind PortName, Mode=OneWay}" 
+                               Text="{x:Bind Name, Mode=OneWay}" 
                                Foreground="{StaticResource SystemFillColorAttentionBrush}"
                                />
                 </Grid>

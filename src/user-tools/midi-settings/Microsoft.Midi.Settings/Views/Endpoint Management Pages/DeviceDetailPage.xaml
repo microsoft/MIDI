@@ -5,8 +5,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:vm="using:Microsoft.Midi.Settings.ViewModels"
-    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
-    xmlns:midi2Config="using:Microsoft.Windows.Devices.Midi2.ServiceConfig"
+    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:midi2Enum="using:Windows.Devices.Midi2.Enumeration"
+    xmlns:midi2Legacy="using:Windows.Devices.Midi2.Enumeration.Legacy"
+    xmlns:midi2Config="using:Windows.Devices.Midi2.ServiceConfig"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
@@ -257,10 +259,10 @@
                     </controls:SettingsExpander.Header>
 
                     <controls:SettingsExpander.ItemTemplate>
-                        <DataTemplate x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
+                        <DataTemplate x:DataType="midi2Legacy:MidiLegacyPortDeviceInformation">
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
-                                    <TextBlock Text="{x:Bind PortName}" />
+                                    <TextBlock Text="{x:Bind Name}" />
                                 </controls:SettingsCard.Header>
 
                                 <controls:SettingsCard.Content>
@@ -281,7 +283,7 @@
                                                        x:Uid="CommonTextBlockLabel_WinMMPortNumber" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                       Text="{x:Bind PortNumber }" 
+                                                       Text="{x:Bind Number }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
@@ -339,10 +341,10 @@
                     </controls:SettingsExpander.HeaderIcon>
 
                     <controls:SettingsExpander.ItemTemplate>
-                        <DataTemplate x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
+                        <DataTemplate x:DataType="midi2Legacy:MidiLegacyPortDeviceInformation">
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
-                                    <TextBlock Text="{x:Bind PortName}" />
+                                    <TextBlock Text="{x:Bind Name}" />
                                 </controls:SettingsCard.Header>
 
                                 <controls:SettingsCard.Content>
@@ -363,7 +365,7 @@
                                                    x:Uid="CommonTextBlockLabel_WinMMPortNumber" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                   Text="{x:Bind PortNumber, Mode=OneTime }" 
+                                                   Text="{x:Bind Number, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
@@ -550,7 +552,7 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb41;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.ItemTemplate>
-                        <DataTemplate x:DataType="midi2:MidiFunctionBlock">
+                        <DataTemplate x:DataType="midi2Enum:MidiFunctionBlock">
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
                                     <TextBlock Text="{x:Bind Name}" />
@@ -675,7 +677,7 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb41;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.ItemTemplate>
-                        <DataTemplate x:DataType="midi2:MidiGroupTerminalBlock">
+                        <DataTemplate x:DataType="midi2Enum:MidiGroupTerminalBlock">
                             <controls:SettingsCard>
                                 <controls:SettingsCard.HeaderIcon>
                                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind Direction, Mode=OneTime, Converter={StaticResource MidiGroupTerminalBlockDirectionToFontIconConverter}}" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -802,9 +804,6 @@
 
                                     <TextBlock Grid.Column="0" Grid.Row="1" Text="Id" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointWrapper.ParentDeviceInformation.Id, Mode=OneWay}"  Style="{StaticResource SmallPlainPropertyValue}"/>
-
-                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Kind" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.EndpointWrapper.ParentDeviceInformation.Kind, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}"/>
 
                                 </Grid>
                             </controls:SettingsCard.Header>
@@ -999,7 +998,7 @@
                               ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNamingOptions, Mode=OneWay}"
                               SelectedItem="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                         <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="midi2:Midi1PortNamingApproach">
+                            <DataTemplate x:DataType="midi2Enum:Midi1PortNamingApproach">
                                 <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource Midi1PortNamingApproachConverter}}"/>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>

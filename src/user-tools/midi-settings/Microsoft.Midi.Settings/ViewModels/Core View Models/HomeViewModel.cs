@@ -11,7 +11,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
-using Microsoft.Windows.Devices.Midi2.Utilities.Update;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,8 +23,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class HomeViewModel : ObservableRecipient, INavigationAware
     {
-
-        public event EventHandler<string> UpdateFailed;
 
         public ICommand CommonTaskSetUpNetworkMidi2Command
         {
@@ -95,9 +92,6 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; set;
         }
 
-        [ObservableProperty]
-        private bool isSdkDownloadInProgress;
-
 
         public string MidiClockResolutionFormattedNanoseconds
         {
@@ -106,30 +100,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                 return (MidiClock.ConvertTimestampTicksToNanoseconds(1)).ToString("N2") + " ns";
             }
         }
-
-
-        public string MidiSdkVersionString
-        {
-            get
-            {
-                return _sdkService.InstalledRuntimeDetailedVersionString;
-            }
-        }
-
-        [ObservableProperty]
-        private Uri midiSdkDownloadUri;
-
-        [ObservableProperty]
-        private Uri midiSdkReleaseNotesUri;
-
-        [ObservableProperty]
-        private string midiSdkNewReleaseVersionString;
-
-        [ObservableProperty]
-        private string midiSdkNewReleaseDateString;
-
-        [ObservableProperty]
-        private string midiSdkCurrentReleaseVersionString;
 
         public bool IsValidConfigLoaded
         {
@@ -197,115 +167,17 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
-        private MidiRuntimeRelease? _newRelease;
 
-
-
-        public void CheckForSdkUpdates()
-        {
-            _loggingService.LogInfo($"Enter");
-
-            try
-            {
-
-                IsNewerSdkRuntimeDownloadAvailable = false;
-                _newRelease = null;
-
-                // TODO: This needs to check the correct channel
-                var newRelease = _updateService.CheckForUpdates();
-                var installedVersion = _sdkService.InstalledVersion;
-
-                if (newRelease == null || installedVersion == null) return;
-
-                MidiSdkCurrentReleaseVersionString = installedVersion.ToString();
-
-                if (newRelease.Version.IsGreaterThan(installedVersion))
-                {
-                    _newRelease = newRelease;
-
-                    MidiSdkDownloadUri = newRelease.DirectDownloadUriForCurrentRuntimeArchitecture;
-                    MidiSdkReleaseNotesUri = newRelease.ReleaseNotesUri;
-                    MidiSdkNewReleaseDateString = newRelease.BuildDate.ToString("MMMM dd, yyyy");
-                    MidiSdkNewReleaseVersionString = newRelease.Version.ToString();
-
-                    IsNewerSdkRuntimeDownloadAvailable = true;
-                }
-                else
-                {
-                    IsNewerSdkRuntimeDownloadAvailable = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                _loggingService.LogError("Error checking for SDK updates", ex);
-
-                // error trying to check for a new release. Firewall? No network?
-
-                System.Diagnostics.Debug.WriteLine(ex);
-                IsNewerSdkRuntimeDownloadAvailable = false;
-            }
-
-        }
 
 
         [ObservableProperty]
         bool isNewerSdkRuntimeDownloadAvailable;
 
 
-        public string NewerSdkRuntimeDownloadVersion
-        {
-            get
-            {
-                if (_newRelease != null)
-                {
-                    return _newRelease.Version.ToString();
-                }
-
-                return "";
-            }
-        }
-
-        public string NewSdkRuntimeDownloadAvailableMessage
-        {
-            get
-            {
-                if (_newRelease != null)
-                {
-                    return _newRelease.Description;
-                }
-
-                return string.Empty;
-            }
-        }
-
-
-        
-
-        public async void StartSdkUpdate()
-        {
-            _loggingService.LogInfo($"Enter");
-
-            // TODO: We need to make sure we pull the correct architecture
-
-            IsSdkDownloadInProgress = true;
-
-            //Task.Run(() =>
-            //{
-            var updateUri = this.MidiSdkDownloadUri;
-
-            bool success = await _updateService.DownloadAndInstallUpdate(updateUri);
-            //});
-
-            // if we got here, the download failed
-
-            IsSdkDownloadInProgress = false;
-            UpdateFailed(this, "Downloading the update file failed.");
-        }
 
         private readonly IMidiTransportInfoService _transportInfoService;
         private readonly INavigationService _navigationService;
         private readonly IMidiConfigFileService _configFileService;
-        private readonly IMidiUpdateService _updateService;
         private readonly IMidiSdkService _sdkService;
         private readonly IMidiConsoleToolsService _consoleToolsService;
         private readonly IMidiDiagnosticsService _diagnosticsService;
@@ -315,7 +187,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         public HomeViewModel(
             INavigationService navigationService,
             IMidiConfigFileService midiConfigFileService,
-            IMidiUpdateService updateService,
             IMidiSdkService sdkService,
             IMidiTransportInfoService transportInfoService,
             IMidiConsoleToolsService consoleToolsService,
@@ -327,7 +198,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _navigationService = navigationService;
             _configFileService = midiConfigFileService;
-            _updateService = updateService;
             _sdkService = sdkService;
             _transportInfoService = transportInfoService;
             _consoleToolsService = consoleToolsService;
@@ -391,13 +261,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     _diagnosticsService.CaptureMidiDiagOutputToNotepad();
                 });
-
-
-
-            if (_updateService.GetAutoCheckForUpdatesEnabled())
-            {
-                CheckForSdkUpdates();
-            }
 
             IsNetworkMidi2Available = _transportInfoService.IsTransportAvailable("NET2UDP") && IsValidConfigLoaded;
             IsBasicLoopbackTransportAvailable = _transportInfoService.IsTransportAvailable("BLOOP") && IsValidConfigLoaded;
