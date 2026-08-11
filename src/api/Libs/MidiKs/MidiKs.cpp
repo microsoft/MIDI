@@ -120,7 +120,8 @@ void
 KSMidiDevice::OnRemoveCallback()
 {
     // Runs before KsHandleWrapper::Close, which is the only chance to release anything
-    // still holding the pin wrapper lock.
+    // still holding the pin wrapper lock. Deliberately unconditional: the override carries its
+    // own KIR gate, and that fix must not be disabled by rolling back an unrelated one.
     OnRemoveCallbackInternal();
 
     if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled() && m_WriteTerminateEvent)
@@ -1038,7 +1039,7 @@ KSMidiInDevice::MidiInWorker(
         // forever.
         auto signalExit = wil::scope_exit([This]()
             {
-                if (This->m_ThreadExitedEvent)
+                if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled() && This->m_ThreadExitedEvent)
                 {
                     This->m_ThreadExitedEvent.SetEvent();
                 }
@@ -1097,10 +1098,11 @@ KSMidiInDevice::Initialize(
         m_ThreadTerminateEvent.create(wil::EventOptions::ManualReset);
         m_ThreadStartedEvent.create(wil::EventOptions::ManualReset);
 
-    if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
-    {
-        m_ThreadExitedEvent.create(wil::EventOptions::ManualReset);
-    }
+        if (Feature_Servicing_MIDI2KSInputRemovalDeadlock::IsEnabled())
+        {
+            m_ThreadExitedEvent.create(wil::EventOptions::ManualReset);
+        }
+
         m_MidiInCallback = callback;
         m_MidiInCallbackContext = context;
 
