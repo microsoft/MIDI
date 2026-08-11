@@ -1597,7 +1597,14 @@ CMidiDeviceManager::ActivateEndpointInternal
     if (midiOne)
     {
         // Assign the port number for this midi port
-        RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), flow));
+        if (Feature_Servicing_MIDI2PortNumberCache::IsEnabled())
+        {
+            RETURN_IF_FAILED(AssignPortNumberUsingCache(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), flow));
+        }
+        else
+        {
+            RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), flow));
+        }
     }
 
     // Activate the SWD just created, it's created in the disabled state to allow for assigning
@@ -2319,9 +2326,102 @@ CMidiDeviceManager::AssignPortNumber(
 
     auto thisDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
+    std::map<UINT32, winrt::hstring> ports;
+
+    // for this version, we only check active devices. We're not trying to preserve or reserve numbers
+    winrt::hstring deviceSelector(flow == MidiFlowOut ? MIDI1_OUTPUT_DEVICES : MIDI1_INPUT_DEVICES);
+    deviceSelector = deviceSelector + L" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+
+    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+
+    auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
+
+    // because we compact the numbers on device removal, the first available port number is the device count including us
+    // however, we need to exclude devices which are handled specially, like the GS Synth, and also any devices which 
+    // are WinRT-only, like BLE MIDI 1.0 devices. Those mess up the count.
+
+    // store all the existing port numbers
+    for (auto const& device : deviceList)
+    {
+        std::wstring id = internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str());
+
+        // ignore WinRT MIDI 1.0 BLE because WinMM doesn't support them
+        if (id.find(L".ble10#") != std::wstring::npos)
+        {
+            continue;
+        }
+
+        // ignore the GS synth
+        if (id.find(L"#microsoftgswavetablesynth#") != std::wstring::npos)
+        {
+            continue;
+        }
+
+        // ensure we're not looking at ourselves
+        if (id == thisDeviceInterfaceId)
+        {
+            continue;
+        }
+
+        // get the ServiceAssignedPortNumber
+        auto servicePortNum = internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_ServiceAssignedPortNumber, device, 0);
+
+        // missing for some reason. We skip it
+        if (servicePortNum == 0) 
+        {
+            continue;
+        }
+
+        ports[servicePortNum] = device.Id();
+    }
+
+    UINT32 firstAvailablePortNumber{ 1 };
+
+    // now find the first available port number
+    for (firstAvailablePortNumber = 1; ports.find(firstAvailablePortNumber) != ports.end(); firstAvailablePortNumber++);
+
+    UINT32 assignedPortNumber = firstAvailablePortNumber;
+
+    // set the new port number
+    std::vector<DEVPROPERTY> newProperties{};
+    newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(assignedPortNumber)) });
+
+    RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+        SwDevice,
+        deviceInterfaceId,
+        1,
+        (const DEVPROPERTY*)newProperties.data()));
+
+    return S_OK;
+}
+
+
+// The cached equivalent of AssignPortNumber. Enumerating every MIDI 1 device once per port made
+// initial enumeration quadratic, so the in-use numbers are kept per flow instead.
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::AssignPortNumberUsingCache(
+    HSWDEVICE SwDevice,
+    PWSTR deviceInterfaceId,
+    MidiFlow flow
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    auto thisDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
+
     UINT32 assignedPortNumber{ 0 };
 
-    if (Feature_Servicing_MIDI2PortNumberCache::IsEnabled())
     {
         auto cacheLock = m_portNumberCacheLock.lock();
 
@@ -2352,67 +2452,7 @@ CMidiDeviceManager::AssignPortNumber(
         // record it now so the next port in this burst sees it without re-enumerating
         ports[assignedPortNumber] = thisDeviceInterfaceId;
     }
-    else
-    {
-        std::map<UINT32, winrt::hstring> ports;
 
-        // for this version, we only check active devices. We're not trying to preserve or reserve numbers
-        winrt::hstring deviceSelector(flow == MidiFlowOut ? MIDI1_OUTPUT_DEVICES : MIDI1_INPUT_DEVICES);
-        deviceSelector = deviceSelector + L" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
-
-        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-        additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
-
-        auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
-
-        // because we compact the numbers on device removal, the first available port number is the device count including us
-        // however, we need to exclude devices which are handled specially, like the GS Synth, and also any devices which 
-        // are WinRT-only, like BLE MIDI 1.0 devices. Those mess up the count.
-
-        // store all the existing port numbers
-        for (auto const& device : deviceList)
-        {
-            std::wstring id = internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str());
-
-            // ignore WinRT MIDI 1.0 BLE because WinMM doesn't support them
-            if (id.find(L".ble10#") != std::wstring::npos)
-            {
-                continue;
-            }
-
-            // ignore the GS synth
-            if (id.find(L"#microsoftgswavetablesynth#") != std::wstring::npos)
-            {
-                continue;
-            }
-
-            // ensure we're not looking at ourselves
-            if (id == thisDeviceInterfaceId)
-            {
-                continue;
-            }
-
-            // get the ServiceAssignedPortNumber
-            auto servicePortNum = internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_ServiceAssignedPortNumber, device, 0);
-
-            // missing for some reason. We skip it
-            if (servicePortNum == 0) 
-            {
-                continue;
-            }
-
-            ports[servicePortNum] = device.Id();
-        }
-
-        UINT32 firstAvailablePortNumber{ 1 };
-
-        // now find the first available port number
-        for (firstAvailablePortNumber = 1; ports.find(firstAvailablePortNumber) != ports.end(); firstAvailablePortNumber++);
-
-        assignedPortNumber = firstAvailablePortNumber;
-    }
-
-    // set the new port number
     std::vector<DEVPROPERTY> newProperties{};
     newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
                         DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(assignedPortNumber)) });
@@ -3296,7 +3336,14 @@ CMidiDeviceManager::SyncMidi1Ports(
                 if (!Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
                 {
                     // Assign the new port number.
-                    RETURN_IF_FAILED(AssignPortNumber(createdMidiPort->SwDevice.get(), createdMidiPort->DeviceInterfaceId.get(), createdMidiPort->Flow));
+                    if (Feature_Servicing_MIDI2PortNumberCache::IsEnabled())
+                    {
+                        RETURN_IF_FAILED(AssignPortNumberUsingCache(createdMidiPort->SwDevice.get(), createdMidiPort->DeviceInterfaceId.get(), createdMidiPort->Flow));
+                    }
+                    else
+                    {
+                        RETURN_IF_FAILED(AssignPortNumber(createdMidiPort->SwDevice.get(), createdMidiPort->DeviceInterfaceId.get(), createdMidiPort->Flow));
+                    }
                 }
 
                 // We want to reuse interfaceProperties for the next creation,

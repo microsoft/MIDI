@@ -703,7 +703,15 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
     {
         MidiFunctionBlockName name{ };
 
-        name.Name = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
+        if (Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled())
+        {
+            name.Name = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
+        }
+        else
+        {
+            name.Name = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
+        }
+
         name.IsComplete = true;
 
         m_functionBlockNames.insert_or_assign(functionBlockNumber, name);
@@ -742,7 +750,15 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
         if (m_functionBlockNames.find(functionBlockNumber) != m_functionBlockNames.end())
         {
             auto& name = m_functionBlockNames.find(functionBlockNumber)->second;
-            name.Name = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(name.Name + ParseStreamTextMessage(ump)));
+            if (Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled())
+            {
+                name.Name = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(name.Name + ParseStreamTextMessage(ump)));
+            }
+            else
+            {
+                name.Name = internal::TrimmedWStringCopy(name.Name + ParseStreamTextMessage(ump));
+            }
+
             name.IsComplete = true;
 
             RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name.Name));
@@ -780,7 +796,15 @@ CMidiEndpointProtocolWorker::ProcessProductInstanceIdNotificationMessage(interna
     switch (internal::GetFormFromStreamMessageFirstWord(ump.word0))
     {
     case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
-        m_productInstanceId = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
+        if (Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled())
+        {
+            m_productInstanceId = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
+        }
+        else
+        {
+            m_productInstanceId = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
+        }
+
         RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
 
         m_taskEndpointProductInstanceIdReceived = true;
@@ -806,7 +830,15 @@ CMidiEndpointProtocolWorker::ProcessProductInstanceIdNotificationMessage(interna
     case MIDI_STREAM_MESSAGE_MULTI_FORM_END: // end of multi-part name message. Finish name and update property
         if (!m_productInstanceId.empty())
         {
-            m_productInstanceId = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(m_productInstanceId + ParseStreamTextMessage(ump)));
+            if (Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled())
+            {
+                m_productInstanceId = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(m_productInstanceId + ParseStreamTextMessage(ump)));
+            }
+            else
+            {
+                m_productInstanceId = internal::TrimmedWStringCopy(m_productInstanceId + ParseStreamTextMessage(ump));
+            }
+
             RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
             m_taskEndpointProductInstanceIdReceived = true;
         }
@@ -843,7 +875,15 @@ CMidiEndpointProtocolWorker::ProcessEndpointNameNotificationMessage(internal::Pa
     switch (internal::GetFormFromStreamMessageFirstWord(ump.word0))
     {
     case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
-        m_endpointName = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
+        if (Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled())
+        {
+            m_endpointName = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(ParseStreamTextMessage(ump)));
+        }
+        else
+        {
+            m_endpointName = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
+        }
+
         RETURN_IF_FAILED(UpdateEndpointNameProperty());
         m_taskEndpointNameReceived = true;
         break;
@@ -868,7 +908,14 @@ CMidiEndpointProtocolWorker::ProcessEndpointNameNotificationMessage(internal::Pa
     case MIDI_STREAM_MESSAGE_MULTI_FORM_END: // end of multi-part name message. Finish name and update property
         if (!m_endpointName.empty())
         {
-            m_endpointName = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(m_endpointName + ParseStreamTextMessage(ump)));
+            if (Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled())
+            {
+                m_endpointName = internal::TrimmedWStringCopy(DecodeAccumulatedStreamText(m_endpointName + ParseStreamTextMessage(ump)));
+            }
+            else
+            {
+                m_endpointName = internal::TrimmedWStringCopy(m_endpointName + ParseStreamTextMessage(ump));
+            }
 
             RETURN_IF_FAILED(UpdateEndpointNameProperty());
             m_taskEndpointNameReceived = true;
@@ -898,13 +945,6 @@ _Use_decl_annotations_
 std::wstring
 CMidiEndpointProtocolWorker::DecodeAccumulatedStreamText(std::wstring const& accumulated)
 {
-    if (!Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled())
-    {
-        // previous behaviour: each UTF-8 byte was left widened into its own character, so any
-        // name outside ASCII arrived mangled
-        return accumulated;
-    }
-
     if (accumulated.empty())
     {
         return accumulated;

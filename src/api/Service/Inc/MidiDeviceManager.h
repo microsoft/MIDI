@@ -184,6 +184,12 @@ private:
         _In_ MidiFlow
     );
 
+    HRESULT AssignPortNumberUsingCache(
+        _In_ HSWDEVICE,
+        _In_ PWSTR,
+        _In_ MidiFlow
+    );
+
     HRESULT RefreshPortNumberCache(_In_ MidiFlow flow);
     void InvalidatePortNumberCache();
 
