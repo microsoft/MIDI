@@ -16,7 +16,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
     _Use_decl_annotations_
     void MidiEndpointDeviceInformationUpdatedEventArgs::InternalInitialize(
-        winrt::hstring const endpointDeviceId,
+        midi2enum::MidiEndpointDeviceInformation const& removedDevice,
         enumeration::DeviceInformationUpdate const& deviceInformationUpdate,
         bool const updatedName,
         bool const updatedInProtocolEndpointInformation,
@@ -39,7 +39,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         m_updatedUserMetadata = updatedUserMetadata;
         m_updatedAdditionalCapabilities = updatedAdditionalCapabilities;
 
-        m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
+        m_updatedDevice = removedDevice;
         m_deviceInformationUpdate = deviceInformationUpdate;
 
         m_updatedUniqueIds = updatedUniqueIds;

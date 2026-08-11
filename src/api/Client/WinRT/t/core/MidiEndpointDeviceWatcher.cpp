@@ -340,7 +340,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                     }
 
                     newArgs->InternalInitialize(
-                        args.Id(),
+                        *ep,
                         args,
                         updatedName,
                         updatedInProtocolEndpointInformation,
@@ -383,15 +383,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         try
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
-
             auto newArgs = winrt::make_self<MidiEndpointDeviceInformationRemovedEventArgs>();
-
-            newArgs->InternalInitialize(args.Id(), args);
 
             std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
 
             if (m_enumeratedEndpointDevices.HasKey(mapKey))
             {
+                newArgs->InternalInitialize(m_enumeratedEndpointDevices.Lookup(mapKey), args);
+
                 m_enumeratedEndpointDevices.Remove(mapKey);
 
                 if (m_deviceRemovedEvent)

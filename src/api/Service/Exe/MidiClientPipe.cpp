@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "stdafx.h"
+#include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -202,15 +203,23 @@ CMidiClientPipe::Shutdown()
 
     if (m_MidiPump)
     {
-        // S_FALSE means the pump abandoned a worker that can never terminate. Releasing
-        // rather than destroying is required: that thread may still reference the pump.
-        // Calling reset() here instead reintroduces a use-after-free on a zombie thread.
-        if (m_MidiPump->Shutdown() == S_FALSE)
+        if (Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled())
         {
-            m_MidiPump.release();
+            // S_FALSE means the pump abandoned a worker that can never terminate. Releasing
+            // rather than destroying is required: that thread may still reference the pump.
+            // Calling reset() here instead reintroduces a use-after-free on a zombie thread.
+            if (m_MidiPump->Shutdown() == S_FALSE)
+            {
+                m_MidiPump.release();
+            }
+            else
+            {
+                m_MidiPump.reset();
+            }
         }
         else
         {
+            m_MidiPump->Shutdown();
             m_MidiPump.reset();
         }
     }

@@ -16,7 +16,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         MidiEndpointDeviceInformationUpdatedEventArgs() = default;
 
-        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+        midi2enum::MidiEndpointDeviceInformation UpdatedDevice() const noexcept { return m_updatedDevice; }
 
         bool IsNameUpdated() const noexcept { return m_updatedName; }
         bool IsEndpointInformationUpdated() const noexcept { return m_updatedInProtocolEndpointInformation; }
@@ -34,7 +34,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
 
         void InternalInitialize(
-            _In_ winrt::hstring const endpointDeviceId,
+            _In_ midi2enum::MidiEndpointDeviceInformation const& updatedDevice,
             _In_ enumeration::DeviceInformationUpdate const& deviceInformationUpdate,
             _In_ bool const updatedName,
             _In_ bool const updatedInProtocolEndpointInformation,
@@ -62,7 +62,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         bool m_updatedMutedState{ false };
 
-        winrt::hstring m_endpointDeviceId{};
+        midi2enum::MidiEndpointDeviceInformation m_updatedDevice{ nullptr };
         enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
     };
 }

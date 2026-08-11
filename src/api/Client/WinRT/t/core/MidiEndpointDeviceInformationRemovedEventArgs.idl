@@ -9,7 +9,7 @@
 #include "..\..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
+import "MidiEndpointDeviceInformation.idl";
 
 namespace Windows.Devices.Midi2.Enumeration
 {
@@ -18,9 +18,7 @@ namespace Windows.Devices.Midi2.Enumeration
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiEndpointDeviceInformationRemovedEventArgs", UUID_IMidiEndpointDeviceInformationRemovedEventArgs)]
     runtimeclass MidiEndpointDeviceInformationRemovedEventArgs
     {
-        [noexcept] String EndpointDeviceId { get; };
-
-        [noexcept] Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
+        [noexcept] MidiEndpointDeviceInformation RemovedDevice{ get; };
     }
 }
 

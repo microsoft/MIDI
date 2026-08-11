@@ -19,7 +19,7 @@ namespace Windows.Devices.Midi2.Enumeration.Legacy
     {
         [noexcept] MidiLegacyPortDeviceInformation UpdatedDevice{ get; };
 
-        //Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
+        Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
 
         [noexcept] Boolean IsNameUpdated{ get; };
         [noexcept] Boolean IsNumberUpdated{ get; };

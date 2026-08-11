@@ -16,11 +16,11 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
     _Use_decl_annotations_
     void MidiEndpointDeviceInformationRemovedEventArgs::InternalInitialize(
-        winrt::hstring const removedDeviceId,
+        midi2enum::MidiEndpointDeviceInformation const& removedDevice,
         enumeration::DeviceInformationUpdate const& deviceInformationUpdate
     ) noexcept
     {
-        m_removedDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(removedDeviceId);
+        m_removedDevice = removedDevice;
         m_deviceInformationUpdate = deviceInformationUpdate;
     }
 }

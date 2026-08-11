@@ -17,17 +17,17 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     {
         MidiEndpointDeviceInformationRemovedEventArgs() = default;
 
-        winrt::hstring EndpointDeviceId() const noexcept { return m_removedDeviceId; }
+        midi2enum::MidiEndpointDeviceInformation RemovedDevice() const noexcept { return m_removedDevice; }
         enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
 
         void InternalInitialize(
-            _In_ winrt::hstring const removedDeviceId,
+            _In_ midi2enum::MidiEndpointDeviceInformation const& removedDevice,
             _In_ enumeration::DeviceInformationUpdate const& deviceInformationUpdate
         ) noexcept;
 
     private:
-        winrt::hstring m_removedDeviceId{};
-       enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
+        midi2enum::MidiEndpointDeviceInformation m_removedDevice{ nullptr };
+        enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
 
 
     };
