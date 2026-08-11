@@ -29,6 +29,7 @@ namespace Microsoft.Midi.Settings.ViewModels
     {
         public MidiNetworkAdvertisedHost? AdvertisedHost { get; internal set; }
 
+
         [ObservableProperty]
         private string? configEntryId;
 
@@ -68,6 +69,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ICommand ConnectCommand { get; private set; }
         public ICommand DisconnectCommand { get; private set; }
+
+        public ICommand ApproveOnceCommand { get; private set; }
+        public ICommand ApproveAlwaysCommand { get; private set; }
+
+        public ICommand DenyOnceCommand { get; private set; }
+        public ICommand DenyAlwaysCommand { get; private set; }
+
 
         private readonly ILoggingService _loggingService;
         private readonly IMessageBoxService _messageBoxService;
@@ -329,6 +337,48 @@ namespace Microsoft.Midi.Settings.ViewModels
                 // todo: remove host from collection
             };
         }
+
+        // these are in here for now, but are what are defined in the service
+        //const string MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS = "enumerateClients";
+        //const string MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS = "enumerateHosts";
+        //const string MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT = "approveRemoteClient";
+        //const string MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT = "denyRemoteClient";
+
+        readonly string[] MINIMUM_CAPABILITIES = new string[] { "enumerateClients", "enumerateHosts", "approveRemoteClient", "denyRemoteClient" };
+
+        public bool IsCompatibleNetworkMidi2ServicePluginRunning()
+        {
+            // need to do this for now just because there are old network MIDI 2 plugins out there
+
+            if (!MidiNetworkTransportManager.IsTransportAvailable)
+            {
+                return false;
+            }
+
+            var capabilities = MidiServiceTransportPluginConfigManager.QueryAllCapabilities(MidiNetworkTransportManager.TransportId);
+
+            foreach (var capability in MINIMUM_CAPABILITIES)
+            {
+                if (capabilities.ContainsKey(capability))
+                {
+                    // if any of the required capabilities are not enabled
+                    if (!capabilities[capability])
+                    {
+                        return false;
+                    }
+                }
+                else 
+                {
+                    // we don't report it, so can't have it enabled
+                    return false;
+                }
+            }
+
+            return true;
+
+        }
+
+
 
         private void _watcher_EnumerationCompleted(MidiNetworkAdvertisedHostWatcher sender, object args)
         {
