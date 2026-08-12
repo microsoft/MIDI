@@ -341,17 +341,17 @@ void MidiBSToUMPTransformTests::TestBasicMalformedSysex()
 
     std::vector<uint32_t> expectedWords
     {
-        //0x30050102, 0x03040500,                           // Scenario 1: Ideal is SysEx Complete with 5 data bytes, but that can be argued as invalid
-        0x30150102, 0x03040500,                             // Scenario 1: Acceptable is SysEx Start. This is what we actually get
+        0x30050102, 0x03040500,                             // Scenario 1: SysEx Complete with 5 data bytes. The F0 that opens scenario 2
+                                                            //             terminates this one, so it is complete rather than a dangling Start.
 
-        0x30161112, 0x13141516, 0x30221718, 0x00000000,     // Scenario 2: SysEx Start + Continue with 8 data bytes, no F7, so no SysEx End
+        0x30161112, 0x13141516, 0x30321718, 0x00000000,     // Scenario 2: SysEx Start + End with 8 data bytes. Terminated by the F0 that
+                                                            //             opens scenario 3, so the second packet is End rather than Continue.
 
-        0x30052122, 0x23242500,                             // Scenario 3: SysEx Complete in one message with 5 data bytes
-                                                            // Scenario 3: THIS FAILS: Extra F7 causes data corruption currently. Should just be ignored, but 
-                                                            //             produces a 30350000 SysEx End using same (uncleared) data byte count as previous message
-                                                            //             Needs fix from Andrew: https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/36
+        0x30052122, 0x23242500,                             // Scenario 3: SysEx Complete in one message with 5 data bytes.
+                                                            //             The extra F7 is ignored.
 
-        0x30043132, 0x33340000,                             // Scenario 4:  SysEx Complete in one message with 4 data bytes
+        0x30043132, 0x33340000,                             // Scenario 4:  SysEx Complete in one message with 4 data bytes. Nothing had
+                                                            //              accumulated when the second F0 arrived, so it is ignored.
     };
 
     InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
@@ -359,6 +359,78 @@ void MidiBSToUMPTransformTests::TestBasicMalformedSysex()
 }
 
 
+// A Channel Voice status byte arriving inside an open SysEx must terminate that SysEx.
+// M2-104-UM 7.7.1: only System Real-Time may be embedded in a SysEx, everything else ends it.
+// Reported against libMIDI2 in https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/39
+void MidiBSToUMPTransformTests::TestStatusByteTerminatesOpenSysEx7()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        0xF0, 0x11, 0x22,           // SysEx start, two data bytes, never ended
+        0x90, 0x3C, 0x7F,           // note on. Must close the SysEx above, not be swallowed by it
+        0x90, 0x3E, 0x7F            // note on
+    };
+
+    std::vector<uint32_t> expectedWords
+    {
+        0x30021122, 0x00000000,     // SysEx Complete, 2 data bytes, terminated by the 0x90
+        0x20903C7F,                 // both notes survive
+        0x20903E7F
+    };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+}
+
+
+// Same as above, but a SysEx end byte turns up later. Once the status byte has closed the
+// SysEx the stray 0xF7 has nothing to end and must be ignored, and the note bytes must not
+// have leaked into the SysEx payload.
+void MidiBSToUMPTransformTests::TestStatusByteTerminatesOpenSysEx7WithLateEndByte()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        0xF0, 0x11, 0x22,
+        0x90, 0x3C, 0x7F,
+        0xF7,                       // stray, the SysEx already ended at the 0x90
+        0x90, 0x3E, 0x7F
+    };
+
+    std::vector<uint32_t> expectedWords
+    {
+        0x30021122, 0x00000000,
+        0x20903C7F,
+        0x20903E7F
+    };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+}
+
+
+// A second SysEx start with data already accumulated must close the first fragment as its own
+// message rather than folding both payloads into one. TestBasicMalformedSysex scenario 4 covers
+// the adjacent F0 F0 case, where there is nothing accumulated and the second F0 is ignored.
+void MidiBSToUMPTransformTests::TestSysEx7StartWithPendingDataStartsNewMessage()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        0xF0, 0x11, 0x12,           // abandoned fragment
+        0xF0, 0x31, 0x32, 0x33, 0x34, 0xF7
+    };
+
+    std::vector<uint32_t> expectedWords
+    {
+        0x30021112, 0x00000000,     // fragment closed as SysEx Complete, 2 data bytes
+        0x30043132, 0x33340000      // second message, complete, 4 data bytes
+    };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
+}
 
 
 

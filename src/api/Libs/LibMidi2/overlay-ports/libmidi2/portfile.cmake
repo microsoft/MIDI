@@ -1,7 +1,8 @@
 # Overlay of the upstream libmidi2 port. Identical to the registry port except for the
-# patches below, which mirror upstream fixes for AM_MIDI2.0Lib issues #39 and #36. Both are
-# in upstream main but not in a released version, and a vcpkg publish takes over a month to
-# reach the internal build repo, so expect this overlay to live for a while.
+# patches below. The first two mirror upstream fixes for AM_MIDI2.0Lib issues #39 and #36;
+# the third has no upstream fix yet and covers two further defects reported in the #39
+# thread. Expect this overlay to live for a while, since a vcpkg publish takes over a month
+# to reach the internal build repo.
 #
 # This must stay under src/api: the internal Windows build repo is rooted there and cannot
 # see anything above it. The path mirrors that repo's existing overlay location so the two
@@ -26,6 +27,7 @@ vcpkg_from_github(
     PATCHES
         fix-uninitialized-running-status.patch
         fix-stray-sysex-end-byte.patch
+        fix-status-byte-terminates-sysex.patch
 )
 
 if(VCPKG_TARGET_IS_WINDOWS)

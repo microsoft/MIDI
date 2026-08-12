@@ -1,0 +1,86 @@
+End an open SysEx when a status byte interrupts it.
+
+Only System Real-Time may appear inside a SysEx (M2-104-UM 7.7.1). Any other status
+byte ends it. bytestreamParse() only acted on SYSEX_START and SYSEX_STOP, so
+sysex7State stayed set and every following data byte was appended to the SysEx
+accumulator instead of being parsed:
+
+    F0 11 22 90 3C 7F 90 3E 7F
+    was: 30161122 3C7F3E7F   - one SysEx that swallowed both notes
+    now: 30021122 00000000, 20903C7F, 20903E7F
+
+When a late F7 does arrive the note data has already leaked into the payload, and a
+device that never sends one silences all subsequent traffic. This is the same
+malformed-input family as the inMusic case in issue #39.
+
+The second F0 case is the same defect seen from the other side. SYSEX_START called
+dumpSysex7State(true), which emits the abandoned fragment with its current state, so a
+fragment was labelled Start and the following message Complete. A receiver reassembling
+that pair produces one merged payload:
+
+    F0 11 12 F0 31 32 33 34 F7
+    was: 30121112 00000000, 30043132 33340000   - Start with no End, then Complete
+    now: 30021112 00000000, 30043132 33340000   - two independent complete messages
+
+endSysex7State() emits nothing when no data has accumulated, so an immediately repeated
+F0 is still ignored, and dumpSysex7State() is left alone because callers rely on it to
+flush a partial SysEx while deliberately staying in the SysEx state.
+
+Upstream: https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/39#issuecomment-5258615978
+
+diff --git a/include/bytestreamToUMP.h b/include/bytestreamToUMP.h
+--- a/include/bytestreamToUMP.h
++++ b/include/bytestreamToUMP.h
+@@ -116,6 +116,30 @@
+ 			return mess;
+ 		}
+ 
++		// Close a SysEx that a status byte has interrupted, per M2-104-UM 7.7.1. Nothing is
++		// emitted when no data has accumulated, so a repeated F0 is simply ignored.
++		void endSysex7State() {
++			if (sysex7State == 0) {
++				return;
++			}
++
++			if (sysex7State == 1 && sysex7Pos == 0) {
++				sysex7State = 0;
++				return;
++			}
++
++			umpMess[writeIndex] = ((UMP_SYSEX7 << 4) + defaultGroup + 0L) << 24;
++			umpMess[writeIndex] +=  ((sysex7State == 1?0:3) + 0L) << 20;
++			umpMess[writeIndex] +=  ((sysex7Pos + 0L) << 16);
++			umpMess[writeIndex] += (sysex[0] << 8) + sysex[1];
++			increaseWrite();
++			umpMess[writeIndex] = ((sysex[2] + 0L) << 24) + ((sysex[3] + 0L)<< 16) + (sysex[4] << 8) + sysex[5];
++			increaseWrite();
++			sysex7State = 0;
++			sysex7Pos = 0;
++			M2Utils::clear(sysex, 0, sizeof(sysex));
++		}
++
+ 		void dumpSysex7State(bool reset) {
+ 			if (sysex7State > 0 && sysex7Pos > 0) {
+ 				//Then dump current bytes
+@@ -151,7 +175,9 @@
+ 				d0 = midi1Byte;
+ 				d1 = 255;
+ 				if (midi1Byte == SYSEX_START){
+-					dumpSysex7State(true);
++					endSysex7State();
++					sysex7State = 1;
++					sysex7Pos = 0;
+ 				}
+                 else if (midi1Byte == SYSEX_STOP){
+                     if (sysex7State == 0) {
+@@ -169,6 +195,10 @@
+                     sysex7Pos = 0;
+                     M2Utils::clear(sysex, 0, sizeof(sysex));
+                 }
++                else if (midi1Byte < TIMINGCLOCK) {
++                    //Any status byte other than System Real-Time ends an open SysEx
++                    endSysex7State();
++                }
+ 			} else if(sysex7State >= 1){
+ 				if(sysex7Pos%6 == 0 && sysex7Pos !=0){
+                     umpMess[writeIndex] = ((UMP_SYSEX7 << 4) + defaultGroup + 0L) << 24;
