@@ -42,7 +42,26 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP QueryInterface(REFIID, void**) { return S_OK; }
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject)
+    {
+        if (ppvObject == nullptr)
+        {
+            return E_POINTER;
+        }
+
+        *ppvObject = nullptr;
+
+        if (riid == __uuidof(IMidiEndpointConnectionMessagesReceivedCallback) ||
+            riid == __uuidof(IUnknown))
+        {
+            *ppvObject = static_cast<IMidiEndpointConnectionMessagesReceivedCallback*>(this);
+            AddRef();
+            return S_OK;
+        }
+
+        return E_NOINTERFACE;
+    }
+
     STDMETHODIMP_(ULONG) AddRef() { return 1; }
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
