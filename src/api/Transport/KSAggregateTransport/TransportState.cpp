@@ -40,43 +40,6 @@ TransportState::ConstructEndpointManager()
 }
 
 
-wil::com_ptr<IMidiEndpointManager>
-TransportState::GetActiveEndpointManager()
-{
-    if (m_endpointManager3 != nullptr)
-    {
-        return m_endpointManager3.query<IMidiEndpointManager>();
-    }
-
-    if (m_endpointManager2 != nullptr)
-    {
-        return m_endpointManager2.query<IMidiEndpointManager>();
-    }
-
-    return nullptr;
-}
-
-
-_Use_decl_annotations_
-winrt::hstring
-TransportState::FindMatchingInstantiatedEndpoint(WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
-{
-    if (m_endpointManager3 != nullptr)
-    {
-        return m_endpointManager3->FindMatchingInstantiatedEndpoint(criteria);
-    }
-
-    if (m_endpointManager2 != nullptr)
-    {
-        return m_endpointManager2->FindMatchingInstantiatedEndpoint(criteria);
-    }
-
-    return L"";
-}
-
-
-
-
 HRESULT
 TransportState::ConstructConfigurationManager()
 {

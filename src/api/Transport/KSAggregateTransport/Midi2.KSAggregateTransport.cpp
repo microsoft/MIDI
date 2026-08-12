@@ -8,6 +8,7 @@
 
 
 #include "pch.h"
+#include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -44,16 +45,29 @@ CMidi2KSAggregateTransport::Activate(
             TraceLoggingWideString(L"IMidiEndpointManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
-        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (TransportState::Current().GetActiveEndpointManager() == nullptr)
+        if (Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled())
         {
-            TransportState::Current().ConstructEndpointManager();
+            // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+            if (TransportState::Current().GetEndpointManager3() == nullptr)
+            {
+                TransportState::Current().ConstructEndpointManager();
+            }
+
+            auto endpointManager = TransportState::Current().GetEndpointManager3();
+            RETURN_HR_IF_NULL(E_FAIL, endpointManager);
+
+            RETURN_IF_FAILED(endpointManager->QueryInterface(iid, activatedInterface));
         }
+        else
+        {
+            // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+            if (TransportState::Current().GetEndpointManager2() == nullptr)
+            {
+                TransportState::Current().ConstructEndpointManager();
+            }
 
-        auto endpointManager = TransportState::Current().GetActiveEndpointManager();
-        RETURN_HR_IF_NULL(E_FAIL, endpointManager);
-
-        RETURN_IF_FAILED(endpointManager->QueryInterface(iid, activatedInterface));
+            RETURN_IF_FAILED(TransportState::Current().GetEndpointManager2()->QueryInterface(iid, activatedInterface));
+        }
     }
     else if (__uuidof(IMidiTransportConfigurationManager) == iid)
     {

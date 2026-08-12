@@ -8,6 +8,7 @@
 
 
 #include "pch.h"
+#include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
 
 #include "MidiEndpointCustomProperties.h"
 #include "json_transport_command_helper.h"
@@ -259,10 +260,21 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                 // Resolve the EndpointDeviceId in case we matched on something else
                 winrt::hstring matchingEndpointDeviceId{};
 
-                auto em = TransportState::Current().GetActiveEndpointManager();
-                if (em != nullptr)
+                if (Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled())
                 {
-                    matchingEndpointDeviceId = TransportState::Current().FindMatchingInstantiatedEndpoint(*matchCriteria);
+                    auto em = TransportState::Current().GetEndpointManager3();
+                    if (em != nullptr)
+                    {
+                        matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
+                    }
+                }
+                else
+                {
+                    auto em = TransportState::Current().GetEndpointManager2();
+                    if (em != nullptr)
+                    {
+                        matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
+                    }
                 }
 
                 // process all the custom props like Name, Description, Image, etc.

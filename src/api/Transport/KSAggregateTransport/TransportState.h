@@ -30,11 +30,6 @@ public:
         return m_endpointManager3;
     }
 
-    // whichever implementation the KIR selected
-    wil::com_ptr<IMidiEndpointManager> GetActiveEndpointManager();
-
-    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
-
     wil::com_ptr<CMidi2KSAggregateMidiConfigurationManager> GetConfigurationManager()
     {
         return m_configurationManager;
