@@ -50,26 +50,24 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP QueryInterface(REFIID /* riid*/, void** /*ppvObject*/ )
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject)
     {
-        //if (ppvObject == nullptr)
-        //{
-        //    return E_POINTER;
-        //}
+        if (ppvObject == nullptr)
+        {
+            return E_POINTER;
+        }
 
-        //if (riid == __uuidof(IMidiEndpointConnectionMessagesReceivedCallback) ||
-        //    riid == __uuidof(IUnknown))
-        //{
-        //    *ppvObject = static_cast<IMidiEndpointConnectionMessagesReceivedCallback*>(this);
-        //    AddRef();
-        //    return S_OK;
-        //}
+        *ppvObject = nullptr;
 
-        //*ppvObject = nullptr;
-        //return E_NOINTERFACE;
+        if (riid == __uuidof(IMidiEndpointConnectionMessagesReceivedCallback) ||
+            riid == __uuidof(IUnknown))
+        {
+            *ppvObject = static_cast<IMidiEndpointConnectionMessagesReceivedCallback*>(this);
+            AddRef();
+            return S_OK;
+        }
 
-        return S_OK;
-
+        return E_NOINTERFACE;
     }
 
     STDMETHODIMP_(ULONG) AddRef() { return 1; }

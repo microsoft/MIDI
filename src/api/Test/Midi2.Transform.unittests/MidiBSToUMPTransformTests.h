@@ -44,6 +44,9 @@ public:
     TEST_METHOD(TestCCPadded);
     TEST_METHOD(TestIssueGithub1040CorruptedIncomingSysExIdeal);
     TEST_METHOD(TestBasicMalformedSysex);
+    TEST_METHOD(TestStatusByteTerminatesOpenSysEx7);
+    TEST_METHOD(TestStatusByteTerminatesOpenSysEx7WithLateEndByte);
+    TEST_METHOD(TestSysEx7StartWithPendingDataStartsNewMessage);
     
     //TEST_METHOD(TestLongSysEx7);
 

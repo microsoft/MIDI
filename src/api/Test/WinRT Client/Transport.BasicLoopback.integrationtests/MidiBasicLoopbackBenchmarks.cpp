@@ -129,9 +129,9 @@ static void RemoveBenchmarkLoopback(winrt::guid const& associationId)
 // ============================================================================
 void MidiBasicLoopbackBenchmarks::BenchmarkComExtensionsSendReceive()
 {
-    LOG_OUTPUT(L"This currently fails woth 0xC0000409 if run with all the other tests outside this project. Looks like a test cleanup problem.");
-
-    winrt::init_apartment(winrt::apartment_type::multi_threaded);
+    // Do not call winrt::init_apartment / winrt::uninit_apartment here. The TAEF
+    // test host has already initialized the apartment for this thread, and calling
+    // uninit_apartment tears COM down for every test that runs after this one.
 
     {
 
@@ -256,8 +256,6 @@ void MidiBasicLoopbackBenchmarks::BenchmarkComExtensionsSendReceive()
         VERIFY_ARE_EQUAL(receivedWordCount.load(), (uint32_t)BENCHMARK_MESSAGE_COUNT);
 
     }
-
-    winrt::uninit_apartment();
 
 }
 

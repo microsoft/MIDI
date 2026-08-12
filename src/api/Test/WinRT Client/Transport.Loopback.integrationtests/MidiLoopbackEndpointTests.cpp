@@ -89,12 +89,26 @@ static void RemoveTestLoopback(winrt::guid const& associationId)
 
 void MidiLoopbackEndpointTests::TestUnicodeGtbAndDeviceNames()
 {
-    auto setModeResult = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT
+    auto previousStdoutMode = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT
 
-    if (setModeResult == -1)
+    if (previousStdoutMode == -1)
     {
         perror("Unable to set stdout to UTF-16 mode. ");
     }
+
+    // The stdout translation mode is process-wide and the TAEF host process is
+    // shared by every test. If we leave stdout in UTF-16 mode, the next test that
+    // writes narrow characters to std::cout trips the CRT invalid parameter
+    // handler, which fast-fails the host process with 0xC0000409.
+    auto restoreStdoutMode = wil::scope_exit([&]
+        {
+            std::wcout.flush();
+
+            if (previousStdoutMode != -1)
+            {
+                _setmode(_fileno(stdout), previousStdoutMode);
+            }
+        });
 
 
     winrt::hstring uniqueId = winrt::to_hstring(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
