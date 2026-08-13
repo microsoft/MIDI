@@ -72,6 +72,12 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
     {
         try
         {
+            // this helps ensure we aren't just using random ids, or MIDI UMP Endpoint device ids
+            if (!MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(portDeviceId))
+            {
+                return nullptr;
+            }
+
             // STA-safe: the inner co_await runs on the thread pool.
             // TODO: future migration: rebuild this entirely on MidiPnpDeviceInfo
             // once we have an AQS-name -> DEVPKEY property-bag synthesizer so

@@ -16,9 +16,11 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
     {
         //MidiReporting() = default;
 
-        static collections::IVector<rpt::MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
+        static collections::IVector<rpt::MidiServiceTransportPluginInfo> GetInstalledTransportPlugins() noexcept;
         //static collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
-        static collections::IVector<rpt::MidiServiceSessionInfo> GetActiveSessions();
+        static collections::IVector<rpt::MidiServiceSessionInfo> GetActiveSessions() noexcept;
+
+        static collections::IVector<rpt::MidiServiceSessionInfo> FindAllSessionsWithOpenEndpoint(_In_ winrt::hstring const& endpointDeviceId, bool const includeRelatedMidi1Ports) noexcept
     };
 }
 namespace winrt::Windows::Devices::Midi2::Reporting::factory_implementation

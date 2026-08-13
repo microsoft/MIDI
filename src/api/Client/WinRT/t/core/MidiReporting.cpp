@@ -17,7 +17,7 @@
 
 namespace winrt::Windows::Devices::Midi2::Reporting::implementation
 {
-    foundation::Collections::IVector<rpt::MidiServiceTransportPluginInfo> MidiReporting::GetInstalledTransportPlugins()
+    collections::IVector<rpt::MidiServiceTransportPluginInfo> MidiReporting::GetInstalledTransportPlugins() 
     {
         auto transportList = winrt::single_threaded_vector<rpt::MidiServiceTransportPluginInfo>();
 
@@ -127,7 +127,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
         return transportList;
     }
 
-    foundation::Collections::IVector<rpt::MidiServiceSessionInfo> MidiReporting::GetActiveSessions()
+    collections::IVector<rpt::MidiServiceSessionInfo> MidiReporting::GetActiveSessions() noexcept
     {
         auto sessionList = winrt::single_threaded_vector<rpt::MidiServiceSessionInfo>();
 
@@ -276,4 +276,35 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
         return sessionList;
 
     }
+
+
+    _Use_decl_annotations_
+    collections::IVector<rpt::MidiServiceSessionInfo> FindAllSessionsWithOpenEndpoint(
+        winrt::hstring const& endpointDeviceId, 
+        bool const includeRelatedMidi1Ports) noexcept
+    {
+        auto sessionList = winrt::single_threaded_vector<rpt::MidiServiceSessionInfo>();
+
+
+        // find all related ids to look for.
+
+        if (includeRelatedMidi1Ports)
+        {
+
+        }
+
+
+
+
+
+
+        // yes, this is an extra copy operation rather than duplicate code
+
+
+        return sessionList;
+    }
+
+
+
+
 }

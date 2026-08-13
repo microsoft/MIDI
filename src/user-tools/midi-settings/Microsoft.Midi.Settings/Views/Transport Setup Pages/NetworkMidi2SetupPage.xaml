@@ -141,7 +141,7 @@
                                                     Disconnect
                                                 If pending approval:
                                                     Drop-down button with
-                                                        Approve Always
+                                                        Approve Always (default)
                                                         Approve Once
                                                         Deny Always
                                                         Deny Once

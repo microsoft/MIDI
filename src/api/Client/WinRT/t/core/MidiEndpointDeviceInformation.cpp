@@ -579,8 +579,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         {
             auto cleanedEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
-            // this helps ensure we aren't just using random ids
-            if (!internal::IsValidWindowsMidiServicesEndpointId(cleanedEndpointDeviceId))
+            // this helps ensure we aren't just using random ids, or MIDI 1 device ids
+            if (!MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(endpointDeviceId))
             {
                 return nullptr;
             }

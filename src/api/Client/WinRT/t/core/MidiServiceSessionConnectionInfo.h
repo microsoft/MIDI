@@ -15,7 +15,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
     {
         MidiServiceSessionConnectionInfo() = default;
 
-        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+        winrt::hstring EndpointOrPortDeviceId() const noexcept { return m_endpointDeviceId; }
         uint16_t InstanceCount() const noexcept { return m_instanceCount; }
         foundation::DateTime EarliestConnectionTime() const noexcept { return m_earliestConnectionTime; }
 

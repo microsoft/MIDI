@@ -22,6 +22,8 @@ namespace Windows.Devices.Midi2.Reporting
         [noexcept] static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
 
         [noexcept] static IVector<MidiServiceSessionInfo> GetActiveSessions();
+
+        [noexcept] static IVector<MidiServiceSessionInfo> FindAllSessionsWithOpenEndpoint(String endpointDeviceId, Boolean includeRelatedMidi1Ports)
     }
 }
 
