@@ -86,6 +86,10 @@
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST                       L"startHost"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST                        L"stopHost"
+
+// Stops the host and forgets it entirely, which is what releases its service instance name.
+// stopHost keeps the entry, so a stopped host still holds its name and can be started again.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST                      L"removeHost"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER       L"entryIdentifier"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT                L"disconnectClient"
@@ -96,6 +100,7 @@
 // by the caller; the service applies them immediately either way.
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT            L"approveRemoteClient"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT               L"denyRemoteClient"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS       L"getPendingRemoteClients"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE              L"scope"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ONCE                   L"once"
@@ -151,6 +156,29 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY                 L"remoteAddress"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_PORT_KEY                    L"remotePort"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_UMP_ENDPOINT_ID_KEY                L"endpointDeviceId"
+
+
+// getPendingRemoteClients response. This is what the settings app polls, so each entry carries
+// the three values approveRemoteClient / denyRemoteClient need, under the same key names those
+// commands read, plus enough address detail to tell two similarly named devices apart.
+//
+// The identity keys are the existing MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_* ones, and
+// the host entry identifier uses the command's own parameter key, so an entry can be handed
+// back as command arguments without renaming anything.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENTS_RESPONSE_ARRAY_KEY            L"pendingRemoteClients"
+
+// Which of this PC's hosts the remote is asking to join. Both are supplied because a user with
+// several hosts running needs to know which one is being knocked on.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_HOST_NAME_KEY                  L"hostUmpEndpointName"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_HOST_SERVICE_INSTANCE_NAME_KEY L"hostServiceInstanceName"
+
+// Address the invitation arrived from. This is the live socket address, not a stored one, and
+// it changes between reconnects, so it is for display only and never for matching. The key is
+// the shared MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY.
+
+// ISO 8601 UTC, for example 2026-08-12T01:23:45.6789012Z. A string rather than a number because
+// the JSON number type is a double and a FILETIME does not survive one intact.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_REQUEST_TIME_KEY               L"requestTime"
 
 
 

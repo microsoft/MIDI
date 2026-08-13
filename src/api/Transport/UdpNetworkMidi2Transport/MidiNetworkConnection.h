@@ -127,6 +127,22 @@ public:
     // on a user decision.
     bool IsAwaitingUserApproval() { return m_awaitingUserApproval; }
 
+    // Host role. FILETIME, UTC, of the first invitation which put this remote into the pending
+    // state. Zero when it has never been pending. The client re-invites on a timer while it
+    // waits, so this deliberately records the first ask and not the most recent one.
+    uint64_t GetUserApprovalRequestedFileTime() { return m_userApprovalRequestedFileTime.load(); }
+
+    // Host role. The remote said Bye before its endpoint had been created, so the queued
+    // creation is no longer wanted. Building it anyway costs a device node created and then
+    // immediately torn down, and that teardown contends with the creations still queued.
+    bool IsHostEndpointCreationAbandoned() { return m_hostEndpointCreationAbandoned; }
+
+    // Drops a queued creation. The remote has already gone, so nothing is sent to it.
+    void CancelPendingHostEndpointCreation()
+    {
+        m_hostEndpointCreationPending = false;
+    }
+
     winrt::Windows::Networking::HostName GetRemoteHostName() { return m_remoteHostName; }
     std::wstring GetRemotePort() { return m_remotePort; }
 
@@ -231,6 +247,9 @@ private:
     // Host role. Set while an endpoint is being created for an invitation we answered with
     // Pending, so a repeated invitation does not queue the work a second time.
     std::atomic<bool> m_hostEndpointCreationPending{ false };
+
+    // Set when a Bye arrives for a connection whose endpoint has not been created yet.
+    std::atomic<bool> m_hostEndpointCreationAbandoned{ false };
 
     wil::critical_section m_latencyLock;
     uint64_t m_latencyTotalTicks{ 0 };
@@ -367,6 +386,10 @@ private:
     // Host role: the remote has been told its invitation is pending and is waiting for a user
     // to approve or deny it. No endpoint exists yet.
     std::atomic<bool> m_awaitingUserApproval{ false };
+
+    // When that wait started, so a user deciding later can see how long something has been
+    // asking. Set on the transition into the pending state only.
+    std::atomic<uint64_t> m_userApprovalRequestedFileTime{ 0 };
 
     std::shared_ptr<MidiNetworkDataWriter> m_writer{ nullptr };
 

@@ -27,6 +27,10 @@ public:
     // The client is held pending and shows up in the polling feed rather than being accepted.
     TEST_METHOD(InvitationIsHeldPendingAndAppearsInEnumerateHosts);
 
+    // The getPendingRemoteClients poll carries everything a user needs to decide, and drops an
+    // entry once a decision has been made.
+    TEST_METHOD(PendingRemoteClientsFeedCarriesEnoughToDecide);
+
     // "Allow just this time" - accepted now, nothing remembered.
     TEST_METHOD(ApproveOnceAcceptsTheWaitingClient);
 
@@ -50,4 +54,8 @@ public:
 
     // The control for the test above. A distinct name must still be accepted.
     TEST_METHOD(HostWithAnUnusedServiceInstanceNameIsAccepted);
+
+    // stopHost keeps the entry and its name; removeHost is what gives the name back.
+    TEST_METHOD(RemovedHostReleasesItsServiceInstanceName);
+    TEST_METHOD(RemovingAnUnknownHostReportsFailure);
 };

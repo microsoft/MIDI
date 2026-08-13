@@ -249,6 +249,39 @@ TransportState::GetHost(winrt::hstring hostEntryIdentifier)
 }
 
 _Use_decl_annotations_
+std::shared_ptr<MidiNetworkHost>
+TransportState::RemoveHost(winrt::hstring const& hostEntryIdentifier)
+{
+    std::shared_ptr<MidiNetworkHost> removed{ nullptr };
+
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto it = m_hosts.begin(); it != m_hosts.end(); it++)
+    {
+        if (*it != nullptr && (*it)->GetDefinition().EntryIdentifier == hostEntryIdentifier)
+        {
+            removed = *it;
+            m_hosts.erase(it);
+            break;
+        }
+    }
+
+    // A host which was created but never instantiated exists only as a pending definition, and
+    // it holds the service instance name just as a live host does.
+    m_pendingHostDefinitions.erase(
+        std::remove_if(
+            m_pendingHostDefinitions.begin(),
+            m_pendingHostDefinitions.end(),
+            [&hostEntryIdentifier](auto const& definition)
+            {
+                return definition != nullptr && definition->EntryIdentifier == hostEntryIdentifier;
+            }),
+        m_pendingHostDefinitions.end());
+
+    return removed;
+}
+
+_Use_decl_annotations_
 bool
 TransportState::IsHostServiceInstanceNameInUse(
     std::wstring const& serviceInstanceName,

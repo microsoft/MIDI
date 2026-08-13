@@ -214,6 +214,34 @@ CMidi2NetworkMidiConfigurationManager::RunCommandStopHost(
     }
 }
 
+// Stops the host and removes the entry. stopHost deliberately keeps the entry so the host can be
+// started again, which also means it keeps holding its service instance name. This is the verb
+// which gives that name back, and the only way to be rid of a host without restarting the
+// service.
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandRemoveHost(
+    winrt::hstring const& hostEntryId,
+    json::JsonObject& responseObject) noexcept
+{
+    // Detached first, so nothing can start it again while it is being shut down, and so the
+    // state lock is not held across a Shutdown which blocks on the network.
+    auto host = TransportState::Current().RemoveHost(hostEntryId);
+
+    if (host == nullptr)
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, internal::ResourceGetWString(IDS_ERROR_HOST_NOT_FOUND));
+        return S_OK;
+    }
+
+    // Sends the Byes, tears down the connections, unbinds the port and removes the parent device.
+    LOG_IF_FAILED(host->Shutdown());
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
+
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::RunCommandStartHost(
@@ -677,6 +705,132 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
     return S_OK;
 }
 
+
+namespace
+{
+    // FILETIME to ISO 8601 UTC, with the full 100ns resolution so the value round-trips. An
+    // unset time returns empty rather than a 1601 date, which would read as a real answer.
+    std::wstring PendingRequestTimeToString(uint64_t const fileTime)
+    {
+        if (fileTime == 0)
+        {
+            return {};
+        }
+
+        FILETIME ft{};
+        ft.dwLowDateTime = static_cast<DWORD>(fileTime & 0xFFFFFFFF);
+        ft.dwHighDateTime = static_cast<DWORD>(fileTime >> 32);
+
+        SYSTEMTIME st{};
+
+        if (!FileTimeToSystemTime(&ft, &st))
+        {
+            return {};
+        }
+
+        wchar_t buffer[40]{};
+
+        if (swprintf_s(buffer, L"%04u-%02u-%02uT%02u:%02u:%02u.%07uZ",
+            st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
+            static_cast<uint32_t>(fileTime % 10000000)) < 0)
+        {
+            return {};
+        }
+
+        return std::wstring{ buffer };
+    }
+}
+
+// Returns a list of all remote connections/invites that are pending
+// some sort of action, like user approval.
+//
+// Response Object Payload
+// {
+//   "pendingRemoteClients" :
+//   [
+//     {
+//       "entryIdentifier" : "host entry id, pass back to approveRemoteClient/denyRemoteClient",
+//       "umpEndpointName" : "remote's own name, also an approval argument",
+//       "productInstanceId" : "remote's own id, also an approval argument",
+//       "hostUmpEndpointName" : "which of this PC's hosts is being asked",
+//       "hostServiceInstanceName" : "service instance name of that host",
+//       "remoteAddress" : "ip the invitation arrived from, for display",
+//       "requestTime" : "2026-08-12T01:23:45.6789012Z"
+//      },
+//     ...
+//   ]
+// }
+//
+// The array is empty when nothing is waiting, which is the normal case for a poll. There is no
+// separate "nothing changed" reply: a caller compares against what it last saw.
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandGetPendingRemoteClients(
+    json::JsonObject& responseObject) noexcept
+{
+    json::JsonArray clientsArray;
+
+    // Pending clients belong to a host, and only the host role has an approval gate at all, so
+    // outbound clients are not walked here.
+    for (auto const host : TransportState::Current().GetHosts())
+    {
+        auto def = host->GetDefinition();
+
+        for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForHost(def.EntryIdentifier))
+        {
+            if (connection == nullptr || !connection->IsAwaitingUserApproval())
+            {
+                continue;
+            }
+
+            json::JsonObject clientObject;
+
+            auto identity = connection->GetRemoteClientIdentity();
+
+            // These three are the approveRemoteClient / denyRemoteClient arguments, under the
+            // key names those commands already read, so an entry goes back unmodified.
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                json::JsonValue::CreateStringValue(def.EntryIdentifier));
+
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                json::JsonValue::CreateStringValue(identity.UmpEndpointName));
+
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                json::JsonValue::CreateStringValue(identity.ProductInstanceId));
+
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_HOST_NAME_KEY,
+                json::JsonValue::CreateStringValue(def.UmpEndpointName));
+
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_HOST_SERVICE_INSTANCE_NAME_KEY,
+                json::JsonValue::CreateStringValue(def.ServiceInstanceName));
+
+            auto remoteHostName = connection->GetRemoteHostName();
+
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY,
+                json::JsonValue::CreateStringValue(remoteHostName != nullptr ? remoteHostName.CanonicalName() : L""));
+
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_REQUEST_TIME_KEY,
+                json::JsonValue::CreateStringValue(PendingRequestTimeToString(connection->GetUserApprovalRequestedFileTime())));
+
+            clientsArray.Append(clientObject);
+        }
+    }
+
+    responseObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENTS_RESPONSE_ARRAY_KEY, clientsArray);
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::ProcessCommand(
@@ -710,11 +864,15 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT, true);
 
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT, true);
+
+        capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS, true);
+
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
@@ -722,6 +880,10 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
     else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS)
     {
         RETURN_IF_FAILED(RunCommandEnumerateClients(responseObject));
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS)
+    {
+        RETURN_IF_FAILED(RunCommandGetPendingRemoteClients(responseObject));
     }
     else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS)
     {
@@ -749,6 +911,19 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
         if (arg != commandHelper.Arguments()->end())
         {
             RETURN_IF_FAILED(RunCommandStopHost(arg->second.c_str(), responseObject));
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST)
+    {
+        auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
+
+        if (arg != commandHelper.Arguments()->end())
+        {
+            RETURN_IF_FAILED(RunCommandRemoveHost(arg->second.c_str(), responseObject));
         }
         else
         {

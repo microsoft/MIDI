@@ -643,6 +643,10 @@ void MidiNetworkHost::OnMessageReceived(
             {
                 // The spec has a reason code for precisely this. Staying silent leaves the
                 // client unable to tell a full host from a dead one.
+                //
+                // The limiter can still suppress this refusal, in which case the invitation goes
+                // unanswered and we are outside 6.4. That is the accepted trade documented on
+                // MidiNetworkReplyRateLimiter: an unconditional reply is an amplification vector.
                 if (args.RemoteAddress() != nullptr)
                 {
                     auto key = MidiNetworkReplyRateLimiter::MakeRemoteKey(

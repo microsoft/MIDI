@@ -808,6 +808,9 @@ MidiNetworkConnection::HandleIncomingBye()
     }
     else
     {
+        // No session means any endpoint we were told to build for this remote is now pointless.
+        m_hostEndpointCreationAbandoned = true;
+
         // Spec 6.16: "Because the Bye Command might be repeated, the Bye Reply shall also be
         // sent if there is no Pending or Established Session." Staying silent here leaves the
         // sender repeating until its own timeout.
@@ -1270,6 +1273,12 @@ MidiNetworkConnection::HandleIncomingInvitation(
 
             if (!alreadyPending)
             {
+                FILETIME requestedTime{};
+                GetSystemTimeAsFileTime(&requestedTime);
+
+                m_userApprovalRequestedFileTime.store(
+                    (static_cast<uint64_t>(requestedTime.dwHighDateTime) << 32) | requestedTime.dwLowDateTime);
+
                 TraceLoggingWrite(
                     MidiNetworkMidiTransportTelemetryProvider::Provider(),
                     MIDI_TRACE_EVENT_INFO,
@@ -1325,6 +1334,9 @@ MidiNetworkConnection::HandleIncomingInvitation(
 
                     return S_OK;
                 }));
+
+            // A remote which said Bye and then invited again wants an endpoint after all.
+            m_hostEndpointCreationAbandoned = false;
 
             auto queueHr = endpointManager->QueueHostEndpointCreation(
                 shared_from_this(),

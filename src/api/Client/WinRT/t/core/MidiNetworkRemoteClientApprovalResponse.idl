@@ -10,20 +10,24 @@
 import "MidiApiContracts.idl";
 
 
-
-import "IMidiServiceTransportPluginConfig.idl";
+import "MidiNetworkRemoteClientApprovalErrorCodeEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemovalConfig")]
-    runtimeclass MidiNetworkHostRemovalConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientApprovalResponse")]
+    runtimeclass MidiNetworkRemoteClientApprovalResponse
     {
-        MidiNetworkHostRemovalConfig();
-        MidiNetworkHostRemovalConfig(Guid hostId);
+        Guid HostId{ get; };
+        String RemoteClientName{ get; };
+        String RemoteClientProductInstanceId{ get; };
 
-        Guid HostId { get; set; };
+        Boolean Success{ get; };
 
-    }
+        MidiNetworkRemoteClientApprovalErrorCode ErrorCode{ get; };
+        String ErrorMessage{ get; };
+
+
+    };
 }

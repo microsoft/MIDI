@@ -15,7 +15,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    enum MidiNetworkClientConnectResultErrorCode
+    enum MidiNetworkRemoteClientApprovalErrorCode
     {
         NoErrorInformationAvailable = 0,
 

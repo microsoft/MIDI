@@ -23,7 +23,7 @@ namespace Windows.Devices.Midi2.Transports.Network
     {
         MidiNetworkHostCreationConfig();
 
-        String Id;
+        Guid HostId;
 
         String Name;
         String ServiceInstanceName;

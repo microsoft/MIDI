@@ -10,15 +10,26 @@
 import "MidiApiContracts.idl";
 
 
-
+import "MidiNetworkClientConnectErrorCodeEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
+    [experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    enum MidiNetworkHostUpdateResultErrorCode
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientConnectResponse")]
+    runtimeclass MidiNetworkClientConnectResponse
     {
-        NoErrorInformationAvailable = 0,
+        Guid ClientId{ get; };
+
+		Boolean Success{ get; };
+
+        MidiNetworkClientConnectErrorCode ErrorCode{ get; };
+
+        String ErrorMessage{ get; };
+
+		// we won't have the endpoint device id yet, so cannot return it here
 
 
-    };
+    }
 }
+

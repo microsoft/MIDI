@@ -537,22 +537,20 @@
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="winrt_devpkey_util.h" />
-
-
-    <ClInclude Include="MidiNetworkClientConnectResult.h">
-      <DependentUpon>MidiNetworkClientConnectResult.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkClientConnectResponse.h">
+      <DependentUpon>MidiNetworkClientConnectResponse.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkClientDisconnectResult.h">
-      <DependentUpon>MidiNetworkClientDisconnectResult.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkClientDisconnectResponse.h">
+      <DependentUpon>MidiNetworkClientDisconnectResponse.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkHostCreationResult.h">
-      <DependentUpon>MidiNetworkHostCreationResult.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkHostCreationResponse.h">
+      <DependentUpon>MidiNetworkHostCreationResponse.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkHostRemovalResult.h">
-      <DependentUpon>MidiNetworkHostRemovalResult.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkHostRemovalResponse.h">
+      <DependentUpon>MidiNetworkHostRemovalResponse.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkHostUpdateResult.h">
-      <DependentUpon>MidiNetworkHostUpdateResult.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkHostUpdateResponse.h">
+      <DependentUpon>MidiNetworkHostUpdateResponse.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiNetworkAdvertisedHost.h">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
@@ -588,8 +586,6 @@
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_network_defs.h" />
-
-    
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -859,25 +855,21 @@
     <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClCompile>
-
-
-
-    <ClCompile Include="MidiNetworkClientConnectResult.cpp">
-      <DependentUpon>MidiNetworkClientConnectResult.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkClientConnectResponse.cpp">
+      <DependentUpon>MidiNetworkClientConnectResponse.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkClientDisconnectResult.cpp">
-      <DependentUpon>MidiNetworkClientDisconnectResult.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkClientDisconnectResponse.cpp">
+      <DependentUpon>MidiNetworkClientDisconnectResponse.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostCreationResult.cpp">
-      <DependentUpon>MidiNetworkHostCreationResult.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkHostCreationResponse.cpp">
+      <DependentUpon>MidiNetworkHostCreationResponse.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostRemovalResult.cpp">
-      <DependentUpon>MidiNetworkHostRemovalResult.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkHostRemovalResponse.cpp">
+      <DependentUpon>MidiNetworkHostRemovalResponse.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostUpdateResult.cpp">
-      <DependentUpon>MidiNetworkHostUpdateResult.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkHostUpdateResponse.cpp">
+      <DependentUpon>MidiNetworkHostUpdateResponse.idl</DependentUpon>
     </ClCompile>
-    
     <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
     </ClCompile>
@@ -911,7 +903,6 @@
     <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClCompile>
-
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
@@ -926,6 +917,10 @@
     <Midl Include="MidiBytestreamToUmpMessageConverterState.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
+    <Midl Include="MidiNetworkPendingRemoteClient.idl" />
+    <Midl Include="MidiNetworkRemoteClientApprovalErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkRemoteClientApprovalResponse.idl" />
+    <Midl Include="MidiNetworkRemoteClientApprovalConfig.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiApi.idl" />
     <Midl Include="MidiApiModeEnum.idl" />
@@ -1026,7 +1021,6 @@
     <Midl Include="MidiMessageHelper.idl" />
     <Midl Include="MidiSystemExclusive7MessageHelper.idl" />
     <Midl Include="MidiUniqueId.idl" />
-
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />
     <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl" />
@@ -1034,25 +1028,24 @@
     <Midl Include="MidiNetworkAdvertisedHostWatcher.idl" />
     <Midl Include="MidiNetworkAuthenticationTypeEnum.idl" />
     <Midl Include="MidiNetworkClientConnectConfig.idl" />
-    <Midl Include="MidiNetworkClientConnectResultErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkClientConnectResult.idl" />
+    <Midl Include="MidiNetworkClientConnectErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkClientConnectResponse.idl" />
     <Midl Include="MidiNetworkClientDisconnectConfig.idl" />
-    <Midl Include="MidiNetworkClientDisconnectResult.idl" />
-    <Midl Include="MidiNetworkClientDisconnectResultErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkClientDisconnectResponse.idl" />
+    <Midl Include="MidiNetworkClientDisconnectErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkClientMatchCriteria.idl" />
     <Midl Include="MidiNetworkConfiguredClient.idl" />
     <Midl Include="MidiNetworkConfiguredHost.idl" />
-    <Midl Include="MidiNetworkHostCreationResultErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkHostCreationErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostRemovalResultErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkHostUpdateResult.idl" />
-    <Midl Include="MidiNetworkHostUpdateResultErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkHostUpdateResponse.idl" />
+    <Midl Include="MidiNetworkHostUpdateErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkTransportManager.idl" />
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
     <Midl Include="MidiNetworkHostCreationConfig.idl" />
-    <Midl Include="MidiNetworkHostCreationResult.idl" />
+    <Midl Include="MidiNetworkHostCreationResponse.idl" />
     <Midl Include="MidiNetworkHostRemovalConfig.idl" />
-    <Midl Include="MidiNetworkHostRemovalResult.idl" />
-
+    <Midl Include="MidiNetworkHostRemovalResponse.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

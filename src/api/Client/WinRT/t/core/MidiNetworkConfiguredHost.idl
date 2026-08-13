@@ -16,22 +16,22 @@ namespace Windows.Devices.Midi2.Transports.Network
 {
     [experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    struct MidiNetworkConfiguredHost
+    runtimeclass MidiNetworkConfiguredHost
     {
-        String HostId;  // internal id we use to match up in config file
+        Guid HostId{ get;} ;  // internal id we use to match up in config file
 
-        Boolean IsEnabled;                  // true if this is allows to connect. Mostly for pre-configured connections
-        Boolean HasStarted;                 // true if this has started
+        Boolean IsEnabled{ get; };                  // true if this is allows to connect. Mostly for pre-configured connections
+        Boolean HasStarted{ get; };                 // true if this has started
 
-        String ActualPort;                  // string because DatagramSocket.LocalPort returns a string
-        String ActualAddress;
+        String ActualPort{ get; };                  // string because DatagramSocket.LocalPort returns a string
+        String ActualAddress{ get; };
 
-        String UmpEndpointName;            
-        String ProductInstanceId;
+        String UmpEndpointName{ get; };
+        String ProductInstanceId{ get; };
 
-        String ServiceInstanceName;
+        String ServiceInstanceName{ get; };
 
-        Boolean CreateMidi1Ports;
+        Boolean CreateMidi1Ports{ get; };
     };
 }
 

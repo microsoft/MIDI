@@ -319,6 +319,26 @@ namespace NetworkMidiTest
     }
 
 
+    ServiceConfigResult GetPendingRemoteClients()
+    {
+        return SendNetworkTransportConfig(
+            L"{\"transportCommand\":{\"commandName\":\"getPendingRemoteClients\"}}");
+    }
+
+
+    ServiceConfigResult RemoveHost(std::wstring const& entryIdentifier)
+    {
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"removeHost\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(entryIdentifier) + L"\""
+            L"}}}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
     namespace
     {
         ServiceConfigResult RemoteClientDecision(

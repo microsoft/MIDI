@@ -10,26 +10,21 @@
 import "MidiApiContracts.idl";
 
 
-import "MidiNetworkClientConnectResultErrorCodeEnum.idl";
+import "MidiNetworkHostRemovalResultErrorCodeEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientConnectResult")]
-    runtimeclass MidiNetworkClientConnectResult
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemovalResponse")]
+    runtimeclass MidiNetworkHostRemovalResponse
     {
-        Guid ClientId{ get; };
+        Guid HostId{ get; };
 
-		Boolean Success{ get; };
+        Boolean Success{ get; };
 
-        MidiNetworkClientConnectResultErrorCode ErrorCode{ get; };
-
-        String ErrorInformation{ get; };
-
-		// we won't have the endpoint device id yet, so cannot return it here
-
-
-    }
+        MidiNetworkHostRemovalErrorCode ErrorCode{ get; };
+        String ErrorMessage{ get; };
+    };
 }
 

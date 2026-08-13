@@ -12,6 +12,16 @@
 // refusals, NAKs and similar. Those are reflection/amplification vectors: a forged source
 // address turns every stray datagram into traffic aimed at the victim.
 //
+// KNOWN DEVIATION FROM THE SPEC, ACCEPTED DELIBERATELY:
+// M2-124-UM 6.4 says a Host receiving an Invitation shall respond with Invitation Reply:
+// Accepted, a Bye, or an authentication reply. When this limiter suppresses a refusal, the
+// Host answers an Invitation with nothing at all, which is none of those three. A client
+// cannot then tell a full or unwilling host from an absent one until its own timeout.
+// This is the intended trade: honouring 6.4 unconditionally means any remote can make us
+// emit one packet per packet it sends, to any address it cares to forge, and a
+// conformance bug is preferable to shipping an amplifier. The client's retry loop covers
+// the honest case, because the per-remote interval is short.
+//
 // The table is a FIXED size on purpose. A map keyed by remote would itself be a memory
 // exhaustion vector, since the addresses are attacker-chosen and unverified. A hash
 // collision here costs one suppressed refusal and the remote retries, which is the safe

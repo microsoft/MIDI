@@ -10,22 +10,23 @@
 import "MidiApiContracts.idl";
 
 
-import "MidiNetworkHostUpdateResultErrorCodeEnum.idl";
+import "MidiNetworkHostCreationErrorCodeEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostUpdateResult")]
-    runtimeclass MidiNetworkHostUpdateResult
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationResponse")]
+    runtimeclass MidiNetworkHostCreationResponse
     {
-        String HostId{ get; };
+        Guid HostId{ get; };
 
-        Boolean Success{ get; };
+		Boolean Success{ get; };
 
-        MidiNetworkHostUpdateResultErrorCode ErrorCode{ get; };
+        MidiNetworkHostCreationErrorCode ErrorCode{ get; };
+        String ErrorMessage{ get; };
 
-        String ErrorInformation{ get; };
+
     };
 }
 

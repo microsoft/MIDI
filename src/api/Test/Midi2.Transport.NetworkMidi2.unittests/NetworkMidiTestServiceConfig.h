@@ -76,9 +76,18 @@ namespace NetworkMidiTest
     // Safe to call for a host which is already stopped or was never created.
     ServiceConfigResult StopHost(_In_ std::wstring const& entryIdentifier);
 
+    // Stops the host and forgets the entry, which is what releases its service instance name.
+    // Tests must do this rather than StopHost, or every run leaves a host behind holding a
+    // socket and an mDNS advertisement.
+    ServiceConfigResult RemoveHost(_In_ std::wstring const& entryIdentifier);
+
     // Returns the enumerateHosts response, which carries the per-host connections array the
     // settings app polls: remote identity, session state, and pendingApproval.
     ServiceConfigResult EnumerateHosts();
+
+    // Returns only the remote clients waiting on a user decision, across every host. This is
+    // the poll the settings app runs on a timer.
+    ServiceConfigResult GetPendingRemoteClients();
 
     // A user's decision about a remote client. scope is one of once / always / untilRestart.
     ServiceConfigResult ApproveRemoteClient(

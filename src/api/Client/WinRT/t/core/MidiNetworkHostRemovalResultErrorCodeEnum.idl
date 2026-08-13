@@ -15,7 +15,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    enum MidiNetworkHostRemovalResultErrorCode
+    enum MidiNetworkHostRemovalErrorCode
     {
         NoErrorInformationAvailable = 0,
 

@@ -18,7 +18,7 @@ namespace Windows.Devices.Midi2.Transports.Network
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostUpdatedEventArgs")]
     runtimeclass MidiNetworkAdvertisedHostUpdatedEventArgs
     {
-        String HostId { get; };
+        String HostDeviceId { get; };
 
         Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
     }

@@ -419,12 +419,26 @@ CMidi2NetworkMidiEndpointManager::QueueHostEndpointCreation(
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, connection);
 
+    size_t queueDepth{ 0 };
+
     {
         auto lock = m_pendingHostEndpointCreationsLock.lock();
 
         m_pendingHostEndpointCreations.push_back(
             PendingHostEndpointCreation{ connection, clientUmpEndpointName, clientProductInstanceId });
+
+        queueDepth = m_pendingHostEndpointCreations.size();
     }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Queued host endpoint creation", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(static_cast<uint64_t>(queueDepth), "queue depth")
+    );
 
     m_backgroundHostEndpointCreationThreadWakeup.SetEvent();
 
@@ -452,8 +466,12 @@ CMidi2NetworkMidiEndpointManager::HostEndpointCreationWorker(std::stop_token sto
             requests.swap(m_pendingHostEndpointCreations);
         }
 
+        size_t remainingInBatch{ requests.size() };
+
         for (auto const& request : requests)
         {
+            remainingInBatch--;
+
             if (request.Connection == nullptr)
             {
                 continue;
@@ -465,14 +483,54 @@ CMidi2NetworkMidiEndpointManager::HostEndpointCreationWorker(std::stop_token sto
                 continue;
             }
 
+            // The remote said Bye while this sat in the queue. Creating the endpoint now would
+            // be immediately undone, and that teardown competes with the rest of this batch.
+            if (request.Connection->IsHostEndpointCreationAbandoned())
+            {
+                request.Connection->CancelPendingHostEndpointCreation();
+
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Skipped host endpoint creation, remote already said Bye", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt64(static_cast<uint64_t>(remainingInBatch), "remaining in batch")
+                );
+
+                continue;
+            }
+
             std::wstring newDeviceInstanceId{ };
             std::wstring newEndpointDeviceInterfaceId{ };
+
+            auto queuedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - request.QueuedAt).count();
+
+            auto activationStarted = std::chrono::steady_clock::now();
 
             auto hr = request.Connection->CreateHostEndpointForPendingInvitation(
                 request.ClientUmpEndpointName,
                 request.ClientProductInstanceId,
                 newDeviceInstanceId,
                 newEndpointDeviceInterfaceId);
+
+            auto activationMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - activationStarted).count();
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Host endpoint creation completed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingInt64(static_cast<int64_t>(queuedMilliseconds), "queued ms"),
+                TraceLoggingInt64(static_cast<int64_t>(activationMilliseconds), "activation ms"),
+                TraceLoggingUInt64(static_cast<uint64_t>(remainingInBatch), "remaining in batch"),
+                TraceLoggingHResult(hr, "hresult")
+            );
 
             if (SUCCEEDED(hr))
             {

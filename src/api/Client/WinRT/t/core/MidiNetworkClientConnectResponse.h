@@ -7,38 +7,38 @@
 // ============================================================================
 
 #pragma once
-#include "Transports.Network.MidiNetworkClientDisconnectResult.g.h"
+#include "Transports.Network.MidiNetworkClientConnectResponse.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
-    struct MidiNetworkClientDisconnectResult : MidiNetworkClientDisconnectResultT<MidiNetworkClientDisconnectResult>
+    struct MidiNetworkClientConnectResponse : MidiNetworkClientConnectResponseT<MidiNetworkClientConnectResponse>
     {
-        MidiNetworkClientDisconnectResult() = default;
+        MidiNetworkClientConnectResponse() = default;
 
         winrt::guid ClientId() const noexcept { return m_clientId; }
         bool Success() const noexcept { return m_success; }
-        network::MidiNetworkClientDisconnectResultErrorCode ErrorCode() const noexcept { return m_errorCode; }
-        winrt::hstring ErrorInformation() const noexcept { return m_errorInformation; }
+        network::MidiNetworkClientConnectErrorCode ErrorCode() const noexcept { return m_errorCode; }
+        winrt::hstring ErrorMessage() const noexcept { return m_errorInformation; }
 
         void InternalSetClientId(_In_ winrt::guid const& value) noexcept { m_clientId = value; }
-        void InternalSetError(_In_ network::MidiNetworkClientDisconnectResultErrorCode const errorCode, _In_ winrt::hstring const& errorInformation) noexcept
+        void InternalSetError(_In_ network::MidiNetworkClientConnectErrorCode const errorCode, _In_ winrt::hstring const& errorInformation) noexcept
         {
             m_success = false;
             m_errorCode = errorCode;
             m_errorInformation = errorInformation;
         }
 
-        void InternalSetSuccess() noexcept
-        {
-            m_success = true;
-            m_errorCode = network::MidiNetworkClientDisconnectResultErrorCode::NoErrorInformationAvailable;
-            m_errorInformation = L"";
+        void InternalSetSuccess() noexcept 
+        { 
+            m_success = true; 
+            m_errorCode = network::MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable; 
+            m_errorInformation = L""; 
         }
 
     private:
         winrt::guid m_clientId{};
         bool m_success{ false };
-        network::MidiNetworkClientDisconnectResultErrorCode m_errorCode{};
+        network::MidiNetworkClientConnectErrorCode m_errorCode{};
         winrt::hstring m_errorInformation{};
 
 

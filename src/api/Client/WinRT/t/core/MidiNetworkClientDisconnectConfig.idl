@@ -21,8 +21,9 @@ namespace Windows.Devices.Midi2.Transports.Network
     runtimeclass MidiNetworkClientDisconnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkClientDisconnectConfig();
+        MidiNetworkClientDisconnectConfig(Guid clientId);
 
-        String Id;							// GUID or other string we use in the config file and for subsequent edits/deletes
+        Guid ClientId;							// GUID we use in the config file and for subsequent edits/deletes
     }
 }
 

@@ -7,21 +7,21 @@
 // ============================================================================
 
 #pragma once
-#include "Transports.Network.MidiNetworkHostUpdateResult.g.h"
+#include "Transports.Network.MidiNetworkHostCreationResponse.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
-    struct MidiNetworkHostUpdateResult : MidiNetworkHostUpdateResultT<MidiNetworkHostUpdateResult>
+    struct MidiNetworkHostCreationResponse : MidiNetworkHostCreationResponseT<MidiNetworkHostCreationResponse>
     {
-        MidiNetworkHostUpdateResult() = default;
+        MidiNetworkHostCreationResponse() = default;
 
         winrt::hstring HostId() const noexcept { return m_hostId; }
         bool Success() const noexcept { return m_success; }
-        network::MidiNetworkHostUpdateResultErrorCode ErrorCode() const noexcept { return m_errorCode; }
-        winrt::hstring ErrorInformation() const noexcept { return m_errorInformation; }
+        network::MidiNetworkHostCreationErrorCode ErrorCode() const noexcept { return m_errorCode; }
+        winrt::hstring ErrorMessage() const noexcept { return m_errorInformation; }
 
         void InternalSetHostId(_In_ winrt::hstring const& value) noexcept { m_hostId = value; }
-        void InternalSetError(_In_ network::MidiNetworkHostUpdateResultErrorCode const errorCode, _In_ winrt::hstring const& errorInformation) noexcept
+        void InternalSetError(_In_ network::MidiNetworkHostCreationErrorCode const errorCode, _In_ winrt::hstring const& errorInformation) noexcept
         {
             m_success = false;
             m_errorCode = errorCode;
@@ -31,15 +31,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         void InternalSetSuccess() noexcept
         {
             m_success = true;
-            m_errorCode = network::MidiNetworkHostUpdateResultErrorCode::NoErrorInformationAvailable;
+            m_errorCode = network::MidiNetworkHostCreationErrorCode::NoErrorInformationAvailable;
             m_errorInformation = L"";
         }
 
     private:
         winrt::hstring m_hostId{};
         bool m_success{ false };
-        network::MidiNetworkHostUpdateResultErrorCode m_errorCode{};
+        network::MidiNetworkHostCreationErrorCode m_errorCode{};
         winrt::hstring m_errorInformation{};
+
 
     };
 }

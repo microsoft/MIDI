@@ -74,6 +74,12 @@ public:
 
     std::shared_ptr<MidiNetworkHost> GetHost(_In_ winrt::hstring hostEntryIdentifier);
 
+    // Detaches a host, and any pending definition sharing its entry identifier, from the state.
+    // The host is returned rather than shut down here, because Shutdown blocks on the network
+    // and re-enters this class, and the state lock must not be held across that. The caller owns
+    // the returned host and must Shutdown() it. Returns nullptr when nothing matched.
+    std::shared_ptr<MidiNetworkHost> RemoveHost(_In_ winrt::hstring const& hostEntryIdentifier);
+
     // The service instance name becomes both the DNS-SD instance and the virtual parent device
     // id, so two host entries cannot share one. Compared case-insensitively.
     bool IsHostServiceInstanceNameInUse(

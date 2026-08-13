@@ -7,8 +7,8 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiNetworkClientDisconnectResult.h"
-#include "Transports.Network.MidiNetworkClientDisconnectResult.g.cpp"
+#include "MidiNetworkClientConnectResponse.h"
+#include "Transports.Network.MidiNetworkClientConnectResponse.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {

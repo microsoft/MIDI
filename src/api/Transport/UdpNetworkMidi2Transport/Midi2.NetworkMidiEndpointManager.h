@@ -164,6 +164,10 @@ private:
         std::shared_ptr<MidiNetworkConnection> Connection;
         std::wstring ClientUmpEndpointName;
         std::wstring ClientProductInstanceId;
+
+        // Time to Invitation Reply: Accepted is queue wait plus activation, and only the
+        // measurement tells us which of the two to attack.
+        std::chrono::steady_clock::time_point QueuedAt{ std::chrono::steady_clock::now() };
     };
 
     wil::slim_event_manual_reset m_backgroundHostEndpointCreationThreadWakeup;

@@ -11,23 +11,27 @@ import "MidiApiContracts.idl";
 
 
 
-import "MidiNetworkHostCreationResult.idl";
+import "MidiNetworkHostCreationResponse.idl";
 import "MidiNetworkHostCreationConfig.idl";
-import "MidiNetworkHostRemovalResult.idl";
+import "MidiNetworkHostRemovalResponse.idl";
 import "MidiNetworkHostRemovalConfig.idl";
-import "MidiNetworkHostUpdateResult.idl";
+import "MidiNetworkHostUpdateResponse.idl";
 
 
-import "MidiNetworkClientConnectResult.idl";
+import "MidiNetworkClientConnectResponse.idl";
 import "MidiNetworkClientConnectConfig.idl";
 
-import "MidiNetworkClientDisconnectResult.idl";
+import "MidiNetworkClientDisconnectResponse.idl";
 import "MidiNetworkClientDisconnectConfig.idl";
 
 import "MidiNetworkAdvertisedHost.idl";
 
 import "MidiNetworkConfiguredHost.idl";
 import "MidiNetworkConfiguredClient.idl";
+
+import "MidiNetworkRemoteClientApprovalConfig.idl";
+import "MidiNetworkRemoteClientApprovalResponse.idl";
+import "MidiNetworkPendingRemoteClient.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -40,30 +44,37 @@ namespace Windows.Devices.Midi2.Transports.Network
         static Guid TransportId{ get; };
 
 
-        static Windows.Foundation.IAsyncOperation<MidiNetworkHostCreationResult> CreateNetworkHostAsync(
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostCreationResponse> CreateNetworkHostAsync(
             MidiNetworkHostCreationConfig creationConfig);
 
-        static Windows.Foundation.IAsyncOperation<MidiNetworkHostRemovalResult> RemoveNetworkHostAsync(
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostRemovalResponse> RemoveNetworkHostAsync(
             MidiNetworkHostRemovalConfig removalConfig);
 
         // keeps the host entry in memory, but closes all connections
         // stops advertising, and refuses any new connections
-        static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResult> StopNetworkHostAsync(String hostId);
-        static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResult> StartNetworkHostAsync(String hostId);
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> StopNetworkHostAsync(String hostId);
+        static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> StartNetworkHostAsync(String hostId);
 
 
         // Sends new client info to the service
-        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectResult> ConnectNetworkClientAsync(
+        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectResponse> ConnectNetworkClientAsync(
             MidiNetworkClientConnectConfig connectConfig);
 
-        //// Closes the connection and removes the entry in the service
-        static Windows.Foundation.IAsyncOperation<MidiNetworkClientDisconnectResult> DisconnectNetworkClientAsync(
+        // Closes the connection and removes the entry in the service
+        static Windows.Foundation.IAsyncOperation<MidiNetworkClientDisconnectResponse> DisconnectNetworkClientAsync(
             MidiNetworkClientDisconnectConfig disconnectConfig);
+
+        // Approves or denies a pending client connection request. 
+        static Windows.Foundation.IAsyncOperation<MidiNetworkRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(
+            MidiNetworkRemoteClientApprovalConfig approvalConfig);
+
 
 
         // returns info about what is configured inside the service
         static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredHost> GetConfiguredHosts();
         static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredClient> GetConfiguredClients();
+
+        static Windows.Foundation.Collections.IVectorView<MidiNetworkPendingRemoteClient> GetPendingRemoteClients();
 
 
         // list the external hosts currently visible to this PC

@@ -7,8 +7,8 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiNetworkHostCreationResult.h"
-#include "Transports.Network.MidiNetworkHostCreationResult.g.cpp"
+#include "MidiNetworkHostRemovalResponse.h"
+#include "Transports.Network.MidiNetworkHostRemovalResponse.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {

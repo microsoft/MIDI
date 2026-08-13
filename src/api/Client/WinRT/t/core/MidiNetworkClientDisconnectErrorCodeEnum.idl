@@ -6,11 +6,19 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
-#include "MidiNetworkClientConnectResult.h"
-#include "Transports.Network.MidiNetworkClientConnectResult.g.cpp"
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
 
-namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
+
+
+
+namespace Windows.Devices.Midi2.Transports.Network
 {
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    enum MidiNetworkClientDisconnectErrorCode
+    {
+        NoErrorInformationAvailable = 0,
 
+
+    };
 }

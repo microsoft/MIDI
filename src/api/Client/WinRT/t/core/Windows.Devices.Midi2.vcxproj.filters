@@ -381,19 +381,19 @@
     <Midl Include="MidiNetworkClientConnectConfig.idl">
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientConnectResult.idl">
+    <Midl Include="MidiNetworkClientConnectResponse.idl">
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientConnectResultErrorCodeEnum.idl">
+    <Midl Include="MidiNetworkClientConnectErrorCodeEnum.idl">
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientDisconnectConfig.idl">
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientDisconnectResult.idl">
+    <Midl Include="MidiNetworkClientDisconnectResponse.idl">
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientDisconnectResultErrorCodeEnum.idl">
+    <Midl Include="MidiNetworkClientDisconnectErrorCodeEnum.idl">
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientMatchCriteria.idl">
@@ -411,25 +411,25 @@
     <Midl Include="MidiNetworkHostCreationConfig.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostCreationResult.idl">
+    <Midl Include="MidiNetworkHostCreationResponse.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostCreationResultErrorCodeEnum.idl">
+    <Midl Include="MidiNetworkHostCreationErrorCodeEnum.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostRemovalConfig.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostRemovalResult.idl">
+    <Midl Include="MidiNetworkHostRemovalResponse.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostRemovalResultErrorCodeEnum.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostUpdateResult.idl">
+    <Midl Include="MidiNetworkHostUpdateResponse.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostUpdateResultErrorCodeEnum.idl">
+    <Midl Include="MidiNetworkHostUpdateErrorCodeEnum.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkTransportManager.idl">
@@ -461,6 +461,18 @@
     </Midl>
     <Midl Include="MidiEndpointDeviceWatcher.idl">
       <Filter>SDK\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientApprovalConfig.idl">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientApprovalResponse.idl">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientApprovalErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkPendingRemoteClient.idl">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -546,6 +558,9 @@
     </Filter>
     <Filter Include="SDK\Enumeration\Watcher">
       <UniqueIdentifier>{69dd6957-6d79-416f-aede-6191ea108b05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Network\Connection Approval">
+      <UniqueIdentifier>{3f05b0d6-e012-4974-82ca-2d25d4b7c6de}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

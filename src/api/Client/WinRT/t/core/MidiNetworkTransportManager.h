@@ -27,24 +27,30 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         static collections::IVector<winrt::hstring> MidiNetworkUdpDnsSdQueryAdditionalProperties() noexcept;
 
-        static bool IsTransportAvailable() noexcept;
-        
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
 
-        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResult> StartNetworkHostAsync(_In_ winrt::hstring const& hostId);
-        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResult> StopNetworkHostAsync(_In_ winrt::hstring const& hostId);
 
-        static foundation::IAsyncOperation<network::MidiNetworkHostCreationResult> CreateNetworkHostAsync(_In_ network::MidiNetworkHostCreationConfig const& creationConfig) noexcept;
-        static foundation::IAsyncOperation<network::MidiNetworkHostRemovalResult> RemoveNetworkHostAsync(_In_ network::MidiNetworkHostRemovalConfig const& removalConfig) noexcept;
+        static bool IsTransportAvailable() noexcept;
+        
+        static foundation::IAsyncOperation<network::MidiNetworkHostCreationResponse> CreateNetworkHostAsync(_In_ network::MidiNetworkHostCreationConfig const& creationConfig) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkHostRemovalResponse> RemoveNetworkHostAsync(_In_ network::MidiNetworkHostRemovalConfig const& removalConfig) noexcept;
 
-        static foundation::IAsyncOperation<network::MidiNetworkClientConnectResult> ConnectNetworkClientAsync(_In_ network::MidiNetworkClientConnectConfig const& creationConfig) noexcept;
-        static foundation::IAsyncOperation<network::MidiNetworkClientDisconnectResult> DisconnectNetworkClientAsync(_In_ network::MidiNetworkClientDisconnectConfig const& removalConfig) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> StartNetworkHostAsync(_In_ winrt::hstring const& hostId);
+        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> StopNetworkHostAsync(_In_ winrt::hstring const& hostId);
+
+        static foundation::IAsyncOperation<network::MidiNetworkClientConnectResponse> ConnectNetworkClientAsync(_In_ network::MidiNetworkClientConnectConfig const& creationConfig) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkClientDisconnectResponse> DisconnectNetworkClientAsync(_In_ network::MidiNetworkClientDisconnectConfig const& removalConfig) noexcept;
+
+        static foundation::IAsyncOperation<network::MidiNetworkRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(_In_ network::MidiNetworkRemoteClientApprovalConfig const& approvalConfig) noexcept;
+
+        static collections::IVectorView<network::MidiNetworkConfiguredHost> GetConfiguredHosts() noexcept;
+        static collections::IVectorView<network::MidiNetworkConfiguredClient> GetConfiguredClients() noexcept;
+        static collections::IVectorView<network::MidiNetworkPendingRemoteClient> GetPendingRemoteClients() noexcept;
+
 
         static collections::IVectorView<network::MidiNetworkAdvertisedHost> GetAdvertisedHosts() noexcept;
 
 
-        static collections::IVectorView<network::MidiNetworkConfiguredHost> GetConfiguredHosts() noexcept;
-        static collections::IVectorView<network::MidiNetworkConfiguredClient> GetConfiguredClients() noexcept;
 
     };
 }
