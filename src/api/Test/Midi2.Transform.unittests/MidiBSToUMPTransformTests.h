@@ -43,10 +43,12 @@ public:
     TEST_METHOD(TestTimingClockPadded);
     TEST_METHOD(TestCCPadded);
     TEST_METHOD(TestIssueGithub1040CorruptedIncomingSysExIdeal);
+    TEST_METHOD(TestIssueGithub1040SysEx7SurvivesUsbSizedChunkedDelivery);
     TEST_METHOD(TestBasicMalformedSysex);
     TEST_METHOD(TestStatusByteTerminatesOpenSysEx7);
     TEST_METHOD(TestStatusByteTerminatesOpenSysEx7WithLateEndByte);
     TEST_METHOD(TestSysEx7StartWithPendingDataStartsNewMessage);
+    TEST_METHOD(TestSysEx7AbandonedMidMessageIsTerminated);
     
     //TEST_METHOD(TestLongSysEx7);
 
@@ -58,6 +60,14 @@ public:
         _In_ uint32_t const byteCount, 
         /*_In_ uint16_t const expectedMessageCount,*/
         _In_ std::vector<uint32_t> const expectedWords);
+
+    // Delivers the byte stream in separate SendMidiMessage calls, the way a driver
+    // hands up a burst of packets, and checks the SysEx payload survives intact.
+    void InternalTestSysEx7InChunks(
+        _In_ uint8_t const groupIndex,
+        _In_reads_bytes_(byteCount) uint8_t const bytes[],
+        _In_ uint32_t const byteCount,
+        _In_ std::vector<uint32_t> const chunkSizePattern);
 
     STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
     {
