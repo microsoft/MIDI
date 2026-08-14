@@ -9,20 +9,6 @@
 
 #include "stdafx.h"
 
-
-bool MidiReportingTests::ClassSetup()
-{
-    StartWinRTMTA();
-    return true;
-}
-
-bool MidiReportingTests::ClassCleanup()
-{
-    ShutdownWinRT();
-    return true;
-}
-
-
 void MidiReportingTests::TestEnumerateTransports()
 {
     auto transports = MidiReporting::GetInstalledTransportPlugins();
