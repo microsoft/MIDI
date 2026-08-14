@@ -16,11 +16,17 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
     {
         //MidiReporting() = default;
 
-        static collections::IVector<rpt::MidiServiceTransportPluginInfo> GetInstalledTransportPlugins() noexcept;
+        static collections::IVectorView<rpt::MidiServiceTransportPluginInfo> GetInstalledTransportPlugins() noexcept;
         //static collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
-        static collections::IVector<rpt::MidiServiceSessionInfo> GetActiveSessions() noexcept;
+        static collections::IVectorView<rpt::MidiServiceSessionInfo> GetActiveSessions() noexcept;
 
-        static collections::IVector<rpt::MidiServiceSessionInfo> FindAllSessionsWithOpenEndpoint(_In_ winrt::hstring const& endpointDeviceId, bool const includeRelatedMidi1Ports) noexcept
+        static collections::IVectorView<rpt::MidiServiceSessionInfo> FindAllSessionsWithMatchingOpenUmpEndpoint(_In_ winrt::hstring const& endpointDeviceId, bool const includeRelatedMidi1Ports) noexcept;
+        static collections::IVectorView<rpt::MidiServiceSessionInfo> FindAllSessionsWithMatchingOpenUmpEndpointOrMidi1Ports(_In_ collections::IVectorView<winrt::hstring> const& endpointsAndPorts) noexcept;
+
+    private:
+        static collections::IVectorView<rpt::MidiServiceSessionInfo> GetActiveSessionsInternal(_In_ collections::IVectorView<winrt::hstring> const& filterEndpointAndPortIds);
+
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::Reporting::factory_implementation
