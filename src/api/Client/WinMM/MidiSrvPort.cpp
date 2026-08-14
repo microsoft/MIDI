@@ -4,6 +4,7 @@
 #include "MidiSrvPort.h"
 
 #include <Feature_Servicing_MIDI2BsToUMPConv.h>
+#include <Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h>
 
 #define CALC_TICKS(pos) ((DWORD) (((pos) * 1000.0) / m_qpcFrequency))
 
@@ -52,7 +53,16 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
         TraceLoggingValue((int)flow, "MidiFlow"),
         TraceLoggingValue(flags, "flags"));
 
+    // CMidiXProc ORs the pipe's options into every send, so leaving WaitForSendComplete here
+    // makes it impossible for an individual send to opt out. SendLongMessage still asks for it
+    // per call, so SysEx keeps the pacing apps rely on.
     TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_WaitForSendComplete, MidiDataFormats_ByteStream, WINMM_APIID };
+
+    if (Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled())
+    {
+        transportCreationParams.MessageOptions = MessageOptionFlags_None;
+    }
+
     DWORD mmcssTaskId {0};
     LARGE_INTEGER qpc{ 0 };
 
@@ -131,15 +141,17 @@ _Use_decl_annotations_
 HRESULT
 CMidiPort::MidMessage(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
 {
-    //TraceLoggingWrite(
-    //    WdmAud2TelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingValue(msg, "msg"),
-    //    TraceLoggingValue(param1, "param1"),
-    //    TraceLoggingValue(param2, "param2"));
+#ifdef _DEBUG
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
+#endif
 
     switch(msg)
     {
@@ -167,17 +179,21 @@ CMidiPort::MidMessage(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::ModMessage(UINT msg, DWORD_PTR param1, DWORD_PTR /*param2*/)
+CMidiPort::ModMessage(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
 {
-    //TraceLoggingWrite(
-    //    WdmAud2TelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingValue(msg, "msg"),
-    //    TraceLoggingValue(param1, "param1"),
-    //    TraceLoggingValue(param2, "param2"));
+#ifdef _DEBUG
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
+#else
+    UNREFERENCED_PARAMETER(param2);
+#endif
 
     switch(msg)
     {
@@ -866,22 +882,32 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
                 messageSize = 3;
             }
 
-            //TraceLoggingWrite(
-            //    WdmAud2TelemetryProvider::Provider(),
-            //    MIDI_TRACE_EVENT_VERBOSE,
-            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Byte is status byte. Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingHexUInt32(midiMessage, "message"),
-            //    TraceLoggingUInt32(messageSize, "message size"),
-            //    TraceLoggingUInt64(timestamp, "timestamp")
-            //);
+#ifdef _DEBUG
+            TraceLoggingWrite(
+                WdmAud2TelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Byte is status byte. Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHexUInt32(midiMessage, "message"),
+                TraceLoggingUInt32(messageSize, "message size"),
+                TraceLoggingUInt64(timestamp, "timestamp")
+            );
+#endif
 
             // send the message to the transport
             // pass a timestamp of 0 to bypass scheduler
-            // For legacy compatibility purposes, always wait for the message send to complete
-            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, &midiMessage, messageSize, timestamp));
+            // Apps depend on the send wait to pace SysEx, but never did for performance data,
+            // and midiOutShortMsg only ever promised the message was accepted.
+            if (Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled())
+            {
+                RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_None, &midiMessage, messageSize, timestamp));
+            }
+            else
+            {
+                RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, &midiMessage, messageSize, timestamp));
+            }
         }
         else if (m_IsInRunningStatus)
         {
@@ -894,33 +920,44 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
                 messageSize = 2;
             }
 
-            //TraceLoggingWrite(
-            //    WdmAud2TelemetryProvider::Provider(),
-            //    MIDI_TRACE_EVENT_VERBOSE,
-            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"In running status. Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingHexUInt32(midiMessage, "message"),
-            //    TraceLoggingUInt32(messageSize, "message size"),
-            //    TraceLoggingUInt64(timestamp, "timestamp")
-            //);
+#ifdef _DEBUG
+            TraceLoggingWrite(
+                WdmAud2TelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"In running status. Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHexUInt32(midiMessage, "message"),
+                TraceLoggingUInt32(messageSize, "message size"),
+                TraceLoggingUInt64(timestamp, "timestamp")
+            );
+#endif
 
             // For legacy compatibility purposes, always wait for the message send to complete
-            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, &midiMessage, messageSize, timestamp));
+            if (Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled())
+            {
+                RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_None, &midiMessage, messageSize, timestamp));
+            }
+            else
+            {
+                RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, &midiMessage, messageSize, timestamp));
+            }
         }
         else
         {
-            //TraceLoggingWrite(
-            //    WdmAud2TelemetryProvider::Provider(),
-            //    MIDI_TRACE_EVENT_ERROR,
-            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Invalid message. Not in running status and not a status byte.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingHexUInt32(midiMessage, "message"),
-            //    TraceLoggingUInt64(timestamp, "timestamp")
-            //);
+#ifdef _DEBUG
+            TraceLoggingWrite(
+                WdmAud2TelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Invalid message. Not in running status and not a status byte.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHexUInt32(midiMessage, "message"),
+                TraceLoggingUInt64(timestamp, "timestamp")
+            );
+#endif
 
             // no status byte, and running status isn't possible, this is an error.
             RETURN_IF_FAILED(E_INVALIDARG);
@@ -988,15 +1025,17 @@ _Use_decl_annotations_
 void
 CMidiPort::WinmmClientCallback(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
 {
-    //TraceLoggingWrite(
-    //    WdmAud2TelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingValue(msg, "msg"),
-    //    TraceLoggingValue(param1, "param1"),
-    //    TraceLoggingValue(param2, "param2"));
+#ifdef _DEBUG
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
+#endif
 
     DriverCallback(m_OpenDesc.dwCallback,
                     HIWORD(m_Flags),
