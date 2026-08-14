@@ -28,6 +28,7 @@
 #include "MidiXProc.h"
 #include "ump_iterator.h"
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
+#include "Feature_Servicing_MIDI2XProcBatchedReads.h"
 
 // A worker holding an IRP that a driver refuses to release can never finish terminating.
 #define MIDI_XPROC_WORKER_EXIT_TIMEOUT 10000
@@ -1037,6 +1038,253 @@ CMidiXProc::ProcessMidiIn()
     return S_OK;
 }
 
+HRESULT
+CMidiXProc::ProcessMidiInBatched()
+{
+    // Reused across the life of the worker so the batching path does not allocate per pass.
+    std::vector<BYTE> batchBuffer;
+    batchBuffer.reserve(MAXIMUM_LOOPED_BYTESTREAM_DATASIZE);
+    do
+    {
+        // wait on write event or exit event
+        HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiIn->WriteEvent.get() };
+        DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+        if (ret == (WAIT_OBJECT_0 + 1))
+        {
+            PMEMORY_MAPPED_REGISTERS registers = &(m_MidiIn->Registers);
+            PMEMORY_MAPPED_DATA mappedData = &(m_MidiIn->Data);
+
+            do
+            {
+                // if we're processing a backlog of data and recieve a thread termination,
+                // stop processing data
+                ret = WaitForSingleObject(m_ThreadTerminateEvent.get(), 0);
+                if (ret == WAIT_OBJECT_0)
+                {
+                    break;
+                }
+                else
+                {
+                    // we're doing a pass on the buffer, so safe to reset the event right now, no chance
+                    // of missing anything if we reset it before we retrieve the current positions.
+                    m_MidiIn->WriteEvent.ResetEvent();
+
+                    // the read position is the last position we have read,
+                    // the write position is the last position written to
+                    ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
+                    ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
+                    ULONG bytesAvailable{ 0 };
+
+                    if (readPosition <= writePosition)
+                    {
+                        bytesAvailable = writePosition - readPosition;
+                    }
+                    else
+                    {
+                        bytesAvailable = mappedData->BufferSize - (readPosition - writePosition);
+                    }
+
+                    if (0 == bytesAvailable ||
+                        bytesAvailable < sizeof(LOOPEDDATAFORMAT))
+                    {
+                        // nothing to do, need at least the LOOPEDDATAFORMAT
+                        // to move forward. Driver will set the event when the
+                        // write position advances.
+                        break;
+                    }
+
+                    // Take everything already queued rather than re-serializing it one message at a
+                    // time. Nothing is ever waited for, so a lone message still goes out immediately.
+                    // Only messages sharing a timestamp are combined, which leaves scheduling intact.
+                    //
+                    // Single byte messages such as clock become a whole 4 byte UMP word, so a batch
+                    // can expand 4x through bytestream to UMP conversion. Bound the batch by what
+                    // still fits MAXIMUM_LOOPED_UMP_DATASIZE after that expansion. A single message
+                    // larger than this is always taken on its own, otherwise it would never be read.
+                    UINT32 const maximumBatchedDataSize = MAXIMUM_LOOPED_UMP_DATASIZE / 4;
+
+                    ULONG scanPosition = readPosition;
+                    ULONG scanAvailable = bytesAvailable;
+                    UINT32 batchedDataSize{ 0 };
+                    UINT32 messageCount{ 0 };
+                    LONGLONG batchPosition{ 0 };
+                    ULONG newReadPosition = readPosition;
+
+                    while (scanAvailable >= sizeof(LOOPEDDATAFORMAT))
+                    {
+                        PLOOPEDDATAFORMAT scanHeader = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + scanPosition);
+                        UINT32 scanDataSize = scanHeader->ByteCount;
+                        UINT32 scanTotalSize = scanDataSize + sizeof(LOOPEDDATAFORMAT);
+
+                        if (scanAvailable < scanTotalSize)
+                        {
+                            // the full contents of this message are not here yet
+                            break;
+                        }
+
+                        if (messageCount == 0)
+                        {
+                            batchPosition = scanHeader->Position;
+                        }
+                        else if (scanHeader->Position != batchPosition)
+                        {
+                            break;
+                        }
+
+                        if (messageCount > 0)
+                        {
+                            if ((batchedDataSize + scanDataSize) > maximumBatchedDataSize)
+                            {
+                                break;
+                            }
+                        }
+
+                        batchedDataSize += scanDataSize;
+                        messageCount++;
+                        scanPosition = (scanPosition + scanTotalSize) % mappedData->BufferSize;
+                        scanAvailable -= scanTotalSize;
+                        newReadPosition = scanPosition;
+                    }
+
+                    if (messageCount == 0)
+                    {
+                        // not enough of the next message has arrived yet, wait for more
+                        break;
+                    }
+
+                    PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + readPosition);
+                    PVOID data = (PVOID)(((BYTE*)header) + sizeof(LOOPEDDATAFORMAT));
+                    UINT32 dataSize = header->ByteCount;
+                    HRESULT hr = S_OK;
+
+                    if (messageCount > 1)
+                    {
+                        batchBuffer.resize(batchedDataSize);
+
+                        ULONG copyPosition = readPosition;
+                        UINT32 copiedBytes{ 0 };
+
+                        for (UINT32 messageIndex = 0; messageIndex < messageCount; messageIndex++)
+                        {
+                            PLOOPEDDATAFORMAT copyHeader = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + copyPosition);
+
+                            memcpy(batchBuffer.data() + copiedBytes,
+                                ((BYTE*)copyHeader) + sizeof(LOOPEDDATAFORMAT),
+                                copyHeader->ByteCount);
+
+                            copiedBytes += copyHeader->ByteCount;
+                            copyPosition = (copyPosition + copyHeader->ByteCount + sizeof(LOOPEDDATAFORMAT)) % mappedData->BufferSize;
+                        }
+
+                        data = batchBuffer.data();
+                        dataSize = batchedDataSize;
+                    }
+
+#ifdef _DEBUG
+                    // Debug builds only. Logging message data in a shipping binary is a privacy violation.
+                    if (m_MidiIn->DataFormat == MidiDataFormats_UMP)
+                    {
+                        TraceLoggingWrite(
+                            MidiXProcTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Read from cross-process queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(dataSize / sizeof(uint32_t)), "words"),
+                            TraceLoggingUInt32(dataSize, "length bytes"),
+                            TraceLoggingUInt32(messageCount, "batched message count"),
+                            TraceLoggingUInt64(static_cast<uint64_t>(batchPosition), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+                        );
+                    }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            MidiXProcTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Read from cross-process queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(dataSize), "bytes"),
+                            TraceLoggingUInt32(dataSize, "length bytes"),
+                            TraceLoggingUInt32(messageCount, "batched message count"),
+                            TraceLoggingUInt64(static_cast<uint64_t>(batchPosition), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+                        );
+                    }
+#endif
+
+                    if (m_MidiInCallback)
+                    {
+                        LONGLONG callbackPosition = batchPosition;
+
+                        // if a position provided is nonzero, use it, otherwise use the current QPC
+                        if (callbackPosition == 0 && m_OverwriteZeroTimestamp)
+                        {
+                            LARGE_INTEGER qpc{ 0 };
+                            QueryPerformanceCounter(&qpc);
+                            callbackPosition = qpc.QuadPart;
+                        }
+
+                        hr = m_MidiInCallback->Callback(m_MidiIn->MessageOptions, data, dataSize, callbackPosition, m_MidiInCallbackContext);
+                    }
+
+                    if (FAILED(hr) && (MessageOptionFlags_CallbackRetry == (m_MidiIn->MessageOptions & MessageOptionFlags_CallbackRetry)))
+                    {
+                        // Sending the message failed and there was a request to retry, 
+                        // Wait and retry sending the failed message. The read position has not moved,
+                        // so the whole batch is retried.
+                        ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_CALLBACK_RETRY_TIMEOUT);
+                        if (ret == WAIT_OBJECT_0)
+                        {
+                            // thread terminated, exit.
+                            break;
+                        }
+
+                        TraceLoggingWrite(
+                            MidiXProcTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"MidiXProc callback failed, buffer retrying.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingHResult(hr, "hr")
+                        );
+                    }
+                    else
+                    {
+                        if (FAILED(hr))
+                        {
+                            m_TotalDroppedBuffers += messageCount;
+                            TraceLoggingWrite(
+                                MidiXProcTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"MidiXProc callback failed, buffer dropped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingHResult(hr, "hr"),
+                                TraceLoggingValue(m_TotalDroppedBuffers, "TotalDroppedBuffers")
+                            );
+                        }
+
+                        // advance past everything delivered in this pass
+                        InterlockedExchange((LONG*)registers->ReadPosition, newReadPosition);
+                        RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiIn->ReadEvent.get()));
+                    }
+                }
+            } while (TRUE);
+        }
+        else
+        {
+            // exit event or wait failed, exit the thread.
+            break;
+        }
+    } while (TRUE);
+
+    return S_OK;
+}
+
 _Use_decl_annotations_
 DWORD WINAPI
 CMidiXProc::MidiInWorker(
@@ -1057,7 +1305,16 @@ CMidiXProc::MidiInWorker(
             // mmcss is configured, so initialization can
             // retrieve the task id.
             This->m_ThreadStartedEvent.SetEvent();
-            This->ProcessMidiIn();
+
+            if (Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled())
+            {
+                This->ProcessMidiInBatched();
+            }
+            else
+            {
+                This->ProcessMidiIn();
+            }
+
             DisableMmcss(This->m_MmcssHandle);
         }
     }

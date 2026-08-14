@@ -143,6 +143,8 @@ private:
 
     HRESULT ProcessMidiIn();
 
+    HRESULT ProcessMidiInBatched();
+
     HRESULT WaitForSendComplete(_In_ ULONG,
                                      _In_ ULONG,
                                      _In_ UINT32 );
