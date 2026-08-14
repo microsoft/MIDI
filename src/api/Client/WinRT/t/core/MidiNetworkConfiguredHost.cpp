@@ -6,19 +6,11 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "..\..\shared\midi_sdk_idl_defs.h"
-import "MidiApiContracts.idl";
+#include "pch.h"
+#include "MidiNetworkConfiguredHost.h"
+#include "Transports.Network.MidiNetworkConfiguredHost.g.cpp"
 
-
-
-
-namespace Windows.Devices.Midi2.Transports.Network
+namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
-    [contract(MidiTransportsNetworkApiContract, 1)]
-    enum MidiNetworkClientConnectErrorCode
-    {
-        NoErrorInformationAvailable = 0,
 
-
-    };
 }

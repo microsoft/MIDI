@@ -536,6 +536,10 @@
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiNetworkConfiguredClient.h" />
+    <ClInclude Include="MidiNetworkConfiguredHost.h" />
+    <ClInclude Include="MidiNetworkRemoteClientApprovalConfig.h" />
+    <ClInclude Include="MidiNetworkRemoteClientApprovalResponse.h" />
     <ClInclude Include="winrt_devpkey_util.h" />
     <ClInclude Include="MidiNetworkClientConnectResponse.h">
       <DependentUpon>MidiNetworkClientConnectResponse.idl</DependentUpon>
@@ -903,6 +907,10 @@
     <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiNetworkConfiguredClient.cpp" />
+    <ClCompile Include="MidiNetworkConfiguredHost.cpp" />
+    <ClCompile Include="MidiNetworkRemoteClientApprovalConfig.cpp" />
+    <ClCompile Include="MidiNetworkRemoteClientApprovalResponse.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />

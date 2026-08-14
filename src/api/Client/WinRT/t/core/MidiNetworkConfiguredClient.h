@@ -1,0 +1,86 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+#include "Transports.Network.MidiNetworkConfiguredClient.g.h"
+
+namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
+{
+    struct MidiNetworkConfiguredClient : MidiNetworkConfiguredClientT<MidiNetworkConfiguredClient>
+    {
+        MidiNetworkConfiguredClient() = default;
+
+        winrt::guid ClientId() const noexcept { return m_clientId; }
+        winrt::guid HostId() const noexcept { return m_hostId; }
+
+        bool IsSessionActive() const noexcept { return m_isSessionActive; }
+
+        winrt::hstring ConnectedRemoteAddress() const noexcept { return m_connectedRemoteAddress; }
+        winrt::hstring ConnectedRemotePort() const noexcept { return m_connectedRemotePort; }
+        winrt::hstring ConnectedLocalAddress() const noexcept { return m_connectedLocalAddress; }
+        winrt::hstring ConnectedLocalPort() const noexcept { return m_connectedLocalPort; }
+
+        winrt::hstring  EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+
+        uint32_t RetransmitCount() const noexcept { return m_retransmitCount; }
+        uint32_t RetransmitRequestCount() const noexcept { return m_retransmitRequestCount; }
+        uint64_t CurrentLatencyTicks() const noexcept { return m_currentLatencyTicks; }
+        uint64_t TotalCountNetworkPacketsSent() const noexcept { return m_totalCountNetworkPacketsSent; }
+        uint64_t TotalCountNetworkPacketsReceived() const noexcept { return m_totalCountNetworkPacketsReceived; }
+
+
+        void InternalInitialize(
+            winrt::guid const& clientId,
+            winrt::guid const& hostId,
+            bool const isSessionActive,
+            winrt::hstring const& connectedRemoteAddress,
+            winrt::hstring const& connectedRemotePort,
+            winrt::hstring const& connectedLocalAddress,
+            winrt::hstring const& connectedLocalPort,
+            winrt::hstring const& endpointDeviceId,
+
+            uint64_t const currentLatencyTicks,
+            uint32_t const retransmitCount,
+            uint32_t const retransmitRequestCount,
+
+            uint64_t const totalCountNetworkPacketsSent,
+            uint64_t const totalCountNetworkPacketsReceived
+        ) noexcept
+        {
+            m_clientId = clientId;
+            m_hostId = hostId;
+            m_isSessionActive = isSessionActive;
+            m_connectedRemoteAddress = connectedRemoteAddress;
+            m_connectedRemotePort = connectedRemotePort;
+            m_connectedLocalAddress = connectedLocalAddress;
+            m_connectedLocalPort = connectedLocalPort;
+            m_endpointDeviceId = endpointDeviceId;
+            m_currentLatencyTicks = currentLatencyTicks;
+            m_retransmitCount = retransmitCount;
+            m_retransmitRequestCount = retransmitRequestCount;
+            m_totalCountNetworkPacketsSent = totalCountNetworkPacketsSent;
+            m_totalCountNetworkPacketsReceived = totalCountNetworkPacketsReceived;
+        }
+
+    private:
+        winrt::guid m_clientId{};
+        winrt::guid m_hostId{};
+        bool m_isSessionActive{ false };
+        winrt::hstring m_connectedRemoteAddress{};
+        winrt::hstring m_connectedRemotePort{};
+        winrt::hstring m_connectedLocalAddress{};
+        winrt::hstring m_connectedLocalPort{};
+        winrt::hstring m_endpointDeviceId{};
+
+        uint32_t m_retransmitCount{ 0 };
+        uint32_t m_retransmitRequestCount{ 0 };
+        uint64_t m_currentLatencyTicks{ 0 };
+        uint64_t m_totalCountNetworkPacketsSent{ 0 };
+        uint64_t m_totalCountNetworkPacketsReceived{ 0 };
+    };
+}

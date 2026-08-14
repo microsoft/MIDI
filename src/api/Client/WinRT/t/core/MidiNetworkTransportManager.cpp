@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -34,6 +34,9 @@
 #include "MidiNetworkConfiguredHost.h"
 #include "MidiNetworkConfiguredClient.h"
 
+#include "MidiNetworkRemoteClientApprovalConfig.h"
+#include "MidiNetworkRemoteClientApprovalResponse.h"
+
 //#include <pplawait.h>
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
@@ -55,7 +58,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
     _Use_decl_annotations_ 
-    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StartNetworkHostAsync(winrt::hstring const& hostId)
+    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StartNetworkHostAsync(winrt::guid const& hostId)
     {
         auto result = winrt::make_self<MidiNetworkHostUpdateResponse>();
         result->InternalSetHostId(hostId);
@@ -67,7 +70,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             command.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST);
             command.Arguments().Insert(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
-                hostId);
+                winrt::to_hstring(hostId));
 
             co_await winrt::resume_background();
 
@@ -128,7 +131,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     }
     
     _Use_decl_annotations_ 
-    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StopNetworkHostAsync(winrt::hstring const& hostId)
+    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StopNetworkHostAsync(winrt::guid const& hostId)
     {
         auto result = winrt::make_self<MidiNetworkHostUpdateResponse>();
         result->InternalSetHostId(hostId);
@@ -140,7 +143,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             command.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST);
             command.Arguments().Insert(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
-                hostId);
+                winrt::to_hstring(hostId));
 
             co_await winrt::resume_background();
 
@@ -229,7 +232,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                             host->InternalInitialize(
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_IS_ENABLED_KEY, false),
-                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY, L""),
+                                winrt::guid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY, L"")),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY, L""),
@@ -315,7 +318,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                             auto client = winrt::make_self<MidiNetworkConfiguredClient>();
 
                             client->InternalInitialize(
-                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY, L""),
+                                winrt::guid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY, L"")),
+                                winrt::guid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_HOST_ID_KEY, L"")),
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY, false),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY, L""),
@@ -381,6 +385,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     collections::IVectorView<network::MidiNetworkPendingRemoteClient> MidiNetworkTransportManager::GetPendingRemoteClients() noexcept
     {
 
+        // TODO
+
+        return nullptr;     // temp
 
     }
 
@@ -584,10 +591,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         {
             svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
 
+            co_await resume_background();
+
+
             // TODO: Set verb based on approvalConfig.ApprovalAction()
 
             cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT);
             //cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, winrt::to_hstring(approvalConfig.ClientId()));
+
+
 
             // TODO: Additional arguments
 
@@ -602,16 +614,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
 
-            auto response = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
 
-            if (response.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
                 response->InternalSetSuccess();
             }
             else
             {
                 // TODO: Get actual error code
-                response->InternalSetError(network::MidiNetworkRemoteClientApprovalErrorCode::NoErrorInformationAvailable, response.ServiceErrorMessage());
+                response->InternalSetError(static_cast<network::MidiNetworkRemoteClientApprovalErrorCode>(serviceResponse.ServiceErrorCode()), serviceResponse.ServiceErrorMessage());
             }
 
             co_return *response;

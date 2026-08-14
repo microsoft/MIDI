@@ -24,6 +24,18 @@
     <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkConfiguredHost.cpp">
+      <Filter>SDK\Transports\Network\Host</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkConfiguredClient.cpp">
+      <Filter>SDK\Transports\Network\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientApprovalConfig.cpp">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientApprovalResponse.cpp">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -49,6 +61,18 @@
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClInclude>
     <ClInclude Include="midi_network_defs.h" />
+    <ClInclude Include="MidiNetworkConfiguredHost.h">
+      <Filter>SDK\Transports\Network\Host</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkConfiguredClient.h">
+      <Filter>SDK\Transports\Network\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientApprovalConfig.h">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientApprovalResponse.h">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">

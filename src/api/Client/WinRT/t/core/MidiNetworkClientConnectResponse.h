@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -18,28 +18,28 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::guid ClientId() const noexcept { return m_clientId; }
         bool Success() const noexcept { return m_success; }
         network::MidiNetworkClientConnectErrorCode ErrorCode() const noexcept { return m_errorCode; }
-        winrt::hstring ErrorMessage() const noexcept { return m_errorInformation; }
+        winrt::hstring ErrorMessage() const noexcept { return m_errorMessage; }
 
         void InternalSetClientId(_In_ winrt::guid const& value) noexcept { m_clientId = value; }
-        void InternalSetError(_In_ network::MidiNetworkClientConnectErrorCode const errorCode, _In_ winrt::hstring const& errorInformation) noexcept
+        void InternalSetError(_In_ network::MidiNetworkClientConnectErrorCode const errorCode, _In_ winrt::hstring const& errorMessage) noexcept
         {
             m_success = false;
             m_errorCode = errorCode;
-            m_errorInformation = errorInformation;
+            m_errorMessage = errorMessage;
         }
 
         void InternalSetSuccess() noexcept 
         { 
             m_success = true; 
             m_errorCode = network::MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable; 
-            m_errorInformation = L""; 
+            m_errorMessage = L"";
         }
 
     private:
         winrt::guid m_clientId{};
         bool m_success{ false };
         network::MidiNetworkClientConnectErrorCode m_errorCode{};
-        winrt::hstring m_errorInformation{};
+        winrt::hstring m_errorMessage{};
 
 
     };

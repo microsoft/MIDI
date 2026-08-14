@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -20,8 +20,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
         json::JsonObject  ConfigJson() const noexcept;
 
-        winrt::hstring Id() const noexcept { return m_id; }
-        void Id(_In_ winrt::hstring const& value) { m_id = value; }
+        winrt::guid HostId() const noexcept { return m_id; }
+        void HostId(_In_ winrt::guid const& value) { m_id = value; }
 
         winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ winrt::hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
@@ -51,7 +51,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
     private:
-        winrt::hstring m_id{};
+        winrt::guid m_id{};
         winrt::hstring m_name{};
         winrt::hstring m_serviceInstanceName{};
         winrt::hstring m_productInstanceId{};

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -12,13 +12,13 @@
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
-    hstring MidiNetworkAdvertisedHostUpdatedEventArgs::HostId()
+    winrt::hstring MidiNetworkAdvertisedHostUpdatedEventArgs::HostDeviceId()
     {
-        throw hresult_not_implemented();
+        return m_id;
     }
     winrt::Windows::Devices::Enumeration::DeviceInformationUpdate MidiNetworkAdvertisedHostUpdatedEventArgs::DeviceInformationUpdate()
     {
-        throw hresult_not_implemented();
+        return m_deviceInformationUpdate;
     }
 
     _Use_decl_annotations_
@@ -27,8 +27,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         enumeration::DeviceInformationUpdate const& args) noexcept
     {
         m_id = id;
-
-        UNREFERENCED_PARAMETER(args);
+        m_deviceInformationUpdate = args;
     }
 
 }
