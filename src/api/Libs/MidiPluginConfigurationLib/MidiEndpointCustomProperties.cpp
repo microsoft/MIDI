@@ -450,19 +450,7 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
     }
     else
     {
-        // this writes the wrong property, but this is what shipped
-        if (RecommendedControlChangeIntervalMilliseconds != 0)
-        {
-            destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
-        }
-        else
-        {
-            destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
-        }
-
-        // supports MPE (NOTE: This is the wrong property, but this is what was shipped)
+        // cc automation interval
         if (SupportsMidiPolyphonicExpression)
         {
             destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
@@ -474,9 +462,18 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
                     DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
         }
 
-
+        // this writes the wrong property, but this is what shipped
+        if (RecommendedControlChangeIntervalMilliseconds != 0)
+        {
+            destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
+        }
+        else
+        {
+            destination.push_back({ {PKEY_MIDI_RequiresNoteOffTranslation, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
+        }
     }
-
 
     if (Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled())
     {
@@ -484,8 +481,6 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
         destination.push_back({ {PKEY_MIDI_MidiOutCustomLatencyTicks, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_UINT64, sizeof(uint64_t), (PVOID)&OutgoingLatencyTicks });
     }
-
-
 
     // naming approach
     destination.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
