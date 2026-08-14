@@ -149,7 +149,7 @@ private:
     HRESULT ProcessFilterDeviceInterfaceRemoved(_In_ DeviceInformationUpdate);
     HRESULT ProcessFilterDeviceInterfaceUpdated(_In_ DeviceInformationUpdate);
 
-    void QueueInterfaceChange(KsaInterfaceChange3&& change);
+    void QueueInterfaceChange(_In_ KsaInterfaceChange3&& change);
     bool InterfaceChangeQueueIsEmpty();
     size_t InterfaceChangeQueueDepth();
     void DrainInterfaceChangeQueue(_In_ std::stop_token const& token);
