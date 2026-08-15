@@ -107,6 +107,12 @@ namespace NetworkMidiTest
 
     ServiceConfigResult SendNetworkTransportConfig(std::wstring const& configJson)
     {
+        return SendRawServiceConfig(WrapForTransport(configJson));
+    }
+
+
+    ServiceConfigResult SendRawServiceConfig(std::wstring const& rawPayload)
+    {
         ServiceConfigResult result{ };
 
         // declared first so it outlives every COM pointer below
@@ -154,9 +160,7 @@ namespace NetworkMidiTest
 
             wil::unique_cotaskmem_string responseString;
 
-            auto wrapped = WrapForTransport(configJson);
-
-            auto updateResult = configManager->UpdateConfiguration(wrapped.c_str(), responseString.put());
+            auto updateResult = configManager->UpdateConfiguration(rawPayload.c_str(), responseString.put());
 
             result.CallSucceeded = SUCCEEDED(updateResult);
 
@@ -316,6 +320,33 @@ namespace NetworkMidiTest
     {
         return SendNetworkTransportConfig(
             L"{\"transportCommand\":{\"commandName\":\"enumerateHosts\"}}");
+    }
+
+
+    std::optional<size_t> CountConfiguredHosts()
+    {
+        auto result = EnumerateHosts();
+
+        if (!result.IsSuccess())
+        {
+            return std::nullopt;
+        }
+
+        // Counted by occurrences of the per-host key rather than by parsing, for the same
+        // reason the success check above is a substring test: the response shape belongs to
+        // the transport, and reusing its parser would stop this being an independent check.
+        size_t count{ 0 };
+        size_t position{ 0 };
+
+        const std::wstring hostKey{ L"\"entryIdentifier\"" };
+
+        while ((position = result.ResponseJson.find(hostKey, position)) != std::wstring::npos)
+        {
+            count++;
+            position += hostKey.length();
+        }
+
+        return count;
     }
 
 

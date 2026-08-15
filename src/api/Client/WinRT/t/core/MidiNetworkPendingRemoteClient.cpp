@@ -6,18 +6,10 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "..\..\shared\midi_sdk_idl_defs.h"
-import "MidiApiContracts.idl";
+#include "pch.h"
+#include "MidiNetworkPendingRemoteClient.h"
+#include "Transports.Network.MidiNetworkPendingRemoteClient.g.cpp"
 
-
-
-namespace Windows.Devices.Midi2.Transports.Network
+namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
-    [contract(MidiTransportsNetworkApiContract, 1)]
-    enum MidiNetworkHostConnectionPolicy
-    {
-        AllowAllConnections = 0,
-        AllowFromIpList,
-        AllowFromIpRange,
-    };
 }

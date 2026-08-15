@@ -101,34 +101,56 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     }
 
 
-    void MidiNetworkAdvertisedHostWatcher::Start()
+    void MidiNetworkAdvertisedHostWatcher::Start() noexcept
     {
-        m_enumeratedHosts.Clear();
-
-        if (m_watcher)
+        try
         {
-            m_watcher.Start();
+            m_enumeratedHosts.Clear();
+
+            if (m_watcher)
+            {
+                m_watcher.Start();
+            }
+        }
+        catch (...)
+        {
+            // Start throws if the watcher is already running or was aborted. Neither is worth
+            // terminating the caller over, and Status reports the real state.
+            LOG_IF_FAILED(E_FAIL);
         }
     }
-    void MidiNetworkAdvertisedHostWatcher::Stop()
+
+    void MidiNetworkAdvertisedHostWatcher::Stop() noexcept
     {
-        if (m_watcher)
+        try
         {
-            m_watcher.Stop();
+            if (m_watcher)
+            {
+                m_watcher.Stop();
+            }
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
         }
     }
 
 
-    enumeration::DeviceWatcherStatus MidiNetworkAdvertisedHostWatcher::Status()
+    enumeration::DeviceWatcherStatus MidiNetworkAdvertisedHostWatcher::Status() noexcept
     {
-        if (m_watcher)
+        try
         {
-            return m_watcher.Status();
+            if (m_watcher)
+            {
+                return m_watcher.Status();
+            }
         }
-        else
+        catch (...)
         {
-            return enumeration::DeviceWatcherStatus::Aborted;
+            LOG_IF_FAILED(E_FAIL);
         }
+
+        return enumeration::DeviceWatcherStatus::Aborted;
     }
 
     _Use_decl_annotations_

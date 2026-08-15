@@ -12,11 +12,11 @@
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
-    winrt::hstring MidiNetworkAdvertisedHostUpdatedEventArgs::HostDeviceId()
+    winrt::hstring MidiNetworkAdvertisedHostUpdatedEventArgs::HostDeviceId() noexcept
     {
         return m_id;
     }
-    winrt::Windows::Devices::Enumeration::DeviceInformationUpdate MidiNetworkAdvertisedHostUpdatedEventArgs::DeviceInformationUpdate()
+    winrt::Windows::Devices::Enumeration::DeviceInformationUpdate MidiNetworkAdvertisedHostUpdatedEventArgs::DeviceInformationUpdate() noexcept
     {
         return m_deviceInformationUpdate;
     }

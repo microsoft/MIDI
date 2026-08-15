@@ -16,10 +16,10 @@ import "MidiNetworkAdvertisedHost.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostAddedEventArgs")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostAddedEventArgs", UUID_IMidiNetworkAdvertisedHostAddedEventArgs)]
     runtimeclass MidiNetworkAdvertisedHostAddedEventArgs
     {
-        MidiNetworkAdvertisedHost AddedHost{ get; };
+        [noexcept] MidiNetworkAdvertisedHost AddedHost{ get; };
     }
 }
 

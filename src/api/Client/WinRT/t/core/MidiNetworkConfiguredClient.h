@@ -35,21 +35,21 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
         void InternalInitialize(
-            winrt::guid const& clientId,
-            winrt::guid const& hostId,
-            bool const isSessionActive,
-            winrt::hstring const& connectedRemoteAddress,
-            winrt::hstring const& connectedRemotePort,
-            winrt::hstring const& connectedLocalAddress,
-            winrt::hstring const& connectedLocalPort,
-            winrt::hstring const& endpointDeviceId,
+            _In_ winrt::guid const& clientId,
+            _In_ winrt::guid const& hostId,
+            _In_ bool const isSessionActive,
+            _In_ winrt::hstring const& connectedRemoteAddress,
+            _In_ winrt::hstring const& connectedRemotePort,
+            _In_ winrt::hstring const& connectedLocalAddress,
+            _In_ winrt::hstring const& connectedLocalPort,
+            _In_ winrt::hstring const& endpointDeviceId,
 
-            uint64_t const currentLatencyTicks,
-            uint32_t const retransmitCount,
-            uint32_t const retransmitRequestCount,
+            _In_ uint64_t const currentLatencyTicks,
+            _In_ uint32_t const retransmitCount,
+            _In_ uint32_t const retransmitRequestCount,
 
-            uint64_t const totalCountNetworkPacketsSent,
-            uint64_t const totalCountNetworkPacketsReceived
+            _In_ uint64_t const totalCountNetworkPacketsSent,
+            _In_ uint64_t const totalCountNetworkPacketsReceived
         ) noexcept
         {
             m_clientId = clientId;

@@ -9,6 +9,8 @@
 #include "stdafx.h"
 #include <filesystem>
 
+#include "Feature_Servicing_MIDI2ServiceConfigJsonHardening.h"
+
 #define SAFE_COTASKMEMFREE(p) \
     if (NULL != p) { \
         CoTaskMemFree(p); \
@@ -237,6 +239,75 @@ HRESULT MidiSrvDestroyClient(
 }
 
 
+// Net-new. The original below has several calls which throw on hostile input, and it is an RPC
+// entry point with no exception containment, so a malformed configuration payload took the
+// whole service down with a fail-fast. Everything here is contained, and every JSON node is
+// type-checked before it is read.
+HRESULT
+MidiSrvUpdateConfigurationHardened(
+    _In_ LPCWSTR configurationJson,
+    _Out_ LPWSTR* responseJson) noexcept
+{
+    try
+    {
+        std::shared_ptr<CMidiConfigurationManager> configurationManager;
+        std::shared_ptr<CMidiDeviceManager> deviceManager;
+
+        auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+        RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configurationManager));
+        RETURN_IF_FAILED(g_MidiService->GetDeviceManager(deviceManager));
+
+        auto configEntries = configurationManager->GetTransportSettingsFromJsonStringHardened(configurationJson);
+
+        if (configEntries.size() != 1)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(nullptr, "this"),
+                TraceLoggingWideString(L"Only one config entry allowed per call", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            return E_FAIL;
+        }
+
+        LPWSTR response{ nullptr };
+
+        RETURN_IF_FAILED(deviceManager->UpdateTransportConfiguration(
+            configEntries.begin()->first,
+            configEntries.begin()->second.c_str(),
+            &response));
+
+        RETURN_HR_IF_NULL(E_UNEXPECTED, response);
+
+        json::JsonObject responseObject{ nullptr };
+
+        // a transport which answers with something unparseable must not be able to crash us
+        if (!json::JsonObject::TryParse(response, responseObject))
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(nullptr, "this"),
+                TraceLoggingWideString(L"Transport response was not valid JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            return E_UNEXPECTED;
+        }
+
+        LOG_IF_FAILED(StringifyJsonToOutputParameter(responseObject, responseJson));
+
+        return S_OK;
+    }
+    CATCH_RETURN();
+}
+
+
 HRESULT 
 MidiSrvUpdateConfiguration(
     /* [in] */ handle_t bindingHandle,
@@ -260,6 +331,11 @@ MidiSrvUpdateConfiguration(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(configurationJson, "JSON")
     );
+
+    if (Feature_Servicing_MIDI2ServiceConfigJsonHardening::IsEnabled())
+    {
+        return MidiSrvUpdateConfigurationHardened(configurationJson, responseJson);
+    }
 
     // Send it to the configuration manager and get it broken apart
 

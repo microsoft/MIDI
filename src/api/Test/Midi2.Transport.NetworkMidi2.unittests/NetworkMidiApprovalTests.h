@@ -58,4 +58,10 @@ public:
     // stopHost keeps the entry and its name; removeHost is what gives the name back.
     TEST_METHOD(RemovedHostReleasesItsServiceInstanceName);
     TEST_METHOD(RemovingAnUnknownHostReportsFailure);
+
+    // Removing a host straight after creating it races the endpoint creator thread, which
+    // used to register the host after the entry had already been taken away. The host was
+    // then unreachable and held its socket and service instance name until a restart. Several
+    // tests in this file create and remove without waiting, so this leaked silently.
+    TEST_METHOD(CreateThenImmediatelyRemoveLeavesNoHostBehind);
 };

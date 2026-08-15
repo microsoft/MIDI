@@ -95,9 +95,6 @@
     <Midl Include="MidiNetworkConfiguredHost.idl">
       <Filter>SDK</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl">
-      <Filter>SDK</Filter>
-    </Midl>
     <Midl Include="MidiNetworkHostCreationConfig.idl">
       <Filter>SDK</Filter>
     </Midl>

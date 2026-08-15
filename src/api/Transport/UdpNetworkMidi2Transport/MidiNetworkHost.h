@@ -31,7 +31,7 @@ struct MidiNetworkHostDefinition
 {
     bool Created{ false };
 
-    winrt::hstring EntryIdentifier;         // internal 
+    winrt::guid EntryIdentifier;            // internal
 
     bool UseAutomaticPortAllocation{ true };
     winrt::hstring Port;

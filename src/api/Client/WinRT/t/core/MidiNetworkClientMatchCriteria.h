@@ -20,7 +20,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
         winrt::hstring DirectHostNameOrIPAddress() const noexcept { return m_directAddress; }
-        void DirectHostNameOrIPAddress(_In_ winrt::hstring const& value) { m_directAddress = value; }
+        void DirectHostNameOrIPAddress(_In_ winrt::hstring const& value) noexcept { m_directAddress = value; }
 
         uint16_t DirectPort() const noexcept { return m_port; }
         void DirectPort(_In_ uint16_t value) noexcept { m_port = value; }

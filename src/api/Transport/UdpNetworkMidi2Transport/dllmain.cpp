@@ -6,9 +6,9 @@ CMidi2NetworkMidiTransportModule _AtlModule;
 
 extern "C" BOOL WINAPI
 DllMain(
-    HINSTANCE /* hInstance */,
-    DWORD Reason,
-    LPVOID Reserved
+    _In_ HINSTANCE /* hInstance */,
+    _In_ DWORD Reason,
+    _In_opt_ LPVOID Reserved
 )
 {
     if (Reason == DLL_PROCESS_ATTACH)

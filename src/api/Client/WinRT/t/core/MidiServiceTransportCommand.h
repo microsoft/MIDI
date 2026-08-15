@@ -25,7 +25,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         MidiServiceTransportCommand(
             _In_ winrt::guid const& transportId, 
             _In_ winrt::hstring const& verb, 
-            collections::IMap<winrt::hstring, winrt::hstring> const& arguments) noexcept;
+            _In_ collections::IMap<winrt::hstring, winrt::hstring> const& arguments) noexcept;
 
         winrt::hstring Verb() const noexcept { return m_verb; }
         void Verb(_In_ winrt::hstring const& value) noexcept { m_verb = internal::TrimmedHStringCopy(value); }

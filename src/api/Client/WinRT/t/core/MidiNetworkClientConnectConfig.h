@@ -21,13 +21,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         json::JsonObject ConfigJson() const noexcept;
 
         winrt::hstring Comment() const noexcept { return m_comment; }
-        void Comment(_In_ winrt::hstring const& value) { m_comment = value; }
+        void Comment(_In_ winrt::hstring const& value) noexcept { m_comment = value; }
 
         winrt::guid ClientId() const noexcept { return m_id; }
-        void ClientId(_In_ winrt::guid const& value) { m_id = value; }
+        void ClientId(_In_ winrt::guid const& value) noexcept { m_id = value; }
 
         winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
-        void UmpEndpointName(_In_ winrt::hstring const& value) { m_umpEndpointName = value; }
+        void UmpEndpointName(_In_ winrt::hstring const& value) noexcept { m_umpEndpointName = value; }
 
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
         void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }

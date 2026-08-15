@@ -86,6 +86,12 @@ public:
     std::map<GUID, std::wstring, GUIDCompare> GetTransportSettingsFromJsonString(
         _In_ std::wstring json) const noexcept;
 
+    // Type-checks every node before reading it. The original above uses accessors which throw
+    // when a value is present but is not the type expected, and a caller can put any type
+    // anywhere.
+    std::map<GUID, std::wstring, GUIDCompare> GetTransportSettingsFromJsonStringHardened(
+        _In_ std::wstring json) const noexcept;
+
 
 
 private:

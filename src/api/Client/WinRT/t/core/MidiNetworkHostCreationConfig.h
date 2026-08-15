@@ -21,33 +21,33 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         json::JsonObject  ConfigJson() const noexcept;
 
         winrt::guid HostId() const noexcept { return m_id; }
-        void HostId(_In_ winrt::guid const& value) { m_id = value; }
+        void HostId(_In_ winrt::guid const& value) noexcept { m_id = value; }
 
         winrt::hstring Name() const noexcept { return m_name; }
-        void Name(_In_ winrt::hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
+        void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
 
         winrt::hstring ServiceInstanceName() const noexcept { return m_serviceInstanceName; }
-        void ServiceInstanceName(_In_ winrt::hstring const& value) { m_serviceInstanceName = internal::TrimmedHStringCopy(value); }
+        void ServiceInstanceName(_In_ winrt::hstring const& value) noexcept { m_serviceInstanceName = internal::TrimmedHStringCopy(value); }
 
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
-        void ProductInstanceId(_In_ winrt::hstring const& value) { m_productInstanceId = internal::TrimmedHStringCopy(value); }
+        void ProductInstanceId(_In_ winrt::hstring const& value) noexcept { m_productInstanceId = internal::TrimmedHStringCopy(value); }
 
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
-        void CreateOnlyUmpEndpoints(_In_ bool const value) { m_umpOnly = value; }
+        void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }
 
         bool UseAutomaticPortAllocation() const noexcept { return m_useAutomaticPortAllocation; }
-        void UseAutomaticPortAllocation(_In_ bool const value) { m_useAutomaticPortAllocation = value; }
+        void UseAutomaticPortAllocation(_In_ bool const value) noexcept { m_useAutomaticPortAllocation = value; }
 
         winrt::hstring ManuallyAssignedPort() const noexcept { return m_manuallyAssignedPort; }
-        void ManuallyAssignedPort(_In_ winrt::hstring const& value) { m_manuallyAssignedPort = internal::TrimmedHStringCopy(value); }
+        void ManuallyAssignedPort(_In_ winrt::hstring const& value) noexcept { m_manuallyAssignedPort = internal::TrimmedHStringCopy(value); }
 
         bool Advertise() const noexcept { return m_advertise; }
-        void Advertise(_In_ bool const value) { m_advertise = value; }
+        void Advertise(_In_ bool const value) noexcept { m_advertise = value; }
 
  //       collections::IVector<winrt::Windows::Networking::HostName> AllowedClientConnectionList() { return m_allowedClientConnectionList; }
 
-        network::MidiNetworkAuthenticationType AuthenticationType() { return m_authenticationType; }
-        void AuthenticationType(_In_ network::MidiNetworkAuthenticationType const& value) { m_authenticationType = value; }
+        network::MidiNetworkAuthenticationType AuthenticationType() noexcept { return m_authenticationType; }
+        void AuthenticationType(_In_ network::MidiNetworkAuthenticationType const& value) noexcept { m_authenticationType = value; }
 
 
     private:

@@ -537,6 +537,7 @@
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiNetworkConfiguredClient.h" />
+    <ClInclude Include="MidiNetworkPendingRemoteClient.h" />
     <ClInclude Include="MidiNetworkConfiguredHost.h" />
     <ClInclude Include="MidiNetworkRemoteClientApprovalConfig.h" />
     <ClInclude Include="MidiNetworkRemoteClientApprovalResponse.h" />
@@ -908,6 +909,7 @@
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiNetworkConfiguredClient.cpp" />
+    <ClCompile Include="MidiNetworkPendingRemoteClient.cpp" />
     <ClCompile Include="MidiNetworkConfiguredHost.cpp" />
     <ClCompile Include="MidiNetworkRemoteClientApprovalConfig.cpp" />
     <ClCompile Include="MidiNetworkRemoteClientApprovalResponse.cpp" />
@@ -1049,7 +1051,6 @@
     <Midl Include="MidiNetworkHostUpdateResponse.idl" />
     <Midl Include="MidiNetworkHostUpdateErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkTransportManager.idl" />
-    <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
     <Midl Include="MidiNetworkHostCreationConfig.idl" />
     <Midl Include="MidiNetworkHostCreationResponse.idl" />
     <Midl Include="MidiNetworkHostRemovalConfig.idl" />

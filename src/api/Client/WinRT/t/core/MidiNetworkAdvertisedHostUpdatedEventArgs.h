@@ -15,8 +15,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     {
         MidiNetworkAdvertisedHostUpdatedEventArgs() = default;
 
-        winrt::hstring HostDeviceId();
-        enumeration::DeviceInformationUpdate DeviceInformationUpdate();
+        winrt::hstring HostDeviceId() noexcept;
+        enumeration::DeviceInformationUpdate DeviceInformationUpdate() noexcept;
 
         void InternalInitialize(_In_ winrt::hstring const& id, _In_ enumeration::DeviceInformationUpdate const& args) noexcept;
 

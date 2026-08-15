@@ -36,56 +36,56 @@ import "MidiNetworkPendingRemoteClient.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportManagerStatics")]
+    [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportManagerStatics", UUID_IMidiNetworkTransportManagerStatics)]
     static runtimeclass MidiNetworkTransportManager
     {
-        static Boolean IsTransportAvailable{ get; };
-        static Guid TransportId{ get; };
+        [noexcept] static Boolean IsTransportAvailable{ get; };
+        [noexcept] static Guid TransportId{ get; };
 
 
-        static Windows.Foundation.IAsyncOperation<MidiNetworkHostCreationResponse> CreateNetworkHostAsync(
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkHostCreationResponse> CreateNetworkHostAsync(
             MidiNetworkHostCreationConfig creationConfig);
 
-        static Windows.Foundation.IAsyncOperation<MidiNetworkHostRemovalResponse> RemoveNetworkHostAsync(
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkHostRemovalResponse> RemoveNetworkHostAsync(
             MidiNetworkHostRemovalConfig removalConfig);
 
         // keeps the host entry in memory, but closes all connections
         // stops advertising, and refuses any new connections
-        static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> StopNetworkHostAsync(Guid hostId);
-        static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> StartNetworkHostAsync(Guid hostId);
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> StopNetworkHostAsync(Guid hostId);
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> StartNetworkHostAsync(Guid hostId);
 
 
         // Sends new client info to the service
-        static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectResponse> ConnectNetworkClientAsync(
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectResponse> ConnectNetworkClientAsync(
             MidiNetworkClientConnectConfig connectConfig);
 
         // Closes the connection and removes the entry in the service
-        static Windows.Foundation.IAsyncOperation<MidiNetworkClientDisconnectResponse> DisconnectNetworkClientAsync(
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkClientDisconnectResponse> DisconnectNetworkClientAsync(
             MidiNetworkClientDisconnectConfig disconnectConfig);
 
         // Approves or denies a pending client connection request. 
-        static Windows.Foundation.IAsyncOperation<MidiNetworkRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(
             MidiNetworkRemoteClientApprovalConfig approvalConfig);
 
 
 
         // returns info about what is configured inside the service
-        static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredHost> GetConfiguredHosts();
-        static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredClient> GetConfiguredClients();
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredHost> GetConfiguredHosts();
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredClient> GetConfiguredClients();
 
-        static Windows.Foundation.Collections.IVectorView<MidiNetworkPendingRemoteClient> GetPendingRemoteClients();
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiNetworkPendingRemoteClient> GetPendingRemoteClients();
 
 
         // list the external hosts currently visible to this PC
-        static Windows.Foundation.Collections.IVectorView<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
 
 
-        static String MidiNetworkUdpDnsServiceType{ get; };
-        static String MidiNetworkUdpDnsSdQueryString{ get; };
-        static String MidiNetworkUdpDnsDomain { get; };
-        static Windows.Devices.Enumeration.DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind{ get; };
+        [noexcept] static String MidiNetworkUdpDnsServiceType{ get; };
+        [noexcept] static String MidiNetworkUdpDnsSdQueryString{ get; };
+        [noexcept] static String MidiNetworkUdpDnsDomain { get; };
+        [noexcept] static Windows.Devices.Enumeration.DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind{ get; };
 
-        static IVector<String> MidiNetworkUdpDnsSdQueryAdditionalProperties { get; };
+        [noexcept] static IVector<String> MidiNetworkUdpDnsSdQueryAdditionalProperties { get; };
 
     }
 }

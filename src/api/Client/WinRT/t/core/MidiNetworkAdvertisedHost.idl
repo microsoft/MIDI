@@ -14,26 +14,26 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHost")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHost", UUID_IMidiNetworkAdvertisedHost)]
     runtimeclass MidiNetworkAdvertisedHost
     {
         // from Windows props
-        String DeviceId { get; };
-        String DeviceName{ get; };
-         
-        // from SRV record 
-        String FullName{ get; };
-        String ServiceInstanceName{ get; };
-        String ServiceType{ get; };
-        String HostName{ get; };
-        UInt16 Port{ get; };
-        String Domain{ get; };
+        [noexcept] String DeviceId { get; };
+        [noexcept] String DeviceName{ get; };
+
+        // from SRV record
+        [noexcept] String FullName{ get; };
+        [noexcept] String ServiceInstanceName{ get; };
+        [noexcept] String ServiceType{ get; };
+        [noexcept] String HostName{ get; };
+        [noexcept] UInt16 Port{ get; };
+        [noexcept] String Domain{ get; };
 
         // from TXT record
-        String UmpEndpointName{ get; };
-        String ProductInstanceId{ get; };
+        [noexcept] String UmpEndpointName{ get; };
+        [noexcept] String ProductInstanceId{ get; };
 
-        IVectorView<String> IPAddresses{ get; };
+        [noexcept] IVectorView<String> IPAddresses{ get; };
     };
 }
 

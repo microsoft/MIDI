@@ -616,9 +616,6 @@
     <Midl Include="MidiNetworkAuthenticationTypeEnum.idl">
       <Filter>SDK\Endpoints\Network</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl">
-      <Filter>SDK\Endpoints\Network</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDevicePropertyHelper.idl">
       <Filter>SDK\Core\Enumeration\Metadata\Windows</Filter>
     </Midl>

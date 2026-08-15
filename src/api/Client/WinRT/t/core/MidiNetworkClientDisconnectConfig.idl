@@ -16,14 +16,14 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientDisconnectConfig")]
-    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientDisconnectConfigFactory")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientDisconnectConfig", UUID_IMidiNetworkClientDisconnectConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientDisconnectConfigFactory", UUID_IMidiNetworkClientDisconnectConfigFactory)]
     runtimeclass MidiNetworkClientDisconnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkClientDisconnectConfig();
         MidiNetworkClientDisconnectConfig(Guid clientId);
 
-        Guid ClientId;							// GUID we use in the config file and for subsequent edits/deletes
+        [noexcept] Guid ClientId;							// GUID we use in the config file and for subsequent edits/deletes
     }
 }
 

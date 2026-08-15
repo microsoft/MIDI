@@ -16,14 +16,14 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemovalConfig")]
-    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemovalConfigFactory")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemovalConfig", UUID_IMidiNetworkHostRemovalConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemovalConfigFactory", UUID_IMidiNetworkHostRemovalConfigFactory)]
     runtimeclass MidiNetworkHostRemovalConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkHostRemovalConfig();
         MidiNetworkHostRemovalConfig(Guid hostId);
 
-        Guid HostId { get; set; };
+        [noexcept] Guid HostId { get; set; };
 
     }
 }

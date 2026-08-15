@@ -32,7 +32,7 @@ class MidiNetworkConnection : public std::enable_shared_from_this<MidiNetworkCon
 public:
 
     HRESULT InitializeForHost(
-        _In_ winrt::hstring const& configIdentifier,
+        _In_ winrt::guid const& configIdentifier,
         _In_ std::wstring const& hostParentInstanceId,
         _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
         _In_ winrt::Windows::Networking::HostName const& remoteClientHostName,
@@ -47,7 +47,7 @@ public:
     );
 
     HRESULT InitializeForClient(
-        _In_ winrt::hstring const& configIdentifier,
+        _In_ winrt::guid const& configIdentifier,
         _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
         _In_ winrt::Windows::Networking::HostName const& remoteHostHostName,
         _In_ winrt::hstring const& remotePort,
@@ -109,7 +109,7 @@ public:
     HRESULT DisconnectMidiCallback();
 
     // if this was created from a host here
-    winrt::hstring ConfigIdentifier() { return m_configIdentifier; }
+    winrt::guid ConfigIdentifier() { return m_configIdentifier; }
 
 
     bool IsSessionActive() { return m_sessionActive; }
@@ -201,7 +201,7 @@ public:
         return latency; 
     }
 
-    void AddLatencyToAverageLatencyTicks(uint64_t latencyTicks)
+    void AddLatencyToAverageLatencyTicks(_In_ uint64_t latencyTicks)
     {
         auto lock = m_latencyLock.lock();
 
@@ -219,7 +219,7 @@ public:
 private:
     HRESULT Initialize(
         _In_ MidiNetworkConnectionRole const role,
-        _In_ winrt::hstring const& configIdentifier,
+        _In_ winrt::guid const& configIdentifier,
         _In_ std::wstring const& hostParentInstanceId,  // host only
         _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
@@ -326,7 +326,7 @@ private:
 
     void LogSendFailure(_In_ HRESULT const hr);
 
-    winrt::hstring m_configIdentifier{};
+    winrt::guid m_configIdentifier{};
         
     wil::critical_section m_incomingMessageLock;
 

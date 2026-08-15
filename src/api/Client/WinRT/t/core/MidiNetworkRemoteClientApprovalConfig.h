@@ -34,10 +34,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         void RemoteClientProductInstanceId(_In_ winrt::hstring const& value) noexcept { m_remoteClientProductInstanceId = value; }
 
         bool Approve() const noexcept { return m_approve; }
-        void Approve(bool const value) noexcept { m_approve = value; }
+        void Approve(_In_ bool const value) noexcept { m_approve = value; }
 
         bool ScopeIsThisRequestOnly() const noexcept { return m_scopeIsThisRequestOnly; }
-        void ScopeIsThisRequestOnly(bool const value) noexcept { m_scopeIsThisRequestOnly = value; }
+        void ScopeIsThisRequestOnly(_In_ bool const value) noexcept { m_scopeIsThisRequestOnly = value; }
 
         json::JsonObject ConfigJson() noexcept;
 

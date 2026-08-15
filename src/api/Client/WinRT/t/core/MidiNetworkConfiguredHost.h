@@ -31,15 +31,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool CreateMidi1Ports() const noexcept { return m_createMidi1Ports; }
 
         void InternalInitialize(
-            bool const isEnabled,
-            winrt::guid const& hostId,
-            winrt::hstring const& umpEndpointName,
-            winrt::hstring const& productInstanceId,
-            winrt::hstring const& serviceInstanceName,
-            bool const hasStarted,
-            winrt::hstring const& actualAddress,
-            winrt::hstring const& actualPort,
-            bool const createMidi1Ports) noexcept
+            _In_ bool const isEnabled,
+            _In_ winrt::guid const& hostId,
+            _In_ winrt::hstring const& umpEndpointName,
+            _In_ winrt::hstring const& productInstanceId,
+            _In_ winrt::hstring const& serviceInstanceName,
+            _In_ bool const hasStarted,
+            _In_ winrt::hstring const& actualAddress,
+            _In_ winrt::hstring const& actualPort,
+            _In_ bool const createMidi1Ports) noexcept
         {
             m_isEnabled = isEnabled;
             m_hostId = hostId;

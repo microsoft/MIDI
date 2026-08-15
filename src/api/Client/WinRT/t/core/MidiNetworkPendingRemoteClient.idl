@@ -16,19 +16,19 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkPendingRemoteClient")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkPendingRemoteClient", UUID_IMidiNetworkPendingRemoteClient)]
     runtimeclass MidiNetworkPendingRemoteClient : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
-        Guid HostId{ get; };
+        [noexcept] Guid HostId{ get; };
 
-        String HostServiceInstanceName{ get; };
-        String HostUmpEndpointName{ get; };
+        [noexcept] String HostServiceInstanceName{ get; };
+        [noexcept] String HostUmpEndpointName{ get; };
 
-        String UmpEndpointName{ get; };
-        String ProductInstanceId{ get;};
-        String RemoteAddress{ get; };
+        [noexcept] String UmpEndpointName{ get; };
+        [noexcept] String ProductInstanceId{ get;};
+        [noexcept] String RemoteAddress{ get; };
 
-        Windows.Foundation.DateTime RequestTime{ get; };
+        [noexcept] Windows.Foundation.DateTime RequestTime{ get; };
 
     }
 }

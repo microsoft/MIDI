@@ -233,7 +233,7 @@ TransportState::GetPendingClientDefinitions()
 
 _Use_decl_annotations_
 std::shared_ptr<MidiNetworkHost>
-TransportState::GetHost(winrt::hstring hostEntryIdentifier)
+TransportState::GetHost(winrt::guid const& hostEntryIdentifier)
 {
     auto lock = m_stateLock.lock_shared();
 
@@ -250,7 +250,7 @@ TransportState::GetHost(winrt::hstring hostEntryIdentifier)
 
 _Use_decl_annotations_
 std::shared_ptr<MidiNetworkHost>
-TransportState::RemoveHost(winrt::hstring const& hostEntryIdentifier)
+TransportState::RemoveHost(winrt::guid const& hostEntryIdentifier, bool& removedPendingDefinition)
 {
     std::shared_ptr<MidiNetworkHost> removed{ nullptr };
 
@@ -267,7 +267,11 @@ TransportState::RemoveHost(winrt::hstring const& hostEntryIdentifier)
     }
 
     // A host which was created but never instantiated exists only as a pending definition, and
-    // it holds the service instance name just as a live host does.
+    // it holds the service instance name just as a live host does. Erasing it here is also what
+    // stops the endpoint creator thread from registering a host for a definition which has been
+    // taken away while that host was being built.
+    auto const before = m_pendingHostDefinitions.size();
+
     m_pendingHostDefinitions.erase(
         std::remove_if(
             m_pendingHostDefinitions.begin(),
@@ -278,14 +282,49 @@ TransportState::RemoveHost(winrt::hstring const& hostEntryIdentifier)
             }),
         m_pendingHostDefinitions.end());
 
+    removedPendingDefinition = m_pendingHostDefinitions.size() != before;
+
     return removed;
+}
+
+// Registers a host only if its definition is still pending. Both this and RemoveHost take the
+// state lock exclusively, so a host can no longer be added after the entry it belongs to has
+// been removed. Returns false when that happened, and the caller must then shut the host down
+// rather than leaving its socket bound and its service instance name claimed.
+_Use_decl_annotations_
+bool
+TransportState::AddHostIfStillPending(std::shared_ptr<MidiNetworkHost> host, winrt::guid const& hostEntryIdentifier)
+{
+    if (host == nullptr)
+    {
+        return false;
+    }
+
+    auto lock = m_stateLock.lock_exclusive();
+
+    auto const stillPending = std::any_of(
+        m_pendingHostDefinitions.begin(),
+        m_pendingHostDefinitions.end(),
+        [&hostEntryIdentifier](auto const& definition)
+        {
+            return definition != nullptr && definition->EntryIdentifier == hostEntryIdentifier;
+        });
+
+    if (!stillPending)
+    {
+        return false;
+    }
+
+    m_hosts.push_back(host);
+
+    return true;
 }
 
 _Use_decl_annotations_
 bool
 TransportState::IsHostServiceInstanceNameInUse(
     std::wstring const& serviceInstanceName,
-    std::wstring const& excludingEntryIdentifier)
+    winrt::guid const& excludingEntryIdentifier)
 {
     if (serviceInstanceName.empty())
     {
@@ -293,7 +332,6 @@ TransportState::IsHostServiceInstanceNameInUse(
     }
 
     auto wanted = internal::ToLowerTrimmedWStringCopy(serviceInstanceName);
-    auto excluding = internal::ToLowerTrimmedWStringCopy(excludingEntryIdentifier);
 
     // Snapshotted first: the accessors take the state lock, and comparing definitions calls into
     // the hosts, which must never happen while that lock is held.
@@ -306,7 +344,7 @@ TransportState::IsHostServiceInstanceNameInUse(
 
         auto definition = host->GetDefinition();
 
-        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition.EntryIdentifier }) == excluding)
+        if (definition.EntryIdentifier == excludingEntryIdentifier)
         {
             continue;
         }
@@ -326,7 +364,7 @@ TransportState::IsHostServiceInstanceNameInUse(
             continue;
         }
 
-        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ definition->EntryIdentifier }) == excluding)
+        if (definition->EntryIdentifier == excludingEntryIdentifier)
         {
             continue;
         }
@@ -342,7 +380,7 @@ TransportState::IsHostServiceInstanceNameInUse(
 
 _Use_decl_annotations_
 std::shared_ptr<MidiNetworkClient>
-TransportState::GetClient(winrt::hstring clientEntryIdentifier)
+TransportState::GetClient(winrt::guid const& clientEntryIdentifier)
 {
     auto lock = m_stateLock.lock_shared();
 
@@ -389,7 +427,7 @@ TransportState::AddClient(
 
 _Use_decl_annotations_
 HRESULT 
-TransportState::RemoveClient(winrt::hstring clientConfigEntryIdentifier)
+TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier)
 {
     auto lock = m_stateLock.lock_exclusive();
 
@@ -572,7 +610,7 @@ TransportState::GetNetworkConnection(
 
 _Use_decl_annotations_
 std::vector<std::shared_ptr<MidiNetworkConnection>>
-TransportState::GetAllNetworkConnectionsForClient(winrt::hstring const& clientEntryConfigIdentifier)
+TransportState::GetAllNetworkConnectionsForClient(winrt::guid const& clientEntryConfigIdentifier)
 {
     std::vector<std::shared_ptr<MidiNetworkConnection>> results;
 
@@ -591,7 +629,7 @@ TransportState::GetAllNetworkConnectionsForClient(winrt::hstring const& clientEn
 
 _Use_decl_annotations_
 std::vector<std::shared_ptr<MidiNetworkConnection>> 
-TransportState::GetAllNetworkConnectionsForHost(winrt::hstring const& hostEntryConfigIdentifier)
+TransportState::GetAllNetworkConnectionsForHost(winrt::guid const& hostEntryConfigIdentifier)
 {
     std::vector<std::shared_ptr<MidiNetworkConnection>> results;
 
@@ -610,7 +648,7 @@ TransportState::GetAllNetworkConnectionsForHost(winrt::hstring const& hostEntryC
 
 _Use_decl_annotations_
 size_t
-TransportState::CountNetworkConnectionsForConfigIdentifier(winrt::hstring const& configEntryIdentifier)
+TransportState::CountNetworkConnectionsForConfigIdentifier(winrt::guid const& configEntryIdentifier)
 {
     size_t count{ 0 };
 
@@ -629,7 +667,7 @@ TransportState::CountNetworkConnectionsForConfigIdentifier(winrt::hstring const&
 
 _Use_decl_annotations_
 HRESULT
-TransportState::ReapIdleNetworkConnections(winrt::hstring const& configEntryIdentifier)
+TransportState::ReapIdleNetworkConnections(winrt::guid const& configEntryIdentifier)
 {
     std::vector<std::shared_ptr<MidiNetworkConnection>> reclaimed;
 
@@ -674,7 +712,7 @@ TransportState::ReapIdleNetworkConnections(winrt::hstring const& configEntryIden
 
 _Use_decl_annotations_
 std::vector<std::shared_ptr<MidiNetworkConnection>>
-TransportState::DetachNetworkConnectionsForConfigIdentifier(winrt::hstring const& configEntryIdentifier)
+TransportState::DetachNetworkConnectionsForConfigIdentifier(winrt::guid const& configEntryIdentifier)
 {
     std::vector<std::shared_ptr<MidiNetworkConnection>> removed;
 
@@ -697,7 +735,7 @@ TransportState::DetachNetworkConnectionsForConfigIdentifier(winrt::hstring const
 
 _Use_decl_annotations_
 HRESULT 
-TransportState::RemoveAllNetworkConnectionsForHost(winrt::hstring const& hostEntryConfigIdentifier)
+TransportState::RemoveAllNetworkConnectionsForHost(winrt::guid const& hostEntryConfigIdentifier)
 {
     auto lock = m_stateLock.lock_exclusive();
 
@@ -709,7 +747,7 @@ TransportState::RemoveAllNetworkConnectionsForHost(winrt::hstring const& hostEnt
 
 _Use_decl_annotations_
 HRESULT
-TransportState::RemoveAllNetworkConnectionsForClient(winrt::hstring const& clientEntryConfigIdentifier)
+TransportState::RemoveAllNetworkConnectionsForClient(winrt::guid const& clientEntryConfigIdentifier)
 {
     auto lock = m_stateLock.lock_exclusive();
 

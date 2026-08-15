@@ -919,7 +919,32 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
             if (host != nullptr)
             {
-                LOG_IF_FAILED(host->Initialize(*definition));
+                auto initializeResult = host->Initialize(*definition);
+
+                if (FAILED(initializeResult))
+                {
+                    LOG_IF_FAILED(initializeResult);
+
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Host definition rejected during initialization. Host not started.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(definition->EntryIdentifier, "entry identifier"),
+                        TraceLoggingWideString(definition->UmpEndpointName.c_str(), "name"),
+                        TraceLoggingHResult(initializeResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
+                    );
+
+                    // Initialize assigns the definition last, so a rejected host has an empty one.
+                    // Starting it anyway bound a socket and published a nameless host that no
+                    // caller could identify or remove. Marked created so we stop retrying a
+                    // definition that can never validate.
+                    definition->Created = true;
+
+                    continue;
+                }
 
                 if (!host->HasStarted())
                 {
@@ -928,8 +953,24 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
                 definition->Created = true;
 
-                // this ensures the host doesn't disappear
-                TransportState::Current().AddHost(host);
+                // The definition can be removed while the host above is being built, so
+                // registration is conditional on it still being there. Losing that race means
+                // this host is unreachable and must not be left holding a socket and a service
+                // instance name.
+                if (!TransportState::Current().AddHostIfStillPending(host, definition->EntryIdentifier))
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Host entry was removed while the host was being created. Shutting it back down.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(definition->EntryIdentifier, "entry identifier")
+                    );
+
+                    LOG_IF_FAILED(host->Shutdown());
+                }
             }
         }
 

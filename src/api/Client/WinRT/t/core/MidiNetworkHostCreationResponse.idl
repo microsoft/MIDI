@@ -15,14 +15,14 @@ import "MidiNetworkHostCreationErrorCodeEnum.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationResponse")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationResponse", UUID_IMidiNetworkHostCreationResponse)]
     runtimeclass MidiNetworkHostCreationResponse
     {
-        Guid HostId{ get; };
+        [noexcept] Guid HostId{ get; };
 
-		Boolean Success{ get; };
-        MidiNetworkHostCreationErrorCode ErrorCode{ get; };
-        String ErrorMessage{ get; };
+		[noexcept] Boolean Success{ get; };
+        [noexcept] MidiNetworkHostCreationErrorCode ErrorCode{ get; };
+        [noexcept] String ErrorMessage{ get; };
     };
 }
 

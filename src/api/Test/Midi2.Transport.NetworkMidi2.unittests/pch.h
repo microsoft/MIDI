@@ -53,6 +53,7 @@
 #include <winrt/Windows.Networking.Connectivity.h>
 
 #include "MidiSequenceNumber.h" // this is in the network midi project
+#include "network_transport_error_codes.h" // shared with the service and the SDK
 
 // generated service interfaces, so tests can push configuration the same way the SDK does
 #include <WindowsMidiServices.h>

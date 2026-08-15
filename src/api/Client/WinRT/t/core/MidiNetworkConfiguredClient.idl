@@ -14,27 +14,27 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkConfiguredClient")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkConfiguredClient", UUID_IMidiNetworkConfiguredClient)]
     runtimeclass MidiNetworkConfiguredClient
     {
-        Guid ClientId{ get; };  // internal id we use to match up in config file
-        Guid HostId{ get; }; // the id of the host this client is connected to
+        [noexcept] Guid ClientId{ get; };  // internal id we use to match up in config file
+        [noexcept] Guid HostId{ get; }; // the id of the host this client is connected to
 
         //Boolean IsEnabled;                    // true if this is allows to connect. Mostly for pre-configured connections
-        Boolean IsSessionActive{ get; };                // true if a session is active
+        [noexcept] Boolean IsSessionActive{ get; };                // true if a session is active
 
-        String ConnectedRemoteAddress{ get; };
-        String ConnectedRemotePort{ get; };
-        String ConnectedLocalAddress{ get; };
-        String ConnectedLocalPort{ get; };              // need to see if I can get this in the service
+        [noexcept] String ConnectedRemoteAddress{ get; };
+        [noexcept] String ConnectedRemotePort{ get; };
+        [noexcept] String ConnectedLocalAddress{ get; };
+        [noexcept] String ConnectedLocalPort{ get; };              // need to see if I can get this in the service
 
-        String EndpointDeviceId{ get; };                // the created MIDI endpoint's id
+        [noexcept] String EndpointDeviceId{ get; };                // the created MIDI endpoint's id
 
-        UInt32 RetransmitCount{ get; };                 // number of times we've retransmitted messages to this client, for telemetry and debugging purposes
-        UInt32 RetransmitRequestCount{ get; };          // number of times we've received a retransmit request from this client, for telemetry and debugging purposes
-        UInt64 CurrentLatencyTicks{ get; };             // latency in ticks, for telemetry and debugging purposes
-        UInt64 TotalCountNetworkPacketsSent{ get; };
-        UInt64 TotalCountNetworkPacketsReceived{ get; };
+        [noexcept] UInt32 RetransmitCount{ get; };                 // number of times we've retransmitted messages to this client, for telemetry and debugging purposes
+        [noexcept] UInt32 RetransmitRequestCount{ get; };          // number of times we've received a retransmit request from this client, for telemetry and debugging purposes
+        [noexcept] UInt64 CurrentLatencyTicks{ get; };             // latency in ticks, for telemetry and debugging purposes
+        [noexcept] UInt64 TotalCountNetworkPacketsSent{ get; };
+        [noexcept] UInt64 TotalCountNetworkPacketsReceived{ get; };
 
     };
 }

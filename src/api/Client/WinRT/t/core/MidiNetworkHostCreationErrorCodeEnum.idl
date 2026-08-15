@@ -9,16 +9,43 @@
 #include "..\..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
-
+// error codes shared with service
+#include "..\..\..\..\Transport\UdpNetworkMidi2Transport\network_transport_error_codes.h"
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
     enum MidiNetworkHostCreationErrorCode
     {
-        NoErrorInformationAvailable = 0,
+        NoErrorInformationAvailable =           NETWORK_ERROR_CODE_UNKNOWN_ERROR,
+        UnrecognizedCommand =                   NETWORK_ERROR_CODE_UNRECOGNIZED_COMMAND,
 
+        InvalidJson =                           NETWORK_ERROR_CODE_INVALID_JSON,
 
+        HostCreationFailed =                    NETWORK_ERROR_CODE_HOST_CREATION_FAILED,
+
+        InvalidOrMissingEntryIdentifier =       NETWORK_ERROR_CODE_MISSING_ENTRY_IDENTIFIER,
+        MalformedEntryIdentifier =              NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER,
+
+        InvalidOrMissingEndpointName =          NETWORK_ERROR_CODE_MISSING_ENDPOINT_NAME,
+        EndpointNameTooLong =                   NETWORK_ERROR_CODE_ENDPOINT_NAME_TOO_LONG,
+        InvalidOrMissingProductInstanceId =     NETWORK_ERROR_CODE_MISSING_PRODUCT_INSTANCE_ID,
+        ProductInstanceIdTooLong =              NETWORK_ERROR_CODE_PRODUCT_INSTANCE_ID_TOO_LONG,
+        ServiceInstanceNameInUse =              NETWORK_ERROR_CODE_SERVICE_INSTANCE_NAME_IN_USE,
+        InvalidNetworkProtocol =                NETWORK_ERROR_CODE_INVALID_NETWORK_PROTOCOL,
+
+        InvalidOrMissingCredentialIdentifier =  NETWORK_ERROR_CODE_MISSING_CREDENTIAL_IDENTIFIER,
+        MalformedCredentialIdentifier =         NETWORK_ERROR_CODE_INVALID_CREDENTIAL_IDENTIFIER,
+        AuthenticationNotImplemented =          NETWORK_ERROR_CODE_AUTHENTICATION_NOT_IMPLEMENTED,
+
+        ForwardErrorCorrectionPacketCountOutOfRange =   NETWORK_ERROR_CODE_FEC_PACKET_COUNT_OUT_OF_RANGE,
+        RetransmitBufferSizeOutOfRange =        NETWORK_ERROR_CODE_RETRANSMIT_BUFFER_SIZE_OUT_OF_RANGE,
+        PingIntervalOutOfRange =                NETWORK_ERROR_CODE_PING_INTERVAL_OUT_OF_RANGE,
+        MaxHostConnectionsOutOfRange =          NETWORK_ERROR_CODE_MAX_HOST_CONNECTIONS_OUT_OF_RANGE,
+        InvitationPendingTimeoutOutOfRange =    NETWORK_ERROR_CODE_INVITATION_PENDING_TIMEOUT_OUT_OF_RANGE,
+        ScanIntervalOutOfRange =                NETWORK_ERROR_CODE_SCAN_INTERVAL_OUT_OF_RANGE,
+
+        InvalidArgument =                       NETWORK_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT,
+        ClientApiException =                    NETWORK_ERROR_CODE_CLIENT_API_EXCEPTION,
     };
 }

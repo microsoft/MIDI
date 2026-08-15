@@ -14,7 +14,7 @@
 _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::InitializeForHost(
-    winrt::hstring const& configIdentifier,
+    winrt::guid const& configIdentifier,
     std::wstring const& hostParentInstanceId,
     winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
     winrt::Windows::Networking::HostName const& remoteClientHostName,
@@ -48,7 +48,7 @@ MidiNetworkConnection::InitializeForHost(
 _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::InitializeForClient(
-    winrt::hstring const& configIdentifier,
+    winrt::guid const& configIdentifier,
     winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
     winrt::Windows::Networking::HostName const& remoteHostHostName,
     winrt::hstring const& remotePort,
@@ -81,7 +81,7 @@ _Use_decl_annotations_
 HRESULT 
 MidiNetworkConnection::Initialize(
     MidiNetworkConnectionRole const role,
-    winrt::hstring const& configIdentifier,
+    winrt::guid const& configIdentifier,
     std::wstring const& parentDeviceInstanceId,
     winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
     winrt::Windows::Networking::HostName const& hostName,
@@ -886,7 +886,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
             HRESULT hr = S_OK;
 
             hr = endpointManager->CreateNewClientEndpointToRemoteHost(
-                m_configIdentifier.c_str(),
+                internal::GuidToString(m_configIdentifier),
                 remoteHostUmpEndpointName,
                 remoteHostProductInstanceId,
                 m_remoteHostName,
@@ -992,7 +992,7 @@ MidiNetworkConnection::CreateHostEndpointForPendingInvitation(
     RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
 
     RETURN_IF_FAILED(endpointManager->CreateNewHostEndpointToRemoteClient(
-        m_configIdentifier.c_str(),
+        internal::GuidToString(m_configIdentifier),
         m_parentDeviceInstanceId,
         clientUmpEndpointName,
         clientProductInstanceId,

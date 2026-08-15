@@ -12,7 +12,7 @@ struct MidiNetworkClientDefinition
 {
     bool Created{ false };
 
-    winrt::hstring EntryIdentifier;         // internal 
+    winrt::guid EntryIdentifier;            // internal
     bool Enabled{ true };
 
     winrt::hstring Name;                    // the name of the endpoint before we do discovery
@@ -95,7 +95,7 @@ private:
     uint32_t m_retransmitCount{ 0 };
     uint32_t m_retransmitRequestCount{ 0 };
 
-    winrt::hstring m_configIdentifier{};
+    winrt::guid m_configIdentifier{};
 
     bool m_createUmpEndpointsOnly{ true };
 

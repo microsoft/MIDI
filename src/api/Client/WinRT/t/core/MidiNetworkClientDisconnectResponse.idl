@@ -15,14 +15,14 @@ import "MidiNetworkClientDisconnectErrorCodeEnum.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientDisconnectResponse")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientDisconnectResponse", UUID_IMidiNetworkClientDisconnectResponse)]
     runtimeclass MidiNetworkClientDisconnectResponse
     {
-        Guid ClientId{ get; };
+        [noexcept] Guid ClientId{ get; };
 
-        Boolean Success{ get; };
-        MidiNetworkClientDisconnectErrorCode ErrorCode{ get; };
-        String ErrorMessage{ get; };
+        [noexcept] Boolean Success{ get; };
+        [noexcept] MidiNetworkClientDisconnectErrorCode ErrorCode{ get; };
+        [noexcept] String ErrorMessage{ get; };
 
     }
 }

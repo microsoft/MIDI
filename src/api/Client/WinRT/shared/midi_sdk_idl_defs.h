@@ -261,6 +261,50 @@
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Network : Interface number 00F03
 
+#define UUID_IMidiNetworkTransportManagerStatics                 8087b303-0519-c0de-31d1-ee00F0301000
+
+#define UUID_IMidiNetworkHostCreationConfig                      8087b303-0519-c0de-31d1-dd00F0302000
+#define UUID_IMidiNetworkHostCreationConfigFactory               8087b303-0519-c0de-31d1-ff00F0302000
+
+#define UUID_IMidiNetworkHostCreationResponse                    8087b303-0519-c0de-31d1-dd00F0303000
+
+#define UUID_IMidiNetworkHostRemovalConfig                       8087b303-0519-c0de-31d1-dd00F0304000
+#define UUID_IMidiNetworkHostRemovalConfigFactory                8087b303-0519-c0de-31d1-ff00F0304000
+
+#define UUID_IMidiNetworkHostRemovalResponse                     8087b303-0519-c0de-31d1-dd00F0305000
+#define UUID_IMidiNetworkHostUpdateResponse                      8087b303-0519-c0de-31d1-dd00F0306000
+
+#define UUID_IMidiNetworkClientConnectConfig                     8087b303-0519-c0de-31d1-dd00F0307000
+#define UUID_IMidiNetworkClientConnectConfigFactory              8087b303-0519-c0de-31d1-ff00F0307000
+
+#define UUID_IMidiNetworkClientConnectResponse                   8087b303-0519-c0de-31d1-dd00F0308000
+
+#define UUID_IMidiNetworkClientDisconnectConfig                  8087b303-0519-c0de-31d1-dd00F0309000
+#define UUID_IMidiNetworkClientDisconnectConfigFactory           8087b303-0519-c0de-31d1-ff00F0309000
+
+#define UUID_IMidiNetworkClientDisconnectResponse                8087b303-0519-c0de-31d1-dd00F030A000
+
+#define UUID_IMidiNetworkClientMatchCriteria                     8087b303-0519-c0de-31d1-dd00F030B000
+#define UUID_IMidiNetworkClientMatchCriteriaFactory              8087b303-0519-c0de-31d1-ff00F030B000
+
+#define UUID_IMidiNetworkConfiguredHost                          8087b303-0519-c0de-31d1-dd00F030C000
+#define UUID_IMidiNetworkConfiguredClient                        8087b303-0519-c0de-31d1-dd00F030D000
+#define UUID_IMidiNetworkPendingRemoteClient                     8087b303-0519-c0de-31d1-dd00F030E000
+
+#define UUID_IMidiNetworkRemoteClientApprovalConfig              8087b303-0519-c0de-31d1-dd00F030F000
+#define UUID_IMidiNetworkRemoteClientApprovalConfigFactory       8087b303-0519-c0de-31d1-ff00F030F000
+
+#define UUID_IMidiNetworkRemoteClientApprovalResponse            8087b303-0519-c0de-31d1-dd00F0310000
+
+#define UUID_IMidiNetworkAdvertisedHost                          8087b303-0519-c0de-31d1-dd00F0311000
+
+#define UUID_IMidiNetworkAdvertisedHostWatcher                   8087b303-0519-c0de-31d1-dd00F0312000
+#define UUID_IMidiNetworkAdvertisedHostWatcherStatics            8087b303-0519-c0de-31d1-ee00F0312000
+
+#define UUID_IMidiNetworkAdvertisedHostAddedEventArgs            8087b303-0519-c0de-31d1-dd00F0313000
+#define UUID_IMidiNetworkAdvertisedHostRemovedEventArgs          8087b303-0519-c0de-31d1-dd00F0314000
+#define UUID_IMidiNetworkAdvertisedHostUpdatedEventArgs          8087b303-0519-c0de-31d1-dd00F0315000
+
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04
 

@@ -72,19 +72,28 @@ public:
         _In_ std::shared_ptr<MidiNetworkHostDefinition>);
     std::vector<std::shared_ptr<MidiNetworkHostDefinition>> GetPendingHostDefinitions();
 
-    std::shared_ptr<MidiNetworkHost> GetHost(_In_ winrt::hstring hostEntryIdentifier);
+    std::shared_ptr<MidiNetworkHost> GetHost(_In_ winrt::guid const& hostEntryIdentifier);
 
     // Detaches a host, and any pending definition sharing its entry identifier, from the state.
     // The host is returned rather than shut down here, because Shutdown blocks on the network
     // and re-enters this class, and the state lock must not be held across that. The caller owns
-    // the returned host and must Shutdown() it. Returns nullptr when nothing matched.
-    std::shared_ptr<MidiNetworkHost> RemoveHost(_In_ winrt::hstring const& hostEntryIdentifier);
+    // the returned host and must Shutdown() it. Returns nullptr when no live host matched;
+    // removedPendingDefinition then says whether an entry was removed before it ever started.
+    std::shared_ptr<MidiNetworkHost> RemoveHost(
+        _In_ winrt::guid const& hostEntryIdentifier,
+        _Out_ bool& removedPendingDefinition);
+
+    // Used by the endpoint creator thread instead of AddHost, so a host cannot be registered
+    // after its definition has been removed.
+    bool AddHostIfStillPending(
+        _In_ std::shared_ptr<MidiNetworkHost> host,
+        _In_ winrt::guid const& hostEntryIdentifier);
 
     // The service instance name becomes both the DNS-SD instance and the virtual parent device
     // id, so two host entries cannot share one. Compared case-insensitively.
     bool IsHostServiceInstanceNameInUse(
         _In_ std::wstring const& serviceInstanceName,
-        _In_ std::wstring const& excludingEntryIdentifier);
+        _In_ winrt::guid const& excludingEntryIdentifier);
 
 
 
@@ -92,11 +101,11 @@ public:
 
 
     HRESULT AddClient(_In_ std::shared_ptr<MidiNetworkClient>);
-    HRESULT RemoveClient(_In_ winrt::hstring clientConfigEntryIdentifier);
+    HRESULT RemoveClient(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
     std::vector<std::shared_ptr<MidiNetworkClient>> GetClients();
 
-    std::shared_ptr<MidiNetworkClient> GetClient(_In_ winrt::hstring clientEntryIdentifier);
+    std::shared_ptr<MidiNetworkClient> GetClient(_In_ winrt::guid const& clientEntryIdentifier);
 
 
     HRESULT AddPendingClientDefinition(
@@ -129,19 +138,19 @@ public:
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort);
 
-    std::vector<std::shared_ptr<MidiNetworkConnection>> GetAllNetworkConnectionsForHost(_In_ winrt::hstring const& hostEntryIdentifier);
+    std::vector<std::shared_ptr<MidiNetworkConnection>> GetAllNetworkConnectionsForHost(_In_ winrt::guid const& hostEntryIdentifier);
 
-    std::vector<std::shared_ptr<MidiNetworkConnection>> GetAllNetworkConnectionsForClient(_In_ winrt::hstring const& clientEntryIdentifier);
+    std::vector<std::shared_ptr<MidiNetworkConnection>> GetAllNetworkConnectionsForClient(_In_ winrt::guid const& clientEntryIdentifier);
 
-    size_t CountNetworkConnectionsForConfigIdentifier(_In_ winrt::hstring const& configEntryIdentifier);
+    size_t CountNetworkConnectionsForConfigIdentifier(_In_ winrt::guid const& configEntryIdentifier);
 
     // Removes and shuts down connections which have no session and have gone quiet. Safe to call
     // from any thread except a worker belonging to one of the connections being reclaimed.
-    HRESULT ReapIdleNetworkConnections(_In_ winrt::hstring const& configEntryIdentifier);
+    HRESULT ReapIdleNetworkConnections(_In_ winrt::guid const& configEntryIdentifier);
 
-    HRESULT RemoveAllNetworkConnectionsForHost(_In_ winrt::hstring const& hostEntryIdentifier);
+    HRESULT RemoveAllNetworkConnectionsForHost(_In_ winrt::guid const& hostEntryIdentifier);
 
-    HRESULT RemoveAllNetworkConnectionsForClient(_In_ winrt::hstring const& clientEntryIdentifier);
+    HRESULT RemoveAllNetworkConnectionsForClient(_In_ winrt::guid const& clientEntryIdentifier);
 
     HRESULT AddNetworkConnection(
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
@@ -194,6 +203,6 @@ private:
     }
 
     // caller already holds m_stateLock exclusively
-    std::vector<std::shared_ptr<MidiNetworkConnection>> DetachNetworkConnectionsForConfigIdentifier(_In_ winrt::hstring const& configEntryIdentifier);
+    std::vector<std::shared_ptr<MidiNetworkConnection>> DetachNetworkConnectionsForConfigIdentifier(_In_ winrt::guid const& configEntryIdentifier);
 
 };

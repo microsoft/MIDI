@@ -24,7 +24,7 @@ public:
     MidiSequenceNumber(_In_ uint16_t const v) : m_value(v) { }
     MidiSequenceNumber(_In_ MidiSequenceNumber const& v) : m_value(v.m_value) { }
 
-    MidiSequenceNumber& operator=(const MidiSequenceNumber& rhs)
+    MidiSequenceNumber& operator=(_In_ const MidiSequenceNumber& rhs)
     {
         m_value = rhs.m_value;
 
@@ -74,7 +74,7 @@ public:
     }
 
     //postfix val++
-    MidiSequenceNumber operator++ (int)
+    MidiSequenceNumber operator++ (_In_ int)
     {
         MidiSequenceNumber temp = *this;
 
@@ -92,7 +92,7 @@ public:
     }
 
     //postfix val--
-    MidiSequenceNumber operator-- (int)
+    MidiSequenceNumber operator-- (_In_ int)
     {
         MidiSequenceNumber temp = *this;
         

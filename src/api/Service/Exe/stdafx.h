@@ -16,6 +16,11 @@
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>
 
+// Must come after C++/WinRT and before wil\result_macros.h. Without it WIL does not recognise
+// winrt::hresult_error, so every CATCH_LOG and CATCH_RETURN in the service fail-fasts on a
+// WinRT exception instead of handling it. Every transport already includes this.
+#include <wil\cppwinrt.h>
+
 #include <string>
 #include <iterator>
 #include <strsafe.h>

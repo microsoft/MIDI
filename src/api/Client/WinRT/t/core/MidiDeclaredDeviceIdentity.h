@@ -16,10 +16,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         MidiDeclaredDeviceIdentity() = default;
 
         MidiDeclaredDeviceIdentity(
-            uint8_t sysexIdByte1, uint8_t sysexIdByte2, uint8_t sysexIdByte3,
-            uint8_t deviceFamilyLsb, uint8_t deviceFamilyMsb,
-            uint8_t deviceFamilyModelNumberLsb, uint8_t deviceFamilyModelNumberMsb,
-            uint8_t softwareRevisionLevelByte1, uint8_t softwareRevisionLevelByte2, uint8_t softwareRevisionLevelByte3, uint8_t softwareRevisionLevelByte4)
+            _In_ uint8_t sysexIdByte1, _In_ uint8_t sysexIdByte2, _In_ uint8_t sysexIdByte3,
+            _In_ uint8_t deviceFamilyLsb, _In_ uint8_t deviceFamilyMsb,
+            _In_ uint8_t deviceFamilyModelNumberLsb, _In_ uint8_t deviceFamilyModelNumberMsb,
+            _In_ uint8_t softwareRevisionLevelByte1, _In_ uint8_t softwareRevisionLevelByte2, _In_ uint8_t softwareRevisionLevelByte3, _In_ uint8_t softwareRevisionLevelByte4)
         {
             SetSystemExclusiveId(sysexIdByte1, sysexIdByte2, sysexIdByte3);
             SetDeviceFamily(deviceFamilyLsb, deviceFamilyMsb);

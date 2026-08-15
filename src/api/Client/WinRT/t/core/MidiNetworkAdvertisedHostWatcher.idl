@@ -18,18 +18,18 @@ import "MidiNetworkAdvertisedHostUpdatedEventArgs.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostWatcher")]
-    [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostWatcherStatics")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostWatcher", UUID_IMidiNetworkAdvertisedHostWatcher)]
+    [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostWatcherStatics", UUID_IMidiNetworkAdvertisedHostWatcherStatics)]
     runtimeclass MidiNetworkAdvertisedHostWatcher
     {
-        static MidiNetworkAdvertisedHostWatcher Create();
+        [noexcept] static MidiNetworkAdvertisedHostWatcher Create();
 
-        void Start();
-        void Stop();
+        [noexcept] void Start();
+        [noexcept] void Stop();
 
-        Windows.Foundation.Collections.IMapView<String, MidiNetworkAdvertisedHost> EnumeratedHosts{ get; };
+        [noexcept] Windows.Foundation.Collections.IMapView<String, MidiNetworkAdvertisedHost> EnumeratedHosts{ get; };
 
-        Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
+        [noexcept] Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
 
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostAddedEventArgs> Added;
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostRemovedEventArgs> Removed;

@@ -35,8 +35,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         static foundation::IAsyncOperation<network::MidiNetworkHostCreationResponse> CreateNetworkHostAsync(_In_ network::MidiNetworkHostCreationConfig const& creationConfig) noexcept;
         static foundation::IAsyncOperation<network::MidiNetworkHostRemovalResponse> RemoveNetworkHostAsync(_In_ network::MidiNetworkHostRemovalConfig const& removalConfig) noexcept;
 
-        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> StartNetworkHostAsync(_In_ winrt::guid const& hostId);
-        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> StopNetworkHostAsync(_In_ winrt::guid const& hostId);
+        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> StartNetworkHostAsync(_In_ winrt::guid const& hostId) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> StopNetworkHostAsync(_In_ winrt::guid const& hostId) noexcept;
 
         static foundation::IAsyncOperation<network::MidiNetworkClientConnectResponse> ConnectNetworkClientAsync(_In_ network::MidiNetworkClientConnectConfig const& creationConfig) noexcept;
         static foundation::IAsyncOperation<network::MidiNetworkClientDisconnectResponse> DisconnectNetworkClientAsync(_In_ network::MidiNetworkClientDisconnectConfig const& removalConfig) noexcept;

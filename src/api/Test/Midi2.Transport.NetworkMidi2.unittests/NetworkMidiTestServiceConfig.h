@@ -39,6 +39,14 @@ namespace NetworkMidiTest
     // Sends an already-built JSON payload to the network transport's configuration manager.
     ServiceConfigResult SendNetworkTransportConfig(_In_ std::wstring const& configJson);
 
+    // Sends a payload verbatim, with none of the wrapping above. This is the only way to reach
+    // the configuration manager with something which is not valid JSON at all.
+    ServiceConfigResult SendRawServiceConfig(_In_ std::wstring const& rawPayload);
+
+    // Number of hosts the service currently reports, or nullopt when the call failed. Used to
+    // prove a run leaves nothing behind.
+    std::optional<size_t> CountConfiguredHosts();
+
     // Creates a client which connects directly to the given address and port. The entry
     // identifier is the GUID string the service uses to track the connection, and is what
     // RemoveClient needs later.

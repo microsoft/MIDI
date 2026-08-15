@@ -20,7 +20,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
         //static collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
         static collections::IVectorView<rpt::MidiServiceSessionInfo> GetActiveSessions() noexcept;
 
-        static collections::IVectorView<rpt::MidiServiceSessionInfo> FindAllSessionsWithMatchingOpenUmpEndpoint(_In_ winrt::hstring const& endpointDeviceId, bool const includeRelatedMidi1Ports) noexcept;
+        static collections::IVectorView<rpt::MidiServiceSessionInfo> FindAllSessionsWithMatchingOpenUmpEndpoint(_In_ winrt::hstring const& endpointDeviceId, _In_ bool const includeRelatedMidi1Ports) noexcept;
         static collections::IVectorView<rpt::MidiServiceSessionInfo> FindAllSessionsWithMatchingOpenUmpEndpointOrMidi1Ports(_In_ collections::IVectorView<winrt::hstring> const& endpointsAndPorts) noexcept;
 
     private:

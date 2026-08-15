@@ -872,7 +872,7 @@ void NetworkMidiApprovalTests::SecondHostWithTheSameServiceInstanceNameIsRejecte
     Log::Comment(String().Format(L"Reported errorCode: 0x%08X", errorCode));
 
     VERIFY_ARE_EQUAL(
-        static_cast<uint32_t>(HRESULT_FROM_WIN32(ERROR_DUP_NAME)),
+        static_cast<uint32_t>(NETWORK_ERROR_CODE_SERVICE_INSTANCE_NAME_IN_USE),
         errorCode,
         L"The error code identifies a duplicate name rather than a generic failure");
 }
@@ -950,4 +950,82 @@ void NetworkMidiApprovalTests::RemovingAnUnknownHostReportsFailure()
     VERIFY_IS_FALSE(
         result.ReportedSuccess,
         L"Removing a host which does not exist is reported rather than silently succeeding");
+}
+
+
+void NetworkMidiApprovalTests::CreateThenImmediatelyRemoveLeavesNoHostBehind()
+{
+    Log::Comment(
+        L"This test creates and removes hosts repeatedly and waits for the service to settle, "
+        L"so it takes appreciably longer than the others here. It has not hung.");
+
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto const before = CountConfiguredHosts();
+
+    VERIFY_IS_TRUE(before.has_value(), L"The host count could be read before the run");
+
+    // No wait between create and remove, so the removal lands while the endpoint creator
+    // thread may still be building the host. Repeated, because the window is small.
+    const int iterations = 15;
+
+    std::vector<std::wstring> createdIdentifiers;
+
+    for (int i = 0; i < iterations; i++)
+    {
+        auto entryIdentifier = MakeEntryIdentifier();
+        auto serviceInstanceName = std::wstring{ L"midi2-approval-test-norace-" }
+            + std::to_wstring(GetTickCount64())
+            + L"-"
+            + std::to_wstring(i);
+
+        auto created = CreateHost(
+            entryIdentifier,
+            L"No Race Host",
+            L"NORACE",
+            serviceInstanceName,
+            false);
+
+        VERIFY_IS_TRUE(created.IsSuccess(), L"Host created");
+
+        createdIdentifiers.push_back(entryIdentifier);
+
+        auto removed = RemoveHost(entryIdentifier);
+
+        // Removing an entry which was accepted but has not been built yet is still a removal,
+        // so this must not come back as "host not found".
+        VERIFY_IS_TRUE(
+            removed.IsSuccess(),
+            L"Removing a host which may still be starting is reported as a success");
+    }
+
+    // let anything still in flight inside the service finish before counting
+    Sleep(3000);
+
+    auto const after = CountConfiguredHosts();
+
+    VERIFY_IS_TRUE(after.has_value(), L"The host count could be read after the run");
+
+    Log::Comment(String().Format(
+        L"%d create/remove cycles. Hosts before %zu, after %zu.",
+        iterations,
+        before.value(),
+        after.value()));
+
+    VERIFY_ARE_EQUAL(
+        before.value(),
+        after.value(),
+        L"Creating and immediately removing hosts leaves none behind");
+
+    // and none of the specific entries survived
+    auto enumerated = EnumerateHosts();
+
+    VERIFY_IS_TRUE(enumerated.IsSuccess(), L"Hosts could be enumerated");
+
+    for (auto const& identifier : createdIdentifiers)
+    {
+        VERIFY_IS_TRUE(
+            enumerated.ResponseJson.find(identifier) == std::wstring::npos,
+            L"A removed host does not appear in the enumeration");
+    }
 }

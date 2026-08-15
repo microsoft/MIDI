@@ -42,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
             return m_streamConfigurationRequestReceivedEvent.add(handler);
         }
 
-        void StreamConfigRequestReceived(winrt::event_token const& token) noexcept
+        void StreamConfigRequestReceived(_In_ winrt::event_token const& token) noexcept
         {
             if (m_streamConfigurationRequestReceivedEvent) m_streamConfigurationRequestReceivedEvent.remove(token);
         }

@@ -24,7 +24,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         json::JsonObject ConfigJson() const noexcept;
 
         winrt::guid ClientId() const noexcept { return m_id; }
-        void ClientId(_In_ winrt::guid const& value) { m_id = value; }
+        void ClientId(_In_ winrt::guid const& value) noexcept { m_id = value; }
 
     private:
         winrt::guid m_id{};

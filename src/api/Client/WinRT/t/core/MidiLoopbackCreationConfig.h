@@ -26,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         json::JsonObject ConfigJson();
 
         bool IsMuted() const noexcept { return m_isMuted; }
-        void IsMuted(bool value) noexcept { m_isMuted = value; }
+        void IsMuted(_In_ bool value) noexcept { m_isMuted = value; }
 
         winrt::guid AssociationId() noexcept { return m_associationId; }
         void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }

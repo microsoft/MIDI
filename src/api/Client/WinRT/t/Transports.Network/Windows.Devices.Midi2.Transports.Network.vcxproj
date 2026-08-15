@@ -404,7 +404,6 @@
     <Midl Include="MidiNetworkHostUpdateResult.idl" />
     <Midl Include="MidiNetworkHostUpdateResultErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkTransportManager.idl" />
-    <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
     <Midl Include="MidiNetworkHostCreationConfig.idl" />
     <Midl Include="MidiNetworkHostCreationResult.idl" />
     <Midl Include="MidiNetworkHostRemovalConfig.idl" />

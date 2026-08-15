@@ -27,7 +27,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
 
-        collections::IVectorView<winrt::hstring> IPAddresses() { return m_ipAddresses.GetView(); }
+        collections::IVectorView<winrt::hstring> IPAddresses() noexcept { return m_ipAddresses.GetView(); }
 
         void InternalInitialize(
             _In_ winrt::hstring deviceId,

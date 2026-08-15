@@ -15,23 +15,23 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkConfiguredHost")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkConfiguredHost", UUID_IMidiNetworkConfiguredHost)]
     runtimeclass MidiNetworkConfiguredHost
     {
-        Guid HostId{ get;} ;  // internal id we use to match up in config file
+        [noexcept] Guid HostId{ get;} ;  // internal id we use to match up in config file
 
-        Boolean IsEnabled{ get; };                  // true if this is allows to connect. Mostly for pre-configured connections
-        Boolean HasStarted{ get; };                 // true if this has started
+        [noexcept] Boolean IsEnabled{ get; };                  // true if this is allows to connect. Mostly for pre-configured connections
+        [noexcept] Boolean HasStarted{ get; };                 // true if this has started
 
-        String ActualPort{ get; };                  // string because DatagramSocket.LocalPort returns a string
-        String ActualAddress{ get; };
+        [noexcept] String ActualPort{ get; };                  // string because DatagramSocket.LocalPort returns a string
+        [noexcept] String ActualAddress{ get; };
 
-        String UmpEndpointName{ get; };
-        String ProductInstanceId{ get; };
+        [noexcept] String UmpEndpointName{ get; };
+        [noexcept] String ProductInstanceId{ get; };
 
-        String ServiceInstanceName{ get; };
+        [noexcept] String ServiceInstanceName{ get; };
 
-        Boolean CreateMidi1Ports{ get; };
+        [noexcept] Boolean CreateMidi1Ports{ get; };
     };
 }
 

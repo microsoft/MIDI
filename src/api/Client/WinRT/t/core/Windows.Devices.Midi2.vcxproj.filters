@@ -30,6 +30,9 @@
     <ClCompile Include="MidiNetworkConfiguredClient.cpp">
       <Filter>SDK\Transports\Network\Client</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkPendingRemoteClient.cpp">
+      <Filter>SDK\Transports\Network\Client</Filter>
+    </ClCompile>
     <ClCompile Include="MidiNetworkRemoteClientApprovalConfig.cpp">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </ClCompile>
@@ -65,6 +68,9 @@
       <Filter>SDK\Transports\Network\Host</Filter>
     </ClInclude>
     <ClInclude Include="MidiNetworkConfiguredClient.h">
+      <Filter>SDK\Transports\Network\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkPendingRemoteClient.h">
       <Filter>SDK\Transports\Network\Client</Filter>
     </ClInclude>
     <ClInclude Include="MidiNetworkRemoteClientApprovalConfig.h">
@@ -427,9 +433,6 @@
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
     <Midl Include="MidiNetworkConfiguredHost.idl">
-      <Filter>SDK\Transports\Network\Host</Filter>
-    </Midl>
-    <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl">
       <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkHostCreationConfig.idl">

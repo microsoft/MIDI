@@ -33,6 +33,7 @@
 
 #include "MidiNetworkConfiguredHost.h"
 #include "MidiNetworkConfiguredClient.h"
+#include "MidiNetworkPendingRemoteClient.h"
 
 #include "MidiNetworkRemoteClientApprovalConfig.h"
 #include "MidiNetworkRemoteClientApprovalResponse.h"
@@ -41,6 +42,35 @@
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
+    namespace
+    {
+        // winrt::guid's string constructor validates length, separators and every hex digit, and
+        // accepts both the braced and unbraced forms. It throws std::invalid_argument rather than
+        // an hresult_error, so it needs its own catch. Entry identifiers come from the
+        // configuration file, where a user can type anything, and one bad entry used to abort an
+        // entire enumeration and surface as an empty list rather than an error.
+        bool TryParseGuid(_In_ winrt::hstring const& value, _Out_ winrt::guid& result) noexcept
+        {
+            result = winrt::guid{};
+
+            if (value.empty())
+            {
+                return false;
+            }
+
+            try
+            {
+                result = winrt::guid{ std::wstring_view{ value } };
+
+                return true;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+    }
+
     bool MidiNetworkTransportManager::IsTransportAvailable() noexcept
     {
         auto transports = rpt::MidiReporting::GetInstalledTransportPlugins();
@@ -58,7 +88,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
     _Use_decl_annotations_ 
-    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StartNetworkHostAsync(winrt::guid const& hostId)
+    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StartNetworkHostAsync(winrt::guid const& hostId) noexcept
     {
         auto result = winrt::make_self<MidiNetworkHostUpdateResponse>();
         result->InternalSetHostId(hostId);
@@ -74,7 +104,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
             co_await winrt::resume_background();
 
-            // this could take a few since it closes all the connections synchronously in the service
             auto response = midi2::ServiceConfig::MidiServiceTransportPluginConfigManager::SendCommand(command);
 
         
@@ -84,8 +113,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             }
             else
             {
-                // TODO: Get actual error code from json
-                result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::NoErrorInformationAvailable, response.ServiceErrorMessage());
+                result->InternalSetError(static_cast<network::MidiNetworkHostUpdateErrorCode>(response.ServiceErrorCode()), response.ServiceErrorMessage());
             }
 
             co_return *result;
@@ -100,13 +128,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Unable to stop network host. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Unable to start network host. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
 
-            // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::NoErrorInformationAvailable, ex.message());
+            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, ex.message());
 
             co_return *result;
         }
@@ -120,18 +147,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Unable to stop network host. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Unable to start network host. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::NoErrorInformationAvailable, L"General exception");
+            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, L"General exception");
 
             co_return *result;
         }
     }
     
     _Use_decl_annotations_ 
-    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StopNetworkHostAsync(winrt::guid const& hostId)
+    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StopNetworkHostAsync(winrt::guid const& hostId) noexcept
     {
         auto result = winrt::make_self<MidiNetworkHostUpdateResponse>();
         result->InternalSetHostId(hostId);
@@ -156,8 +182,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             }
             else
             {
-                // TODO: Get actual error code
-                result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::NoErrorInformationAvailable, response.ServiceErrorMessage());
+                result->InternalSetError(static_cast<network::MidiNetworkHostUpdateErrorCode>(response.ServiceErrorCode()), response.ServiceErrorMessage());
             }
 
             co_return *result;
@@ -178,7 +203,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::NoErrorInformationAvailable, ex.message());
+            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, ex.message());
 
             co_return *result;
         }
@@ -196,7 +221,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::NoErrorInformationAvailable, L"General exception");
+            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, L"General exception");
 
             co_return *result;
         }
@@ -228,11 +253,28 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                         if (entryObject != nullptr)
                         {
+                            winrt::guid hostId{};
+
+                            if (!TryParseGuid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY, L""), hostId))
+                            {
+                                TraceLoggingWrite(
+                                    Midi2SdkTelemetryProvider::Provider(),
+                                    MIDI_SDK_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                                    TraceLoggingWideString(L"Host entry skipped. Its entry identifier is not a valid guid.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                                    TraceLoggingWideString(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY, L"").c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+                                );
+
+                                continue;
+                            }
+
                             auto host = winrt::make_self<MidiNetworkConfiguredHost>();
 
                             host->InternalInitialize(
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_IS_ENABLED_KEY, false),
-                                winrt::guid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY, L"")),
+                                hostId,
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY, L""),
@@ -315,11 +357,32 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                         if (entryObject != nullptr)
                         {
+                            winrt::guid clientId{};
+
+                            if (!TryParseGuid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY, L""), clientId))
+                            {
+                                TraceLoggingWrite(
+                                    Midi2SdkTelemetryProvider::Provider(),
+                                    MIDI_SDK_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                                    TraceLoggingWideString(L"Client entry skipped. Its entry identifier is not a valid guid.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                                    TraceLoggingWideString(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY, L"").c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+                                );
+
+                                continue;
+                            }
+
+                            // the host association is optional, so an unparseable one is left empty
+                            winrt::guid clientHostId{};
+                            TryParseGuid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_HOST_ID_KEY, L""), clientHostId);
+
                             auto client = winrt::make_self<MidiNetworkConfiguredClient>();
 
                             client->InternalInitialize(
-                                winrt::guid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY, L"")),
-                                winrt::guid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_HOST_ID_KEY, L"")),
+                                clientId,
+                                clientHostId,
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY, false),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY, L""),
@@ -382,13 +445,161 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     }
 
 
+    namespace
+    {
+        // Inverse of the service's PendingRequestTimeToString. The wire format is ISO 8601 UTC
+        // with the full 100ns FILETIME resolution, for example 2026-08-12T01:23:45.6789012Z. An
+        // empty or unparseable string becomes a zero DateTime, which is what an unset request
+        // time means on the service side as well.
+        foundation::DateTime PendingRequestTimeFromString(_In_ winrt::hstring const& value) noexcept
+        {
+            foundation::DateTime result{};
+
+            if (value.empty())
+            {
+                return result;
+            }
+
+            uint32_t year{}, month{}, day{}, hour{}, minute{}, second{}, fraction{};
+
+            // The fraction is exactly seven digits, so it is read as a whole number of 100ns ticks
+            if (swscanf_s(value.c_str(), L"%4u-%2u-%2uT%2u:%2u:%2u.%7uZ",
+                &year, &month, &day, &hour, &minute, &second, &fraction) != 7)
+            {
+                return result;
+            }
+
+            SYSTEMTIME st{};
+            st.wYear = static_cast<WORD>(year);
+            st.wMonth = static_cast<WORD>(month);
+            st.wDay = static_cast<WORD>(day);
+            st.wHour = static_cast<WORD>(hour);
+            st.wMinute = static_cast<WORD>(minute);
+            st.wSecond = static_cast<WORD>(second);
+            st.wMilliseconds = 0;
+
+            FILETIME ft{};
+
+            if (!SystemTimeToFileTime(&st, &ft))
+            {
+                return result;
+            }
+
+            // whole seconds from the conversion, plus the sub-second ticks the service preserved
+            uint64_t fileTime = (static_cast<uint64_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+            fileTime += fraction;
+
+            result = winrt::clock::from_file_time(winrt::file_time{ fileTime });
+
+            return result;
+        }
+    }
+
     collections::IVectorView<network::MidiNetworkPendingRemoteClient> MidiNetworkTransportManager::GetPendingRemoteClients() noexcept
     {
+        auto results = winrt::single_threaded_vector<network::MidiNetworkPendingRemoteClient>();
 
-        // TODO
+        try
+        {
+            midi2::ServiceConfig::MidiServiceTransportCommand command(network::MidiNetworkTransportManager::TransportId());
+            command.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS);
 
-        return nullptr;     // temp
+            auto response = midi2::ServiceConfig::MidiServiceTransportPluginConfigManager::SendCommand(command);
 
+            if (response.Status() == midi2::ServiceConfig::MidiServiceConfigResponseStatus::Success)
+            {
+                auto responseJson = response.ResponseJson();
+
+                if (responseJson != nullptr && responseJson.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENTS_RESPONSE_ARRAY_KEY))
+                {
+                    auto pendingArray = responseJson.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENTS_RESPONSE_ARRAY_KEY);
+
+                    for (auto const& entry : pendingArray)
+                    {
+                        auto entryObject = entry.GetObject();
+
+                        if (entryObject != nullptr)
+                        {
+                            winrt::guid pendingHostId{};
+
+                            if (!TryParseGuid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER, L""), pendingHostId))
+                            {
+                                TraceLoggingWrite(
+                                    Midi2SdkTelemetryProvider::Provider(),
+                                    MIDI_SDK_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                                    TraceLoggingWideString(L"Pending client entry skipped. Its host entry identifier is not a valid guid.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                                );
+
+                                continue;
+                            }
+
+                            auto pendingClient = winrt::make_self<MidiNetworkPendingRemoteClient>();
+
+                            pendingClient->InternalInitialize(
+                                pendingHostId,
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_HOST_SERVICE_INSTANCE_NAME_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_HOST_NAME_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY, L""),
+                                PendingRequestTimeFromString(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PENDING_CLIENT_REQUEST_TIME_KEY, L""))
+                            );
+
+                            results.Append(*pendingClient);
+                        }
+                    }
+                }
+                else
+                {
+                    // no response array. Nothing pending is a normal and common answer.
+                }
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Service returned a failure for the pending remote clients request.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(response.ServiceErrorMessage().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+                );
+            }
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to get pending remote clients. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to get pending remote clients. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
+
+        return results.GetView();
     }
 
 
@@ -396,19 +607,30 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
 
-    // TODO: Not yet really async
     _Use_decl_annotations_
     foundation::IAsyncOperation<network::MidiNetworkHostCreationResponse> MidiNetworkTransportManager::CreateNetworkHostAsync(
         network::MidiNetworkHostCreationConfig const& creationConfig) noexcept
     {
         auto result = winrt::make_self<MidiNetworkHostCreationResponse>();
 
-    //    co_await winrt::resume_background();
-
         try
         {
-            // TODO. This doesn't do everything sync in the service so needs to change
-            auto createResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(creationConfig);
+            if (creationConfig == nullptr)
+            {
+                result->InternalSetError(
+                    network::MidiNetworkHostCreationErrorCode::InvalidArgument,
+                    L"Creation configuration is null.");
+
+                co_return *result;
+            }
+
+            // Strong copy, because a reference parameter is not stored in the coroutine frame
+            // and does not survive the suspension below.
+            auto config = creationConfig;
+
+            co_await winrt::resume_background();
+
+            auto createResponse = svc::MidiServiceTransportPluginConfigManager::SendUpdate(config);
 
             if (createResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
@@ -417,7 +639,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             else
             {
                 // todo: get actual error code
-                result->InternalSetError(network::MidiNetworkHostCreationErrorCode::NoErrorInformationAvailable, createResponse.ServiceErrorMessage());
+                result->InternalSetError(static_cast<network::MidiNetworkHostCreationErrorCode>(createResponse.ServiceErrorCode()), createResponse.ServiceErrorMessage());
             }
 
             co_return *result;
@@ -438,7 +660,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkHostCreationErrorCode::NoErrorInformationAvailable, ex.message());
+            result->InternalSetError(network::MidiNetworkHostCreationErrorCode::ClientApiException, ex.message());
 
             co_return *result;
         }
@@ -456,13 +678,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkHostCreationErrorCode::NoErrorInformationAvailable, L"General exception.");
+            result->InternalSetError(network::MidiNetworkHostCreationErrorCode::ClientApiException, L"General exception.");
 
             co_return *result;
         }
     }
 
-    // TODO: Not yet really async
     _Use_decl_annotations_
     foundation::IAsyncOperation<network::MidiNetworkHostRemovalResponse>
     MidiNetworkTransportManager::RemoveNetworkHostAsync(
@@ -470,45 +691,185 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     {
         auto result = winrt::make_self<MidiNetworkHostRemovalResponse>();
 
-        // TODO: Get actual error code
-        result->InternalSetError(network::MidiNetworkHostRemovalErrorCode::NoErrorInformationAvailable, L"Not yet implemented");
+        try
+        {
+            if (removalConfig == nullptr)
+            {
+                result->InternalSetError(
+                    network::MidiNetworkHostRemovalErrorCode::InvalidArgument,
+                    L"Removal configuration is null.");
 
-        co_return *result;
+                co_return *result;
+            }
+
+            auto const hostId = removalConfig.HostId();
+
+            result->InternalSetHostId(hostId);
+
+            midi2::ServiceConfig::MidiServiceTransportCommand command(network::MidiNetworkTransportManager::TransportId());
+
+            command.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST);
+            command.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                winrt::to_hstring(hostId));
+
+            co_await winrt::resume_background();
+
+            // the service shuts the host down synchronously, including its sessions, so this can take a moment
+            auto response = midi2::ServiceConfig::MidiServiceTransportPluginConfigManager::SendCommand(command);
+
+            if (response.Status() == midi2::ServiceConfig::MidiServiceConfigResponseStatus::Success)
+            {
+                result->InternalSetSuccess();
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Service rejected the host removal.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(response.ServiceErrorMessage().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+                );
+
+                result->InternalSetError(
+                    static_cast<network::MidiNetworkHostRemovalErrorCode>(response.ServiceErrorCode()),
+                    response.ServiceErrorMessage());
+            }
+
+            co_return *result;
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to remove network host. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            result->InternalSetError(network::MidiNetworkHostRemovalErrorCode::ClientApiException, ex.message());
+
+            co_return *result;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to remove network host. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            result->InternalSetError(network::MidiNetworkHostRemovalErrorCode::ClientApiException, L"General exception.");
+
+            co_return *result;
+        }
     }
 
 
 
-    // TODO: not yet really async
     _Use_decl_annotations_
     foundation::IAsyncOperation<network::MidiNetworkClientConnectResponse>
     MidiNetworkTransportManager::ConnectNetworkClientAsync(
         network::MidiNetworkClientConnectConfig const& creationConfig) noexcept
     {
-        // TODO: Right now this is only doing direct connects, not MDNS connects
-        // TODO: There's no endpoint name in the config
-
-        svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
-        cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT);
-        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, winrt::to_hstring(creationConfig.ClientId()));
-        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS, creationConfig.MatchCriteria().DirectHostNameOrIPAddress());
-        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT, winrt::to_hstring(creationConfig.MatchCriteria().DirectPort()));
-        cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME, creationConfig.UmpEndpointName());
-
-        auto createResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
-
         auto result = winrt::make_self<MidiNetworkClientConnectResponse>();
 
-        if (createResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+        try
         {
-            result->InternalSetSuccess();
-        }
-        else
-        {
-            // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkClientConnectErrorCode::NoErrorInformationAvailable, createResponse.ServiceErrorMessage());
-        }
+            if (creationConfig == nullptr)
+            {
+                result->InternalSetError(
+                    network::MidiNetworkClientConnectErrorCode::InvalidArgument,
+                    L"Connect configuration is null.");
 
-        co_return *result;
+                co_return *result;
+            }
+
+            // TODO: Right now this is only doing direct connects, not MDNS connects
+            auto matchCriteria = creationConfig.MatchCriteria();
+
+            if (matchCriteria == nullptr)
+            {
+                result->InternalSetError(
+                    network::MidiNetworkClientConnectErrorCode::InvalidOrMissingMatchCriteria,
+                    L"Connect configuration has no match criteria.");
+
+                co_return *result;
+            }
+
+            svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
+            cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT);
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, winrt::to_hstring(creationConfig.ClientId()));
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS, matchCriteria.DirectHostNameOrIPAddress());
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT, winrt::to_hstring(matchCriteria.DirectPort()));
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME, creationConfig.UmpEndpointName());
+
+            co_await winrt::resume_background();
+
+            // the service sends the invitation and waits for the reply, so this can take a while
+            auto createResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+
+            if (createResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                result->InternalSetSuccess();
+            }
+            else
+            {
+                result->InternalSetError(static_cast<network::MidiNetworkClientConnectErrorCode>(createResponse.ServiceErrorCode()), createResponse.ServiceErrorMessage());
+            }
+
+            co_return *result;
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to connect network client. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            result->InternalSetError(network::MidiNetworkClientConnectErrorCode::ClientApiException, ex.message());
+
+            co_return *result;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to connect network client. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            result->InternalSetError(network::MidiNetworkClientConnectErrorCode::ClientApiException, L"General exception.");
+
+            co_return *result;
+        }
     }
     
 
@@ -521,9 +882,20 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         try
         {
+            if (disconnectConfig == nullptr)
+            {
+                result->InternalSetError(
+                    network::MidiNetworkClientDisconnectErrorCode::InvalidArgument,
+                    L"Disconnect configuration is null.");
+
+                co_return *result;
+            }
+
             svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
             cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT);
             cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, winrt::to_hstring(disconnectConfig.ClientId()));
+
+            co_await winrt::resume_background();
 
             auto response = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
 
@@ -534,7 +906,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             else
             {
                 // TODO: Get actual error code
-                result->InternalSetError(network::MidiNetworkClientDisconnectErrorCode::NoErrorInformationAvailable, response.ServiceErrorMessage());
+                result->InternalSetError(static_cast<network::MidiNetworkClientDisconnectErrorCode>(response.ServiceErrorCode()), response.ServiceErrorMessage());
             }
 
             co_return *result;
@@ -555,7 +927,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkClientDisconnectErrorCode::NoErrorInformationAvailable, ex.message());
+            result->InternalSetError(network::MidiNetworkClientDisconnectErrorCode::ClientApiException, ex.message());
 
             co_return *result;
         }
@@ -573,7 +945,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkClientDisconnectErrorCode::NoErrorInformationAvailable, L"General exception.");
+            result->InternalSetError(network::MidiNetworkClientDisconnectErrorCode::ClientApiException, L"General exception.");
 
             co_return *result;
         }
@@ -583,36 +955,67 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     foundation::IAsyncOperation<network::MidiNetworkRemoteClientApprovalResponse> MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(
         network::MidiNetworkRemoteClientApprovalConfig const& approvalConfig) noexcept
     {
-        UNREFERENCED_PARAMETER(approvalConfig);
-
         auto response = winrt::make_self<MidiNetworkRemoteClientApprovalResponse>();
 
         try
         {
+            if (approvalConfig == nullptr)
+            {
+                response->InternalSetError(
+                    network::MidiNetworkRemoteClientApprovalErrorCode::InvalidArgument,
+                    L"Approval configuration is null.");
+
+                co_return *response;
+            }
+
+            // Captured before the thread switch because the projected object may be apartment-bound
+            auto const hostId = approvalConfig.HostId();
+            auto const remoteClientName = approvalConfig.RemoteClientName();
+            auto const remoteClientProductInstanceId = approvalConfig.RemoteClientProductInstanceId();
+            auto const approve = approvalConfig.Approve();
+            auto const scopeIsThisRequestOnly = approvalConfig.ScopeIsThisRequestOnly();
+
+            response->InternalSetHostId(hostId);
+            response->InternalSetRemoteClientName(remoteClientName);
+            response->InternalSetRemoteClientProductInstanceId(remoteClientProductInstanceId);
+
+            if (remoteClientName.empty() || remoteClientProductInstanceId.empty())
+            {
+                response->InternalSetError(
+                    network::MidiNetworkRemoteClientApprovalErrorCode::InvalidOrMissingRemoteClientIdentity,
+                    L"Remote client name and product instance id are both required to identify the pending client.");
+
+                co_return *response;
+            }
+
             svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
 
+            cmd.Verb(approve ?
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT :
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT);
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                winrt::to_hstring(hostId));
+
+            // The service matches the parked connection on these two values together
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                remoteClientName);
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                remoteClientProductInstanceId);
+
+            // Only "always" is written to the configuration file. "once" authorizes just the
+            // connection currently waiting.
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE,
+                scopeIsThisRequestOnly ?
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ONCE :
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ALWAYS);
+
             co_await resume_background();
-
-
-            // TODO: Set verb based on approvalConfig.ApprovalAction()
-
-            cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT);
-            //cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, winrt::to_hstring(approvalConfig.ClientId()));
-
-
-
-            // TODO: Additional arguments
-
-
-
-
-
-
-
-
-
-
-
 
             auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
 
@@ -622,8 +1025,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             }
             else
             {
-                // TODO: Get actual error code
-                response->InternalSetError(static_cast<network::MidiNetworkRemoteClientApprovalErrorCode>(serviceResponse.ServiceErrorCode()), serviceResponse.ServiceErrorMessage());
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Service rejected the remote client decision.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(serviceResponse.ServiceErrorMessage().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+                );
+
+                response->InternalSetError(
+                    static_cast<network::MidiNetworkRemoteClientApprovalErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
             }
 
             co_return *response;
@@ -638,13 +1052,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Unable to disconnect network client. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Unable to approve or deny remote client. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
 
-            // TODO: Get actual error code
-            response->InternalSetError(network::MidiNetworkRemoteClientApprovalErrorCode::NoErrorInformationAvailable, ex.message());
+            response->InternalSetError(network::MidiNetworkRemoteClientApprovalErrorCode::ClientApiException, ex.message());
 
             co_return *response;
         }
@@ -658,16 +1071,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Unable to disconnect network client. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Unable to approve or deny remote client. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            // TODO: Get actual error code
-            response->InternalSetError(network::MidiNetworkRemoteClientApprovalErrorCode::NoErrorInformationAvailable, L"General exception.");
+            response->InternalSetError(network::MidiNetworkRemoteClientApprovalErrorCode::ClientApiException, L"General exception.");
 
             co_return *response;
         }
-
-
     }
 
 
