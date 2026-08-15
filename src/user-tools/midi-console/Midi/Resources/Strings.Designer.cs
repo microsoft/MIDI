@@ -1593,6 +1593,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include additional details about the sessions.
+        /// </summary>
+        internal static string ParameterEnumSessionsVerbose {
+            get {
+                return ResourceManager.GetString("ParameterEnumSessionsVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Include additional details for each transport, such as the transport id, image file name, and creation capabilities.
         /// </summary>
         internal static string ParameterEnumTransportsVerbose {

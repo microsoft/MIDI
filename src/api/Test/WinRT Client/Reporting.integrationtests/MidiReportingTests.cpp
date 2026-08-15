@@ -25,7 +25,7 @@ void MidiReportingTests::TestEnumerateTransports()
 }
 
 
-MidiServiceSessionInfo FindSession(collections::IVector<MidiServiceSessionInfo> sessions, winrt::guid sessionId)
+MidiServiceSessionInfo FindSession(collections::IVectorView<MidiServiceSessionInfo> sessions, winrt::guid sessionId)
 {
     for (auto const& session : sessions)
     {
@@ -49,9 +49,7 @@ void MidiReportingTests::TestEnumerateSessions()
 
     // Test 1: check that session shows up in results, with no connections
 
-    collections::IVector<MidiServiceSessionInfo> sessionList;
-
-    sessionList = MidiReporting::GetActiveSessions();
+    auto sessionList = MidiReporting::GetActiveSessions();
     VERIFY_IS_NOT_NULL(sessionList);
 
     auto foundSession = FindSession(sessionList, thisSession.SessionId());
@@ -81,7 +79,7 @@ void MidiReportingTests::TestEnumerateSessions()
         foundSession = FindSession(sessionList, thisSession.SessionId());
         VERIFY_IS_NOT_NULL(foundSession);
         VERIFY_IS_TRUE(foundSession.Connections().Size() == 1);
-        VERIFY_IS_TRUE(foundSession.Connections().GetAt(0).EndpointDeviceId() == endpoint.EndpointDeviceId());
+        VERIFY_IS_TRUE(foundSession.Connections().GetAt(0).EndpointOrPortDeviceId() == endpoint.EndpointDeviceId());
 
         // close the connection
         thisSession.DisconnectEndpointConnection(conn.ConnectionId());

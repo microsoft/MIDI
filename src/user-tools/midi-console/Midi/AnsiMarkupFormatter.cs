@@ -167,6 +167,12 @@ namespace Microsoft.Midi.ConsoleApp
             return "[darkseagreen]" + EscapeString(id.Trim()) + "[/]";
         }
 
+        public static string FormatGeneralGuid(Guid id)
+        {
+            return "[darkseagreen]" + EscapeString(id.ToString()) + "[/]";
+        }
+
+
         public static string FormatEndpointAssociationId(Guid id)
         {
             return "[darkseagreen]" + EscapeString(id.ToString()) + "[/]";

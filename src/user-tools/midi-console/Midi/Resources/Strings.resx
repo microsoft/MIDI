@@ -1283,4 +1283,7 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   <data name="ParameterMonitorEndpointIncludeUtilityMessages" xml:space="preserve">
     <value>Include Type 0 utility messages, like NOOP</value>
   </data>
+  <data name="ParameterEnumSessionsVerbose" xml:space="preserve">
+    <value>Include additional details about the sessions</value>
+  </data>
 </root>
