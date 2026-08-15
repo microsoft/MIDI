@@ -131,6 +131,8 @@ struct MidiNetworkHostDefinition;
 #include "MidiNetworkDataWriter.h"
 #include "MidiNetworkInvitationState.h"
 #include "MidiNetworkConnection.h"
+#include "MidiNetworkHostConnection.h"
+#include "MidiNetworkClientConnection.h"
 
 #include "TransportState.h"
 

@@ -284,6 +284,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiNetworkConnection.cpp" />
+    <ClCompile Include="MidiNetworkHostConnection.cpp" />
+    <ClCompile Include="MidiNetworkClientConnection.cpp" />
     <ClCompile Include="MidiNetworkDataWriter.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
@@ -309,6 +311,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiNetworkConnection.h" />
+    <ClInclude Include="MidiNetworkHostConnection.h" />
+    <ClInclude Include="MidiNetworkClientConnection.h" />
+    <ClInclude Include="MidiNetworkInvitationState.h" />
     <ClInclude Include="MidiNetworkDataWriter.h" />
     <ClInclude Include="MidiSequenceNumber.h" />
     <ClInclude Include="network_json_defs.h" />

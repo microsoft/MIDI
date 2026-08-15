@@ -410,7 +410,7 @@ CMidi2NetworkMidiEndpointManager::StartBackgroundHostEndpointCreation()
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::QueueHostEndpointCreation(
-    std::shared_ptr<MidiNetworkConnection> connection,
+    std::shared_ptr<MidiNetworkHostConnection> connection,
     std::wstring const& clientUmpEndpointName,
     std::wstring const& clientProductInstanceId
 )

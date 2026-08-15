@@ -265,10 +265,10 @@ MidiNetworkHost::CreateNetworkConnection(
     auto socket = GetSocket();
     RETURN_HR_IF_NULL(E_UNEXPECTED, socket);
 
-    auto conn = std::make_shared<MidiNetworkConnection>();
+    auto conn = std::make_shared<MidiNetworkHostConnection>();
     RETURN_IF_NULL_ALLOC(conn);
 
-    RETURN_IF_FAILED(conn->InitializeForHost(
+    RETURN_IF_FAILED(conn->Initialize(
         m_hostDefinition.EntryIdentifier,
         m_parentDeviceInstanceId,
         socket,

@@ -160,6 +160,10 @@ public:
 
     std::vector<std::shared_ptr<MidiNetworkConnection>> GetAllNetworkConnectionsForHost(_In_ winrt::guid const& hostEntryIdentifier);
 
+    // The same set, typed. A host's connections are all host-role, and the approval and
+    // enumeration paths need the host-only surface.
+    std::vector<std::shared_ptr<MidiNetworkHostConnection>> GetHostConnectionsForHost(_In_ winrt::guid const& hostEntryIdentifier);
+
     std::vector<std::shared_ptr<MidiNetworkConnection>> GetAllNetworkConnectionsForClient(_In_ winrt::guid const& clientEntryIdentifier);
 
     size_t CountNetworkConnectionsForConfigIdentifier(_In_ winrt::guid const& configEntryIdentifier);

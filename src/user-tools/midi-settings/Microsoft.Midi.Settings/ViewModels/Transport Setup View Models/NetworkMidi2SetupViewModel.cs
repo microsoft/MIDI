@@ -29,28 +29,7 @@ namespace Microsoft.Midi.Settings.ViewModels
     public partial class MidiNetworkPendingRemoteClientEntry : ObservableRecipient
     {
         [ObservableProperty]
-        public Guid hostId;
-
-        [ObservableProperty]
-        public String hostServiceInstanceName;
-
-        [ObservableProperty]
-        public String hostUmpEndpointName;
-
-
-        [ObservableProperty]
-        public String umpEndpointName;
-
-        [ObservableProperty]
-        public String productInstanceId;
-
-        [ObservableProperty]
-        public String remoteAddress;
-
-        [ObservableProperty]
-        public DateTimeOffset requestTime;
-
-
+        public MidiNetworkPendingRemoteClient remoteClient;
 
         public ICommand ApproveOnceCommand { get; private set; }
         public ICommand ApproveAlwaysCommand { get; private set; }
@@ -68,14 +47,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMessageBoxService messageBoxService,
             IMidiConfigFileService configFileService)
         {
-            HostId = pendingClient.HostId;
-            HostServiceInstanceName = pendingClient.HostServiceInstanceName;
-            HostUmpEndpointName = pendingClient.HostUmpEndpointName;
-            UmpEndpointName = pendingClient.UmpEndpointName;
-            ProductInstanceId = pendingClient.ProductInstanceId;
-            RemoteAddress = pendingClient.RemoteAddress;
-            RequestTime = pendingClient.RequestTime;
-
+            RemoteClient = pendingClient;
 
             _loggingService = loggingService;
             _messageBoxService = messageBoxService;

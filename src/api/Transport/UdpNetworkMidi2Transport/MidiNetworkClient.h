@@ -104,9 +104,9 @@ private:
     bool m_createUmpEndpointsOnly{ true };
 
     wil::critical_section m_connectionLock;
-    std::shared_ptr<MidiNetworkConnection> m_networkConnection{ nullptr };
+    std::shared_ptr<MidiNetworkClientConnection> m_networkConnection{ nullptr };
 
-    std::shared_ptr<MidiNetworkConnection> GetConnection()
+    std::shared_ptr<MidiNetworkClientConnection> GetConnection()
     {
         auto lock = m_connectionLock.lock();
 

@@ -75,7 +75,7 @@ public:
     // on the socket receive callback, so one burst of invitations stalled every datagram behind
     // it. The connection is answered with Invitation Reply: Pending and completed from here.
     HRESULT QueueHostEndpointCreation(
-        _In_ std::shared_ptr<MidiNetworkConnection> connection,
+        _In_ std::shared_ptr<MidiNetworkHostConnection> connection,
         _In_ std::wstring const& clientUmpEndpointName,
         _In_ std::wstring const& clientProductInstanceId);
 
@@ -161,7 +161,7 @@ private:
 
     struct PendingHostEndpointCreation
     {
-        std::shared_ptr<MidiNetworkConnection> Connection;
+        std::shared_ptr<MidiNetworkHostConnection> Connection;
         std::wstring ClientUmpEndpointName;
         std::wstring ClientProductInstanceId;
 

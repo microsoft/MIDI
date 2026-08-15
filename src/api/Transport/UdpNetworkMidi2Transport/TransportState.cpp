@@ -779,6 +779,34 @@ TransportState::GetAllNetworkConnectionsForHost(winrt::guid const& hostEntryConf
 }
 
 _Use_decl_annotations_
+std::vector<std::shared_ptr<MidiNetworkHostConnection>>
+TransportState::GetHostConnectionsForHost(winrt::guid const& hostEntryConfigIdentifier)
+{
+    std::vector<std::shared_ptr<MidiNetworkHostConnection>> results;
+
+    auto lock = m_stateLock.lock_shared();
+
+    for (auto& conn : m_networkConnections)
+    {
+        if (conn.second->ConfigIdentifier() != hostEntryConfigIdentifier)
+        {
+            continue;
+        }
+
+        // A client entry identifier can never equal a host's, so this only skips something
+        // which was mis-registered.
+        auto hostConnection = std::dynamic_pointer_cast<MidiNetworkHostConnection>(conn.second);
+
+        if (hostConnection != nullptr)
+        {
+            results.push_back(hostConnection);
+        }
+    }
+
+    return results;
+}
+
+_Use_decl_annotations_
 size_t
 TransportState::CountNetworkConnectionsForConfigIdentifier(winrt::guid const& configEntryIdentifier)
 {

@@ -121,7 +121,7 @@ MidiNetworkClient::Start(
         TraceLoggingWideString(remoteHostName.ToString().c_str(), "remote hostname"),
         TraceLoggingWideString(remotePort.c_str(), "remote port"));
 
-    auto conn = std::make_shared<MidiNetworkConnection>();
+    auto conn = std::make_shared<MidiNetworkClientConnection>();
     RETURN_IF_NULL_ALLOC(conn);
 
     DatagramSocket socket;
@@ -235,7 +235,7 @@ MidiNetworkClient::Start(
         TraceLoggingWideString(remoteHostName.ToString().c_str(), "remote hostname"),
         TraceLoggingWideString(remotePort.c_str(), "remote port"));
 
-    RETURN_IF_FAILED(conn->InitializeForClient(
+    RETURN_IF_FAILED(conn->Initialize(
         m_configIdentifier,
         socket,
         remoteHostName,
@@ -343,7 +343,7 @@ MidiNetworkClient::Shutdown()
     RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier));
 
     // may not be in the list above if Start failed part way through. Shutdown is idempotent.
-    std::shared_ptr<MidiNetworkConnection> connection{ nullptr };
+    std::shared_ptr<MidiNetworkClientConnection> connection{ nullptr };
 
     {
         auto lock = m_connectionLock.lock();

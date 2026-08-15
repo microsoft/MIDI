@@ -555,7 +555,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandRemoteClientDecision(
     // client retried from a new port while the user was deciding.
     auto key = identity.Key();
 
-    for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForHost(hostEntryId))
+    for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(hostEntryId))
     {
         if (connection == nullptr || !connection->IsAwaitingUserApproval())
         {
@@ -806,7 +806,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
         // list is how a caller learns a client went away; nothing tracks departures separately.
         json::JsonArray connectionsArray;
 
-        for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForHost(def.EntryIdentifier))
+        for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(def.EntryIdentifier))
         {
             if (connection == nullptr)
             {
@@ -934,7 +934,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandGetPendingRemoteClients(
     {
         auto def = host->GetDefinition();
 
-        for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForHost(def.EntryIdentifier))
+        for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(def.EntryIdentifier))
         {
             if (connection == nullptr || !connection->IsAwaitingUserApproval())
             {
