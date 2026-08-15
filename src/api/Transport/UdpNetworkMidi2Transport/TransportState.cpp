@@ -474,8 +474,7 @@ TransportState::MarkClientDefinitionForReconnect(winrt::guid const& clientConfig
                 return S_FALSE;
             }
 
-            definition->Created = false;
-            definition->Unavailable = false;
+            definition->State = MidiNetworkEntryState::Pending;
 
             return S_OK;
         }
@@ -501,13 +500,12 @@ TransportState::MarkClientDefinitionUnavailableOrRetry(winrt::guid const& client
 
             if (definition->IsDirectConnection())
             {
-                // stays created, so the creator worker leaves it alone until it is re-armed
-                definition->Unavailable = true;
+                definition->State = MidiNetworkEntryState::Unavailable;
 
                 return S_FALSE;
             }
 
-            definition->Created = false;
+            definition->State = MidiNetworkEntryState::Pending;
 
             return S_OK;
         }
@@ -526,9 +524,65 @@ TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdenti
     {
         if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
         {
-            definition->Created = false;
-            definition->Unavailable = false;
+            definition->State = MidiNetworkEntryState::Pending;
             definition->Enabled = true;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkClientDefinitionLive(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto const& definition : m_pendingClientDefinitions)
+    {
+        if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            definition->State = MidiNetworkEntryState::Live;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkHostDefinitionLive(winrt::guid const& hostConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto const& definition : m_pendingHostDefinitions)
+    {
+        if (definition != nullptr && definition->EntryIdentifier == hostConfigEntryIdentifier)
+        {
+            definition->State = MidiNetworkEntryState::Live;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkHostDefinitionFailed(winrt::guid const& hostConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto const& definition : m_pendingHostDefinitions)
+    {
+        if (definition != nullptr && definition->EntryIdentifier == hostConfigEntryIdentifier)
+        {
+            definition->State = MidiNetworkEntryState::Failed;
 
             return S_OK;
         }

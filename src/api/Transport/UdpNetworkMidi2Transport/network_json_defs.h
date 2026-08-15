@@ -130,13 +130,18 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY  MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY
 
 // A configured client is reported whether or not it is connected, so the app can show an entry
-// which is not currently reachable. "unavailable" means a direct connection gave up and will
-// only be tried again on a fresh connect command.
+// which is not currently reachable.
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_DIRECT_KEY           L"isDirectConnection"
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_CONNECTED_KEY        L"connected"
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_UNAVAILABLE_KEY      L"unavailable"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_ADDRESS_KEY      L"configuredDirectAddress"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY         L"configuredDirectPort"
+
+// Where the entry is in its life. "unavailable" means a direct connection gave up and will only
+// be tried again on a fresh connect command.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_ENTRY_STATE_KEY         L"entryState"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_PENDING                     L"pending"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_LIVE                        L"live"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_FAILED                      L"failed"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_UNAVAILABLE                 L"unavailable"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_LATENCY_KEY                   L"currentLatencyTicks"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY            L"totalRetransmitCount"

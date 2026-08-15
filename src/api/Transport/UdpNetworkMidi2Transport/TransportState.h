@@ -112,9 +112,8 @@ public:
         _In_ std::shared_ptr<MidiNetworkClientDefinition>);
     std::vector<std::shared_ptr<MidiNetworkClientDefinition>> GetPendingClientDefinitions();
 
-    // Clears the created flag so the endpoint creator worker builds the client again. Returns
-    // S_FALSE when no definition remains, which is how a user-requested disconnect avoids
-    // being reconnected.
+    // Puts the entry back in front of the endpoint creator worker. Returns S_FALSE when no
+    // definition remains, which is how a user-requested disconnect avoids being reconnected.
     HRESULT MarkClientDefinitionForReconnect(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
     // The remote never answered an invitation. An advertised host is retried when it advertises
@@ -126,6 +125,12 @@ public:
     // The app asking to connect an entry which is already configured: "it is available now, try
     // again". Returns S_FALSE when there is no such definition.
     HRESULT RearmClientDefinition(_In_ winrt::guid const& clientConfigEntryIdentifier);
+
+    // Set by the endpoint creator worker once an entry has been built, or once its definition has
+    // been rejected. Every legal transition of MidiNetworkEntryState is one of these calls.
+    HRESULT MarkClientDefinitionLive(_In_ winrt::guid const& clientConfigEntryIdentifier);
+    HRESULT MarkHostDefinitionLive(_In_ winrt::guid const& hostConfigEntryIdentifier);
+    HRESULT MarkHostDefinitionFailed(_In_ winrt::guid const& hostConfigEntryIdentifier);
 
 
 

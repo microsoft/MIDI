@@ -20,6 +20,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         bool IsSessionActive() const noexcept { return m_isSessionActive; }
 
+        network::MidiNetworkClientEntryState EntryState() const noexcept { return m_entryState; }
+
+        bool IsDirectConnection() const noexcept { return m_isDirectConnection; }
+        winrt::hstring ConfiguredDirectAddress() const noexcept { return m_configuredDirectAddress; }
+        winrt::hstring ConfiguredDirectPort() const noexcept { return m_configuredDirectPort; }
+
         winrt::hstring ConnectedRemoteAddress() const noexcept { return m_connectedRemoteAddress; }
         winrt::hstring ConnectedRemotePort() const noexcept { return m_connectedRemotePort; }
         winrt::hstring ConnectedLocalAddress() const noexcept { return m_connectedLocalAddress; }
@@ -49,7 +55,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             _In_ uint32_t const retransmitRequestCount,
 
             _In_ uint64_t const totalCountNetworkPacketsSent,
-            _In_ uint64_t const totalCountNetworkPacketsReceived
+            _In_ uint64_t const totalCountNetworkPacketsReceived,
+
+            _In_ network::MidiNetworkClientEntryState const entryState,
+            _In_ bool const isDirectConnection,
+            _In_ winrt::hstring const& configuredDirectAddress,
+            _In_ winrt::hstring const& configuredDirectPort
         ) noexcept
         {
             m_clientId = clientId;
@@ -65,6 +76,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_retransmitRequestCount = retransmitRequestCount;
             m_totalCountNetworkPacketsSent = totalCountNetworkPacketsSent;
             m_totalCountNetworkPacketsReceived = totalCountNetworkPacketsReceived;
+            m_entryState = entryState;
+            m_isDirectConnection = isDirectConnection;
+            m_configuredDirectAddress = configuredDirectAddress;
+            m_configuredDirectPort = configuredDirectPort;
         }
 
     private:
@@ -82,5 +97,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         uint64_t m_currentLatencyTicks{ 0 };
         uint64_t m_totalCountNetworkPacketsSent{ 0 };
         uint64_t m_totalCountNetworkPacketsReceived{ 0 };
+
+        network::MidiNetworkClientEntryState m_entryState{ network::MidiNetworkClientEntryState::Pending };
+        bool m_isDirectConnection{ false };
+        winrt::hstring m_configuredDirectAddress{};
+        winrt::hstring m_configuredDirectPort{};
     };
 }

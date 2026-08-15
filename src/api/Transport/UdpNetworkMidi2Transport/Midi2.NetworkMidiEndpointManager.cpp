@@ -274,8 +274,6 @@ CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatche
 
     m_foundAdvertisedHosts.insert_or_assign(args.Id(), args);
 
-    // signal the background thread to check the collection?
-    //m_backgroundEndpointCreatorThreadWakeup.SetEvent();
     WakeupBackgroundEndpointCreatorThread();
 
     TraceLoggingWrite(
@@ -854,9 +852,9 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
         auto startHr = client->Start(hostName, portNumberString);
         RETURN_IF_FAILED(startHr);
 
-        // Add the client and mark as created so we don't try to process it again
+        // Add the client and mark it live so the creator loop leaves it alone
         TransportState::Current().AddClient(client);
-        clientDefinition->Created = true;
+        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionLive(clientDefinition->EntryIdentifier));
 
         return S_OK;
     }
@@ -877,13 +875,6 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
-
-
-    // the first time this starts up, we delay for a bit. This is a hack
-    // but right now, the service is doing way too much immediately. Having
-    // devices connect immediately just adds to the contention. This needs
-    // to be removed before this is production-ready
-//    Sleep(3000);
 
     winrt::init_apartment();
 
@@ -914,7 +905,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
         for (auto& definition : TransportState::Current().GetPendingHostDefinitions())
         {
-            if (definition->Created)
+            if (definition->State != MidiNetworkEntryState::Pending)
             {
                 continue;
             }
@@ -949,9 +940,8 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
                     // Initialize assigns the definition last, so a rejected host has an empty one.
                     // Starting it anyway bound a socket and published a nameless host that no
-                    // caller could identify or remove. Marked created so we stop retrying a
-                    // definition that can never validate.
-                    definition->Created = true;
+                    // caller could identify or remove.
+                    LOG_IF_FAILED(TransportState::Current().MarkHostDefinitionFailed(definition->EntryIdentifier));
 
                     continue;
                 }
@@ -961,7 +951,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                     LOG_IF_FAILED(host->Start());
                 }
 
-                definition->Created = true;
+                LOG_IF_FAILED(TransportState::Current().MarkHostDefinitionLive(definition->EntryIdentifier));
 
                 // The definition can be removed while the host above is being built, so
                 // registration is conditional on it still being there. Losing that race means
@@ -990,7 +980,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
         for (auto const& clientDefinition : TransportState::Current().GetPendingClientDefinitions())
         {
-            if (clientDefinition->Created)
+            if (clientDefinition->State != MidiNetworkEntryState::Pending)
             {
                 continue;
             }

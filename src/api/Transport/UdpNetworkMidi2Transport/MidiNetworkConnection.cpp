@@ -841,8 +841,7 @@ MidiNetworkConnection::HandleIncomingBye()
     );
 
     // whatever the outcome, the remote has answered us
-    m_invitationPending = false;
-    m_invitationReplyPendingReceived = false;
+    m_invitation.Answered();
 
     if (m_sessionActive)
     {
@@ -900,8 +899,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
     if (m_role == MidiNetworkConnectionRole::ConnectionWindowsIsClient)
     {
         // the host answered, so stop repeating the invitation
-        m_invitationPending = false;
-        m_invitationReplyPendingReceived = false;
+        m_invitation.Answered();
 
         if (m_sessionActive)
         {
@@ -1678,12 +1676,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyPending()
     // Spec 6.8. The host is telling us it needs more time, typically because a person has to
     // approve the connection. Re-inviting now would just make it ask again, so the retry loop
     // stops here and we wait for Accepted or Bye.
-    bool const alreadyPending = m_invitationReplyPendingReceived.exchange(true);
-
-    if (!alreadyPending)
-    {
-        m_invitationReplyPendingTimestamp = internal::GetCurrentMidiTimestamp();
-    }
+    bool const firstPendingReply = m_invitation.NoteReplyPending(internal::GetCurrentMidiTimestamp());
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1692,7 +1685,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyPending()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Remote host accepted the invitation as pending. Waiting for it to be approved.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingBoolean(alreadyPending, "repeat pending reply")
+        TraceLoggingBoolean(!firstPendingReply, "repeat pending reply")
     );
 
     return S_OK;
@@ -1768,32 +1761,36 @@ MidiNetworkConnection::SendInvitationCommand()
     return S_OK;
 }
 
-// Driven by the watchdog tick. Spec 6.4 requires the invitation to be repeated until a reply
-// arrives, and requires a Bye with reason 0x80 once the client gives up.
+// Driven by the watchdog tick. The rules live in MidiNetworkInvitationState; this turns the
+// action it returns into network traffic.
 HRESULT
 MidiNetworkConnection::ServicePendingInvitation()
 {
-    if (!m_invitationPending || m_sessionActive)
+    uint64_t elapsedMilliseconds{ 0 };
+
+    if (m_invitation.ReplyPendingReceived())
     {
-        return S_OK;
+        elapsedMilliseconds = internal::ConvertTimestampToWholeMilliseconds(
+            internal::GetCurrentMidiTimestamp() - m_invitation.ReplyPendingTimestamp(),
+            internal::GetMidiTimestampFrequency());
     }
 
-    // The host answered Pending, so it is waiting on a person rather than ignoring us. Keep
-    // waiting without re-inviting, but do not wait forever.
-    if (m_invitationReplyPendingReceived)
+    auto const action = m_invitation.Tick(
+        m_sessionActive,
+        elapsedMilliseconds,
+        TransportState::Current().TransportSettings.InvitationPendingTimeout,
+        MIDI_NETWORK_MAX_INVITATION_ATTEMPTS);
+
+    switch (action)
     {
-        auto const elapsedMilliseconds = internal::ConvertTimestampToWholeMilliseconds(
-            internal::GetCurrentMidiTimestamp() - m_invitationReplyPendingTimestamp,
-            internal::GetMidiTimestampFrequency());
+    case MidiNetworkInvitationAction::None:
+        return S_OK;
 
-        if (elapsedMilliseconds < TransportState::Current().TransportSettings.InvitationPendingTimeout)
-        {
-            return S_OK;
-        }
+    case MidiNetworkInvitationAction::SendInvitation:
+        LOG_IF_FAILED(SendInvitationCommand());
+        return S_OK;
 
-        m_invitationPending = false;
-        m_invitationReplyPendingReceived = false;
-
+    case MidiNetworkInvitationAction::CancelNotApproved:
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_WARNING,
@@ -1816,12 +1813,8 @@ MidiNetworkConnection::ServicePendingInvitation()
             }));
 
         return S_OK;
-    }
 
-    if (m_invitationAttempts >= MIDI_NETWORK_MAX_INVITATION_ATTEMPTS)
-    {
-        m_invitationPending = false;
-
+    case MidiNetworkInvitationAction::CancelNoReply:
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_WARNING,
@@ -1852,10 +1845,6 @@ MidiNetworkConnection::ServicePendingInvitation()
 
         return S_OK;
     }
-
-    m_invitationAttempts++;
-
-    LOG_IF_FAILED(SendInvitationCommand());
 
     return S_OK;
 }
@@ -2754,10 +2743,7 @@ MidiNetworkConnection::SendInvitation()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_invitationPending = true;
-    m_invitationAttempts = 1;
-    m_invitationReplyPendingReceived = false;
-    m_invitationReplyPendingTimestamp = 0;
+    m_invitation.Begin();
 
     RETURN_IF_FAILED(SendInvitationCommand());
 

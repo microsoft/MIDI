@@ -89,6 +89,43 @@ enum MidiNetworkCommandInvitationCapabilities : byte
 DEFINE_ENUM_FLAG_OPERATORS(MidiNetworkCommandInvitationCapabilities);
 
 
+enum class MidiNetworkPacketPrologueResult
+{
+    Ok,
+
+    // smaller than a payload header plus a command header, so there is nothing to read
+    TooSmall,
+
+    // not a Network MIDI 2.0 datagram at all
+    UnrecognizedHeader,
+};
+
+// The first two words of every datagram: the UDP payload header, then the first command header.
+// Host and client validate these identically before handing the reader to a connection, so the
+// order of the two reads lives here rather than in both roles.
+inline MidiNetworkPacketPrologueResult ReadNetworkPacketPrologue(
+    _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
+    _Out_ uint32_t& firstCommandHeaderWord) noexcept
+{
+    firstCommandHeaderWord = 0;
+
+    // the null check has to short-circuit, otherwise a null reader falls through to the read below
+    if (reader == nullptr || reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
+    {
+        return MidiNetworkPacketPrologueResult::TooSmall;
+    }
+
+    if (reader.ReadUInt32() != MIDI_UDP_PAYLOAD_HEADER)
+    {
+        return MidiNetworkPacketPrologueResult::UnrecognizedHeader;
+    }
+
+    firstCommandHeaderWord = reader.ReadUInt32();
+
+    return MidiNetworkPacketPrologueResult::Ok;
+}
+
+
 // The order of elements in this is super important. It's
 // designed to fit the protocol as it is represented on an
 // incoming socket stream. Don't move anything around.

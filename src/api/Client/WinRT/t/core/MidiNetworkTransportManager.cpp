@@ -70,6 +70,26 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             }
         }
 
+        network::MidiNetworkClientEntryState EntryStateFromString(_In_ winrt::hstring const& value) noexcept
+        {
+            if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_LIVE)
+            {
+                return network::MidiNetworkClientEntryState::Active;
+            }
+
+            if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_FAILED)
+            {
+                return network::MidiNetworkClientEntryState::Failed;
+            }
+
+            if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_UNAVAILABLE)
+            {
+                return network::MidiNetworkClientEntryState::Unavailable;
+            }
+
+            return network::MidiNetworkClientEntryState::Pending;
+        }
+
         // The service turns a submitted host definition into a live host on its creator worker,
         // so the host is not up yet when the configuration update call returns.
         constexpr uint32_t HostStartPollAttempts{ 40 };
@@ -420,7 +440,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 static_cast<uint32_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY, 0)),
 
                                 static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_SENT_KEY, 0)),
-                                static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_RECEIVED_KEY, 0))
+                                static_cast<uint64_t>(entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_RECEIVED_KEY, 0)),
+
+                                EntryStateFromString(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_ENTRY_STATE_KEY, L"")),
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_DIRECT_KEY, false),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_ADDRESS_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY, L"")
                                 );
 
                             results.Append(*client);

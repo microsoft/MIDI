@@ -9,7 +9,7 @@
 #include "..\..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
-
+import "MidiNetworkClientEntryStateEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -22,6 +22,14 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         //Boolean IsEnabled;                    // true if this is allows to connect. Mostly for pre-configured connections
         [noexcept] Boolean IsSessionActive{ get; };                // true if a session is active
+
+        // Where the configured entry is in its life. A client is reported even when it is not
+        // connected, so an app can show something the service cannot currently reach.
+        [noexcept] MidiNetworkClientEntryState EntryState{ get; };
+
+        [noexcept] Boolean IsDirectConnection{ get; };             // configured by address and port rather than discovered
+        [noexcept] String ConfiguredDirectAddress{ get; };
+        [noexcept] String ConfiguredDirectPort{ get; };
 
         [noexcept] String ConnectedRemoteAddress{ get; };
         [noexcept] String ConnectedRemotePort{ get; };

@@ -133,6 +133,25 @@ MidiNetworkRemoteClientPolicyFromJsonString(_In_ winrt::hstring const& jsonStrin
     return MidiNetworkRemoteClientPolicy::PolicyAllowAny;
 }
 
+winrt::hstring
+EntryStateToString(_In_ MidiNetworkEntryState const state)
+{
+    switch (state)
+    {
+    case MidiNetworkEntryState::Live:
+        return winrt::hstring{ MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_LIVE };
+
+    case MidiNetworkEntryState::Failed:
+        return winrt::hstring{ MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_FAILED };
+
+    case MidiNetworkEntryState::Unavailable:
+        return winrt::hstring{ MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_UNAVAILABLE };
+
+    default:
+        return winrt::hstring{ MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_STATE_VALUE_PENDING };
+    }
+}
+
 // Reads an array of { umpEndpointName, productInstanceId } objects into comparison keys.
 // Entries missing either field cannot identify a device, so they are skipped rather than
 // stored as something which would match nothing or, worse, everything.
@@ -626,12 +645,8 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
             json::JsonValue::CreateStringValue(def->MatchDirectPort));
 
         clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_CONNECTED_KEY,
-            json::JsonValue::CreateBooleanValue(client != nullptr));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_UNAVAILABLE_KEY,
-            json::JsonValue::CreateBooleanValue(def->Unavailable));
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_ENTRY_STATE_KEY,
+            json::JsonValue::CreateStringValue(EntryStateToString(def->State)));
 
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
@@ -1806,11 +1821,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
 
 
-
-
-    //responseObject.SetNamedValue(
-    //    MIDI_CONFIG_JSON_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY,
-    //    createdDevicesResponseArray);
 
 
     TraceLoggingWrite(

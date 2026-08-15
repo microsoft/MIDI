@@ -1044,6 +1044,7 @@
     <Midl Include="MidiNetworkClientDisconnectResponse.idl" />
     <Midl Include="MidiNetworkClientDisconnectErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkClientMatchCriteria.idl" />
+    <Midl Include="MidiNetworkClientEntryStateEnum.idl" />
     <Midl Include="MidiNetworkConfiguredClient.idl" />
     <Midl Include="MidiNetworkConfiguredHost.idl" />
     <Midl Include="MidiNetworkHostCreationErrorCodeEnum.idl" />

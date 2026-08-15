@@ -429,6 +429,9 @@
     <Midl Include="MidiNetworkClientMatchCriteria.idl">
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>
+    <Midl Include="MidiNetworkClientEntryStateEnum.idl">
+      <Filter>SDK\Transports\Network\Client</Filter>
+    </Midl>
     <Midl Include="MidiNetworkConfiguredClient.idl">
       <Filter>SDK\Transports\Network\Client</Filter>
     </Midl>

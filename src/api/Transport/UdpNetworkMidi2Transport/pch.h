@@ -124,13 +124,12 @@ struct MidiNetworkClientDefinition;
 struct MidiNetworkHostDefinition;
 
 
-//#include "MidiNetworkEndpointDefinition.h"
-
 #include "MidiNetworkMessages.h"
 
 #include "MidiNetworkCredentials.h"
 #include "MidiNetworkRateLimiter.h"
 #include "MidiNetworkDataWriter.h"
+#include "MidiNetworkInvitationState.h"
 #include "MidiNetworkConnection.h"
 
 #include "TransportState.h"

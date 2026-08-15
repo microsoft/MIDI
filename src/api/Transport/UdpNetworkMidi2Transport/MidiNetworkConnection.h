@@ -157,7 +157,7 @@ public:
     // ephemeral port, so the old entry would otherwise hold a slot and two threads for nothing.
     bool IsSessionFinished()
     {
-        return m_sessionEverEstablished && !m_sessionActive && !m_invitationPending;
+        return m_sessionEverEstablished && !m_sessionActive && !m_invitation.IsPending();
     }
 
     // True when there is no session and nothing has arrived for long enough that the remote is
@@ -264,15 +264,8 @@ private:
     // Reset or a Session Reset Reply outside an Established Session shall answer with this.
     HRESULT SendByeSessionNotEstablished(_In_ uint8_t const commandCode);
 
-    // Invitation retry state, client role only. Touched from the watchdog thread and from
-    // message parsing.
-    std::atomic<bool> m_invitationPending{ false };
-    std::atomic<uint16_t> m_invitationAttempts{ 0 };
-
-    // Set once the host answers with Invitation Reply: Pending. Re-inviting after that would
-    // be pestering a host which has already told us it is waiting on a person.
-    std::atomic<bool> m_invitationReplyPendingReceived{ false };
-    std::atomic<uint64_t> m_invitationReplyPendingTimestamp{ 0 };
+    // Invitation handshake, client role only. See MidiNetworkInvitationState.h.
+    MidiNetworkInvitationState m_invitation;
 
     HRESULT SendInvitationCommand();
     HRESULT ServicePendingInvitation();

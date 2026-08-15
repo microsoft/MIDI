@@ -10,12 +10,7 @@
 
 struct MidiNetworkClientDefinition
 {
-    bool Created{ false };
-
-    // A direct connection which stopped answering. Nothing advertises it, so retrying on a timer
-    // would put invitations on the wire forever for every dead address in the configuration.
-    // Cleared by a fresh connect command, which is the user saying it is worth another try.
-    bool Unavailable{ false };
+    MidiNetworkEntryState State{ MidiNetworkEntryState::Pending };
 
     winrt::guid EntryIdentifier;            // internal
     bool Enabled{ true };

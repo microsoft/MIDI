@@ -29,7 +29,7 @@ enum MidiNetworkHostProtocol
 
 struct MidiNetworkHostDefinition
 {
-    bool Created{ false };
+    MidiNetworkEntryState State{ MidiNetworkEntryState::Pending };
 
     winrt::guid EntryIdentifier;            // internal
 

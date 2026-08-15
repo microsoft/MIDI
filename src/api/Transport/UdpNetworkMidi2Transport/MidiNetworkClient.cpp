@@ -49,13 +49,12 @@ void MidiNetworkClient::OnMessageReceived(
     {
         auto reader = args.GetDataReader();
 
-        // the null check has to short-circuit, otherwise a null reader falls through to the read below
-        if (reader == nullptr || reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
-        {
-            // not a message we understand. Needs to be at least the size of the 
-            // MIDI header plus a command packet header. Really it needs to be larger, but
-            // just trying to weed out blips
+        uint32_t firstCommandHeaderWord{ 0 };
 
+        auto prologue = ReadNetworkPacketPrologue(reader, firstCommandHeaderWord);
+
+        if (prologue == MidiNetworkPacketPrologueResult::TooSmall)
+        {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_WARNING,
@@ -68,16 +67,10 @@ void MidiNetworkClient::OnMessageReceived(
             return;
         }
 
-        uint32_t udpHeader = reader.ReadUInt32();
-
-        if (udpHeader != MIDI_UDP_PAYLOAD_HEADER)
+        if (prologue != MidiNetworkPacketPrologueResult::Ok)
         {
-            // not a message we understand
-
             return;
         }
-
-        uint32_t firstCommandHeaderWord = reader.ReadUInt32();
 
         auto connection = GetConnection();
 
