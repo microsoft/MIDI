@@ -595,8 +595,7 @@ MidiNetworkConnection::EndActiveSessionDueToTimeout()
     // Tell the remote first. Ending the session tears down the state this needs.
     LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
         {
-            // TODO: Move string to resources for localization
-            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Timeout, L"Session timed out (missed pings or other messages)."));
+            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Timeout, internal::ResourceGetWString(IDS_MESSAGE_SESSION_TIMED_OUT)));
 
             return S_OK;
         }));
@@ -959,8 +958,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
         // we are a host, not a client, so NAK this per spec 6.4
         LOG_IF_FAILED(SendToNetwork([&header](MidiNetworkDataWriter& writer)
             {
-                // TODO: Move string to resources for localization
-                RETURN_IF_FAILED(writer.WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"Unexpected invitation accept sent to host."));
+                RETURN_IF_FAILED(writer.WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, internal::ResourceGetWString(IDS_MESSAGE_UNEXPECTED_INVITATION_ACCEPT)));
 
                 return S_OK;
             }));
@@ -1358,8 +1356,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
 
             LOG_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
                 {
-                    // TODO: Move string to resources for localization
-                    RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined, L"Host is unable to accept invitations at this time."));
+                    RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined, internal::ResourceGetWString(IDS_MESSAGE_HOST_CANNOT_ACCEPT_INVITATIONS)));
 
                     return S_OK;
                 }));
@@ -1370,8 +1367,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
         // we are a client, not a host, so NAK this per spec 6.4
         LOG_IF_FAILED(SendToNetwork([&header](MidiNetworkDataWriter& writer)
             {
-                // TODO: Move string to resources for localization
-                RETURN_IF_FAILED(writer.WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"Unexpected invitation sent to client."));
+                RETURN_IF_FAILED(writer.WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, internal::ResourceGetWString(IDS_MESSAGE_UNEXPECTED_INVITATION)));
 
                 return S_OK;
             }));
@@ -1532,7 +1528,7 @@ MidiNetworkConnection::RefuseSessionForEndpointCreationFailure(HRESULT const cre
     bool alreadyAttached = (creationResult == HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED));
 
     MidiNetworkCommandByeReason reason{ MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined };
-    std::wstring message{ L"Unable to create a MIDI endpoint for this session." };
+    std::wstring message{ internal::ResourceGetWString(IDS_MESSAGE_ENDPOINT_CREATION_FAILED) };
 
     if (alreadyAttached)
     {
@@ -1542,7 +1538,7 @@ MidiNetworkConnection::RefuseSessionForEndpointCreationFailure(HRESULT const cre
             MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions :
             MidiNetworkCommandByeReason::CommandByeReasonClientToHost_InvitationCanceled;
 
-        message = L"This device is already connected to this PC.";
+        message = internal::ResourceGetWString(IDS_MESSAGE_DEVICE_ALREADY_CONNECTED);
     }
 
     TraceLoggingWrite(
@@ -1558,7 +1554,6 @@ MidiNetworkConnection::RefuseSessionForEndpointCreationFailure(HRESULT const cre
 
     LOG_IF_FAILED(SendToNetwork([&reason, &message](MidiNetworkDataWriter& writer)
         {
-            // TODO: Move string to resources for localization
             RETURN_IF_FAILED(writer.WriteCommandBye(reason, message));
 
             return S_OK;
@@ -1583,8 +1578,7 @@ MidiNetworkConnection::RefuseInvitationForAuthentication(MidiNetworkCommandByeRe
 
     RETURN_IF_FAILED(SendToNetwork([&reason](MidiNetworkDataWriter& writer)
         {
-            // TODO: Move string to resources for localization
-            RETURN_IF_FAILED(writer.WriteCommandBye(reason, L"Authentication is not supported by this endpoint."));
+            RETURN_IF_FAILED(writer.WriteCommandBye(reason, internal::ResourceGetWString(IDS_MESSAGE_AUTHENTICATION_NOT_SUPPORTED)));
 
             return S_OK;
         }));
@@ -1706,8 +1700,7 @@ MidiNetworkConnection::SendByeSessionNotEstablished(uint8_t const commandCode)
 
     RETURN_IF_FAILED(SendToNetwork([](MidiNetworkDataWriter& writer)
         {
-            // TODO: Move string to resources for localization
-            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_SessionNotEstablished, L"No session is established with this endpoint."));
+            RETURN_IF_FAILED(writer.WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_SessionNotEstablished, internal::ResourceGetWString(IDS_MESSAGE_NO_SESSION_ESTABLISHED)));
 
             return S_OK;
         }));
@@ -2382,11 +2375,10 @@ MidiNetworkConnection::ProcessIncomingMessage(
                 {
                     LOG_IF_FAILED(SendToNetwork([&commandHeader](MidiNetworkDataWriter& writer)
                         {
-                            // TODO: Move string to resources for localization
                             RETURN_IF_FAILED(writer.WriteCommandNAK(
                                 commandHeader.HeaderWord,
                                 MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotSupported,
-                                L"Command code not supported."));
+                                internal::ResourceGetWString(IDS_MESSAGE_COMMAND_NOT_SUPPORTED)));
 
                             return S_OK;
                         }));
@@ -2562,11 +2554,10 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(
     {
         RETURN_IF_FAILED(SendToNetwork([&header](MidiNetworkDataWriter& writer)
             {
-                // TODO: Move string to resources for localization
                 RETURN_IF_FAILED(writer.WriteCommandNAK(
                     header.HeaderWord,
                     MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotSupported,
-                    L"Retransmit buffering is disabled on this endpoint."));
+                    internal::ResourceGetWString(IDS_MESSAGE_RETRANSMIT_DISABLED)));
 
                 return S_OK;
             }));

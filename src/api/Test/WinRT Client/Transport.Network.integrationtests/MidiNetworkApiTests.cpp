@@ -580,6 +580,40 @@ void MidiNetworkApiTests::TestCreateThenRemoveHost()
     cleanup.release();
 }
 
+// Creation used to return as soon as the definition was queued, leaving the caller to poll.
+// A successful await must now mean the host is live.
+void MidiNetworkApiTests::TestCreateHostAsyncReturnsOnlyOnceHostHasStarted()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hostId = CreateTestHost(MakeUniqueSuffix());
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{});
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    // deliberately no polling here: one sample, taken the moment creation returned
+    auto hosts = MidiNetworkTransportManager::GetConfiguredHosts();
+
+    VERIFY_IS_NOT_NULL(hosts);
+
+    bool found{ false };
+
+    for (auto const& host : hosts)
+    {
+        if (host.HostId() == hostId)
+        {
+            found = true;
+
+            VERIFY_IS_TRUE(host.HasStarted());
+
+            break;
+        }
+    }
+
+    VERIFY_IS_TRUE(found);
+}
+
 void MidiNetworkApiTests::TestCreateStopStartThenRemoveHost()
 {
     SKIP_IF_NO_NETWORK_TRANSPORT();

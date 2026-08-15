@@ -66,3 +66,4 @@
 // raised by the client SDK rather than the service
 #define NETWORK_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT              0x11000055
 #define NETWORK_ERROR_CODE_CLIENT_API_EXCEPTION                     0x11002011
+#define NETWORK_ERROR_CODE_CLIENT_API_TIMEOUT                       0x110005B4

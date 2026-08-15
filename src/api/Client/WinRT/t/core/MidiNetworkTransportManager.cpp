@@ -69,6 +69,31 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 return false;
             }
         }
+
+        // The service turns a submitted host definition into a live host on its creator worker,
+        // so the host is not up yet when the configuration update call returns.
+        constexpr uint32_t HostStartPollAttempts{ 40 };
+        constexpr std::chrono::milliseconds HostStartPollInterval{ 250 };
+
+        bool ConfiguredHostHasStarted(
+            _In_ collections::IVectorView<network::MidiNetworkConfiguredHost> const& hosts,
+            _In_ winrt::guid const& hostId) noexcept
+        {
+            if (hosts == nullptr)
+            {
+                return false;
+            }
+
+            for (auto const& host : hosts)
+            {
+                if (host != nullptr && host.HostId() == hostId)
+                {
+                    return host.HasStarted();
+                }
+            }
+
+            return false;
+        }
     }
 
     bool MidiNetworkTransportManager::IsTransportAvailable() noexcept
@@ -150,7 +175,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingWideString(L"Unable to start network host. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, L"General exception");
+            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             co_return *result;
         }
@@ -221,7 +246,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, L"General exception");
+            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             co_return *result;
         }
@@ -619,7 +644,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 result->InternalSetError(
                     network::MidiNetworkHostCreationErrorCode::InvalidArgument,
-                    L"Creation configuration is null.");
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_NULL_CREATION_CONFIG));
 
                 co_return *result;
             }
@@ -634,12 +659,47 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
             if (createResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
             {
-                result->InternalSetSuccess();
+                // The update call only queues the definition. Returning here would hand back a
+                // host the caller cannot yet use, so wait for the service to bring it up.
+                bool started{ false };
+
+                for (uint32_t attempt = 0; attempt < HostStartPollAttempts; attempt++)
+                {
+                    if (ConfiguredHostHasStarted(GetConfiguredHosts(), config.HostId()))
+                    {
+                        started = true;
+                        break;
+                    }
+
+                    co_await winrt::resume_after(HostStartPollInterval);
+                }
+
+                if (started)
+                {
+                    result->InternalSetSuccess();
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Network host definition was accepted, but the host did not start in time.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingGuid(config.HostId(), "host id")
+                    );
+
+                    result->InternalSetError(
+                        network::MidiNetworkHostCreationErrorCode::TimedOutWaitingForHostToStart,
+                        internal::ResourceGetHString(IDS_NETWORK_ERROR_HOST_START_TIMEOUT));
+                }
             }
             else
             {
-                // todo: get actual error code
-                result->InternalSetError(static_cast<network::MidiNetworkHostCreationErrorCode>(createResponse.ServiceErrorCode()), createResponse.ServiceErrorMessage());
+                result->InternalSetError(
+                    static_cast<network::MidiNetworkHostCreationErrorCode>(createResponse.ServiceErrorCode()), 
+                    createResponse.ServiceErrorMessage());
             }
 
             co_return *result;
@@ -659,7 +719,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
 
-            // TODO: Get actual error code
             result->InternalSetError(network::MidiNetworkHostCreationErrorCode::ClientApiException, ex.message());
 
             co_return *result;
@@ -677,8 +736,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingWideString(L"Unable to create network host. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkHostCreationErrorCode::ClientApiException, L"General exception.");
+            result->InternalSetError(network::MidiNetworkHostCreationErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             co_return *result;
         }
@@ -697,7 +755,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 result->InternalSetError(
                     network::MidiNetworkHostRemovalErrorCode::InvalidArgument,
-                    L"Removal configuration is null.");
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_NULL_REMOVAL_CONFIG));
 
                 co_return *result;
             }
@@ -773,7 +831,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingWideString(L"Unable to remove network host. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            result->InternalSetError(network::MidiNetworkHostRemovalErrorCode::ClientApiException, L"General exception.");
+            result->InternalSetError(network::MidiNetworkHostRemovalErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             co_return *result;
         }
@@ -794,7 +852,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 result->InternalSetError(
                     network::MidiNetworkClientConnectErrorCode::InvalidArgument,
-                    L"Connect configuration is null.");
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_NULL_CONNECT_CONFIG));
 
                 co_return *result;
             }
@@ -806,7 +864,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 result->InternalSetError(
                     network::MidiNetworkClientConnectErrorCode::InvalidOrMissingMatchCriteria,
-                    L"Connect configuration has no match criteria.");
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_MISSING_MATCH_CRITERIA));
 
                 co_return *result;
             }
@@ -866,7 +924,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingWideString(L"Unable to connect network client. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            result->InternalSetError(network::MidiNetworkClientConnectErrorCode::ClientApiException, L"General exception.");
+            result->InternalSetError(network::MidiNetworkClientConnectErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             co_return *result;
         }
@@ -886,7 +944,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 result->InternalSetError(
                     network::MidiNetworkClientDisconnectErrorCode::InvalidArgument,
-                    L"Disconnect configuration is null.");
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_NULL_DISCONNECT_CONFIG));
 
                 co_return *result;
             }
@@ -945,7 +1003,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             // TODO: Get actual error code
-            result->InternalSetError(network::MidiNetworkClientDisconnectErrorCode::ClientApiException, L"General exception.");
+            result->InternalSetError(network::MidiNetworkClientDisconnectErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             co_return *result;
         }
@@ -963,7 +1021,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 response->InternalSetError(
                     network::MidiNetworkRemoteClientApprovalErrorCode::InvalidArgument,
-                    L"Approval configuration is null.");
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_NULL_APPROVAL_CONFIG));
 
                 co_return *response;
             }
@@ -983,7 +1041,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             {
                 response->InternalSetError(
                     network::MidiNetworkRemoteClientApprovalErrorCode::InvalidOrMissingRemoteClientIdentity,
-                    L"Remote client name and product instance id are both required to identify the pending client.");
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_MISSING_REMOTE_CLIENT_IDENTITY));
 
                 co_return *response;
             }
@@ -1074,7 +1132,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingWideString(L"Unable to approve or deny remote client. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-            response->InternalSetError(network::MidiNetworkRemoteClientApprovalErrorCode::ClientApiException, L"General exception.");
+            response->InternalSetError(network::MidiNetworkRemoteClientApprovalErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             co_return *response;
         }

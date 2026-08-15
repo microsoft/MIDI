@@ -55,6 +55,10 @@ public:
     TEST_METHOD(TestCreateStopStartThenRemoveHost);
     TEST_METHOD(TestRemoveNonexistentHostFailsCleanly);
 
+    // Creation is async precisely so it can wait for the service. A successful result has to
+    // mean the host is live, with no polling left for the caller to do.
+    TEST_METHOD(TestCreateHostAsyncReturnsOnlyOnceHostHasStarted);
+
     // Removing a host the instant it is created races the service's endpoint creator thread,
     // which used to register the host after the entry had already been taken away. The host
     // was then unreachable and held its socket and service instance name until a restart.

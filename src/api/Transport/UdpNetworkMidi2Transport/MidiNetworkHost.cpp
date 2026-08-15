@@ -609,12 +609,11 @@ void MidiNetworkHost::OnMessageReceived(
 
                     if (m_refusalRateLimiter.ShouldSend(key))
                     {
-                        // TODO: Move string to resources for localization
                         LOG_IF_FAILED(SendUnconnectedBye(
                             args.RemoteAddress(),
                             args.RemotePort(),
                             MidiNetworkCommandByeReason::CommandByeReasonCommon_SessionNotEstablished,
-                            L"No session is established with this endpoint."));
+                            internal::ResourceGetWString(IDS_MESSAGE_NO_SESSION_ESTABLISHED)));
 
                         refused = true;
                     }
@@ -655,12 +654,11 @@ void MidiNetworkHost::OnMessageReceived(
 
                     if (m_refusalRateLimiter.ShouldSend(key))
                     {
-                        // TODO: Move string to resources for localization
                         LOG_IF_FAILED(SendUnconnectedBye(
                             args.RemoteAddress(),
                             args.RemotePort(),
                             MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions,
-                            L"This host already has the maximum number of open sessions."));
+                            internal::ResourceGetWString(IDS_MESSAGE_MAX_SESSIONS_REACHED)));
                     }
                 }
 

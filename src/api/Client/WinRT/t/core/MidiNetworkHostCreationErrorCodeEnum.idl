@@ -47,5 +47,8 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         InvalidArgument =                       NETWORK_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT,
         ClientApiException =                    NETWORK_ERROR_CODE_CLIENT_API_EXCEPTION,
+
+        // the service accepted the definition, but the host did not come up in time
+        TimedOutWaitingForHostToStart =         NETWORK_ERROR_CODE_CLIENT_API_TIMEOUT,
     };
 }
