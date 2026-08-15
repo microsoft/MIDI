@@ -133,6 +133,22 @@ namespace NetworkMidiTest
         // session on address and port, so these are counted and otherwise ignored.
         size_t IgnoredFromOtherSourceCount() const { return m_ignoredFromOtherSource; }
 
+        // Drops the latched remote so the next sender becomes the new one. A reconnecting client
+        // arrives on a fresh ephemeral port, and a host which has restarted has no memory of the
+        // old one, so a reconnect test has to say so explicitly.
+        void ForgetRemote()
+        {
+            m_remoteKnown = false;
+            m_remotePort = 0;
+            m_sessionAccepted = false;
+            m_pendingReplySent = false;
+        }
+
+        // Re-latches onto whoever sends an Invitation, which is what a real host does when a
+        // client reconnects from a new ephemeral port. Off by default, because the strict latch
+        // is what makes the reflection and wrong-source-port tests meaningful.
+        void SetRelatchOnInvitation(_In_ bool const enabled) { m_relatchOnInvitation = enabled; }
+
         // Sending ----------------------------------------------------------------------
 
         bool Send(_In_ std::vector<uint8_t> const& bytes);
@@ -159,6 +175,7 @@ namespace NetworkMidiTest
         std::atomic<bool> m_remoteKnown{ false };
         std::atomic<uint16_t> m_remotePort{ 0 };
         std::atomic<size_t> m_ignoredFromOtherSource{ 0 };
+        std::atomic<bool> m_relatchOnInvitation{ false };
 
         std::string m_endpointName{ };
         std::string m_productInstanceId{ };

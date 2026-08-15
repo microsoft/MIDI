@@ -30,13 +30,13 @@
     <ClCompile Include="MidiNetworkConfiguredClient.cpp">
       <Filter>SDK\Transports\Network\Client</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkPendingRemoteClient.cpp">
-      <Filter>SDK\Transports\Network\Client</Filter>
-    </ClCompile>
     <ClCompile Include="MidiNetworkRemoteClientApprovalConfig.cpp">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </ClCompile>
     <ClCompile Include="MidiNetworkRemoteClientApprovalResponse.cpp">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkPendingRemoteClient.cpp">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </ClCompile>
   </ItemGroup>
@@ -70,13 +70,13 @@
     <ClInclude Include="MidiNetworkConfiguredClient.h">
       <Filter>SDK\Transports\Network\Client</Filter>
     </ClInclude>
-    <ClInclude Include="MidiNetworkPendingRemoteClient.h">
-      <Filter>SDK\Transports\Network\Client</Filter>
-    </ClInclude>
     <ClInclude Include="MidiNetworkRemoteClientApprovalConfig.h">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </ClInclude>
     <ClInclude Include="MidiNetworkRemoteClientApprovalResponse.h">
+      <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkPendingRemoteClient.h">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </ClInclude>
   </ItemGroup>

@@ -832,6 +832,16 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
     auto client = std::make_shared<MidiNetworkClient>();
     RETURN_IF_NULL_ALLOC(client);
 
+    // A reconnect still has the previous client registered. Left in place it keeps its socket
+    // and threads, and lookups by entry identifier find the dead one.
+    auto previousClient = TransportState::Current().GetClient(clientDefinition->EntryIdentifier);
+
+    if (previousClient != nullptr)
+    {
+        LOG_IF_FAILED(previousClient->Shutdown());
+        LOG_IF_FAILED(TransportState::Current().RemoveClient(clientDefinition->EntryIdentifier));
+    }
+
     auto initHr = client->Initialize(*clientDefinition);
     RETURN_IF_FAILED(initHr);
 

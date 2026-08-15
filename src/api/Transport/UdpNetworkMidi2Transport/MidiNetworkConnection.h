@@ -525,6 +525,10 @@ private:
     HRESULT ConnectionWatcherThreadWorker(_In_ std::stop_token stopToken);
     HRESULT EndActiveSessionDueToTimeout();
 
+    // Puts an outbound client definition back in front of the creator worker after the remote
+    // host went away on its own. Deliberate teardowns do not call this.
+    HRESULT RequestClientReconnect();
+
     HRESULT AddUmpPacketToRetransmitBuffer(_In_ MidiSequenceNumber const sequenceNumber, _In_ std::vector<uint32_t> const& words);
 
     HRESULT AddUmpPacketToRetransmitBuffer(

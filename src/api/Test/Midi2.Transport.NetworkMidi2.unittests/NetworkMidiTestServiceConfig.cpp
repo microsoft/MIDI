@@ -238,6 +238,26 @@ namespace NetworkMidiTest
     }
 
 
+    ServiceConfigResult ConnectDirectClient(
+        std::wstring const& entryIdentifier,
+        std::wstring const& hostNameOrAddress,
+        uint16_t const port,
+        std::wstring const& umpEndpointName)
+    {
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"connectDirect\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(entryIdentifier) + L"\","
+            L"\"remoteAddress\":\"" + EscapeJsonString(hostNameOrAddress) + L"\","
+            L"\"remotePort\":\"" + std::to_wstring(port) + L"\","
+            L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\""
+            L"}}}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
     ServiceConfigResult EnumerateClients()
     {
         return SendNetworkTransportConfig(

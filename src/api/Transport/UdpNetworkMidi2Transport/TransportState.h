@@ -112,6 +112,21 @@ public:
         _In_ std::shared_ptr<MidiNetworkClientDefinition>);
     std::vector<std::shared_ptr<MidiNetworkClientDefinition>> GetPendingClientDefinitions();
 
+    // Clears the created flag so the endpoint creator worker builds the client again. Returns
+    // S_FALSE when no definition remains, which is how a user-requested disconnect avoids
+    // being reconnected.
+    HRESULT MarkClientDefinitionForReconnect(_In_ winrt::guid const& clientConfigEntryIdentifier);
+
+    // The remote never answered an invitation. An advertised host is retried when it advertises
+    // again, which costs nothing while it is absent. A direct address has no such signal, so it
+    // is parked as unavailable rather than retried on a timer. Returns S_OK when it will be
+    // retried, S_FALSE when it was parked.
+    HRESULT MarkClientDefinitionUnavailableOrRetry(_In_ winrt::guid const& clientConfigEntryIdentifier);
+
+    // The app asking to connect an entry which is already configured: "it is available now, try
+    // again". Returns S_FALSE when there is no such definition.
+    HRESULT RearmClientDefinition(_In_ winrt::guid const& clientConfigEntryIdentifier);
+
 
 
     // these two sets of functions, and their related maps, work with the same

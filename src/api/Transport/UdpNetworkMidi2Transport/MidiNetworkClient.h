@@ -12,6 +12,11 @@ struct MidiNetworkClientDefinition
 {
     bool Created{ false };
 
+    // A direct connection which stopped answering. Nothing advertises it, so retrying on a timer
+    // would put invitations on the wire forever for every dead address in the configuration.
+    // Cleared by a fresh connect command, which is the user saying it is worth another try.
+    bool Unavailable{ false };
+
     winrt::guid EntryIdentifier;            // internal
     bool Enabled{ true };
 
@@ -35,6 +40,10 @@ struct MidiNetworkClientDefinition
     // these are direct connections. HostName or IP are required, plus the port
     winrt::hstring MatchDirectHostNameOrIPAddress{};
     winrt::hstring MatchDirectPort{};
+
+    // An advertised host announces its return, so it can be retried for free. A direct address
+    // never does, which is why the two are paced differently.
+    bool IsDirectConnection() const { return MatchId.empty() && !MatchDirectPort.empty(); }
 };
 
 

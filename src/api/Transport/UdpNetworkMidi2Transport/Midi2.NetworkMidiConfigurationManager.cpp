@@ -403,6 +403,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
 
     // this happens all in real-time, unlike the stuff that is done via the config file
 
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+
+    // The same entry arriving again is the app saying the remote is available now. A direct
+    // connection which gave up earlier is only ever revived here.
+    if (TransportState::Current().RearmClientDefinition(configEntryId) == S_OK)
+    {
+        LOG_IF_FAILED(endpointManager->WakeupBackgroundEndpointCreatorThread());
+
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+        return S_OK;
+    }
+
     auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
 
     // TODO: These should be parameters
@@ -412,9 +427,9 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     clientDefinition->MatchDirectPort = remotePort;
     clientDefinition->LocalEndpointName = umpEndpointName;
 
-    auto endpointManager = TransportState::Current().GetEndpointManager();
-
-    RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+    // Registered before it is started, or nothing can retry it, revive it, or report it in
+    // enumerateClients.
+    LOG_IF_FAILED(TransportState::Current().AddPendingClientDefinition(clientDefinition));
 
     endpointManager->StartNewClient(
         clientDefinition, 
@@ -576,23 +591,62 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
 {
     json::JsonArray clientsArray;
 
-    for (auto const client : TransportState::Current().GetClients())
+    // Driven by the configured definitions rather than the live clients, so an entry which is
+    // not currently connected still appears. A direct connection which gave up would otherwise
+    // vanish from the list entirely.
+    for (auto const& def : TransportState::Current().GetPendingClientDefinitions())
     {
+        if (def == nullptr)
+        {
+            continue;
+        }
+
         json::JsonObject clientObject;
 
-        auto def = client->GetDefinition();
+        auto client = TransportState::Current().GetClient(def->EntryIdentifier);
 
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY,
-            json::JsonValue::CreateStringValue(winrt::hstring{ internal::GuidToString(def.EntryIdentifier) }));
+            json::JsonValue::CreateStringValue(winrt::hstring{ internal::GuidToString(def->EntryIdentifier) }));
 
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_MDNS_MATCH_ID_KEY,
-            json::JsonValue::CreateStringValue(def.MatchId));
+            json::JsonValue::CreateStringValue(def->MatchId));
 
-        //clientObject.SetNamedValue(
-        //    MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_ENABLED_KEY,
-        //    json::JsonValue::CreateBooleanValue(client->IsEnabled()));
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_DIRECT_KEY,
+            json::JsonValue::CreateBooleanValue(def->IsDirectConnection()));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(def->MatchDirectHostNameOrIPAddress));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY,
+            json::JsonValue::CreateStringValue(def->MatchDirectPort));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_CONNECTED_KEY,
+            json::JsonValue::CreateBooleanValue(client != nullptr));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_UNAVAILABLE_KEY,
+            json::JsonValue::CreateBooleanValue(def->Unavailable));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
+            json::JsonValue::CreateBooleanValue(def->CreateMidi1Ports));
+
+        if (client == nullptr)
+        {
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY,
+                json::JsonValue::CreateBooleanValue(false));
+
+            clientsArray.Append(clientObject);
+
+            continue;
+        }
 
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY,
@@ -617,10 +671,6 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_UMP_ENDPOINT_ID_KEY,
             json::JsonValue::CreateStringValue(client->GetEndpointDeviceId()));
-
-        clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
-            json::JsonValue::CreateBooleanValue(def.CreateMidi1Ports));
 
         // TODO: possibly move this to a different command to make the payload smaller
         auto latency = client->GetAndResetAverageLatencyTicks();

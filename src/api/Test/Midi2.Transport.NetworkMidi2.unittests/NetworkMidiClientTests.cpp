@@ -635,10 +635,163 @@ namespace NetworkMidiTest
     }
 
 
-    void ClientTests::ClientAnswersSessionResetWithReply()
+    // A host which reboots says goodbye, or simply stops answering. Either way the client
+    // definition has to go back to the endpoint creator, or the connection is dead until the
+    // service restarts.
+    void ClientTests::ClientReconnectsAfterHostSendsBye()
     {
         if (!RequireService()) return;
 
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(EstablishClientSession(client));
+
+        // Same socket and port throughout, which is what a host looks like when it restarts and
+        // the client is configured with a fixed address and port.
+        client.Host().SetRelatchOnInvitation(true);
+        client.Host().ClearHistory();
+
+        VERIFY_IS_TRUE(client.Host().SendBye(ByeReason::PowerDown, "restarting"),
+            L"Could not send the Bye which ends the session.");
+
+        auto invitation = client.Host().WaitForCommand(CommandCode::Invitation, InvitationTimeout);
+
+        VERIFY_IS_TRUE(invitation.has_value(),
+            L"After the host ended the session, the service must invite it again rather than wait for a service restart.");
+
+        auto data = client.Host().WaitForCommand(CommandCode::UmpData, SessionTimeout);
+
+        if (!data.has_value())
+        {
+            for (auto const& packet : client.Host().ReceivedPackets())
+            {
+                Log::Comment(DescribePacket(packet).c_str());
+            }
+        }
+
+        VERIFY_IS_TRUE(data.has_value(), L"The reconnected session did not establish.");
+    }
+
+
+    void ClientTests::ClientReconnectsAfterHostStopsResponding()
+    {
+        if (!RequireService()) return;
+
+        // The client only gives up after several unanswered pings, so this one is slow by
+        // nature. Logged up front so a slow run does not look like a hang.
+        Log::Comment(L"This test waits for the client's ping timeout and can take about a minute. Please let it run.");
+
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(EstablishClientSession(client));
+
+        // The host is still bound, but silent. This is the network-outage case rather than the
+        // clean shutdown one, so the client has to notice by itself.
+        client.Host().SetAutoPingReply(false);
+        client.Host().SetRelatchOnInvitation(true);
+        client.Host().ClearHistory();
+
+        // Ping interval is 2s and the client tolerates 5 unanswered, so the session ends after
+        // roughly 12 seconds. Generous, because the endpoint teardown is on the same worker.
+        auto invitation = client.Host().WaitForCommand(CommandCode::Invitation, std::chrono::milliseconds(60000));
+
+        VERIFY_IS_TRUE(invitation.has_value(),
+            L"After the session timed out, the service must invite the host again.");
+
+        // Answer normally again, as a returning host would
+        client.Host().SetAutoPingReply(true);
+
+        auto data = client.Host().WaitForCommand(CommandCode::UmpData, SessionTimeout);
+
+        VERIFY_IS_TRUE(data.has_value(), L"The session did not re-establish once the host answered again.");
+    }
+
+
+    // The reconnect must not resurrect something the user deliberately took down.
+    void ClientTests::ClientDoesNotReconnectAfterUserDisconnect()
+    {
+        if (!RequireService()) return;
+
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(EstablishClientSession(client));
+
+        DisconnectClient(client.EntryIdentifier());
+
+        // Let the Bye exchange finish before counting, or the disconnect's own traffic is
+        // mistaken for a reconnect attempt.
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+        client.Host().ClearHistory();
+
+        // Several scan intervals. The interval is shortened to 1s in ClassSetup.
+        std::this_thread::sleep_for(std::chrono::milliseconds(8000));
+
+        auto invitations = client.Host().CountReceived(CommandCode::Invitation);
+
+        Log::Comment(String().Format(L"Invitations seen after a user disconnect: %zu", invitations));
+
+        VERIFY_ARE_EQUAL(static_cast<size_t>(0), invitations,
+            L"A client the user disconnected must stay disconnected.");
+    }
+
+
+    // Nothing announces that a direct address has come online, so the service stops inviting it
+    // rather than putting invitations on the wire forever for every dead address configured.
+    void ClientTests::ClientConnectsToHostWhichComesOnlineLater()
+    {
+        if (!RequireService()) return;
+
+        Log::Comment(L"This test waits out the full invitation retry budget before the host answers, so it takes a while.");
+
+        ClientUnderTest client;
+
+        // Bound so the test can watch, but silent: the client sees a host which is not there.
+        VERIFY_IS_TRUE(client.Start(FakeHostInvitationBehavior::Ignore), L"Could not set up the client.");
+
+        // Let the client exhaust its invitation attempts and cancel with Bye 0x80
+        auto give_up = client.Host().WaitForCommand(CommandCode::Bye, InvitationTimeout);
+
+        VERIFY_IS_TRUE(give_up.has_value(), L"The client never cancelled its unanswered invitation.");
+
+        auto byeCommand = give_up->Find(CommandCode::Bye);
+
+        VERIFY_IS_NOT_NULL(byeCommand);
+
+        VERIFY_ARE_EQUAL(ByeReason::InvitationCanceled, byeCommand->GetByeReason(),
+            L"Giving up on an unanswered invitation is reported with 0x80.");
+
+        // The host is now switched on, but it has no way to say so.
+        client.Host().SetInvitationBehavior(FakeHostInvitationBehavior::Accept);
+        client.Host().SetRelatchOnInvitation(true);
+        client.Host().ClearHistory();
+
+        // Several scan intervals, shortened to 1s in ClassSetup
+        std::this_thread::sleep_for(std::chrono::milliseconds(8000));
+
+        VERIFY_ARE_EQUAL(static_cast<size_t>(0), client.Host().CountReceived(CommandCode::Invitation),
+            L"A direct connection which gave up must not keep inviting on its own.");
+
+        // The app telling the service the remote is reachable now
+        auto connectResult = ConnectDirectClient(
+            client.EntryIdentifier(),
+            FakeNetworkHost::Address(),
+            client.Host().Port());
+
+        VERIFY_IS_TRUE(connectResult.IsSuccess(),
+            L"A connect command for an existing entry must be accepted.");
+
+        auto invitation = client.Host().WaitForCommand(CommandCode::Invitation, InvitationTimeout);
+
+        VERIFY_IS_TRUE(invitation.has_value(),
+            L"A connect command must make the service try the direct address again.");
+
+        auto data = client.Host().WaitForCommand(CommandCode::UmpData, SessionTimeout);
+
+        VERIFY_IS_TRUE(data.has_value(), L"The session did not establish after the connect command.");
+    }
+
+
+    void ClientTests::ClientAnswersSessionResetWithReply()
+    {
+        if (!RequireService()) return;
         LogSpecRequirement(L"6.13: on reception of a Session Reset Command the receiver replies with Session Reset Reply.");
 
         ClientUnderTest client;

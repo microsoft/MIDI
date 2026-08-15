@@ -459,6 +459,84 @@ TransportState::AddPendingClientDefinition(
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkClientDefinitionForReconnect(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto const& definition : m_pendingClientDefinitions)
+    {
+        if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition->Enabled)
+            {
+                return S_FALSE;
+            }
+
+            definition->Created = false;
+            definition->Unavailable = false;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkClientDefinitionUnavailableOrRetry(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto const& definition : m_pendingClientDefinitions)
+    {
+        if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition->Enabled)
+            {
+                return S_FALSE;
+            }
+
+            if (definition->IsDirectConnection())
+            {
+                // stays created, so the creator worker leaves it alone until it is re-armed
+                definition->Unavailable = true;
+
+                return S_FALSE;
+            }
+
+            definition->Created = false;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto const& definition : m_pendingClientDefinitions)
+    {
+        if (definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            definition->Created = false;
+            definition->Unavailable = false;
+            definition->Enabled = true;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
 
 
 _Use_decl_annotations_

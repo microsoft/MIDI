@@ -60,6 +60,14 @@ namespace NetworkMidiTest
     // no longer present.
     ServiceConfigResult DisconnectClient(_In_ std::wstring const& entryIdentifier);
 
+    // The connectDirect command. For an entry which already exists this is the app saying the
+    // remote is reachable now, and is the only thing which revives a parked direct connection.
+    ServiceConfigResult ConnectDirectClient(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::wstring const& hostNameOrAddress,
+        _In_ uint16_t const port,
+        _In_ std::wstring const& umpEndpointName = L"Test Client");
+
     // Returns the enumerateClients response, for tests which need to see what the service
     // believes is connected.
     ServiceConfigResult EnumerateClients();

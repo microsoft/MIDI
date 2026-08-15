@@ -602,6 +602,51 @@ MidiNetworkConnection::EndActiveSessionDueToTimeout()
 
     LOG_IF_FAILED(EndActiveSession(false));
 
+    LOG_IF_FAILED(RequestClientReconnect());
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkConnection::RequestClientReconnect()
+{
+    // Only outbound clients are ours to re-establish. A remote client reconnects to us by
+    // sending a new invitation.
+    if (m_role != MidiNetworkConnectionRole::ConnectionWindowsIsClient)
+    {
+        return S_FALSE;
+    }
+
+    if (m_shuttingDown)
+    {
+        return S_FALSE;
+    }
+
+    auto markResult = TransportState::Current().MarkClientDefinitionForReconnect(m_configIdentifier);
+
+    if (markResult != S_OK)
+    {
+        // no definition, or it was disabled, so nothing should be rebuilt
+        return S_FALSE;
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Session to the remote host ended. Queued for reconnect.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(m_configIdentifier, "entry identifier")
+    );
+
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    if (endpointManager != nullptr)
+    {
+        LOG_IF_FAILED(endpointManager->WakeupBackgroundEndpointCreatorThread());
+    }
+
     return S_OK;
 }
 
@@ -669,8 +714,6 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
         LOG_IF_FAILED(TransportState::Current().DisassociateMidiEndpointFromConnection(m_sessionEndpointDeviceInterfaceId));
         m_sessionEndpointDeviceInterfaceId.clear();
     }
-
-    // TODO: if the endpoint is in our discovery list, mark it as not created
 
     // The writer deliberately outlives the session. A session ending is not the connection
     // ending: the same remote address and port may send a fresh invitation, and destroying the
@@ -804,6 +847,9 @@ MidiNetworkConnection::HandleIncomingBye()
     if (m_sessionActive)
     {
         LOG_IF_FAILED(EndActiveSession(true));
+
+        // the remote said goodbye on its own, so this is one to re-establish
+        LOG_IF_FAILED(RequestClientReconnect());
     }
     else
     {
@@ -1795,6 +1841,14 @@ MidiNetworkConnection::ServicePendingInvitation()
 
                 return S_OK;
             }));
+
+        // The host may simply not be switched on yet. An advertised host is picked up again when
+        // it advertises; a direct address is parked until the app asks for it again, because
+        // nothing announces its return and every configured dead address would be retried.
+        if (m_role == MidiNetworkConnectionRole::ConnectionWindowsIsClient && !m_shuttingDown)
+        {
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionUnavailableOrRetry(m_configIdentifier));
+        }
 
         return S_OK;
     }
