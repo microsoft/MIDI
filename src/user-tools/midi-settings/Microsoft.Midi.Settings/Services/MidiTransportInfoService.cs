@@ -13,7 +13,7 @@ namespace Microsoft.Midi.Settings.Services;
 
 class MidiTransportInfoService : IMidiTransportInfoService
 {
-    private IList<MidiServiceTransportPluginInfo>? _transports = null;
+    private IReadOnlyList<MidiServiceTransportPluginInfo>? _transports = null;
 
 
     public bool IsTransportAvailable(string transportCode)

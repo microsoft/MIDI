@@ -74,12 +74,24 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     // look up name
 
-                    var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(conn.EndpointDeviceId);
-                    if (di != null)
+                    if (MidiEndpointDeviceIdHelper.IsPossibleWindowsMidiServicesEndpointDeviceId(conn.EndpointOrPortDeviceId))
                     {
-                        connectionWrapper.EndpointName = di.Name;
+                        var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(conn.EndpointOrPortDeviceId);
+                        if (di != null)
+                        {
+                            connectionWrapper.EndpointName = di.Name;
+                        }
                     }
-                    else
+                    else if (MidiEndpointDeviceIdHelper.IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(conn.EndpointOrPortDeviceId))
+                    {
+                        var di = MidiLegacyPortDeviceInformation.CreateFromPortDeviceId(conn.EndpointOrPortDeviceId);
+                        if (di != null)
+                        {
+                            connectionWrapper.EndpointName = di.Name;
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(connectionWrapper.EndpointName))
                     {
                         connectionWrapper.EndpointName = "Unknown";
                     }

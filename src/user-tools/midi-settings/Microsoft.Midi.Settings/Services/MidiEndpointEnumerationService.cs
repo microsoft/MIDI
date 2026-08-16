@@ -164,7 +164,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
         foreach (MidiEndpointWrapper info in _endpoints)
         {
-            if (info.Id == args.EndpointDeviceId)
+            if (info.Id == args.RemovedDevice.EndpointDeviceId)
             {
                 lock (_endpoints)
                 {
@@ -188,9 +188,9 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
         foreach (MidiEndpointWrapper info in _endpoints)
         {
-            if (info.Id == args.EndpointDeviceId)
+            if (info.Id == args.UpdatedDevice.EndpointDeviceId)
             {
-                info.RefreshData(sender.EnumeratedEndpointDevices[args.EndpointDeviceId]);
+                info.RefreshData(sender.EnumeratedEndpointDevices[args.UpdatedDevice.EndpointDeviceId]);
 
                 if (EndpointUpdated != null)
                 {

@@ -7,8 +7,8 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiEndpointDeviceIdHelper.h"
-#include "Enumeration.MidiEndpointDeviceIdHelper.g.cpp"
+#include "MidiEndpointDeviceHelper.h"
+#include "Enumeration.MidiEndpointDeviceHelper.g.cpp"
 
 // all 
 #define MIDISRV_UMP_ENDPOINT_SWD_PREFIX                         L"\\\\?\\swd#midisrv#midiu_"
@@ -22,7 +22,27 @@
 namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
     _Use_decl_annotations_
-    winrt::hstring MidiEndpointDeviceIdHelper::GetShortIdFromFullId(winrt::hstring const& fullEndpointDeviceId) noexcept
+    winrt::hstring MidiEndpointDeviceHelper::EnsureCompliantUmpEndpointName(winrt::hstring const& endpointName) noexcept
+    {
+        // The specification's limit is a UTF-8 byte count, not a character count, so a name well
+        // inside the character limit can still be too long once encoded.
+        return winrt::hstring{ internal::TruncateToUtf8ByteCount(
+            internal::TrimmedWStringCopy(endpointName.c_str()),
+            MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH) };
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MidiEndpointDeviceHelper::EnsureCompliantProductInstanceId(winrt::hstring const& productInstanceId) noexcept
+    {
+        // ensures all ASCII characters, and removes any invalid characters for a SWD unique id. Also ensures length is within the spec's
+        // requirement of 42 ASCII characters or fewer. If the given string is too long, it is truncated to 42 characters.
+
+        return winrt::hstring{ internal::RemoveInvalidSWDUniqueIdCharacters(productInstanceId.c_str()).substr(0, MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_MAX_LENGTH) };
+    }
+
+
+    _Use_decl_annotations_
+    winrt::hstring MidiEndpointDeviceHelper::GetShortIdFromFullId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
         try
         {
@@ -64,7 +84,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     }
 
     _Use_decl_annotations_
-    winrt::hstring MidiEndpointDeviceIdHelper::GetFullIdFromShortId(winrt::hstring const& shortEndpointDeviceId) noexcept
+    winrt::hstring MidiEndpointDeviceHelper::GetFullIdFromShortId(winrt::hstring const& shortEndpointDeviceId) noexcept
     {
         // we don't want to start looking up all the transport codes here, so we just take on faith
         // that what is supplied is a real short endpoint device id. If it isn't, the only problem
@@ -87,7 +107,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(winrt::hstring const& fullEndpointDeviceId) noexcept
+    bool MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
         try
         {
@@ -108,7 +128,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
     }
 
     _Use_decl_annotations_
-        bool MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(winrt::hstring const& fulllegacyPortDeviceId) noexcept
+        bool MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(winrt::hstring const& fulllegacyPortDeviceId) noexcept
     {
         try
         {
@@ -132,7 +152,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
 
     _Use_decl_annotations_
-    winrt::hstring MidiEndpointDeviceIdHelper::NormalizeFullId(winrt::hstring const& fullEndpointDeviceId) noexcept
+    winrt::hstring MidiEndpointDeviceHelper::NormalizeFullId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
         try
         {

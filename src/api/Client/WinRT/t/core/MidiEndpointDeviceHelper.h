@@ -7,11 +7,11 @@
 // ============================================================================
 
 #pragma once
-#include "Enumeration.MidiEndpointDeviceIdHelper.g.h"
+#include "Enumeration.MidiEndpointDeviceHelper.g.h"
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
-    struct MidiEndpointDeviceIdHelper
+    struct MidiEndpointDeviceHelper
     {
         //MidiEndpointDeviceIdHelper() = default;
 
@@ -21,11 +21,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         static bool IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(_In_ winrt::hstring const& legacyPortDeviceId) noexcept;
 
         static winrt::hstring NormalizeFullId(_In_ winrt::hstring const& fullEndpointDeviceId) noexcept;
+
+        static winrt::hstring EnsureCompliantUmpEndpointName(_In_ winrt::hstring const& endpointName) noexcept;
+        static winrt::hstring EnsureCompliantProductInstanceId(_In_ winrt::hstring const& productInstanceId) noexcept;
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::Enumeration::factory_implementation
 {
-    struct MidiEndpointDeviceIdHelper : MidiEndpointDeviceIdHelperT<MidiEndpointDeviceIdHelper, implementation::MidiEndpointDeviceIdHelper, winrt::static_lifetime>
+    struct MidiEndpointDeviceHelper : MidiEndpointDeviceHelperT<MidiEndpointDeviceHelper, implementation::MidiEndpointDeviceHelper, winrt::static_lifetime>
     {
     };
 }

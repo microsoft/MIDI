@@ -175,6 +175,117 @@ namespace WindowsMidiServicesInternal
     }
 
 
+    // The MIDI 2.0 specification states its UMP Endpoint Name and Product Instance Id limits in
+    // UTF-8 BYTES, not characters. A name well under the character limit can still be over the
+    // byte limit once encoded, so these must never be measured with wstring::length().
+
+    inline std::string Utf8FromWString(_In_ std::wstring const& value) noexcept
+    {
+        if (value.empty())
+        {
+            return {};
+        }
+
+        auto required = ::WideCharToMultiByte(
+            CP_UTF8, 0, value.c_str(), static_cast<int>(value.length()), nullptr, 0, nullptr, nullptr);
+
+        if (required <= 0)
+        {
+            return {};
+        }
+
+        std::string utf8;
+        utf8.resize(static_cast<size_t>(required));
+
+        auto written = ::WideCharToMultiByte(
+            CP_UTF8, 0, value.c_str(), static_cast<int>(value.length()), utf8.data(), required, nullptr, nullptr);
+
+        if (written <= 0)
+        {
+            return {};
+        }
+
+        utf8.resize(static_cast<size_t>(written));
+
+        return utf8;
+    }
+
+    inline std::wstring WStringFromUtf8(_In_ std::string const& value) noexcept
+    {
+        if (value.empty())
+        {
+            return {};
+        }
+
+        auto required = ::MultiByteToWideChar(
+            CP_UTF8, 0, value.data(), static_cast<int>(value.length()), nullptr, 0);
+
+        if (required <= 0)
+        {
+            return {};
+        }
+
+        std::wstring wide;
+        wide.resize(static_cast<size_t>(required));
+
+        auto written = ::MultiByteToWideChar(
+            CP_UTF8, 0, value.data(), static_cast<int>(value.length()), wide.data(), required);
+
+        if (written <= 0)
+        {
+            return {};
+        }
+
+        wide.resize(static_cast<size_t>(written));
+
+        return wide;
+    }
+
+    // Number of bytes this string occupies when encoded as UTF-8. This is what the
+    // specification's limits are expressed in.
+    inline size_t Utf8ByteCount(_In_ std::wstring const& value) noexcept
+    {
+        return Utf8FromWString(value).length();
+    }
+
+    inline bool ExceedsUtf8ByteCount(_In_ std::wstring const& value, _In_ size_t const maxByteCount) noexcept
+    {
+        return Utf8ByteCount(value) > maxByteCount;
+    }
+
+    // Shortens the string so its UTF-8 encoding fits within maxByteCount, cutting only on a
+    // character boundary. Returns the string unchanged when it already fits.
+    inline std::wstring TruncateToUtf8ByteCount(_In_ std::wstring const& value, _In_ size_t const maxByteCount) noexcept
+    {
+        if (maxByteCount == 0)
+        {
+            return {};
+        }
+
+        auto utf8 = Utf8FromWString(value);
+
+        if (utf8.length() <= maxByteCount)
+        {
+            return value;
+        }
+
+        // maxByteCount is the first byte that has to go. If it is a continuation byte then the
+        // cut lands inside a character, so walk back to that character's lead byte. Checking the
+        // first DROPPED byte rather than the last kept one is what keeps a character which ends
+        // exactly on the limit intact.
+        size_t cut = maxByteCount;
+
+        while (cut > 0 && (static_cast<unsigned char>(utf8[cut]) & 0xC0) == 0x80)
+        {
+            cut--;
+        }
+
+        utf8.resize(cut);
+
+        return WStringFromUtf8(utf8);
+    }
+
+
     inline bool WStringEndsWidth(_In_ std::wstring source, _In_ std::wstring ending)
     {
         if (ending.size() > source.size())

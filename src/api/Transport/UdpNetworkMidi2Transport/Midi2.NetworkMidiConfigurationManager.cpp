@@ -233,8 +233,8 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 
     // Enforced here as well as in MidiNetworkHost::Initialize, because a definition rejected
     // there is skipped silently, which looked to the caller like a host that was created and
-    // then vanished.
-    if (definition.UmpEndpointName.size() > MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT)
+    // then vanished. The limit is a UTF-8 byte count, so hstring::size() is the wrong measure.
+    if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.UmpEndpointName }, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT))
     {
         errorMessage = internal::ResourceGetHString(IDS_ERROR_ENDPOINT_NAME_TOO_LONG);
         errorCode = NETWORK_ERROR_CODE_ENDPOINT_NAME_TOO_LONG;
@@ -248,7 +248,7 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
         return E_INVALIDARG;
     }
 
-    if (definition.ProductInstanceId.size() > MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT)
+    if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.ProductInstanceId }, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT))
     {
         errorMessage = internal::ResourceGetHString(IDS_ERROR_PRODUCT_INSTANCE_ID_TOO_LONG);
         errorCode = NETWORK_ERROR_CODE_PRODUCT_INSTANCE_ID_TOO_LONG;

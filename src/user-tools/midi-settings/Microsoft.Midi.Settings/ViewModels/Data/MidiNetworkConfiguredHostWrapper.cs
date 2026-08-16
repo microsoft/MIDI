@@ -56,9 +56,9 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
             }
             else
             {
-                _messageBoxService.ShowError($"Failed to start host. {result.ErrorInformation}");
+                _messageBoxService.ShowError($"Failed to start host. {result.ErrorMessage}");
 
-                _loggingService.LogError($"Failed to start host. {result.ErrorInformation}");
+                _loggingService.LogError($"Failed to start host. {result.ErrorMessage}");
             }
 
         });
@@ -78,9 +78,9 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
             }
             else
             {
-                _messageBoxService.ShowError($"Failed to stop host. {result.ErrorInformation}");
+                _messageBoxService.ShowError($"Failed to stop host. {result.ErrorMessage}");
 
-                _loggingService.LogError($"Failed to stop host. {result.ErrorInformation}");
+                _loggingService.LogError($"Failed to stop host. {result.ErrorMessage}");
             }
 
             // TODO
@@ -110,9 +110,9 @@ public partial class MidiNetworkConfiguredHostWrapper : ObservableRecipient
             }
             else
             {
-                _messageBoxService.ShowError($"Failed to stop host. {result.ErrorInformation}");
+                _messageBoxService.ShowError($"Failed to stop host. {result.ErrorMessage}");
 
-                _loggingService.LogError($"Failed to stop host. {result.ErrorInformation}");
+                _loggingService.LogError($"Failed to stop host. {result.ErrorMessage}");
                 
             }
 

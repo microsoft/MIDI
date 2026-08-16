@@ -17,6 +17,108 @@
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
 
+    _Use_decl_annotations_
+    winrt::hstring MidiNetworkHostCreationConfig::EnsureCompliantServiceInstanceName(winrt::hstring const& serviceInstanceName) noexcept
+    {
+        // ensures all ASCII characters, and removes any invalid characters for a SWD unique id.
+
+        auto cleanId = internal::RemoveInvalidSWDUniqueIdCharacters(serviceInstanceName.c_str());
+
+        // if it doesn't have the required suffix
+
+
+
+
+
+        // TEMP
+        return L"";
+
+    }
+
+
+
+
+
+    network::MidiNetworkHostCreationConfig MidiNetworkHostCreationConfig::CreateDefault() noexcept
+    {
+        try
+        {
+            auto config = winrt::make_self<MidiNetworkHostCreationConfig>();
+
+            config->m_id = foundation::GuidHelper::CreateNewGuid();
+
+            winrt::hstring name{};
+
+            // get the computer name
+
+            wchar_t computerName[MAX_COMPUTERNAME_LENGTH + 1]; // Buffer for name
+            DWORD size = sizeof(computerName);              // Size in bytes
+
+            // Attempt to get the computer name
+            if (GetComputerNameW(computerName, &size)) 
+            {
+                name = winrt::hstring{ computerName };
+            }
+            else
+            {
+                // couldn't get the computer name. This is a faulure
+                return nullptr;
+            }
+
+            // TODO: default the endpoint name to the computer name
+            // The constant here is the max number of UTF-8 bytes allowed.
+            // here we're treating it as ascii character count. That's not
+            // correct and so needs changing.
+            std::wstring nameStr = name.c_str();
+            config->m_name = nameStr.substr(0, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+
+            // build the service instance name. Like the instance id, we include Windows / midisrv because
+            // there are already implementations of this protocol which use the machine name directly from apps.
+            config->m_serviceInstanceName = internal::RemoveInvalidSWDUniqueIdCharacters(name.c_str()) + 
+                L"_windows_midisrv." + 
+                MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType() +
+                L"." +
+                MidiNetworkTransportManager::MidiNetworkUdpDnsDomain();
+
+
+            // create the product instance id. Per spec, this must be 42 ASCII characters or fewer
+            // stripped guid + this prefix is exactly 42 characters.
+            winrt::hstring instanceIdPrefix = L"winmidisrv";
+            config->m_productInstanceId = instanceIdPrefix + internal::RemoveInvalidSWDUniqueIdCharacters(internal::GuidToString(config->m_id)).substr(0, 42 - instanceIdPrefix.size());
+
+            // use a dynamic port by default
+            config->m_useAutomaticPortAllocation = true;
+            config->m_manuallyAssignedPort = winrt::hstring{};
+           
+            // yes, we advertise over mDNS
+            config->m_advertise = true;
+
+            // create MIDI 1 API ports for this
+            config->m_umpOnly = true;
+
+            // default to no authentication.
+            config->m_authenticationType = network::MidiNetworkAuthenticationType::NoAuthentication;
+            
+            
+            return *config;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, ex, L"hresult error creating default network host config.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, L"General exception creating default network host config.");
+            return nullptr;
+        }
+
+
+    }
+
+
+
+
     json::JsonObject MidiNetworkHostCreationConfig::ConfigJson() const noexcept
     {
         json::JsonObject hostObject{};

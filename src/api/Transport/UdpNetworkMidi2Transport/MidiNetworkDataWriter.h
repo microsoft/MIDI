@@ -68,36 +68,10 @@ private:
 
     inline std::string ConvertWStringToUTF8(_In_ std::wstring s, _In_ size_t maxByteCount)
     {
-        // this is deprecated, and removed in C++ 23, but there's currently no replacement
-        // there's also apparently a memory leak in this in the stdlib
-
-#pragma warning (push)
-#pragma warning (disable: 4996)
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
-        auto utf8 = convert.to_bytes(s);
-#pragma warning (pop)
-
-        auto cap = EffectiveMaxByteCount(maxByteCount);
-
-        if (utf8.size() > cap)
-        {
-            utf8.resize(cap);
-
-            // Truncating at a fixed byte count can land in the middle of a multi-byte sequence,
-            // which would put invalid UTF-8 on the wire. Back up to the last whole character.
-            while (!utf8.empty() && (static_cast<unsigned char>(utf8.back()) & 0xC0) == 0x80)
-            {
-                utf8.pop_back();
-            }
-
-            // and drop the lead byte of the sequence we just cut into
-            if (!utf8.empty() && (static_cast<unsigned char>(utf8.back()) & 0x80) != 0)
-            {
-                utf8.pop_back();
-            }
-        }
-
-        return utf8;
+        // The cap is rounded down to whole words first, so the truncation and the declared
+        // length always agree.
+        return internal::Utf8FromWString(
+            internal::TruncateToUtf8ByteCount(s, EffectiveMaxByteCount(maxByteCount)));
     }
 
     // The declared length and the bytes actually written must always agree, otherwise every

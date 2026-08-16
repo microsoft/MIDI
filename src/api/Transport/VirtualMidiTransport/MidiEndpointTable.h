@@ -59,6 +59,7 @@ public:
     HRESULT OnDeviceDisconnected(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
     HRESULT OnDeviceDisconnectedAlwaysTeardown(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
     HRESULT OnClientDisconnected(_In_ std::wstring const clientEndpointInterfaceId) noexcept;
+    HRESULT OnClientDisconnectedKeepDeviceLink(_In_ std::wstring const clientEndpointInterfaceId) noexcept;
 
     bool IsUniqueIdInUse(_In_ std::wstring const uniqueId) noexcept;
 

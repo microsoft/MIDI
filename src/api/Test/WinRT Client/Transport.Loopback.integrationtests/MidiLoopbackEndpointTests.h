@@ -44,6 +44,7 @@ public:
     TEST_METHOD(TestReopenLegacyWinMMPorts);
 
     TEST_METHOD(TestUnicodeGtbAndDeviceNames);
+    TEST_METHOD(TestOverlongUnicodeDeviceNameIsTruncatedOnCharacterBoundary);
 
 
 private:

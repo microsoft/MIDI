@@ -39,7 +39,7 @@ public interface IMidiConfigFile
 
 
 
-    bool RemoveNetworkHost(string hostEntryId);
+    bool RemoveNetworkHost(Guid hostEntryId);
 
     bool StoreEndpointCustomization(MidiServiceEndpointCustomizationConfig updateConfig);
 

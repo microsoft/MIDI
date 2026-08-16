@@ -171,6 +171,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="UmpIteratorTests.h" />
+    <ClInclude Include="Utf8StringTests.h" />
     <ClInclude Include="VersionResourceHelperTests.h" />
   </ItemGroup>
   <ItemGroup>
@@ -183,6 +184,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="UmpIteratorTests.cpp" />
+    <ClCompile Include="Utf8StringTests.cpp" />
     <ClCompile Include="VersionResourceHelperTests.cpp" />
   </ItemGroup>
   <ItemGroup>

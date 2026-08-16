@@ -27,6 +27,40 @@ public:
 
     TEST_METHOD(TestCreateVirtualDevice);
 
+    // endpoint name limits. The specification states these in UTF-8 bytes, not characters
+    TEST_METHOD(TestCompliantNameIsNotModified);
+    TEST_METHOD(TestOverlongUnicodeNameIsTruncatedOnCharacterBoundary);
+    TEST_METHOD(TestOverlongAsciiNameIsTruncated);
+    TEST_METHOD(TestDeviceSideNameKeepsSuffixWhenTruncated);
+
+    // in-protocol stream message text, which is also limited in UTF-8 bytes
+    TEST_METHOD(TestEndpointNameNotificationRespectsByteLimit);
+    TEST_METHOD(TestFunctionBlockNameNotificationRespectsByteLimit);
+    TEST_METHOD(TestSplitTextMessagesNeverSplitAMultiByteCharacter);
+
+    // connection lifetime
+    TEST_METHOD(TestClientDisconnectsBeforeDevice);
+    TEST_METHOD(TestClientDisconnectsAfterDevice);
+    TEST_METHOD(TestMultipleClientsConnectAndDisconnect);
+
+    // endpoint publication and teardown
+    TEST_METHOD(TestEndpointsPublishedBeforeAnyClientConnects);
+    TEST_METHOD(TestBothEndpointsRemovedWhenDeviceDisconnects);
+    TEST_METHOD(TestRepeatedCreateAndDestroyDoesNotLeakEndpoints);
+    TEST_METHOD(TestEndpointStaysFunctionalAcrossClientReconnects);
+
+    // misuse of the device-side endpoint
+    TEST_METHOD(TestExtraConnectionToDeviceSideEndpointDoesNotBreakClient);
+
+    // teardown robustness
+    TEST_METHOD(TestDeviceTeardownWhileClientSendingDoesNotHang);
+    TEST_METHOD(TestDeviceTeardownWithoutClientDisconnectDoesNotHang);
+
+    // general virtual device behaviour
+    TEST_METHOD(TestEmptyNameGetsDefaultName);
+    TEST_METHOD(TestMultipleVirtualDevicesHaveDistinctIdentities);
+    TEST_METHOD(TestFunctionBlocksAreVisibleOnVirtualDevice);
+
 
 private:
 

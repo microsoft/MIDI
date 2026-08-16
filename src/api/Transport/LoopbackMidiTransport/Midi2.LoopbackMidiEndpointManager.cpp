@@ -294,6 +294,12 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     std::wstring endpointName = definition->EndpointName;
     std::wstring endpointDescription = definition->EndpointDescription;
 
+    // The specification states the name limit as a UTF-8 byte count, not a character count
+    if (Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled())
+    {
+        endpointName = internal::TruncateToUtf8ByteCount(endpointName, MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH);
+    }
+
     std::vector<DEVPROPERTY> interfaceDevProperties{};
 
     // no user or in-protocol data in this case

@@ -255,6 +255,75 @@ void MidiLoopbackEndpointTests::TestUnicodeGtbAndDeviceNames()
 
 
 
+// The specification's endpoint name limit is a UTF-8 byte count, not a character count, so a
+// name well inside the character limit can still be over the byte limit once encoded.
+void MidiLoopbackEndpointTests::TestOverlongUnicodeDeviceNameIsTruncatedOnCharacterBoundary()
+{
+    const size_t maxByteCount = 98;
+
+    auto utf8ByteCount = [](std::wstring const& s) -> size_t
+        {
+            if (s.empty()) return 0;
+            auto count = ::WideCharToMultiByte(CP_UTF8, 0, s.c_str(), (int)s.length(), nullptr, 0, nullptr, nullptr);
+            return count > 0 ? (size_t)count : 0;
+        };
+
+    // 40 CJK characters: 40 UTF-16 code units, but 120 UTF-8 bytes. 32 characters (96 bytes) is
+    // the most that fits, because a 33rd would land on byte 99.
+    std::wstring longName{};
+    for (int i = 0; i < 40; i++)
+    {
+        longName += L"設";
+    }
+
+    VERIFY_ARE_EQUAL(longName.length(), (size_t)40);
+    VERIFY_ARE_EQUAL(utf8ByteCount(longName), (size_t)120);
+
+    winrt::hstring uniqueId = winrt::to_hstring(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+    auto associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
+
+    MidiLoopbackEndpointDefinition definitionA;
+    definitionA.Name(longName);
+    definitionA.UniqueId(uniqueId);
+
+    MidiLoopbackEndpointDefinition definitionB;
+    definitionB.Name(longName);
+    definitionB.UniqueId(uniqueId);
+
+    MidiLoopbackCreationConfig config(associationId, definitionA, definitionB);
+
+    auto result = MidiLoopbackManager::CreateTransientLoopback(config);
+
+    VERIFY_IS_NOT_NULL(result);
+    VERIFY_IS_TRUE(result.Success());
+
+    auto cleanupLoopback = wil::scope_exit([&]
+        {
+            MidiLoopbackRemovalConfig removalConfig(associationId);
+            MidiLoopbackManager::RemoveTransientLoopback(removalConfig);
+        });
+
+    auto endpointInformationA = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+        result.CreatedLoopbackEntry().EndpointA().EndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(endpointInformationA);
+
+    std::wstring returnedName{ endpointInformationA.Name() };
+
+    std::cout << "Original: 40 chars, " << utf8ByteCount(longName) << " UTF-8 bytes" << std::endl;
+    std::cout << "Returned: " << returnedName.length() << " chars, " << utf8ByteCount(returnedName) << " UTF-8 bytes" << std::endl;
+
+    // within the limit, and a whole number of characters rather than a split one
+    VERIFY_IS_LESS_THAN_OR_EQUAL(utf8ByteCount(returnedName), maxByteCount);
+    VERIFY_ARE_EQUAL(returnedName.length(), (size_t)32);
+    VERIFY_ARE_EQUAL(utf8ByteCount(returnedName), (size_t)96);
+
+    // and it is a prefix of what was submitted, not a mangled string
+    VERIFY_ARE_EQUAL(longName.compare(0, returnedName.length(), returnedName), 0);
+}
+
+
+
 
 // ============================================================================
 // Repro for GH1070 support code and the A/B loopback tests

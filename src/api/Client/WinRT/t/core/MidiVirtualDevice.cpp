@@ -183,7 +183,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
                 }
                 else
                 {
-                    m_declaredEndpointInfo.Name() == cleanedName;
+                    m_declaredEndpointInfo.Name(cleanedName);
                 }
             }
 

@@ -207,7 +207,7 @@
     <Midl Include="MidiDiagnostics.idl">
       <Filter>SDK\Diagnostics</Filter>
     </Midl>
-    <Midl Include="MidiEndpointDeviceIdHelper.idl">
+    <Midl Include="MidiEndpointDeviceHelper.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceInformation.idl">
