@@ -8,11 +8,11 @@ description: Argument supplied by the watcher when the properties of an endpoint
 
 Represents a notification that endpoint properties have been updated
 
-## Functions
+## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `EndpointDeviceId` | Id of the endpoint which has been updated  |
+| `UpdatedDevice` | The `MidiEndpointDeviceInformation` for the endpoint which was updated, carrying the current property values |
 | `DeviceInformationUpdate` | The source `Windows.Devices.Enumeration.DeviceInformationUpdate` object. |
 | `IsNameUpdated` | True if the name properties have been updated  |
 | `IsEndpointInformationUpdated` | True if the in-protocol endpoint information has been updated |
@@ -23,5 +23,6 @@ Represents a notification that endpoint properties have been updated
 | `AreAdditionalCapabilitiesUpdated` | True if the additional capabilities have been updated |
 | `AreUniqueIdsUpdated` | True if any unique identifier properties have been updated |
 | `AreGroupTerminalBlocksUpdated` | True if any group terminal blocks have been updated |
+| `IsMutedStateUpdated` | True if the muted state of the endpoint has been updated |
 
-If none of the `UpdatedXX` properties are true, then other properties have been updated.
+If none of the `IsXXUpdated` or `AreXXUpdated` properties are true, then other properties have been updated.
