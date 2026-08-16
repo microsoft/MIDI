@@ -201,7 +201,8 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
 
                     for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
                     {
-                        bool keepSession{ false };
+                        // no filter means keep every session, including ones with no connections
+                        bool keepSession{ filterEndpointAndPortIds == nullptr || filterEndpointAndPortIds.Size() == 0 };
 
                         auto sessionJson = sessionJsonArray.GetObjectAt(i);
 

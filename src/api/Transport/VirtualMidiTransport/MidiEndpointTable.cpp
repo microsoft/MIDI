@@ -502,11 +502,134 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(
     return S_OK;
 }
 
+// Same teardown as OnDeviceDisconnected, except it does not require MidiDeviceBidi to still be
+// set. If the client side disconnected first, OnClientDisconnected has already cleared that
+// pointer, and gating on it leaks both the client-visible and device-side endpoints.
+_Use_decl_annotations_
+HRESULT MidiEndpointTable::OnDeviceDisconnectedAlwaysTeardown(
+    std::wstring const deviceEndpointInterfaceId) noexcept
+{
+    TraceLoggingWrite(
+        MidiVirtualMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    try
+    {
+        if (TransportState::Current().GetEndpointManager() == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Endpoint Manager is null", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            RETURN_IF_FAILED(E_POINTER);  // fallback error
+        }
+
+        std::wstring associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
+
+        if (associationId.empty())
+        {
+            TraceLoggingWrite(
+                MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unable to get association id for this endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            RETURN_IF_FAILED(E_INVALIDARG);  // fallback error
+        }
+
+        auto lock = m_entriesLock.lock();
+
+        if (m_endpoints.find(associationId) == m_endpoints.end())
+        {
+            TraceLoggingWrite(
+                MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unexpected. There's no entry for associationId", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            RETURN_IF_FAILED(E_INVALIDARG);  // fallback error
+        }
+
+        auto entry = m_endpoints[associationId];
+
+        if (entry.MidiClientBidi != nullptr)
+        {
+            LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
+            entry.MidiClientBidi.reset();
+        }
+
+        if (entry.MidiDeviceBidi != nullptr)
+        {
+            LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
+            entry.MidiDeviceBidi.reset();
+        }
+
+        TraceLoggingWrite(
+            MidiVirtualMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Removing client visibile endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+        // remove the client endpoint. This will also trigger removal of MIDI 1.0 endpoints
+        LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));
+
+        TraceLoggingWrite(
+            MidiVirtualMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Removing app host endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+        // deactivate the device
+        LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteDeviceEndpoint(entry.CreatedShortDeviceInstanceId));
+
+        m_endpoints.erase(entry.VirtualEndpointAssociationId);
+
+        TraceLoggingWrite(
+            MidiVirtualMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Endpoint teardown complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+    }
+    CATCH_LOG();
+
+    return S_OK;
+}
 
 _Use_decl_annotations_
 bool MidiEndpointTable::IsUniqueIdInUse(std::wstring const uniqueId) noexcept
-{
-    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueId);
+{    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueId);
 
     if (Feature_Servicing_MIDI2IsUniqueIdLock::IsEnabled())
     {

@@ -692,12 +692,13 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsArraySub
 
     winrt::array_view<uint32_t> wordArray(wordList);
 
-    sentMessageCount = 3;
+    // 7 words starting at index 3 is three 64-bit messages plus one 32-bit message
+    sentMessageCount = 4;
 
     auto result = connSend.SendMultipleMessagesWordArray(
         MidiClock::TimestampConstantSendImmediately(),
         3,
-        7,  // this lines up with 3 messages
+        7,
         wordArray
     );
 
@@ -992,7 +993,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructArray(
     VERIFY_IS_NOT_NULL(connSend);
 
     // open connection
-    uint32_t countMessagesSent = 20;
+    uint32_t countMessagesSent = 100;
     uint32_t countMessagesReceived{ 0 };
 
 
@@ -1025,7 +1026,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagesStructArray(
     // create the data
     std::vector<MidiMessageStruct> structList;
 
-    for (uint32_t i = 0; i < 100; i++)
+    for (uint32_t i = 0; i < countMessagesSent; i++)
     {
         if (i % 2 == 0)
         {

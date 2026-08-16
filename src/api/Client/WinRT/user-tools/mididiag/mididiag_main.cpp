@@ -1488,6 +1488,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 #include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
 #include "Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs.h"
 
@@ -1535,6 +1536,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNumberCache::IsEnabled(),          L"MIDI2PortNumberCache (greatly speeds up service startup)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeUmpSize::IsEnabled(), L"MIDI2USBSystemRealTimeUmpSize (fix timing clock coming in as NOOP on MIDI2 driver)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs::IsEnabled(), L"MIDI2BsToUMPConvDisallowNOOPs (ensure over-stated MIDI 1 packet size doesn't result in trailing NOOPs)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled(), L"MIDI2VirtualDeviceRemovalDeadlock (fix service hang when a virtual device is shut down)");
 
     
     

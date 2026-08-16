@@ -9,6 +9,25 @@
 
 #include "stdafx.h"
 
+#include <cwctype>
+
+// Ports the legacy lookup deliberately returns null for, because they have no Windows MIDI
+// Services backing: WinRT MIDI 1.0 BLE ports (BLE10 transport code, in-box Bluetooth MIDI
+// stack) and the in-box GS Wavetable Synth. The service skips the same two.
+static bool IsNonMidiServicesPort(_In_ winrt::hstring const& portDeviceId)
+{
+    std::wstring id{ portDeviceId };
+
+    for (auto& ch : id)
+    {
+        ch = static_cast<wchar_t>(std::towlower(ch));
+    }
+
+    return
+        id.find(L"ble10") != std::wstring::npos ||
+        id.find(L"microsoftgswavetablesynth") != std::wstring::npos;
+}
+
 
 winrt::hstring GetStringVersionOfPropertyValue(foundation::IInspectable const& value)
 {
@@ -66,6 +85,12 @@ void MidiLegacyPortDeviceInformationTests::TestCreateFromId()
 
         for (const auto& device : devices)
         {
+            if (IsNonMidiServicesPort(device.Id()))
+            {
+                std::wcout << L"\n----- Skipping non-MIDI Services port: " << device.Name().c_str() << std::endl;
+                continue;
+            }
+
             std::wcout << L"\n----- Checking device: " << device.Name().c_str() << std::endl;
 
             auto portInfo = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::CreateFromPortDeviceId(device.Id());
@@ -107,6 +132,12 @@ void MidiLegacyPortDeviceInformationTests::TestWalkUpToParent()
 
         for (const auto& device : devices)
         {
+            if (IsNonMidiServicesPort(device.Id()))
+            {
+                std::wcout << L"\n---------------------------------------- Skipping non-MIDI Services port: " << device.Name().c_str() << std::endl;
+                continue;
+            }
+
             std::wcout << L"\n---------------------------------------- Checking MIDI 1 port: " << device.Name().c_str() << std::endl;
 
             auto portInfo = winrt::Windows::Devices::Midi2::Enumeration::Legacy::MidiLegacyPortDeviceInformation::CreateFromPortDeviceId(device.Id());
