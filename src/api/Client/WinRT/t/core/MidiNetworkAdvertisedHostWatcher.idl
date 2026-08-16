@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -17,19 +17,19 @@ import "MidiNetworkAdvertisedHostUpdatedEventArgs.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
-    [experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostWatcher")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostWatcher", UUID_IMidiNetworkAdvertisedHostWatcher)]
+    [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostWatcherStatics", UUID_IMidiNetworkAdvertisedHostWatcherStatics)]
     runtimeclass MidiNetworkAdvertisedHostWatcher
     {
-        static MidiNetworkAdvertisedHostWatcher Create();
+        [noexcept] static MidiNetworkAdvertisedHostWatcher Create();
 
-        void Start();
-        void Stop();
+        [noexcept] void Start();
+        [noexcept] void Stop();
 
-        Windows.Foundation.Collections.IMapView<String, MidiNetworkAdvertisedHost> EnumeratedHosts{ get; };
+        [noexcept] Windows.Foundation.Collections.IMapView<String, MidiNetworkAdvertisedHost> EnumeratedHosts{ get; };
 
-        Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
+        [noexcept] Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
 
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostAddedEventArgs> Added;
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostRemovedEventArgs> Removed;

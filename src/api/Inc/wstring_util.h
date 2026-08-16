@@ -235,9 +235,6 @@ namespace WindowsMidiServicesInternal
     // Expects enclosing braces: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
     inline GUID StringToGuid(_In_ std::wstring value)
     {
-        // this fails when {} are included
-//        winrt::guid resultingGuid = winrt::guid{ value };
-
         GUID g;
 
         if (SUCCEEDED(CLSIDFromString(value.c_str(), &g)))
@@ -250,6 +247,37 @@ namespace WindowsMidiServicesInternal
             return g;
         }
         
+    }
+
+
+    // Unlike StringToGuid above, reports failure instead of returning an uninitialized value,
+    // and accepts the unbraced form as well.
+    inline bool TryParseGuidString(_In_ std::wstring const& value, _Out_ GUID& result)
+    {
+        result = GUID{};
+
+        if (value.empty())
+        {
+            return false;
+        }
+
+        std::wstring braced{ value };
+
+        if (braced.front() != L'{')
+        {
+            braced = L"{" + braced + L"}";
+        }
+
+        GUID parsed{};
+
+        if (FAILED(CLSIDFromString(braced.c_str(), &parsed)))
+        {
+            return false;
+        }
+
+        result = parsed;
+
+        return true;
     }
 
 

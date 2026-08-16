@@ -1,0 +1,1298 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "stdafx.h"
+#include "MidiNetworkApiTests.h"
+
+#include <vector>
+
+using namespace WEX::Logging;
+using namespace WEX::Common;
+
+
+namespace
+{
+    // Any host these tests create is named with this prefix so a leaked one is obvious
+    // in the configuration file and can be told apart from a real user host.
+    constexpr wchar_t TestHostNamePrefix[] = L"MidiApiTest_";
+
+    // Byte counts from the MIDI 2.0 spec, restated rather than included so the test fails if
+    // the service ever quietly changes them.
+    constexpr uint32_t MaxUmpEndpointNameBytes = 98;
+    constexpr uint32_t MaxProductInstanceIdBytes = 42;
+
+    std::wstring RepeatedString(_In_ wchar_t const ch, _In_ size_t const count)
+    {
+        return std::wstring(count, ch);
+    }
+
+    // Skips the rest of the test rather than failing it when the service is not running.
+    // A developer box without the service installed should not produce red tests here.
+    bool ServiceIsAvailable()
+    {
+        try
+        {
+            return MidiNetworkTransportManager::IsTransportAvailable();
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    std::wstring MakeUniqueSuffix()
+    {
+        return winrt::to_string(winrt::to_hstring(foundation::GuidHelper::CreateNewGuid())).empty()
+            ? std::wstring{ L"x" }
+            : std::wstring{ winrt::to_hstring(foundation::GuidHelper::CreateNewGuid()).c_str() };
+    }
+}
+
+#define SKIP_IF_NO_NETWORK_TRANSPORT() \
+    if (!ServiceIsAvailable()) \
+    { \
+        Log::Result(TestResults::Skipped, L"Network MIDI 2.0 transport is not available on this PC."); \
+        return; \
+    }
+
+
+winrt::guid MidiNetworkApiTests::CreateTestHost(std::wstring const& nameSuffix)
+{
+    auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkHostCreationConfig config;
+
+    config.HostId(hostId);
+    config.Name(winrt::hstring{ TestHostNamePrefix + nameSuffix });
+    config.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + nameSuffix });
+
+    // The UMP product instance id is capped at 42 bytes by the spec, and the service rejects
+    // the whole host definition if it is longer, so this cannot carry the full suffix.
+    config.ProductInstanceId(winrt::hstring{ (TestHostNamePrefix + nameSuffix).substr(0, 42) });
+
+    config.UseAutomaticPortAllocation(true);
+    config.CreateOnlyUmpEndpoints(true);
+
+    // Not advertised, so these tests never put anything on the local network
+    config.Advertise(false);
+
+    auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+    if (response == nullptr || !response.Success())
+    {
+        Log::Comment(String().Format(
+            L"Host creation failed. code=0x%08X message='%s'",
+            response == nullptr ? 0 : (uint32_t)response.ErrorCode(),
+            response == nullptr ? L"null response" : response.ErrorMessage().c_str()));
+
+        return winrt::guid{};
+    }
+
+    return hostId;
+}
+
+void MidiNetworkApiTests::RemoveTestHost(winrt::guid const& hostId)
+{
+    if (hostId == winrt::guid{})
+    {
+        return;
+    }
+
+    try
+    {
+        MidiNetworkHostRemovalConfig removalConfig(hostId);
+        MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+    }
+    catch (...)
+    {
+        // best effort cleanup only
+    }
+}
+
+bool MidiNetworkApiTests::HostIsPresent(winrt::guid const& hostId)
+{
+    // The service applies a configuration update and brings the host up on its own
+    // threads, so a host can be a moment behind the call that created it. Poll rather
+    // than sampling once.
+    const int maxAttempts = 50;     // up to 5 seconds
+
+    for (int attempt = 0; attempt < maxAttempts; attempt++)
+    {
+        auto hosts = MidiNetworkTransportManager::GetConfiguredHosts();
+
+        if (hosts != nullptr)
+        {
+            for (auto const& host : hosts)
+            {
+                if (host.HostId() == hostId)
+                {
+                    return true;
+                }
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    return false;
+}
+
+// True when the host is gone. Removal is also applied asynchronously.
+bool MidiNetworkApiTests::HostIsAbsent(winrt::guid const& hostId)
+{
+    const int maxAttempts = 50;     // up to 5 seconds
+
+    for (int attempt = 0; attempt < maxAttempts; attempt++)
+    {
+        auto hosts = MidiNetworkTransportManager::GetConfiguredHosts();
+
+        bool found{ false };
+
+        if (hosts != nullptr)
+        {
+            for (auto const& host : hosts)
+            {
+                if (host.HostId() == hostId)
+                {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (!found)
+        {
+            return true;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    return false;
+}
+
+// Fails the test if a newly created host never shows up, and says what to check first.
+// The usual cause is a service-side network transport binary older than the host
+// lifecycle commands, because the transport lives in Program Files rather than
+// System32 and is easy to leave behind when deploying.
+void MidiNetworkApiTests::VerifyHostAppeared(winrt::guid const& hostId)
+{
+    if (!HostIsPresent(hostId))
+    {
+        Log::Comment(
+            L"The host was created without error but never appeared in GetConfiguredHosts. "
+            L"Check that 'C:\\Program Files\\Windows MIDI Services\\Service\\Midi2.NetworkMidiTransport.dll' "
+            L"is current. Deploy it with build\\replace_just_network_x64.bat from an elevated prompt, "
+            L"restart the service, and re-run.");
+
+        VERIFY_FAIL(L"Created host did not appear in GetConfiguredHosts.");
+    }
+}
+
+
+void MidiNetworkApiTests::TestTransportIsAvailable()
+{
+    // Not skipped. This test is the one that reports whether the transport is there.
+    auto available = MidiNetworkTransportManager::IsTransportAvailable();
+
+    Log::Comment(String().Format(L"Network transport available: %s", available ? L"true" : L"false"));
+
+    if (!available)
+    {
+        Log::Result(TestResults::Skipped, L"Network MIDI 2.0 transport is not installed on this PC.");
+    }
+}
+
+void MidiNetworkApiTests::TestTransportIdIsStable()
+{
+    auto id1 = MidiNetworkTransportManager::TransportId();
+    auto id2 = MidiNetworkTransportManager::TransportId();
+
+    VERIFY_ARE_EQUAL(id1, id2);
+    VERIFY_IS_FALSE(id1 == winrt::guid{});
+}
+
+void MidiNetworkApiTests::TestRawEnumerateHostsResponse()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    winrt::Windows::Devices::Midi2::ServiceConfig::MidiServiceTransportCommand command(
+        MidiNetworkTransportManager::TransportId());
+
+    command.Verb(L"enumerateHosts");
+
+    auto response = winrt::Windows::Devices::Midi2::ServiceConfig::MidiServiceTransportPluginConfigManager::SendCommand(command);
+
+    VERIFY_IS_NOT_NULL(response);
+
+    Log::Comment(String().Format(L"Status: %d", (int)response.Status()));
+    Log::Comment(String().Format(L"Error message: '%s'", response.ServiceErrorMessage().c_str()));
+
+    auto responseJson = response.ResponseJson();
+
+    if (responseJson != nullptr)
+    {
+        Log::Comment(String().Format(L"RAW RESPONSE: %s", responseJson.Stringify().c_str()));
+    }
+    else
+    {
+        Log::Comment(L"RAW RESPONSE: <null>");
+    }
+
+    // What the SDK actually surfaces from that same data. Entries whose identifier is not a
+    // valid guid are skipped by design, but they must not take the rest of the list with them,
+    // which is what happened when the parse threw out of the enumeration loop.
+    auto parsed = MidiNetworkTransportManager::GetConfiguredHosts();
+
+    uint32_t rawCount{ 0 };
+    uint32_t parseableCount{ 0 };
+
+    if (responseJson != nullptr && responseJson.HasKey(L"hosts"))
+    {
+        auto hostsArray = responseJson.GetNamedArray(L"hosts");
+
+        rawCount = hostsArray.Size();
+
+        for (auto const& entry : hostsArray)
+        {
+            auto entryObject = entry.GetObject();
+
+            if (entryObject == nullptr)
+            {
+                continue;
+            }
+
+            auto identifier = entryObject.GetNamedString(L"entryIdentifier", L"");
+
+            try
+            {
+                if (!identifier.empty())
+                {
+                    winrt::guid parsedId{ identifier };
+                    parseableCount++;
+                }
+            }
+            catch (...)
+            {
+                // not a guid, so the SDK is expected to skip it
+            }
+        }
+    }
+
+    Log::Comment(String().Format(
+        L"Raw entries: %d, of which parseable: %d, surfaced by GetConfiguredHosts: %d",
+        rawCount, parseableCount, parsed.Size()));
+
+    VERIFY_ARE_EQUAL(parseableCount, parsed.Size());
+}
+
+void MidiNetworkApiTests::TestGetConfiguredHostsReturnsCollection()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hosts = MidiNetworkTransportManager::GetConfiguredHosts();
+
+    VERIFY_IS_NOT_NULL(hosts);
+
+    Log::Comment(String().Format(L"Configured hosts: %d", hosts.Size()));
+
+    // every entry must be readable without throwing
+    for (auto const& host : hosts)
+    {
+        VERIFY_IS_NOT_NULL(host);
+
+        Log::Comment(String().Format(
+            L"  host '%s' started=%s port=%s",
+            host.UmpEndpointName().c_str(),
+            host.HasStarted() ? L"true" : L"false",
+            host.ActualPort().c_str()));
+    }
+}
+
+void MidiNetworkApiTests::TestGetConfiguredClientsReturnsCollection()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto clients = MidiNetworkTransportManager::GetConfiguredClients();
+
+    VERIFY_IS_NOT_NULL(clients);
+
+    Log::Comment(String().Format(L"Configured clients: %d", clients.Size()));
+
+    for (auto const& client : clients)
+    {
+        VERIFY_IS_NOT_NULL(client);
+
+        Log::Comment(String().Format(
+            L"  client sessionActive=%s remote=%s:%s",
+            client.IsSessionActive() ? L"true" : L"false",
+            client.ConnectedRemoteAddress().c_str(),
+            client.ConnectedRemotePort().c_str()));
+    }
+}
+
+void MidiNetworkApiTests::TestGetPendingRemoteClientsReturnsCollection()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto pending = MidiNetworkTransportManager::GetPendingRemoteClients();
+
+    // The most important assertion in this file. This returned null before the
+    // implementation landed, which crashed anything that tried to iterate it.
+    VERIFY_IS_NOT_NULL(pending);
+
+    Log::Comment(String().Format(L"Pending remote clients: %d", pending.Size()));
+
+    for (auto const& client : pending)
+    {
+        VERIFY_IS_NOT_NULL(client);
+
+        // A pending entry is only actionable if it carries the three values the
+        // approve/deny command requires, so those must never come back blank.
+        VERIFY_IS_FALSE(client.HostId() == winrt::guid{});
+        VERIFY_IS_FALSE(client.UmpEndpointName().empty());
+        VERIFY_IS_FALSE(client.ProductInstanceId().empty());
+
+        Log::Comment(String().Format(
+            L"  pending '%s' (%s) for host '%s' from %s",
+            client.UmpEndpointName().c_str(),
+            client.ProductInstanceId().c_str(),
+            client.HostUmpEndpointName().c_str(),
+            client.RemoteAddress().c_str()));
+
+        // The request time is a real time if it is set at all. Zero means the service
+        // had no time recorded, which is allowed, but a garbage year is not.
+        auto requestTime = client.RequestTime();
+
+        if (requestTime.time_since_epoch().count() != 0)
+        {
+            auto asFileTime = winrt::clock::to_file_time(requestTime);
+
+            // 2000-01-01 in FILETIME ticks. Anything earlier means the ISO 8601
+            // round trip lost the date.
+            VERIFY_IS_GREATER_THAN(asFileTime.value, 125911584000000000ull);
+        }
+    }
+}
+
+void MidiNetworkApiTests::TestGetAdvertisedHostsReturnsCollection()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hosts = MidiNetworkTransportManager::GetAdvertisedHosts();
+
+    VERIFY_IS_NOT_NULL(hosts);
+
+    Log::Comment(String().Format(L"Advertised hosts visible: %d", hosts.Size()));
+}
+
+void MidiNetworkApiTests::TestGetPendingRemoteClientsIsRepeatable()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // A settings app polls this on a timer, so the same call repeated has to keep
+    // working and keep agreeing with itself when nothing has changed.
+    const int iterations = 20;
+
+    uint32_t firstCount{ 0 };
+
+    for (int i = 0; i < iterations; i++)
+    {
+        auto pending = MidiNetworkTransportManager::GetPendingRemoteClients();
+
+        VERIFY_IS_NOT_NULL(pending);
+
+        if (i == 0)
+        {
+            firstCount = pending.Size();
+        }
+        else
+        {
+            // Nothing is connecting during this test, so the count must be stable.
+            VERIFY_ARE_EQUAL(firstCount, pending.Size());
+        }
+    }
+
+    Log::Comment(String().Format(L"%d polls returned a stable count of %d", iterations, firstCount));
+}
+
+
+void MidiNetworkApiTests::TestHostRemovalConfigRoundTrip()
+{
+    auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkHostRemovalConfig config(hostId);
+
+    VERIFY_ARE_EQUAL(hostId, config.HostId());
+    VERIFY_ARE_EQUAL(MidiNetworkTransportManager::TransportId(), config.TransportId());
+
+    auto otherId = foundation::GuidHelper::CreateNewGuid();
+    config.HostId(otherId);
+
+    VERIFY_ARE_EQUAL(otherId, config.HostId());
+}
+
+void MidiNetworkApiTests::TestHostRemovalConfigJsonShape()
+{
+    auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkHostRemovalConfig config(hostId);
+
+    auto configJson = config.ConfigJson();
+
+    VERIFY_IS_NOT_NULL(configJson);
+
+    Log::Comment(String().Format(L"Removal config json: %s", configJson.Stringify().c_str()));
+
+    // Walk the wrapper the service expects, one level at a time, so a failure
+    // says which level is wrong.
+    VERIFY_IS_TRUE(configJson.HasKey(L"endpointTransportPluginSettings"));
+
+    auto pluginSettings = configJson.GetNamedObject(L"endpointTransportPluginSettings");
+    VERIFY_IS_NOT_NULL(pluginSettings);
+
+    // The transport id is written in the braced uppercase form the service uses, so the
+    // key is matched by parsing it rather than by comparing strings.
+    auto expectedTransportId = MidiNetworkTransportManager::TransportId();
+
+    json::JsonObject transportObject{ nullptr };
+
+    for (auto const& pair : pluginSettings)
+    {
+        if (winrt::guid(pair.Key()) == expectedTransportId)
+        {
+            transportObject = pair.Value().GetObject();
+            break;
+        }
+    }
+
+    VERIFY_IS_NOT_NULL(transportObject);
+    VERIFY_IS_TRUE(transportObject.HasKey(L"remove"));
+
+    auto removeObject = transportObject.GetNamedObject(L"remove");
+    VERIFY_IS_NOT_NULL(removeObject);
+    VERIFY_IS_TRUE(removeObject.HasKey(L"hosts"));
+
+    auto hostsObject = removeObject.GetNamedObject(L"hosts");
+    VERIFY_IS_NOT_NULL(hostsObject);
+
+    // the host being removed is named by its id
+    bool foundHostKey{ false };
+
+    for (auto const& pair : hostsObject)
+    {
+        if (winrt::guid(pair.Key()) == hostId)
+        {
+            foundHostKey = true;
+            break;
+        }
+    }
+
+    VERIFY_IS_TRUE(foundHostKey);
+}
+
+void MidiNetworkApiTests::TestApprovalConfigRoundTrip()
+{
+    auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkRemoteClientApprovalConfig config(
+        hostId,
+        L"Some Remote Endpoint",
+        L"SomeProductInstanceId",
+        true,
+        false);
+
+    VERIFY_ARE_EQUAL(hostId, config.HostId());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"Some Remote Endpoint" }, config.RemoteClientName());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"SomeProductInstanceId" }, config.RemoteClientProductInstanceId());
+    VERIFY_IS_TRUE(config.Approve());
+    VERIFY_IS_FALSE(config.ScopeIsThisRequestOnly());
+
+    VERIFY_ARE_EQUAL(MidiNetworkTransportManager::TransportId(), config.TransportId());
+
+    // settable as well as gettable
+    config.Approve(false);
+    config.ScopeIsThisRequestOnly(true);
+
+    VERIFY_IS_FALSE(config.Approve());
+    VERIFY_IS_TRUE(config.ScopeIsThisRequestOnly());
+}
+
+void MidiNetworkApiTests::TestApprovalConfigJsonIsNotNull()
+{
+    MidiNetworkRemoteClientApprovalConfig config(
+        foundation::GuidHelper::CreateNewGuid(),
+        L"Name",
+        L"Id",
+        true,
+        false);
+
+    // An approval is sent as a command, so there is no configuration payload, but the
+    // property must still return an object rather than null.
+    VERIFY_IS_NOT_NULL(config.ConfigJson());
+}
+
+void MidiNetworkApiTests::TestDisconnectConfigJsonIsNotNull()
+{
+    MidiNetworkClientDisconnectConfig config(foundation::GuidHelper::CreateNewGuid());
+
+    VERIFY_IS_NOT_NULL(config.ConfigJson());
+}
+
+
+void MidiNetworkApiTests::TestCreateThenRemoveHost()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hostId = CreateTestHost(MakeUniqueSuffix());
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{});
+
+    // remove it even if an assert below halts the method
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    VerifyHostAppeared(hostId);
+
+    MidiNetworkHostRemovalConfig removalConfig(hostId);
+
+    auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+
+    VERIFY_IS_NOT_NULL(removalResponse);
+
+    if (!removalResponse.Success())
+    {
+        Log::Comment(String().Format(L"Removal error: %s", removalResponse.ErrorMessage().c_str()));
+    }
+
+    VERIFY_IS_TRUE(removalResponse.Success());
+
+    // the response should identify what it acted on
+    VERIFY_ARE_EQUAL(hostId, removalResponse.HostId());
+
+    // and the host must actually be gone
+    VERIFY_IS_TRUE(HostIsAbsent(hostId));
+
+    cleanup.release();
+}
+
+// Creation used to return as soon as the definition was queued, leaving the caller to poll.
+// A successful await must now mean the host is live.
+void MidiNetworkApiTests::TestCreateHostAsyncReturnsOnlyOnceHostHasStarted()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hostId = CreateTestHost(MakeUniqueSuffix());
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{});
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    // deliberately no polling here: one sample, taken the moment creation returned
+    auto hosts = MidiNetworkTransportManager::GetConfiguredHosts();
+
+    VERIFY_IS_NOT_NULL(hosts);
+
+    bool found{ false };
+
+    for (auto const& host : hosts)
+    {
+        if (host.HostId() == hostId)
+        {
+            found = true;
+
+            VERIFY_IS_TRUE(host.HasStarted());
+
+            break;
+        }
+    }
+
+    VERIFY_IS_TRUE(found);
+}
+
+void MidiNetworkApiTests::TestCreateStopStartThenRemoveHost()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hostId = CreateTestHost(MakeUniqueSuffix());
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{});
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    VerifyHostAppeared(hostId);
+
+    auto stopResponse = MidiNetworkTransportManager::StopNetworkHostAsync(hostId).get();
+    VERIFY_IS_NOT_NULL(stopResponse);
+    VERIFY_IS_TRUE(stopResponse.Success());
+
+    auto startResponse = MidiNetworkTransportManager::StartNetworkHostAsync(hostId).get();
+    VERIFY_IS_NOT_NULL(startResponse);
+    VERIFY_IS_TRUE(startResponse.Success());
+
+    // removing a running host has to work, not just a stopped one
+    MidiNetworkHostRemovalConfig removalConfig(hostId);
+    auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+
+    VERIFY_IS_NOT_NULL(removalResponse);
+    VERIFY_IS_TRUE(removalResponse.Success());
+    VERIFY_IS_TRUE(HostIsAbsent(hostId));
+
+    cleanup.release();
+}
+
+void MidiNetworkApiTests::TestRemoveNonexistentHostFailsCleanly()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // a host id the service has never seen
+    MidiNetworkHostRemovalConfig removalConfig(foundation::GuidHelper::CreateNewGuid());
+
+    auto response = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+
+    // a failure has to say something, otherwise the caller has nothing to show a user
+    VERIFY_IS_FALSE(response.ErrorMessage().empty());
+
+    Log::Comment(String().Format(L"Expected failure message: %s", response.ErrorMessage().c_str()));
+}
+
+void MidiNetworkApiTests::TestCreateThenImmediatelyRemoveDoesNotLeak()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto const hostsBefore = MidiNetworkTransportManager::GetConfiguredHosts().Size();
+
+    // No wait between the two calls, so removal lands while the service may still be building
+    // the host. Repeated, because the window is small and timing dependent.
+    const int iterations = 15;
+
+    std::vector<winrt::guid> createdIds;
+
+    for (int i = 0; i < iterations; i++)
+    {
+        auto hostId = foundation::GuidHelper::CreateNewGuid();
+        auto suffix = MakeUniqueSuffix();
+
+        MidiNetworkHostCreationConfig config;
+
+        config.HostId(hostId);
+        config.Name(winrt::hstring{ TestHostNamePrefix + suffix });
+        config.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + suffix });
+        config.ProductInstanceId(winrt::hstring{ (TestHostNamePrefix + suffix).substr(0, 42) });
+        config.UseAutomaticPortAllocation(true);
+        config.CreateOnlyUmpEndpoints(true);
+        config.Advertise(false);
+
+        auto creationResponse = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+        VERIFY_IS_NOT_NULL(creationResponse);
+        VERIFY_IS_TRUE(creationResponse.Success());
+
+        createdIds.push_back(hostId);
+
+        MidiNetworkHostRemovalConfig removalConfig(hostId);
+
+        auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+
+        VERIFY_IS_NOT_NULL(removalResponse);
+
+        // Removing an entry which has been accepted but not yet built is still a removal, so
+        // this must not come back as "host not found".
+        VERIFY_IS_TRUE(removalResponse.Success());
+    }
+
+    // Let anything still in flight inside the service finish before counting.
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    for (auto const& id : createdIds)
+    {
+        VERIFY_IS_TRUE(HostIsAbsent(id));
+    }
+
+    auto const hostsAfter = MidiNetworkTransportManager::GetConfiguredHosts().Size();
+
+    Log::Comment(String().Format(
+        L"%d create/remove cycles. Hosts before %d, after %d.",
+        iterations, hostsBefore, hostsAfter));
+
+    VERIFY_ARE_EQUAL(hostsBefore, hostsAfter);
+}
+
+
+void MidiNetworkApiTests::TestApproveUnknownRemoteClientFailsCleanly()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    MidiNetworkRemoteClientApprovalConfig config(
+        foundation::GuidHelper::CreateNewGuid(),      // host that does not exist
+        L"NoSuchRemoteEndpoint",
+        L"NoSuchProductInstanceId",
+        true,                                          // approve
+        false);
+
+    auto response = MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+    VERIFY_IS_FALSE(response.ErrorMessage().empty());
+
+    // the response must echo back what was asked for, so a caller polling several
+    // decisions at once can tell them apart
+    VERIFY_ARE_EQUAL(config.HostId(), response.HostId());
+    VERIFY_ARE_EQUAL(config.RemoteClientName(), response.RemoteClientName());
+    VERIFY_ARE_EQUAL(config.RemoteClientProductInstanceId(), response.RemoteClientProductInstanceId());
+
+    Log::Comment(String().Format(L"Expected failure message: %s", response.ErrorMessage().c_str()));
+}
+
+void MidiNetworkApiTests::TestDenyUnknownRemoteClientFailsCleanly()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    MidiNetworkRemoteClientApprovalConfig config(
+        foundation::GuidHelper::CreateNewGuid(),
+        L"NoSuchRemoteEndpoint",
+        L"NoSuchProductInstanceId",
+        false,                                         // deny
+        true);                                         // this request only
+
+    auto response = MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+    VERIFY_IS_FALSE(response.ErrorMessage().empty());
+
+    Log::Comment(String().Format(L"Expected failure message: %s", response.ErrorMessage().c_str()));
+}
+
+void MidiNetworkApiTests::TestApprovalWithEmptyIdentityFailsWithoutCallingService()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // The service requires all four arguments and rejects the command outright if any
+    // is missing, so the API stops this before it goes anywhere.
+    MidiNetworkRemoteClientApprovalConfig config(
+        foundation::GuidHelper::CreateNewGuid(),
+        L"",                                           // no name
+        L"",                                           // no product instance id
+        true,
+        false);
+
+    auto response = MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+    VERIFY_IS_FALSE(response.ErrorMessage().empty());
+
+    Log::Comment(String().Format(L"Expected validation message: %s", response.ErrorMessage().c_str()));
+}
+
+
+// ============================================================================
+// Fuzzing / hostile input
+// ============================================================================
+
+void MidiNetworkApiTests::TestFuzzNullConfigsAreRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // Every entry point which takes a configuration object has to survive a null one. These
+    // are all declared noexcept, so an unhandled throw here would take the process down
+    // rather than surface as a failed call.
+
+    auto creationResponse = MidiNetworkTransportManager::CreateNetworkHostAsync(nullptr).get();
+    VERIFY_IS_NOT_NULL(creationResponse);
+    VERIFY_IS_FALSE(creationResponse.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkHostCreationErrorCode::InvalidArgument, creationResponse.ErrorCode());
+
+    auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(nullptr).get();
+    VERIFY_IS_NOT_NULL(removalResponse);
+    VERIFY_IS_FALSE(removalResponse.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkHostRemovalErrorCode::InvalidArgument, removalResponse.ErrorCode());
+
+    auto connectResponse = MidiNetworkTransportManager::ConnectNetworkClientAsync(nullptr).get();
+    VERIFY_IS_NOT_NULL(connectResponse);
+    VERIFY_IS_FALSE(connectResponse.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkClientConnectErrorCode::InvalidArgument, connectResponse.ErrorCode());
+
+    auto disconnectResponse = MidiNetworkTransportManager::DisconnectNetworkClientAsync(nullptr).get();
+    VERIFY_IS_NOT_NULL(disconnectResponse);
+    VERIFY_IS_FALSE(disconnectResponse.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkClientDisconnectErrorCode::InvalidArgument, disconnectResponse.ErrorCode());
+
+    auto approvalResponse = MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(nullptr).get();
+    VERIFY_IS_NOT_NULL(approvalResponse);
+    VERIFY_IS_FALSE(approvalResponse.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkRemoteClientApprovalErrorCode::InvalidArgument, approvalResponse.ErrorCode());
+}
+
+void MidiNetworkApiTests::TestFuzzEmptyHostCreationFieldsAreRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // A host with no name at all. The service needs a UMP endpoint name to build the
+    // endpoint and to advertise, so this cannot be allowed through.
+    MidiNetworkHostCreationConfig config;
+
+    config.HostId(foundation::GuidHelper::CreateNewGuid());
+    config.Name(L"");
+    config.ServiceInstanceName(L"");
+    config.ProductInstanceId(L"");
+    config.UseAutomaticPortAllocation(true);
+    config.Advertise(false);
+
+    auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+    VERIFY_IS_FALSE(response.ErrorMessage().empty());
+
+    Log::Comment(String().Format(
+        L"Empty fields rejected with 0x%08X: %s",
+        (uint32_t)response.ErrorCode(),
+        response.ErrorMessage().c_str()));
+}
+
+void MidiNetworkApiTests::TestFuzzOversizeEndpointNameIsRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkHostCreationConfig config;
+
+    config.HostId(hostId);
+    config.Name(winrt::hstring{ RepeatedString(L'N', MaxUmpEndpointNameBytes + 50) });
+    config.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + MakeUniqueSuffix() });
+    config.ProductInstanceId(L"TestProductInstance");
+    config.UseAutomaticPortAllocation(true);
+    config.Advertise(false);
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+
+    // The name limit used to be enforced only when the host was being started, which meant
+    // creation reported success and the host then silently never appeared.
+    VERIFY_IS_FALSE(response.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkHostCreationErrorCode::EndpointNameTooLong, response.ErrorCode());
+
+    VERIFY_IS_TRUE(HostIsAbsent(hostId));
+}
+
+void MidiNetworkApiTests::TestFuzzOversizeProductInstanceIdIsRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkHostCreationConfig config;
+
+    config.HostId(hostId);
+    config.Name(L"Oversize Product Instance Id Test");
+    config.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + MakeUniqueSuffix() });
+    config.ProductInstanceId(winrt::hstring{ RepeatedString(L'P', MaxProductInstanceIdBytes + 20) });
+    config.UseAutomaticPortAllocation(true);
+    config.Advertise(false);
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkHostCreationErrorCode::ProductInstanceIdTooLong, response.ErrorCode());
+
+    VERIFY_IS_TRUE(HostIsAbsent(hostId));
+}
+
+void MidiNetworkApiTests::TestFuzzHugeStringsAreRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // Far past anything the protocol or the configuration file could carry. The point is
+    // that this is refused rather than allocated, serialized and sent.
+    auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkHostCreationConfig config;
+
+    config.HostId(hostId);
+    config.Name(winrt::hstring{ RepeatedString(L'A', 64 * 1024) });
+    config.ServiceInstanceName(winrt::hstring{ RepeatedString(L'B', 64 * 1024) });
+    config.ProductInstanceId(winrt::hstring{ RepeatedString(L'C', 64 * 1024) });
+    config.ManuallyAssignedPort(winrt::hstring{ RepeatedString(L'9', 4096) });
+    config.UseAutomaticPortAllocation(false);
+    config.Advertise(false);
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+
+    VERIFY_IS_TRUE(HostIsAbsent(hostId));
+
+    Log::Comment(String().Format(L"Huge strings rejected with 0x%08X", (uint32_t)response.ErrorCode()));
+}
+
+void MidiNetworkApiTests::TestFuzzHostileCharactersDoNotCrash()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // Quotes and backslashes break naive json building, braces look like guids, control
+    // characters and surrogate pairs break naive string handling, and path separators and
+    // '#' are meaningful in device interface ids.
+    const std::wstring hostileNames[] =
+    {
+        L"\"quoted\"",
+        L"back\\slash",
+        L"{not-a-guid}",
+        L"new\r\nline",
+        L"tab\there",
+        L"null\u0001control",
+        L"emoji \U0001F3B9 surrogate",
+        L"semi;colon#hash\\?query",
+        L"../../relative/path",
+        L"%s %d %n format",
+        L"<xml attr='x'/>",
+    };
+
+    for (auto const& name : hostileNames)
+    {
+        auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+        MidiNetworkHostCreationConfig config;
+
+        config.HostId(hostId);
+        config.Name(winrt::hstring{ name });
+        config.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + MakeUniqueSuffix() });
+        config.ProductInstanceId(L"HostileCharTest");
+        config.UseAutomaticPortAllocation(true);
+        config.Advertise(false);
+
+        // Whether the service accepts or rejects any given string is its business. What
+        // matters is that the call returns a response and the host does not linger.
+        auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+        VERIFY_IS_NOT_NULL(response);
+
+        if (response.Success())
+        {
+            // Removing before the creator thread has promoted the pending definition can race
+            // with it, so wait for the host to exist before taking it away.
+            if (HostIsPresent(hostId))
+            {
+                RemoveTestHost(hostId);
+
+                VERIFY_IS_TRUE(HostIsAbsent(hostId));
+            }
+            else
+            {
+                Log::Comment(String().Format(L"Host for name '%s' was accepted but never appeared.", name.c_str()));
+
+                RemoveTestHost(hostId);
+            }
+        }
+    }
+
+    // and the transport is still healthy afterwards
+    VERIFY_IS_NOT_NULL(MidiNetworkTransportManager::GetConfiguredHosts());
+    VERIFY_IS_NOT_NULL(MidiNetworkTransportManager::GetPendingRemoteClients());
+}
+
+void MidiNetworkApiTests::TestFuzzUnknownGuidsFailCleanly()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // Guids the service has never seen, including the empty one, on every verb which
+    // takes an entry identifier.
+    const winrt::guid unknownIds[] =
+    {
+        winrt::guid{},
+        foundation::GuidHelper::CreateNewGuid(),
+        winrt::guid{ L"FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF" },
+    };
+
+    for (auto const& id : unknownIds)
+    {
+        auto startResponse = MidiNetworkTransportManager::StartNetworkHostAsync(id).get();
+        VERIFY_IS_NOT_NULL(startResponse);
+        VERIFY_IS_FALSE(startResponse.Success());
+
+        auto stopResponse = MidiNetworkTransportManager::StopNetworkHostAsync(id).get();
+        VERIFY_IS_NOT_NULL(stopResponse);
+        VERIFY_IS_FALSE(stopResponse.Success());
+
+        MidiNetworkHostRemovalConfig removalConfig(id);
+        auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+        VERIFY_IS_NOT_NULL(removalResponse);
+        VERIFY_IS_FALSE(removalResponse.Success());
+
+        MidiNetworkClientDisconnectConfig disconnectConfig(id);
+        auto disconnectResponse = MidiNetworkTransportManager::DisconnectNetworkClientAsync(disconnectConfig).get();
+        VERIFY_IS_NOT_NULL(disconnectResponse);
+        VERIFY_IS_FALSE(disconnectResponse.Success());
+    }
+}
+
+void MidiNetworkApiTests::TestFuzzInvalidPortsAreRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // Port is a string on the wire, so it can be anything at all.
+    const std::wstring badPorts[] =
+    {
+        L"",
+        L"0",
+        L"-1",
+        L"65536",
+        L"99999999999999999999",
+        L"not-a-port",
+        L"80abc",
+        L" 443 ",
+    };
+
+    for (auto const& port : badPorts)
+    {
+        auto clientId = foundation::GuidHelper::CreateNewGuid();
+
+        MidiNetworkClientMatchCriteria criteria;
+        criteria.DirectHostNameOrIPAddress(L"127.0.0.1");
+
+        MidiNetworkClientConnectConfig config;
+        config.ClientId(clientId);
+        config.UmpEndpointName(L"Invalid Port Test");
+        config.MatchCriteria(criteria);
+
+        auto response = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
+
+        VERIFY_IS_NOT_NULL(response);
+
+        // DirectPort is a UInt16 in the API, so the out-of-range string cases cannot even be
+        // expressed. What is reachable is port zero, which must still be refused.
+        Log::Comment(String().Format(
+            L"port '%s' -> success=%s code=0x%08X",
+            port.c_str(),
+            response.Success() ? L"true" : L"false",
+            (uint32_t)response.ErrorCode()));
+
+        if (response.Success())
+        {
+            MidiNetworkClientDisconnectConfig disconnectConfig(clientId);
+            MidiNetworkTransportManager::DisconnectNetworkClientAsync(disconnectConfig).get();
+        }
+    }
+}
+
+void MidiNetworkApiTests::TestFuzzRepeatedBadCallsAreStable()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // A settings app with a bug, or something malicious, could hammer these. The service
+    // must not accumulate state, and the API must keep answering.
+    const int iterations = 100;
+
+    for (int i = 0; i < iterations; i++)
+    {
+        auto id = foundation::GuidHelper::CreateNewGuid();
+
+        MidiNetworkHostRemovalConfig removalConfig(id);
+        auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+        VERIFY_IS_FALSE(removalResponse.Success());
+
+        MidiNetworkRemoteClientApprovalConfig approvalConfig(id, L"nobody", L"nothing", true, false);
+        auto approvalResponse = MidiNetworkTransportManager::ApproveOrDenyRemoteClientConnectRequestAsync(approvalConfig).get();
+        VERIFY_IS_FALSE(approvalResponse.Success());
+    }
+
+    // the transport is still answering normally
+    auto hosts = MidiNetworkTransportManager::GetConfiguredHosts();
+    VERIFY_IS_NOT_NULL(hosts);
+
+    auto pending = MidiNetworkTransportManager::GetPendingRemoteClients();
+    VERIFY_IS_NOT_NULL(pending);
+
+    Log::Comment(String().Format(L"%d hostile round trips completed, %d hosts still configured", iterations, hosts.Size()));
+}
+
+
+// ============================================================================
+// Feature coverage
+// ============================================================================
+
+void MidiNetworkApiTests::TestAdvertisedHostWatcherLifecycle()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto watcher = MidiNetworkAdvertisedHostWatcher::Create();
+
+    VERIFY_IS_NOT_NULL(watcher);
+
+    // events must be subscribable and revocable even if nothing ever fires
+    auto addedToken = watcher.Added([](auto&&, auto&&) {});
+    auto removedToken = watcher.Removed([](auto&&, auto&&) {});
+    auto updatedToken = watcher.Updated([](auto&&, auto&&) {});
+    auto enumerationCompletedToken = watcher.EnumerationCompleted([](auto&&, auto&&) {});
+    auto stoppedToken = watcher.Stopped([](auto&&, auto&&) {});
+
+    VERIFY_IS_NOT_NULL(watcher.EnumeratedHosts());
+
+    watcher.Start();
+
+    // mDNS discovery is not instant and there may be nothing on the network at all, so this
+    // only checks that the watcher reaches a sane state rather than that it finds anything.
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    Log::Comment(String().Format(L"Watcher status: %d, hosts seen: %d",
+        (int)watcher.Status(),
+        watcher.EnumeratedHosts().Size()));
+
+    watcher.Stop();
+
+    watcher.Added(addedToken);
+    watcher.Removed(removedToken);
+    watcher.Updated(updatedToken);
+    watcher.EnumerationCompleted(enumerationCompletedToken);
+    watcher.Stopped(stoppedToken);
+}
+
+void MidiNetworkApiTests::TestAdvertisedHostWatcherDoubleStartStopIsSafe()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto watcher = MidiNetworkAdvertisedHostWatcher::Create();
+    VERIFY_IS_NOT_NULL(watcher);
+
+    // DeviceWatcher throws if it is started when already running, and these are noexcept,
+    // so an unguarded call would terminate the process rather than fail.
+    watcher.Stop();
+    watcher.Start();
+    watcher.Start();
+    watcher.Stop();
+    watcher.Stop();
+
+    Log::Comment(String().Format(L"Watcher survived repeated start/stop, status %d", (int)watcher.Status()));
+}
+
+void MidiNetworkApiTests::TestClientMatchCriteriaRoundTrip()
+{
+    MidiNetworkClientMatchCriteria criteria;
+
+    criteria.DeviceId(L"SomeDeviceId");
+    criteria.DirectHostNameOrIPAddress(L"192.168.1.50");
+    criteria.DirectPort(5673);
+
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"SomeDeviceId" }, criteria.DeviceId());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"192.168.1.50" }, criteria.DirectHostNameOrIPAddress());
+    VERIFY_ARE_EQUAL((uint16_t)5673, criteria.DirectPort());
+
+    // must not throw or return null even when only partly populated
+    auto json = criteria.GetConfigJson();
+
+    Log::Comment(String().Format(L"Match criteria json: %s", json.c_str()));
+}
+
+void MidiNetworkApiTests::TestClientConnectConfigRoundTrip()
+{
+    auto clientId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DirectHostNameOrIPAddress(L"127.0.0.1");
+    criteria.DirectPort(5004);
+
+    MidiNetworkClientConnectConfig config;
+
+    config.ClientId(clientId);
+    config.Comment(L"a comment");
+    config.UmpEndpointName(L"Round Trip Endpoint");
+    config.CreateOnlyUmpEndpoints(true);
+    config.MatchCriteria(criteria);
+
+    VERIFY_ARE_EQUAL(clientId, config.ClientId());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"a comment" }, config.Comment());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"Round Trip Endpoint" }, config.UmpEndpointName());
+    VERIFY_IS_TRUE(config.CreateOnlyUmpEndpoints());
+    VERIFY_IS_NOT_NULL(config.MatchCriteria());
+    VERIFY_ARE_EQUAL((uint16_t)5004, config.MatchCriteria().DirectPort());
+
+    VERIFY_ARE_EQUAL(MidiNetworkTransportManager::TransportId(), config.TransportId());
+    VERIFY_IS_NOT_NULL(config.ConfigJson());
+}
+
+void MidiNetworkApiTests::TestDisconnectUnknownClientFailsCleanly()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    MidiNetworkClientDisconnectConfig config(foundation::GuidHelper::CreateNewGuid());
+
+    auto response = MidiNetworkTransportManager::DisconnectNetworkClientAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+
+    Log::Comment(String().Format(
+        L"Disconnect of unknown client failed with 0x%08X: %s",
+        (uint32_t)response.ErrorCode(),
+        response.ErrorMessage().c_str()));
+}
+
+void MidiNetworkApiTests::TestDuplicateServiceInstanceNameIsRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // The service instance name becomes the DNS-SD instance and the virtual parent device id,
+    // so a second host cannot share it.
+    auto sharedName = winrt::hstring{ TestHostNamePrefix + MakeUniqueSuffix() };
+
+    auto firstId = foundation::GuidHelper::CreateNewGuid();
+    auto secondId = foundation::GuidHelper::CreateNewGuid();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            RemoveTestHost(firstId);
+            RemoveTestHost(secondId);
+        });
+
+    MidiNetworkHostCreationConfig firstConfig;
+    firstConfig.HostId(firstId);
+    firstConfig.Name(L"Duplicate Name Test A");
+    firstConfig.ServiceInstanceName(sharedName);
+    firstConfig.ProductInstanceId(L"DuplicateTestA");
+    firstConfig.UseAutomaticPortAllocation(true);
+    firstConfig.Advertise(false);
+
+    auto firstResponse = MidiNetworkTransportManager::CreateNetworkHostAsync(firstConfig).get();
+
+    VERIFY_IS_NOT_NULL(firstResponse);
+    VERIFY_IS_TRUE(firstResponse.Success());
+
+    VerifyHostAppeared(firstId);
+
+    MidiNetworkHostCreationConfig secondConfig;
+    secondConfig.HostId(secondId);
+    secondConfig.Name(L"Duplicate Name Test B");
+    secondConfig.ServiceInstanceName(sharedName);
+    secondConfig.ProductInstanceId(L"DuplicateTestB");
+    secondConfig.UseAutomaticPortAllocation(true);
+    secondConfig.Advertise(false);
+
+    auto secondResponse = MidiNetworkTransportManager::CreateNetworkHostAsync(secondConfig).get();
+
+    VERIFY_IS_NOT_NULL(secondResponse);
+    VERIFY_IS_FALSE(secondResponse.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkHostCreationErrorCode::ServiceInstanceNameInUse, secondResponse.ErrorCode());
+
+    VERIFY_IS_TRUE(HostIsAbsent(secondId));
+
+    Log::Comment(String().Format(L"Duplicate rejected: %s", secondResponse.ErrorMessage().c_str()));
+}

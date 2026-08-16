@@ -4,7 +4,7 @@
 
 HMODULE g_sdkRuntimeImplementationModuleHandle;
 
-BOOL WINAPI DllMain(HINSTANCE hmodule, DWORD reason, LPVOID /*lpvReserved*/)
+BOOL WINAPI DllMain(_In_ HINSTANCE hmodule, _In_ DWORD reason, _In_ LPVOID /*lpvReserved*/)
 {
     TraceLoggingWrite(
         Midi2SdkTelemetryProvider::Provider(),

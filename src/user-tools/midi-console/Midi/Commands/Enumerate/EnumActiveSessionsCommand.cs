@@ -16,6 +16,11 @@ namespace Microsoft.Midi.ConsoleApp
             [CommandOption("-a|--all")]
             [DefaultValue(false)]
             public bool All { get; set; }
+
+            [LocalizedDescription("ParameterEnumSessionsVerbose")]
+            [CommandOption("-v|--verbose")]
+            [DefaultValue(false)]
+            public bool Verbose { get; set; }
         }
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
@@ -61,6 +66,11 @@ namespace Microsoft.Midi.ConsoleApp
                             $"{AnsiMarkupFormatter.FormatProcessName(session.ProcessName)} [[{AnsiMarkupFormatter.FormatProcessId(session.ProcessId)}]]",
                             $"Session {AnsiMarkupFormatter.FormatSessionName(session.SessionName)} open since {AnsiMarkupFormatter.FormatLongDateTime(session.StartTime)}"
                             );
+
+                        if (settings.Verbose)
+                        {
+                            table.AddRow("", $"Session ID: { AnsiMarkupFormatter.FormatGeneralGuid(session.SessionId) }");
+                        }
 
                         if (session.Connections.Count > 0)
                         {

@@ -29,9 +29,9 @@ enum MidiNetworkHostProtocol
 
 struct MidiNetworkHostDefinition
 {
-    bool Created{ false };
+    MidiNetworkEntryState State{ MidiNetworkEntryState::Pending };
 
-    winrt::hstring EntryIdentifier;         // internal 
+    winrt::guid EntryIdentifier;            // internal
 
     bool UseAutomaticPortAllocation{ true };
     winrt::hstring Port;

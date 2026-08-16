@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -14,24 +14,24 @@ import "MidiApiContracts.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
-    [experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    struct MidiNetworkConfiguredHost
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkConfiguredHost", UUID_IMidiNetworkConfiguredHost)]
+    runtimeclass MidiNetworkConfiguredHost
     {
-        String HostId;  // internal id we use to match up in config file
+        [noexcept] Guid HostId{ get;} ;  // internal id we use to match up in config file
 
-        Boolean IsEnabled;                  // true if this is allows to connect. Mostly for pre-configured connections
-        Boolean HasStarted;                 // true if this has started
+        [noexcept] Boolean IsEnabled{ get; };                  // true if this is allows to connect. Mostly for pre-configured connections
+        [noexcept] Boolean HasStarted{ get; };                 // true if this has started
 
-        String ActualPort;                  // string because DatagramSocket.LocalPort returns a string
-        String ActualAddress;
+        [noexcept] String ActualPort{ get; };                  // string because DatagramSocket.LocalPort returns a string
+        [noexcept] String ActualAddress{ get; };
 
-        String UmpEndpointName;            
-        String ProductInstanceId;
+        [noexcept] String UmpEndpointName{ get; };
+        [noexcept] String ProductInstanceId{ get; };
 
-        String ServiceInstanceName;
+        [noexcept] String ServiceInstanceName{ get; };
 
-        Boolean CreateMidi1Ports;
+        [noexcept] Boolean CreateMidi1Ports{ get; };
     };
 }
 

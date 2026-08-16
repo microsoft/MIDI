@@ -28,6 +28,7 @@
 //#include "MidiDefs.h"
 #include "wstring_util.h"
 #include "json_defs.h"
+#include "Feature_Servicing_MIDI2TransportCommandJsonHardening.h"
 
 namespace json = ::winrt::Windows::Data::Json;
 
@@ -41,12 +42,33 @@ namespace WindowsMidiServicesInternal
     public:
         inline static bool TransportObjectContainsCommand(_In_ json::JsonObject transportObject)
         {
-            if (transportObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY, nullptr) != nullptr)
+            if (Feature_Servicing_MIDI2TransportCommandJsonHardening::IsEnabled())
             {
-                return true;
-            }
+                // the two-argument GetNamedObject only tolerates a missing key. A key which is
+                // present holding another type throws, and that throw terminates the service.
+                if (transportObject == nullptr)
+                {
+                    return false;
+                }
 
-            return false;
+                if (!transportObject.HasKey(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY))
+                {
+                    return false;
+                }
+
+                auto commandValue = transportObject.Lookup(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY);
+
+                return commandValue != nullptr && commandValue.ValueType() == json::JsonValueType::Object;
+            }
+            else
+            {
+                if (transportObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY, nullptr) != nullptr)
+                {
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         // pulls the command out from inside this object. You provide the transport wrapper object
@@ -54,36 +76,98 @@ namespace WindowsMidiServicesInternal
         {
             MidiTransportCommandHelper result;
 
-            // parses into a new instance of this object
-
-            auto commandObject = transportObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY, nullptr);
-
-            if (commandObject == nullptr)
+            if (Feature_Servicing_MIDI2TransportCommandJsonHardening::IsEnabled())
             {
                 result.m_command = L"";
-            }
-            else
-            {
-                auto commandName = commandObject.GetNamedString(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY, L"");
-                result.m_command = commandName.c_str();
 
-                auto arguments = commandObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY, nullptr);
-                if (arguments != nullptr)
+                if (transportObject == nullptr)
                 {
-                    for (auto const& argument : arguments)
+                    return result;
+                }
+
+                if (!transportObject.HasKey(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY))
+                {
+                    return result;
+                }
+
+                auto commandValue = transportObject.Lookup(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY);
+
+                if (commandValue == nullptr || commandValue.ValueType() != json::JsonValueType::Object)
+                {
+                    return result;
+                }
+
+                // safe now that the type is known
+                auto commandObject = transportObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY);
+
+                if (commandObject.HasKey(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY))
+                {
+                    auto commandNameValue = commandObject.Lookup(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY);
+
+                    if (commandNameValue != nullptr && commandNameValue.ValueType() == json::JsonValueType::String)
                     {
-                        std::wstring key { argument.Key().c_str() };
-                        std::wstring value {};
-
-                        value = arguments.GetNamedString(argument.Key()).c_str();
-
-                        result.m_arguments.emplace(key, value);
+                        result.m_command = commandNameValue.GetString().c_str();
                     }
                 }
 
-            }
+                if (commandObject.HasKey(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY))
+                {
+                    auto argumentsValue = commandObject.Lookup(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY);
 
-            return result;
+                    if (argumentsValue != nullptr && argumentsValue.ValueType() == json::JsonValueType::Object)
+                    {
+                        auto arguments = commandObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY);
+
+                        for (auto const& argument : arguments)
+                        {
+                            auto argumentValue = argument.Value();
+
+                            // an argument which is not a string is skipped, not thrown on
+                            if (argumentValue != nullptr && argumentValue.ValueType() == json::JsonValueType::String)
+                            {
+                                result.m_arguments.emplace(
+                                    std::wstring{ argument.Key().c_str() },
+                                    std::wstring{ argumentValue.GetString().c_str() });
+                            }
+                        }
+                    }
+                }
+
+                return result;
+            }
+            else
+            {
+                // parses into a new instance of this object
+
+                auto commandObject = transportObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY, nullptr);
+
+                if (commandObject == nullptr)
+                {
+                    result.m_command = L"";
+                }
+                else
+                {
+                    auto commandName = commandObject.GetNamedString(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY, L"");
+                    result.m_command = commandName.c_str();
+
+                    auto arguments = commandObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY, nullptr);
+                    if (arguments != nullptr)
+                    {
+                        for (auto const& argument : arguments)
+                        {
+                            std::wstring key { argument.Key().c_str() };
+                            std::wstring value {};
+
+                            value = arguments.GetNamedString(argument.Key()).c_str();
+
+                            result.m_arguments.emplace(key, value);
+                        }
+                    }
+
+                }
+
+                return result;
+            }
         }
 
         inline std::wstring Command()

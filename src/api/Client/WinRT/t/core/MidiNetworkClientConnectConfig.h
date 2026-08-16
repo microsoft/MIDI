@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -21,13 +21,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         json::JsonObject ConfigJson() const noexcept;
 
         winrt::hstring Comment() const noexcept { return m_comment; }
-        void Comment(_In_ winrt::hstring const& value) { m_comment = value; }
+        void Comment(_In_ winrt::hstring const& value) noexcept { m_comment = value; }
 
-        winrt::hstring Id() const noexcept { return m_id; }
-        void Id(_In_ winrt::hstring const& value) { m_id = value; }
+        winrt::guid ClientId() const noexcept { return m_id; }
+        void ClientId(_In_ winrt::guid const& value) noexcept { m_id = value; }
 
         winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
-        void UmpEndpointName(_In_ winrt::hstring const& value) { m_umpEndpointName = value; }
+        void UmpEndpointName(_In_ winrt::hstring const& value) noexcept { m_umpEndpointName = value; }
 
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
         void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }
@@ -40,7 +40,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
     private:
         winrt::hstring m_umpEndpointName{};
-        winrt::hstring m_id{};
+        winrt::guid m_id{};
         bool m_umpOnly{ false };
         bool m_autoReconnect{ true };
         winrt::hstring m_comment{};

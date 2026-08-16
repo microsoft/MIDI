@@ -54,6 +54,14 @@ namespace NetworkMidiTest
         TEST_METHOD(ClientSendsUserTerminatedByeOnExplicitDisconnect);
         TEST_METHOD(ClientRepeatsByeUntilByeReplyReceived);
 
+        // Reconnect after the remote host goes away on its own, by rebooting or by dropping off
+        // the network. The definition has to go back to the endpoint creator, and a disconnect
+        // the user asked for must not.
+        TEST_METHOD(ClientReconnectsAfterHostSendsBye);
+        TEST_METHOD(ClientReconnectsAfterHostStopsResponding);
+        TEST_METHOD(ClientDoesNotReconnectAfterUserDisconnect);
+        TEST_METHOD(ClientConnectsToHostWhichComesOnlineLater);
+
         // Session reset, spec 6.13
         TEST_METHOD(ClientAnswersSessionResetWithReply);
 

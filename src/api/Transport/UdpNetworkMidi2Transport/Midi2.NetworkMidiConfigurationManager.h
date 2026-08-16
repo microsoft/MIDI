@@ -20,7 +20,7 @@ public:
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _Out_ LPWSTR* Response));
     STDMETHOD(Shutdown)();
 
-    STDMETHOD(ValidateHostDefinition(_In_ MidiNetworkHostDefinition& definition, _Out_ winrt::hstring& errorMessage));
+    STDMETHOD(ValidateHostDefinition(_In_ MidiNetworkHostDefinition& definition, _Out_ winrt::hstring& errorMessage, _Out_ uint32_t& errorCode));
 //    STDMETHOD(ValidateClientDefinition(_In_ MidiNetworkUdpClientDefinition& definition));
 
 private:
@@ -28,18 +28,24 @@ private:
         _In_ json::JsonObject const& transportObject,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
+    
+    HRESULT RunCommandGetPendingRemoteClients(_Inout_ json::JsonObject& responseObject) noexcept;
     HRESULT RunCommandEnumerateClients(_Inout_ json::JsonObject& responseObject) noexcept;
     HRESULT RunCommandEnumerateHosts(_Inout_ json::JsonObject& responseObject) noexcept;
     HRESULT RunCommandStopHost(
-        _In_ winrt::hstring const& hostConfigEntryId,
+        _In_ winrt::guid const& hostConfigEntryId,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
+    HRESULT RunCommandRemoveHost(
+        _In_ winrt::guid const& hostConfigEntryId,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
     HRESULT RunCommandStartHost(
-        _In_ winrt::hstring const& hostConfigEntryId,
+        _In_ winrt::guid const& hostConfigEntryId,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
     HRESULT RunCommandConnectDirect(
-        _In_ winrt::hstring const& clientConfigEntryId,
+        _In_ winrt::guid const& clientConfigEntryId,
         _In_ winrt::hstring const& remoteAddress,
         _In_ winrt::hstring const& remotePort,
         _In_ winrt::hstring const& umpEndpointName,
@@ -47,13 +53,13 @@ private:
 
 
     HRESULT RunCommandDisconnectClient(
-        _In_ winrt::hstring const& clientConfigEntryId,
-        _In_ json::JsonObject& responseObject) noexcept;
+        _In_ winrt::guid const& clientConfigEntryId,
+        _Inout_ json::JsonObject& responseObject) noexcept;
 
     // A user's approve or deny decision for a remote client on one of our hosts. persist means
     // the caller chose "always", which is also written to the configuration file by the caller.
     HRESULT RunCommandRemoteClientDecision(
-        _In_ winrt::hstring const& hostEntryId,
+        _In_ winrt::guid const& hostEntryId,
         _In_ MidiNetworkRemoteClientIdentity const& identity,
         _In_ bool const approve,
         _In_ bool const persist,

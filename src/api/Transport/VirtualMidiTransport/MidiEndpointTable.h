@@ -57,6 +57,7 @@ public:
     HRESULT OnClientConnected(_In_ std::wstring const clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBidi* clientBidi) noexcept;
 
     HRESULT OnDeviceDisconnected(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
+    HRESULT OnDeviceDisconnectedAlwaysTeardown(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
     HRESULT OnClientDisconnected(_In_ std::wstring const clientEndpointInterfaceId) noexcept;
 
     bool IsUniqueIdInUse(_In_ std::wstring const uniqueId) noexcept;

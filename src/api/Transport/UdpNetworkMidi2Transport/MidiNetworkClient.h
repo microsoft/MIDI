@@ -10,9 +10,9 @@
 
 struct MidiNetworkClientDefinition
 {
-    bool Created{ false };
+    MidiNetworkEntryState State{ MidiNetworkEntryState::Pending };
 
-    winrt::hstring EntryIdentifier;         // internal 
+    winrt::guid EntryIdentifier;            // internal
     bool Enabled{ true };
 
     winrt::hstring Name;                    // the name of the endpoint before we do discovery
@@ -35,6 +35,10 @@ struct MidiNetworkClientDefinition
     // these are direct connections. HostName or IP are required, plus the port
     winrt::hstring MatchDirectHostNameOrIPAddress{};
     winrt::hstring MatchDirectPort{};
+
+    // An advertised host announces its return, so it can be retried for free. A direct address
+    // never does, which is why the two are paced differently.
+    bool IsDirectConnection() const { return MatchId.empty() && !MatchDirectPort.empty(); }
 };
 
 
@@ -95,14 +99,14 @@ private:
     uint32_t m_retransmitCount{ 0 };
     uint32_t m_retransmitRequestCount{ 0 };
 
-    winrt::hstring m_configIdentifier{};
+    winrt::guid m_configIdentifier{};
 
     bool m_createUmpEndpointsOnly{ true };
 
     wil::critical_section m_connectionLock;
-    std::shared_ptr<MidiNetworkConnection> m_networkConnection{ nullptr };
+    std::shared_ptr<MidiNetworkClientConnection> m_networkConnection{ nullptr };
 
-    std::shared_ptr<MidiNetworkConnection> GetConnection()
+    std::shared_ptr<MidiNetworkClientConnection> GetConnection()
     {
         auto lock = m_connectionLock.lock();
 

@@ -43,7 +43,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         void StaticIPAddress(_In_ winrt::hstring const& value) noexcept { m_match->NetworkStaticIPAddress = internal::TrimmedHStringCopy(value); }
 
         uint16_t Port() const noexcept { return m_match->NetworkPort; }
-        void Port(uint16_t value) noexcept { m_match->NetworkPort = value; }
+        void Port(_In_ uint16_t value) noexcept { m_match->NetworkPort = value; }
 
         winrt::hstring TransportSuppliedEndpointName() const noexcept { return m_match->TransportSuppliedEndpointName; }
         void TransportSuppliedEndpointName(_In_ winrt::hstring const& value) noexcept { m_match->TransportSuppliedEndpointName = internal::TrimmedHStringCopy(value); }

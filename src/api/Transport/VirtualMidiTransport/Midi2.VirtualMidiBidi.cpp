@@ -9,6 +9,7 @@
 
 #include "pch.h"
 #include "midi2.VirtualMiditransport.h"
+#include <Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h>
 
 _Use_decl_annotations_
 HRESULT
@@ -137,7 +138,14 @@ CMidi2VirtualMidiBidi::Shutdown()
 
     if (m_isDeviceSide)
     {
-        RETURN_IF_FAILED(TransportState::Current().GetEndpointTable()->OnDeviceDisconnected(m_endpointId));
+        if (Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled())
+        {
+            RETURN_IF_FAILED(TransportState::Current().GetEndpointTable()->OnDeviceDisconnectedAlwaysTeardown(m_endpointId));
+        }
+        else
+        {
+            RETURN_IF_FAILED(TransportState::Current().GetEndpointTable()->OnDeviceDisconnected(m_endpointId));
+        }
     }
     else
     {

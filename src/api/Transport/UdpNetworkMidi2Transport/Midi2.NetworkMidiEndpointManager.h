@@ -75,7 +75,7 @@ public:
     // on the socket receive callback, so one burst of invitations stalled every datagram behind
     // it. The connection is answered with Invitation Reply: Pending and completed from here.
     HRESULT QueueHostEndpointCreation(
-        _In_ std::shared_ptr<MidiNetworkConnection> connection,
+        _In_ std::shared_ptr<MidiNetworkHostConnection> connection,
         _In_ std::wstring const& clientUmpEndpointName,
         _In_ std::wstring const& clientProductInstanceId);
 
@@ -161,9 +161,13 @@ private:
 
     struct PendingHostEndpointCreation
     {
-        std::shared_ptr<MidiNetworkConnection> Connection;
+        std::shared_ptr<MidiNetworkHostConnection> Connection;
         std::wstring ClientUmpEndpointName;
         std::wstring ClientProductInstanceId;
+
+        // Time to Invitation Reply: Accepted is queue wait plus activation, and only the
+        // measurement tells us which of the two to attack.
+        std::chrono::steady_clock::time_point QueuedAt{ std::chrono::steady_clock::now() };
     };
 
     wil::slim_event_manual_reset m_backgroundHostEndpointCreationThreadWakeup;

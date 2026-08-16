@@ -562,6 +562,110 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
 
     return transportSettings;
 }
+
+
+_Use_decl_annotations_
+std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTransportSettingsFromJsonStringHardened(
+    std::wstring jsonStringSource) const noexcept
+{
+    std::map<GUID, std::wstring, GUIDCompare> transportSettings{};
+
+    try
+    {
+        json::JsonObject jsonObject{ nullptr };
+
+        if (!json::JsonObject::TryParse(jsonStringSource, jsonObject))
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Configuration JSON could not be parsed", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            return transportSettings;
+        }
+
+        if (jsonObject == nullptr)
+        {
+            return transportSettings;
+        }
+
+        // GetNamedObject throws when the name is present but holds something other than an
+        // object, so the type is checked before it is read.
+        if (!jsonObject.HasKey(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT))
+        {
+            return transportSettings;
+        }
+
+        auto pluginsValue = jsonObject.Lookup(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
+
+        if (pluginsValue == nullptr || pluginsValue.ValueType() != json::JsonValueType::Object)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Transport plugin settings node is not an object", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            return transportSettings;
+        }
+
+        auto plugins = pluginsValue.GetObject();
+
+        for (auto it = plugins.First(); it.HasCurrent(); it.MoveNext())
+        {
+            std::wstring key = it.Current().Key().c_str();
+
+            auto entryValue = it.Current().Value();
+
+            // each transport's settings must themselves be an object
+            if (entryValue == nullptr || entryValue.ValueType() != json::JsonValueType::Object)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Transport settings entry is not an object. Entry skipped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(key.c_str(), "TransportIdGuidString")
+                );
+
+                continue;
+            }
+
+            GUID transportId{};
+
+            // The original inserted an uninitialized GUID when the key would not parse, which
+            // put a garbage transport id into the map.
+            if (!internal::TryParseGuidString(key, transportId))
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Transport id is not a GUID. Entry skipped.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(key.c_str(), "TransportIdGuidString")
+                );
+
+                continue;
+            }
+
+            transportSettings.insert_or_assign(transportId, std::wstring{ entryValue.GetObject().Stringify().c_str() });
+        }
+    }
+    CATCH_LOG();
+
+    return transportSettings;
+}
 #pragma pop_macro("GetObject")
 
 

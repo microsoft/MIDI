@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -15,25 +15,25 @@ import "IMidiServiceTransportPluginConfig.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
-	[experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientMatchCriteria")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientMatchCriteria", UUID_IMidiNetworkClientMatchCriteria)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientMatchCriteriaFactory", UUID_IMidiNetworkClientMatchCriteriaFactory)]
 	runtimeclass MidiNetworkClientMatchCriteria
 	{
 		MidiNetworkClientMatchCriteria();
 
 		// Windows mDNS-discovered host's id (full id from DeviceInformation.Id() )
-		String DeviceId;
+		[noexcept] String DeviceId;
 
-		// For IP based connection 
-		String DirectHostNameOrIPAddress;
-			 
+		// For IP based connection
+		[noexcept] String DirectHostNameOrIPAddress;
+
 		// required for IP or host name
-		UInt16 DirectPort;
+		[noexcept] UInt16 DirectPort;
 
 
 
-		String GetConfigJson();
+		[noexcept] String GetConfigJson();
 	}
 }
 

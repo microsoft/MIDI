@@ -133,6 +133,28 @@ enum MidiNetworkRemoteClientDecision
 
 #define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT             50
 #define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND         1000
+
+
+// Where a configured host or client entry is in its life. This replaced a bare "Created" flag,
+// which could not distinguish "not started yet" from "started and lost" from "gave up", so every
+// new scenario needed another flag alongside it. Only TransportState changes these, so the legal
+// transitions live in one place.
+enum class MidiNetworkEntryState
+{
+    // waiting for the endpoint creator worker to build it
+    Pending,
+
+    // built and registered
+    Live,
+
+    // The definition itself is bad, so retrying can only fail the same way. Terminal until the
+    // configuration changes.
+    Failed,
+
+    // Reachability gave out and nothing will announce its return, so it is only retried when the
+    // app asks again. Direct connections only.
+    Unavailable,
+};
 #define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND         0
 
 #define MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT                     2000

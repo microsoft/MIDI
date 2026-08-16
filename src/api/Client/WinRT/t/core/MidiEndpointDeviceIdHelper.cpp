@@ -11,8 +11,13 @@
 #include "Enumeration.MidiEndpointDeviceIdHelper.g.cpp"
 
 // all 
-#define MIDISRV_UMP_ENDPOINT_SWD_PREFIX             L"\\\\?\\swd#midisrv#midiu_"
-#define MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX   L"#{e7cce071-3c03-423f-88d3-f1045d02552b}"
+#define MIDISRV_UMP_ENDPOINT_SWD_PREFIX                         L"\\\\?\\swd#midisrv#midiu_"
+#define MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX               L"#{e7cce071-3c03-423f-88d3-f1045d02552b}"
+
+#define MIDISRV_LEGACY_PORT_SWD_PREFIX                          L"\\\\?\\swd#mmdevapi#midiu_"
+#define MIDISRV_LEGACY_PORT_DESTINATION_SWD_INTERFACE_SUFFIX    L"#{6dc23320-ab33-4ce4-80d4-bbb3ebbf2814}"
+#define MIDISRV_LEGACY_PORT_SOURCE_SWD_INTERFACE_SUFFIX         L"#{504be32c-ccf6-4d2c-b73f-6f8b3747e22b}"
+
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
@@ -101,6 +106,29 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             return false;
         }
     }
+
+    _Use_decl_annotations_
+        bool MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(winrt::hstring const& fulllegacyPortDeviceId) noexcept
+    {
+        try
+        {
+            auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(fulllegacyPortDeviceId.c_str());
+
+            return cleanId.starts_with(MIDISRV_LEGACY_PORT_SWD_PREFIX) && 
+                (cleanId.ends_with(MIDISRV_LEGACY_PORT_DESTINATION_SWD_INTERFACE_SUFFIX) || cleanId.ends_with(MIDISRV_LEGACY_PORT_SOURCE_SWD_INTERFACE_SUFFIX));
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error checking possible Windows MIDI Services MIDI 1 port device id.");
+            return false;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception checking possible Windows MIDI Services MIDI 1 port device id.");
+            return false;
+        }
+    }
+
 
 
     _Use_decl_annotations_

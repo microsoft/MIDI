@@ -15,9 +15,12 @@
 #include "MidiServiceSessionInfo.h"
 #include "MidiServiceSessionConnectionInfo.h"
 
+#include "MidiEndpointDeviceIdHelper.h"
+#include "MidiLegacyPortDeviceInformation.h"
+
 namespace winrt::Windows::Devices::Midi2::Reporting::implementation
 {
-    foundation::Collections::IVector<rpt::MidiServiceTransportPluginInfo> MidiReporting::GetInstalledTransportPlugins()
+    collections::IVectorView<rpt::MidiServiceTransportPluginInfo> MidiReporting::GetInstalledTransportPlugins() noexcept
     {
         auto transportList = winrt::single_threaded_vector<rpt::MidiServiceTransportPluginInfo>();
 
@@ -29,7 +32,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
             serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
             if (serviceTransport == nullptr)
             {
-                return transportList;
+                return transportList.GetView();
             }
 
             if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiServicePluginMetadataReporter), (void**)&metadataReporter)))
@@ -124,10 +127,12 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
             );
         }
 
-        return transportList;
+        return transportList.GetView();
     }
 
-    foundation::Collections::IVector<rpt::MidiServiceSessionInfo> MidiReporting::GetActiveSessions()
+
+    _Use_decl_annotations_
+    collections::IVectorView<rpt::MidiServiceSessionInfo> MidiReporting::GetActiveSessionsInternal(collections::IVectorView<winrt::hstring> const& filterEndpointAndPortIds)
     {
         auto sessionList = winrt::single_threaded_vector<rpt::MidiServiceSessionInfo>();
 
@@ -140,7 +145,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
 
             if (serviceTransport == nullptr)
             {
-                return sessionList;
+                return sessionList.GetView();
             }
 
             if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker)))
@@ -156,7 +161,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                         TraceLoggingWideString(L"Failed to initialize session tracker.", MIDI_SDK_TRACE_MESSAGE_FIELD)
                     );
 
-                    return sessionList;
+                    return sessionList.GetView();
                 }
             }
             else
@@ -170,7 +175,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                     TraceLoggingWideString(L"Failed to activate session tracker.", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
 
-                return sessionList;
+                return sessionList.GetView();
             }
 
 
@@ -196,7 +201,11 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
 
                     for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
                     {
+                        // no filter means keep every session, including ones with no connections
+                        bool keepSession{ filterEndpointAndPortIds == nullptr || filterEndpointAndPortIds.Size() == 0 };
+
                         auto sessionJson = sessionJsonArray.GetObjectAt(i);
+
                         auto sessionObject = winrt::make_self<rpt::implementation::MidiServiceSessionInfo>();
 
                         //    auto startTimeString = internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, L"").c_str();
@@ -211,7 +220,6 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                             winrt::clock::from_sys(startTime)
                         );
 
-
                         // Add connections
 
                         auto connectionsJsonArray = sessionJson.GetNamedArray(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY, nullptr);
@@ -221,12 +229,27 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                             for (uint32_t j = 0; j < connectionsJsonArray.Size(); j++)
                             {
                                 auto connectionJson = connectionsJsonArray.GetObjectAt(j);
+
+                                auto endpointOrPortId = internal::NormalizeDeviceInstanceIdHStringCopy(connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L""));
+
+                                // Filter by Ids in the list. Don't need to recheck for each connection if we've
+                                // already decided to include this session
+                                uint32_t discardIndex{ 0 };
+
+                                if (keepSession ||
+                                    (filterEndpointAndPortIds == nullptr) ||
+                                    (filterEndpointAndPortIds.Size() == 0) ||
+                                    (filterEndpointAndPortIds.Size() > 0 && filterEndpointAndPortIds.IndexOf(endpointOrPortId, discardIndex)))
+                                {
+                                    keepSession = true;
+                                }
+
                                 auto connectionObject = winrt::make_self<MidiServiceSessionConnectionInfo>();
 
                                 auto earliestConnectionTime = internal::JsonGetDateTimeProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, noTime);
 
                                 connectionObject->InternalInitialize(
-                                    connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L""),
+                                    endpointOrPortId,
                                     (uint16_t)(connectionJson.GetNamedNumber(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0)),
                                     winrt::clock::from_sys(earliestConnectionTime)
                                 );
@@ -235,14 +258,16 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                             }
                         }
 
-                        sessionList.Append(*sessionObject);
+                        // Add only if we're keeping the session. Discard if there were no matching connections
+                        if (keepSession)
+                        {
+                            sessionList.Append(*sessionObject);
+                        }
                     }
                 }
 
                 SAFE_COTASKMEMFREE(rpcSessionListJson);
             }
-
-
         }
         catch (winrt::hresult_error ex)
         {
@@ -273,7 +298,59 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
             );
         }
 
-        return sessionList;
+        return sessionList.GetView();
+
 
     }
+
+
+
+
+    collections::IVectorView<rpt::MidiServiceSessionInfo> MidiReporting::GetActiveSessions() noexcept
+    {
+        return GetActiveSessionsInternal(nullptr);
+    }
+
+
+    _Use_decl_annotations_
+    collections::IVectorView<rpt::MidiServiceSessionInfo> MidiReporting::FindAllSessionsWithMatchingOpenUmpEndpoint(
+        winrt::hstring const& endpointDeviceId, 
+        bool const includeRelatedMidi1Ports) noexcept
+    {
+        auto cleanedEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
+
+        // check to see if this is a Windows MIDI Services UMP endpoint. This also checks for empty ids.
+        if (!midi2enum::MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(cleanedEndpointDeviceId))
+        {
+            // return empty collection
+            return winrt::single_threaded_vector<rpt::MidiServiceSessionInfo>().GetView();
+        }
+
+        auto allIds = winrt::single_threaded_vector<winrt::hstring>();
+        allIds.Append(endpointDeviceId);
+
+        // find all related ids to look for.
+        if (includeRelatedMidi1Ports)
+        {
+            // find the related ids
+            auto relatedPorts = legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(cleanedEndpointDeviceId);
+
+            for (auto const& port : relatedPorts)
+            {
+                allIds.Append(port.PortDeviceId());
+            }
+        }
+
+        return GetActiveSessionsInternal(allIds.GetView());
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<rpt::MidiServiceSessionInfo> MidiReporting::FindAllSessionsWithMatchingOpenUmpEndpointOrMidi1Ports(
+        collections::IVectorView<winrt::hstring> const& endpointsAndPorts) noexcept
+    {
+
+        return GetActiveSessionsInternal(endpointsAndPorts);
+    }
+
+
 }

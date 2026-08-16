@@ -1,0 +1,123 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+
+// Tests for the Network MIDI 2.0 client API surface in Windows.Devices.Midi2.dll.
+//
+// These exercise the API against the real service, but deliberately do not require a
+// second machine or a remote peer. Anything that needs an actual remote client
+// connecting in (a genuinely pending approval) belongs in the transport unit tests,
+// which have a fake host and fake client to drive the protocol.
+class MidiNetworkApiTests
+    : public WEX::TestClass<MidiNetworkApiTests>
+{
+public:
+
+    BEGIN_TEST_CLASS(MidiNetworkApiTests)
+        TEST_CLASS_PROPERTY(L"TestClassification", L"Integration")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
+    END_TEST_CLASS()
+
+    // Transport is present and reports a stable id
+    TEST_METHOD(TestTransportIsAvailable);
+    TEST_METHOD(TestTransportIdIsStable);
+
+    // Dumps the raw service response, so a mismatch between what the service returns and
+    // what the SDK surfaces is visible instead of being hidden by a swallowed exception.
+    TEST_METHOD(TestRawEnumerateHostsResponse);
+
+    // Enumeration entry points must always return a usable collection, never null,
+    // whether or not anything is configured.
+    TEST_METHOD(TestGetConfiguredHostsReturnsCollection);
+    TEST_METHOD(TestGetConfiguredClientsReturnsCollection);
+    TEST_METHOD(TestGetPendingRemoteClientsReturnsCollection);
+    TEST_METHOD(TestGetAdvertisedHostsReturnsCollection);
+
+    // Pending clients, repeatedly. This is what a settings app polls, so it must not
+    // leak or degrade.
+    TEST_METHOD(TestGetPendingRemoteClientsIsRepeatable);
+
+    // Config objects are pure client-side, so these run without the service.
+    TEST_METHOD(TestHostRemovalConfigRoundTrip);
+    TEST_METHOD(TestHostRemovalConfigJsonShape);
+    TEST_METHOD(TestApprovalConfigRoundTrip);
+    TEST_METHOD(TestApprovalConfigJsonIsNotNull);
+    TEST_METHOD(TestDisconnectConfigJsonIsNotNull);
+
+    // Full host lifecycle, which is also the only way to exercise removal end to end
+    TEST_METHOD(TestCreateThenRemoveHost);
+    TEST_METHOD(TestCreateStopStartThenRemoveHost);
+    TEST_METHOD(TestRemoveNonexistentHostFailsCleanly);
+
+    // Creation is async precisely so it can wait for the service. A successful result has to
+    // mean the host is live, with no polling left for the caller to do.
+    TEST_METHOD(TestCreateHostAsyncReturnsOnlyOnceHostHasStarted);
+
+    // Removing a host the instant it is created races the service's endpoint creator thread,
+    // which used to register the host after the entry had already been taken away. The host
+    // was then unreachable and held its socket and service instance name until a restart.
+    TEST_METHOD(TestCreateThenImmediatelyRemoveDoesNotLeak);
+
+    // Approval command argument handling. A decision naming a client the service has
+    // never heard of has to come back as a clean failure rather than a hang or a crash.
+    TEST_METHOD(TestApproveUnknownRemoteClientFailsCleanly);
+    TEST_METHOD(TestDenyUnknownRemoteClientFailsCleanly);
+    TEST_METHOD(TestApprovalWithEmptyIdentityFailsWithoutCallingService);
+
+    // ---- fuzzing / hostile input ----
+    //
+    // Every one of these must come back as a clean failure. None may throw, hang, or
+    // terminate the process, which matters more than usual now that the whole API surface
+    // is declared noexcept.
+
+    // null configuration objects on every entry point which takes one
+    TEST_METHOD(TestFuzzNullConfigsAreRejected);
+
+    // empty and whitespace-only strings
+    TEST_METHOD(TestFuzzEmptyHostCreationFieldsAreRejected);
+
+    // beyond the byte counts the MIDI 2.0 spec allows
+    TEST_METHOD(TestFuzzOversizeEndpointNameIsRejected);
+    TEST_METHOD(TestFuzzOversizeProductInstanceIdIsRejected);
+
+    // very large strings, well past anything the protocol could carry
+    TEST_METHOD(TestFuzzHugeStringsAreRejected);
+
+    // characters that tend to break json, mDNS, or device ids
+    TEST_METHOD(TestFuzzHostileCharactersDoNotCrash);
+
+    // guids which do not map to anything the service knows
+    TEST_METHOD(TestFuzzUnknownGuidsFailCleanly);
+
+    // ports outside the valid range, and non-numeric ports
+    TEST_METHOD(TestFuzzInvalidPortsAreRejected);
+
+    // repeated hostile calls must not degrade or leak
+    TEST_METHOD(TestFuzzRepeatedBadCallsAreStable);
+
+    // ---- feature coverage ----
+    TEST_METHOD(TestAdvertisedHostWatcherLifecycle);
+    TEST_METHOD(TestAdvertisedHostWatcherDoubleStartStopIsSafe);
+    TEST_METHOD(TestClientMatchCriteriaRoundTrip);
+    TEST_METHOD(TestClientConnectConfigRoundTrip);
+    TEST_METHOD(TestDisconnectUnknownClientFailsCleanly);
+    TEST_METHOD(TestDuplicateServiceInstanceNameIsRejected);
+
+private:
+
+    // Creates a host with a unique name and returns its id. Returns a zero guid on failure.
+    winrt::guid CreateTestHost(_In_ std::wstring const& nameSuffix);
+
+    // Best-effort teardown so a failed assert does not leave a host behind
+    void RemoveTestHost(_In_ winrt::guid const& hostId);
+
+    bool HostIsPresent(_In_ winrt::guid const& hostId);
+    bool HostIsAbsent(_In_ winrt::guid const& hostId);
+    void VerifyHostAppeared(_In_ winrt::guid const& hostId);
+};

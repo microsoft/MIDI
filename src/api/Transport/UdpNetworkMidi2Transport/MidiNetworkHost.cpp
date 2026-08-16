@@ -265,10 +265,10 @@ MidiNetworkHost::CreateNetworkConnection(
     auto socket = GetSocket();
     RETURN_HR_IF_NULL(E_UNEXPECTED, socket);
 
-    auto conn = std::make_shared<MidiNetworkConnection>();
+    auto conn = std::make_shared<MidiNetworkHostConnection>();
     RETURN_IF_NULL_ALLOC(conn);
 
-    RETURN_IF_FAILED(conn->InitializeForHost(
+    RETURN_IF_FAILED(conn->Initialize(
         m_hostDefinition.EntryIdentifier,
         m_parentDeviceInstanceId,
         socket,
@@ -553,13 +553,14 @@ void MidiNetworkHost::OnMessageReceived(
     {
         auto reader = args.GetDataReader();
 
-        // the null check has to short-circuit, otherwise a null reader falls through to the read below
-        if (reader == nullptr || reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
-        {
-            // not a message we understand. Needs to be at least the size of the 
-            // MIDI header plus a command packet header. Really it needs to be larger, but
-            // just trying to weed out blips
+        // Read the first command header here so we can decide whether this remote gets a
+        // connection at all before we allocate one for it.
+        uint32_t firstCommandHeaderWord{ 0 };
 
+        auto prologue = ReadNetworkPacketPrologue(reader, firstCommandHeaderWord);
+
+        if (prologue == MidiNetworkPacketPrologueResult::TooSmall)
+        {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_WARNING,
@@ -572,18 +573,10 @@ void MidiNetworkHost::OnMessageReceived(
             return;
         }
 
-        uint32_t udpHeader = reader.ReadUInt32();
-
-        if (udpHeader != MIDI_UDP_PAYLOAD_HEADER)
+        if (prologue != MidiNetworkPacketPrologueResult::Ok)
         {
-            // not a message we understand
-
             return;
         }
-
-        // Read the first command header here so we can decide whether this remote gets a
-        // connection at all before we allocate one for it.
-        uint32_t firstCommandHeaderWord = reader.ReadUInt32();
 
         MidiNetworkCommandPacketHeader firstCommandHeader;
         firstCommandHeader.HeaderWord = firstCommandHeaderWord;
@@ -609,12 +602,11 @@ void MidiNetworkHost::OnMessageReceived(
 
                     if (m_refusalRateLimiter.ShouldSend(key))
                     {
-                        // TODO: Move string to resources for localization
                         LOG_IF_FAILED(SendUnconnectedBye(
                             args.RemoteAddress(),
                             args.RemotePort(),
                             MidiNetworkCommandByeReason::CommandByeReasonCommon_SessionNotEstablished,
-                            L"No session is established with this endpoint."));
+                            internal::ResourceGetWString(IDS_MESSAGE_NO_SESSION_ESTABLISHED)));
 
                         refused = true;
                     }
@@ -643,6 +635,10 @@ void MidiNetworkHost::OnMessageReceived(
             {
                 // The spec has a reason code for precisely this. Staying silent leaves the
                 // client unable to tell a full host from a dead one.
+                //
+                // The limiter can still suppress this refusal, in which case the invitation goes
+                // unanswered and we are outside 6.4. That is the accepted trade documented on
+                // MidiNetworkReplyRateLimiter: an unconditional reply is an amplification vector.
                 if (args.RemoteAddress() != nullptr)
                 {
                     auto key = MidiNetworkReplyRateLimiter::MakeRemoteKey(
@@ -651,12 +647,11 @@ void MidiNetworkHost::OnMessageReceived(
 
                     if (m_refusalRateLimiter.ShouldSend(key))
                     {
-                        // TODO: Move string to resources for localization
                         LOG_IF_FAILED(SendUnconnectedBye(
                             args.RemoteAddress(),
                             args.RemotePort(),
                             MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions,
-                            L"This host already has the maximum number of open sessions."));
+                            internal::ResourceGetWString(IDS_MESSAGE_MAX_SESSIONS_REACHED)));
                     }
                 }
 

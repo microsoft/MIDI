@@ -10,10 +10,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         static network::MidiNetworkAdvertisedHostWatcher Create() noexcept;
 
-        void Start();
-        void Stop();
+        void Start() noexcept;
+        void Stop() noexcept;
 
-        enumeration::DeviceWatcherStatus Status();
+        enumeration::DeviceWatcherStatus Status() noexcept;
 
         winrt::event_token Added(_In_ foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, network::MidiNetworkAdvertisedHostAddedEventArgs> const& handler);
         void Added(_In_ winrt::event_token const& token) noexcept;
@@ -30,7 +30,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::event_token Stopped(_In_ foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, foundation::IInspectable> const& handler);
         void Stopped(_In_ winrt::event_token const& token) noexcept;
 
-        collections::IMapView<winrt::hstring, network::MidiNetworkAdvertisedHost> EnumeratedHosts()
+        collections::IMapView<winrt::hstring, network::MidiNetworkAdvertisedHost> EnumeratedHosts() noexcept
         {
             return m_enumeratedHosts.GetView();
         }

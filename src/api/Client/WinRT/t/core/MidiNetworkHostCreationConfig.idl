@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App WinRT API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -16,25 +16,25 @@ import "MidiNetworkAuthenticationTypeEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
-    [experimental]
     [contract(MidiTransportsNetworkApiContract, 1)]
-    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostEndpointCreationConfig")]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfig", UUID_IMidiNetworkHostCreationConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfigFactory", UUID_IMidiNetworkHostCreationConfigFactory)]
     runtimeclass MidiNetworkHostCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkHostCreationConfig();
 
-        String Id;
+        [noexcept] Guid HostId;
 
-        String Name;
-        String ServiceInstanceName;
-        String ProductInstanceId;
+        [noexcept] String Name;
+        [noexcept] String ServiceInstanceName;
+        [noexcept] String ProductInstanceId;
 
-        Boolean CreateOnlyUmpEndpoints;
+        [noexcept] Boolean CreateOnlyUmpEndpoints;
 
-        Boolean UseAutomaticPortAllocation;
-        String ManuallyAssignedPort;
-        
-        Boolean Advertise;
+        [noexcept] Boolean UseAutomaticPortAllocation;
+        [noexcept] String ManuallyAssignedPort;
+
+        [noexcept] Boolean Advertise;
 
         // todo: network adapter/interface
 
@@ -43,7 +43,7 @@ namespace Windows.Devices.Midi2.Transports.Network
 
 
 
-        MidiNetworkAuthenticationType AuthenticationType;
+        [noexcept] MidiNetworkAuthenticationType AuthenticationType;
 
         // todo: password key etc.
 

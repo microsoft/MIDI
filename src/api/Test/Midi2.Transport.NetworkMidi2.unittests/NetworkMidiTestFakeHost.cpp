@@ -196,6 +196,27 @@ namespace NetworkMidiTest
 
             m_historySignal.notify_all();
 
+            // A reconnecting client invites from a new ephemeral port. A real host takes that as
+            // a new session rather than ignoring it, so tests which exercise reconnect opt in.
+            if (!fromLatchedRemote && m_relatchOnInvitation && packet.SignatureValid &&
+                (packet.Contains(CommandCode::Invitation) ||
+                 packet.Contains(CommandCode::InvitationWithAuthentication) ||
+                 packet.Contains(CommandCode::InvitationWithUserAuthentication)))
+            {
+                m_remoteAddress = from;
+                m_remoteAddressLength = fromLength;
+                m_remoteKnown = true;
+                m_sessionAccepted = false;
+                m_pendingReplySent = false;
+
+                if (from.ss_family == AF_INET)
+                {
+                    m_remotePort = ntohs(reinterpret_cast<sockaddr_in const*>(&from)->sin_port);
+                }
+
+                fromLatchedRemote = true;
+            }
+
             if (!fromLatchedRemote)
             {
                 m_ignoredFromOtherSource++;

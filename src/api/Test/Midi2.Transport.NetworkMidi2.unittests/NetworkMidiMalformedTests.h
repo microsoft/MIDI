@@ -55,6 +55,18 @@ public:
     TEST_METHOD(OversizedDatagramIsHandled);
     TEST_METHOD(RapidInvitationsFromManyPortsAreBounded);
 
+    // The configuration path, which is a separate attack surface from the packet parser above.
+    // Anything can arrive on UpdateConfiguration, including payloads which are not JSON.
+    TEST_METHOD(ConfigNonJsonPayloadsAreRejected);
+    TEST_METHOD(ConfigMalformedJsonIsRejected);
+
+    TEST_METHOD(ConfigStructurallyValidButWrongShapeIsRejected);
+
+    TEST_METHOD(ConfigHostileStringValuesAreHandled);
+    TEST_METHOD(ConfigDeeplyNestedJsonIsHandled);
+    TEST_METHOD(ConfigHugePayloadIsHandled);
+    TEST_METHOD(ServiceStillAnswersAfterConfigFuzzing);
+
     // Overall survival
     TEST_METHOD(ServiceSurvivesRandomFuzzing);
 };

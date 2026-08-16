@@ -32,4 +32,5 @@ This class works on Windows MIDI Services UMP endpoints only. It does not work o
 | `GetShortIdFromFullId(fullEndpointDeviceId)` | Returns the short form of the Endpoint Device Id |
 | `GetFullIdFromShortId(shortEndpointDeviceId)` | Given a short id, returns the full id. No validation is performed to ensure the id is a valid UMP Endpoint |
 | `IsPossibleWindowsMidiServicesEndpointDeviceId(fullEndpointDeviceId)` | Returns true if the endpoint device id appears to be a Windows MIDI Services UMP Endpoint Device Id. No actual lookup is performed. |
+| `IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(legacyPortDeviceId)` | Returns true if the id appears to be a WinRT or WinMM MIDI 1.0 port device id created by Windows MIDI Services. No actual lookup is performed. |
 | `NormalizeFullId(fullEndpointDeviceId)` | Returns the id in normalized form: trimmed and lowercase. |

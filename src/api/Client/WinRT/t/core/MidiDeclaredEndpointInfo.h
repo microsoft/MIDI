@@ -16,16 +16,16 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         MidiDeclaredEndpointInfo() = default;
 
         MidiDeclaredEndpointInfo(
-            winrt::hstring name,
-            winrt::hstring productInstanceId,
-            bool supportsMidi10Protocol,
-            bool supportsMidi20Protocol,
-            bool supportsReceivingJitterReductionTimestamps,
-            bool supportsSendingJitterReductionTimestamps,
-            bool hasStaticFunctionBlocks,
-            uint8_t declaredFunctionBlockCount,
-            uint8_t specificationVersionMajor,
-            uint8_t specificationVersionMinor
+            _In_ winrt::hstring name,
+            _In_ winrt::hstring productInstanceId,
+            _In_ bool supportsMidi10Protocol,
+            _In_ bool supportsMidi20Protocol,
+            _In_ bool supportsReceivingJitterReductionTimestamps,
+            _In_ bool supportsSendingJitterReductionTimestamps,
+            _In_ bool hasStaticFunctionBlocks,
+            _In_ uint8_t declaredFunctionBlockCount,
+            _In_ uint8_t specificationVersionMajor,
+            _In_ uint8_t specificationVersionMinor
         )
         {
             m_name = name;
@@ -43,7 +43,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         bool IsReadOnly() const noexcept { return m_isReadOnly; }
 
         winrt::hstring Name() const noexcept { return m_name;}
-        void Name(hstring const& value)
+        void Name(_In_ hstring const& value)
         {
             if (IsReadOnly()) return;
 

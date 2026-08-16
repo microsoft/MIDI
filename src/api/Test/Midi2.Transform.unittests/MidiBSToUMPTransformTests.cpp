@@ -111,6 +111,167 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
     //VERIFY_ARE_EQUAL(expectedMessageCount, receivedMessageCount);
 }
 
+
+_Use_decl_annotations_
+void MidiBSToUMPTransformTests::InternalTestSysEx7InChunks(
+    uint8_t const groupIndex,
+    uint8_t const bytes[],
+    uint32_t const byteCount,
+    std::vector<uint32_t> const chunkSizePattern
+)
+{
+    VERIFY_IS_GREATER_THAN(chunkSizePattern.size(), (size_t)0);
+    VERIFY_IS_GREATER_THAN(byteCount, (uint32_t)2);
+    VERIFY_ARE_EQUAL((uint8_t)0xF0, bytes[0]);
+    VERIFY_ARE_EQUAL((uint8_t)0xF7, bytes[byteCount - 1]);
+
+    wil::com_ptr_nothrow<IMidiTransform> transformLib;
+    wil::com_ptr_nothrow<IMidiDataTransform> transform;
+
+    auto iid = __uuidof(Midi2BS2UMPTransform);
+
+    VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformLib)));
+    VERIFY_SUCCEEDED(transformLib->Activate(__uuidof(IMidiDataTransform), (void**)(&transform)));
+
+    std::wstring deviceId{ L"foobarbaz" };
+
+    TRANSFORMCREATIONPARAMS creationParams{};
+    creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_ByteStream;
+    creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
+    creationParams.UmpGroupIndex = groupIndex;
+
+    DWORD mmcssTaskId{};
+
+    VERIFY_SUCCEEDED(transform->Initialize(deviceId.c_str(), &creationParams, &mmcssTaskId, this, 0, nullptr));
+
+    std::vector<uint32_t> receivedWords{};
+
+    m_MidiInCallback = [&](PVOID payload, UINT payloadSize, LONGLONG, LONGLONG)
+        {
+            auto words = static_cast<uint32_t*>(payload);
+
+            for (uint32_t i = 0; i < payloadSize / sizeof(uint32_t); i++)
+            {
+                receivedWords.push_back(words[i]);
+            }
+        };
+
+    uint32_t offset{ 0 };
+    uint32_t patternIndex{ 0 };
+    uint32_t chunkCount{ 0 };
+
+    while (offset < byteCount)
+    {
+        auto remaining = byteCount - offset;
+        auto chunkSize = chunkSizePattern[patternIndex % chunkSizePattern.size()];
+
+        if (chunkSize == 0 || chunkSize > remaining)
+        {
+            chunkSize = remaining;
+        }
+
+        VERIFY_SUCCEEDED(transform->SendMidiMessage(MessageOptionFlags_None, (void*)(bytes + offset), chunkSize, 0));
+
+        offset += chunkSize;
+        patternIndex++;
+        chunkCount++;
+    }
+
+    Sleep(1000);
+
+    m_MidiInCallback = nullptr;
+    transform->Shutdown();
+
+    // walk the emitted SysEx7 packets and rebuild the payload the way any client must
+
+    std::vector<uint8_t> reassembled{};
+    uint32_t packetCount{ 0 };
+    bool sawStart{ false };
+    bool sawEnd{ false };
+
+    VERIFY_ARE_EQUAL((size_t)0, receivedWords.size() % 2);
+
+    for (size_t i = 0; i + 1 < receivedWords.size(); i += 2)
+    {
+        auto word0 = receivedWords[i];
+        auto word1 = receivedWords[i + 1];
+
+        VERIFY_ARE_EQUAL((uint32_t)0x3, (word0 >> 28) & 0xF);
+        VERIFY_ARE_EQUAL((uint32_t)groupIndex, (word0 >> 24) & 0xF);
+
+        auto status = (word0 >> 20) & 0xF;
+        auto dataByteCount = (word0 >> 16) & 0xF;
+
+        VERIFY_IS_LESS_THAN_OR_EQUAL(dataByteCount, (uint32_t)6);
+
+        if (status == 0x0 || status == 0x1) { sawStart = true; }
+        if (status == 0x0 || status == 0x3) { sawEnd = true; }
+
+        uint8_t const packetBytes[]
+        {
+            (uint8_t)((word0 >> 8) & 0xFF),
+            (uint8_t)(word0 & 0xFF),
+            (uint8_t)((word1 >> 24) & 0xFF),
+            (uint8_t)((word1 >> 16) & 0xFF),
+            (uint8_t)((word1 >> 8) & 0xFF),
+            (uint8_t)(word1 & 0xFF),
+        };
+
+        for (uint32_t b = 0; b < dataByteCount; b++)
+        {
+            reassembled.push_back(packetBytes[b]);
+        }
+
+        packetCount++;
+    }
+
+    std::vector<uint8_t> const expectedPayload(bytes + 1, bytes + (byteCount - 1));
+
+    {
+        std::wostringstream message{};
+        message
+            << L"Sent " << byteCount << L" bytes in " << chunkCount << L" chunks. Received "
+            << packetCount << L" SysEx7 packets carrying " << reassembled.size()
+            << L" of an expected " << expectedPayload.size() << L" payload bytes.";
+
+        WEX::Logging::Log::Comment(message.str().c_str());
+    }
+
+    VERIFY_IS_TRUE(sawStart);
+    VERIFY_IS_TRUE(sawEnd);
+
+    // the payload must survive chunking exactly. how it was packed is a separate question
+    VERIFY_ARE_EQUAL(expectedPayload.size(), reassembled.size());
+
+    for (size_t i = 0; i < expectedPayload.size(); i++)
+    {
+        if (expectedPayload[i] != reassembled[i])
+        {
+            std::wostringstream message{};
+            message << L"Payload mismatch at byte " << i << L".";
+            WEX::Logging::Log::Error(message.str().c_str());
+        }
+
+        VERIFY_ARE_EQUAL(expectedPayload[i], reassembled[i]);
+    }
+
+    // fragmentation is legal, so this is reported rather than failed. the floor is
+    // the number of packets needed if every packet but the last were filled
+    auto minimumPacketCount = (uint32_t)((expectedPayload.size() + 5) / 6);
+
+    if (packetCount > minimumPacketCount)
+    {
+        std::wostringstream message{};
+        message
+            << L"Packing is not optimal: " << packetCount << L" packets used where "
+            << minimumPacketCount << L" would do (" << (packetCount - minimumPacketCount)
+            << L" extra, " << ((packetCount * 6) - reassembled.size()) << L" unused payload bytes). "
+            << L"Each chunk boundary flushes a partly filled packet.";
+
+        WEX::Logging::Log::Warning(message.str().c_str());
+    }
+}
+
 //#include "Midi2"
 
 void MidiBSToUMPTransformTests::TestBSToUMPWithSysEx7()
@@ -321,6 +482,72 @@ void MidiBSToUMPTransformTests::TestIssueGithub1040CorruptedIncomingSysExIdeal()
 
     InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
 
+}
+
+// Same SysEx as the ideal case, but delivered the way it actually arrives from the
+// device: usbaudio.sys hands up USB-MIDI 1.0 packets that carry three data bytes each,
+// so every inbound buffer is a multiple of three and rarely lines up with the six data
+// bytes a SysEx7 packet holds. The chunk sizes here were inferred from the short-packet
+// boundaries in the capture attached to the issue.
+void MidiBSToUMPTransformTests::TestIssueGithub1040SysEx7SurvivesUsbSizedChunkedDelivery()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        0xF0, 0x00, 0x02, 0x17, 0x0F, 0x02,
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x09,
+        0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+        0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+        0x09, 0x09, 0x09, 0xF7
+    };
+
+    std::vector<uint32_t> chunkSizePattern{ 9, 3, 9, 21, 9, 15, 9, 27, 9, 3 };
+
+    InternalTestSysEx7InChunks(groupIndex, bytes, _countof(bytes), chunkSizePattern);
+}
+
+// Issue 1040: a device that abandons a dump part way through and immediately starts a new
+// one. Once more than six bytes have accumulated the message is in the Continue state, so
+// terminating it has to emit an End. The Start-state case is covered by
+// TestSysEx7StartWithPendingDataStartsNewMessage, which takes the other branch and emits
+// a Complete instead.
+void MidiBSToUMPTransformTests::TestSysEx7AbandonedMidMessageIsTerminated()
+{
+    uint8_t groupIndex{ 0 };
+
+    uint8_t bytes[] =
+    {
+        0xF0, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+        0xF0, 0x31, 0x32, 0x33, 0x34, 0xF7
+    };
+
+    std::vector<uint32_t> expectedWords
+    {
+        0x30161112, 0x13141516,
+        0x30311700, 0x00000000,
+        0x30043132, 0x33340000
+    };
+
+    InternalTestBytes(groupIndex, bytes, _countof(bytes), expectedWords);
 }
 
 

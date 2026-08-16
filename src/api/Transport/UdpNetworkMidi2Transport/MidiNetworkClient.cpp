@@ -49,13 +49,12 @@ void MidiNetworkClient::OnMessageReceived(
     {
         auto reader = args.GetDataReader();
 
-        // the null check has to short-circuit, otherwise a null reader falls through to the read below
-        if (reader == nullptr || reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
-        {
-            // not a message we understand. Needs to be at least the size of the 
-            // MIDI header plus a command packet header. Really it needs to be larger, but
-            // just trying to weed out blips
+        uint32_t firstCommandHeaderWord{ 0 };
 
+        auto prologue = ReadNetworkPacketPrologue(reader, firstCommandHeaderWord);
+
+        if (prologue == MidiNetworkPacketPrologueResult::TooSmall)
+        {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_WARNING,
@@ -68,16 +67,10 @@ void MidiNetworkClient::OnMessageReceived(
             return;
         }
 
-        uint32_t udpHeader = reader.ReadUInt32();
-
-        if (udpHeader != MIDI_UDP_PAYLOAD_HEADER)
+        if (prologue != MidiNetworkPacketPrologueResult::Ok)
         {
-            // not a message we understand
-
             return;
         }
-
-        uint32_t firstCommandHeaderWord = reader.ReadUInt32();
 
         auto connection = GetConnection();
 
@@ -128,7 +121,7 @@ MidiNetworkClient::Start(
         TraceLoggingWideString(remoteHostName.ToString().c_str(), "remote hostname"),
         TraceLoggingWideString(remotePort.c_str(), "remote port"));
 
-    auto conn = std::make_shared<MidiNetworkConnection>();
+    auto conn = std::make_shared<MidiNetworkClientConnection>();
     RETURN_IF_NULL_ALLOC(conn);
 
     DatagramSocket socket;
@@ -242,7 +235,7 @@ MidiNetworkClient::Start(
         TraceLoggingWideString(remoteHostName.ToString().c_str(), "remote hostname"),
         TraceLoggingWideString(remotePort.c_str(), "remote port"));
 
-    RETURN_IF_FAILED(conn->InitializeForClient(
+    RETURN_IF_FAILED(conn->Initialize(
         m_configIdentifier,
         socket,
         remoteHostName,
@@ -350,7 +343,7 @@ MidiNetworkClient::Shutdown()
     RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier));
 
     // may not be in the list above if Start failed part way through. Shutdown is idempotent.
-    std::shared_ptr<MidiNetworkConnection> connection{ nullptr };
+    std::shared_ptr<MidiNetworkClientConnection> connection{ nullptr };
 
     {
         auto lock = m_connectionLock.lock();

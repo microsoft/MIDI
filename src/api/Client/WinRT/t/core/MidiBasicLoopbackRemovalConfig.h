@@ -18,12 +18,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         MidiBasicLoopbackRemovalConfig() = default;
         MidiBasicLoopbackRemovalConfig(_In_ winrt::guid const& associationId);
 
-        winrt::guid TransportId() { return bloop::MidiBasicLoopbackManager::TransportId(); }
+        winrt::guid TransportId() const noexcept { return bloop::MidiBasicLoopbackManager::TransportId(); }
 
         json::JsonObject ConfigJson();
 
-        winrt::guid AssociationId() { return m_associationId; }
-        void AssociationId(_In_ winrt::guid const& value) { m_associationId = value; }
+        winrt::guid AssociationId() const noexcept { return m_associationId; }
+        void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }
 
     private:
         winrt::guid m_associationId;

@@ -1,0 +1,17 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "pch.h"
+#include "MidiNetworkHostUpdateResponse.h"
+#include "Transports.Network.MidiNetworkHostUpdateResponse.g.cpp"
+
+
+namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
+{
+
+}

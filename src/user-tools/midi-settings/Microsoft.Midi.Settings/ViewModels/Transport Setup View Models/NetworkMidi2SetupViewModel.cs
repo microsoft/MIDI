@@ -25,6 +25,65 @@ using Windows.Media.Protection.PlayReady;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
+
+    public partial class MidiNetworkPendingRemoteClientEntry : ObservableRecipient
+    {
+        [ObservableProperty]
+        public MidiNetworkPendingRemoteClient remoteClient;
+
+        public ICommand ApproveOnceCommand { get; private set; }
+        public ICommand ApproveAlwaysCommand { get; private set; }
+
+        public ICommand DenyOnceCommand { get; private set; }
+        public ICommand DenyAlwaysCommand { get; private set; }
+
+        private ILoggingService _loggingService;
+        private IMessageBoxService _messageBoxService;
+        private IMidiConfigFileService _configFileService;
+
+        MidiNetworkPendingRemoteClientEntry(
+            MidiNetworkPendingRemoteClient pendingClient,
+            ILoggingService loggingService,
+            IMessageBoxService messageBoxService,
+            IMidiConfigFileService configFileService)
+        {
+            RemoteClient = pendingClient;
+
+            _loggingService = loggingService;
+            _messageBoxService = messageBoxService;
+            _configFileService = configFileService;
+
+            ApproveOnceCommand = new RelayCommand(() =>
+            {
+                // TODO: Submit the approval to the service
+            });
+
+            ApproveAlwaysCommand = new RelayCommand(() =>
+            {
+                // If the approve sucessfully executes, then update
+                // the config file with the new entry
+            });
+
+            DenyOnceCommand = new RelayCommand(() =>
+            {
+                // TODO: Submit the deny to the service
+
+            });
+
+            DenyAlwaysCommand = new RelayCommand(() =>
+            {
+                // TODO: We're going to need a new kind of config entry for denial
+                // that can be read by this app and by the service.
+
+
+            });
+        }
+
+    }
+
+
+
+    // this entity folds together discovered remote hosts and configured clients.
     public partial class MidiNetworkRemoteHostEntry : ObservableRecipient
     {
         public MidiNetworkAdvertisedHost? AdvertisedHost { get; internal set; }
@@ -66,16 +125,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private UInt64 totalCountNetworkPacketsReceived;
 
-
         public ICommand ConnectCommand { get; private set; }
         public ICommand DisconnectCommand { get; private set; }
-
-        public ICommand ApproveOnceCommand { get; private set; }
-        public ICommand ApproveAlwaysCommand { get; private set; }
-
-        public ICommand DenyOnceCommand { get; private set; }
-        public ICommand DenyAlwaysCommand { get; private set; }
-
 
         private readonly ILoggingService _loggingService;
         private readonly IMessageBoxService _messageBoxService;

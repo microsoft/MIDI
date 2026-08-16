@@ -1,6 +1,6 @@
 ---
 layout: sdk_reference_page
-title: MidiServiceTransportPluginInformation
+title: MidiServiceTransportPluginInfo
 namespace: Windows.Devices.Midi2.Reporting
 type: runtimeclass
 description: Information about a single transport plugin loaded in the MIDI Service
@@ -12,11 +12,11 @@ When creating a new transport, these properties are specified in the service plu
 
 | Property | Description |
 | --- | --- |
-| `Id` | GUID for the transport |
+| `TransportId` | GUID for the transport |
 | `Name` | Name of the transport |
 | `TransportCode` | Short code for the transport. For example "KSA" |
 | `Description` | Description of the transport |
-| `SmallImagePath` | Image for the transport. Not currently used, but will be used in future iterations of the settings app. |
+| `ImageFileName` | Image for the transport. Not currently used, but will be used in future iterations of the settings app. |
 | `Author` | Transport author |
 | `Version` | The version of the transport in use. This is for informational use only. |
 | `IsRuntimeCreatableByApps` | True if endpoints can be created by apps |

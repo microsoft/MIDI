@@ -87,14 +87,14 @@ int main()
     auto OnWatcherDeviceRemoved = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationRemovedEventArgs const& args)
         {
             std::wcout << std::endl;
-            std::wcout << L"Removed: " << args.EndpointDeviceId().c_str() << std::endl;
+            std::wcout << L"Removed: " << args.RemovedDevice().EndpointDeviceId().c_str() << std::endl;
         };
 
     // Endpoints can be updated at any time, typically due to protocol negotiation, discovery, or changes the user has made in the settings app
     auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationUpdatedEventArgs const& args)
         {
             std::wcout << std::endl;
-            std::wcout << "Updated: " << args.EndpointDeviceId().c_str() << std::endl;
+            std::wcout << "Updated: " << args.UpdatedDevice().EndpointDeviceId().c_str() << std::endl;
 
             // Show how to use the various data update flags here
 

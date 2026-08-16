@@ -27,37 +27,15 @@ struct MidiOutgoingPingTrackingEntry
 
 // Always created with make_shared. The endpoint creation worker holds a reference to the
 // connection while it works, so the connection has to be able to hand out its own shared_ptr.
+//
+// This holds only what both roles need: the socket writer, the session, the worker threads, the
+// retransmit buffer and the UMP queues. Anything which is meaningful in one role only lives in
+// MidiNetworkHostConnection or MidiNetworkClientConnection, so a connection cannot carry state
+// belonging to the role it is not.
 class MidiNetworkConnection : public std::enable_shared_from_this<MidiNetworkConnection>
 {
 public:
-
-    HRESULT InitializeForHost(
-        _In_ winrt::hstring const& configIdentifier,
-        _In_ std::wstring const& hostParentInstanceId,
-        _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
-        _In_ winrt::Windows::Networking::HostName const& remoteClientHostName,
-        _In_ winrt::hstring const& remotePort,
-        _In_ std::wstring const& thisEndpointName,
-        _In_ std::wstring const& thisProductInstanceId,
-        _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
-        _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-        _In_ bool createUmpEndpointsOnly,
-        _In_ MidiNetworkAuthenticationKind const authenticationKind,
-        _In_ MidiNetworkCredentialIdentifier const& credentialIdentifier
-    );
-
-    HRESULT InitializeForClient(
-        _In_ winrt::hstring const& configIdentifier,
-        _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
-        _In_ winrt::Windows::Networking::HostName const& remoteHostHostName,
-        _In_ winrt::hstring const& remotePort,
-        _In_ std::wstring const& thisEndpointName,
-        _In_ std::wstring const& thisProductInstanceId,
-        _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
-        _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-        _In_ bool createUmpEndpointsOnly
-    );
-
+    virtual ~MidiNetworkConnection() = default;
 
     HRESULT Shutdown();
 
@@ -68,19 +46,6 @@ public:
 
     // Called by the endpoint creation worker once the MIDI endpoint exists, to finish accepting
     // an invitation that was answered with Invitation Reply: Pending.
-    HRESULT CompleteHostSessionAfterEndpointCreated(
-        _In_ std::wstring const& newDeviceInstanceId,
-        _In_ std::wstring const& newEndpointDeviceInterfaceId);
-
-    // Performs the creation itself, on the worker rather than the receive callback.
-    HRESULT CreateHostEndpointForPendingInvitation(
-        _In_ std::wstring const& clientUmpEndpointName,
-        _In_ std::wstring const& clientProductInstanceId,
-        _Out_ std::wstring& newDeviceInstanceId,
-        _Out_ std::wstring& newEndpointDeviceInterfaceId);
-
-    // Called by the same worker when the endpoint could not be created.
-    HRESULT FailHostSessionEndpointCreation(_In_ HRESULT const failure);
 
     // Spec 6.16 "should": repeat the Bye until a Bye Reply arrives or we run out of attempts.
     // Only for a disconnect the user asked for. Shutdown paths must not block, so they use the
@@ -92,8 +57,6 @@ public:
     HRESULT ProcessIncomingMessage(
         _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
         _In_ uint32_t const firstCommandHeaderWord);
-
-    HRESULT SendInvitation();
 
     HRESULT ConnectMidiCallback(
         _In_ wil::com_ptr_nothrow<IMidiCallback> callback
@@ -109,39 +72,21 @@ public:
     HRESULT DisconnectMidiCallback();
 
     // if this was created from a host here
-    winrt::hstring ConfigIdentifier() { return m_configIdentifier; }
+    winrt::guid ConfigIdentifier() { return m_configIdentifier; }
 
 
     bool IsSessionActive() { return m_sessionActive; }
     std::wstring GetEndpointDeviceId() { return m_sessionEndpointDeviceInterfaceId; }
 
-    // Host role. The remote's own identity, as supplied in its invitation.
-    MidiNetworkRemoteClientIdentity GetRemoteClientIdentity()
-    {
-        auto lock = m_remoteIdentityLock.lock();
-
-        return MidiNetworkRemoteClientIdentity{ m_remoteEndpointName, m_remoteProductInstanceId };
-    }
-
-    // Host role. The remote has been answered with an Invitation Reply Pending and is waiting
-    // on a user decision.
-    bool IsAwaitingUserApproval() { return m_awaitingUserApproval; }
-
     winrt::Windows::Networking::HostName GetRemoteHostName() { return m_remoteHostName; }
     std::wstring GetRemotePort() { return m_remotePort; }
-
-    // A user allowed this pending remote. Resumes the invitation where the approval gate left it.
-    HRESULT ApproveByUser();
-
-    // A user refused this pending remote. Sends the Bye the spec has for exactly this.
-    HRESULT DenyByUser();
 
     // True once a session existed and has now ended. The owner releases the connection at that
     // point instead of leaving it to the idle reaper: a remote normally reconnects from a new
     // ephemeral port, so the old entry would otherwise hold a slot and two threads for nothing.
-    bool IsSessionFinished()
+    virtual bool IsSessionFinished()
     {
-        return m_sessionEverEstablished && !m_sessionActive && !m_invitationPending;
+        return m_sessionEverEstablished && !m_sessionActive;
     }
 
     // True when there is no session and nothing has arrived for long enough that the remote is
@@ -185,7 +130,7 @@ public:
         return latency; 
     }
 
-    void AddLatencyToAverageLatencyTicks(uint64_t latencyTicks)
+    void AddLatencyToAverageLatencyTicks(_In_ uint64_t latencyTicks)
     {
         auto lock = m_latencyLock.lock();
 
@@ -200,11 +145,11 @@ public:
         }
     }
 
-private:
+protected:
     HRESULT Initialize(
         _In_ MidiNetworkConnectionRole const role,
-        _In_ winrt::hstring const& configIdentifier,
-        _In_ std::wstring const& hostParentInstanceId,  // host only
+        _In_ winrt::guid const& configIdentifier,
+        _In_ std::wstring const& parentDeviceInstanceId,
         _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort,
@@ -212,10 +157,51 @@ private:
         _In_ std::wstring const& thisProductInstanceId,
         _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
         _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-        _In_ bool createUmpEndpointsOnly,
-        _In_ MidiNetworkAuthenticationKind const authenticationKind,
-        _In_ MidiNetworkCredentialIdentifier const& credentialIdentifier
+        _In_ bool createUmpEndpointsOnly
     );
+
+    // Role hooks. The defaults are what happens when a command arrives for the role this
+    // connection is not, which spec 6.4 answers with a NAK. Overriding is how a role opts in,
+    // so forgetting to override cannot silently do the wrong role's work.
+
+    virtual HRESULT HandleIncomingInvitation(
+        _In_ MidiNetworkCommandPacketHeader const& header,
+        _In_ MidiNetworkCommandInvitationCapabilities const& capabilities,
+        _In_ std::wstring const& clientUmpEndpointName,
+        _In_ std::wstring const& clientProductInstanceId);
+
+    virtual HRESULT HandleIncomingInvitationWithAuthentication(
+        _In_ MidiNetworkCommandPacketHeader const& header,
+        _In_ MidiNetworkAuthenticationKind const kind);
+
+    virtual HRESULT HandleIncomingInvitationReplyAccepted(
+        _In_ MidiNetworkCommandPacketHeader const& header,
+        _In_ std::wstring const& remoteHostUmpEndpointName,
+        _In_ std::wstring const& remoteHostProductInstanceId);
+
+    virtual HRESULT HandleIncomingInvitationReplyPending();
+
+    virtual HRESULT HandleIncomingInvitationReplyAuthenticationRequired(
+        _In_ MidiNetworkCommandPacketHeader const& header,
+        _In_ MidiNetworkAuthenticationKind const kind);
+
+    // Which Bye reason this role uses when the remote is already attached.
+    virtual MidiNetworkCommandByeReason ByeReasonForDeviceAlreadyAttached() const noexcept
+    {
+        return MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined;
+    }
+
+    // Called on the watchdog tick. Only the client has anything to do here.
+    virtual HRESULT OnWatchdogTick() { return S_OK; }
+
+    // The remote ended an established session on its own.
+    virtual void OnSessionEndedByRemote() { }
+
+    // A Bye arrived with no session, so anything queued for this remote is pointless.
+    virtual void OnSessionEndedBeforeEndpointCreated() noexcept { }
+
+    // The remote answered our invitation, whatever the answer was.
+    virtual void OnInvitationAnswered() noexcept { }
 
     HRESULT SendQueuedMidiMessagesToNetwork();
 
@@ -227,10 +213,6 @@ private:
 
     std::atomic<bool> m_shuttingDown{ false };
     std::atomic<bool> m_shutdownByeSent{ false };
-
-    // Host role. Set while an endpoint is being created for an invitation we answered with
-    // Pending, so a repeated invitation does not queue the work a second time.
-    std::atomic<bool> m_hostEndpointCreationPending{ false };
 
     wil::critical_section m_latencyLock;
     uint64_t m_latencyTotalTicks{ 0 };
@@ -244,19 +226,6 @@ private:
     // Spec: a Device receiving UMP Data, a Retransmit Request, a Retransmit Error, a Session
     // Reset or a Session Reset Reply outside an Established Session shall answer with this.
     HRESULT SendByeSessionNotEstablished(_In_ uint8_t const commandCode);
-
-    // Invitation retry state, client role only. Touched from the watchdog thread and from
-    // message parsing.
-    std::atomic<bool> m_invitationPending{ false };
-    std::atomic<uint16_t> m_invitationAttempts{ 0 };
-
-    // Set once the host answers with Invitation Reply: Pending. Re-inviting after that would
-    // be pestering a host which has already told us it is waiting on a person.
-    std::atomic<bool> m_invitationReplyPendingReceived{ false };
-    std::atomic<uint64_t> m_invitationReplyPendingTimestamp{ 0 };
-
-    HRESULT SendInvitationCommand();
-    HRESULT ServicePendingInvitation();
 
     // All outbound datagrams funnel through here. Keeps the writer alive for the duration of
     // the write, and discards a half-composed packet if any step fails or throws, so that a
@@ -307,7 +276,7 @@ private:
 
     void LogSendFailure(_In_ HRESULT const hr);
 
-    winrt::hstring m_configIdentifier{};
+    winrt::guid m_configIdentifier{};
         
     wil::critical_section m_incomingMessageLock;
 
@@ -322,7 +291,7 @@ private:
 
     wil::critical_section m_socketWriterLock;
 
-    std::wstring m_parentDeviceInstanceId;              // the parent under which new endpoints are created.
+    std::wstring m_parentDeviceInstanceId;              // the parent under which new endpoints are created
 
     std::wstring m_sessionEndpointDeviceInterfaceId{};  // swd
     std::wstring m_sessionDeviceInstanceId{};           // what we used to create/delete the device
@@ -357,17 +326,6 @@ private:
     std::wstring m_thisEndpointName{ };
     std::wstring m_thisProductInstanceId{ };
 
-    // Identity the remote supplied in its invitation. Host role only. This is what the user
-    // approves and what the allow and deny lists match on. Written on the socket receive thread
-    // and read by the configuration manager, so it is guarded.
-    wil::critical_section m_remoteIdentityLock;
-    std::wstring m_remoteEndpointName{ };
-    std::wstring m_remoteProductInstanceId{ };
-
-    // Host role: the remote has been told its invitation is pending and is waiting for a user
-    // to approve or deny it. No endpoint exists yet.
-    std::atomic<bool> m_awaitingUserApproval{ false };
-
     std::shared_ptr<MidiNetworkDataWriter> m_writer{ nullptr };
 
 
@@ -376,37 +334,14 @@ private:
         _In_ size_t const byteCount,
         _Out_ std::wstring& value);
 
-    HRESULT HandleIncomingInvitation(
-        _In_ MidiNetworkCommandPacketHeader const& header,
-        _In_ MidiNetworkCommandInvitationCapabilities const& capabilities,
-        _In_ std::wstring const& clientUmpEndpointName,
-        _In_ std::wstring const& clientProductInstanceId);
-
-    HRESULT HandleIncomingInvitationReplyAccepted(
-        _In_ MidiNetworkCommandPacketHeader const& header,
-        _In_ std::wstring const& remoteHostUmpEndpointName,
-        _In_ std::wstring const& remoteHostProductInstanceId);
-
     // Authentication negotiation, spec 6.5, 6.6, 6.9 and 6.10. All of these currently refuse.
     // https://github.com/microsoft/MIDI/issues/733
-
-    // Host side: a client answered our authentication challenge.
-    HRESULT HandleIncomingInvitationWithAuthentication(
-        _In_ MidiNetworkCommandPacketHeader const& header,
-        _In_ MidiNetworkAuthenticationKind const kind);
-
-    // Client side: the host is challenging us, or asking us to keep waiting.
-    HRESULT HandleIncomingInvitationReplyAuthenticationRequired(
-        _In_ MidiNetworkCommandPacketHeader const& header,
-        _In_ MidiNetworkAuthenticationKind const kind);
-
-    HRESULT HandleIncomingInvitationReplyPending();
 
     // Refuses an invitation which we cannot authenticate, per spec 6.4.
     HRESULT RefuseInvitationForAuthentication(_In_ MidiNetworkCommandByeReason const reason);
 
     // Declines the session when the endpoint could not be created, choosing a Bye reason which
-    // reflects why. Role-appropriate: the host and client reason codes differ.
+    // reflects why. The already-attached reason differs per role.
     HRESULT RefuseSessionForEndpointCreationFailure(_In_ HRESULT const creationResult);
 
     // Spec Appendix B. Deliberately not written from guesswork: getting this wrong produces a
@@ -417,9 +352,6 @@ private:
         _In_ MidiNetworkSecret const& secret,
         _Out_writes_bytes_(digestByteCount) uint8_t* digest,
         _In_ size_t const digestByteCount);
-
-    MidiNetworkAuthenticationKind m_authenticationKind{ MidiNetworkAuthenticationKind::None };
-    MidiNetworkCredentialIdentifier m_credentialIdentifier{ };
 
     HRESULT HandleIncomingBye();
     HRESULT HandleIncomingByeReply();
@@ -501,6 +433,10 @@ private:
     HRESULT SignalHealthyConnectionAndUpdateArrivalTimestamp();
     HRESULT ConnectionWatcherThreadWorker(_In_ std::stop_token stopToken);
     HRESULT EndActiveSessionDueToTimeout();
+
+    // Puts an outbound client definition back in front of the creator worker after the remote
+    // host went away on its own. Deliberate teardowns do not call this.
+    HRESULT RequestClientReconnect();
 
     HRESULT AddUmpPacketToRetransmitBuffer(_In_ MidiSequenceNumber const sequenceNumber, _In_ std::vector<uint32_t> const& words);
 
