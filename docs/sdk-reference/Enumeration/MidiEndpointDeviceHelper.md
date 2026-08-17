@@ -1,9 +1,9 @@
 ---
 layout: sdk_reference_page
-title: MidiEndpointDeviceIdHelper
+title: MidiEndpointDeviceHelper
 namespace: Windows.Devices.Midi2.Enumeration
 type: runtimeclass
-description: Utility class for converting between short and long Windows MIDI Services endpoint device ids
+description: Utility class for working with Windows MIDI Services endpoint device ids and specification-compliant names
 ---
 
 
@@ -34,3 +34,13 @@ This class works on Windows MIDI Services UMP endpoints only. It does not work o
 | `IsPossibleWindowsMidiServicesEndpointDeviceId(fullEndpointDeviceId)` | Returns true if the endpoint device id appears to be a Windows MIDI Services UMP Endpoint Device Id. No actual lookup is performed. |
 | `IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(legacyPortDeviceId)` | Returns true if the id appears to be a WinRT or WinMM MIDI 1.0 port device id created by Windows MIDI Services. No actual lookup is performed. |
 | `NormalizeFullId(fullEndpointDeviceId)` | Returns the id in normalized form: trimmed and lowercase. |
+| `EnsureCompliantUmpEndpointName(endpointName)` | Returns the supplied name shortened, if necessary, to fit the UMP Endpoint Name limit in the MIDI 2.0 specification. |
+| `EnsureCompliantProductInstanceId(productInstanceId)` | Returns the supplied Product Instance Id with characters which are not valid in a device identifier removed, shortened if necessary to the specification limit. |
+
+## Name and Id Compliance
+
+The MIDI 2.0 specification states its UMP Endpoint Name and Product Instance Id limits as **UTF-8 byte counts, not character counts**. A name which looks comfortably short can still exceed the limit once encoded: accented Latin characters take two bytes each, CJK characters three, and emoji four. A 40-character name using CJK characters is 120 bytes, well over the 98 byte endpoint name limit.
+
+`EnsureCompliantUmpEndpointName` measures in bytes and never cuts a character in half, so the result is always valid text rather than a truncated multi-byte sequence.
+
+Use these when you accept a name or id from a user and want to know what the service will actually store, before you submit it.

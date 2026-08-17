@@ -1052,7 +1052,7 @@
     <Midl Include="MidiNetworkConfiguredClient.idl" />
     <Midl Include="MidiNetworkConfiguredHost.idl" />
     <Midl Include="MidiNetworkHostCreationErrorCodeEnum.idl" />
-    <Midl Include="MidiNetworkHostRemovalResultErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkHostRemovalErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostUpdateResponse.idl" />
     <Midl Include="MidiNetworkHostUpdateErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkTransportManager.idl" />

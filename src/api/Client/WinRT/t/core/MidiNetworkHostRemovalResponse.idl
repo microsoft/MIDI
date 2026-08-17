@@ -10,7 +10,7 @@
 import "MidiApiContracts.idl";
 
 
-import "MidiNetworkHostRemovalResultErrorCodeEnum.idl";
+import "MidiNetworkHostRemovalErrorCodeEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
