@@ -33,6 +33,7 @@ public:
     // Verifies that a unique id containing invalid characters still results in a
     // successfully created loopback, because the manager cleans it up first.
     TEST_METHOD(TestCreateLoopbackWithGarbageUniqueId);
+    TEST_METHOD(TestCreateLoopbackWithoutUniqueIdGeneratesOne);
 
     // Muting, unmuting, and enumerating active loopbacks
     TEST_METHOD(TestMuteLoopback);

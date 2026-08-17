@@ -255,6 +255,16 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
         return E_INVALIDARG;
     }
 
+    // Spec range is ASCII 32-126, which is wider than a device identifier allows. The value is
+    // kept as supplied because it is meaningful on the device; it gets stripped only where it is
+    // used to build an SWD id.
+    if (!internal::ContainsOnlyPrintableAscii(std::wstring{ definition.ProductInstanceId }))
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_PRODUCT_INSTANCE_ID);
+        errorCode = NETWORK_ERROR_CODE_INVALID_PRODUCT_INSTANCE_ID;
+        return E_INVALIDARG;
+    }
+
     // validate user authentication
     if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
     {

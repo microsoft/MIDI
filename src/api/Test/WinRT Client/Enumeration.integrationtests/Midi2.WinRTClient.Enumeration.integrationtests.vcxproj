@@ -162,7 +162,7 @@
   <ItemGroup>
     <ClInclude Include="MidiEndpointDeviceInformationTests.h" />
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h" />
-    <ClInclude Include="MidiEndpointIdHelperTests.h" />
+    <ClInclude Include="MidiEndpointHelperTests.h" />
     <ClInclude Include="MidiLegacyPortDeviceInformationTests.h" />
     <ClInclude Include="MidiLegacyPortDeviceWatcherTests.h" />
     <ClInclude Include="stdafx.h" />

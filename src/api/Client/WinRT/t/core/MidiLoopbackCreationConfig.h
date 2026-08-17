@@ -17,7 +17,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         MidiLoopbackCreationConfig() = default;
 
         MidiLoopbackCreationConfig(
-            _In_ winrt::guid associationId,
             _In_ loop::MidiLoopbackEndpointDefinition endpointDefinitionA,
             _In_ loop::MidiLoopbackEndpointDefinition endpointDefinitionB
             );
@@ -29,16 +28,30 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         void IsMuted(_In_ bool value) noexcept { m_isMuted = value; }
 
         winrt::guid AssociationId() noexcept { return m_associationId; }
-        void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }
+        //void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }
 
         loop::MidiLoopbackEndpointDefinition EndpointDefinitionA() noexcept { return m_definitionA; }
-        void EndpointDefinitionA(_In_ loop::MidiLoopbackEndpointDefinition const& value) noexcept { m_definitionA = value; }
+        void EndpointDefinitionA(_In_ loop::MidiLoopbackEndpointDefinition const& value) noexcept 
+        { 
+            m_definitionA = value; 
+            if (m_definitionA.UniqueId().empty())
+            {
+                m_definitionA.UniqueId(internal::GuidToHexDigitsOnlyString(m_associationId));
+            }
+        }
 
         loop::MidiLoopbackEndpointDefinition EndpointDefinitionB() noexcept { return m_definitionB; }
-        void EndpointDefinitionB(_In_ loop::MidiLoopbackEndpointDefinition const& value) noexcept { m_definitionB = value; }
+        void EndpointDefinitionB(_In_ loop::MidiLoopbackEndpointDefinition const& value) noexcept 
+        { 
+            m_definitionB = value;
+            if (m_definitionB.UniqueId().empty())
+            {
+                m_definitionB.UniqueId(internal::GuidToHexDigitsOnlyString(m_associationId));
+            }
+        }
 
     private:
-        winrt::guid m_associationId{};
+        winrt::guid m_associationId{ foundation::GuidHelper::CreateNewGuid() };
         bool m_isMuted{ false };
         loop::MidiLoopbackEndpointDefinition m_definitionA{ nullptr };
         loop::MidiLoopbackEndpointDefinition m_definitionB{ nullptr };   

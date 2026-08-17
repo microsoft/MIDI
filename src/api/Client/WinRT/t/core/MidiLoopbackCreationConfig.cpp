@@ -15,15 +15,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 {
     _Use_decl_annotations_
     MidiLoopbackCreationConfig::MidiLoopbackCreationConfig(
-        winrt::guid associationId,
         loop::MidiLoopbackEndpointDefinition endpointDefinitionA,
         loop::MidiLoopbackEndpointDefinition endpointDefinitionB
     )
     {
-        m_associationId = associationId;
-
-        m_definitionA = endpointDefinitionA;
-        m_definitionB = endpointDefinitionB;
+        EndpointDefinitionA(endpointDefinitionA);
+        EndpointDefinitionB(endpointDefinitionB);
     }
 
 

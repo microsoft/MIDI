@@ -16,12 +16,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 {
     _Use_decl_annotations_
     MidiBasicLoopbackCreationConfig::MidiBasicLoopbackCreationConfig(
-        winrt::guid const& associationId,
         bloop::MidiBasicLoopbackEndpointDefinition const& endpointDefinition)
     {
 
-        m_associationId = associationId;
-        m_definition = endpointDefinition;
+        EndpointDefinition(endpointDefinition);
     }
 
 

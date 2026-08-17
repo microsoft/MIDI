@@ -241,6 +241,23 @@ namespace WindowsMidiServicesInternal
         return wide;
     }
 
+    // The specification restricts Product Instance Id to ASCII in the ordinal range 32-126. That
+    // is wider than a device identifier allows, so a conformant value can still need cleaning
+    // before it is used to build one.
+    inline bool ContainsOnlyPrintableAscii(_In_ std::wstring const& value) noexcept
+    {
+        for (auto const c : value)
+        {
+            if (c < 32 || c > 126)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
     // Number of bytes this string occupies when encoded as UTF-8. This is what the
     // specification's limits are expressed in.
     inline size_t Utf8ByteCount(_In_ std::wstring const& value) noexcept

@@ -81,8 +81,7 @@ enum MidiNetworkRemoteClientDecision
 // standard 1500 byte Ethernet MTU. DontFragment is set on the socket, so a datagram larger than
 // the path MTU is dropped outright rather than fragmented.
 #define MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES                              1400
-#define MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT                           98          // Spec sections 6.4 - 6.8. This is a UTF-8 byte count, not a character count    
-#define MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT                     42          // Spec sections 6.4 - 6.8
+
 // NAK payload length counts the original command header word as well, leaving 254 words of text
 #define MIDI_MAX_NAK_MESSAGE_BYTE_COUNT                                 1016        // Spec 6.15 : (254 * sizeof(uint32_t))
 #define MIDI_MAX_BYE_MESSAGE_BYTE_COUNT                                 1020        // Spec 6.16 : (255 * sizeof(uint32_t))

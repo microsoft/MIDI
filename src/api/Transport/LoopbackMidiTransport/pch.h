@@ -77,6 +77,7 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "Feature_Servicing_MIDI2LoopbackMuteAndList.h"
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
+#include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
 
 // TransportUtilities
 #include "wstring_util.h"

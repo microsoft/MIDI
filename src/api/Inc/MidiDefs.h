@@ -78,6 +78,12 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 
 #define MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT (LONGLONG)3263827
 
+
+#define MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT                           98 // utf-8 byte count
+#define MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT                     42
+#define MIDI_MAX_UMP_FUNCTION_BLOCK_NAME_BYTE_COUNT                     91  // utf-8 byte count
+#define MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT                 MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT     // technically, anything under 126 characters is fine
+
 //
 // Registry keys for Drivers32 control and configuration
 //

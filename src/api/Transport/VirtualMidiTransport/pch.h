@@ -73,6 +73,7 @@
 #include "wstring_util.h"
 
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
+#include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
 
 // TransportUtilities
 #include "wstring_util.h"

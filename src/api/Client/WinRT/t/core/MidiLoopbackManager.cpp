@@ -427,16 +427,14 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
             return *result;
         }
 
-        creationConfig.EndpointDefinitionA().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId().c_str()).c_str(), MAXPNAMELEN-1));
-        creationConfig.EndpointDefinitionB().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId().c_str()).c_str(), MAXPNAMELEN-1));
+        //creationConfig.EndpointDefinitionA().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionA().UniqueId().c_str()).c_str(), MAXPNAMELEN));
+        //creationConfig.EndpointDefinitionB().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinitionB().UniqueId().c_str()).c_str(), MAXPNAMELEN));
 
 
         if (creationConfig.EndpointDefinitionA().UniqueId().empty())
         {
             // generate a unique id if one has not been provided
-            std::wstring id{ internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid()) };
-            internal::InPlaceToLower(id);
-
+            std::wstring id{ internal::GuidToHexDigitsOnlyString(creationConfig.AssociationId()) };
             creationConfig.EndpointDefinitionA().UniqueId(id);
         }
 
@@ -889,7 +887,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     {
         try
         {
-            winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_A_PREFIX, uniqueIdentifier.c_str());
+            winrt::hstring cleanId{ internal::RemoveInvalidSWDUniqueIdCharacters(uniqueIdentifier.c_str()) };
+            cleanId = internal::TruncateHStringCopy(cleanId.c_str(), MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT);
+
+            winrt::hstring id = BuildDeviceId(MIDI_LOOP_INSTANCE_ID_A_PREFIX, cleanId.c_str());
 
             return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));
         }

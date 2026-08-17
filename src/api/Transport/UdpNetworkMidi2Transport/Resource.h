@@ -43,6 +43,7 @@
 #define IDS_ERROR_ENDPOINT_NAME_TOO_LONG                2029
 #define IDS_ERROR_PRODUCT_INSTANCE_ID_TOO_LONG          2030
 #define IDS_ERROR_CLIENT_NOT_FOUND                      2031
+#define IDS_ERROR_INVALID_PRODUCT_INSTANCE_ID           2032
 
 #define IDS_MESSAGE_CONNECTION_ENDED                    2100
 #define IDS_MESSAGE_USER_DISCONNECTED                   2101

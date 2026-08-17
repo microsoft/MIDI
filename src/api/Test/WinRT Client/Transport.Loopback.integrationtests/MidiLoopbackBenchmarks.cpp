@@ -102,8 +102,7 @@ static MidiLoopbackCreationResponse CreateBenchmarkLoopback(_In_ winrt::hstring 
         L"B-side loopback created by the Windows MIDI Services benchmarks."
     );
 
-    MidiLoopbackCreationConfig creationConfig(
-        foundation::GuidHelper::CreateNewGuid(), definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
 
     auto response = MidiLoopbackManager::CreateTransientLoopback(creationConfig);
 

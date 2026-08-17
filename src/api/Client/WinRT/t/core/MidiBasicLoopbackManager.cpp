@@ -97,15 +97,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             return *result;
         }
 
-        // clean up the unique id and then verify there's still something left to it
-        creationConfig.EndpointDefinition().UniqueId(internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(creationConfig.EndpointDefinition().UniqueId().c_str()).c_str(), MAXPNAMELEN - 1));
-
         if (creationConfig.EndpointDefinition().UniqueId().empty())
         {
             // the RemoveInvalidSWDUniqueIdCharacters is currently redundant with the TruncateHStringCopy, but we want to keep it in case we change the logic in the future
-            std::wstring id{ internal::RemoveInvalidSWDUniqueIdCharacters(internal::GuidToHexDigitsOnlyString(foundation::GuidHelper::CreateNewGuid())) };
-            internal::InPlaceToLower(id);
-
+            std::wstring id{ internal::RemoveInvalidSWDUniqueIdCharacters(internal::GuidToHexDigitsOnlyString(creationConfig.AssociationId())) };
             creationConfig.EndpointDefinition().UniqueId(id);
         }
 
@@ -359,7 +354,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         try
         {
             winrt::hstring cleanId { internal::RemoveInvalidSWDUniqueIdCharacters(uniqueIdentifier.c_str()) };
-            cleanId = internal::TruncateHStringCopy(cleanId.c_str(), MAXPNAMELEN);
+            cleanId = internal::TruncateHStringCopy(cleanId.c_str(), MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT);
             winrt::hstring id = BuildDeviceId(MIDI_BLOOP_INSTANCE_ID_PREFIX, cleanId.c_str());
 
             return (internal::IsValidWindowsMidiServicesEndpointId(id) && internal::IsWindowsMidiServicesEndpointPresent(id));

@@ -43,19 +43,20 @@ void MidiBasicLoopbackTests::TestUnicodeGtbAndDeviceNames()
 
 
     winrt::hstring uniqueId = winrt::to_hstring(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
-    auto associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
     auto name = L"我的虚拟设备";
 
     MidiBasicLoopbackEndpointDefinition definition;
     definition.Name(name);
     definition.UniqueId(uniqueId);
 
-    MidiBasicLoopbackCreationConfig config(associationId, definition);
+    MidiBasicLoopbackCreationConfig config(definition);
 
     auto result = MidiBasicLoopbackManager::CreateTransientLoopback(config);
 
     VERIFY_IS_NOT_NULL(result);
     VERIFY_IS_TRUE(result.Success());
+
+    auto associationId = result.CreatedLoopbackEntry().AssociationId();
 
     // remove the loopback even if a VERIFY macro below halts the method
     auto cleanupLoopback = wil::scope_exit([&]
@@ -187,10 +188,8 @@ void MidiBasicLoopbackTests::TestReopenLegacyWinMMPorts()
         L"Regression test loopback for issue GH1070."
     );
 
-    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
-
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
-    MidiBasicLoopbackCreationConfig creationConfig(associationId, definition);
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
 
     LOG_OUTPUT(L"Creating loopback");
     auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
@@ -309,14 +308,12 @@ void MidiBasicLoopbackTests::TestCreateLoopbackWithGarbageUniqueId()
 
     MidiBasicLoopbackEndpointDefinition definition(
         L"Test Basic Loopback Garbage Id",
-        winrt::hstring{ garbageUniqueId },
-        L"Loopback created with a unique id which contains invalid characters."
+        L"Loopback created with a unique id which contains invalid characters.",
+        winrt::hstring{ garbageUniqueId }
     );
 
-    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
-
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
-    MidiBasicLoopbackCreationConfig creationConfig(associationId, definition);
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
 
     LOG_OUTPUT(L"Creating loopback");
     auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
@@ -357,6 +354,52 @@ void MidiBasicLoopbackTests::TestCreateLoopbackWithGarbageUniqueId()
 }
 
 
+void MidiBasicLoopbackTests::TestCreateLoopbackWithoutUniqueIdGeneratesOne()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+
+    // no unique id supplied, so the config has to produce one. A caller should not have to
+    // invent a random string just to create a loopback.
+    MidiBasicLoopbackEndpointDefinition definition(
+        L"Test Basic Loopback Generated Id",
+        L"Loopback created without supplying a unique id."
+    );
+
+    VERIFY_IS_TRUE(definition.UniqueId().empty());
+
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
+
+    std::wstring generatedUniqueId{ creationConfig.EndpointDefinition().UniqueId().c_str() };
+
+    std::wcout << L"Generated unique id: " << generatedUniqueId << std::endl;
+
+    VERIFY_IS_FALSE(generatedUniqueId.empty());
+    VERIFY_IS_TRUE(UniqueIdContainsOnlyValidCharacters(generatedUniqueId));
+
+    auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_TRUE(response.Success());
+
+    auto cleanupLoopback = wil::scope_exit([&]
+        {
+            MidiBasicLoopbackRemovalConfig removalConfig(response.CreatedLoopbackEntry().AssociationId());
+            MidiBasicLoopbackManager::RemoveTransientLoopback(removalConfig);
+        });
+
+    VERIFY_IS_FALSE(response.CreatedLoopbackEntry().EndpointDeviceId().empty());
+
+    std::wcout << L"Endpoint device id: " << response.CreatedLoopbackEntry().EndpointDeviceId().c_str() << std::endl;
+
+    // and two configs must not collide
+    MidiBasicLoopbackEndpointDefinition otherDefinition(L"Test Basic Loopback Generated Id 2");
+    MidiBasicLoopbackCreationConfig otherConfig(otherDefinition);
+
+    VERIFY_IS_FALSE(otherConfig.EndpointDefinition().UniqueId().empty());
+    VERIFY_ARE_NOT_EQUAL(otherConfig.EndpointDefinition().UniqueId(), creationConfig.EndpointDefinition().UniqueId());
+    VERIFY_ARE_NOT_EQUAL(otherConfig.AssociationId(), creationConfig.AssociationId());
+}
+
+
 void MidiBasicLoopbackTests::TestCreateLoopback()
 {
     VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
@@ -373,11 +416,9 @@ void MidiBasicLoopbackTests::TestCreateLoopback()
         L"The first description is optional, but is displayed to users. This becomes the transport-defined description." // description
     );
 
-    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
-
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
 
-    MidiBasicLoopbackCreationConfig creationConfig(associationId, definition);
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
 
     LOG_OUTPUT(L"Creating loopbacks");
 
@@ -452,11 +493,9 @@ void MidiBasicLoopbackTests::TestCreateLegacyPorts()
         L"The description is optional, but is displayed to users. This becomes the transport-defined description." // description
     );
 
-    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
-
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
 
-    MidiBasicLoopbackCreationConfig creationConfig(associationId, definition);
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
 
     LOG_OUTPUT(L"Creating loopbacks");
 
@@ -548,11 +587,11 @@ static MidiBasicLoopbackCreationResponse CreateTestLoopback(_In_ winrt::hstring 
 
     MidiBasicLoopbackEndpointDefinition definition(
         namePrefix,
-        uniqueId,
-        L"Loopback created by the Windows MIDI Services TAEF tests."
+        L"Loopback created by the Windows MIDI Services TAEF tests.",
+        uniqueId
     );
 
-    MidiBasicLoopbackCreationConfig creationConfig(foundation::GuidHelper::CreateNewGuid(), definition);
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
 
     auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
 
@@ -762,6 +801,7 @@ void MidiBasicLoopbackTests::TestListActiveLoopbacks()
 
     LOG_OUTPUT(L"Creating first loopback");
     auto response1 = CreateTestLoopback(L"Test Basic Loopback List 1");
+    VERIFY_IS_TRUE(response1.Success());
     auto associationId1 = response1.CreatedLoopbackEntry().AssociationId();
     auto endpointId1 = response1.CreatedLoopbackEntry().EndpointDeviceId();
 
@@ -769,6 +809,7 @@ void MidiBasicLoopbackTests::TestListActiveLoopbacks()
 
     LOG_OUTPUT(L"Creating second loopback");
     auto response2 = CreateTestLoopback(L"Test Basic Loopback List 2");
+    VERIFY_IS_TRUE(response2.Success());
     auto associationId2 = response2.CreatedLoopbackEntry().AssociationId();
     auto endpointId2 = response2.CreatedLoopbackEntry().EndpointDeviceId();
 
@@ -838,11 +879,9 @@ void MidiBasicLoopbackTests::TestUmpSendReceive()
         L"The description is optional, but is displayed to users. This becomes the transport-defined description." // description
     );
 
-    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
-
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
 
-    MidiBasicLoopbackCreationConfig creationConfig(associationId, definition);
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
 
     LOG_OUTPUT(L"Creating loopbacks");
 
