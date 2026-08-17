@@ -23,7 +23,7 @@ namespace Windows.Devices.Midi2.Transports.Network
     {
 		MidiNetworkClientConnectConfig();
 
-		[noexcept] Guid ClientId;							// GUID  we use in the config file and for subsequent edits/deletes
+		[noexcept] Guid ClientId;						// GUID  we use in the config file and for subsequent edits/deletes
 		[noexcept] String Comment;						// optional comment that is put into the config file
 		[noexcept] Boolean CreateOnlyUmpEndpoints;	    // todo: this will also need a table of port names
 		//Boolean AutoReconnect;				// true if we reconnect after any disconnects. Otherwise, we connect only once.

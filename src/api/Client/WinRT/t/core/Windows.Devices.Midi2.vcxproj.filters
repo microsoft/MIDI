@@ -150,15 +150,6 @@
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
-    <Midl Include="Midi1PortFlowEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="Midi1PortNameTableEntry.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="Midi1PortNamingApproachEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
@@ -192,65 +183,17 @@
     <Midl Include="MidiChannelEndpointListener.idl">
       <Filter>SDK\ClientPlugins</Filter>
     </Midl>
-    <Midl Include="MidiDeclaredDeviceIdentity.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiDeclaredEndpointInfo.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
     <Midl Include="IMidiServiceTransportPluginConfig.idl">
       <Filter>SDK\ServiceConfig</Filter>
-    </Midl>
-    <Midl Include="MidiDeclaredStreamConfiguration.idl">
-      <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiDiagnostics.idl">
       <Filter>SDK\Diagnostics</Filter>
     </Midl>
-    <Midl Include="MidiEndpointDeviceIdHelper.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformation.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDevicePropertyHelper.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
-    <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointTransportSuppliedInfo.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointUserSuppliedInfo.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlock.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
     <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl">
       <Filter>SDK\Utilities\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiGroupEndpointListener.idl">
       <Filter>SDK\ClientPlugins</Filter>
@@ -303,15 +246,6 @@
     <Midl Include="MidiLegacyPortDeviceWatcher.idl">
       <Filter>SDK\Enumeration\Legacy</Filter>
     </Midl>
-    <Midl Include="MidiGroupTerminalBlock.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
     <Midl Include="MidiMessageBuilder.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
@@ -320,12 +254,6 @@
     </Midl>
     <Midl Include="MidiMessageHelper.idl">
       <Filter>SDK\Utilities\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiParentDeviceInformation.idl">
-      <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiProtocolEnum.idl">
-      <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiReporting.idl">
       <Filter>SDK\Reporting</Filter>
@@ -480,18 +408,6 @@
     <Midl Include="MidiNetworkAdvertisedHostWatcher.idl">
       <Filter>SDK\Transports\Network\Watcher</Filter>
     </Midl>
-    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
-      <Filter>SDK\Enumeration\Watcher</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
-      <Filter>SDK\Enumeration\Watcher</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
-      <Filter>SDK\Enumeration\Watcher</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceWatcher.idl">
-      <Filter>SDK\Enumeration\Watcher</Filter>
-    </Midl>
     <Midl Include="MidiNetworkRemoteClientApprovalConfig.idl">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </Midl>
@@ -503,6 +419,90 @@
     </Midl>
     <Midl Include="MidiNetworkPendingRemoteClient.idl">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlock.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredStreamConfiguration.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredDeviceIdentity.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiDeclaredEndpointInfo.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlock.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiProtocolEnum.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl">
+      <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointTransportSuppliedInfo.idl">
+      <Filter>SDK\Enumeration\Windows Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
+      <Filter>SDK\Enumeration\Windows Metadata</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNamingApproachEnum.idl">
+      <Filter>SDK\Enumeration\Windows Metadata</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNameTableEntry.idl">
+      <Filter>SDK\Enumeration\Windows Metadata</Filter>
+    </Midl>
+    <Midl Include="Midi1PortFlowEnum.idl">
+      <Filter>SDK\Enumeration\Windows Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiParentDeviceInformation.idl">
+      <Filter>SDK\Enumeration\Windows Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceHelper.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformation.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePropertyHelper.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointUserSuppliedInfo.idl">
+      <Filter>SDK\Enumeration\Windows Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceWatcher.idl">
+      <Filter>SDK\Enumeration\Endpoint</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -586,11 +586,17 @@
     <Filter Include="SDK\Transports\Network\Watcher">
       <UniqueIdentifier>{dcb148ef-e48f-4b38-b946-4fd4c4faf594}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Enumeration\Watcher">
-      <UniqueIdentifier>{69dd6957-6d79-416f-aede-6191ea108b05}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SDK\Transports\Network\Connection Approval">
       <UniqueIdentifier>{3f05b0d6-e012-4974-82ca-2d25d4b7c6de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Enumeration\MIDI 2 Metadata">
+      <UniqueIdentifier>{fbd0f64e-0b57-4b03-a706-a44ed3f445cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Enumeration\Windows Metadata">
+      <UniqueIdentifier>{94e1c737-721f-4129-ab57-92aacde148f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Enumeration\Endpoint">
+      <UniqueIdentifier>{e3156cdb-b2f5-401b-9817-28a085783742}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

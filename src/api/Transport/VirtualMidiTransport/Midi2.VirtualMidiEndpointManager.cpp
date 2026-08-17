@@ -245,6 +245,12 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     std::wstring endpointName = entry.BaseEndpointName;
     std::wstring endpointDescription = entry.Description;
 
+    // The specification states the name limit as a UTF-8 byte count, not a character count
+    if (Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled())
+    {
+        endpointName = internal::TruncateToUtf8ByteCount(endpointName, MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH);
+    }
+
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
     // no user or in-protocol data in this case
@@ -352,8 +358,19 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     // TODO: These should come from localized resources
-    std::wstring endpointName = internal::TrimmedWStringCopy(entry.BaseEndpointName + L" (Virtual MIDI Device)");
+    std::wstring endpointNameSuffix = L" (Virtual MIDI Device)";
+    std::wstring endpointName = internal::TrimmedWStringCopy(entry.BaseEndpointName + endpointNameSuffix);
     std::wstring endpointDescription = internal::TrimmedWStringCopy(entry.Description + L" (This endpoint for use only by the device host application.)");
+
+    // Trim the base rather than the composed name, so the suffix that tells this endpoint apart
+    // from the client-visible one is never what gets cut
+    if (Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled())
+    {
+        endpointName = internal::TrimmedWStringCopy(
+            internal::TruncateToUtf8ByteCount(
+                entry.BaseEndpointName,
+                MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH - internal::Utf8ByteCount(endpointNameSuffix)) + endpointNameSuffix);
+    }
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 

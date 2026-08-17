@@ -57,6 +57,9 @@
 #define MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH 98
 #define MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET 14
 
+// 91, not the 98 the specification states. The function block number takes a byte out of the first
+// word, leaving 13 text bytes per packet rather than 14. Reported to the spec team. These are
+// UTF-8 byte counts, not character counts.
 #define MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_MAX_LENGTH 91
 #define MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_CHARACTERS_PER_PACKET 13
 

@@ -749,7 +749,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            _loggingService.LogInfo($"Enter. Id: {creationConfig.Id}");
+            _loggingService.LogInfo($"Enter. Id: { creationConfig.HostId }");
 
             if (m_config == null) return false;
             if (creationConfig == null) return false;
@@ -765,7 +765,7 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 // write the property
 
-                _loggingService.LogInfo($"Saving. Id: {creationConfig.Id}");
+                _loggingService.LogInfo($"Saving. Id: { creationConfig.HostId }");
                 return Save();
             }
 
@@ -774,20 +774,19 @@ public class MidiConfigFile : IMidiConfigFile
         }
         catch (Exception ex)
         {
-            _loggingService.LogError($"Exception storing network host. Id: {creationConfig.Id}", ex);
+            _loggingService.LogError($"Exception storing network host. Id: { creationConfig.HostId }", ex);
 
             return false;
         }
     }
 
-    public bool RemoveNetworkHost(string hostEntryId)
+    public bool RemoveNetworkHost(Guid hostEntryId)
     {
         try
         {
             _loggingService.LogInfo($"Enter. Id: {hostEntryId}");
 
             if (m_config == null) return false;
-            if (string.IsNullOrEmpty(hostEntryId)) return false;
 
             // get the latest from disk
             if (!Load())
@@ -795,6 +794,10 @@ public class MidiConfigFile : IMidiConfigFile
                 _loggingService.LogError($"Unable to load config");
                 return false;
             }
+
+            // TODO: May need to have a uniform way to convert the guids to the same format
+            // since the config file is doing a string search only. Prefer to just do direct
+            // guid comparisons, but not possible
 
             var transportObject = FindExistingTransportSection(m_config, MidiNetworkTransportManager.TransportId);
             if (transportObject == null) return false;
@@ -805,11 +808,11 @@ public class MidiConfigFile : IMidiConfigFile
             var hostsObject = createObject.GetNamedObject(MidiConfigConstants.JsonKeys.NetworkHosts);
             if (hostsObject == null) return false;
 
-            if (hostsObject.ContainsKey(hostEntryId))
+            if (hostsObject.ContainsKey(hostEntryId.ToString("B")))
             {
-                hostsObject.Remove(hostEntryId);
+                hostsObject.Remove(hostEntryId.ToString("B"));
 
-                _loggingService.LogInfo($"Saving. Id: {hostEntryId}");
+                _loggingService.LogInfo($"Saving. Id: { hostEntryId.ToString("B") }");
                 return Save();
             }
             else
@@ -832,7 +835,7 @@ public class MidiConfigFile : IMidiConfigFile
     {
         try
         {
-            _loggingService.LogInfo($"Enter. Id: '{creationConfig.Id}'");
+            _loggingService.LogInfo($"Enter. Id: '{creationConfig.ClientId}'");
 
             if (m_config == null) return false;
             if (creationConfig == null) return false;
@@ -848,7 +851,7 @@ public class MidiConfigFile : IMidiConfigFile
             {
                 // write the property
 
-                _loggingService.LogInfo($"Saving. Id: '{creationConfig.Id}'");
+                _loggingService.LogInfo($"Saving. Id: '{creationConfig.ClientId}'");
                 return Save();
             }
 
@@ -858,7 +861,7 @@ public class MidiConfigFile : IMidiConfigFile
         }
         catch (Exception ex)
         {
-            _loggingService.LogError($"Exception storing network client. Id: {creationConfig.Id}", ex);
+            _loggingService.LogError($"Exception storing network client. Id: {creationConfig.ClientId}", ex);
 
             return false;
         }

@@ -490,16 +490,17 @@ void MidiLegacyPortDeviceWatcherTests::TestAddedRaisedForPortsCreatedWhileWatchi
 
     MidiLoopbackEndpointDefinition definitionA(
         L"Test Watcher Added Repro A",
-        uniqueId + L"-A",
-        L"A-side of the loopback used to repro the watcher Added defect.");
+        L"A-side of the loopback used to repro the watcher Added defect.",
+        uniqueId + L"-A"
+        );
 
     MidiLoopbackEndpointDefinition definitionB(
         L"Test Watcher Added Repro B",
-        uniqueId + L"-B",
-        L"B-side of the loopback used to repro the watcher Added defect.");
+        L"B-side of the loopback used to repro the watcher Added defect.",
+        uniqueId + L"-B"
+        );
 
-    MidiLoopbackCreationConfig creationConfig(
-        foundation::GuidHelper::CreateNewGuid(), definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
 
     LOG_OUTPUT(L"Creating the A/B loopback (creates four MIDI 1.0 ports at once)");
 

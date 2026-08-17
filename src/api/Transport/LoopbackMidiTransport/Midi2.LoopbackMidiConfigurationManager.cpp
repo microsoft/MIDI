@@ -434,6 +434,52 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         }
 
 
+                        // The SDK cleans and shortens these before sending, so this is protection
+                        // against hand-authored configuration json reaching the device creation code.
+                        if (Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled())
+                        {
+                            if (definitionA->EndpointUniqueIdentifier.length() > MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT ||
+                                definitionB->EndpointUniqueIdentifier.length() > MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT)
+                            {
+                                TraceLoggingWrite(
+                                    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Unique identifier is too long", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                                );
+
+                                responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                                    json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_UNIQUE_ID_TOO_LONG)));
+
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                return E_FAIL;
+                            }
+
+                            if (internal::RemoveInvalidSWDUniqueIdCharacters(definitionA->EndpointUniqueIdentifier) != definitionA->EndpointUniqueIdentifier ||
+                                internal::RemoveInvalidSWDUniqueIdCharacters(definitionB->EndpointUniqueIdentifier) != definitionB->EndpointUniqueIdentifier)
+                            {
+                                TraceLoggingWrite(
+                                    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Unique identifier contains invalid characters", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                                );
+
+                                responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                                    json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_INVALID_UNIQUE_ID)));
+
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                return E_FAIL;
+                            }
+                        }
+
+
                         // check for an identifier already in use. Failure to do this results in crashing the 
                         // service due to issues creating the device
                         if (allocatedUniqueIdsA.find(definitionA->EndpointUniqueIdentifier) != allocatedUniqueIdsA.end() ||

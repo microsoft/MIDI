@@ -20,8 +20,9 @@ namespace Windows.Devices.Midi2.Transports.Loopback
     runtimeclass MidiLoopbackEndpointDefinition
     {
         MidiLoopbackEndpointDefinition();
-        MidiLoopbackEndpointDefinition(String name, String uniqueId);
-        MidiLoopbackEndpointDefinition(String name, String uniqueId, String description);
+        MidiLoopbackEndpointDefinition(String name);
+        MidiLoopbackEndpointDefinition(String name, String description);
+        MidiLoopbackEndpointDefinition(String name, String description, String uniqueId);
 
         [noexcept] String Name;
         [noexcept] String UniqueId;

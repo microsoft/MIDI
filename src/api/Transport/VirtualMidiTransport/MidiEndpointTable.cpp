@@ -226,6 +226,88 @@ MidiEndpointTable::OnClientDisconnected(
 }
 
 
+// Same as OnClientDisconnected, except it leaves MidiDeviceBidi in place. The device side is
+// still connected when a client leaves, and OnClientConnected refuses the next client if that
+// pointer is null, which made the endpoint unusable after its last client went away.
+_Use_decl_annotations_
+HRESULT
+MidiEndpointTable::OnClientDisconnectedKeepDeviceLink(
+    std::wstring const clientEndpointInterfaceId) noexcept
+{
+    TraceLoggingWrite(
+        MidiVirtualMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    try
+    {
+        std::wstring associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
+
+        if (!associationId.empty())
+        {
+            auto lock = m_entriesLock.lock();
+
+            if (m_endpoints.find(associationId) != m_endpoints.end())
+            {
+                auto entry = m_endpoints[associationId];
+
+                // unlink both directions, but only the client is actually going away
+                if (entry.MidiDeviceBidi != nullptr)
+                {
+                    LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
+                }
+
+                if (entry.MidiClientBidi != nullptr)
+                {
+                    LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
+                    entry.MidiClientBidi.reset();
+                }
+
+                m_endpoints[associationId] = entry;
+
+                return S_OK;
+            }
+            else
+            {
+                // association id isn't present. That's not right.
+                TraceLoggingWrite(
+                    MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+
+                RETURN_IF_FAILED(E_INVALIDARG);
+            }
+        }
+        else
+        {
+            // association id is blank, which is also not right
+            TraceLoggingWrite(
+                MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Association id property was blank", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+    CATCH_RETURN();
+}
+
+
 
 _Use_decl_annotations_
 HRESULT MidiEndpointTable::OnDeviceConnected(

@@ -48,7 +48,7 @@ using namespace winrt::Windows::Devices::Midi2::Transports::Loopback;
 #include "..\SdkTestCommon.h"
 
 #include "MidiEndpointDeviceWatcherTests.h"
-#include "MidiEndpointIdHelperTests.h"
+#include "MidiEndpointHelperTests.h"
 #include "MidiLegacyPortDeviceInformationTests.h"
 #include "MidiLegacyPortDeviceWatcherTests.h"
 #include "MidiEndpointDeviceInformationTests.h"

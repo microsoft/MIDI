@@ -33,6 +33,7 @@ public:
     // sides still result in a successfully created loopback, because the manager
     // cleans them up first.
     TEST_METHOD(TestCreateLoopbackWithGarbageUniqueIds);
+    TEST_METHOD(TestCreateLoopbackWithoutUniqueIdsGeneratesThem);
 
     // Muting, unmuting, and enumerating active loopbacks
     TEST_METHOD(TestMuteLoopback);
@@ -44,6 +45,7 @@ public:
     TEST_METHOD(TestReopenLegacyWinMMPorts);
 
     TEST_METHOD(TestUnicodeGtbAndDeviceNames);
+    TEST_METHOD(TestOverlongUnicodeDeviceNameIsTruncatedOnCharacterBoundary);
 
 
 private:

@@ -383,6 +383,72 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         }
 
 
+                        // Rejected rather than truncated: the unique id is an identity, so
+                        // shortening it here would not match what the caller uses to remove it later.
+                        if (definition->EndpointUniqueIdentifier.length() > MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT)
+                        {
+                            TraceLoggingWrite(
+                                MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unique identifier is too long", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier")
+                            );
+
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_UNIQUE_ID_TOO_LONG,
+                                    internal::ResourceGetWString(IDS_ERROR_UNIQUE_ID_TOO_LONG));
+
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                o.MoveNext();
+                                continue;
+                            }
+                        }
+
+
+                        // The SDK cleans these before sending, so this is protection against
+                        // hand-authored configuration json reaching the device creation code.
+                        if (internal::RemoveInvalidSWDUniqueIdCharacters(definition->EndpointUniqueIdentifier) != definition->EndpointUniqueIdentifier)
+                        {
+                            TraceLoggingWrite(
+                                MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unique identifier contains invalid characters", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier")
+                            );
+
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_INVALID_UNIQUE_ID,
+                                    internal::ResourceGetWString(IDS_ERROR_INVALID_UNIQUE_ID));
+
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                o.MoveNext();
+                                continue;
+                            }
+                        }
+
+
                         // check for an identifier already in use. Failure to do this results in crashing the 
                         // service due to issues creating the device
                         if (allocatedUniqueIds.find(definition->EndpointUniqueIdentifier) != allocatedUniqueIds.end() ||

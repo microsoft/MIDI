@@ -7,14 +7,32 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
     {
         MidiBasicLoopbackEndpointDefinition() = default;
 
-        MidiBasicLoopbackEndpointDefinition(_In_ winrt::hstring const& name, _In_ winrt::hstring const& uniqueId);
-        MidiBasicLoopbackEndpointDefinition(_In_ winrt::hstring const& name, _In_ winrt::hstring const& uniqueId, _In_ winrt::hstring const& description);
+        MidiBasicLoopbackEndpointDefinition(
+            _In_ winrt::hstring const& name)
+        {
+            Name(name);
+        }
+
+        MidiBasicLoopbackEndpointDefinition(
+            _In_ winrt::hstring const& name,
+            _In_ winrt::hstring const& description) : MidiBasicLoopbackEndpointDefinition(name)
+        {
+            Description(description);
+        }
+
+        MidiBasicLoopbackEndpointDefinition(
+            _In_ winrt::hstring const& name,
+            _In_ winrt::hstring const& description,
+            _In_ winrt::hstring const& uniqueId) : MidiBasicLoopbackEndpointDefinition(name, description)
+        {
+            UniqueId(uniqueId);
+        }
 
         winrt::hstring Name() const noexcept { return m_name; }
-        void Name(_In_ winrt::hstring const& value) noexcept { m_name = value; }
+        void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TruncateToUtf8ByteCount(value.c_str(), MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT); }
 
         winrt::hstring UniqueId() const noexcept { return m_uniqueId; }
-        void UniqueId(_In_ winrt::hstring const& value) noexcept { m_uniqueId = value; }        
+        void UniqueId(_In_ winrt::hstring const& value) noexcept { m_uniqueId = internal::TruncateHStringCopy(internal::RemoveInvalidSWDUniqueIdCharacters(value.c_str()).c_str(), MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT); }
 
         winrt::hstring Description() const noexcept { return m_description; }
         void Description(_In_ winrt::hstring const& value) noexcept { m_description = value; }

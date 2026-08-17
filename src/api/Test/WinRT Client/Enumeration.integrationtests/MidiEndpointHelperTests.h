@@ -9,12 +9,12 @@
 
 #pragma once
 
-class MidiEndpointIdHelperTests
-    : public WEX::TestClass<MidiEndpointIdHelperTests>
+class MidiEndpointHelperTests
+    : public WEX::TestClass<MidiEndpointHelperTests>
 {
 public:
 
-    BEGIN_TEST_CLASS(MidiEndpointIdHelperTests)
+    BEGIN_TEST_CLASS(MidiEndpointHelperTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
     END_TEST_CLASS()

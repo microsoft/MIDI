@@ -17,11 +17,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     {
         MidiNetworkHostCreationConfig() = default;
 
+        static network::MidiNetworkHostCreationConfig CreateDefault() noexcept;
+
+
+        static winrt::hstring EnsureCompliantServiceInstanceName(_In_ winrt::hstring const& serviceInstanceName) noexcept;
+
+
         winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
         json::JsonObject  ConfigJson() const noexcept;
 
         winrt::guid HostId() const noexcept { return m_id; }
-        void HostId(_In_ winrt::guid const& value) noexcept { m_id = value; }
+        //void HostId(_In_ winrt::guid const& value) noexcept { m_id = value; }
 
         winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }

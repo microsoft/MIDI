@@ -44,18 +44,17 @@ static MidiLoopbackCreationResponse CreateTestLoopback(_In_ winrt::hstring const
 
     MidiLoopbackEndpointDefinition definitionA(
         namePrefix + L" A",
-        uniqueId + L"-A",
-        L"A-side loopback created by the Windows MIDI Services TAEF tests."
+        L"A-side loopback created by the Windows MIDI Services TAEF tests.",
+        uniqueId + L"-A"
     );
 
     MidiLoopbackEndpointDefinition definitionB(
         namePrefix + L" B",
-        uniqueId + L"-B",
-        L"B-side loopback created by the Windows MIDI Services TAEF tests."
+        L"B-side loopback created by the Windows MIDI Services TAEF tests.",
+        uniqueId + L"-B"
     );
 
-    MidiLoopbackCreationConfig creationConfig(
-        foundation::GuidHelper::CreateNewGuid(), definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
 
     auto response = MidiLoopbackManager::CreateTransientLoopback(creationConfig);
 
@@ -112,7 +111,6 @@ void MidiLoopbackEndpointTests::TestUnicodeGtbAndDeviceNames()
 
 
     winrt::hstring uniqueId = winrt::to_hstring(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
-    auto associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
     auto nameA = L"我的虚拟设备";
     auto nameB = L"ענדפוינט ב";
 
@@ -124,7 +122,7 @@ void MidiLoopbackEndpointTests::TestUnicodeGtbAndDeviceNames()
     definitionB.Name(nameB);
     definitionB.UniqueId(uniqueId);
 
-    MidiLoopbackCreationConfig config(associationId, definitionA, definitionB);
+    MidiLoopbackCreationConfig config(definitionA, definitionB);
 
     VERIFY_IS_FALSE(config.EndpointDefinitionA().Name().empty());
     VERIFY_IS_FALSE(config.EndpointDefinitionB().Name().empty());
@@ -134,6 +132,8 @@ void MidiLoopbackEndpointTests::TestUnicodeGtbAndDeviceNames()
 
     VERIFY_IS_NOT_NULL(result);
     VERIFY_IS_TRUE(result.Success());
+
+    auto associationId = result.CreatedLoopbackEntry().AssociationId();
 
     // remove the loopback even if a VERIFY macro below halts the method
     auto cleanupLoopback = wil::scope_exit([&]
@@ -255,6 +255,76 @@ void MidiLoopbackEndpointTests::TestUnicodeGtbAndDeviceNames()
 
 
 
+// The specification's endpoint name limit is a UTF-8 byte count, not a character count, so a
+// name well inside the character limit can still be over the byte limit once encoded.
+void MidiLoopbackEndpointTests::TestOverlongUnicodeDeviceNameIsTruncatedOnCharacterBoundary()
+{
+    const size_t maxByteCount = 98;
+
+    auto utf8ByteCount = [](std::wstring const& s) -> size_t
+        {
+            if (s.empty()) return 0;
+            auto count = ::WideCharToMultiByte(CP_UTF8, 0, s.c_str(), (int)s.length(), nullptr, 0, nullptr, nullptr);
+            return count > 0 ? (size_t)count : 0;
+        };
+
+    // 40 CJK characters: 40 UTF-16 code units, but 120 UTF-8 bytes. 32 characters (96 bytes) is
+    // the most that fits, because a 33rd would land on byte 99.
+    std::wstring longName{};
+    for (int i = 0; i < 40; i++)
+    {
+        longName += L"設";
+    }
+
+    VERIFY_ARE_EQUAL(longName.length(), (size_t)40);
+    VERIFY_ARE_EQUAL(utf8ByteCount(longName), (size_t)120);
+
+    winrt::hstring uniqueId = winrt::to_hstring(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+
+    MidiLoopbackEndpointDefinition definitionA;
+    definitionA.Name(longName);
+    definitionA.UniqueId(uniqueId);
+
+    MidiLoopbackEndpointDefinition definitionB;
+    definitionB.Name(longName);
+    definitionB.UniqueId(uniqueId);
+
+    MidiLoopbackCreationConfig config(definitionA, definitionB);
+
+    auto result = MidiLoopbackManager::CreateTransientLoopback(config);
+
+    VERIFY_IS_NOT_NULL(result);
+    VERIFY_IS_TRUE(result.Success());
+
+    auto associationId = result.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&]
+        {
+            MidiLoopbackRemovalConfig removalConfig(associationId);
+            MidiLoopbackManager::RemoveTransientLoopback(removalConfig);
+        });
+
+    auto endpointInformationA = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+        result.CreatedLoopbackEntry().EndpointA().EndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(endpointInformationA);
+
+    std::wstring returnedName{ endpointInformationA.Name() };
+
+    std::cout << "Original: 40 chars, " << utf8ByteCount(longName) << " UTF-8 bytes" << std::endl;
+    std::cout << "Returned: " << returnedName.length() << " chars, " << utf8ByteCount(returnedName) << " UTF-8 bytes" << std::endl;
+
+    // within the limit, and a whole number of characters rather than a split one
+    VERIFY_IS_LESS_THAN_OR_EQUAL(utf8ByteCount(returnedName), maxByteCount);
+    VERIFY_ARE_EQUAL(returnedName.length(), (size_t)32);
+    VERIFY_ARE_EQUAL(utf8ByteCount(returnedName), (size_t)96);
+
+    // and it is a prefix of what was submitted, not a mangled string
+    VERIFY_ARE_EQUAL(longName.compare(0, returnedName.length(), returnedName), 0);
+}
+
+
+
 
 // ============================================================================
 // Repro for GH1070 support code and the A/B loopback tests
@@ -361,6 +431,7 @@ void MidiLoopbackEndpointTests::TestUnmuteAfterMute()
     VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
 
     auto response = CreateTestLoopback(L"Test Loopback Unmute");
+    VERIFY_IS_TRUE(response.Success());
 
     auto associationId = response.CreatedLoopbackEntry().AssociationId();
     auto endpointAId = response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId();
@@ -678,22 +749,22 @@ void MidiLoopbackEndpointTests::TestCreateLoopbackWithGarbageUniqueIds()
     // A-side of the loopback
     MidiLoopbackEndpointDefinition definitionA(
         L"Test Loopback A Garbage Id",
-        winrt::hstring{ garbageUniqueIdA },
-        L"A-side created with a unique id which contains invalid characters."
-    );
+        L"A-side created with a unique id which contains invalid characters.",
+        winrt::hstring{ garbageUniqueIdA }
+        );
 
     // B-side of the loopback
     MidiLoopbackEndpointDefinition definitionB(
         L"Test Loopback B Garbage Id",
-        winrt::hstring{ garbageUniqueIdB },
-        L"B-side created with a unique id which contains invalid characters."
-    );
+        L"B-side created with a unique id which contains invalid characters.",
+        winrt::hstring{ garbageUniqueIdB }
+        );
 
     winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
 
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
 
-    MidiLoopbackCreationConfig creationConfig(associationId, definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
 
     LOG_OUTPUT(L"Creating loopbacks");
 
@@ -743,6 +814,68 @@ void MidiLoopbackEndpointTests::TestCreateLoopbackWithGarbageUniqueIds()
 }
 
 
+void MidiLoopbackEndpointTests::TestCreateLoopbackWithoutUniqueIdsGeneratesThem()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
+
+    // no unique ids supplied, so the config has to produce them. A caller should not have to
+    // invent a random string just to create a loopback.
+    MidiLoopbackEndpointDefinition definitionA(
+        L"Test Loopback Generated Id A",
+        L"A-side created without supplying a unique id."
+        );
+
+    MidiLoopbackEndpointDefinition definitionB(
+        L"Test Loopback Generated Id B",
+        L"B-side created without supplying a unique id."
+        );
+
+    VERIFY_IS_TRUE(definitionA.UniqueId().empty());
+    VERIFY_IS_TRUE(definitionB.UniqueId().empty());
+
+    MidiLoopbackCreationConfig config(definitionA, definitionB);
+
+    std::wstring generatedIdA{ config.EndpointDefinitionA().UniqueId().c_str() };
+    std::wstring generatedIdB{ config.EndpointDefinitionB().UniqueId().c_str() };
+
+    std::wcout << L"Generated unique id A: " << generatedIdA << std::endl;
+    std::wcout << L"Generated unique id B: " << generatedIdB << std::endl;
+
+    VERIFY_IS_FALSE(generatedIdA.empty());
+    VERIFY_IS_FALSE(generatedIdB.empty());
+    VERIFY_IS_TRUE(UniqueIdContainsOnlyValidCharacters(generatedIdA));
+    VERIFY_IS_TRUE(UniqueIdContainsOnlyValidCharacters(generatedIdB));
+
+    auto response = MidiLoopbackManager::CreateTransientLoopback(config);
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_TRUE(response.Success());
+
+    auto cleanupLoopback = wil::scope_exit([&]
+        {
+            MidiLoopbackRemovalConfig removalConfig(response.CreatedLoopbackEntry().AssociationId());
+            MidiLoopbackManager::RemoveTransientLoopback(removalConfig);
+        });
+
+    VERIFY_IS_FALSE(response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId().empty());
+    VERIFY_IS_FALSE(response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId().empty());
+
+    // the two endpoints still have to be distinct even though the ids were generated
+    VERIFY_ARE_NOT_EQUAL(
+        response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId(),
+        response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId());
+
+    // and a second config must not collide with the first
+    MidiLoopbackEndpointDefinition otherA(L"Test Loopback Generated Id A2");
+    MidiLoopbackEndpointDefinition otherB(L"Test Loopback Generated Id B2");
+    MidiLoopbackCreationConfig otherConfig(otherA, otherB);
+
+    VERIFY_IS_FALSE(otherConfig.EndpointDefinitionA().UniqueId().empty());
+    VERIFY_ARE_NOT_EQUAL(otherConfig.EndpointDefinitionA().UniqueId(), config.EndpointDefinitionA().UniqueId());
+    VERIFY_ARE_NOT_EQUAL(otherConfig.AssociationId(), config.AssociationId());
+}
+
+
 void MidiLoopbackEndpointTests::TestCreateLoopback()
 {
     VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
@@ -756,22 +889,20 @@ void MidiLoopbackEndpointTests::TestCreateLoopback()
     // A-side of the loopback
     MidiLoopbackEndpointDefinition definitionA(
         L"Test Loopback A", // name
-        uniqueId, // unique Id that identifies the loopback
-        L"The first description is optional, but is displayed to users. This becomes the transport-defined description." // description
-    );
+        L"The first description is optional, but is displayed to users. This becomes the transport-defined description.", // description
+        uniqueId // unique Id that identifies the loopback
+        );
 
     // B-side of the loopback
     MidiLoopbackEndpointDefinition definitionB(
         L"Test Loopback B",
-        uniqueId, // can be the same as the first one, but doesn't need to be.
-        L"The second description is optional, but is displayed to users. This becomes the transport-defined description."
-    );
-
-    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
+        L"The second description is optional, but is displayed to users. This becomes the transport-defined description.",
+        uniqueId // can be the same as the first one, but doesn't need to be.
+        );
 
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
 
-    MidiLoopbackCreationConfig creationConfig(associationId, definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
 
     LOG_OUTPUT(L"Creating loopbacks");
 
@@ -838,22 +969,20 @@ void MidiLoopbackEndpointTests::TestCreateLegacyPorts()
     // A-side of the loopback
     MidiLoopbackEndpointDefinition definitionA(
         L"Test Loopback A", // name
-        uniqueId, // unique Id that identifies the loopback
-        L"The first description is optional, but is displayed to users. This becomes the transport-defined description." // description
-    );
+        L"The first description is optional, but is displayed to users. This becomes the transport-defined description.", // description
+        uniqueId // unique Id that identifies the loopback
+        );
 
     // B-side of the loopback
     MidiLoopbackEndpointDefinition definitionB(
         L"Test Loopback B",
-        uniqueId, // can be the same as the first one, but doesn't need to be.
-        L"The second description is optional, but is displayed to users. This becomes the transport-defined description."
-    );
-
-    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
+        L"The second description is optional, but is displayed to users. This becomes the transport-defined description.",
+        uniqueId // can be the same as the first one, but doesn't need to be.
+        );
 
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
 
-    MidiLoopbackCreationConfig creationConfig(associationId, definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
 
     LOG_OUTPUT(L"Creating loopbacks");
 
@@ -955,22 +1084,20 @@ void MidiLoopbackEndpointTests::TestUmpSendReceive()
     // A-side of the loopback
     MidiLoopbackEndpointDefinition definitionA(
         L"Test Loopback A", // name
-        uniqueId, // unique Id that identifies the loopback
-        L"The first description is optional, but is displayed to users. This becomes the transport-defined description." // description
-    );
+        L"The first description is optional, but is displayed to users. This becomes the transport-defined description.", // description
+        uniqueId // unique Id that identifies the loopback
+        );
 
     // B-side of the loopback
     MidiLoopbackEndpointDefinition definitionB(
         L"Test Loopback B",
-        uniqueId, // can be the same as the first one, but doesn't need to be.
-        L"The second description is optional, but is displayed to users. This becomes the transport-defined description."
-    );
-
-    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
+        L"The second description is optional, but is displayed to users. This becomes the transport-defined description.",
+        uniqueId // can be the same as the first one, but doesn't need to be.
+        );
 
     LOG_OUTPUT(L"Creating loopback endpoint creation config");
 
-    MidiLoopbackCreationConfig creationConfig(associationId, definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
 
     LOG_OUTPUT(L"Creating loopbacks");
 

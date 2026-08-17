@@ -72,11 +72,15 @@
 #include "strsafe.h"
 #include "wstring_util.h"
 
+#include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
+#include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
+
 // TransportUtilities
 #include "wstring_util.h"
 namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
+#include "midi_ump_message_defs.h"
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
 

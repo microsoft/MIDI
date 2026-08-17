@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,2
- PRODUCTVERSION 1,0,0,2
+ FILEVERSION 1,0,0,3
+ PRODUCTVERSION 1,0,0,3
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -75,8 +75,8 @@ BEGIN
             VALUE "InternalName", "Midi2.NetworkMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.NetworkMidiTransport.dll"
             VALUE "ProductName", "Windows MIDI Services"
-            VALUE "FileVersion", "1.0.0.2"
-            VALUE "ProductVersion", "1.0.0.2"
+            VALUE "FileVersion", "1.0.0.3"
+            VALUE "ProductVersion", "1.0.0.3"
             VALUE "OLESelfRegister", ""
         END
     END
@@ -95,9 +95,9 @@ STRINGTABLE
 BEGIN
     IDS_PROJNAME                    "Midi2.NetworkMidiTransport"
 
-    IDS_PLUGIN_METADATA_VERSION         "1.0.0.0"
-    IDS_PLUGIN_METADATA_NAME            "Network MIDI 2.0 (UDP) PROTOTYPE"
-    IDS_PLUGIN_METADATA_DESCRIPTION     "(Prototype) Provides host and client Network MIDI 2.0 (UDP) capabilities"
+    IDS_PLUGIN_METADATA_VERSION         "1.0.0.3"
+    IDS_PLUGIN_METADATA_NAME            "Network MIDI 2.0 (UDP)"
+    IDS_PLUGIN_METADATA_DESCRIPTION     "Provides host and client Network MIDI 2.0 (UDP) capabilities"
     IDS_PLUGIN_METADATA_AUTHOR          "Microsoft"
 
 
@@ -133,6 +133,7 @@ BEGIN
     IDS_ERROR_ENDPOINT_NAME_TOO_LONG                "The UMP endpoint name is longer than the 98 bytes the MIDI 2.0 specification allows."
     IDS_ERROR_PRODUCT_INSTANCE_ID_TOO_LONG          "The product instance id is longer than the 42 bytes the MIDI 2.0 specification allows."
     IDS_ERROR_CLIENT_NOT_FOUND                      "Client not found."
+    IDS_ERROR_INVALID_PRODUCT_INSTANCE_ID           "Product instance id contains characters which are not allowed in a device identifier."
 
     IDS_MESSAGE_CONNECTION_ENDED                    "Windows MIDI Services ended this connection."
     IDS_MESSAGE_USER_DISCONNECTED                   "Disconnected by the user."

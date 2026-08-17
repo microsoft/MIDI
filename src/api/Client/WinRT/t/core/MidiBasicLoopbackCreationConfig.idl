@@ -23,11 +23,10 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
     {
         MidiBasicLoopbackCreationConfig();
         MidiBasicLoopbackCreationConfig(
-            Guid associationId,
             MidiBasicLoopbackEndpointDefinition endpointDefinition
         );
 
-        [noexcept] Guid AssociationId;
+        [noexcept] Guid AssociationId { get;};
 
         [noexcept] MidiBasicLoopbackEndpointDefinition EndpointDefinition;
 

@@ -29,7 +29,7 @@ namespace Microsoft.Midi.Settings.ViewModels
     public partial class MidiNetworkPendingRemoteClientEntry : ObservableRecipient
     {
         [ObservableProperty]
-        public MidiNetworkPendingRemoteClient remoteClient;
+        private MidiNetworkPendingRemoteClient remoteClient;
 
         public ICommand ApproveOnceCommand { get; private set; }
         public ICommand ApproveAlwaysCommand { get; private set; }
@@ -90,7 +90,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         [ObservableProperty]
-        private string? configEntryId;
+        private Guid configEntryId;
 
         [ObservableProperty]
         private string? name;
@@ -137,7 +137,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             _loggingService = loggingService;
             _messageBoxService = messageBoxService;
 
-            ConfigEntryId = Guid.NewGuid().ToString("B");
+            ConfigEntryId = Guid.NewGuid();
 
             ConnectCommand = new RelayCommand(() =>
             {
@@ -154,7 +154,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     var config = new MidiNetworkClientConnectConfig();
                     config.Comment = AdvertisedHost.FullName;
-                    config.Id = ConfigEntryId;
+                    config.ClientId = ConfigEntryId;
                     config.MatchCriteria.DeviceId = AdvertisedHost.DeviceId;
                     config.MatchCriteria.DirectHostNameOrIPAddress = AdvertisedHost.IPAddresses[0];
                     config.MatchCriteria.DirectPort = AdvertisedHost.Port;
@@ -168,9 +168,9 @@ namespace Microsoft.Midi.Settings.ViewModels
                     }
                     else
                     {
-                        _messageBoxService.ShowError($"Unable to connect to remote host. {result.ErrorInformation}");
+                        _messageBoxService.ShowError($"Unable to connect to remote host. {result.ErrorMessage}");
 
-                        _loggingService.LogError("Unable to connect to remote host " + result.ErrorInformation);
+                        _loggingService.LogError("Unable to connect to remote host " + result.ErrorMessage);
                     }
                 }
                 catch (Exception ex)
@@ -187,7 +187,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 _loggingService.LogInfo($"Enter");
 
                 var config = new MidiNetworkClientDisconnectConfig();
-                config.Id = ConfigEntryId;
+                config.ClientId = ConfigEntryId;
 
                 var result = MidiNetworkTransportManager.DisconnectNetworkClientAsync(config).GetAwaiter().GetResult();
 
@@ -197,9 +197,9 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
                 else
                 {
-                    _messageBoxService.ShowError($"Unable to disconnect from remote host. {result.ErrorInformation}");
+                    _messageBoxService.ShowError($"Unable to disconnect from remote host. {result.ErrorMessage}");
 
-                    _loggingService.LogError("Unable to disconnect from remote host " + result.ErrorInformation);
+                    _loggingService.LogError("Unable to disconnect from remote host " + result.ErrorMessage);
                 }
             });
 
@@ -271,7 +271,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         [ObservableProperty]
-        private string newClientIdentifier;
+        private Guid newClientIdentifier;
 
         [ObservableProperty]
         private string newClientDeviceId;
@@ -471,7 +471,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             var config = new MidiNetworkHostCreationConfig();
 
-            config.Id = NewHostEndpointName + "_" + NewHostProductInstanceId;
+            config.HostId = Guid.NewGuid();
             config.Name = NewHostEndpointName;
             config.ServiceInstanceName = NewHostServiceInstanceName.ToLower();
             config.ProductInstanceId = NewHostProductInstanceId;
@@ -510,7 +510,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             NewClientDeviceId = string.Empty;
             NewClientHostNameOrIP = string.Empty;
-            NewClientIdentifier = Guid.NewGuid().ToString();
+            NewClientIdentifier = Guid.NewGuid();
             NewClientPortNumber = string.Empty;
             NewClientEnableMidi1Ports = true;
         }
@@ -521,7 +521,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             var config = new MidiNetworkClientConnectConfig();
 
-            config.Id = NewClientIdentifier;
+            config.ClientId = NewClientIdentifier;
             config.MatchCriteria.DeviceId = NewClientDeviceId;
             config.MatchCriteria.DirectHostNameOrIPAddress = NewClientHostNameOrIP;
             config.Comment = NewClientComment;

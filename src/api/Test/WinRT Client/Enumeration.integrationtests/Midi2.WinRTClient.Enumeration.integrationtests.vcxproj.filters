@@ -21,7 +21,7 @@
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointIdHelperTests.h">
+    <ClInclude Include="MidiEndpointHelperTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MidiLegacyPortDeviceInformationTests.h">

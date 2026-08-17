@@ -15,7 +15,7 @@
 #include "MidiServiceSessionInfo.h"
 #include "MidiServiceSessionConnectionInfo.h"
 
-#include "MidiEndpointDeviceIdHelper.h"
+#include "MidiEndpointDeviceHelper.h"
 #include "MidiLegacyPortDeviceInformation.h"
 
 namespace winrt::Windows::Devices::Midi2::Reporting::implementation
@@ -320,7 +320,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
         auto cleanedEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
         // check to see if this is a Windows MIDI Services UMP endpoint. This also checks for empty ids.
-        if (!midi2enum::MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(cleanedEndpointDeviceId))
+        if (!midi2enum::MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(cleanedEndpointDeviceId))
         {
             // return empty collection
             return winrt::single_threaded_vector<rpt::MidiServiceSessionInfo>().GetView();

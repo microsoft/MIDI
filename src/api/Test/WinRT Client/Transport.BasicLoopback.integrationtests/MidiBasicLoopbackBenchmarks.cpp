@@ -92,11 +92,11 @@ static MidiBasicLoopbackCreationResponse CreateBenchmarkLoopback(_In_ winrt::hst
 
     MidiBasicLoopbackEndpointDefinition definition(
         name,
-        uniqueId,
-        L"Loopback created by the Windows MIDI Services benchmarks."
+        L"Loopback created by the Windows MIDI Services benchmarks.",
+        uniqueId
     );
 
-    MidiBasicLoopbackCreationConfig creationConfig(foundation::GuidHelper::CreateNewGuid(), definition);
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
 
     auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
 

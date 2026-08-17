@@ -22,6 +22,7 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <winrt/Windows.Devices.Midi2.Reporting.h>
 #include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Virtual.h>
+#include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 
 using namespace winrt::Windows::Devices::Midi2;
 using namespace winrt::Windows::Devices::Midi2::ClientPlugins;
@@ -29,6 +30,7 @@ using namespace winrt::Windows::Devices::Midi2::Enumeration;
 using namespace winrt::Windows::Devices::Midi2::Reporting;
 using namespace winrt::Windows::Devices::Midi2::ServiceConfig;
 using namespace winrt::Windows::Devices::Midi2::Transports::Virtual;
+using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 
 #include <iostream>
 

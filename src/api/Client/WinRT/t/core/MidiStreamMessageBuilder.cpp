@@ -142,15 +142,15 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         // endpoint name is one or more UMPs, max 98 bytes. Either 1 complete message (form 0x0)
         // or start (form 0x1, continue messages 0x2, and end 0x3)
 
-        // don't process past the last allowed character
-        size_t totalCharacters = (text.size() > maxCharacters) ? maxCharacters : text.size();
+        // The specification states these limits as UTF-8 byte counts, and the packing below is
+        // byte-based, so the cap has to be measured in bytes. Using the UTF-16 length would both
+        // overrun the limit for non-ASCII text and split multi-byte characters across the cut.
+        auto utf8Version = internal::Utf8FromWString(
+            internal::TruncateToUtf8ByteCount(std::wstring{ text }, maxCharacters));
+
+        size_t totalCharacters = utf8Version.size();
         size_t remainingCharacters = totalCharacters;
 
-        // TODO: The Product Instance Id is ASCII, not UTF-8, so need to provide some encoding
-        // information to this function
-        // 
-        // convert to 8 bit UTF-8 characters, and get the pointer to the first character
-        auto utf8Version = winrt::to_string(text);
         char* utf8StringPointer = utf8Version.data();
 
         size_t umpCount = totalCharacters / maxCharactersPerPacket;

@@ -27,7 +27,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         void ClientId(_In_ winrt::guid const& value) noexcept { m_id = value; }
 
         winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
-        void UmpEndpointName(_In_ winrt::hstring const& value) noexcept { m_umpEndpointName = value; }
+        void UmpEndpointName(_In_ winrt::hstring const& value) noexcept { m_umpEndpointName = internal::TruncateToUtf8ByteCount(value.c_str(), MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT); }
 
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
         void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }

@@ -73,7 +73,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         try
         {
             // this helps ensure we aren't just using random ids, or MIDI UMP Endpoint device ids
-            if (!MidiEndpointDeviceIdHelper::IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(portDeviceId))
+            if (!MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(portDeviceId))
             {
                 return nullptr;
             }

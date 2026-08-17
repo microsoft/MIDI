@@ -138,17 +138,46 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
                     // get a guid and strip all non-alphanumeric characters
                     auto guidString = internal::GuidToString(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
 
-                    guidString.erase(
-                        std::remove_if(
-                            guidString.begin(),
-                            guidString.end(),
-                            [](wchar_t c) { return !std::isalnum(c); })
-                    );
+                    if (Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled())
+                    {
+                        guidString = internal::RemoveInvalidSWDUniqueIdCharacters(guidString);
+                    }
+                    else
+                    {
+                        guidString.erase(
+                            std::remove_if(
+                                guidString.begin(),
+                                guidString.end(),
+                                [](wchar_t c) { return !std::isalnum(c); })
+                        );
+                    }
 
                     deviceEntry.ShortUniqueId = internal::ToLowerTrimmedWStringCopy(guidString);
                 }
                 else
                 {
+                    // The SDK cleans these before sending, so this is protection against
+                    // hand-authored configuration json reaching the device creation code.
+                    if (Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled())
+                    {
+                        if (internal::RemoveInvalidSWDUniqueIdCharacters(deviceEntry.ShortUniqueId) != deviceEntry.ShortUniqueId)
+                        {
+                            TraceLoggingWrite(
+                                MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unique identifier contains invalid characters", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(deviceEntry.ShortUniqueId.c_str(), "identifier")
+                            );
+
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                            return E_INVALIDARG;
+                        }
+                    }
+
                     // If a unique id and it's larger than the max length, truncate it
                     deviceEntry.ShortUniqueId = deviceEntry.ShortUniqueId.substr(0, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN);
 

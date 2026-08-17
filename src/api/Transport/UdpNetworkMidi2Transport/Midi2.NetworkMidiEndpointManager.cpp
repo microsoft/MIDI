@@ -190,6 +190,48 @@ static bool TryGetDnssdTextAttribute(
     return false;
 }
 
+// mDNS is an unbounded source: a remote can advertise arbitrary text of arbitrary length. Values
+// which do not meet the specification are dropped rather than stored, so they can never reach a
+// comparison, a device property, or an SWD id.
+static bool TryGetAdvertisedProductInstanceId(
+    _In_ enumeration::DeviceInformation const& device,
+    _Out_ std::wstring& value)
+{
+    if (!TryGetDnssdTextAttribute(device, L"ProductInstanceId", value))
+    {
+        return false;
+    }
+
+    if (internal::ExceedsUtf8ByteCount(value, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT) ||
+        !internal::ContainsOnlyPrintableAscii(value))
+    {
+        value.clear();
+
+        return false;
+    }
+
+    return true;
+}
+
+static bool TryGetAdvertisedEndpointName(
+    _In_ enumeration::DeviceInformation const& device,
+    _Out_ std::wstring& value)
+{
+    if (!TryGetDnssdTextAttribute(device, L"UMPEndpointName", value))
+    {
+        return false;
+    }
+
+    if (internal::ExceedsUtf8ByteCount(value, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT))
+    {
+        value.clear();
+
+        return false;
+    }
+
+    return true;
+}
+
 // Matches a configured client entry against a discovered host. The mDNS device id is opaque and
 // changes between machines, so the advertised Product Instance Id and UMP Endpoint Name are
 // accepted too. All comparisons are case-insensitive.
@@ -218,7 +260,7 @@ static bool TryFindAdvertisedHost(
 
         std::wstring value{ };
 
-        if (TryGetDnssdTextAttribute(entry.second, L"ProductInstanceId", value) &&
+        if (TryGetAdvertisedProductInstanceId(entry.second, value) &&
             internal::ToLowerTrimmedWStringCopy(value) == wanted)
         {
             found = entry.second;
@@ -226,7 +268,7 @@ static bool TryFindAdvertisedHost(
             return true;
         }
 
-        if (TryGetDnssdTextAttribute(entry.second, L"UMPEndpointName", value) &&
+        if (TryGetAdvertisedEndpointName(entry.second, value) &&
             internal::ToLowerTrimmedWStringCopy(value) == wanted)
         {
             found = entry.second;
@@ -258,8 +300,8 @@ CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatche
     std::wstring advertisedEndpointName{ };
     std::wstring advertisedProductInstanceId{ };
 
-    TryGetDnssdTextAttribute(args, L"UMPEndpointName", advertisedEndpointName);
-    TryGetDnssdTextAttribute(args, L"ProductInstanceId", advertisedProductInstanceId);
+    TryGetAdvertisedEndpointName(args, advertisedEndpointName);
+    TryGetAdvertisedProductInstanceId(args, advertisedProductInstanceId);
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1676,6 +1718,11 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
         break;
     }
 
+    // The id is kept intact everywhere it is shown or matched, because it is meaningful on the
+    // remote device. Only the SWD copy is stripped, since device identifiers allow far fewer
+    // characters than the specification permits here.
+    auto swdUniqueIdentifier = internal::RemoveInvalidSWDUniqueIdCharacters(remoteEndpointProductInstanceId);
+
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.TransportId = TRANSPORT_LAYER_GUID;
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType::MidiEndpointDeviceType_Normal;
@@ -1685,7 +1732,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     commonProperties.EndpointDescription = endpointDescription.c_str();
     commonProperties.CustomEndpointName = nullptr;
     commonProperties.CustomEndpointDescription = nullptr;
-    commonProperties.UniqueIdentifier = remoteEndpointProductInstanceId.c_str();
+    commonProperties.UniqueIdentifier = swdUniqueIdentifier.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
     commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
 

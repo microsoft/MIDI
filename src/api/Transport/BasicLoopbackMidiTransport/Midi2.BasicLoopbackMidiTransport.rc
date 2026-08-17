@@ -110,6 +110,8 @@ BEGIN
     IDS_ERROR_ENDPOINT_NOT_FOUND        "Endpoint not found."
     IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."
     IDS_ERROR_ENDPOINT_REMOVAL_FAILED   "Endpoint removal failed for an unknown reason."
+    IDS_ERROR_UNIQUE_ID_TOO_LONG        "Unique identifier is longer than the maximum allowed number of characters."
+    IDS_ERROR_INVALID_UNIQUE_ID         "Unique identifier contains characters which are not allowed in a device identifier."
     //IDS_ERROR_MISSING_ENTRY_IDENTIFIER   "Missing or blank entry identifier."
 
 
