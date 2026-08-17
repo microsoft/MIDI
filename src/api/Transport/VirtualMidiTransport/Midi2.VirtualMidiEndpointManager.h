@@ -35,6 +35,12 @@ public:
 
     HRESULT NegotiateAndRequestMetadata(_In_ std::wstring endpointInterfaceId);
 
+    // Best-effort: the device-side endpoint can already be gone when the last client leaves, so
+    // a failure here is logged rather than propagated.
+    HRESULT UpdateClientEndpointInUseProperty(
+        _In_ std::wstring const& deviceEndpointInterfaceId,
+        _In_ bool const inUse);
+
     HRESULT DeleteClientEndpoint(_In_ std::wstring clientShortInstanceId);
 
     HRESULT DeleteDeviceEndpoint(_In_ std::wstring deviceShortInstanceId);

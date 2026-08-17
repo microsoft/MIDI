@@ -16,6 +16,7 @@ This is the class that a virtual device application uses as its interface to the
 | `DeviceEndpointDeviceId` | The EndpointDeviceId to be used by the app creating the virtual device |
 | `AssociationId` | The id used to associate the client and device endpoints |
 | `FunctionBlocks` | Current list of function blocks for this device. |
+| `IsClientEndpointInUse` | True when one or more applications are connected to this device's client-visible endpoint. Readable at any time, including before any client has ever connected. |
 | `SuppressHandledMessages` | True if the protocol messages handled by this class should be filtered out of the incoming message stream |
 
 ## Functions
@@ -30,6 +31,15 @@ This is the class that a virtual device application uses as its interface to the
 | Event | Description |
 | --------------- | ----------- |
 | `StreamConfigRequestReceived (device, args)` | Raised when this device receives a Stream Configuration Request UMP message. The virtual device application should respond per the UMP MIDI 2.0 protocol negotiation specification. |
+| `ClientEndpointInUseChanged (device, args)` | Raised when an application connects to, or disconnects from, this device's client-visible endpoint. See `MidiVirtualDeviceClientEndpointInUseChangedEventArgs`. |
+
+## Remarks
+
+`IsClientEndpointInUse` and `ClientEndpointInUseChanged` report whether *any* application is connected, not how many. The service maintains a single connection to the transport for each endpoint regardless of how many applications are attached, so only the transitions from none-connected to some-connected, and back, are observable. Ten applications connecting raise one event, not ten.
+
+The event is raised through device property change notification, so expect a short delay rather than immediate delivery. Because the property is readable at any time, an application which starts late or misses an event can simply read `IsClientEndpointInUse` instead of waiting for the next change.
+
+When the virtual device is torn down, `IsClientEndpointInUse` returns to false and no further events are raised. Applications running against an older service which does not report this information will see `IsClientEndpointInUse` remain false and the event never raise, rather than receiving incorrect values.
 
 ## Examples
 

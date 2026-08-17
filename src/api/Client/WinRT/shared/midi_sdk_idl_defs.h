@@ -317,6 +317,8 @@
 
 #define UUID_IMidiVirtualDeviceManagerStatics				    8087b303-0519-c0de-31d1-ee00F0404000
 
+#define UUID_IMidiVirtualDeviceClientEndpointInUseChangedEventArgs   8087b303-0519-c0de-31d1-dd00F0405000
+
 
 
 

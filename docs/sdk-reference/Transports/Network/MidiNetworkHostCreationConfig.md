@@ -15,11 +15,18 @@ Describes a host for remote clients to connect to. Pass to `MidiNetworkTransport
 | -------- | ----------- |
 | `MidiNetworkHostCreationConfig()` | Create an empty config |
 
+## Static Functions
+
+| Function | Description |
+| -------- | ----------- |
+| `CreateDefault()` | Create a configuration pre-populated with sensible defaults, including a name derived from the computer name. |
+| `EnsureCompliantServiceInstanceName(serviceInstanceName)` | Returns a version of the supplied service instance name which is valid for use as an mDNS service instance name. |
+
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `HostId` | The GUID which identifies this host entry, used for later updates, removal, and to match the entry in the configuration file. Set this yourself; it is how you find the host again. |
+| `HostId` | Read-only. The GUID which identifies this host entry, generated when the configuration is created. Use it for later updates, removal, and to match the entry in the configuration file. |
 | `Name` | The UMP Endpoint Name for this host, as remote devices will see it. Capped at 98 bytes by the MIDI 2.0 specification. |
 | `ServiceInstanceName` | The mDNS service instance name. Must be unique on the network, and is also used to name the parent device. Creation fails with `ServiceInstanceNameInUse` if another host already has it. |
 | `ProductInstanceId` | The Product Instance Id advertised for this host. Capped at 42 bytes by the specification. |

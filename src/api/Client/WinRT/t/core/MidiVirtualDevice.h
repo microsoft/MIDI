@@ -47,6 +47,18 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
             if (m_streamConfigurationRequestReceivedEvent) m_streamConfigurationRequestReceivedEvent.remove(token);
         }
 
+        winrt::event_token ClientEndpointInUseChanged(_In_ foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiVirtualDeviceClientEndpointInUseChangedEventArgs> const& handler)
+        {
+            return m_clientEndpointInUseChangedEvent.add(handler);
+        }
+
+        void ClientEndpointInUseChanged(_In_ winrt::event_token const& token) noexcept
+        {
+            if (m_clientEndpointInUseChangedEvent) m_clientEndpointInUseChangedEvent.remove(token);
+        }
+
+        bool IsClientEndpointInUse() const noexcept { return m_isClientEndpointInUse; }
+
 
         bool SuppressHandledMessages() { return m_suppressHandledMessages; }
         void SuppressHandledMessages(_In_ bool const value) { m_suppressHandledMessages = value; }
@@ -94,6 +106,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         bool SendFunctionBlockNameNotificationMessages(_In_ midi2enum::MidiFunctionBlock const& fb) noexcept;
         bool SendEndpointNameNotificationMessages(_In_ winrt::hstring const& name) noexcept;
 
+        void StartClientEndpointInUseWatcher() noexcept;
+        void StopClientEndpointInUseWatcher() noexcept;
+        void HandleClientEndpointInUseProperty(_In_ enumeration::DeviceInformationUpdate const& update) noexcept;
+
         //void MidiVirtualEndpointDevice::QueueWorker();
 
         //void EnqueueOutgoingMessage(_In_ internal::PackedUmp128 const& message);
@@ -127,6 +143,18 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         collections::IMap<uint8_t, midi2enum::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2enum::MidiFunctionBlock>() };
 
         winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
+        winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiVirtualDeviceClientEndpointInUseChangedEventArgs>> m_clientEndpointInUseChangedEvent;
+
+        // Watches only the device-side endpoint, and only the one property. The device-side
+        // endpoint can be removed while this is running, so every handler has to tolerate the
+        // object already being on its way out.
+        enumeration::DeviceWatcher m_clientEndpointInUseWatcher{ nullptr };
+        winrt::event_token m_watcherAddedToken{};
+        winrt::event_token m_watcherUpdatedToken{};
+        winrt::event_token m_watcherRemovedToken{};
+
+        std::atomic<bool> m_isClientEndpointInUse{ false };
+        std::atomic<bool> m_watcherShuttingDown{ false };
     };
 }
 

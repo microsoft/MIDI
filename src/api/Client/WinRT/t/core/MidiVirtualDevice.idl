@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiStreamConfigRequestReceivedEventArgs.idl";
+import "MidiVirtualDeviceClientEndpointInUseChangedEventArgs.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiFunctionBlock.idl";
 
@@ -30,8 +31,13 @@ namespace Windows.Devices.Midi2.Transports.Virtual
         [noexcept] Boolean UpdateFunctionBlock(Windows.Devices.Midi2.Enumeration.MidiFunctionBlock block);
         [noexcept] Boolean UpdateEndpointName(String name);
 
+        // True when one or more applications are connected to the client-visible endpoint. Read
+        // it at any time, or subscribe below to be told when it changes.
+        [noexcept] Boolean IsClientEndpointInUse{ get; };
+
         [noexcept] Boolean SuppressHandledMessages;
 
         event Windows.Foundation.TypedEventHandler<MidiVirtualDevice, MidiStreamConfigRequestReceivedEventArgs> StreamConfigRequestReceived;
+        event Windows.Foundation.TypedEventHandler<MidiVirtualDevice, MidiVirtualDeviceClientEndpointInUseChangedEventArgs> ClientEndpointInUseChanged;
     }
 }

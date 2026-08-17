@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "json_transport_command_helper.h"
 
 
 _Use_decl_annotations_
@@ -89,6 +90,19 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
             RETURN_IF_FAILED(E_INVALIDARG);
+        }
+
+        // command. If there's a command in the payload, we ignore anything else
+        if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+        {
+            if (internal::MidiTransportCommandHelper::TransportObjectContainsCommand(jsonObject))
+            {
+                auto hr = ProcessCommand(jsonObject, responseObject);
+
+                internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                return hr;
+            }
         }
 
         auto createArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
@@ -235,6 +249,45 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
     // return the json with the information the client will need
     internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiConfigurationManager::ProcessCommand(
+    json::JsonObject const& transportObject,
+    json::JsonObject& responseObject)
+{
+    auto commandHelper = internal::MidiTransportCommandHelper::ParseCommand(transportObject);
+
+    if (commandHelper.Command().empty())
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Missing command.");
+
+        // S_OK because the response object is valid and should be read
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES)
+    {
+        std::map<std::wstring, bool> capabilities{};
+
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CLIENT_ENDPOINT_IN_USE_NOTIFICATION, true);
+
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+        internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
+    }
+    else
+    {
+        internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+    }
 
     return S_OK;
 }
