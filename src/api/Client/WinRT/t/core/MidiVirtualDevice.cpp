@@ -14,6 +14,7 @@
 
 #include "MidiStreamMessageBuilder.h"
 #include "MidiStreamConfigRequestReceivedEventArgs.h"
+#include "MidiVirtualDeviceClientEndpointInUseChangedEventArgs.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
 {
@@ -221,12 +222,159 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
 
     void MidiVirtualDevice::OnEndpointConnectionOpened() noexcept
     {
-        // nothing to do here
+        // The client-visible endpoint only exists once this connection is open, so this is the
+        // earliest point the transport can report anything about it.
+        StartClientEndpointInUseWatcher();
     }
 
     void MidiVirtualDevice::Cleanup() noexcept
     {
+        StopClientEndpointInUseWatcher();
+
         m_streamConfigurationRequestReceivedEvent.clear();
+        m_clientEndpointInUseChangedEvent.clear();
+    }
+
+
+    void MidiVirtualDevice::StartClientEndpointInUseWatcher() noexcept
+    {
+        try
+        {
+            if (m_deviceEndpointDeviceId.empty()) return;
+
+            // A transport which does not report this leaves the watcher unstarted rather than
+            // raising events which would always read false.
+            if (!svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                    virt::MidiVirtualDeviceManager::TransportId(),
+                    MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CLIENT_ENDPOINT_IN_USE_NOTIFICATION))
+            {
+                return;
+            }
+
+            auto properties = winrt::single_threaded_vector<winrt::hstring>();
+            properties.Append(STRING_PKEY_MIDI_VirtualMidiClientEndpointInUse);
+
+            // scoped to this one endpoint, so no other endpoint's churn reaches us
+            auto selector = L"System.Devices.DeviceInstanceId:=\"" + m_deviceEndpointDeviceId + L"\"";
+
+            m_clientEndpointInUseWatcher = enumeration::DeviceInformation::CreateWatcher(
+                winrt::hstring{ L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True" },
+                properties,
+                enumeration::DeviceInformationKind::DeviceInterface);
+
+            if (m_clientEndpointInUseWatcher == nullptr) return;
+
+            // A watcher does not deliver Updated unless Added and Removed are also subscribed.
+            m_watcherAddedToken = m_clientEndpointInUseWatcher.Added(
+                [this](enumeration::DeviceWatcher const&, enumeration::DeviceInformation const& info)
+                {
+                    if (m_watcherShuttingDown) return;
+
+                    if (_wcsicmp(info.Id().c_str(), m_deviceEndpointDeviceId.c_str()) != 0) return;
+
+                    if (auto value = info.Properties().TryLookup(STRING_PKEY_MIDI_VirtualMidiClientEndpointInUse))
+                    {
+                        m_isClientEndpointInUse = winrt::unbox_value_or<bool>(value, false);
+                    }
+                });
+
+            m_watcherUpdatedToken = m_clientEndpointInUseWatcher.Updated(
+                [this](enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& update)
+                {
+                    HandleClientEndpointInUseProperty(update);
+                });
+
+            m_watcherRemovedToken = m_clientEndpointInUseWatcher.Removed(
+                [this](enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& update)
+                {
+                    if (m_watcherShuttingDown) return;
+                    if (update == nullptr) return;
+                    if (_wcsicmp(update.Id().c_str(), m_deviceEndpointDeviceId.c_str()) != 0) return;
+
+                    // No further update can arrive once the endpoint is gone, so clear the cached
+                    // value rather than leave it reading true forever. Deliberately silent: the
+                    // device is being torn down and raising into a disposing object helps nobody.
+                    m_isClientEndpointInUse = false;
+                });
+
+            m_clientEndpointInUseWatcher.Start();
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error starting client endpoint in-use watcher.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception starting client endpoint in-use watcher.");
+        }
+    }
+
+
+    void MidiVirtualDevice::StopClientEndpointInUseWatcher() noexcept
+    {
+        // Set before revoking, so a handler already running sees it and does nothing further.
+        m_watcherShuttingDown = true;
+
+        try
+        {
+            if (m_clientEndpointInUseWatcher == nullptr) return;
+
+            if (m_watcherAddedToken) m_clientEndpointInUseWatcher.Added(m_watcherAddedToken);
+            if (m_watcherUpdatedToken) m_clientEndpointInUseWatcher.Updated(m_watcherUpdatedToken);
+            if (m_watcherRemovedToken) m_clientEndpointInUseWatcher.Removed(m_watcherRemovedToken);
+
+            auto status = m_clientEndpointInUseWatcher.Status();
+
+            if (status == enumeration::DeviceWatcherStatus::Started ||
+                status == enumeration::DeviceWatcherStatus::EnumerationCompleted)
+            {
+                m_clientEndpointInUseWatcher.Stop();
+            }
+        }
+        catch (...)
+        {
+            // the endpoint may already be gone, which is a normal way for this to end
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"Exception stopping client endpoint in-use watcher.");
+        }
+
+        m_clientEndpointInUseWatcher = nullptr;
+        m_isClientEndpointInUse = false;
+    }
+
+
+    _Use_decl_annotations_
+    void MidiVirtualDevice::HandleClientEndpointInUseProperty(enumeration::DeviceInformationUpdate const& update) noexcept
+    {
+        try
+        {
+            if (m_watcherShuttingDown) return;
+            if (update == nullptr) return;
+
+            if (_wcsicmp(update.Id().c_str(), m_deviceEndpointDeviceId.c_str()) != 0) return;
+
+            auto value = update.Properties().TryLookup(STRING_PKEY_MIDI_VirtualMidiClientEndpointInUse);
+
+            if (value == nullptr) return;
+
+            auto inUse = winrt::unbox_value_or<bool>(value, false);
+
+            // Only report real transitions. A property write which does not change the value
+            // still produces an update.
+            if (m_isClientEndpointInUse.exchange(inUse) == inUse) return;
+
+            auto args = winrt::make_self<implementation::MidiVirtualDeviceClientEndpointInUseChangedEventArgs>();
+            args->InternalInitialize(inUse);
+
+            m_clientEndpointInUseChangedEvent(*this, *args);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(this, ex, L"hresult error handling client endpoint in-use update.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(this, L"General exception handling client endpoint in-use update.");
+        }
     }
 
     _Use_decl_annotations_

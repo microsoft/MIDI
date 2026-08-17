@@ -509,6 +509,9 @@
     <ClInclude Include="MidiVirtualDevice.h">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualDeviceClientEndpointInUseChangedEventArgs.h">
+      <DependentUpon>MidiVirtualDeviceClientEndpointInUseChangedEventArgs.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiVirtualDeviceCreationConfig.h">
       <DependentUpon>MidiVirtualDeviceCreationConfig.idl</DependentUpon>
     </ClInclude>
@@ -1018,6 +1021,7 @@
     <Midl Include="MidiLoopbackEntry.idl" />
     <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl" />
     <Midl Include="MidiVirtualDevice.idl" />
+    <Midl Include="MidiVirtualDeviceClientEndpointInUseChangedEventArgs.idl" />
     <Midl Include="MidiVirtualDeviceCreationConfig.idl" />
     <Midl Include="MidiVirtualDeviceManager.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />

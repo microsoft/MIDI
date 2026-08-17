@@ -220,6 +220,47 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::UpdateClientEndpointInUseProperty(
+    std::wstring const& deviceEndpointInterfaceId,
+    bool const inUse)
+{
+    TraceLoggingWrite(
+        MidiVirtualMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(inUse, "in use")
+    );
+
+    // The device side can tear down before the last client does, taking the endpoint with it, so
+    // every one of these is a normal condition rather than an error.
+    if (m_MidiDeviceManager == nullptr || deviceEndpointInterfaceId.empty())
+    {
+        return S_FALSE;
+    }
+
+    DEVPROP_BOOLEAN devPropInUse = inUse ? DEVPROP_TRUE : DEVPROP_FALSE;
+
+    std::vector<DEVPROPERTY> interfaceDevProperties{};
+
+    interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiClientEndpointInUse, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropInUse });
+
+    LOG_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
+        deviceEndpointInterfaceId.c_str(),
+        static_cast<ULONG>(interfaceDevProperties.size()),
+        interfaceDevProperties.data()
+    ));
+
+    return S_OK;
+}
+
+
 _Use_decl_annotations_
 HRESULT 
 CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
@@ -380,6 +421,15 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     interfaceDeviceProperties.push_back(DEVPROPERTY{ { PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.length() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
+
+    // Present from creation so a watcher never has to cope with the property being absent
+    DEVPROP_BOOLEAN devPropNotInUse = DEVPROP_FALSE;
+
+    if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+    {
+        interfaceDeviceProperties.push_back(DEVPROPERTY{ { PKEY_MIDI_VirtualMidiClientEndpointInUse, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropNotInUse });
+    }
 
 
     SW_DEVICE_CREATE_INFO createInfo = {};

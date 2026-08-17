@@ -74,6 +74,7 @@
 
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
 #include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
 
 // TransportUtilities
 #include "wstring_util.h"
@@ -110,3 +111,4 @@ class TransportState;
 #include "Midi2.VirtualMidiConfigurationManager.h"
 #include "TransportState.h"
 #include "Midi2.VirtualMidiPluginMetadataProvider.h"
+

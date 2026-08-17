@@ -1235,3 +1235,123 @@ void MidiVirtualDeviceTests::TestDeviceTeardownWithoutClientDisconnectDoesNotHan
 
     VERIFY_IS_TRUE(MidiEndpointDeviceInformation::FindAll().Size() >= 0);
 }
+
+
+
+
+// ============================================================================
+// Client endpoint in-use notification
+//
+// The transport reports only the 0 -> 1 and 1 -> 0 transitions, because midisrv keeps one
+// transport connection per endpoint regardless of how many apps are attached.
+// ============================================================================
+
+
+void MidiVirtualDeviceTests::TestClientEndpointInUseIsFalseBeforeAnyClientConnects()
+{
+    TestVirtualDevice device{};
+    auto cleanup = wil::scope_exit([&] { CleanupTestVirtualDevice(device); });
+
+    VERIFY_IS_TRUE(CreateTestVirtualDevice(L"Contoso In Use Initial", device));
+
+    // no client has ever connected, and the value has to be readable without waiting for an edge
+    VERIFY_IS_FALSE(device.Device.IsClientEndpointInUse());
+}
+
+
+void MidiVirtualDeviceTests::TestClientEndpointInUseRaisedOnConnectAndDisconnect()
+{
+    TestVirtualDevice device{};
+    auto cleanup = wil::scope_exit([&] { CleanupTestVirtualDevice(device); });
+
+    VERIFY_IS_TRUE(CreateTestVirtualDevice(L"Contoso In Use Events", device));
+
+    wil::unique_event_nothrow inUseRaised;
+    inUseRaised.create();
+
+    wil::unique_event_nothrow notInUseRaised;
+    notInUseRaised.create();
+
+    std::atomic<uint32_t> eventCount{ 0 };
+
+    auto token = device.Device.ClientEndpointInUseChanged(
+        [&](MidiVirtualDevice const&, MidiVirtualDeviceClientEndpointInUseChangedEventArgs const& args)
+        {
+            eventCount++;
+
+            if (args.IsClientEndpointInUse())
+            {
+                inUseRaised.SetEvent();
+            }
+            else
+            {
+                notInUseRaised.SetEvent();
+            }
+        });
+
+    auto revoke = wil::scope_exit([&] { device.Device.ClientEndpointInUseChanged(token); });
+
+    auto client = device.Session.CreateEndpointConnection(device.ClientEndpointDeviceId);
+    VERIFY_IS_NOT_NULL(client);
+    VERIFY_IS_TRUE(client.Open());
+
+    // property updates travel through PnP, so this is not instant
+    VERIFY_IS_TRUE(inUseRaised.wait(15000));
+    VERIFY_IS_TRUE(device.Device.IsClientEndpointInUse());
+
+    device.Session.DisconnectEndpointConnection(client.ConnectionId());
+
+    VERIFY_IS_TRUE(notInUseRaised.wait(15000));
+    VERIFY_IS_FALSE(device.Device.IsClientEndpointInUse());
+
+    LOG_OUTPUT(L"Raised %u in-use change events", eventCount.load());
+}
+
+
+void MidiVirtualDeviceTests::TestClientEndpointInUseSurvivesDeviceTeardownFirst()
+{
+    TestVirtualDevice device{};
+    auto cleanup = wil::scope_exit([&] { CleanupTestVirtualDevice(device); });
+
+    VERIFY_IS_TRUE(CreateTestVirtualDevice(L"Contoso In Use Teardown", device));
+
+    auto deviceEndpointDeviceId = device.DeviceEndpointDeviceId;
+    auto clientEndpointDeviceId = device.ClientEndpointDeviceId;
+
+    auto token = device.Device.ClientEndpointInUseChanged(
+        [&](MidiVirtualDevice const&, MidiVirtualDeviceClientEndpointInUseChangedEventArgs const&) { });
+
+    auto revoke = wil::scope_exit([&] { device.Device.ClientEndpointInUseChanged(token); });
+
+    // a client which is still attached when the device side goes away
+    auto orphanSession = MidiSession::Create(L"Virtual device in-use orphan");
+    VERIFY_IS_NOT_NULL(orphanSession);
+
+    auto orphan = orphanSession.CreateEndpointConnection(clientEndpointDeviceId);
+    VERIFY_IS_NOT_NULL(orphan);
+    VERIFY_IS_TRUE(orphan.Open());
+
+    Sleep(2000);
+
+    // device side tears down first, taking the endpoint the watcher is watching with it
+    device.DeviceConnection.RemoveMessageProcessingPlugin(device.Device.PluginId());
+    device.Session.DisconnectEndpointConnection(device.DeviceConnection.ConnectionId());
+    device.DeviceConnection = nullptr;
+
+    Sleep(3000);
+
+    VERIFY_IS_FALSE(EndpointExists(deviceEndpointDeviceId));
+    VERIFY_IS_FALSE(EndpointExists(clientEndpointDeviceId));
+
+    // the orphaned client leaving now drives a property update for an endpoint which no longer
+    // exists, which must not fault
+    orphanSession.DisconnectEndpointConnection(orphan.ConnectionId());
+    orphanSession.Close();
+
+    Sleep(1000);
+
+    // reading the property on the torn down device must still be safe
+    VERIFY_IS_FALSE(device.Device.IsClientEndpointInUse());
+
+    VERIFY_IS_TRUE(MidiEndpointDeviceInformation::FindAll().Size() >= 0);
+}

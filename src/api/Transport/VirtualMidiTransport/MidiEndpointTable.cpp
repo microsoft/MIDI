@@ -97,41 +97,59 @@ MidiEndpointTable::OnClientConnected(
 
         auto associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
+        // captured under the lock, used after releasing it
+        std::wstring deviceEndpointInterfaceId{ };
+
         if (!associationId.empty())
         {
-            auto lock = m_entriesLock.lock();
-
-            if (m_endpoints.find(associationId) != m_endpoints.end())
             {
-                // find this id in the table
-                auto entry = m_endpoints[associationId];
+                auto lock = m_entriesLock.lock();
 
-                RETURN_HR_IF_NULL(E_UNEXPECTED, entry.MidiDeviceBidi);
+                if (m_endpoints.find(associationId) != m_endpoints.end())
+                {
+                    // find this id in the table
+                    auto entry = m_endpoints[associationId];
 
-                // add the client
-                //entry.MidiClientConnections.push_back(clientBidi);
-                entry.MidiClientBidi = clientBidi;
-                RETURN_IF_FAILED(entry.MidiDeviceBidi->LinkAssociatedCallback(entry.MidiClientBidi));
-                RETURN_IF_FAILED(entry.MidiClientBidi->LinkAssociatedCallback(entry.MidiDeviceBidi));
+                    RETURN_HR_IF_NULL(E_UNEXPECTED, entry.MidiDeviceBidi);
 
-                m_endpoints[associationId] = entry;
+                    // add the client
+                    //entry.MidiClientConnections.push_back(clientBidi);
+                    entry.MidiClientBidi = clientBidi;
+                    RETURN_IF_FAILED(entry.MidiDeviceBidi->LinkAssociatedCallback(entry.MidiClientBidi));
+                    RETURN_IF_FAILED(entry.MidiClientBidi->LinkAssociatedCallback(entry.MidiDeviceBidi));
+
+                    m_endpoints[associationId] = entry;
+
+                    deviceEndpointInterfaceId = entry.CreatedDeviceEndpointId;
+                }
+                else
+                {
+                    // couldn't find the entry
+
+                    LOG_IF_FAILED(E_NOTFOUND);  // cause fallback error to be logged
+
+                    TraceLoggingWrite(
+                        MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Unable to find device table entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+                }
             }
-            else
+
+            // Deliberately outside the table lock. This reaches PnP through the device manager,
+            // and holding a lock across that is what wedges a removal callback.
+            if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
             {
-                // couldn't find the entry
+                auto endpointManager = TransportState::Current().GetEndpointManager();
 
-                LOG_IF_FAILED(E_NOTFOUND);  // cause fallback error to be logged
-
-                TraceLoggingWrite(
-                    MidiVirtualMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Unable to find device table entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-                );
-
+                if (endpointManager != nullptr && !deviceEndpointInterfaceId.empty())
+                {
+                    LOG_IF_FAILED(endpointManager->UpdateClientEndpointInUseProperty(deviceEndpointInterfaceId, true));
+                }
             }
         }
     }
@@ -248,45 +266,65 @@ MidiEndpointTable::OnClientDisconnectedKeepDeviceLink(
     {
         std::wstring associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
+        // captured under the lock, used after releasing it
+        std::wstring deviceEndpointInterfaceId{ };
+
         if (!associationId.empty())
         {
-            auto lock = m_entriesLock.lock();
-
-            if (m_endpoints.find(associationId) != m_endpoints.end())
             {
-                auto entry = m_endpoints[associationId];
+                auto lock = m_entriesLock.lock();
 
-                // unlink both directions, but only the client is actually going away
-                if (entry.MidiDeviceBidi != nullptr)
+                if (m_endpoints.find(associationId) != m_endpoints.end())
                 {
-                    LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
-                }
+                    auto entry = m_endpoints[associationId];
 
-                if (entry.MidiClientBidi != nullptr)
+                    // unlink both directions, but only the client is actually going away
+                    if (entry.MidiDeviceBidi != nullptr)
+                    {
+                        LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
+                    }
+
+                    if (entry.MidiClientBidi != nullptr)
+                    {
+                        LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
+                        entry.MidiClientBidi.reset();
+                    }
+
+                    m_endpoints[associationId] = entry;
+
+                    deviceEndpointInterfaceId = entry.CreatedDeviceEndpointId;
+                }
+                else
                 {
-                    LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
-                    entry.MidiClientBidi.reset();
+                    // The device side tears the whole entry down, so by the time a lingering
+                    // client disconnects there may be nothing left to update. Not an error.
+                    TraceLoggingWrite(
+                        MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Table entry already gone, device side tore down first", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+
+                    return S_OK;
                 }
-
-                m_endpoints[associationId] = entry;
-
-                return S_OK;
             }
-            else
+
+            // Deliberately outside the table lock, and best-effort: the endpoint may already be
+            // deleted if the device side went first.
+            if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
             {
-                // association id isn't present. That's not right.
-                TraceLoggingWrite(
-                    MidiVirtualMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-                );
+                auto endpointManager = TransportState::Current().GetEndpointManager();
 
-                RETURN_IF_FAILED(E_INVALIDARG);
+                if (endpointManager != nullptr && !deviceEndpointInterfaceId.empty())
+                {
+                    LOG_IF_FAILED(endpointManager->UpdateClientEndpointInUseProperty(deviceEndpointInterfaceId, false));
+                }
             }
+
+            return S_OK;
         }
         else
         {

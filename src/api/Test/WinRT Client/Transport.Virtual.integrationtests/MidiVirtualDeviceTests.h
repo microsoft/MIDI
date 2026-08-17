@@ -56,6 +56,11 @@ public:
     TEST_METHOD(TestDeviceTeardownWhileClientSendingDoesNotHang);
     TEST_METHOD(TestDeviceTeardownWithoutClientDisconnectDoesNotHang);
 
+    // client endpoint in-use notification
+    TEST_METHOD(TestClientEndpointInUseIsFalseBeforeAnyClientConnects);
+    TEST_METHOD(TestClientEndpointInUseRaisedOnConnectAndDisconnect);
+    TEST_METHOD(TestClientEndpointInUseSurvivesDeviceTeardownFirst);
+
     // general virtual device behaviour
     TEST_METHOD(TestEmptyNameGetsDefaultName);
     TEST_METHOD(TestMultipleVirtualDevicesHaveDistinctIdentities);

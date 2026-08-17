@@ -670,6 +670,13 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportEndpointConfigId, 900);     // DEVPROP_
 #define STRING_PKEY_MIDI_VirtualMidiEndpointAssociator MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"905"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 905);     // DEVPROP_TYPE_STRING
 
+// True while one or more applications are connected to the associated client-visible endpoint.
+// Set on the device-side endpoint only, which is hidden from normal enumeration: putting it on
+// the client endpoint would send a PnP change notification to every app watching public
+// endpoints each time any app connected.
+#define STRING_PKEY_MIDI_VirtualMidiClientEndpointInUse MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"906"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiClientEndpointInUse, 906);     // DEVPROP_TYPE_BOOLEAN
+
 #define STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"920"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiLastRemoteHostName, 920);     // DEVPROP_TYPE_STRING
 
