@@ -70,6 +70,7 @@ public:
 
 
     std::vector<GUID> GetEnabledTransports() const noexcept;
+    std::vector<GUID> GetEnabledTransportsSkippingUnreadableKeys() const noexcept;
     std::vector<GUID> GetEnabledEndpointProcessingTransforms() const noexcept;
 
     std::vector<TRANSPORTMETADATA> GetAllEnabledTransportMetadata() const noexcept;

@@ -21,6 +21,7 @@
 #include "Feature_Servicing_MIDI2LegacyControl.h"
 #include "Feature_Servicing_MIDI2SynchronizedStart.h"
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
+#include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -118,62 +119,28 @@ CMidiDeviceManager::Initialize(
         }
     }
 
-    // Get the enabled transport layers from the registry
-    for (auto const& TransportLayer : m_configurationManager->GetEnabledTransports())
+    if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
     {
-        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
-        wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
-        wil::com_ptr_nothrow<IMidiTransportConfigurationManager> transportConfigurationManager;
-
-        if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
+        // Get the enabled transport layers from the registry
+        for (auto const& TransportLayer : m_configurationManager->GetEnabledTransportsSkippingUnreadableKeys())
         {
-            // If hybrid legacy midi was requested, we do not use the KSAggreagate transport
-            // because that will conflict with the legacy KS driver publishing done by endpoint builder.
-            // Other transports are permitted, as they will not conflict with legacy KS definitions.
-            if (legacyMidi == MIDI_USE_HYBRID_LEGACY && 
-                TransportLayer == __uuidof(Midi2KSAggregateTransport))
+            wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+            wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
+            wil::com_ptr_nothrow<IMidiTransportConfigurationManager> transportConfigurationManager;
+
+            if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
             {
-                continue;
-            }
-        }
-
-        try
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Getting transport configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(TransportLayer, "transport layer")
-            );
-
-            // provide the initial settings for these transports
-            auto transportSettingsJson = m_configurationManager->GetSavedConfigurationForTransport(TransportLayer);
-
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"CoCreating transport layer", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(TransportLayer, "transport layer")
-            );
-
-            // Do not load any transports which are untrusted, unless in developer mode.
-            if (FAILED(internal::IsComponentPermitted(TransportLayer)))
-            {
-                continue;
+                // If hybrid legacy midi was requested, we do not use the KSAggreagate transport
+                // because that will conflict with the legacy KS driver publishing done by endpoint builder.
+                // Other transports are permitted, as they will not conflict with legacy KS definitions.
+                if (legacyMidi == MIDI_USE_HYBRID_LEGACY && 
+                    TransportLayer == __uuidof(Midi2KSAggregateTransport))
+                {
+                    continue;
+                }
             }
 
-            // changed these from a return-on-fail to just log, so we don't prevent service startup
-            // due to one bad transport
-
-            LOG_IF_FAILED(CoCreateInstance(TransportLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
-
-            if (midiTransport != nullptr)
+            try
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
@@ -181,120 +148,169 @@ CMidiDeviceManager::Initialize(
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating transport configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Getting transport configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingGuid(TransportLayer, "transport layer")
                 );
 
-                // we only log. This interface is optional
-                // If present, an transport device manager may make use of its configuration manager, so activate
-                // and initialize the configuration manager before activating the device manager so that configuration
-                // is present.
-                auto configHR = midiTransport->Activate(__uuidof(IMidiTransportConfigurationManager), (void**)&transportConfigurationManager);
-                if (SUCCEEDED(configHR))
+                // provide the initial settings for these transports
+                auto transportSettingsJson = m_configurationManager->GetSavedConfigurationForTransport(TransportLayer);
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"CoCreating transport layer", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
+
+                // Do not load any transports which are untrusted, unless in developer mode.
+                if (FAILED(internal::IsComponentPermittedWithCaching(TransportLayer)))
                 {
-                    if (transportConfigurationManager != nullptr)
+                    continue;
+                }
+
+                // changed these from a return-on-fail to just log, so we don't prevent service startup
+                // due to one bad transport
+
+                LOG_IF_FAILED(CoCreateInstance(TransportLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+
+                if (midiTransport != nullptr)
+                {
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Activating transport configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(TransportLayer, "transport layer")
+                    );
+
+                    // we only log. This interface is optional
+                    // If present, an transport device manager may make use of its configuration manager, so activate
+                    // and initialize the configuration manager before activating the device manager so that configuration
+                    // is present.
+                    auto configHR = midiTransport->Activate(__uuidof(IMidiTransportConfigurationManager), (void**)&transportConfigurationManager);
+                    if (SUCCEEDED(configHR))
                     {
-                        // init the transport's config manager
-                        auto initializeResult = transportConfigurationManager->Initialize(
-                            TransportLayer,
-                            this, 
-                            m_configurationManager.get());
-
-                        if (FAILED(initializeResult))
+                        if (transportConfigurationManager != nullptr)
                         {
-                            LOG_IF_FAILED(initializeResult);
+                            // init the transport's config manager
+                            auto initializeResult = transportConfigurationManager->Initialize(
+                                TransportLayer,
+                                this, 
+                                m_configurationManager.get());
 
-                            TraceLoggingWrite(
-                                MidiSrvTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_ERROR,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Failed to initialize transport configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingHResult(initializeResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                                TraceLoggingGuid(TransportLayer, "transport layer")
-                            );
-                        }
-                        else
-                        {
-                            if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+                            if (FAILED(initializeResult))
                             {
-                                {
-                                    auto mapsLock = m_midiManagerMapsLock.lock();
-                                    // don't std::move this because we sill need it
-                                    m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
-                                }
+                                LOG_IF_FAILED(initializeResult);
+
+                                TraceLoggingWrite(
+                                    MidiSrvTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Failed to initialize transport configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingHResult(initializeResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                    TraceLoggingGuid(TransportLayer, "transport layer")
+                                );
                             }
                             else
                             {
-                                // don't std::move this because we sill need it
-                                m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
-                            }
-
-                            if (!transportSettingsJson.empty())
-                            {
-                                TraceLoggingWrite(
-                                    MidiSrvTelemetryProvider::Provider(),
-                                    MIDI_TRACE_EVENT_INFO,
-                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                    TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(L"Updating transport configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                    TraceLoggingGuid(TransportLayer, "transport layer")
-                                );
-
-                                LPWSTR response{};
-
-                                auto updateConfigHR = transportConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response);
-
-                                if (FAILED(updateConfigHR))
+                                if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
                                 {
-                                    if (updateConfigHR == E_NOTIMPL)
                                     {
-                                        TraceLoggingWrite(
-                                            MidiSrvTelemetryProvider::Provider(),
-                                            MIDI_TRACE_EVENT_WARNING,
-                                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                                            TraceLoggingPointer(this, "this"),
-                                            TraceLoggingWideString(L"Config update not implemented for this transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                            TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                                            TraceLoggingGuid(TransportLayer, "transport layer")
-                                        );
-                                    }
-                                    else
-                                    {
-                                        LOG_IF_FAILED(updateConfigHR);
-
-                                        TraceLoggingWrite(
-                                            MidiSrvTelemetryProvider::Provider(),
-                                            MIDI_TRACE_EVENT_ERROR,
-                                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                            TraceLoggingPointer(this, "this"),
-                                            TraceLoggingWideString(L"Failed to update configuration.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                            TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                                            TraceLoggingGuid(TransportLayer, "transport layer")
-                                        );
+                                        auto mapsLock = m_midiManagerMapsLock.lock();
+                                        // don't std::move this because we sill need it
+                                        m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
                                     }
                                 }
                                 else
                                 {
+                                    // don't std::move this because we sill need it
+                                    m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
+                                }
 
+                                if (!transportSettingsJson.empty())
+                                {
                                     TraceLoggingWrite(
                                         MidiSrvTelemetryProvider::Provider(),
                                         MIDI_TRACE_EVENT_INFO,
                                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                         TraceLoggingPointer(this, "this"),
-                                        TraceLoggingWideString(L"Configuration updated.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                        TraceLoggingWideString(L"Updating transport configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                         TraceLoggingGuid(TransportLayer, "transport layer")
                                     );
+
+                                    LPWSTR response{};
+
+                                    auto updateConfigHR = transportConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response);
+
+                                    if (FAILED(updateConfigHR))
+                                    {
+                                        if (updateConfigHR == E_NOTIMPL)
+                                        {
+                                            TraceLoggingWrite(
+                                                MidiSrvTelemetryProvider::Provider(),
+                                                MIDI_TRACE_EVENT_WARNING,
+                                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                                                TraceLoggingPointer(this, "this"),
+                                                TraceLoggingWideString(L"Config update not implemented for this transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                                TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                                TraceLoggingGuid(TransportLayer, "transport layer")
+                                            );
+                                        }
+                                        else
+                                        {
+                                            LOG_IF_FAILED(updateConfigHR);
+
+                                            TraceLoggingWrite(
+                                                MidiSrvTelemetryProvider::Provider(),
+                                                MIDI_TRACE_EVENT_ERROR,
+                                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                                TraceLoggingPointer(this, "this"),
+                                                TraceLoggingWideString(L"Failed to update configuration.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                                TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                                TraceLoggingGuid(TransportLayer, "transport layer")
+                                            );
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        TraceLoggingWrite(
+                                            MidiSrvTelemetryProvider::Provider(),
+                                            MIDI_TRACE_EVENT_INFO,
+                                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                            TraceLoggingPointer(this, "this"),
+                                            TraceLoggingWideString(L"Configuration updated.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                            TraceLoggingGuid(TransportLayer, "transport layer")
+                                        );
+                                    }
+
                                 }
 
+
                             }
-
-
+                        }
+                        else
+                        {
+                            TraceLoggingWrite(
+                                MidiSrvTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Transport transport configuration manager activation failed with null result.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingGuid(TransportLayer, "transport layer")
+                            );
                         }
                     }
                     else
@@ -305,40 +321,11 @@ CMidiDeviceManager::Initialize(
                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Transport transport configuration manager activation failed with null result.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingHResult(configHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                            TraceLoggingWideString(L"Transport transport configuration manager activation failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                             TraceLoggingGuid(TransportLayer, "transport layer")
                         );
                     }
-                }
-                else
-                {
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingHResult(configHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                        TraceLoggingWideString(L"Transport transport configuration manager activation failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(TransportLayer, "transport layer")
-                    );
-                }
-
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating transport layer IMidiEndpointManager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingGuid(TransportLayer, "transport layer")
-                );
-
-                LOG_IF_FAILED(midiTransport->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
-
-                if (endpointManager != nullptr)
-                {
-                    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> protocolManager = endpointProtocolManager.get();
 
                     TraceLoggingWrite(
                         MidiSrvTelemetryProvider::Provider(),
@@ -346,25 +333,15 @@ CMidiDeviceManager::Initialize(
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Initializing transport layer Midi Endpoint Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Activating transport layer IMidiEndpointManager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingGuid(TransportLayer, "transport layer")
                     );
 
-                    auto initializeResult = endpointManager->Initialize(this, protocolManager.get());
+                    LOG_IF_FAILED(midiTransport->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
 
-                    if (SUCCEEDED(initializeResult))
+                    if (endpointManager != nullptr)
                     {
-                        if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
-                        {
-                            {
-                                auto mapsLock = m_midiManagerMapsLock.lock();
-                                m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
-                            }
-                        }
-                        else
-                        {
-                            m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
-                        }
+                        wil::com_ptr_nothrow<IMidiEndpointProtocolManager> protocolManager = endpointProtocolManager.get();
 
                         TraceLoggingWrite(
                             MidiSrvTelemetryProvider::Provider(),
@@ -372,9 +349,49 @@ CMidiDeviceManager::Initialize(
                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Midi Endpoint Manager initialized", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(L"Initializing transport layer Midi Endpoint Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                             TraceLoggingGuid(TransportLayer, "transport layer")
                         );
+
+                        auto initializeResult = endpointManager->Initialize(this, protocolManager.get());
+
+                        if (SUCCEEDED(initializeResult))
+                        {
+                            if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+                            {
+                                {
+                                    auto mapsLock = m_midiManagerMapsLock.lock();
+                                    m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
+                                }
+                            }
+                            else
+                            {
+                                m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
+                            }
+
+                            TraceLoggingWrite(
+                                MidiSrvTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Midi Endpoint Manager initialized", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingGuid(TransportLayer, "transport layer")
+                            );
+                        }
+                        else
+                        {
+                            TraceLoggingWrite(
+                                MidiSrvTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Transport transport initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingGuid(TransportLayer, "transport layer")
+                            );
+                        }
+
                     }
                     else
                     {
@@ -384,11 +401,11 @@ CMidiDeviceManager::Initialize(
                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Transport transport initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(L"Transport transport endpoint manager initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                             TraceLoggingGuid(TransportLayer, "transport layer")
                         );
-                    }
 
+                    }
                 }
                 else
                 {
@@ -398,13 +415,14 @@ CMidiDeviceManager::Initialize(
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Transport transport endpoint manager initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Transport Transport activation failed (nullptr return).", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingGuid(TransportLayer, "transport layer")
                     );
-
                 }
+
             }
-            else
+
+            catch (wil::ResultException rex)
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
@@ -412,66 +430,411 @@ CMidiDeviceManager::Initialize(
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Transport Transport activation failed (nullptr return).", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Result Exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingString(rex.what(), "error"),
+                    TraceLoggingHResult(rex.GetErrorCode(), MIDI_TRACE_EVENT_HRESULT_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
+
+            }
+            catch (std::runtime_error& err)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Runtime error loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingString(err.what(), "error"),
                     TraceLoggingGuid(TransportLayer, "transport layer")
                 );
             }
+            catch (const std::exception& ex)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingString(ex.what(), "exception"),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
+            }        
+            catch (...)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unknown exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
 
+            }
         }
+    }
+    else
+    {
+        // Get the enabled transport layers from the registry
+        for (auto const& TransportLayer : m_configurationManager->GetEnabledTransports())
+        {
+            wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+            wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
+            wil::com_ptr_nothrow<IMidiTransportConfigurationManager> transportConfigurationManager;
 
-        catch (wil::ResultException rex)
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Result Exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingString(rex.what(), "error"),
-                TraceLoggingHResult(rex.GetErrorCode(), MIDI_TRACE_EVENT_HRESULT_FIELD),
-                TraceLoggingGuid(TransportLayer, "transport layer")
-            );
+            if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
+            {
+                // If hybrid legacy midi was requested, we do not use the KSAggreagate transport
+                // because that will conflict with the legacy KS driver publishing done by endpoint builder.
+                // Other transports are permitted, as they will not conflict with legacy KS definitions.
+                if (legacyMidi == MIDI_USE_HYBRID_LEGACY && 
+                    TransportLayer == __uuidof(Midi2KSAggregateTransport))
+                {
+                    continue;
+                }
+            }
 
-        }
-        catch (std::runtime_error& err)
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Runtime error loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingString(err.what(), "error"),
-                TraceLoggingGuid(TransportLayer, "transport layer")
-            );
-        }
-        catch (const std::exception& ex)
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingString(ex.what(), "exception"),
-                TraceLoggingGuid(TransportLayer, "transport layer")
-            );
-        }        
-        catch (...)
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unknown exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(TransportLayer, "transport layer")
-            );
+            try
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Getting transport configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
 
+                // provide the initial settings for these transports
+                auto transportSettingsJson = m_configurationManager->GetSavedConfigurationForTransport(TransportLayer);
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"CoCreating transport layer", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
+
+                // Do not load any transports which are untrusted, unless in developer mode.
+                if (FAILED(internal::IsComponentPermitted(TransportLayer)))
+                {
+                    continue;
+                }
+
+                // changed these from a return-on-fail to just log, so we don't prevent service startup
+                // due to one bad transport
+
+                LOG_IF_FAILED(CoCreateInstance(TransportLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+
+                if (midiTransport != nullptr)
+                {
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Activating transport configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(TransportLayer, "transport layer")
+                    );
+
+                    // we only log. This interface is optional
+                    // If present, an transport device manager may make use of its configuration manager, so activate
+                    // and initialize the configuration manager before activating the device manager so that configuration
+                    // is present.
+                    auto configHR = midiTransport->Activate(__uuidof(IMidiTransportConfigurationManager), (void**)&transportConfigurationManager);
+                    if (SUCCEEDED(configHR))
+                    {
+                        if (transportConfigurationManager != nullptr)
+                        {
+                            // init the transport's config manager
+                            auto initializeResult = transportConfigurationManager->Initialize(
+                                TransportLayer,
+                                this, 
+                                m_configurationManager.get());
+
+                            if (FAILED(initializeResult))
+                            {
+                                LOG_IF_FAILED(initializeResult);
+
+                                TraceLoggingWrite(
+                                    MidiSrvTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Failed to initialize transport configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingHResult(initializeResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                    TraceLoggingGuid(TransportLayer, "transport layer")
+                                );
+                            }
+                            else
+                            {
+                                if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+                                {
+                                    {
+                                        auto mapsLock = m_midiManagerMapsLock.lock();
+                                        // don't std::move this because we sill need it
+                                        m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
+                                    }
+                                }
+                                else
+                                {
+                                    // don't std::move this because we sill need it
+                                    m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
+                                }
+
+                                if (!transportSettingsJson.empty())
+                                {
+                                    TraceLoggingWrite(
+                                        MidiSrvTelemetryProvider::Provider(),
+                                        MIDI_TRACE_EVENT_INFO,
+                                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                        TraceLoggingPointer(this, "this"),
+                                        TraceLoggingWideString(L"Updating transport configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                        TraceLoggingGuid(TransportLayer, "transport layer")
+                                    );
+
+                                    LPWSTR response{};
+
+                                    auto updateConfigHR = transportConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response);
+
+                                    if (FAILED(updateConfigHR))
+                                    {
+                                        if (updateConfigHR == E_NOTIMPL)
+                                        {
+                                            TraceLoggingWrite(
+                                                MidiSrvTelemetryProvider::Provider(),
+                                                MIDI_TRACE_EVENT_WARNING,
+                                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                                                TraceLoggingPointer(this, "this"),
+                                                TraceLoggingWideString(L"Config update not implemented for this transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                                TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                                TraceLoggingGuid(TransportLayer, "transport layer")
+                                            );
+                                        }
+                                        else
+                                        {
+                                            LOG_IF_FAILED(updateConfigHR);
+
+                                            TraceLoggingWrite(
+                                                MidiSrvTelemetryProvider::Provider(),
+                                                MIDI_TRACE_EVENT_ERROR,
+                                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                                TraceLoggingPointer(this, "this"),
+                                                TraceLoggingWideString(L"Failed to update configuration.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                                TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                                TraceLoggingGuid(TransportLayer, "transport layer")
+                                            );
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        TraceLoggingWrite(
+                                            MidiSrvTelemetryProvider::Provider(),
+                                            MIDI_TRACE_EVENT_INFO,
+                                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                            TraceLoggingPointer(this, "this"),
+                                            TraceLoggingWideString(L"Configuration updated.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                            TraceLoggingGuid(TransportLayer, "transport layer")
+                                        );
+                                    }
+
+                                }
+
+
+                            }
+                        }
+                        else
+                        {
+                            TraceLoggingWrite(
+                                MidiSrvTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Transport transport configuration manager activation failed with null result.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingGuid(TransportLayer, "transport layer")
+                            );
+                        }
+                    }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingHResult(configHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                            TraceLoggingWideString(L"Transport transport configuration manager activation failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(TransportLayer, "transport layer")
+                        );
+                    }
+
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Activating transport layer IMidiEndpointManager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(TransportLayer, "transport layer")
+                    );
+
+                    LOG_IF_FAILED(midiTransport->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
+
+                    if (endpointManager != nullptr)
+                    {
+                        wil::com_ptr_nothrow<IMidiEndpointProtocolManager> protocolManager = endpointProtocolManager.get();
+
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Initializing transport layer Midi Endpoint Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(TransportLayer, "transport layer")
+                        );
+
+                        auto initializeResult = endpointManager->Initialize(this, protocolManager.get());
+
+                        if (SUCCEEDED(initializeResult))
+                        {
+                            if (Feature_Servicing_MIDI2SynchronizedStart::IsEnabled())
+                            {
+                                {
+                                    auto mapsLock = m_midiManagerMapsLock.lock();
+                                    m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
+                                }
+                            }
+                            else
+                            {
+                                m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
+                            }
+
+                            TraceLoggingWrite(
+                                MidiSrvTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Midi Endpoint Manager initialized", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingGuid(TransportLayer, "transport layer")
+                            );
+                        }
+                        else
+                        {
+                            TraceLoggingWrite(
+                                MidiSrvTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Transport transport initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingGuid(TransportLayer, "transport layer")
+                            );
+                        }
+
+                    }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Transport transport endpoint manager initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(TransportLayer, "transport layer")
+                        );
+
+                    }
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Transport Transport activation failed (nullptr return).", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(TransportLayer, "transport layer")
+                    );
+                }
+
+            }
+
+            catch (wil::ResultException rex)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Result Exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingString(rex.what(), "error"),
+                    TraceLoggingHResult(rex.GetErrorCode(), MIDI_TRACE_EVENT_HRESULT_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
+
+            }
+            catch (std::runtime_error& err)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Runtime error loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingString(err.what(), "error"),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
+            }
+            catch (const std::exception& ex)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingString(ex.what(), "exception"),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
+            }        
+            catch (...)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unknown exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
+                );
+
+            }
         }
     }
 

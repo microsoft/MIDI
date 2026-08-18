@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
+#include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -55,7 +56,14 @@ CMidiDevicePipe::Initialize(
 
     // Confirm that this component is either signed, or we are in developer mode.
     // Else, do not use it.
-    RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransportGuid));
+    if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
+    {
+        RETURN_IF_FAILED(internal::IsComponentPermittedWithCaching(m_TransportGuid));
+    }
+    else
+    {
+        RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransportGuid));
+    }
 
     GUID dummySessionId{};
 

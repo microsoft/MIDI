@@ -10,6 +10,7 @@
 #include "ump_iterator.h"
 #include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
 #include "Feature_Servicing_MIDI2StreamTextUtf8.h"
+#include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -207,7 +208,14 @@ CMidiEndpointProtocolWorker::Start(
             // this is not a good idea, but we don't have a reference to the COM lib here
             GUID midi2MidiSrvTransportIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
 
-            RETURN_IF_FAILED(internal::IsComponentPermitted(midi2MidiSrvTransportIID));
+            if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
+            {
+                RETURN_IF_FAILED(internal::IsComponentPermittedWithCaching(midi2MidiSrvTransportIID));
+            }
+            else
+            {
+                RETURN_IF_FAILED(internal::IsComponentPermitted(midi2MidiSrvTransportIID));
+            }
             RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvTransportIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport)));
             RETURN_IF_NULL_ALLOC(serviceTransport);
 

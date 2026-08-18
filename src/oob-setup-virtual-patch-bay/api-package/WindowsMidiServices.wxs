@@ -40,6 +40,17 @@
                 Guid="b3358c4f-b05a-4586-900f-d9b104918d5e"
                 NeverOverwrite="false">
                    
+            <!--
+              Earlier versions of this installer stamped an explicit ACL on the transport plugin
+              key with a Permission element. MSI never repairs the security descriptor of a key
+              that already exists, so upgrading alone would leave those machines broken forever.
+              Removing the key first means it is recreated inheriting from the parent.
+            -->
+            <RemoveRegistryKey Id="RemoveLegacyVirtualPatchBayTransportPluginKey"
+                               Root="HKLM"
+                               Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins\Midi2VirtualPatchBayTransport"
+                               Action="removeOnInstall" />
+
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
