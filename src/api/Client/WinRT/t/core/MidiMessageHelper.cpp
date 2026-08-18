@@ -612,6 +612,23 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
 
                     switch (statusBank)
                     {
+                    case 0x00:
+                        switch (status)
+                        {
+                        case 0x00:
+                            return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTD_00_00_SET_TEMPO); //L"Set Tempo";
+                        case 0x01:
+                            return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTD_00_01_SET_TIME_SIGNATURE); //L"Set Time Signature";
+                        case 0x02:
+                            return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTD_00_02_SET_METRONOME); //L"Set Metronome";
+                        case 0x05:
+                            return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTD_00_05_SET_KEY_SIGNATURE); //L"Set Key Signature";
+                        case 0x06:
+                            return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTD_00_06_SET_CHORD_NAME); //L"Set Chord Name";
+                        default:
+                            return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTD_00_UNKNOWN); //L"Flex Data with Bank 0x00";
+                        }
+                        break;
                     case 0x01:
                         switch (status)
                         {
