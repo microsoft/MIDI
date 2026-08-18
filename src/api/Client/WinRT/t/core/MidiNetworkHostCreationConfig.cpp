@@ -20,19 +20,40 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     _Use_decl_annotations_
     winrt::hstring MidiNetworkHostCreationConfig::EnsureCompliantServiceInstanceName(winrt::hstring const& serviceInstanceName) noexcept
     {
-        // ensures all ASCII characters, and removes any invalid characters for a SWD unique id.
+        // This is the DNS-SD instance name only: the single label to the left of the service
+        // type, so "contoso-synth-1" out of "contoso-synth-1._midi2._udp.local". RFC 6763 treats
+        // it as user-visible Net-Unicode text, so spaces and non-ASCII are all legal. The only
+        // characters removed are the ones which would corrupt the record.
+        try
+        {
+            std::wstring cleaned{ };
 
-        auto cleanId = internal::RemoveInvalidSWDUniqueIdCharacters(serviceInstanceName.c_str());
+            for (auto const ch : internal::TrimmedWStringCopy(serviceInstanceName.c_str()))
+            {
+                // a period would split this into two labels
+                if (ch == L'.')
+                {
+                    continue;
+                }
 
-        // if it doesn't have the required suffix
+                // C0, DEL and C1, all excluded by Net-Unicode (RFC 5198)
+                if (ch < 0x20 || ch == 0x7F || (ch >= 0x80 && ch <= 0x9F))
+                {
+                    continue;
+                }
 
+                cleaned += ch;
+            }
 
-
-
-
-        // TEMP
-        return L"";
-
+            // trimmed again because truncation can leave a trailing space behind
+            return winrt::hstring{ internal::TrimmedWStringCopy(
+                internal::TruncateToUtf8ByteCount(cleaned, MIDI_DNSSD_SERVICE_INSTANCE_NAME_MAX_BYTE_COUNT)) };
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, L"General exception cleaning service instance name.");
+            return L"";
+        }
     }
 
 
@@ -44,8 +65,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         try
         {
             auto config = winrt::make_self<MidiNetworkHostCreationConfig>();
-
-            config->m_id = foundation::GuidHelper::CreateNewGuid();
 
             winrt::hstring name{};
 
@@ -72,13 +91,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             std::wstring nameStr = name.c_str();
             config->m_name = nameStr.substr(0, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
 
-            // build the service instance name. Like the instance id, we include Windows / midisrv because
-            // there are already implementations of this protocol which use the machine name directly from apps.
-            config->m_serviceInstanceName = internal::RemoveInvalidSWDUniqueIdCharacters(name.c_str()) + 
-                L"_windows_midisrv." + 
-                MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType() +
-                L"." +
-                MidiNetworkTransportManager::MidiNetworkUdpDnsDomain();
+            // Just the instance label. The transport appends "." + the service type when it
+            // builds the PTR record, so the suffix must not be stored here. We include
+            // windows/midisrv because other implementations of this protocol already advertise
+            // using the bare machine name.
+            config->m_serviceInstanceName = EnsureCompliantServiceInstanceName(
+                winrt::hstring{ internal::RemoveInvalidSWDUniqueIdCharacters(name.c_str()) + L"_windows_midisrv" });
 
 
             // create the product instance id. Per spec, this must be 42 ASCII characters or fewer
