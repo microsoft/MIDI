@@ -222,46 +222,6 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
 
 
 _Use_decl_annotations_
-HRESULT
-CMidi2VirtualMidiEndpointManager::UpdateClientEndpointInUseProperty(
-    std::wstring const& deviceEndpointInterfaceId,
-    bool const inUse)
-{
-    TraceLoggingWrite(
-        MidiVirtualMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingBool(inUse, "in use")
-    );
-
-    // The device side can tear down before the last client does, taking the endpoint with it, so
-    // every one of these is a normal condition rather than an error.
-    if (m_MidiDeviceManager == nullptr || deviceEndpointInterfaceId.empty())
-    {
-        return S_FALSE;
-    }
-
-    DEVPROP_BOOLEAN devPropInUse = inUse ? DEVPROP_TRUE : DEVPROP_FALSE;
-
-    std::vector<DEVPROPERTY> interfaceDevProperties{};
-
-    interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiClientEndpointInUse, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropInUse });
-
-    LOG_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
-        deviceEndpointInterfaceId.c_str(),
-        static_cast<ULONG>(interfaceDevProperties.size()),
-        interfaceDevProperties.data()
-    ));
-
-    return S_OK;
-}
-
-
-_Use_decl_annotations_
 HRESULT 
 CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     MidiVirtualDeviceEndpointEntry& entry
@@ -300,6 +260,14 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     // this is needed for the loopback endpoints to have a relationship with each other
     interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.length() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
+
+    // The service counts the applications connected here, but publishes the result on the
+    // device-side endpoint, which is the one the owning application watches.
+    if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+    {
+        interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiInUseReportingTarget, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.CreatedDeviceEndpointId.length() + 1)), (PVOID)entry.CreatedDeviceEndpointId.c_str() });
+    }
 
 
     // we specify this here, knowing that the device manager will generate the name table once

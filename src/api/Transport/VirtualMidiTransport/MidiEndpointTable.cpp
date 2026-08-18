@@ -97,9 +97,6 @@ MidiEndpointTable::OnClientConnected(
 
         auto associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
-        // captured under the lock, used after releasing it
-        std::wstring deviceEndpointInterfaceId{ };
-
         if (!associationId.empty())
         {
             {
@@ -119,8 +116,6 @@ MidiEndpointTable::OnClientConnected(
                     RETURN_IF_FAILED(entry.MidiClientBidi->LinkAssociatedCallback(entry.MidiDeviceBidi));
 
                     m_endpoints[associationId] = entry;
-
-                    deviceEndpointInterfaceId = entry.CreatedDeviceEndpointId;
                 }
                 else
                 {
@@ -137,18 +132,6 @@ MidiEndpointTable::OnClientConnected(
                         TraceLoggingWideString(L"Unable to find device table entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                     );
-                }
-            }
-
-            // Deliberately outside the table lock. This reaches PnP through the device manager,
-            // and holding a lock across that is what wedges a removal callback.
-            if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
-            {
-                auto endpointManager = TransportState::Current().GetEndpointManager();
-
-                if (endpointManager != nullptr && !deviceEndpointInterfaceId.empty())
-                {
-                    LOG_IF_FAILED(endpointManager->UpdateClientEndpointInUseProperty(deviceEndpointInterfaceId, true));
                 }
             }
         }
@@ -266,9 +249,6 @@ MidiEndpointTable::OnClientDisconnectedKeepDeviceLink(
     {
         std::wstring associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
-        // captured under the lock, used after releasing it
-        std::wstring deviceEndpointInterfaceId{ };
-
         if (!associationId.empty())
         {
             {
@@ -291,8 +271,6 @@ MidiEndpointTable::OnClientDisconnectedKeepDeviceLink(
                     }
 
                     m_endpoints[associationId] = entry;
-
-                    deviceEndpointInterfaceId = entry.CreatedDeviceEndpointId;
                 }
                 else
                 {
@@ -309,18 +287,6 @@ MidiEndpointTable::OnClientDisconnectedKeepDeviceLink(
                     );
 
                     return S_OK;
-                }
-            }
-
-            // Deliberately outside the table lock, and best-effort: the endpoint may already be
-            // deleted if the device side went first.
-            if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
-            {
-                auto endpointManager = TransportState::Current().GetEndpointManager();
-
-                if (endpointManager != nullptr && !deviceEndpointInterfaceId.empty())
-                {
-                    LOG_IF_FAILED(endpointManager->UpdateClientEndpointInUseProperty(deviceEndpointInterfaceId, false));
                 }
             }
 

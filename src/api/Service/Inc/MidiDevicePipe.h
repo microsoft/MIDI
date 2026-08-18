@@ -28,6 +28,8 @@ public:
 
     HRESULT SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
+    std::wstring const& InUseReportingTarget() const noexcept { return m_inUseReportingTarget; }
+
 private:
     wil::srwlock m_DevicePipeLock;
     winrt::guid m_TransportGuid{};
@@ -37,6 +39,9 @@ private:
 
     // TODO: This needs to be read from the device properties
     bool m_endpointSupportsMulticlient{ true };
+
+    // empty unless the transport asked for this endpoint's in-use state to be published
+    std::wstring m_inUseReportingTarget{ };
 
 };
 
