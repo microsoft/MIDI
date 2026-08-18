@@ -71,6 +71,11 @@ enum MidiNetworkRemoteClientDecision
 
 
 #define DNS_PTR_SERVICE_TYPE                                            L"_midi2._udp.local"
+
+// The service instance name is a single DNS label, so it carries the RFC 1035 63 byte limit.
+// Bytes once encoded as UTF-8, not characters.
+#define MIDI_DNSSD_SERVICE_INSTANCE_NAME_MAX_BYTE_COUNT                 63
+
 #define MIDI_UDP_PAYLOAD_HEADER                                         0x4D494449                      // "MIDI" in ASCII
 
 

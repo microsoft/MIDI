@@ -57,7 +57,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
     private:
-        winrt::guid m_id{};
+        winrt::guid m_id{ foundation::GuidHelper::CreateNewGuid() };
         winrt::hstring m_name{};
         winrt::hstring m_serviceInstanceName{};
         winrt::hstring m_productInstanceId{};
