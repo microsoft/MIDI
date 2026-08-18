@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Windows.Devices.Midi2</id>
-		<version>0.99.52-devpreview.5</version>
+		<version>0.99.54-devpreview.5</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services App SDK. Temporary package to use until the metadata is in an official Windows SDK</description>
 		<license type="expression">MIT</license>
@@ -17,10 +17,7 @@
         </dependencies>
     </metadata>
     
-    <files>          
-      <!-- TODO -->
-      <!-- Create a coalesce project that has x64 and Arm64x output and use that to source the files -->
-        
+    <files>                 
       <!-- Compile-time References  ================================================ -->
 
       <!-- Reference winmds -->

@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -932,6 +933,85 @@ CMidiClientManager::GetMidiScheduler(
 }
 
 
+// Returns the endpoint that this endpoint's in-use state should be published to, or an empty
+// string if no transport asked for it. Caller must hold m_ClientManagerLock.
+_Use_decl_annotations_
+std::wstring
+CMidiClientManager::GetEndpointInUseReportingTarget(
+    std::wstring const& midiDevice
+)
+{
+    auto devicePipes = m_DevicePipes.equal_range(midiDevice);
+
+    for (auto pipe = devicePipes.first; pipe != devicePipes.second; ++pipe)
+    {
+        auto devicePipe = static_cast<CMidiDevicePipe*>(pipe->second.get());
+
+        if (!devicePipe->InUseReportingTarget().empty())
+        {
+            return devicePipe->InUseReportingTarget();
+        }
+    }
+
+    return L"";
+}
+
+
+// The service's own protocol negotiation connection is a client of the endpoint just like any
+// application, and it is held open for the life of the endpoint, so it has to be excluded here
+// or every endpoint would look permanently busy. Caller must hold m_ClientManagerLock.
+_Use_decl_annotations_
+bool
+CMidiClientManager::EndpointHasApplicationClients(
+    std::wstring const& midiDevice
+)
+{
+    for (auto const& client : m_ClientPipes)
+    {
+        auto clientPipe = static_cast<CMidiClientPipe*>(client.second.get());
+
+        if (clientPipe->SessionId() == __uuidof(IMidiEndpointProtocolManager))
+        {
+            continue;
+        }
+
+        if (clientPipe->MidiDevice() == midiDevice)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+// Reaches PnP, so this must be called with m_ClientManagerLock released.
+//
+// Deliberately scoped to virtual devices. Nothing above this function is virtual-specific: the
+// count is just "client pipes on this endpoint that aren't the protocol manager", and the
+// reporting target is whatever the transport asked for. Making this general would mean swapping
+// the hardcoded property key below for one the transport nominates, and likely publishing a
+// count rather than a bool, so that endpoints could report how many applications are attached.
+_Use_decl_annotations_
+HRESULT
+CMidiClientManager::UpdateEndpointInUseProperty(
+    std::wstring const& endpointInterfaceId,
+    bool const inUse
+)
+{
+    RETURN_HR_IF_NULL(E_POINTER, m_DeviceManager);
+
+    DEVPROP_BOOLEAN devPropInUse = inUse ? DEVPROP_TRUE : DEVPROP_FALSE;
+
+    DEVPROPERTY prop{ { PKEY_MIDI_VirtualMidiClientEndpointInUse, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropInUse };
+
+    RETURN_IF_FAILED(m_DeviceManager->UpdateEndpointProperties(endpointInterfaceId.c_str(), 1, &prop));
+
+    return S_OK;
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiClientManager::CreateMidiClient(
@@ -1044,6 +1124,10 @@ CMidiClientManager::CreateMidiClient(
         client->ClientHandle = NULL;
         client->DataFormat = MidiDataFormats_Invalid;
     });
+
+    // captured under the lock below, published after it is released
+    std::wstring inUseReportingTarget{ };
+    bool endpointInUse{ false };
 
     {
         auto lock = m_ClientManagerLock.lock_exclusive();
@@ -1222,9 +1306,27 @@ CMidiClientManager::CreateMidiClient(
         }
 
         RETURN_IF_FAILED(m_SessionTracker->AddClientEndpointConnection(sessionId, clientProcessId, midiDevice, client->ClientHandle));
+
+        if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+        {
+            inUseReportingTarget = GetEndpointInUseReportingTarget(devicePipe->MidiDevice());
+
+            if (!inUseReportingTarget.empty())
+            {
+                endpointInUse = EndpointHasApplicationClients(devicePipe->MidiDevice());
+            }
+        }
     }
 
     cleanupOnFailure.release();
+
+    if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+    {
+        if (!inUseReportingTarget.empty())
+        {
+            LOG_IF_FAILED(UpdateEndpointInUseProperty(inUseReportingTarget, endpointInUse));
+        }
+    }
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -1411,6 +1513,10 @@ CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
     // shut them down after the lock has been released
     std::vector<wil::com_ptr_nothrow<CMidiPipe>> pipesToShutdown;
 
+    // captured under the lock below, published after it is released
+    std::wstring inUseReportingTarget{ };
+    bool endpointInUse{ false };
+
     {
         auto lock = m_ClientManagerLock.lock_exclusive();
 
@@ -1424,6 +1530,14 @@ CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
         {
             wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
             wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+
+            // the device pipe is erased below once its last client goes, so read this first
+            std::wstring endpointId = client->second->MidiDevice();
+
+            if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+            {
+                inUseReportingTarget = GetEndpointInUseReportingTarget(endpointId);
+            }
 
             m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), midiClientPipe->ClientProcessId(), client->second->MidiDevice().c_str(), clientHandle);
 
@@ -1487,10 +1601,26 @@ CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
             }
 
             m_ClientPipes.erase(client);
+
+            if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+            {
+                if (!inUseReportingTarget.empty())
+                {
+                    endpointInUse = EndpointHasApplicationClients(endpointId);
+                }
+            }
         }
         else
         {
             RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+
+    if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+    {
+        if (!inUseReportingTarget.empty())
+        {
+            LOG_IF_FAILED(UpdateEndpointInUseProperty(inUseReportingTarget, endpointInUse));
         }
     }
 

@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "stdafx.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -41,6 +42,7 @@ CMidiDevicePipe::Initialize(
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
     additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
+    additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiInUseReportingTarget);
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(
         device, 
@@ -154,6 +156,25 @@ CMidiDevicePipe::Initialize(
 
     }
     CATCH_LOG();
+
+    if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+    {
+        try
+        {
+            // presence of this property is how a transport opts an endpoint in to having the
+            // number of connected applications reported
+            if (deviceInfo.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiInUseReportingTarget))
+            {
+                auto propTarget = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiInUseReportingTarget);
+
+                if (propTarget != nullptr)
+                {
+                    m_inUseReportingTarget = winrt::unbox_value<winrt::hstring>(propTarget).c_str();
+                }
+            }
+        }
+        CATCH_LOG();
+    }
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

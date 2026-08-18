@@ -539,11 +539,21 @@
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkConfiguredClient.h" />
-    <ClInclude Include="MidiNetworkPendingRemoteClient.h" />
-    <ClInclude Include="MidiNetworkConfiguredHost.h" />
-    <ClInclude Include="MidiNetworkRemoteClientApprovalConfig.h" />
-    <ClInclude Include="MidiNetworkRemoteClientApprovalResponse.h" />
+    <ClInclude Include="MidiNetworkConfiguredClient.h">
+      <DependentUpon>MidiNetworkConfiguredClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkPendingRemoteClient.h">
+      <DependentUpon>MidiNetworkPendingRemoteClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkConfiguredHost.h">
+      <DependentUpon>MidiNetworkConfiguredHost.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientApprovalConfig.h">
+      <DependentUpon>MidiNetworkRemoteClientApprovalConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientApprovalResponse.h">
+      <DependentUpon>MidiNetworkRemoteClientApprovalResponse.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="winrt_devpkey_util.h" />
     <ClInclude Include="MidiNetworkClientConnectResponse.h">
       <DependentUpon>MidiNetworkClientConnectResponse.idl</DependentUpon>
@@ -911,11 +921,21 @@
     <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkConfiguredClient.cpp" />
-    <ClCompile Include="MidiNetworkPendingRemoteClient.cpp" />
-    <ClCompile Include="MidiNetworkConfiguredHost.cpp" />
-    <ClCompile Include="MidiNetworkRemoteClientApprovalConfig.cpp" />
-    <ClCompile Include="MidiNetworkRemoteClientApprovalResponse.cpp" />
+    <ClCompile Include="MidiNetworkConfiguredClient.cpp">
+      <DependentUpon>MidiNetworkConfiguredClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkPendingRemoteClient.cpp">
+      <DependentUpon>MidiNetworkPendingRemoteClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkConfiguredHost.cpp">
+      <DependentUpon>MidiNetworkConfiguredHost.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientApprovalConfig.cpp">
+      <DependentUpon>MidiNetworkRemoteClientApprovalConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientApprovalResponse.cpp">
+      <DependentUpon>MidiNetworkRemoteClientApprovalResponse.idl</DependentUpon>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />

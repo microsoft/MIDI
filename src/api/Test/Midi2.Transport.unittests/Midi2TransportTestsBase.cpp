@@ -209,10 +209,15 @@ void MidiTransportTestsBase::TestMidiTransport(REFIID iid, MidiDataFormats dataF
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
-        PrintMidiMessage(payload, payloadSize, (transportCreationParams.DataFormat == MidiDataFormats_UMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
+        UINT32 const messageSize = static_cast<UINT32>((transportCreationParams.DataFormat == MidiDataFormats_UMP) ? sizeof(UMP32) : sizeof(MIDI_MESSAGE));
 
-        midiMessagesReceived++;
-        if (midiMessagesReceived == expectedMessageCount)
+        PrintMidiMessage(payload, payloadSize, messageSize, payloadPosition);
+
+        // Messages sharing a timestamp arrive coalesced into one callback, so the count comes
+        // from the payload rather than from the number of calls.
+        midiMessagesReceived += (payloadSize / messageSize);
+
+        if (midiMessagesReceived >= expectedMessageCount)
         {
             allMessagesReceived.SetEvent();
         }
@@ -510,10 +515,15 @@ void MidiTransportTestsBase::TestMidiTransportBidi(REFIID iid, MidiDataFormats d
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
-        PrintMidiMessage(payload, payloadSize, (transportCreationParams.DataFormat == MidiDataFormats_UMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
+        UINT32 const messageSize = static_cast<UINT32>((transportCreationParams.DataFormat == MidiDataFormats_UMP) ? sizeof(UMP32) : sizeof(MIDI_MESSAGE));
 
-        midiMessagesReceived++;
-        if (midiMessagesReceived == expectedMessageCount)
+        PrintMidiMessage(payload, payloadSize, messageSize, payloadPosition);
+
+        // Messages sharing a timestamp arrive coalesced into one callback, so the count comes
+        // from the payload rather than from the number of calls.
+        midiMessagesReceived += (payloadSize / messageSize);
+
+        if (midiMessagesReceived >= expectedMessageCount)
         {
             allMessagesReceived.SetEvent();
         }
@@ -640,6 +650,10 @@ void MidiTransportTestsBase::TestMidiIO_Latency(REFIID iid, MidiDataFormats data
 
     UINT midiMessagesReceived = 0;
 
+    // Jitter and round trip are sampled once per callback, and a callback can carry several
+    // coalesced messages, so the statistics need their own denominator.
+    UINT midiCallbacksReceived = 0;
+
     VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
@@ -664,12 +678,19 @@ void MidiTransportTestsBase::TestMidiIO_Latency(REFIID iid, MidiDataFormats data
 
     VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBidirectional), (void**)&midiBidiDevice));
 
-    m_MidiInCallback = [&](PVOID , UINT32 , LONGLONG payloadPosition, LONGLONG)
+    m_MidiInCallback = [&](PVOID , UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
         LARGE_INTEGER qpc{0};
         LONGLONG roundTripLatency{0};
 
         QueryPerformanceCounter(&qpc);
+
+        midiCallbacksReceived++;
+
+        // Messages sharing a timestamp arrive coalesced into one callback, so the count comes
+        // from the payload rather than from the number of calls.
+        UINT32 const messageSize = static_cast<UINT32>((transportCreationParams.DataFormat == MidiDataFormats_UMP) ? sizeof(UMP32) : sizeof(MIDI_MESSAGE));
+        midiMessagesReceived += (payloadSize / messageSize);
 
         // first, we calculate the jitter statistics for how often the
         // recieve function was called. Since the messages are sent at a
@@ -694,13 +715,11 @@ void MidiTransportTestsBase::TestMidiIO_Latency(REFIID iid, MidiDataFormats data
             long double prevAvgReceiveLatency = avgReceiveLatency;
 
             // running average for the average recieve latency/jitter
-            avgReceiveLatency = (prevAvgReceiveLatency + (((long double)receiveLatency - prevAvgReceiveLatency) / ((long double)midiMessagesReceived)));
+            avgReceiveLatency = (prevAvgReceiveLatency + (((long double)receiveLatency - prevAvgReceiveLatency) / ((long double)midiCallbacksReceived)));
 
             stdevReceiveLatency = stdevReceiveLatency + ((receiveLatency - prevAvgReceiveLatency) * (receiveLatency - avgReceiveLatency));
         }
         previousReceive = qpc.QuadPart;
-
-        midiMessagesReceived++;
 
         // now calculate the round trip statistics based upon
         // the timestamp on the message that was just received relative
@@ -719,16 +738,16 @@ void MidiTransportTestsBase::TestMidiIO_Latency(REFIID iid, MidiDataFormats data
         long double prevAvgRoundTripLatency = avgRoundTripLatency;
 
         // running average for the round trip latency
-        avgRoundTripLatency = (prevAvgRoundTripLatency + (((long double) roundTripLatency - prevAvgRoundTripLatency) / (long double) midiMessagesReceived));
+        avgRoundTripLatency = (prevAvgRoundTripLatency + (((long double) roundTripLatency - prevAvgRoundTripLatency) / (long double) midiCallbacksReceived));
 
         stdevRoundTripLatency = stdevRoundTripLatency + ((roundTripLatency - prevAvgRoundTripLatency) * (roundTripLatency - avgRoundTripLatency));
 
         // Save the latency for the very first message
-        if (1 == midiMessagesReceived)
+        if (1 == midiCallbacksReceived)
         {
             firstRoundTripLatency = roundTripLatency;
         }
-        else if (midiMessagesReceived == expectedMessageCount)
+        else if (midiMessagesReceived >= expectedMessageCount)
         {
             lastReceive = qpc;
             lastRoundTripLatency = roundTripLatency;
@@ -856,7 +875,7 @@ void MidiTransportTestsBase::TestMidiIO_Latency(REFIID iid, MidiDataFormats data
     long double lastRtLatency = 1000. * (lastRoundTripLatency / qpcPerMs);
     long double minRtLatency = 1000. * (minRoundTripLatency / qpcPerMs);
     long double maxRtLatency = 1000. * (maxRoundTripLatency / qpcPerMs);
-    long double stddevRtLatency = 1000. * (sqrt(stdevRoundTripLatency / (long double)midiMessagesReceived) / qpcPerMs);
+    long double stddevRtLatency = 1000. * (sqrt(stdevRoundTripLatency / (long double)midiCallbacksReceived) / qpcPerMs);
 
     long double avgSLatency = 1000. * (avgSendLatency / qpcPerMs);
     long double firstSLatency = 1000. * (firstSendLatency / qpcPerMs);
@@ -868,7 +887,7 @@ void MidiTransportTestsBase::TestMidiIO_Latency(REFIID iid, MidiDataFormats data
     long double avgRLatency = 1000. * (avgReceiveLatency / qpcPerMs);
     long double maxRLatency = 1000. * (maxReceiveLatency / qpcPerMs);
     long double minRLatency = 1000. * (minReceiveLatency / qpcPerMs);
-    long double stddevRLatency = 1000. * (sqrt(stdevReceiveLatency / ((long double)midiMessagesReceived - 1.)) / qpcPerMs);
+    long double stddevRLatency = 1000. * (sqrt(stdevReceiveLatency / ((long double)midiCallbacksReceived - 1.)) / qpcPerMs);
 
     LOG_OUTPUT(L"****************************************************************************");
     LOG_OUTPUT(L"Elapsed time from start of send to final receive %g ms", elapsedMs);

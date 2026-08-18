@@ -57,6 +57,19 @@ private:
         _In_ PMIDISRV_CLIENTCREATION_PARAMS,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
+    // The following three support publishing endpoint in-use state. The first two require
+    // m_ClientManagerLock to be held; the third writes to PnP and must be called without it.
+
+    std::wstring GetEndpointInUseReportingTarget(
+        _In_ std::wstring const&);
+
+    bool EndpointHasApplicationClients(
+        _In_ std::wstring const&);
+
+    HRESULT UpdateEndpointInUseProperty(
+        _In_ std::wstring const&,
+        _In_ bool);
+
     // TODO: These should be made more generic and go by a configuration, rather than have
     // discrete methods for each type of transform. But right now, it's about making the
     // transform process work properly
