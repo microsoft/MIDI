@@ -14,6 +14,11 @@
       <BufferSize Value="256" />
       <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="64" />
     </EventCollector>
+    <!-- USB and PnP get their own buffer budget so their volume cannot evict the MIDI events -->
+    <EventCollector Id="UsbPnpCollector" Name="UsbPnpCollector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="128" />
+    </EventCollector>
     <SystemProvider Id="SystemProvider">
       <Keywords>
         <Keyword Value="CpuConfig" />
@@ -44,6 +49,9 @@
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrv" Name="f42d2441-aac3-5216-0150-3c0f50006b64" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrvTransport" Name="c22d26fd-947b-5df1-a0f8-bc62d26d188d" Level="5" NonPagedMemory="false" />
 
+    <!-- Cross-process pipe. This is where send stalls and dropped buffers are reported. -->
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiXproc" Name="159b4b38-c2b9-58bc-f3cc-dcd31ca44d21" Level="5" NonPagedMemory="false" />
+
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSTransport" Name="a8d144fe-be0c-5484-25a9-512d2f6445d5" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSAggregateTransport" Name="07e90998-c326-56f8-e99b-20afb12e1b4f" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsTransport" Name="84856b86-fe14-51a3-96fa-b9683533d40b" Level="5" NonPagedMemory="false" />
@@ -71,6 +79,17 @@
         <Keyword Value="0x7FFFFFFF" />
       </Keywords>
     </EventProvider>
+
+    <!-- Device arrival/removal and USB stack state. Level 4 (Information) deliberately: level 5
+         on the host controller providers logs every transfer and fills the ring in seconds. -->
+    <EventProvider Id="Microsoft-Windows-Kernel-PnP" Name="9c205a39-1250-487d-abd7-e831c6290539" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-USBHUB3" Name="ac52ad17-cc01-4f85-8df5-4dce4333c99b" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-UCX" Name="36da592d-e43a-4e28-af6f-4bc57c5a11e8" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-USBXHCI" Name="30e1d284-5d88-459c-83fd-6345b39b19ec" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-USBHUB" Name="7426a56b-e2d5-4b30-bdef-b31815c1a74a" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-USBPORT" Name="c88a4ef5-d048-4013-9408-e04b7db2814a" Level="4" NonPagedMemory="true" />
+
+    <EventProvider Id="Microsoft-Windows-Audio" Name="ae4bd3be-f36f-45b6-8d21-bdd6fb832853" Level="4" NonPagedMemory="false" />
     <Profile Id="midi.Verbose.Memory" LoggingMode="Memory" Name="midi" DetailLevel="Verbose" Description="midi profile">
       <Collectors>
         <SystemCollectorId Value="SystemCollector">
@@ -80,6 +99,7 @@
           <EventProviders>
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrv" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrvTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiXproc" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSTransport" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSAggregateTransport" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsTransport" />
@@ -97,11 +117,22 @@
             <EventProviderId Value="TraceLogging/Microsoft.Midi.Console" />
             <EventProviderId Value="TraceLogging/Windows.Devices.Midi2.Api" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Sdk" />
+            <EventProviderId Value="Microsoft-Windows-Audio" />
           </EventProviders>
         </EventCollectorId>
         <EventCollectorId Value="NonpagedPoolCollector">
           <EventProviders>
             <EventProviderId Value="WPP/usbmidi2.sys" />
+          </EventProviders>
+        </EventCollectorId>
+        <EventCollectorId Value="UsbPnpCollector">
+          <EventProviders>
+            <EventProviderId Value="Microsoft-Windows-Kernel-PnP" />
+            <EventProviderId Value="Microsoft-Windows-USB-USBHUB3" />
+            <EventProviderId Value="Microsoft-Windows-USB-UCX" />
+            <EventProviderId Value="Microsoft-Windows-USB-USBXHCI" />
+            <EventProviderId Value="Microsoft-Windows-USB-USBHUB" />
+            <EventProviderId Value="Microsoft-Windows-USB-USBPORT" />
           </EventProviders>
         </EventCollectorId>
       </Collectors>

@@ -29,6 +29,7 @@
 #include "ump_iterator.h"
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 #include "Feature_Servicing_MIDI2XProcBatchedReads.h"
+#include "Feature_Servicing_MIDI2XProcSendWaitTimeouts.h"
 
 // A worker holding an IRP that a driver refuses to release can never finish terminating.
 #define MIDI_XPROC_WORKER_EXIT_TIMEOUT 10000
@@ -49,6 +50,11 @@ class MidiXProcTelemetryProvider : public wil::TraceLoggingProvider
 // timeout waiting for the messages to be received
 // waits for more than 5 seconds cause UI app hang crashes.
 #define MIDI_XPROC_BUFFER_RECEIVED_WAIT 1000
+
+// A single downstream KS write is allowed KSMidiOutDevice::WriteTimeoutBaseMilliseconds plus a
+// per-byte allowance, so the 1 second wait above gives up on sends that are still in flight to a
+// slow but healthy device. Kept below the 5 second UI hang threshold noted above.
+#define MIDI_XPROC_SEND_WAIT_TIMEOUT_EXTENDED 4000
 
 // timeout waiting for the messages to be received
 #define MIDI_XPROC_CALLBACK_RETRY_TIMEOUT 1000
@@ -333,10 +339,17 @@ CMidiXProc::WaitForSendComplete(ULONG startingReadPosition, ULONG BufferWrittenP
             }
         }
 
+        ULONG bufferReceivedWait = MIDI_XPROC_BUFFER_RECEIVED_WAIT;
+
+        if (Feature_Servicing_MIDI2XProcSendWaitTimeouts::IsEnabled())
+        {
+            bufferReceivedWait = MIDI_XPROC_SEND_WAIT_TIMEOUT_EXTENDED;
+        }
+
         do
         {
             // wait for either the other end to read the buffer, termination, or timeout with no messages read
-            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_RECEIVED_WAIT);
+            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, bufferReceivedWait);
             if (ret == (WAIT_OBJECT_0 + 1))
             {
                 // this is a manual reset event, so reset the event before reading the updated position so

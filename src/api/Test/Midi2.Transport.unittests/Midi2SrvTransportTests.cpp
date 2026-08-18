@@ -189,18 +189,22 @@ MidiSrvTransportTests::TestMidiSrvMultiClient
 
         PrintMidiMessage(payload, payloadSize, sizeof(MIDI_MESSAGE), payloadPosition);
 
-        midiMessagesReceived++;
+        // Messages sharing a timestamp arrive coalesced into one callback, so the counts come
+        // from the payload rather than from the number of calls.
+        UINT32 const messagesInPayload = static_cast<UINT32>(payloadSize / sizeof(MIDI_MESSAGE));
+
+        midiMessagesReceived += messagesInPayload;
 
         if (context == context1)
         {
-            midiMessageReceived1++;
+            midiMessageReceived1 += messagesInPayload;
         }
         else if (context == context2)
         {
-            midiMessageReceived2++;
+            midiMessageReceived2 += messagesInPayload;
         }
 
-        if (midiMessagesReceived == expectedMessageCount)
+        if (midiMessagesReceived >= expectedMessageCount)
         {
             allMessagesReceived.SetEvent();
         }
@@ -527,18 +531,22 @@ MidiSrvTransportTests::TestMidiSrvMultiClientBidi
 
         PrintMidiMessage(payload, payloadSize, sizeof(MIDI_MESSAGE), payloadPosition);
 
-        midiMessagesReceived++;
+        // Messages sharing a timestamp arrive coalesced into one callback, so the counts come
+        // from the payload rather than from the number of calls.
+        UINT32 const messagesInPayload = static_cast<UINT32>(payloadSize / sizeof(MIDI_MESSAGE));
+
+        midiMessagesReceived += messagesInPayload;
 
         if (context == context1)
         {
-            midiMessageReceived1++;
+            midiMessageReceived1 += messagesInPayload;
         }
         else if (context == context2)
         {
-            midiMessageReceived2++;
+            midiMessageReceived2 += messagesInPayload;
         }
 
-        if (midiMessagesReceived == expectedMessageCount)
+        if (midiMessagesReceived >= expectedMessageCount)
         {
             allMessagesReceived.SetEvent();
         }
@@ -787,6 +795,10 @@ public:
 
         UINT midiMessagesReceived = 0;
 
+        // Jitter and round trip are sampled once per callback, and a callback can carry several
+        // coalesced messages, so the statistics need their own denominator.
+        UINT midiCallbacksReceived = 0;
+
         RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
 
         auto cleanupOnFailure = wil::scope_exit([&]() {
@@ -811,16 +823,32 @@ public:
 
         RETURN_IF_FAILED(midiTransport->Activate(__uuidof(IMidiBidirectional), (void**)&midiBidiDevice));
 
-        m_MidiInCallback = [&](PVOID payload, UINT32 , LONGLONG payloadPosition, LONGLONG)
+        m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
         {
             LARGE_INTEGER qpc{0};
             LONGLONG roundTripLatency{0};
 
-            // filter the callback to only look at the messages sent by this thread
-            if (((transportCreationParams.DataFormat == MidiDataFormats_UMP) && 0 == memcmp(payload, &(testConfig.MidiTestData_32), sizeof(testConfig.MidiTestData_32))) ||
-                ((transportCreationParams.DataFormat == MidiDataFormats_ByteStream) && 0 == memcmp(payload, &(testConfig.MidiTestMessage), sizeof(testConfig.MidiTestMessage))))
+            bool const isUmp = (transportCreationParams.DataFormat == MidiDataFormats_UMP);
+            UINT32 const messageSize = static_cast<UINT32>(isUmp ? sizeof(testConfig.MidiTestData_32) : sizeof(testConfig.MidiTestMessage));
+            void const* const expectedMessage = isUmp ? static_cast<void const*>(&(testConfig.MidiTestData_32)) : static_cast<void const*>(&(testConfig.MidiTestMessage));
+
+            // filter the callback to only look at the messages sent by this thread. Messages sharing
+            // a timestamp arrive coalesced into one callback and every thread shares the endpoint,
+            // so each message in the payload has to be matched on its own.
+            UINT32 matchingMessages = 0;
+            for (UINT32 offset = 0; offset + messageSize <= payloadSize; offset += messageSize)
+            {
+                if (0 == memcmp(static_cast<BYTE const*>(payload) + offset, expectedMessage, messageSize))
+                {
+                    matchingMessages++;
+                }
+            }
+
+            if (matchingMessages > 0)
             {
                 QueryPerformanceCounter(&qpc);
+
+                midiCallbacksReceived++;
         
                 // first, we calculate the jitter statistics for how often the
                 // recieve function was called. Since the messages are sent at a
@@ -845,13 +873,13 @@ public:
                     long double prevAvgReceiveLatency = avgReceiveLatency;
         
                     // running average for the average recieve latency/jitter
-                    avgReceiveLatency = (prevAvgReceiveLatency + (((long double)receiveLatency - prevAvgReceiveLatency) / ((long double)midiMessagesReceived)));
+                    avgReceiveLatency = (prevAvgReceiveLatency + (((long double)receiveLatency - prevAvgReceiveLatency) / ((long double)midiCallbacksReceived)));
         
                     stdevReceiveLatency = stdevReceiveLatency + ((receiveLatency - prevAvgReceiveLatency) * (receiveLatency - avgReceiveLatency));
                 }
                 previousReceive = qpc.QuadPart;
         
-                midiMessagesReceived++;
+                midiMessagesReceived += matchingMessages;
         
                 // now calculate the round trip statistics based upon
                 // the timestamp on the message that was just received relative
@@ -870,16 +898,16 @@ public:
                 long double prevAvgRoundTripLatency = avgRoundTripLatency;
         
                 // running average for the round trip latency
-                avgRoundTripLatency = (prevAvgRoundTripLatency + (((long double) roundTripLatency - prevAvgRoundTripLatency) / (long double) midiMessagesReceived));
+                avgRoundTripLatency = (prevAvgRoundTripLatency + (((long double) roundTripLatency - prevAvgRoundTripLatency) / (long double) midiCallbacksReceived));
         
                 stdevRoundTripLatency = stdevRoundTripLatency + ((roundTripLatency - prevAvgRoundTripLatency) * (roundTripLatency - avgRoundTripLatency));
         
                 // Save the latency for the very first message
-                if (1 == midiMessagesReceived)
+                if (1 == midiCallbacksReceived)
                 {
                     firstRoundTripLatency = roundTripLatency;
                 }
-                else if (midiMessagesReceived == expectedMessageCount)
+                else if (midiMessagesReceived >= expectedMessageCount)
                 {
                     lastReceive = qpc;
                     lastRoundTripLatency = roundTripLatency;
@@ -1015,7 +1043,7 @@ public:
         m_lastRtLatency = 1000. * (lastRoundTripLatency / qpcPerMs);
         m_minRtLatency = 1000. * (minRoundTripLatency / qpcPerMs);
         m_maxRtLatency = 1000. * (maxRoundTripLatency / qpcPerMs);
-        m_stddevRtLatency = 1000. * (sqrt(stdevRoundTripLatency / (long double)midiMessagesReceived) / qpcPerMs);
+        m_stddevRtLatency = 1000. * (sqrt(stdevRoundTripLatency / (long double)midiCallbacksReceived) / qpcPerMs);
     
         m_avgSLatency = 1000. * (avgSendLatency / qpcPerMs);
         m_firstSLatency = 1000. * (firstSendLatency / qpcPerMs);
@@ -1027,7 +1055,7 @@ public:
         m_avgRLatency = 1000. * (avgReceiveLatency / qpcPerMs);
         m_maxRLatency = 1000. * (maxReceiveLatency / qpcPerMs);
         m_minRLatency = 1000. * (minReceiveLatency / qpcPerMs);
-        m_stddevRLatency = 1000. * (sqrt(stdevReceiveLatency / ((long double)midiMessagesReceived - 1.)) / qpcPerMs);
+        m_stddevRLatency = 1000. * (sqrt(stdevReceiveLatency / ((long double)midiCallbacksReceived - 1.)) / qpcPerMs);
 
         LOG_OUTPUT(L"%s - Done, cleaning up", testConfig.SessionName.c_str());
     
