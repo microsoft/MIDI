@@ -1,0 +1,102 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace midi2monitor
+{
+    // A display name paired with the number it represents. Used for the group and channel
+    // pickers, where zero means "All".
+    [default_interface]
+    runtimeclass NamedChoice
+    {
+        NamedChoice();
+
+        String DisplayName{ get; };
+        Int32 Value{ get; };
+    }
+
+    [default_interface]
+    runtimeclass EndpointChoice
+    {
+        EndpointChoice();
+
+        String DisplayName{ get; };
+        String EndpointDeviceId{ get; };
+        String ImagePath{ get; };
+        Microsoft.UI.Xaml.Visibility ImageVisibility{ get; };
+    }
+
+    [default_interface]
+    runtimeclass MonitorColumn : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        MonitorColumn();
+
+        Int32 ColumnId{ get; };
+        String Header{ get; };
+        Boolean IsVisible;
+        Boolean CanHide{ get; };
+        Boolean CanMove{ get; };
+    }
+
+    // One row in the message list. Every string is formatted once, when the row is first
+    // realized for display, and never on the capture path.
+    [default_interface]
+    runtimeclass MidiMessageViewModel : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        MidiMessageViewModel();
+
+        UInt64 Sequence{ get; };
+
+        String IndexText{ get; };
+        String TimestampText{ get; };
+        String TimestampUnit{ get; };
+        String GroupText{ get; };
+        String ChannelText{ get; };
+        String DeltaText{ get; };
+        String DeltaUnit{ get; };
+
+        // decoded contents, split so the values can be coloured independently of the labels
+        String Detail0Label{ get; };
+        String Detail0Value{ get; };
+        String Detail1Label{ get; };
+        String Detail1Value{ get; };
+        String Detail2Label{ get; };
+        String Detail2Value{ get; };
+        String Detail3Label{ get; };
+        String Detail3Value{ get; };
+
+        String Word0Text{ get; };
+        String Word1Text{ get; };
+        String Word2Text{ get; };
+        String Word3Text{ get; };
+
+        Microsoft.UI.Xaml.Visibility Word1Visibility{ get; };
+        Microsoft.UI.Xaml.Visibility Word2Visibility{ get; };
+        Microsoft.UI.Xaml.Visibility Word3Visibility{ get; };
+
+        String MessageName{ get; };
+        Microsoft.UI.Xaml.Visibility MessageNameVisibility{ get; };
+        Microsoft.UI.Xaml.Media.Brush MessageNameBackground{ get; };
+        Microsoft.UI.Xaml.Media.Brush MessageNameForeground{ get; };
+
+        Microsoft.UI.Xaml.Media.Brush RowBackground{ get; };
+
+        String NoticeText{ get; };
+        Microsoft.UI.Xaml.Visibility NoticeVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility MessageVisibility{ get; };
+
+        String Comment;
+        Microsoft.UI.Xaml.Visibility CommentGlyphVisibility{ get; };
+    }
+
+    // Lays the message list cells out in the order and widths the customer has chosen. The
+    // header row and every message row use the same panel, so they stay aligned.
+    [default_interface]
+    runtimeclass MessageRowPanel : Microsoft.UI.Xaml.Controls.Panel
+    {
+        MessageRowPanel();
+    }
+}

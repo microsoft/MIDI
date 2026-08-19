@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midi2monitor.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midi2monitor"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer x:Name="RootScrollViewer" Loaded="OnRootLoaded" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel Margin="24" Spacing="20" MaxWidth="620" HorizontalAlignment="Left">
+
+            <TextBlock x:Uid="SettingsPageTitle"
+                       Text="Settings"
+                       Style="{ThemeResource TitleTextBlockStyle}" />
+
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="SettingsAppearanceHeader"
+                           Text="Appearance"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock x:Uid="SettingsThemeDescription"
+                           Text="Choose whether the app follows your Windows app colour mode, or always uses light or dark."
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                <ComboBox x:Name="ThemeComboBox"
+                          x:Uid="SettingsThemePicker"
+                          Width="260"
+                          SelectionChanged="OnThemeChanged">
+                    <ComboBoxItem x:Uid="SettingsThemeSystem" Content="Use my Windows setting" />
+                    <ComboBoxItem x:Uid="SettingsThemeLight" Content="Light" />
+                    <ComboBoxItem x:Uid="SettingsThemeDark" Content="Dark" />
+                </ComboBox>
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="SettingsCaptureHeader"
+                           Text="Capture"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock x:Uid="SettingsRetentionDescription"
+                           Text="How many messages to keep. Older messages are discarded once the limit is reached."
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                <NumberBox x:Name="RetentionNumberBox"
+                           x:Uid="SettingsRetentionNumberBox"
+                           Width="260"
+                           Minimum="100"
+                           Maximum="500000"
+                           SmallChange="1000"
+                           LargeChange="10000"
+                           SpinButtonPlacementMode="Compact"
+                           ValueChanged="OnRetentionChanged" />
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="SettingsDisplayHeader"
+                           Text="Message list"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <ToggleSwitch x:Name="ShowChicletsToggle"
+                              x:Uid="SettingsShowChicletsToggle"
+                              Header="Show the message name under each message"
+                              Toggled="OnShowChicletsToggled" />
+                <Button x:Name="ResetColumnsButton"
+                        x:Uid="SettingsResetColumnsButton"
+                        Content="Reset the columns to their defaults"
+                        Click="OnResetColumnsClick" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="SettingsAboutHeader"
+                           Text="About"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock x:Name="VersionText"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           IsTextSelectionEnabled="True" />
+            </StackPanel>
+
+            <Button x:Name="CloseButton"
+                    x:Uid="SettingsCloseButton"
+                    Content="Close"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    Click="OnCloseClick" />
+        </StackPanel>
+    </ScrollViewer>
+</Window>
