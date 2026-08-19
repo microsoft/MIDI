@@ -23,6 +23,12 @@ namespace midi2monitor
         constexpr wchar_t ValueShowChiclets[] = L"ShowMessageNameChiclets";
         constexpr wchar_t ValueAutoHideColumns[] = L"AutoHideColumnsWhenNarrow";
         constexpr wchar_t ValueColumnLayout[] = L"ColumnLayout";
+        constexpr wchar_t ValueTableZoomPercent[] = L"TableZoomPercent";
+        constexpr wchar_t ValueWindowX[] = L"WindowX";
+        constexpr wchar_t ValueWindowY[] = L"WindowY";
+        constexpr wchar_t ValueWindowWidth[] = L"WindowWidth";
+        constexpr wchar_t ValueWindowHeight[] = L"WindowHeight";
+        constexpr wchar_t ValueWindowMaximized[] = L"WindowMaximized";
 
         wil::unique_hkey OpenSettingsKeyForWrite() noexcept
         {
@@ -78,6 +84,41 @@ namespace midi2monitor
         m_retainedMessageCount = std::clamp(retained, MinimumRetainedMessageCount, MaximumRetainedMessageCount);
 
         m_columnLayout = ReadString(ValueColumnLayout, L"");
+
+        auto const zoom = ReadDword(ValueTableZoomPercent, DefaultZoomPercent);
+        m_tableZoomPercent = std::clamp(zoom, MinimumZoomPercent, MaximumZoomPercent);
+
+        m_windowPlacement.X = static_cast<int32_t>(ReadDword(ValueWindowX, 0));
+        m_windowPlacement.Y = static_cast<int32_t>(ReadDword(ValueWindowY, 0));
+        m_windowPlacement.Width = static_cast<int32_t>(ReadDword(ValueWindowWidth, 0));
+        m_windowPlacement.Height = static_cast<int32_t>(ReadDword(ValueWindowHeight, 0));
+        m_windowPlacement.Maximized = ReadDword(ValueWindowMaximized, 0) != 0;
+        m_windowPlacement.Valid =
+            m_windowPlacement.Width >= MinimumWindowWidth && m_windowPlacement.Height >= MinimumWindowHeight;
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::WindowPlacement(WindowPlacementInfo const& value) noexcept
+    {
+        m_windowPlacement = value;
+        m_windowPlacement.Valid = value.Width >= MinimumWindowWidth && value.Height >= MinimumWindowHeight;
+
+        if (!m_windowPlacement.Valid)
+        {
+            return;
+        }
+
+        WriteDword(ValueWindowX, static_cast<uint32_t>(value.X));
+        WriteDword(ValueWindowY, static_cast<uint32_t>(value.Y));
+        WriteDword(ValueWindowWidth, static_cast<uint32_t>(value.Width));
+        WriteDword(ValueWindowHeight, static_cast<uint32_t>(value.Height));
+        WriteDword(ValueWindowMaximized, value.Maximized ? 1u : 0u);
+    }
+
+    void AppSettings::TableZoomPercent(uint32_t value) noexcept
+    {
+        m_tableZoomPercent = std::clamp(value, MinimumZoomPercent, MaximumZoomPercent);
+        WriteDword(ValueTableZoomPercent, m_tableZoomPercent);
     }
 
     void AppSettings::ShowClockMessages(bool value) noexcept

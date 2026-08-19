@@ -78,6 +78,10 @@ namespace midi2monitor
         Microsoft.UI.Xaml.Visibility Word3Visibility{ get; };
 
         String MessageName{ get; };
+        Double RowFontSize{ get; };
+        Double ChicletFontSize{ get; };
+        Double CommentButtonSize{ get; };
+        Double CommentGlyphSize{ get; };
         Microsoft.UI.Xaml.Visibility MessageNameVisibility{ get; };
         Microsoft.UI.Xaml.Media.Brush MessageNameBackground{ get; };
         Microsoft.UI.Xaml.Media.Brush MessageNameForeground{ get; };
@@ -89,6 +93,7 @@ namespace midi2monitor
         Microsoft.UI.Xaml.Visibility MessageVisibility{ get; };
 
         String Comment;
+        Object CommentToolTip{ get; };
         Microsoft.UI.Xaml.Visibility CommentGlyphVisibility{ get; };
     }
 

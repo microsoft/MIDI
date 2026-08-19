@@ -140,8 +140,8 @@
     <ClInclude Include="MainWindow.xaml.h">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClInclude>
-    <ClInclude Include="SettingsWindow.xaml.h">
-      <DependentUpon>SettingsWindow.xaml</DependentUpon>
+    <ClInclude Include="SettingsDialog.xaml.h">
+      <DependentUpon>SettingsDialog.xaml</DependentUpon>
     </ClInclude>
     <ClInclude Include="MessageRowPanel.h" />
     <ClInclude Include="MidiMessageViewModel.h" />
@@ -171,9 +171,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindow.Monitoring.cpp" />
+    <ClCompile Include="MainWindow.Clipboard.cpp" />
     <ClCompile Include="MainWindow.Export.cpp" />
-    <ClCompile Include="SettingsWindow.xaml.cpp">
-      <DependentUpon>SettingsWindow.xaml</DependentUpon>
+    <ClCompile Include="SettingsDialog.xaml.cpp">
+      <DependentUpon>SettingsDialog.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MessageRowPanel.cpp" />
     <ClCompile Include="MidiMessageViewModel.cpp" />
@@ -186,8 +187,8 @@
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
-    <Midl Include="SettingsWindow.idl">
-      <DependentUpon>SettingsWindow.xaml</DependentUpon>
+    <Midl Include="SettingsDialog.idl">
+      <DependentUpon>SettingsDialog.xaml</DependentUpon>
     </Midl>
     <Midl Include="MonitorTypes.idl" />
   </ItemGroup>
@@ -198,7 +199,7 @@
     <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="SettingsWindow.xaml">
+    <Page Include="SettingsDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Styles\MonitorStyles.xaml">

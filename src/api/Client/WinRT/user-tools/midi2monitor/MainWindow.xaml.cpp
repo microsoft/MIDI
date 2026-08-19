@@ -10,7 +10,7 @@
 #include "MainWindow.g.cpp"
 
 #include "App.xaml.h"
-#include "SettingsWindow.xaml.h"
+#include "SettingsDialog.xaml.h"
 
 #include "EndpointChoice.h"
 #include "MessageRowPanel.h"
@@ -25,6 +25,47 @@ namespace res = ::midi2monitor::resources;
 
 namespace winrt::midi2monitor::implementation
 {
+    namespace
+    {
+        // accepts "125" and "125%", with surrounding spaces
+        bool TryParseZoomText(std::wstring_view text, uint32_t& percent) noexcept
+        {
+            uint32_t value{ 0 };
+            bool sawDigit{ false };
+
+            for (auto const ch : text)
+            {
+                if (ch >= L'0' && ch <= L'9')
+                {
+                    value = (value * 10) + static_cast<uint32_t>(ch - L'0');
+                    sawDigit = true;
+
+                    if (value > 10000)
+                    {
+                        return false;
+                    }
+                }
+                else if (ch != L'%' && ch != L' ')
+                {
+                    return false;
+                }
+            }
+
+            if (!sawDigit)
+            {
+                return false;
+            }
+
+            percent = value;
+            return true;
+        }
+
+        bool IsToggleOn(controls::Primitives::ToggleButton const& button) noexcept
+        {
+            auto const value = button.IsChecked();
+            return value != nullptr && value.Value();
+        }
+    }
     _Use_decl_annotations_
     void MainWindow::OnRootLoaded(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
@@ -46,6 +87,8 @@ namespace winrt::midi2monitor::implementation
         StartEndpointWatcher();
 
         UpdateCommandStates();
+        UpdateCaptureButtonLayout();
+        UpdateStatusBarLayout();
         UpdateStatusLine();
         ApplyStartupOptions();
     }
@@ -101,6 +144,7 @@ namespace winrt::midi2monitor::implementation
                 {
                     if (auto strong = weak.get())
                     {
+                        strong->SaveWindowPlacement();
                         strong->StopMonitoring(false);
                         strong->StopEndpointWatcher();
                         strong->m_pipeline.Stop();
@@ -114,17 +158,10 @@ namespace winrt::midi2monitor::implementation
     {
         try
         {
-            Title(res::GetString(L"AppDisplayName"));
+            UpdateWindowTitle();
 
             ExtendsContentIntoTitleBar(true);
             SetTitleBar(AppTitleBar());
-
-            auto appWindow = AppWindow();
-
-            if (appWindow != nullptr)
-            {
-                appWindow.Resize(winrt::Windows::Graphics::SizeInt32{ 1280, 800 });
-            }
 
             ApplyTitleBarColors();
             UpdateTitleBarInsets();
@@ -133,10 +170,128 @@ namespace winrt::midi2monitor::implementation
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to set up the window chrome.")
     }
 
+    void MainWindow::RestoreWindowPlacement() noexcept
+    {
+        try
+        {
+            auto appWindow = AppWindow();
+
+            if (appWindow == nullptr)
+            {
+                return;
+            }
+
+            auto const& saved = native::AppSettings::Current().WindowPlacement();
+
+            if (!saved.Valid)
+            {
+                appWindow.Resize(winrt::Windows::Graphics::SizeInt32{ 1280, 800 });
+                return;
+            }
+
+            winrt::Windows::Graphics::RectInt32 bounds{ saved.X, saved.Y, saved.Width, saved.Height };
+
+            // The saved monitor may be gone or smaller now, so pull the window back onto a
+            // display that actually exists before showing it.
+            auto const display = winrt::Microsoft::UI::Windowing::DisplayArea::GetFromRect(
+                bounds, winrt::Microsoft::UI::Windowing::DisplayAreaFallback::Nearest);
+
+            if (display != nullptr)
+            {
+                auto const work = display.WorkArea();
+
+                bounds.Width = std::min(bounds.Width, work.Width);
+                bounds.Height = std::min(bounds.Height, work.Height);
+                bounds.X = std::clamp(bounds.X, work.X, work.X + work.Width - bounds.Width);
+                bounds.Y = std::clamp(bounds.Y, work.Y, work.Y + work.Height - bounds.Height);
+            }
+
+            appWindow.MoveAndResize(bounds);
+
+            if (saved.Maximized)
+            {
+                if (auto presenter = appWindow.Presenter().try_as<winrt::Microsoft::UI::Windowing::OverlappedPresenter>())
+                {
+                    presenter.Maximize();
+                }
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to restore the saved window position.")
+    }
+
+    void MainWindow::SaveWindowPlacement() noexcept
+    {
+        try
+        {
+            auto const handle = WindowHandle();
+
+            if (handle == nullptr)
+            {
+                return;
+            }
+
+            // WINDOWPLACEMENT carries the restore rectangle, so a window closed while maximized
+            // still reopens at the size the customer chose.
+            WINDOWPLACEMENT placement{};
+            placement.length = sizeof(placement);
+
+            if (!::GetWindowPlacement(handle, &placement))
+            {
+                return;
+            }
+
+            native::WindowPlacementInfo info{};
+
+            info.X = placement.rcNormalPosition.left;
+            info.Y = placement.rcNormalPosition.top;
+            info.Width = placement.rcNormalPosition.right - placement.rcNormalPosition.left;
+            info.Height = placement.rcNormalPosition.bottom - placement.rcNormalPosition.top;
+            info.Maximized = placement.showCmd == SW_SHOWMAXIMIZED;
+
+            native::AppSettings::Current().WindowPlacement(info);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to save the window position.")
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnRootSizeChanged(foundation::IInspectable const&, xaml::SizeChangedEventArgs const&)
     {
         UpdateTitleBarInsets();
+        UpdateCaptureButtonLayout();
+        UpdateStatusBarLayout();
+    }
+
+    void MainWindow::UpdateStatusBarLayout() noexcept
+    {
+        try
+        {
+            auto const width = RootGrid().ActualWidth();
+
+            if (width <= 0)
+            {
+                return;
+            }
+
+            // the export button is centred on the whole bar, so each side only gets half the
+            // width. Shed the least important controls first rather than letting them collide.
+            constexpr double ZoomSliderMinimumWidth = 800.0;
+            constexpr double ZoomPresetsMinimumWidth = 730.0;
+            constexpr double MessageCountsMinimumWidth = 690.0;
+
+            auto const visible = [](bool show)
+                {
+                    return show ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+                };
+
+            ZoomSlider().Visibility(visible(width >= ZoomSliderMinimumWidth));
+            ZoomButton().Visibility(visible(width >= ZoomPresetsMinimumWidth));
+
+            auto const showCounts = visible(width >= MessageCountsMinimumWidth);
+
+            TotalCountText().Visibility(showCounts);
+            RealTimeCountText().Visibility(showCounts);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to lay out the status bar.")
     }
 
     void MainWindow::UpdateTitleBarInsets() noexcept
@@ -234,10 +389,111 @@ namespace winrt::midi2monitor::implementation
     {
         if (m_listSource != nullptr)
         {
+            auto const& settings = native::AppSettings::Current();
+
             m_listSource->FormattingOptions(
-                native::AppSettings::Current().TimestampFormat(),
-                native::AppSettings::Current().ShowMessageNameChiclets());
+                settings.TimestampFormat(),
+                settings.ShowMessageNameChiclets(),
+                native::AppSettings::BaseRowFontSize * settings.TableZoomPercent() / 100.0);
         }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ApplyZoom(uint32_t zoomPercent, bool updateSlider, bool updateChoice) noexcept
+    {
+        try
+        {
+            auto& settings = native::AppSettings::Current();
+
+            settings.TableZoomPercent(zoomPercent);
+
+            auto const percent = settings.TableZoomPercent();
+            auto const scale = percent / 100.0;
+
+            // rows inherit their size from the list, so one assignment scales every cell
+            MessagesListView().FontSize(native::AppSettings::BaseRowFontSize * scale);
+
+            auto const headerFontSize = native::AppSettings::BaseRowFontSize * scale;
+
+            IndexHeaderText().FontSize(headerFontSize);
+            TimestampHeaderText().FontSize(headerFontSize);
+            DataHeaderText().FontSize(headerFontSize);
+            GroupHeaderText().FontSize(headerFontSize);
+            ChannelHeaderText().FontSize(headerFontSize);
+            DecodedHeaderText().FontSize(headerFontSize);
+            DeltaHeaderText().FontSize(headerFontSize);
+
+            m_suppressZoomHandling = true;
+
+            if (updateSlider)
+            {
+                ZoomSlider().Value(static_cast<double>(percent));
+            }
+
+            if (updateChoice)
+            {
+                ZoomButtonText().Text(winrt::hstring{ std::format(L"{}%", percent) });
+            }
+
+            m_suppressZoomHandling = false;
+
+            // the chiclet size lives on the row view models, so they have to be rebuilt
+            ApplyMessageNameSetting();
+        }
+        catch (...)
+        {
+            m_suppressZoomHandling = false;
+            MIDI_MONITOR_LOG_GENERAL_EXCEPTION(L"Unable to apply the table zoom.");
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnZoomSliderValueChanged(foundation::IInspectable const&, controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        if (m_suppressZoomHandling || !m_initialized)
+        {
+            return;
+        }
+
+        ApplyZoom(static_cast<uint32_t>(args.NewValue()), false, true);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnZoomPresetClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const item = sender.try_as<controls::MenuFlyoutItem>();
+
+            if (item == nullptr)
+            {
+                return;
+            }
+
+            uint32_t percent{ 0 };
+
+            if (TryParseZoomText(winrt::unbox_value_or<winrt::hstring>(item.Tag(), winrt::hstring{}), percent))
+            {
+                ApplyZoom(percent, true, true);
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the zoom level.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnZoomOutClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto const current = native::AppSettings::Current().TableZoomPercent();
+
+        ApplyZoom(current > native::AppSettings::MinimumZoomPercent + 10 ? current - 10 : native::AppSettings::MinimumZoomPercent, true, true);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnZoomInClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto const current = native::AppSettings::Current().TableZoomPercent();
+
+        ApplyZoom(current + 10, true, true);
     }
 
     void MainWindow::InitializeControlsFromSettings() noexcept
@@ -248,11 +504,12 @@ namespace winrt::midi2monitor::implementation
 
             m_suppressSelectionHandling = true;
 
-            ShowClockToggle().IsOn(settings.ShowClockMessages());
-            ShowActiveSenseToggle().IsOn(settings.ShowActiveSenseMessages());
-            AlwaysOnTopToggle().IsOn(settings.AlwaysOnTop());
+            ShowClockToggle().IsChecked(settings.ShowClockMessages());
+            ShowActiveSenseToggle().IsChecked(settings.ShowActiveSenseMessages());
+            AlwaysOnTopToggle().IsChecked(settings.AlwaysOnTop());
             TimestampFormatComboBox().SelectedIndex(static_cast<int32_t>(settings.TimestampFormat()));
             AutoHideColumnsCheckBox().IsChecked(settings.AutoHideColumnsWhenNarrow());
+            ShowMessageNamesCheckBox().IsChecked(settings.ShowMessageNameChiclets());
 
             m_suppressSelectionHandling = false;
 
@@ -260,6 +517,7 @@ namespace winrt::midi2monitor::implementation
 
             ApplyHiddenTraits();
             ApplyMessageNameSetting();
+            ApplyZoom(settings.TableZoomPercent(), true, true);
 
             if (settings.AlwaysOnTop())
             {
@@ -438,7 +696,7 @@ namespace winrt::midi2monitor::implementation
 
         try
         {
-            native::AppSettings::Current().ShowClockMessages(ShowClockToggle().IsOn());
+            native::AppSettings::Current().ShowClockMessages(IsToggleOn(ShowClockToggle()));
             ApplyHiddenTraits();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the clock message filter.")
@@ -454,7 +712,7 @@ namespace winrt::midi2monitor::implementation
 
         try
         {
-            native::AppSettings::Current().ShowActiveSenseMessages(ShowActiveSenseToggle().IsOn());
+            native::AppSettings::Current().ShowActiveSenseMessages(IsToggleOn(ShowActiveSenseToggle()));
             ApplyHiddenTraits();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the active sense message filter.")
@@ -465,7 +723,7 @@ namespace winrt::midi2monitor::implementation
     {
         try
         {
-            auto const isOn = AlwaysOnTopToggle().IsOn();
+            auto const isOn = IsToggleOn(AlwaysOnTopToggle());
 
             if (!m_suppressSelectionHandling)
             {
@@ -629,6 +887,44 @@ namespace winrt::midi2monitor::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::OnShowMessageNamesChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        if (m_suppressSelectionHandling)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const isChecked = ShowMessageNamesCheckBox().IsChecked();
+
+            native::AppSettings::Current().ShowMessageNameChiclets(isChecked != nullptr && isChecked.Value());
+            ApplyMessageNameSetting();
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the message name setting.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditColumnsClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            controls::Primitives::FlyoutBase::ShowAttachedFlyout(HeaderRowBorder());
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to show the column options.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnDisplayOptionsClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            controls::Primitives::FlyoutBase::ShowAttachedFlyout(HeaderRowPanel());
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to show the display options.")
+    }
+
+    _Use_decl_annotations_
     void MainWindow::OnCommentTextChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const&)
     {
         try
@@ -695,11 +991,20 @@ namespace winrt::midi2monitor::implementation
     {
         try
         {
-            auto settingsWindow = winrt::make<SettingsWindow>();
-            winrt::get_self<SettingsWindow>(settingsWindow)->Owner(*this);
-            settingsWindow.Activate();
+            auto content = winrt::make_self<SettingsDialog>();
+
+            content->Owner(*this);
+            content->RequestedTheme(RootGrid().RequestedTheme());
+
+            // a Flyout rather than a ContentDialog: it light dismisses, and picks up the
+            // standard overlay corner radius and shadow for free
+            controls::Flyout flyout{};
+
+            flyout.Content(content.as<xaml::UIElement>());
+            flyout.Placement(controls::Primitives::FlyoutPlacementMode::TopEdgeAlignedLeft);
+            flyout.ShowAt(SettingsButton());
         }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to open the settings window.")
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to open the settings.")
     }
 
     _Use_decl_annotations_

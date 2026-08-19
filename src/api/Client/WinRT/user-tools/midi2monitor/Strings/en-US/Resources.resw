@@ -90,29 +90,44 @@
   <data name="ChannelPickerLabel.Text" xml:space="preserve">
     <value>Channel</value>
   </data>
-  <data name="StartMonitoringButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+  <data name="StartMonitoringButtonText" xml:space="preserve">
     <value>Start listening</value>
   </data>
-  <data name="StartMonitoringButtonText.Text" xml:space="preserve">
+  <data name="StartMonitoringButtonName" xml:space="preserve">
     <value>Start listening</value>
   </data>
-  <data name="StopMonitoringButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+  <data name="StopMonitoringButtonText" xml:space="preserve">
     <value>Stop listening</value>
   </data>
-  <data name="StopMonitoringButtonText.Text" xml:space="preserve">
-    <value>Stop</value>
+  <data name="StopMonitoringButtonName" xml:space="preserve">
+    <value>Stop listening</value>
   </data>
-  <data name="OptionsExpanderHeader.Text" xml:space="preserve">
-    <value>Filters and display options</value>
-  </data>
-  <data name="ShowClockToggle.Header" xml:space="preserve">
+  <data name="ShowClockToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Show Clock messages</value>
   </data>
-  <data name="ShowActiveSenseToggle.Header" xml:space="preserve">
+  <data name="ShowClockToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show Clock messages</value>
+  </data>
+  <data name="ShowActiveSenseToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Show Active Sense messages</value>
   </data>
-  <data name="AlwaysOnTopToggle.Header" xml:space="preserve">
+  <data name="ShowActiveSenseToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show Active Sense messages</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Always on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window above other windows</value>
+  </data>
+  <data name="EditColumnsMenuItem.Text" xml:space="preserve">
+    <value>Edit columns</value>
+  </data>
+  <data name="DisplayOptionsMenuItem.Text" xml:space="preserve">
+    <value>Time and message display</value>
+  </data>
+  <data name="ShowMessageNamesCheckBox.Content" xml:space="preserve">
+    <value>Show the message name under the data</value>
   </data>
   <data name="TimestampFormatLabel.Text" xml:space="preserve">
     <value>Show message time as</value>
@@ -129,12 +144,6 @@
   <data name="TimestampFormatSeconds.Content" xml:space="preserve">
     <value>Seconds since start</value>
   </data>
-  <data name="ColumnsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Choose columns</value>
-  </data>
-  <data name="ColumnsButtonText.Text" xml:space="preserve">
-    <value>Columns</value>
-  </data>
   <data name="ColumnsFlyoutHeader.Text" xml:space="preserve">
     <value>Choose and order the columns</value>
   </data>
@@ -147,23 +156,41 @@
   <data name="AutoHideColumnsCheckBox.Content" xml:space="preserve">
     <value>Hide extra columns when the window is narrow</value>
   </data>
-  <data name="ClearCaptureButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Clear the captured messages</value>
-  </data>
-  <data name="ClearCaptureButtonText.Text" xml:space="preserve">
-    <value>Clear</value>
-  </data>
   <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Settings</value>
   </data>
-  <data name="SettingsButtonText.Text" xml:space="preserve">
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Settings</value>
   </data>
   <data name="ExportButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Save the captured messages to a file</value>
   </data>
   <data name="ExportButtonText.Text" xml:space="preserve">
-    <value>Save to a file</value>
+    <value>Save to File</value>
+  </data>
+  <data name="CopyUmpWordsMenuItem.Text" xml:space="preserve">
+    <value>Copy as UMP words</value>
+  </data>
+  <data name="CopyMidi1BytesMenuItem.Text" xml:space="preserve">
+    <value>Copy as MIDI 1.0 bytes</value>
+  </data>
+  <data name="CopySysExBytesMenuItem.Text" xml:space="preserve">
+    <value>Copy as SysEx bytes</value>
+  </data>
+  <data name="ClearCaptureMenuItem.Text" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="ZoomPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Table zoom level</value>
+  </data>
+  <data name="ZoomSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Table zoom level</value>
+  </data>
+  <data name="ZoomOutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Make the table text smaller</value>
+  </data>
+  <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Make the table text larger</value>
   </data>
   <data name="AddCommentButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Add a note to this message</value>
@@ -395,10 +422,7 @@ Examples
     <value>The capture could not be written to that location. Choose a different folder or file name and try again.</value>
   </data>
 
-  <!-- ================================ Settings window ================================ -->
-  <data name="SettingsWindowTitle" xml:space="preserve">
-    <value>Windows MIDI Monitor settings</value>
-  </data>
+  <!-- ================================ Settings ================================ -->
   <data name="SettingsPageTitle.Text" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -432,17 +456,11 @@ Examples
   <data name="SettingsDisplayHeader.Text" xml:space="preserve">
     <value>Message list</value>
   </data>
-  <data name="SettingsShowChicletsToggle.Header" xml:space="preserve">
-    <value>Show the message name under each message</value>
-  </data>
   <data name="SettingsResetColumnsButton.Content" xml:space="preserve">
     <value>Reset the columns to their defaults</value>
   </data>
   <data name="SettingsAboutHeader.Text" xml:space="preserve">
     <value>About</value>
-  </data>
-  <data name="SettingsCloseButton.Content" xml:space="preserve">
-    <value>Close</value>
   </data>
   <data name="SettingsVersionFormat" xml:space="preserve">
     <value>Windows MIDI Services {0} ({1})</value>

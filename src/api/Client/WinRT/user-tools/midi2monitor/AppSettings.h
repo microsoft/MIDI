@@ -24,6 +24,17 @@ namespace midi2monitor
         Dark = 2
     };
 
+    // Restore bounds, so a maximized window still reopens at its previous size.
+    struct WindowPlacementInfo
+    {
+        int32_t X{ 0 };
+        int32_t Y{ 0 };
+        int32_t Width{ 0 };
+        int32_t Height{ 0 };
+        bool Maximized{ false };
+        bool Valid{ false };
+    };
+
     // Per-user settings, persisted under HKCU so that every instance of the app picks up the
     // same defaults. Reads and writes never throw; on failure the in-memory value is used.
     class AppSettings
@@ -61,9 +72,30 @@ namespace midi2monitor
         std::wstring ColumnLayout() const noexcept { return m_columnLayout; }
         void ColumnLayout(std::wstring const& value) noexcept;
 
+        uint32_t TableZoomPercent() const noexcept { return m_tableZoomPercent; }
+        void TableZoomPercent(uint32_t value) noexcept;
+
+        WindowPlacementInfo const& WindowPlacement() const noexcept { return m_windowPlacement; }
+        void WindowPlacement(WindowPlacementInfo const& value) noexcept;
+
         static constexpr uint32_t MinimumRetainedMessageCount = 100;
         static constexpr uint32_t MaximumRetainedMessageCount = 500000;
         static constexpr uint32_t DefaultRetainedMessageCount = 10000;
+
+        static constexpr uint32_t MinimumZoomPercent = 50;
+        static constexpr uint32_t MaximumZoomPercent = 200;
+        static constexpr uint32_t DefaultZoomPercent = 100;
+
+        // font size the table uses at 100%
+        static constexpr double BaseRowFontSize = 12.0;
+        static constexpr double BaseChicletFontSize = 11.0;
+
+        // comment gutter button at 100%; it only ever scales down, since the gutter is fixed width
+        static constexpr double BaseCommentButtonSize = 22.0;
+        static constexpr double BaseCommentGlyphSize = 12.0;
+
+        static constexpr int32_t MinimumWindowWidth = 640;
+        static constexpr int32_t MinimumWindowHeight = 400;
 
     private:
         AppSettings() = default;
@@ -81,6 +113,8 @@ namespace midi2monitor
         TimestampDisplayFormat m_timestampFormat{ TimestampDisplayFormat::Ticks };
         AppTheme m_theme{ AppTheme::System };
         uint32_t m_retainedMessageCount{ DefaultRetainedMessageCount };
+        uint32_t m_tableZoomPercent{ DefaultZoomPercent };
         std::wstring m_columnLayout{};
+        WindowPlacementInfo m_windowPlacement{};
     };
 }

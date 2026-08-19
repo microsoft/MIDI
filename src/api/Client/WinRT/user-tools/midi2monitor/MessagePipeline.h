@@ -59,6 +59,7 @@ namespace midi2monitor
 
         MessageStoreSnapshot Snapshot() const noexcept;
         bool TryGetVisibleRecord(size_t visibleIndex, MessageRecord& record) const noexcept;
+        bool TryGetRecord(uint64_t sequence, MessageRecord& record) const noexcept;
         bool TrySetComment(uint64_t sequence, winrt::hstring const& comment) noexcept;
 
         // copies every retained record, including hidden ones, for export

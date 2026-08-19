@@ -6,8 +6,8 @@
 // ============================================================================
 
 #include "pch.h"
-#include "SettingsWindow.xaml.h"
-#include "SettingsWindow.g.cpp"
+#include "SettingsDialog.xaml.h"
+#include "SettingsDialog.g.cpp"
 
 #include "MainWindow.xaml.h"
 #include "MessageRowPanel.h"
@@ -21,7 +21,7 @@ namespace res = ::midi2monitor::resources;
 namespace winrt::midi2monitor::implementation
 {
     _Use_decl_annotations_
-    void SettingsWindow::OnRootLoaded(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    void SettingsDialog::OnRootLoaded(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         if (m_initialized)
         {
@@ -32,52 +32,28 @@ namespace winrt::midi2monitor::implementation
 
         try
         {
-            Title(res::GetString(L"SettingsWindowTitle"));
-
-            if (auto appWindow = AppWindow())
-            {
-                appWindow.Resize(winrt::Windows::Graphics::SizeInt32{ 720, 720 });
-            }
-
             auto& settings = native::AppSettings::Current();
 
             ThemeComboBox().SelectedIndex(static_cast<int32_t>(settings.Theme()));
             RetentionNumberBox().Value(static_cast<double>(settings.RetainedMessageCount()));
-            ShowChicletsToggle().IsOn(settings.ShowMessageNameChiclets());
 
             VersionText().Text(res::FormatString(L"SettingsVersionFormat",
                 std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL },
                 std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE }));
 
-            ApplyOwnerTheme();
-
             m_initializing = false;
         }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to initialize the settings window.")
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to initialize the settings dialog.")
     }
 
     _Use_decl_annotations_
-    void SettingsWindow::Owner(midi2monitor::MainWindow const& value) noexcept
+    void SettingsDialog::Owner(midi2monitor::MainWindow const& value) noexcept
     {
         m_owner = value;
     }
 
-    void SettingsWindow::ApplyOwnerTheme() noexcept
-    {
-        try
-        {
-            auto const theme = native::AppSettings::Current().Theme();
-
-            RootScrollViewer().RequestedTheme(
-                theme == native::AppTheme::Light ? xaml::ElementTheme::Light :
-                theme == native::AppTheme::Dark ? xaml::ElementTheme::Dark :
-                xaml::ElementTheme::Default);
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the theme to the settings window.")
-    }
-
     _Use_decl_annotations_
-    void SettingsWindow::OnThemeChanged(foundation::IInspectable const&, controls::SelectionChangedEventArgs const&)
+    void SettingsDialog::OnThemeChanged(foundation::IInspectable const&, controls::SelectionChangedEventArgs const&)
     {
         if (m_initializing)
         {
@@ -95,18 +71,24 @@ namespace winrt::midi2monitor::implementation
 
             native::AppSettings::Current().Theme(static_cast<native::AppTheme>(index));
 
-            ApplyOwnerTheme();
-
             if (m_owner != nullptr)
             {
                 winrt::get_self<MainWindow>(m_owner)->ApplyTheme();
             }
+
+            // the dialog lives in its own popup tree, so it needs the theme applied directly
+            auto const theme = native::AppSettings::Current().Theme();
+
+            RequestedTheme(
+                theme == native::AppTheme::Light ? xaml::ElementTheme::Light :
+                theme == native::AppTheme::Dark ? xaml::ElementTheme::Dark :
+                xaml::ElementTheme::Default);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the theme.")
     }
 
     _Use_decl_annotations_
-    void SettingsWindow::OnRetentionChanged(foundation::IInspectable const&, controls::NumberBoxValueChangedEventArgs const& args)
+    void SettingsDialog::OnRetentionChanged(foundation::IInspectable const&, controls::NumberBoxValueChangedEventArgs const& args)
     {
         if (m_initializing)
         {
@@ -137,27 +119,7 @@ namespace winrt::midi2monitor::implementation
     }
 
     _Use_decl_annotations_
-    void SettingsWindow::OnShowChicletsToggled(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
-    {
-        if (m_initializing)
-        {
-            return;
-        }
-
-        try
-        {
-            native::AppSettings::Current().ShowMessageNameChiclets(ShowChicletsToggle().IsOn());
-
-            if (m_owner != nullptr)
-            {
-                winrt::get_self<MainWindow>(m_owner)->ApplyMessageNameSetting();
-            }
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the message name setting.")
-    }
-
-    _Use_decl_annotations_
-    void SettingsWindow::OnResetColumnsClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    void SettingsDialog::OnResetColumnsClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         try
         {
@@ -166,20 +128,9 @@ namespace winrt::midi2monitor::implementation
 
             if (m_owner != nullptr)
             {
-                auto owner = winrt::get_self<MainWindow>(m_owner);
-                owner->RefreshColumnsAfterReset();
+                winrt::get_self<MainWindow>(m_owner)->RefreshColumnsAfterReset();
             }
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to reset the columns.")
-    }
-
-    _Use_decl_annotations_
-    void SettingsWindow::OnCloseClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
-    {
-        try
-        {
-            Close();
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to close the settings window.")
     }
 }

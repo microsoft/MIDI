@@ -20,7 +20,8 @@ namespace winrt::midi2monitor::implementation
         MidiMessageViewModel(
             ::midi2monitor::MessageRecord const& record,
             ::midi2monitor::TimestampDisplayFormat timestampFormat,
-            bool showMessageNames);
+            bool showMessageNames,
+            double rowFontSize);
 
         uint64_t Sequence() const noexcept { return m_sequence; }
 
@@ -51,6 +52,13 @@ namespace winrt::midi2monitor::implementation
         xaml::Visibility Word3Visibility() const noexcept { return VisibleWhen(m_wordCount > 3); }
 
         winrt::hstring MessageName() const noexcept { return m_messageName; }
+
+        // ListViewItemPresenter does not propagate font properties to the row content, so the
+        // zoomed sizes have to be bound explicitly rather than inherited from the list.
+        double RowFontSize() const noexcept { return m_rowFontSize; }
+        double ChicletFontSize() const noexcept { return m_chicletFontSize; }
+        double CommentButtonSize() const noexcept { return m_commentButtonSize; }
+        double CommentGlyphSize() const noexcept { return m_commentGlyphSize; }
         xaml::Visibility MessageNameVisibility() const noexcept { return VisibleWhen(!m_messageName.empty()); }
         media::Brush MessageNameBackground() const noexcept { return m_messageNameBackground; }
         media::Brush MessageNameForeground() const noexcept { return m_messageNameForeground; }
@@ -63,6 +71,12 @@ namespace winrt::midi2monitor::implementation
 
         winrt::hstring Comment() const noexcept { return m_comment; }
         void Comment(winrt::hstring const& value);
+
+        // null rather than an empty string, so rows with no comment show no tooltip at all
+        foundation::IInspectable CommentToolTip() const noexcept
+        {
+            return m_comment.empty() ? nullptr : winrt::box_value(m_comment);
+        }
 
         xaml::Visibility CommentGlyphVisibility() const noexcept { return VisibleWhen(!m_comment.empty()); }
 
@@ -85,6 +99,10 @@ namespace winrt::midi2monitor::implementation
         uint64_t m_sequence{ 0 };
         uint8_t m_wordCount{ 0 };
         bool m_isNotice{ false };
+        double m_rowFontSize{ ::midi2monitor::AppSettings::BaseRowFontSize };
+        double m_chicletFontSize{ ::midi2monitor::AppSettings::BaseChicletFontSize };
+        double m_commentButtonSize{ ::midi2monitor::AppSettings::BaseCommentButtonSize };
+        double m_commentGlyphSize{ ::midi2monitor::AppSettings::BaseCommentGlyphSize };
 
         winrt::hstring m_indexText{};
         winrt::hstring m_timestampText{};

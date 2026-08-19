@@ -21,7 +21,7 @@ namespace midi2monitor
     {
         explicit MessageListSource(MessagePipeline& pipeline) noexcept : m_pipeline(pipeline) {}
 
-        void FormattingOptions(TimestampDisplayFormat timestampFormat, bool showMessageNames) noexcept;
+        void FormattingOptions(TimestampDisplayFormat timestampFormat, bool showMessageNames, double rowFontSize) noexcept;
 
         // Pulls the latest counts from the pipeline and raises the minimum set of change
         // notifications. Returns true when rows were appended at the end.
@@ -71,6 +71,7 @@ namespace midi2monitor
 
         TimestampDisplayFormat m_timestampFormat{ TimestampDisplayFormat::Ticks };
         bool m_showMessageNames{ true };
+        double m_rowFontSize{ AppSettings::BaseRowFontSize };
 
         std::unordered_map<uint64_t, foundation::IInspectable> m_cache{};
 

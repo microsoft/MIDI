@@ -21,10 +21,20 @@ namespace winrt::midi2monitor::implementation
     MidiMessageViewModel::MidiMessageViewModel(
         midi2native::MessageRecord const& record,
         midi2native::TimestampDisplayFormat timestampFormat,
-        bool showMessageNames)
+        bool showMessageNames,
+        double rowFontSize)
     {
         m_sequence = record.Sequence;
         m_comment = record.Comment;
+        m_rowFontSize = rowFontSize;
+        m_chicletFontSize = rowFontSize *
+            (midi2native::AppSettings::BaseChicletFontSize / midi2native::AppSettings::BaseRowFontSize);
+
+        // only shrink: at larger sizes the button would spill out of the fixed-width gutter
+        auto const gutterScale = std::min(1.0, rowFontSize / midi2native::AppSettings::BaseRowFontSize);
+
+        m_commentButtonSize = midi2native::AppSettings::BaseCommentButtonSize * gutterScale;
+        m_commentGlyphSize = midi2native::AppSettings::BaseCommentGlyphSize * gutterScale;
         m_rowBackground = midi2native::MonitorPalette::RowBackground(record.AlternateBatch);
 
         if (record.Kind == midi2native::RecordKind::Notice)
@@ -102,6 +112,7 @@ namespace winrt::midi2monitor::implementation
         try
         {
             m_propertyChanged(*this, xaml::Data::PropertyChangedEventArgs{ L"Comment" });
+            m_propertyChanged(*this, xaml::Data::PropertyChangedEventArgs{ L"CommentToolTip" });
             m_propertyChanged(*this, xaml::Data::PropertyChangedEventArgs{ L"CommentGlyphVisibility" });
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to raise the comment change notification.")

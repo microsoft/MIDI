@@ -531,15 +531,16 @@ namespace winrt::midi2monitor::implementation
     // ------------------------------------------------------------------------------------
 
     _Use_decl_annotations_
-    void MainWindow::OnStartMonitoringClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    void MainWindow::OnCaptureButtonClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
-        StartMonitoring();
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnStopMonitoringClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
-    {
-        StopMonitoring(true);
+        if (m_monitoring)
+        {
+            StopMonitoring(true);
+        }
+        else
+        {
+            StartMonitoring();
+        }
     }
 
     void MainWindow::StartMonitoring() noexcept
@@ -775,11 +776,71 @@ namespace winrt::midi2monitor::implementation
         {
             auto const hasEndpoint = !SelectedEndpointDeviceId().empty();
 
-            StartButton().IsEnabled(hasEndpoint && !m_monitoring && !m_connecting);
-            StopButton().IsEnabled(m_monitoring);
+            CaptureButton().IsEnabled(m_monitoring || (hasEndpoint && !m_connecting));
+
+            if (m_monitoring)
+            {
+                CaptureButtonIcon().Glyph(L"\uE71A");
+                CaptureButtonText().Text(res::GetString(L"StopMonitoringButtonText"));
+                CaptureButton().Style(nullptr);
+                winrt::Microsoft::UI::Xaml::Automation::AutomationProperties::SetName(
+                    CaptureButton(), res::GetString(L"StopMonitoringButtonName"));
+            }
+            else
+            {
+                CaptureButtonIcon().Glyph(L"\uE768");
+                CaptureButtonText().Text(res::GetString(L"StartMonitoringButtonText"));
+                CaptureButton().Style(
+                    xaml::Application::Current().Resources()
+                        .Lookup(winrt::box_value(L"AccentButtonStyle")).as<xaml::Style>());
+                winrt::Microsoft::UI::Xaml::Automation::AutomationProperties::SetName(
+                    CaptureButton(), res::GetString(L"StartMonitoringButtonName"));
+            }
+
             EndpointComboBox().IsEnabled(!m_monitoring && !m_connecting);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the command states.")
+    }
+
+    void MainWindow::UpdateCaptureButtonLayout() noexcept
+    {
+        try
+        {
+            auto const width = RootGrid().ActualWidth();
+
+            if (width <= 0)
+            {
+                return;
+            }
+
+            // the pickers plus the button need about 650px; below that the button gets its own row
+            constexpr double SingleRowMinimumWidth = 680.0;
+
+            auto const stacked = width < SingleRowMinimumWidth;
+
+            if (stacked == m_captureButtonStacked)
+            {
+                return;
+            }
+
+            m_captureButtonStacked = stacked;
+
+            auto button = CaptureButton();
+
+            if (stacked)
+            {
+                controls::Grid::SetRow(button, 1);
+                controls::Grid::SetColumn(button, 0);
+                controls::Grid::SetColumnSpan(button, 4);
+            }
+            else
+            {
+                controls::Grid::SetRow(button, 0);
+                controls::Grid::SetColumn(button, 3);
+                controls::Grid::SetColumnSpan(button, 1);
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to reposition the capture button.")
     }
 
     void MainWindow::UpdateWindowTitle() noexcept

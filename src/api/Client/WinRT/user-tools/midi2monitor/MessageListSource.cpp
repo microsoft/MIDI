@@ -105,15 +105,18 @@ namespace midi2monitor
     }
 
     _Use_decl_annotations_
-    void MessageListSource::FormattingOptions(TimestampDisplayFormat timestampFormat, bool showMessageNames) noexcept
+    void MessageListSource::FormattingOptions(TimestampDisplayFormat timestampFormat, bool showMessageNames, double rowFontSize) noexcept
     {
-        if (m_timestampFormat == timestampFormat && m_showMessageNames == showMessageNames)
+        if (m_timestampFormat == timestampFormat &&
+            m_showMessageNames == showMessageNames &&
+            m_rowFontSize == rowFontSize)
         {
             return;
         }
 
         m_timestampFormat = timestampFormat;
         m_showMessageNames = showMessageNames;
+        m_rowFontSize = rowFontSize;
 
         Reset();
     }
@@ -224,7 +227,7 @@ namespace midi2monitor
             // the row was evicted between the refresh and the request. An empty placeholder is
             // better than an exception escaping into XAML layout.
             return winrt::make<winrt::midi2monitor::implementation::MidiMessageViewModel>(
-                MessageRecord{}, m_timestampFormat, m_showMessageNames);
+                MessageRecord{}, m_timestampFormat, m_showMessageNames, m_rowFontSize);
         }
 
         auto const cached = m_cache.find(record.Sequence);
@@ -235,7 +238,7 @@ namespace midi2monitor
         }
 
         auto item = winrt::make<winrt::midi2monitor::implementation::MidiMessageViewModel>(
-            record, m_timestampFormat, m_showMessageNames);
+            record, m_timestampFormat, m_showMessageNames, m_rowFontSize);
 
         if (m_cache.size() >= MaximumCachedRows)
         {

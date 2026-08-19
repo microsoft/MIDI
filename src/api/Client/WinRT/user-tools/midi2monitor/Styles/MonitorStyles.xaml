@@ -59,11 +59,9 @@
     <SolidColorBrush x:Key="MidiRowBackgroundBrush" Color="Transparent" />
     <SolidColorBrush x:Key="MidiRowAlternateBackgroundBrush" Color="#16808080" />
 
-    <x:Double x:Key="MidiMonitorRowFontSize">12</x:Double>
-    <x:Double x:Key="MidiMonitorChicletFontSize">11</x:Double>
-
+    <!-- Font sizes are deliberately absent: the table inherits its size from the list, so the
+         zoom control can scale it at runtime. -->
     <Style x:Key="MidiMonitorCellTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource MidiMonitorRowFontSize}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="NoWrap" />
@@ -73,13 +71,11 @@
 
     <Style x:Key="MidiMonitorWordTextStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Courier New" />
-        <Setter Property="FontSize" Value="{StaticResource MidiMonitorRowFontSize}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Margin" Value="0,0,8,0" />
     </Style>
 
     <Style x:Key="MidiMonitorHeaderTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />

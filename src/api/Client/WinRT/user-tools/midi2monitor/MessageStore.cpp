@@ -156,6 +156,25 @@ namespace midi2monitor
     }
 
     _Use_decl_annotations_
+    bool MessageStore::TryGetRecord(uint64_t sequence, MessageRecord& record) const noexcept
+    {
+        if (sequence < m_firstSequence)
+        {
+            return false;
+        }
+
+        auto const position = static_cast<size_t>(sequence - m_firstSequence);
+
+        if (position >= m_records.size())
+        {
+            return false;
+        }
+
+        record = m_records[position];
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool MessageStore::TrySetComment(uint64_t sequence, winrt::hstring const& comment) noexcept
     {
         if (sequence < m_firstSequence)

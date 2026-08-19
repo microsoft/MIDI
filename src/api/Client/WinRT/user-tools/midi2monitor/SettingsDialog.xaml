@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window
-    x:Class="midi2monitor.SettingsWindow"
+<UserControl
+    x:Class="midi2monitor.SettingsDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:midi2monitor"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Loaded="OnRootLoaded">
 
-    <ScrollViewer x:Name="RootScrollViewer" Loaded="OnRootLoaded" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel Margin="24" Spacing="20" MaxWidth="620" HorizontalAlignment="Left">
+    <ScrollViewer x:Name="RootScrollViewer"
+                  VerticalScrollBarVisibility="Auto"
+                  MaxHeight="520">
+        <StackPanel Spacing="20" Width="400" HorizontalAlignment="Left">
 
             <TextBlock x:Uid="SettingsPageTitle"
                        Text="Settings"
-                       Style="{ThemeResource TitleTextBlockStyle}" />
+                       Style="{ThemeResource SubtitleTextBlockStyle}" />
 
             <StackPanel Spacing="8">
                 <TextBlock x:Uid="SettingsAppearanceHeader"
@@ -27,6 +30,7 @@
                 <ComboBox x:Name="ThemeComboBox"
                           x:Uid="SettingsThemePicker"
                           Width="260"
+                          HorizontalAlignment="Left"
                           SelectionChanged="OnThemeChanged">
                     <ComboBoxItem x:Uid="SettingsThemeSystem" Content="Use my Windows setting" />
                     <ComboBoxItem x:Uid="SettingsThemeLight" Content="Light" />
@@ -46,6 +50,7 @@
                 <NumberBox x:Name="RetentionNumberBox"
                            x:Uid="SettingsRetentionNumberBox"
                            Width="260"
+                           HorizontalAlignment="Left"
                            Minimum="100"
                            Maximum="500000"
                            SmallChange="1000"
@@ -58,13 +63,10 @@
                 <TextBlock x:Uid="SettingsDisplayHeader"
                            Text="Message list"
                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                <ToggleSwitch x:Name="ShowChicletsToggle"
-                              x:Uid="SettingsShowChicletsToggle"
-                              Header="Show the message name under each message"
-                              Toggled="OnShowChicletsToggled" />
                 <Button x:Name="ResetColumnsButton"
                         x:Uid="SettingsResetColumnsButton"
                         Content="Reset the columns to their defaults"
+                        HorizontalAlignment="Left"
                         Click="OnResetColumnsClick" />
             </StackPanel>
 
@@ -75,14 +77,9 @@
                 <TextBlock x:Name="VersionText"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                           IsTextSelectionEnabled="True" />
+                           IsTextSelectionEnabled="True"
+                           TextWrapping="Wrap" />
             </StackPanel>
-
-            <Button x:Name="CloseButton"
-                    x:Uid="SettingsCloseButton"
-                    Content="Close"
-                    Style="{ThemeResource AccentButtonStyle}"
-                    Click="OnCloseClick" />
         </StackPanel>
     </ScrollViewer>
-</Window>
+</UserControl>

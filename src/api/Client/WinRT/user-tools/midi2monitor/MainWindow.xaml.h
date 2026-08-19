@@ -26,8 +26,7 @@ namespace winrt::midi2monitor::implementation
         void OnGroupSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnChannelSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
-        void OnStartMonitoringClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnStopMonitoringClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCaptureButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnShowClockToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowActiveSenseToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -38,20 +37,38 @@ namespace winrt::midi2monitor::implementation
         void OnMoveColumnUpClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMoveColumnDownClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAutoHideColumnsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnShowMessageNamesChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnEditColumnsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnDisplayOptionsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnClearCaptureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnMessagesContextRequested(xaml::UIElement const& sender, xaml::Input::ContextRequestedEventArgs const& args);
+        void OnMessagesContextFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
+        void OnCopyUmpWordsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCopyMidi1BytesClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCopySysExBytesClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnZoomSliderValueChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnZoomPresetClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnZoomOutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnZoomInClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnExportClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCommentTextChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
 
-        // called by the settings window
+        // called by the settings dialog
         void ApplyTheme() noexcept;
         void ApplyRetention() noexcept;
         void ApplyMessageNameSetting() noexcept;
         void RefreshColumnsAfterReset() noexcept;
 
+        // called before Activate so the window never appears at the wrong size first
+        void RestoreWindowPlacement() noexcept;
+
     private:
         void InitializeWindowChrome() noexcept;
+        void SaveWindowPlacement() noexcept;
         void UpdateTitleBarInsets() noexcept;
         void ApplyTitleBarColors() noexcept;
         void InitializeCollections() noexcept;
@@ -87,6 +104,8 @@ namespace winrt::midi2monitor::implementation
         winrt::hstring DescribeSelectedGroup() noexcept;
         winrt::hstring DescribeSelectedChannel() noexcept;
         void UpdateCommandStates() noexcept;
+        void UpdateCaptureButtonLayout() noexcept;
+        void UpdateStatusBarLayout() noexcept;
         void ApplyFilterToPipeline() noexcept;
         void ApplyHiddenTraits() noexcept;
 
@@ -95,6 +114,8 @@ namespace winrt::midi2monitor::implementation
         void UpdateStatusLine() noexcept;
 
         void ApplyStartupOptions() noexcept;
+        void ApplyZoom(uint32_t zoomPercent, bool updateSlider, bool updateChoice) noexcept;
+        std::vector<::midi2monitor::MessageRecord> SelectedRecords() noexcept;
         winrt::fire_and_forget ShowCommandLineHelpAsync();
         winrt::fire_and_forget ConfirmClearCaptureAsync();
         winrt::fire_and_forget ShowMessageAsync(winrt::hstring title, winrt::hstring message);
@@ -133,7 +154,9 @@ namespace winrt::midi2monitor::implementation
         bool m_connecting{ false };
         bool m_initialized{ false };
         bool m_startupFilterApplied{ false };
+        bool m_captureButtonStacked{ false };
         bool m_suppressSelectionHandling{ false };
+        bool m_suppressZoomHandling{ false };
         winrt::hstring m_monitoredEndpointName{};
     };
 }

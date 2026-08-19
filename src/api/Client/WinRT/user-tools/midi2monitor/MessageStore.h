@@ -89,6 +89,7 @@ namespace midi2monitor
         size_t VisibleCount() const noexcept { return m_visibleSequences.size(); }
 
         bool TryGetVisibleRecord(size_t visibleIndex, MessageRecord& record) const noexcept;
+        bool TryGetRecord(uint64_t sequence, MessageRecord& record) const noexcept;
         bool TrySetComment(uint64_t sequence, winrt::hstring const& comment) noexcept;
 
         // full retained set, oldest first, used for export

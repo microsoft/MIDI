@@ -61,7 +61,12 @@ namespace winrt::midi2monitor::implementation
 
             ::midi2monitor::AppSettings::Current().Load();
 
-            m_window = winrt::make<MainWindow>();
+            auto window = winrt::make_self<MainWindow>();
+
+            // sized and positioned before the first paint, so it does not visibly jump
+            window->RestoreWindowPlacement();
+
+            m_window = window.as<xaml::Window>();
             m_window.Activate();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to create the main window.")

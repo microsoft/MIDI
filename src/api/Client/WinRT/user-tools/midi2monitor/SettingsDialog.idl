@@ -8,8 +8,8 @@
 namespace midi2monitor
 {
     [default_interface]
-    runtimeclass SettingsWindow : Microsoft.UI.Xaml.Window
+    runtimeclass SettingsDialog : Microsoft.UI.Xaml.Controls.UserControl
     {
-        SettingsWindow();
+        SettingsDialog();
     }
 }

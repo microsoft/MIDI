@@ -327,6 +327,13 @@ namespace midi2monitor
     }
 
     _Use_decl_annotations_
+    bool MessagePipeline::TryGetRecord(uint64_t sequence, MessageRecord& record) const noexcept
+    {
+        std::shared_lock<std::shared_mutex> guard{ m_storeLock };
+        return m_store.TryGetRecord(sequence, record);
+    }
+
+    _Use_decl_annotations_
     bool MessagePipeline::TrySetComment(uint64_t sequence, winrt::hstring const& comment) noexcept
     {
         std::unique_lock<std::shared_mutex> guard{ m_storeLock };
