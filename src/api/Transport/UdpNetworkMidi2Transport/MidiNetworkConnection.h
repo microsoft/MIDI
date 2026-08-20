@@ -73,7 +73,7 @@ public:
 
     // if this was created from a host here
     winrt::guid ConfigIdentifier() { return m_configIdentifier; }
-
+    MidiNetworkConnectionRole Role() const noexcept { return m_role; }
 
     bool IsSessionActive() { return m_sessionActive; }
     std::wstring GetEndpointDeviceId() { return m_sessionEndpointDeviceInterfaceId; }

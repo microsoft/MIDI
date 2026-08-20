@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include <objbase.h>
+
 #include "MidiPnpUtilities.h"
 #include "MidiPnpDeviceInfo.h"
 #include <iostream>
@@ -347,6 +349,5 @@ namespace WindowsMidiServicesInternal
 
 
 }
-
 
 

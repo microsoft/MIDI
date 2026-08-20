@@ -11,7 +11,8 @@
 namespace WindowsMidiServicesInternal
 {
 #pragma warning(push)
-#pragma warning(disable: 26816, justification: "stack-allocated return value is fine for inline function like this.")
+// 26816: the stack-allocated return value is fine for an inline function like this.
+#pragma warning(disable: 26816)
     // IMap version
     template<typename T>
     __forceinline T GetDeviceInfoProperty(

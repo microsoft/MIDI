@@ -1088,6 +1088,11 @@ CMidiXProc::ProcessMidiInBatched()
                     ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
                     ULONG bytesAvailable{ 0 };
 
+                    // Confirm that the positions in the registers are valid, within the
+                    // available buffer space. If they are not, abort.
+                    RETURN_HR_IF(E_ABORT, readPosition >= mappedData->BufferSize);
+                    RETURN_HR_IF(E_ABORT, writePosition >= mappedData->BufferSize);
+
                     if (readPosition <= writePosition)
                     {
                         bytesAvailable = writePosition - readPosition;
