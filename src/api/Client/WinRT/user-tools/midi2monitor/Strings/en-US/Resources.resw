@@ -453,8 +453,28 @@ Examples
   <data name="SettingsThemeDark.Content" xml:space="preserve">
     <value>Dark</value>
   </data>
-  <data name="SettingsCaptureHeader.Text" xml:space="preserve">
-    <value>Capture</value>
+  <data name="SettingsBackdropDescription.Text" xml:space="preserve">
+    <value>The window background. Mica and Acrylic pick up the colours behind the window.</value>
+  </data>
+  <data name="SettingsBackdropPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="SettingsBackdropSolid.Content" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica.Content" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic.Content" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsTransparencyDescription.Text" xml:space="preserve">
+    <value>How much of the background shows through. The message table stays more opaque so messages remain readable.</value>
+  </data>
+  <data name="SettingsTransparencySlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Background transparency percent</value>
+  </data>
+  <data name="SettingsCaptureHeader.Text" xml:space="preserve">    <value>Capture</value>
   </data>
   <data name="SettingsRetentionDescription.Text" xml:space="preserve">
     <value>How many messages to keep. Older messages are discarded once the limit is reached.</value>

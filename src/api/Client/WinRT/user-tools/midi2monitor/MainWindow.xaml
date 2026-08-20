@@ -8,13 +8,19 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
 
         <!-- ============================ Title bar drag region ============================ -->
         <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
@@ -69,11 +75,18 @@
         </Grid>
 
         <!-- ============================ Top: what to listen to ============================ -->
+        <!-- fill sits behind the card so its opacity never fades the controls on top -->
         <Border Grid.Row="1"
+                x:Name="HeaderCardFill"
+                Margin="12,4,12,8"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+
+        <Border Grid.Row="1"
+                x:Name="HeaderCard"
                 Margin="12,4,12,8"
                 Padding="14"
                 CornerRadius="8"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1">
             <Grid ColumnSpacing="14">
@@ -210,9 +223,15 @@
 
         <!-- ============================== Middle: the messages ============================== -->
         <Border Grid.Row="2"
+                x:Name="MessagesCardFill"
                 Margin="12,0,12,8"
                 CornerRadius="8"
-                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                Background="{ThemeResource LayerFillColorDefaultBrush}" />
+
+        <Border Grid.Row="2"
+                x:Name="MessagesCard"
+                Margin="12,0,12,8"
+                CornerRadius="8"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1">
             <Grid>

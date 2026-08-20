@@ -36,6 +36,38 @@
                     <ComboBoxItem x:Uid="SettingsThemeLight" Content="Light" />
                     <ComboBoxItem x:Uid="SettingsThemeDark" Content="Dark" />
                 </ComboBox>
+
+                <TextBlock x:Uid="SettingsBackdropDescription"
+                           Text="The window background. Mica and Acrylic pick up the colours behind the window."
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                <ComboBox x:Name="BackdropComboBox"
+                          x:Uid="SettingsBackdropPicker"
+                          Width="260"
+                          HorizontalAlignment="Left"
+                          SelectionChanged="OnBackdropChanged">
+                    <ComboBoxItem x:Uid="SettingsBackdropSolid" Content="Solid" />
+                    <ComboBoxItem x:Uid="SettingsBackdropMica" Content="Mica" />
+                    <ComboBoxItem x:Uid="SettingsBackdropAcrylic" Content="Acrylic" />
+                </ComboBox>
+
+                <TextBlock x:Name="TransparencyLabel"
+                           x:Uid="SettingsTransparencyDescription"
+                           Text="How much of the background shows through. The message table stays more opaque so messages remain readable."
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                <Slider x:Name="TransparencySlider"
+                        x:Uid="SettingsTransparencySlider"
+                        Width="260"
+                        HorizontalAlignment="Left"
+                        Minimum="0"
+                        Maximum="90"
+                        StepFrequency="5"
+                        TickFrequency="15"
+                        SnapsTo="StepValues"
+                        ValueChanged="OnTransparencyChanged" />
             </StackPanel>
 
             <StackPanel Spacing="8">

@@ -22,6 +22,8 @@ namespace winrt::midi2monitor::implementation
         void Owner(midi2monitor::MainWindow const& value) noexcept;
 
         void OnThemeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnBackdropChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnTransparencyChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnRetentionChanged(foundation::IInspectable const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnResetColumnsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 

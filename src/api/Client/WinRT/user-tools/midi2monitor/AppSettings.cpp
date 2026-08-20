@@ -19,6 +19,8 @@ namespace midi2monitor
         constexpr wchar_t ValueAlwaysOnTop[] = L"AlwaysOnTop";
         constexpr wchar_t ValueTimestampFormat[] = L"TimestampFormat";
         constexpr wchar_t ValueTheme[] = L"Theme";
+        constexpr wchar_t ValueBackdrop[] = L"WindowBackdrop";
+        constexpr wchar_t ValueBackgroundTransparency[] = L"BackgroundTransparencyPercent";
         constexpr wchar_t ValueRetainedMessageCount[] = L"RetainedMessageCount";
         constexpr wchar_t ValueShowChiclets[] = L"ShowMessageNameChiclets";
         constexpr wchar_t ValueAutoHideColumns[] = L"AutoHideColumnsWhenNarrow";
@@ -80,6 +82,14 @@ namespace midi2monitor
             ? static_cast<AppTheme>(theme)
             : AppTheme::System;
 
+        auto const backdrop = ReadDword(ValueBackdrop, static_cast<uint32_t>(WindowBackdrop::Solid));
+        m_backdrop = (backdrop <= static_cast<uint32_t>(WindowBackdrop::Acrylic))
+            ? static_cast<WindowBackdrop>(backdrop)
+            : WindowBackdrop::Solid;
+
+        m_backgroundTransparencyPercent =
+            std::min(ReadDword(ValueBackgroundTransparency, 0), MaximumTransparencyPercent);
+
         auto const retained = ReadDword(ValueRetainedMessageCount, DefaultRetainedMessageCount);
         m_retainedMessageCount = std::clamp(retained, MinimumRetainedMessageCount, MaximumRetainedMessageCount);
 
@@ -95,6 +105,20 @@ namespace midi2monitor
         m_windowPlacement.Maximized = ReadDword(ValueWindowMaximized, 0) != 0;
         m_windowPlacement.Valid =
             m_windowPlacement.Width >= MinimumWindowWidth && m_windowPlacement.Height >= MinimumWindowHeight;
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::Backdrop(WindowBackdrop value) noexcept
+    {
+        m_backdrop = value;
+        WriteDword(ValueBackdrop, static_cast<uint32_t>(value));
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::BackgroundTransparencyPercent(uint32_t value) noexcept
+    {
+        m_backgroundTransparencyPercent = std::min(value, MaximumTransparencyPercent);
+        WriteDword(ValueBackgroundTransparency, m_backgroundTransparencyPercent);
     }
 
     _Use_decl_annotations_

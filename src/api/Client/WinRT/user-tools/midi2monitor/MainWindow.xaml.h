@@ -63,6 +63,7 @@ namespace winrt::midi2monitor::implementation
 
         // called by the settings dialog
         void ApplyTheme() noexcept;
+        void ApplyBackdrop() noexcept;
         void ApplyRetention() noexcept;
         void ApplyMessageNameSetting() noexcept;
         void RefreshColumnsAfterReset() noexcept;

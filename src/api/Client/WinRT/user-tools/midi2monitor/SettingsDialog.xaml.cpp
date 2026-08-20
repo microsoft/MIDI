@@ -35,6 +35,9 @@ namespace winrt::midi2monitor::implementation
             auto& settings = native::AppSettings::Current();
 
             ThemeComboBox().SelectedIndex(static_cast<int32_t>(settings.Theme()));
+            BackdropComboBox().SelectedIndex(static_cast<int32_t>(settings.Backdrop()));
+            TransparencySlider().Value(static_cast<double>(settings.BackgroundTransparencyPercent()));
+            TransparencySlider().IsEnabled(settings.Backdrop() != native::WindowBackdrop::Solid);
             RetentionNumberBox().Value(static_cast<double>(settings.RetainedMessageCount()));
 
             VersionText().Text(res::FormatString(L"SettingsVersionFormat",
@@ -85,6 +88,58 @@ namespace winrt::midi2monitor::implementation
                 xaml::ElementTheme::Default);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the theme.")
+    }
+
+    _Use_decl_annotations_
+    void SettingsDialog::OnBackdropChanged(foundation::IInspectable const&, controls::SelectionChangedEventArgs const&)
+    {
+        if (m_initializing)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const index = BackdropComboBox().SelectedIndex();
+
+            if (index < 0)
+            {
+                return;
+            }
+
+            auto const backdrop = static_cast<native::WindowBackdrop>(index);
+
+            native::AppSettings::Current().Backdrop(backdrop);
+
+            // transparency has nothing to show through when the window is solid
+            TransparencySlider().IsEnabled(backdrop != native::WindowBackdrop::Solid);
+
+            if (m_owner != nullptr)
+            {
+                winrt::get_self<MainWindow>(m_owner)->ApplyBackdrop();
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the window backdrop.")
+    }
+
+    _Use_decl_annotations_
+    void SettingsDialog::OnTransparencyChanged(foundation::IInspectable const&, controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        if (m_initializing)
+        {
+            return;
+        }
+
+        try
+        {
+            native::AppSettings::Current().BackgroundTransparencyPercent(static_cast<uint32_t>(args.NewValue()));
+
+            if (m_owner != nullptr)
+            {
+                winrt::get_self<MainWindow>(m_owner)->ApplyBackdrop();
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the background transparency.")
     }
 
     _Use_decl_annotations_

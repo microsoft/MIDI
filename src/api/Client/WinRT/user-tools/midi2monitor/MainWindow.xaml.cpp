@@ -166,6 +166,7 @@ namespace winrt::midi2monitor::implementation
             ApplyTitleBarColors();
             UpdateTitleBarInsets();
             ApplyTheme();
+            ApplyBackdrop();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to set up the window chrome.")
     }
@@ -251,6 +252,48 @@ namespace winrt::midi2monitor::implementation
             native::AppSettings::Current().WindowPlacement(info);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to save the window position.")
+    }
+
+    void MainWindow::ApplyBackdrop() noexcept
+    {
+        try
+        {
+            auto const& settings = native::AppSettings::Current();
+            auto const backdrop = settings.Backdrop();
+
+            switch (backdrop)
+            {
+            case native::WindowBackdrop::Mica:
+                SystemBackdrop(media::MicaBackdrop{});
+                break;
+
+            case native::WindowBackdrop::Acrylic:
+                SystemBackdrop(media::DesktopAcrylicBackdrop{});
+                break;
+
+            default:
+                SystemBackdrop(nullptr);
+                break;
+            }
+
+            if (backdrop == native::WindowBackdrop::Solid)
+            {
+                WindowFill().Visibility(xaml::Visibility::Visible);
+                HeaderCardFill().Opacity(1.0);
+                MessagesCardFill().Opacity(1.0);
+                return;
+            }
+
+            // the window itself has to be clear or the system material is simply covered up
+            WindowFill().Visibility(xaml::Visibility::Collapsed);
+
+            auto const transparency = settings.BackgroundTransparencyPercent() / 100.0;
+
+            // the table only goes half as transparent, so messages stay readable over any desktop
+            HeaderCardFill().Opacity(1.0 - transparency);
+            MessagesCardFill().Opacity(1.0 - (transparency / 2.0));
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the window backdrop.")
     }
 
     _Use_decl_annotations_
@@ -371,6 +414,12 @@ namespace winrt::midi2monitor::implementation
 
             native::MonitorPalette::Invalidate();
             ApplyTitleBarColors();
+
+            // the tinted backgrounds are built from theme colours, so they need rebuilding
+            if (m_initialized)
+            {
+                ApplyBackdrop();
+            }
 
             if (m_listSource != nullptr)
             {
