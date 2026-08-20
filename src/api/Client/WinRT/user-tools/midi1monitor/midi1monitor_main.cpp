@@ -475,9 +475,12 @@ void CALLBACK OnMidiMessageReceived(
 
 }
 
+#ifndef RETURN_INVALID_PORT_NUMBER
 #define RETURN_INVALID_PORT_NUMBER 1
+#endif
+#ifndef RETURN_UNABLE_TO_OPEN_PORT
 #define RETURN_UNABLE_TO_OPEN_PORT 2
-
+#endif
 
 std::jthread m_displayThread;
 

@@ -8,6 +8,15 @@
 
 #include "..\..\shared\midi_sdk_idl_defs.h"
 
+// Every Midi2 IDL imports this file, so it carries the external WinRT
+// declarations the API surface depends on.
+import "inspectable.idl";
+import "windows.foundation.idl";
+import "robytestream.idl";
+import "windows.data.json.idl";
+import "windows.devices.enumeration.idl";
+import "windows.devices.midi.idl";
+
 namespace Windows.Devices.Midi2
 {
     [contractversion(1)]

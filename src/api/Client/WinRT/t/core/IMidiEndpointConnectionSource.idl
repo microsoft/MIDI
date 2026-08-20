@@ -17,7 +17,7 @@ import "MidiEndpointConnectionSettings.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
-    [uuid(UUID_IMidiEndpointConnectionSource), version(1.0)]
+    [uuid(UUID_IMidiEndpointConnectionSource)]
     interface IMidiEndpointConnectionSource
     {
         event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceDisconnected;

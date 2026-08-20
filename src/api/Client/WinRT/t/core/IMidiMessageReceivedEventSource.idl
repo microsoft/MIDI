@@ -18,7 +18,7 @@ import "IMidiEndpointConnectionSource.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
-    [uuid(UUID_IMidiMessageReceivedEventSource), version(1.0)]
+    [uuid(UUID_IMidiMessageReceivedEventSource)]
     interface IMidiMessageReceivedEventSource
     {      
         event Windows.Foundation.TypedEventHandler<IMidiMessageReceivedEventSource, MidiMessageReceivedEventArgs> MessageReceived;

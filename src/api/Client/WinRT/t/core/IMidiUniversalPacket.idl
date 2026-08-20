@@ -17,7 +17,7 @@ import "MidiMessageTypeEnum.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract, 1)]
-    [uuid(UUID_IMidiUniversalPacket), version(1.0)]
+    [uuid(UUID_IMidiUniversalPacket)]
     interface IMidiUniversalPacket
     {
         [noexcept] UInt64 Timestamp;

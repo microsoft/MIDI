@@ -18,7 +18,7 @@ import "IMidiEndpointConnectionSource.idl";
 namespace Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
-    [uuid(UUID_IMidiEndpointMessageProcessingPlugin), version(1.0)]
+    [uuid(UUID_IMidiEndpointMessageProcessingPlugin)]
     interface IMidiEndpointMessageProcessingPlugin
     {
         [noexcept] Guid PluginId { get; };            

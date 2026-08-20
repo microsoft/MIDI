@@ -62,7 +62,6 @@ namespace rept = winrt::Windows::Devices::Midi2::Reporting;
 #include <wil/com.h>
 #include <wil/registry.h>
 
-#include <WindowsMidiServicesVersion.h>
 #include "WindowsMidiServices.h"
 
 //#include "WindowsMidiServicesClientInitialization.h"

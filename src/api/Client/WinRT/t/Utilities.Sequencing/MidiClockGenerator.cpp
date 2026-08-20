@@ -8,6 +8,7 @@
 
 #include "pch.h"
 #include "MidiClockGenerator.h"
+#include "MidiClockDestination.h"
 #include "Utilities.Sequencing.MidiClockGenerator.g.cpp"
 
 
