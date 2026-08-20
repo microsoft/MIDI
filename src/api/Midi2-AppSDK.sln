@@ -81,39 +81,39 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Default Configuration", "De
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{4839DC3B-ADBB-4D2A-8450-169D9AD47A0A}"
 	ProjectSection(SolutionItems) = preProject
-		Test\WinRT Client\SdkTestCommon.h = Test\WinRT Client\SdkTestCommon.h
+		Test\WinRTClient\SdkTestCommon.h = Test\WinRTClient\SdkTestCommon.h
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.BasicLoopback.integrationtests", "Test\WinRT Client\Transport.BasicLoopback.integrationtests\Midi2.WinRTClient.BasicLoopback.integrationtests.vcxproj", "{63FDB29C-5638-427B-86BF-05B318480571}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.BasicLoopback.integrationtests", "Test\WinRTClient\Transport.BasicLoopback.integrationtests\Midi2.WinRTClient.BasicLoopback.integrationtests.vcxproj", "{63FDB29C-5638-427B-86BF-05B318480571}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Loopback.integrationtests", "Test\WinRT Client\Transport.Loopback.integrationtests\Midi2.WinRTClient.Loopback.integrationtests.vcxproj", "{99D92B61-18A1-4F64-91D2-4CE1BB93C757}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Loopback.integrationtests", "Test\WinRTClient\Transport.Loopback.integrationtests\Midi2.WinRTClient.Loopback.integrationtests.vcxproj", "{99D92B61-18A1-4F64-91D2-4CE1BB93C757}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration Tests", "Integration Tests", "{4BDA5815-7CDC-4F3B-8716-B6C26830BEC4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Virtual.integrationtests", "Test\WinRT Client\Transport.Virtual.integrationtests\Midi2.WinRTClient.Virtual.integrationtests.vcxproj", "{DFF7641E-171F-4CFE-8EC7-4EEDF3F3037A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Virtual.integrationtests", "Test\WinRTClient\Transport.Virtual.integrationtests\Midi2.WinRTClient.Virtual.integrationtests.vcxproj", "{DFF7641E-171F-4CFE-8EC7-4EEDF3F3037A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Offline.unittests", "Test\WinRT Client\Offline.unittests\Midi2.WinRTClient.Offline.unittests.vcxproj", "{BCAE6353-5F32-4AE8-9949-039A2BC2C8C6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Offline.unittests", "Test\WinRTClient\Offline.unittests\Midi2.WinRTClient.Offline.unittests.vcxproj", "{BCAE6353-5F32-4AE8-9949-039A2BC2C8C6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Benchmarks", "Test\WinRT Client\Benchmarks\Midi2.WinRTClient.Benchmarks.vcxproj", "{4DABE157-7DD5-422A-8C77-B83EAC9987D0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Benchmarks", "Test\WinRTClient\Benchmarks\Midi2.WinRTClient.Benchmarks.vcxproj", "{4DABE157-7DD5-422A-8C77-B83EAC9987D0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Offline", "Offline", "{2F4DC22F-F5FA-4408-8255-77F6FA4ED589}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Enumeration.integrationtests", "Test\WinRT Client\Enumeration.integrationtests\Midi2.WinRTClient.Enumeration.integrationtests.vcxproj", "{D64CAEFE-A7C7-48D8-9433-C70380E0650E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Enumeration.integrationtests", "Test\WinRTClient\Enumeration.integrationtests\Midi2.WinRTClient.Enumeration.integrationtests.vcxproj", "{D64CAEFE-A7C7-48D8-9433-C70380E0650E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A631658B-3552-48E3-9DF1-EEA3E5016257} = {A631658B-3552-48E3-9DF1-EEA3E5016257}
 		{B7E4F8D2-9C3A-4F71-9D5B-7E2A1F8B6C4D} = {B7E4F8D2-9C3A-4F71-9D5B-7E2A1F8B6C4D}
 		{FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E} = {FB45BB5E-F3CB-4079-AD0C-6CAC3A14029E}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Session.integrationtests", "Test\WinRT Client\Session.integrationtests\Midi2.WinRTClient.Session.integrationtests.vcxproj", "{7C9608FE-4AA4-46D8-ACB8-840C6B216A59}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Session.integrationtests", "Test\WinRTClient\Session.integrationtests\Midi2.WinRTClient.Session.integrationtests.vcxproj", "{7C9608FE-4AA4-46D8-ACB8-840C6B216A59}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Diagnostics.integrationtests", "Test\WinRT Client\Transport.Diagnostic.integrationtests\Midi2.WinRTClient.Diagnostics.integrationtests.vcxproj", "{23F704E2-F0B4-4794-8080-817E9F906938}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Diagnostics.integrationtests", "Test\WinRTClient\Transport.Diagnostic.integrationtests\Midi2.WinRTClient.Diagnostics.integrationtests.vcxproj", "{23F704E2-F0B4-4794-8080-817E9F906938}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Offline.MessageUtilities.unittests", "Test\WinRT Client\Offline.MessageUtilities.unittests\Midi2.WinRTClient.Offline.MessageUtilities.unittests.vcxproj", "{3AE83B7E-5E50-45BA-AEF2-A97225FADBD2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Offline.MessageUtilities.unittests", "Test\WinRTClient\Offline.MessageUtilities.unittests\Midi2.WinRTClient.Offline.MessageUtilities.unittests.vcxproj", "{3AE83B7E-5E50-45BA-AEF2-A97225FADBD2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiPnpLib", "Libs\SDK-MidiPnpLib\MidiPnpLib.vcxproj", "{B7E4F8D2-9C3A-4F71-9D5B-7E2A1F8B6C4D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Reporting.integrationtests", "Test\WinRT Client\Reporting.integrationtests\Midi2.WinRTClient.Reporting.integrationtests.vcxproj", "{34A32D26-0BA0-44D4-8F3F-3BEB1D83246C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Reporting.integrationtests", "Test\WinRTClient\Reporting.integrationtests\Midi2.WinRTClient.Reporting.integrationtests.vcxproj", "{34A32D26-0BA0-44D4-8F3F-3BEB1D83246C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{9E81D7F4-B7A9-46C4-B8E7-8F13616E2174}"
 EndProject
@@ -121,13 +121,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Windows.Devices.Midi2.NuGet
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Activation and Reg Validation", "Activation and Reg Validation", "{B040FBBA-8AB1-48F7-9F9D-C507B923A27B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.RegistrationValidation.unittests", "Test\WinRT Client\Activation and Registration\Midi2.WinRTClient.RegistrationValidation.unittests.vcxproj", "{64C7CC76-2AEA-446F-A38C-4DF17270CBB7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.RegistrationValidation.unittests", "Test\WinRTClient\ActivationandRegistration\Midi2.WinRTClient.RegistrationValidation.unittests.vcxproj", "{64C7CC76-2AEA-446F-A38C-4DF17270CBB7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.ThreadMTA.integrationtests", "Test\WinRT Client\ThreadMTA.integrationtests\Midi2.WinRTClient.ThreadMTA.integrationtests.vcxproj", "{D9E85EA2-43FA-4317-98E9-B6BD37AF38AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.ThreadMTA.integrationtests", "Test\WinRTClient\ThreadMTA.integrationtests\Midi2.WinRTClient.ThreadMTA.integrationtests.vcxproj", "{D9E85EA2-43FA-4317-98E9-B6BD37AF38AD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.ThreadSTA.integrationtests", "Test\WinRT Client\ThreadSTA.integrationtests\Midi2.WinRTClient.ThreadSTA.integrationtests.vcxproj", "{E864EE3E-800E-4660-84CA-BE8320177E89}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.ThreadSTA.integrationtests", "Test\WinRTClient\ThreadSTA.integrationtests\Midi2.WinRTClient.ThreadSTA.integrationtests.vcxproj", "{E864EE3E-800E-4660-84CA-BE8320177E89}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Utilities.SysExTransfer.integrationtests", "Test\WinRT Client\Utilities.SysExTransfer.integrationtests\Midi2.WinRTClient.Utilities.SysExTransfer.integrationtests.vcxproj", "{678B9CD6-DAFD-44F0-A68F-0FC5DAEF7BF1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.WinRTClient.Utilities.SysExTransfer.integrationtests", "Test\WinRTClient\Utilities.SysExTransfer.integrationtests\Midi2.WinRTClient.Utilities.SysExTransfer.integrationtests.vcxproj", "{678B9CD6-DAFD-44F0-A68F-0FC5DAEF7BF1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
