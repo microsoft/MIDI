@@ -15,6 +15,8 @@
 #include <string>
 #include <cwctype>
 #include <algorithm>
+#include <system_error>
+#include <windows.h>
 
 #include "Feature_Servicing_MIDI2StringCharacterSets.h"
 

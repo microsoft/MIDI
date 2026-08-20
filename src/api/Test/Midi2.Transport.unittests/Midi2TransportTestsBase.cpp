@@ -172,8 +172,8 @@ void MidiTransportTestsBase::TestMidiTransport(REFIID iid, MidiDataFormats dataF
     
     DWORD mmcssTaskId {0};
     wil::unique_event_nothrow allMessagesReceived;
-    UINT32 expectedMessageCount = 4;
-    UINT midiMessagesReceived = 0;
+    UINT32 expectedMessageByteCount = 0;
+    UINT midiMessageBytesReceived = 0;
     TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_None, dataFormat, TEST_APPID };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
@@ -209,15 +209,13 @@ void MidiTransportTestsBase::TestMidiTransport(REFIID iid, MidiDataFormats dataF
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
-        UINT32 const messageSize = static_cast<UINT32>((transportCreationParams.DataFormat == MidiDataFormats_UMP) ? sizeof(UMP32) : sizeof(MIDI_MESSAGE));
-
-        PrintMidiMessage(payload, payloadSize, messageSize, payloadPosition);
+        PrintMidiMessage(payload, payloadSize, (transportCreationParams.DataFormat == MidiDataFormats_UMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
 
         // Messages sharing a timestamp arrive coalesced into one callback, so the count comes
         // from the payload rather than from the number of calls.
-        midiMessagesReceived += (payloadSize / messageSize);
+        midiMessageBytesReceived += payloadSize;
 
-        if (midiMessagesReceived >= expectedMessageCount)
+        if (midiMessageBytesReceived >= expectedMessageByteCount)
         {
             allMessagesReceived.SetEvent();
         }
@@ -290,6 +288,7 @@ void MidiTransportTestsBase::TestMidiTransport(REFIID iid, MidiDataFormats dataF
         if (nativeInDataFormat == MidiDataFormats_ByteStream || 
             nativeOutDataFormat == MidiDataFormats_ByteStream)
         {
+            expectedMessageByteCount += (4 * sizeof(UMP32));
             VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
             VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
             VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
@@ -297,6 +296,10 @@ void MidiTransportTestsBase::TestMidiTransport(REFIID iid, MidiDataFormats dataF
         }
         else
         {
+            expectedMessageByteCount += sizeof(UMP32);
+            expectedMessageByteCount += sizeof(UMP64);
+            expectedMessageByteCount += sizeof(UMP96);
+            expectedMessageByteCount += sizeof(UMP128);
             VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
             VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_64, sizeof(UMP64), 0));
             VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_96, sizeof(UMP96), 0));
@@ -305,6 +308,7 @@ void MidiTransportTestsBase::TestMidiTransport(REFIID iid, MidiDataFormats dataF
     }
     else
     {
+        expectedMessageByteCount += (4 * sizeof(MIDI_MESSAGE));
         VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
         VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
         VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
@@ -317,8 +321,8 @@ void MidiTransportTestsBase::TestMidiTransport(REFIID iid, MidiDataFormats dataF
         LOG_OUTPUT(L"Failure waiting for messages, timed out.");
     }
 
-    LOG_OUTPUT(L"%d messages expected, %d received", expectedMessageCount, midiMessagesReceived);
-    VERIFY_IS_TRUE(midiMessagesReceived == expectedMessageCount);
+    LOG_OUTPUT(L"%d message bytes expected, %d received", expectedMessageByteCount, midiMessageBytesReceived);
+    VERIFY_IS_TRUE(midiMessageBytesReceived == expectedMessageByteCount);
 
     LOG_OUTPUT(L"Done, cleaning up");
     cleanupOnFailure.release();
@@ -484,8 +488,8 @@ void MidiTransportTestsBase::TestMidiTransportBidi(REFIID iid, MidiDataFormats d
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId {0};
     wil::unique_event_nothrow allMessagesReceived;
-    UINT32 expectedMessageCount = 4;
-    UINT midiMessagesReceived = 0;
+    UINT32 expectedMessageByteCount = 0;
+    UINT midiMessageBytesReceived = 0;
     TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_None, dataFormat, TEST_APPID };
     std::wstring midiBidirectionalInstanceId;
 
@@ -521,9 +525,9 @@ void MidiTransportTestsBase::TestMidiTransportBidi(REFIID iid, MidiDataFormats d
 
         // Messages sharing a timestamp arrive coalesced into one callback, so the count comes
         // from the payload rather than from the number of calls.
-        midiMessagesReceived += (payloadSize / messageSize);
+        midiMessageBytesReceived += payloadSize;
 
-        if (midiMessagesReceived >= expectedMessageCount)
+        if (midiMessageBytesReceived >= expectedMessageByteCount)
         {
             allMessagesReceived.SetEvent();
         }
@@ -565,6 +569,7 @@ void MidiTransportTestsBase::TestMidiTransportBidi(REFIID iid, MidiDataFormats d
         // that will roundtrip, the others will get dropped.
         if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
+            expectedMessageByteCount += (4 * sizeof(UMP32));
             VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
             VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
             VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
@@ -572,6 +577,10 @@ void MidiTransportTestsBase::TestMidiTransportBidi(REFIID iid, MidiDataFormats d
         }
         else
         {
+            expectedMessageByteCount += sizeof(UMP32);
+            expectedMessageByteCount += sizeof(UMP64);
+            expectedMessageByteCount += sizeof(UMP96);
+            expectedMessageByteCount += sizeof(UMP128);
             VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
             VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_64, sizeof(UMP64), 0));
             VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_96, sizeof(UMP96), 0));
@@ -580,6 +589,7 @@ void MidiTransportTestsBase::TestMidiTransportBidi(REFIID iid, MidiDataFormats d
     }
     else
     {
+        expectedMessageByteCount += (4 * sizeof(MIDI_MESSAGE));
         VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
         VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
         VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
@@ -592,8 +602,8 @@ void MidiTransportTestsBase::TestMidiTransportBidi(REFIID iid, MidiDataFormats d
         LOG_OUTPUT(L"Failure waiting for messages, timed out.");
     }
 
-    LOG_OUTPUT(L"%d messages expected, %d received", expectedMessageCount, midiMessagesReceived);
-    VERIFY_IS_TRUE(midiMessagesReceived == expectedMessageCount);
+    LOG_OUTPUT(L"%d message bytes expected, %d received", expectedMessageByteCount, midiMessageBytesReceived);
+    VERIFY_IS_TRUE(midiMessageBytesReceived == expectedMessageByteCount);
 
     LOG_OUTPUT(L"Done, cleaning up");
 

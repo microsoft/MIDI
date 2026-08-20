@@ -77,6 +77,7 @@ namespace foundation = ::winrt::Windows::Foundation;
 #include "wstring_util.h"
 #include "hstring_util.h"
 #include "ump_helpers.h"
+#include "midi_ump_message_defs.h"
 #include "midi_timestamp.h"
 
 #undef GetObject

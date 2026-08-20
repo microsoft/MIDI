@@ -121,13 +121,13 @@ MidiSrvTransportTests::TestMidiSrvMultiClient
     wil::unique_event_nothrow allMessagesReceived;
 
     // We're sending 4 messages on MidiOut1, and 4 messages on
-    // MidiOut2. MidiIn1 will recieve both sets, so 8 messages.
+    // MidiOut2. MidiIn1 will receive both sets, so 8 messages.
     // MidiIn2 will also receive both sets, 8 messages. So we
     // have a total of 8 messages.
-    UINT32 expectedMessageCount = 16;
-    UINT midiMessagesReceived = 0;
-    UINT midiMessageReceived1 = 0;
-    UINT midiMessageReceived2 = 0;
+    UINT32 expectedMessageByteCount = 0;
+    UINT midiMessageBytesReceived = 0;
+    UINT midiMessageBytesReceived1 = 0;
+    UINT midiMessageBytesReceived2 = 0;
 
     // as there are two clients using the same callback, intentionally,
     // we need to ensure that only 1 is processed at a time.
@@ -189,22 +189,18 @@ MidiSrvTransportTests::TestMidiSrvMultiClient
 
         PrintMidiMessage(payload, payloadSize, sizeof(MIDI_MESSAGE), payloadPosition);
 
-        // Messages sharing a timestamp arrive coalesced into one callback, so the counts come
-        // from the payload rather than from the number of calls.
-        UINT32 const messagesInPayload = static_cast<UINT32>(payloadSize / sizeof(MIDI_MESSAGE));
-
-        midiMessagesReceived += messagesInPayload;
+        midiMessageBytesReceived += payloadSize;
 
         if (context == context1)
         {
-            midiMessageReceived1 += messagesInPayload;
+            midiMessageBytesReceived1 += payloadSize;
         }
         else if (context == context2)
         {
-            midiMessageReceived2 += messagesInPayload;
+            midiMessageBytesReceived2 += payloadSize;
         }
 
-        if (midiMessagesReceived >= expectedMessageCount)
+        if (midiMessageBytesReceived >= expectedMessageByteCount)
         {
             allMessagesReceived.SetEvent();
         }
@@ -250,6 +246,8 @@ MidiSrvTransportTests::TestMidiSrvMultiClient
         VERIFY_SUCCEEDED(GetEndpointGroupIndex(midiOutInstanceId, midiOutGroupIndex));
         VERIFY_IS_TRUE(midiInGroupIndex == midiOutGroupIndex);
 
+        LOG_OUTPUT(L"MidiOne interface, group index %d", midiInGroupIndex);
+
         // Shift left 24 bits, so that it's in the correct field
         midiInGroupIndex = midiInGroupIndex << 24;
 
@@ -284,6 +282,57 @@ MidiSrvTransportTests::TestMidiSrvMultiClient
     VERIFY_SUCCEEDED(GetEndpointNativeDataFormat(midiOutInstanceId.c_str(), nativeOutDataFormat));
 
     LOG_OUTPUT(L"Writing midi data");
+
+    // calculate the expected message byte sizes
+    if (transportCreationParams1.DataFormat == MidiDataFormats_UMP &&
+        transportCreationParams2.DataFormat == MidiDataFormats_UMP)
+    {
+        if (nativeInDataFormat == MidiDataFormats_ByteStream || 
+            nativeOutDataFormat == MidiDataFormats_ByteStream)
+        {
+            // if everyone is UMP and the underlying transport is bytestream,
+            // then we're going to get 16 ump32's, 4 from client 1 going to client 2,
+            // 4 from client 1 looped back to client 1, 4 from client 2 to client 1,
+            // and 4 from client 2 looped back to client 2
+            expectedMessageByteCount += (16 * sizeof(UMP32));
+        }
+        else
+        {
+            // both sides are ump and a ump transport, so
+            // we have 4 ump32's, 4 ump64s, 4 ump96's, and 4 ump128's, 
+            // because each client receives the other clients messages and
+            // a loopback of their own message.
+            expectedMessageByteCount += (4 *sizeof(UMP32));
+            expectedMessageByteCount += (4 *sizeof(UMP64));
+            expectedMessageByteCount += (4 *sizeof(UMP96));
+            expectedMessageByteCount += (4 *sizeof(UMP128));
+        }
+    }
+    else if (transportCreationParams1.DataFormat == MidiDataFormats_ByteStream &&
+        transportCreationParams2.DataFormat == MidiDataFormats_ByteStream)
+    {
+        // both clients are bytestream, so we're going to have 16 bytestream messages
+        expectedMessageByteCount += (16 * sizeof(MIDI_MESSAGE));
+    }
+    else
+    {
+        // one client is bytestream, one client UMP. the bytestream client
+        // will receive 4 bytestream messages, the ump client will receive
+        // 4 ump32 messages (bytestream converted to ump) if the native data format
+        // is bytestream. If the native data format is ump, then there will be 5 UMP32s, and
+        // 3 UMP64's, because 96 and 128 aren't valid to send when interacting with bytestream
+        expectedMessageByteCount += (8 * sizeof(MIDI_MESSAGE));
+        if (nativeInDataFormat == MidiDataFormats_ByteStream || 
+            nativeOutDataFormat == MidiDataFormats_ByteStream)
+        {
+            expectedMessageByteCount += (8 * sizeof(UMP32));
+        }
+        else
+        {
+            expectedMessageByteCount += (5 * sizeof(UMP32));
+            expectedMessageByteCount += (3 * sizeof(UMP64));
+        }
+    }
 
     if (transportCreationParams1.DataFormat == MidiDataFormats_UMP)
     {
@@ -365,10 +414,13 @@ MidiSrvTransportTests::TestMidiSrvMultiClient
         LOG_OUTPUT(L"Failure waiting for messages, timed out.");
     }
 
-    LOG_OUTPUT(L"%d messages expected, %d received", expectedMessageCount, midiMessagesReceived);
-    LOG_OUTPUT(L"%d messages on client 1, %d message on client 2", midiMessageReceived1, midiMessageReceived2);
-    VERIFY_IS_TRUE(midiMessagesReceived == expectedMessageCount);
-    VERIFY_IS_TRUE((midiMessageReceived1 + midiMessageReceived2) == expectedMessageCount);
+    // Wait additional time for any straggling messages to come in
+    Sleep(500);
+
+    LOG_OUTPUT(L"%d message bytes expected, %d received", expectedMessageByteCount, midiMessageBytesReceived);
+    LOG_OUTPUT(L"%d message bytes on client 1, %d message bytes on client 2", midiMessageBytesReceived1, midiMessageBytesReceived2);
+    VERIFY_IS_TRUE(midiMessageBytesReceived == expectedMessageByteCount);
+    VERIFY_IS_TRUE((midiMessageBytesReceived1 + midiMessageBytesReceived2) == expectedMessageByteCount);
 
     LOG_OUTPUT(L"Done, cleaning up");
 
@@ -475,13 +527,13 @@ MidiSrvTransportTests::TestMidiSrvMultiClientBidi
     wil::unique_event_nothrow allMessagesReceived;
 
     // We're sending 4 messages on MidiOut1, and 4 messages on
-    // MidiOut2. MidiIn1 will recieve both sets, so 8 messages.
+    // MidiOut2. MidiIn1 will receive both sets, so 8 messages.
     // MidiIn2 will also receive both sets, 8 messages. So we
     // have a total of 8 messages.
-    UINT32 expectedMessageCount = 16;
-    UINT midiMessagesReceived = 0;
-    UINT midiMessageReceived1 = 0;
-    UINT midiMessageReceived2 = 0;
+    UINT32 expectedMessageByteCount = 0;
+    UINT midiMessageBytesReceived = 0;
+    UINT midiMessageBytesReceived1 = 0;
+    UINT midiMessageBytesReceived2 = 0;
 
     // as there are two clients using the same callback, intentionally,
     // we need to ensure that only 1 is processed at a time.
@@ -531,22 +583,18 @@ MidiSrvTransportTests::TestMidiSrvMultiClientBidi
 
         PrintMidiMessage(payload, payloadSize, sizeof(MIDI_MESSAGE), payloadPosition);
 
-        // Messages sharing a timestamp arrive coalesced into one callback, so the counts come
-        // from the payload rather than from the number of calls.
-        UINT32 const messagesInPayload = static_cast<UINT32>(payloadSize / sizeof(MIDI_MESSAGE));
-
-        midiMessagesReceived += messagesInPayload;
+        midiMessageBytesReceived += payloadSize;
 
         if (context == context1)
         {
-            midiMessageReceived1 += messagesInPayload;
+            midiMessageBytesReceived1 += payloadSize;
         }
         else if (context == context2)
         {
-            midiMessageReceived2 += messagesInPayload;
+            midiMessageBytesReceived2 += payloadSize;
         }
 
-        if (midiMessagesReceived >= expectedMessageCount)
+        if (midiMessageBytesReceived >= expectedMessageByteCount)
         {
             allMessagesReceived.SetEvent();
         }
@@ -584,6 +632,55 @@ MidiSrvTransportTests::TestMidiSrvMultiClientBidi
 
     BYTE nativeDataFormat {0};
     VERIFY_SUCCEEDED(GetEndpointNativeDataFormat(midiInstanceId.c_str(), nativeDataFormat));
+
+    // calculate the expected message byte sizes
+    if (transportCreationParams1.DataFormat == MidiDataFormats_UMP &&
+        transportCreationParams2.DataFormat == MidiDataFormats_UMP)
+    {
+        if (nativeDataFormat == MidiDataFormats_ByteStream)
+        {
+            // if everyone is UMP and the underlying transport is bytestream,
+            // then we're going to get 16 ump32's, 4 from client 1 going to client 2,
+            // 4 from client 1 looped back to client 1, 4 from client 2 to client 1,
+            // and 4 from client 2 looped back to client 2
+            expectedMessageByteCount += (16 * sizeof(UMP32));
+        }
+        else
+        {
+            // both sides are ump and a ump transport, so
+            // we have 4 ump32's, 4 ump64s, 4 ump96's, and 4 ump128's, 
+            // because each client receives the other clients messages and
+            // a loopback of their own message.
+            expectedMessageByteCount += (4 *sizeof(UMP32));
+            expectedMessageByteCount += (4 *sizeof(UMP64));
+            expectedMessageByteCount += (4 *sizeof(UMP96));
+            expectedMessageByteCount += (4 *sizeof(UMP128));
+        }
+    }
+    else if (transportCreationParams1.DataFormat == MidiDataFormats_ByteStream &&
+        transportCreationParams2.DataFormat == MidiDataFormats_ByteStream)
+    {
+        // both clients are bytestream, so we're going to have 16 bytestream messages
+        expectedMessageByteCount += (16 * sizeof(MIDI_MESSAGE));
+    }
+    else
+    {
+        // one client is bytestream, one client UMP. the bytestream client
+        // will receive 4 bytestream messages, the ump client will receive
+        // 4 ump32 messages (bytestream converted to ump) if the native data format
+        // is bytestream. If the native data format is ump, then there will be 5 UMP32s, and
+        // 3 UMP64's, because 96 and 128 aren't valid to send when interacting with bytestream
+        expectedMessageByteCount += (8 * sizeof(MIDI_MESSAGE));
+        if (nativeDataFormat == MidiDataFormats_ByteStream)
+        {
+            expectedMessageByteCount += (8 * sizeof(UMP32));
+        }
+        else
+        {
+            expectedMessageByteCount += (5 * sizeof(UMP32));
+            expectedMessageByteCount += (3 * sizeof(UMP64));
+        }
+    }
 
     LOG_OUTPUT(L"Writing midi data");
     if (transportCreationParams1.DataFormat == MidiDataFormats_UMP)
@@ -662,10 +759,12 @@ MidiSrvTransportTests::TestMidiSrvMultiClientBidi
         LOG_OUTPUT(L"Failure waiting for messages, timed out.");
     }
 
-    LOG_OUTPUT(L"%d messages expected, %d received", expectedMessageCount, midiMessagesReceived);
-    LOG_OUTPUT(L"%d messages on client 1, %d message on client 2", midiMessageReceived1, midiMessageReceived2);
-    VERIFY_IS_TRUE(midiMessagesReceived == expectedMessageCount);
-    VERIFY_IS_TRUE((midiMessageReceived1 + midiMessageReceived2) == expectedMessageCount);
+    Sleep(500);
+
+    LOG_OUTPUT(L"%d message bytes expected, %d received", expectedMessageByteCount, midiMessageBytesReceived);
+    LOG_OUTPUT(L"%d message bytes on client 1, %d message bytes on client 2", midiMessageBytesReceived1, midiMessageBytesReceived2);
+    VERIFY_IS_TRUE(midiMessageBytesReceived == expectedMessageByteCount);
+    VERIFY_IS_TRUE((midiMessageBytesReceived1 + midiMessageBytesReceived2) == expectedMessageByteCount);
 
     LOG_OUTPUT(L"Done, cleaning up");
 
@@ -851,10 +950,10 @@ public:
                 midiCallbacksReceived++;
         
                 // first, we calculate the jitter statistics for how often the
-                // recieve function was called. Since the messages are sent at a
+                // receive function was called. Since the messages are sent at a
                 // fixed cadence, they should also be received at a similar cadence.
                 // We can only calculate this for the 2nd and on message, since we don't
-                // have a previous recieve time for the first message.
+                // have a previous receive time for the first message.
                 if (previousReceive > 0)
                 {
                     LONGLONG receiveLatency{0};
@@ -872,7 +971,7 @@ public:
         
                     long double prevAvgReceiveLatency = avgReceiveLatency;
         
-                    // running average for the average recieve latency/jitter
+                    // running average for the average receive latency/jitter
                     avgReceiveLatency = (prevAvgReceiveLatency + (((long double)receiveLatency - prevAvgReceiveLatency) / ((long double)midiCallbacksReceived)));
         
                     stdevReceiveLatency = stdevReceiveLatency + ((receiveLatency - prevAvgReceiveLatency) * (receiveLatency - avgReceiveLatency));
