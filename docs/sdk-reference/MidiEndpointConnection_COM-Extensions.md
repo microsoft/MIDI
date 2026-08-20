@@ -111,17 +111,21 @@ interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
 };
 ```
 
+The `MessagesReceived` callback is synchronous, and needs to be handled quickly and efficiently by the calling application.
+
+Applications are typically much faster than devices at handling messages. However, failing to drain the incoming message queue fast enough can result in transmission errors. With MIDI 2.0 there is no upper performance limit on devices, and USB 3 and Network MIDI devices, among others, are capable of transmitting a large number of messages in a very short period of time.
+
+If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
+
 | Function | Description |
 | -------- | ----------- |
-| `MessagesReceived` | Called when one or more messages have been received from the endpoint. How many messages are included in a single call depends largely upon how the endpoint receives and passes them along, and what additional processing is done on the data in the service. We guarantee `messages` will not be nullptr, and `wordCount` will be at least 1
-
-**Performance Tip:** When processing the `MessagesReceived` callback, do so quickly. This callback is synchronous. If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
+| `MessagesReceived` | Called when one or more messages have been received from the endpoint. How many messages are included in a single call depends largely upon how the endpoint receives and passes them along, and what additional processing is done on the data in the service. We guarantee `messages` will not be nullptr, and `wordCount` will be at least 1. |
 
 The session id and connection id are provided for convenience when using a centralized message handler. 
 
 The messages data pointer is valid only for the duration of the call, as it is a pointer into the cross-process memory-mapped buffer shared with the service. Therefore, all data must be copied and not referenced. 
 
-Your handler should return an S_OK HRESULT when it completes. The messages will be invalidated in the cross-process buffer regardless of the return value from this callback. |
+Your handler should return an S_OK HRESULT when it completes. The messages will be invalidated in the cross-process buffer regardless of the return value from this callback.
 
 > IMPORTANT: These interfaces are provided for speed and efficiency. When a `MidiEndpointConnection` has a registered `IMidiEndpointConnectionMessagesReceivedCallback`, it will completely bypass all other message handling code, including any listeners and event handlers. Therefore, this cannot be combined with, for example, implementing a Virtual Device app, which is implemented as a connection listener.
 
