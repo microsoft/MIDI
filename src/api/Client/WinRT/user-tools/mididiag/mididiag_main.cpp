@@ -337,7 +337,7 @@ void OutputCOMComponentInfo(std::wstring const dllNameFieldName, std::wstring co
     else
     {
         OutputStringField(dllNameFieldName, std::wstring{ L"ERROR" });
-        OutputError(L"Could not find COM component in-proc server value under HKEY_CLASSES_ROOT");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_NO_INPROC_SERVER));
     }
 }
 
@@ -375,7 +375,7 @@ bool DoSectionDrivers32WOWRegistryEntries(_In_ bool const verbose)
                         // it's an invalid value that is not picked up by WinMM
                         if (valueData.name == L"midi0")
                         {
-                            OutputError(L"The above \"midi0\" entry is invalid. It should be named \"midi\" to be recognized by AudioEndpointBuilder.");
+                            OutputError(internal::ResourceGetWString(IDS_ERROR_MIDI0_ENTRY_INVALID));
                         }
                         else if (internal::ToLowerTrimmedWStringCopy(val.value()) == L"wdmaud2.drv")
                         {
@@ -397,20 +397,20 @@ bool DoSectionDrivers32WOWRegistryEntries(_In_ bool const verbose)
 
             if (!wdmaud2drvFound)
             {
-                OutputError(L"No valid entry found with wdmaud2.drv listed in " + drivers32KeyLocation + L".");
-                OutputError(L"Typically, this will be the \"midi1\" entry. Without this, WinMM apps will not see your MIDI 1.0 ports.");
-                OutputError(L"Run midifixreg.exe (installed with these tools) as Administrator to fix this.");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY) + drivers32KeyLocation + L".");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY_TYPICAL));
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY_REMEDY));
             }
         }
         else
         {
             OutputStringField(L"ERROR", drivers32KeyLocation);
-            OutputError(L"Could not open Drivers32 Key");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_COULD_NOT_OPEN_DRIVERS32));
         }
     }
     catch (...)
     {
-        OutputError(L"Exception enumerating registry keys and values.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_REGISTRY));
 
         return false;
     }
@@ -456,7 +456,7 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
                         // it's an invalid value that is not picked up by WinMM
                         if (valueData.name == L"midi0")
                         {
-                            OutputError(L"The above \"midi0\" entry is invalid. It should be named \"midi\" to be recognized by AudioEndpointBuilder.");
+                            OutputError(internal::ResourceGetWString(IDS_ERROR_MIDI0_ENTRY_INVALID));
                         }
                         else if (internal::ToLowerTrimmedWStringCopy(val.value()) == L"wdmaud2.drv")
                         {
@@ -478,20 +478,20 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
 
             if (!wdmaud2drvFound)
             {
-                OutputError(L"No valid entry found with wdmaud2.drv listed in " + drivers32KeyLocation + L".");
-                OutputError(L"Typically, this will be the \"midi1\" entry. Without this, WinMM apps will not see your MIDI 1.0 ports.");
-                OutputError(L"Run midifixreg.exe (installed with these tools) as Administrator to fix this.");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY) + drivers32KeyLocation + L".");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY_TYPICAL));
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_WDMAUD2_ENTRY_REMEDY));
             }
         }
         else
         {
             OutputStringField(L"ERROR", drivers32KeyLocation);
-            OutputError(L"Could not open Drivers32 Key");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_COULD_NOT_OPEN_DRIVERS32));
         }
     }
     catch (...)
     {
-        OutputError(L"Exception enumerating registry keys and values.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_REGISTRY));
 
         return false;
     }
@@ -565,7 +565,7 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
         }
         else
         {
-            OutputError(L"Unable to find or open root Windows MIDI Services registry key. Is Windows MIDI Services installed?");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_NO_ROOT_REGISTRY_KEY));
         }
 
         // List midisrv info
@@ -584,18 +584,18 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
                 }
                 else
                 {
-                    OutputError(L"Found midisrv service entry in registry, but it does not have an ImagePath");
+                    OutputError(internal::ResourceGetWString(IDS_ERROR_MIDISRV_NO_IMAGE_PATH));
                 }
 
             }
             else
             {
-                OutputError(L"midisrv registry key not found or is not valid, or user does not have permissions to read it.");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_MIDISRV_KEY_INVALID));
             }
         }
         else
         {
-            OutputError(L"Unable to find or open Midisrv entry in registry services key. Is Windows MIDI Services installed?");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_NO_MIDISRV_SERVICES_KEY));
         }
 
         OutputItemSeparator();
@@ -613,12 +613,12 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
             }
             else
             {
-                OutputError(L"No MIDI Desktop app SDK runtime registry 'Installed' value. The Windows MIDI Services SDK does not appear to be installed.");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_SDK_INSTALLED_VALUE));
             }
         }
         else
         {
-            OutputError(L"No MIDI Desktop app SDK runtime registry root key. The Windows MIDI Services SDK does not appear to be installed.");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_NO_SDK_ROOT_KEY));
         }
 
         OutputItemSeparator();
@@ -672,7 +672,7 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
                     }
                     else
                     {
-                        OutputError(L"No clsid found in MIDI transport entry");
+                        OutputError(internal::ResourceGetWString(IDS_ERROR_NO_TRANSPORT_CLSID));
                     }
 
                 }
@@ -682,13 +682,13 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
         }
         else
         {
-            OutputError(L"Unable to enumerate transport plugins from registry. You may need to run this tool as Administrator.");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_CANNOT_ENUMERATE_TRANSPORTS));
         }
 
     }
     catch (...)
     {
-        OutputError(L"Exception enumerating registry keys and values.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_REGISTRY));
 
         return false;
     }
@@ -722,13 +722,13 @@ bool DoSectionTransports(_In_ bool const verbose)
         }
         else
         {
-            OutputError(L"Enumerating transports returned no matches. This is not expected and indicates an installation problem or that the service is not running.");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_NO_TRANSPORTS_FOUND));
             return false;
         }
     }
     catch (...)
     {
-        OutputError(L"Exception enumerating transports.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_TRANSPORTS));
         return false;
     }
 
@@ -758,7 +758,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
     }
     catch (...)
     {
-        OutputError(L"Unable to access Windows MIDI Services and enumerate devices.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_CANNOT_ENUMERATE_DEVICES));
         return false;
     }
 
@@ -889,7 +889,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
                 if (nameEntries.size() == 0)
                 {
-                    OutputError(L"No naming table found for device. This is expected ONLY when the device does not export endpoints to WinMM");
+                    OutputError(internal::ResourceGetWString(IDS_ERROR_NO_NAMING_TABLE));
                 }
                 else
                 {
@@ -944,7 +944,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             }
             else
             {
-                OutputError(L"Unable to find endpoint parent");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_ENDPOINT_PARENT));
             }
 
             if (i != devices.Size() - 1)
@@ -955,9 +955,9 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
     }
     else
     {
-        OutputError(L"Enumerating devices returned no matches. This is not expected and indicates an installation");
-        OutputError(L"problem, the service couldn't start, or you are running developer service components and do");
-        OutputError(L"not have developer mode set in Windows Settings.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_NO_DEVICES_FOUND_1));
+        OutputError(internal::ResourceGetWString(IDS_ERROR_NO_DEVICES_FOUND_2));
+        OutputError(internal::ResourceGetWString(IDS_ERROR_NO_DEVICES_FOUND_3));
         return false;
     }
 
@@ -991,7 +991,7 @@ bool DoSectionWinRTMidi1ApiEndpoints(_In_ bool const verbose)
     }
     catch (...)
     {
-        OutputError(L"Enumerating WinRT MIDI 1.0 devices encountered an exception.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINRT_MIDI1));
 
         return false;
     }
@@ -1018,7 +1018,7 @@ bool DoSectionWinRTMidi1ApiEndpoints(_In_ bool const verbose)
     }
     catch (...)
     {
-        OutputError(L"Enumerating WinRT MIDI 1.0 devices encountered an exception.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINRT_MIDI1));
 
         return false;
     }
@@ -1035,19 +1035,19 @@ void DisplayWinMMGetDevCapsErrorResult(MMRESULT result)
         break;
 
     case MMSYSERR_NODRIVER:
-        OutputError(L"Port returned MMSYSERR_NODRIVER. This is normal for unused port numbers.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_PORT_NODRIVER));
         break;
 
     case MMSYSERR_INVALPARAM:
-        OutputError(L"Port returned MMSYSERR_INVALPARAM.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_PORT_INVALPARAM));
         break;
 
     case MMSYSERR_BADDEVICEID:
-        OutputError(L"Port returned MMSYSERR_BADDEVICEID.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_PORT_BADDEVICEID));
         break;
 
     case MMSYSERR_NOMEM:
-        OutputError(L"Port returned MMSYSERR_NOMEM.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_PORT_NOMEM));
         break;
 
     }
@@ -1097,7 +1097,7 @@ bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
     }
     catch (...)
     {
-        OutputError(L"Enumerating WinMM MIDI 1.0 input devices encountered an exception.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINMM_INPUTS));
 
         return false;
     }
@@ -1142,7 +1142,7 @@ bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
     }
     catch (...)
     {
-        OutputError(L"Enumerating WinMM MIDI 1.0 output devices encountered an exception.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_WINMM_OUTPUTS));
 
         return false;
     }
@@ -1182,7 +1182,7 @@ bool DoSectionPingTest(_In_ bool const verbose, _In_ uint8_t const pingCount)
             }
             else
             {
-                OutputError(L"Ping test failed");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_PING_FAILED));
                 OutputStringField(MIDIDIAG_FIELD_LABEL_PING_FAILURE_REASON, pingResult.FailureReason());
 
                 return false;
@@ -1190,13 +1190,13 @@ bool DoSectionPingTest(_In_ bool const verbose, _In_ uint8_t const pingCount)
         }
         else
         {
-            OutputError(L"Ping test failed. Return was null.");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_PING_FAILED_NULL_RESULT));
             return false;
         }
     }
     catch (...)
     {
-        OutputError(L"Ping test failed with exception");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_PING_FAILED_EXCEPTION));
 
         return false;
     }
@@ -1219,7 +1219,7 @@ bool DoSectionClock(_In_ bool const verbose)
     catch (winrt::hresult_error ex)
     {
         OutputError(ex.message().c_str());
-        OutputError(L"winrt::hresult_error getting clock information. Likely an issue with SDK activation.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_CLOCK_HRESULT));
 
         return false;
     }
@@ -1358,12 +1358,12 @@ void OutputProcessAndNativeMachine()
             }
             else
             {
-                OutputError(L"Unidentified process and/or machine architecture");
+                OutputError(internal::ResourceGetWString(IDS_ERROR_UNIDENTIFIED_ARCHITECTURE));
             }
         }
         else
         {
-            OutputError(L"Unable to query process and machine architecture.");
+            OutputError(internal::ResourceGetWString(IDS_ERROR_CANNOT_QUERY_ARCHITECTURE));
         }
 
     }
@@ -1564,9 +1564,9 @@ int __cdecl main()
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_HEADER);
 
-    OutputHeader(L"This tool is part of the Windows MIDI Services SDK and tools");
-    OutputHeader(L"Copyright 2026- Microsoft Corporation.");
-    OutputHeader(L"Information, license, and source available at https://aka.ms/midi");
+    OutputHeader(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
+    OutputHeader(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
+    OutputHeader(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
     WriteBlankLine();
     OutputHeader(MIDIDIAG_PRODUCT_NAME);
     WriteBlankLine();
@@ -1622,7 +1622,7 @@ int __cdecl main()
     }
     catch (...)
     {
-        OutputError(L"Exception attempting to gather MIDI information.");
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_GATHERING_INFORMATION));
         OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
         return RETURN_GENERAL_FAILURE;
@@ -1635,7 +1635,7 @@ int __cdecl main()
 
 abort_run:
     OutputSectionHeader(L"Aborted Run");
-    OutputError(L"Aborting MIDI Diag run due to failure(s).");
+    OutputError(internal::ResourceGetWString(IDS_ERROR_ABORTING_RUN));
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
     return RETURN_GENERAL_FAILURE;
