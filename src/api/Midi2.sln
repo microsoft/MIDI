@@ -110,6 +110,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSrvTransport", "T
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiTestCommon", "Test\Libs\MidiTestCommon\MidiTestCommon.vcxproj", "{574447FB-B44C-403E-9617-092F08B0FB27}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9991FF5B-E0F0-4373-A7C2-20B1EFDE5F70} = {9991FF5B-E0F0-4373-A7C2-20B1EFDE5F70}
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiXProc", "Libs\MidiXProc\MidiXProc.vcxproj", "{2480B077-46E5-42AE-9BDB-685AFF258529}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -279,12 +283,22 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.NetworkMidiTransport", "Transport\UdpNetworkMidi2Transport\Midi2.NetworkMidiTransport.vcxproj", "{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transport.Loopback.unittests", "Test\Midi2.Transport.Loopback.unittests\Midi2.Transport.Loopback.unittests.vcxproj", "{3F1A7C40-6B21-4D55-9C8E-1A2B3C4D5E01}"
+	ProjectSection(ProjectDependencies) = postProject
+		{574447FB-B44C-403E-9617-092F08B0FB27} = {574447FB-B44C-403E-9617-092F08B0FB27}
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transport.VirtualMidi.unittests", "Test\Midi2.Transport.VirtualMidi.unittests\Midi2.Transport.VirtualMidi.unittests.vcxproj", "{3F1A7C40-6B21-4D55-9C8E-1A2B3C4D5E02}"
+	ProjectSection(ProjectDependencies) = postProject
+		{574447FB-B44C-403E-9617-092F08B0FB27} = {574447FB-B44C-403E-9617-092F08B0FB27}
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transport.NetworkMidi2.unittests", "Test\Midi2.Transport.NetworkMidi2.unittests\Midi2.Transport.NetworkMidi2.unittests.vcxproj", "{A758688B-891C-42C1-AD78-79186264E127}"
 	ProjectSection(ProjectDependencies) = postProject
+		{574447FB-B44C-403E-9617-092F08B0FB27} = {574447FB-B44C-403E-9617-092F08B0FB27}
 		{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C} = {7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
 	EndProjectSection
 EndProject
 Global
