@@ -795,11 +795,9 @@ TransportState::GetHostConnectionsForHost(winrt::guid const& hostEntryConfigIden
 
         // A client entry identifier can never equal a host's, so this only skips something
         // which was mis-registered.
-        auto hostConnection = std::dynamic_pointer_cast<MidiNetworkHostConnection>(conn.second);
-
-        if (hostConnection != nullptr)
+        if (conn.second->Role() == MidiNetworkConnectionRole::ConnectionWindowsIsHost)
         {
-            results.push_back(hostConnection);
+            results.push_back(std::static_pointer_cast<MidiNetworkHostConnection>(conn.second));
         }
     }
 

@@ -19,6 +19,8 @@
 #include <wil\registry.h>
 
 #include "MidiDefs.h"
+#include "WindowsMidiServices.h"
+#include "Midi2MidiSrvTransport.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -147,6 +149,14 @@ HRESULT StartMIDIService()
     while (serviceStatusProcess.dwCurrentState != SERVICE_RUNNING && (currentTime - startTime < SERVICE_START_TIMEOUT));
 
     RETURN_HR_IF(E_FAIL, serviceStatusProcess.dwCurrentState != SERVICE_RUNNING);
+
+    wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
+
+    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+    RETURN_IF_FAILED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker));
+    RETURN_IF_FAILED(midiSessionTracker->Initialize());
+    RETURN_HR_IF(E_FAIL, !midiSessionTracker->VerifyConnectivity());
 
     return S_OK;
 }
