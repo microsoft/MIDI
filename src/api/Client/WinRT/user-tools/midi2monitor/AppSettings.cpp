@@ -20,7 +20,6 @@ namespace midi2monitor
         constexpr wchar_t ValueTimestampFormat[] = L"TimestampFormat";
         constexpr wchar_t ValueTheme[] = L"Theme";
         constexpr wchar_t ValueBackdrop[] = L"WindowBackdrop";
-        constexpr wchar_t ValueBackgroundTransparency[] = L"BackgroundTransparencyPercent";
         constexpr wchar_t ValueRetainedMessageCount[] = L"RetainedMessageCount";
         constexpr wchar_t ValueShowChiclets[] = L"ShowMessageNameChiclets";
         constexpr wchar_t ValueAutoHideColumns[] = L"AutoHideColumnsWhenNarrow";
@@ -87,9 +86,6 @@ namespace midi2monitor
             ? static_cast<WindowBackdrop>(backdrop)
             : WindowBackdrop::Solid;
 
-        m_backgroundTransparencyPercent =
-            std::min(ReadDword(ValueBackgroundTransparency, 0), MaximumTransparencyPercent);
-
         auto const retained = ReadDword(ValueRetainedMessageCount, DefaultRetainedMessageCount);
         m_retainedMessageCount = std::clamp(retained, MinimumRetainedMessageCount, MaximumRetainedMessageCount);
 
@@ -112,13 +108,6 @@ namespace midi2monitor
     {
         m_backdrop = value;
         WriteDword(ValueBackdrop, static_cast<uint32_t>(value));
-    }
-
-    _Use_decl_annotations_
-    void AppSettings::BackgroundTransparencyPercent(uint32_t value) noexcept
-    {
-        m_backgroundTransparencyPercent = std::min(value, MaximumTransparencyPercent);
-        WriteDword(ValueBackgroundTransparency, m_backgroundTransparencyPercent);
     }
 
     _Use_decl_annotations_

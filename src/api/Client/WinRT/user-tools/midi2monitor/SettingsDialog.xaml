@@ -51,23 +51,6 @@
                     <ComboBoxItem x:Uid="SettingsBackdropMica" Content="Mica" />
                     <ComboBoxItem x:Uid="SettingsBackdropAcrylic" Content="Acrylic" />
                 </ComboBox>
-
-                <TextBlock x:Name="TransparencyLabel"
-                           x:Uid="SettingsTransparencyDescription"
-                           Text="How much of the background shows through. The message table stays more opaque so messages remain readable."
-                           TextWrapping="Wrap"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                <Slider x:Name="TransparencySlider"
-                        x:Uid="SettingsTransparencySlider"
-                        Width="260"
-                        HorizontalAlignment="Left"
-                        Minimum="0"
-                        Maximum="90"
-                        StepFrequency="5"
-                        TickFrequency="15"
-                        SnapsTo="StepValues"
-                        ValueChanged="OnTransparencyChanged" />
             </StackPanel>
 
             <StackPanel Spacing="8">

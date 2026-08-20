@@ -258,40 +258,35 @@ namespace winrt::midi2monitor::implementation
     {
         try
         {
-            auto const& settings = native::AppSettings::Current();
-            auto const backdrop = settings.Backdrop();
+            auto const backdrop = native::AppSettings::Current().Backdrop();
 
-            switch (backdrop)
+            // Assigning a new backdrop object tears the material down and rebuilds it, which
+            // flickers. Only do it when the material actually changes.
+            if (!m_backdropApplied || m_appliedBackdrop != backdrop)
             {
-            case native::WindowBackdrop::Mica:
-                SystemBackdrop(media::MicaBackdrop{});
-                break;
+                switch (backdrop)
+                {
+                case native::WindowBackdrop::Mica:
+                    SystemBackdrop(media::MicaBackdrop{});
+                    break;
 
-            case native::WindowBackdrop::Acrylic:
-                SystemBackdrop(media::DesktopAcrylicBackdrop{});
-                break;
+                case native::WindowBackdrop::Acrylic:
+                    SystemBackdrop(media::DesktopAcrylicBackdrop{});
+                    break;
 
-            default:
-                SystemBackdrop(nullptr);
-                break;
+                default:
+                    SystemBackdrop(nullptr);
+                    break;
+                }
+
+                m_appliedBackdrop = backdrop;
+                m_backdropApplied = true;
             }
 
-            if (backdrop == native::WindowBackdrop::Solid)
-            {
-                WindowFill().Visibility(xaml::Visibility::Visible);
-                HeaderCardFill().Opacity(1.0);
-                MessagesCardFill().Opacity(1.0);
-                return;
-            }
-
-            // the window itself has to be clear or the system material is simply covered up
-            WindowFill().Visibility(xaml::Visibility::Collapsed);
-
-            auto const transparency = settings.BackgroundTransparencyPercent() / 100.0;
-
-            // the table only goes half as transparent, so messages stay readable over any desktop
-            HeaderCardFill().Opacity(1.0 - transparency);
-            MessagesCardFill().Opacity(1.0 - (transparency / 2.0));
+            // a system material only shows if the window is not painting over it
+            WindowFill().Visibility(backdrop == native::WindowBackdrop::Solid
+                ? xaml::Visibility::Visible
+                : xaml::Visibility::Collapsed);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the window backdrop.")
     }

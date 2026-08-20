@@ -75,18 +75,12 @@
         </Grid>
 
         <!-- ============================ Top: what to listen to ============================ -->
-        <!-- fill sits behind the card so its opacity never fades the controls on top -->
-        <Border Grid.Row="1"
-                x:Name="HeaderCardFill"
-                Margin="12,4,12,8"
-                CornerRadius="8"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
-
         <Border Grid.Row="1"
                 x:Name="HeaderCard"
                 Margin="12,4,12,8"
                 Padding="14"
                 CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1">
             <Grid ColumnSpacing="14">
@@ -223,15 +217,10 @@
 
         <!-- ============================== Middle: the messages ============================== -->
         <Border Grid.Row="2"
-                x:Name="MessagesCardFill"
-                Margin="12,0,12,8"
-                CornerRadius="8"
-                Background="{ThemeResource LayerFillColorDefaultBrush}" />
-
-        <Border Grid.Row="2"
                 x:Name="MessagesCard"
                 Margin="12,0,12,8"
                 CornerRadius="8"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1">
             <Grid>

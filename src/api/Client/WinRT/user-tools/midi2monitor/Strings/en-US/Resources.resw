@@ -468,12 +468,7 @@ Examples
   <data name="SettingsBackdropAcrylic.Content" xml:space="preserve">
     <value>Acrylic</value>
   </data>
-  <data name="SettingsTransparencyDescription.Text" xml:space="preserve">
-    <value>How much of the background shows through. The message table stays more opaque so messages remain readable.</value>
-  </data>
-  <data name="SettingsTransparencySlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Background transparency percent</value>
-  </data>
+
   <data name="SettingsCaptureHeader.Text" xml:space="preserve">    <value>Capture</value>
   </data>
   <data name="SettingsRetentionDescription.Text" xml:space="preserve">

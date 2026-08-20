@@ -69,10 +69,6 @@ namespace midi2monitor
         WindowBackdrop Backdrop() const noexcept { return m_backdrop; }
         void Backdrop(WindowBackdrop value) noexcept;
 
-        // 0 means fully opaque; the table is always drawn less transparent than this
-        uint32_t BackgroundTransparencyPercent() const noexcept { return m_backgroundTransparencyPercent; }
-        void BackgroundTransparencyPercent(uint32_t value) noexcept;
-
         uint32_t RetainedMessageCount() const noexcept { return m_retainedMessageCount; }
         void RetainedMessageCount(uint32_t value) noexcept;
 
@@ -111,8 +107,6 @@ namespace midi2monitor
         static constexpr int32_t MinimumWindowWidth = 640;
         static constexpr int32_t MinimumWindowHeight = 400;
 
-        static constexpr uint32_t MaximumTransparencyPercent = 90;
-
     private:
         AppSettings() = default;
 
@@ -129,7 +123,6 @@ namespace midi2monitor
         TimestampDisplayFormat m_timestampFormat{ TimestampDisplayFormat::Ticks };
         AppTheme m_theme{ AppTheme::System };
         WindowBackdrop m_backdrop{ WindowBackdrop::Solid };
-        uint32_t m_backgroundTransparencyPercent{ 0 };
         uint32_t m_retainedMessageCount{ DefaultRetainedMessageCount };
         uint32_t m_tableZoomPercent{ DefaultZoomPercent };
         std::wstring m_columnLayout{};

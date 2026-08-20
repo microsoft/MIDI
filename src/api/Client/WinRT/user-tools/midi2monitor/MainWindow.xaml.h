@@ -160,6 +160,8 @@ namespace winrt::midi2monitor::implementation
         bool m_connecting{ false };
         bool m_initialized{ false };
         bool m_startupFilterApplied{ false };
+        bool m_backdropApplied{ false };
+        ::midi2monitor::WindowBackdrop m_appliedBackdrop{ ::midi2monitor::WindowBackdrop::Solid };
         bool m_captureButtonStacked{ false };
         bool m_suppressSelectionHandling{ false };
         bool m_suppressZoomHandling{ false };
