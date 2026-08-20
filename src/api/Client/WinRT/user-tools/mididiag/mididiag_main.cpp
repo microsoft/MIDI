@@ -1570,12 +1570,6 @@ int __cdecl main()
     WriteBlankLine();
     OutputHeader(MIDIDIAG_PRODUCT_NAME);
     WriteBlankLine();
-    //OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_BUILD_SOURCE, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE });
-    //OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_NAME, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME });
-    //OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_FULL, std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL });
-
-    // this fails on Windows 10
-//    OutputCurrentTime();
 
     try
     {
@@ -1628,13 +1622,16 @@ int __cdecl main()
         return RETURN_GENERAL_FAILURE;
     }
 
-    OutputSectionHeader(L"*** Successful Run ***");
+    // don't localize
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SUCCESSFUL_RUN);
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
     return RETURN_SUCCESS;
 
 abort_run:
-    OutputSectionHeader(L"Aborted Run");
+
+    // don't localize
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ABORTED_RUN);
     OutputError(internal::ResourceGetWString(IDS_ERROR_ABORTING_RUN));
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
