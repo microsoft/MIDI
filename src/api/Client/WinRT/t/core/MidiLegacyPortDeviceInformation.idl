@@ -12,6 +12,7 @@ import "MidiApiContracts.idl";
 import "Midi1PortFlowEnum.idl";
 import "MidiEndpointNativeDataFormatEnum.idl";
 import "MidiParentDeviceInformation.idl";
+import "MidiGroup.idl";
 
 
 namespace Windows.Devices.Midi2.Enumeration.Legacy
