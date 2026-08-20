@@ -787,11 +787,18 @@ namespace winrt::midi2monitor::implementation
                 return;
             }
 
+            // read the control, not the view model: this event runs before the two-way binding
+            // pushes the new value to the source, so the view model is still one click behind
+            auto const isChecked = checkBox.IsChecked();
+            auto const visible = isChecked != nullptr && isChecked.Value();
+
+            column.IsVisible(visible);
+
             for (auto& entry : native::ColumnLayoutState::Entries())
             {
                 if (static_cast<int32_t>(entry.Id) == column.ColumnId())
                 {
-                    entry.IsVisible = column.IsVisible();
+                    entry.IsVisible = visible;
                     break;
                 }
             }

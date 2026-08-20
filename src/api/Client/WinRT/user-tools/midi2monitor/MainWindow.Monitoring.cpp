@@ -531,6 +531,56 @@ namespace winrt::midi2monitor::implementation
     // ------------------------------------------------------------------------------------
 
     _Use_decl_annotations_
+    void MainWindow::OnEndpointChoiceLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const panel = sender.try_as<controls::Panel>();
+
+            if (panel == nullptr)
+            {
+                return;
+            }
+
+            uint32_t imageIndex{ 0 };
+            bool found{ false };
+
+            for (uint32_t i = 0; i < panel.Children().Size(); i++)
+            {
+                if (panel.Children().GetAt(i).try_as<controls::Image>() != nullptr)
+                {
+                    imageIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                return;
+            }
+
+            auto parent = media::VisualTreeHelper::GetParent(panel);
+
+            while (parent != nullptr)
+            {
+                if (parent.try_as<controls::ComboBoxItem>() != nullptr)
+                {
+                    return;
+                }
+
+                parent = media::VisualTreeHelper::GetParent(parent);
+            }
+
+            // No ComboBoxItem ancestor means this instance draws the closed selection box, where
+            // the picture is redundant. Remove it rather than collapse it: the compiled binding
+            // re-evaluates whenever the selection changes and would make it visible again.
+            panel.Children().RemoveAt(imageIndex);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to lay out the endpoint list item.")
+    }
+
+    _Use_decl_annotations_
     void MainWindow::OnCaptureButtonClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         if (m_monitoring)

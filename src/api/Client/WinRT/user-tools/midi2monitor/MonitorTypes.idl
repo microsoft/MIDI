@@ -26,6 +26,7 @@ namespace midi2monitor
         String DisplayName{ get; };
         String EndpointDeviceId{ get; };
         String ImagePath{ get; };
+        Microsoft.UI.Xaml.Media.ImageSource ImageSource{ get; };
         Microsoft.UI.Xaml.Visibility ImageVisibility{ get; };
     }
 

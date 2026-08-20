@@ -22,6 +22,7 @@
                 <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
             </Grid.ColumnDefinitions>
 
@@ -37,6 +38,34 @@
                        VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis"
                        Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <!-- sized like a caption button; lightweight styling removes the button chrome so
+                 it reads as a bare icon until it is switched on -->
+            <ToggleButton x:Name="AlwaysOnTopToggle"
+                          x:Uid="AlwaysOnTopToggle"
+                          Grid.Column="3"
+                          Width="46"
+                          Height="32"
+                          MinWidth="0"
+                          MinHeight="0"
+                          Padding="0"
+                          CornerRadius="0"
+                          Margin="0,0,8,0"
+                          VerticalAlignment="Top"
+                          Checked="OnAlwaysOnTopToggled"
+                          Unchecked="OnAlwaysOnTopToggled">
+                <ToggleButton.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </ToggleButton.Resources>
+                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                          Glyph="&#xE718;"
+                          FontSize="14" />
+            </ToggleButton>
         </Grid>
 
         <!-- ============================ Top: what to listen to ============================ -->
@@ -78,7 +107,7 @@
 
                     <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
                         <TextBlock x:Uid="EndpointPickerLabel"
-                                   Text="MIDI device to watch"
+                                   Text="MIDI Device"
                                    TextWrapping="NoWrap"
                                    TextTrimming="CharacterEllipsis"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
@@ -87,9 +116,32 @@
                                   x:Uid="EndpointPicker"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnEndpointSelectionChanged">
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="local:EndpointChoice">
-                                    <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                                    <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{x:Bind DisplayName}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+                                        <Image x:Name="EndpointChoiceImage"
+                                               Grid.Column="1"
+                                               Source="{x:Bind ImageSource}"
+                                               Visibility="{x:Bind ImageVisibility}"
+                                               Height="18"
+                                               MaxWidth="32"
+                                               Stretch="Uniform"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center" />
+                                    </Grid>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
@@ -295,6 +347,32 @@
 
                     <ListView.ContextFlyout>
                         <MenuFlyout x:Name="MessagesContextFlyout" Opening="OnMessagesContextFlyoutOpening">
+                            <MenuFlyoutItem x:Name="SelectAllMenuItem"
+                                            x:Uid="SelectAllMenuItem"
+                                            Text="Select All"
+                                            Click="OnSelectAllClick">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE8B3;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="DeselectAllMenuItem"
+                                            x:Uid="DeselectAllMenuItem"
+                                            Text="Deselect All"
+                                            Click="OnDeselectAllClick">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE8E6;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Name="SelectAllSysEx7MenuItem"
+                                            x:Uid="SelectAllSysEx7MenuItem"
+                                            Text="Select All SysEx 7"
+                                            Click="OnSelectAllSysEx7Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE8B3;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
                             <MenuFlyoutItem x:Name="CopyUmpWordsMenuItem"
                                             x:Uid="CopyUmpWordsMenuItem"
                                             Text="Copy as UMP words"
@@ -310,8 +388,12 @@
                             <MenuFlyoutSeparator />
                             <MenuFlyoutItem x:Name="ClearCaptureMenuItem"
                                             x:Uid="ClearCaptureMenuItem"
-                                            Text="Clear"
-                                            Click="OnClearCaptureClick" />
+                                            Text="Clear All Entries"
+                                            Click="OnClearCaptureClick">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE74D;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                         </MenuFlyout>
                     </ListView.ContextFlyout>
                     <ListView.ItemsPanel>
@@ -552,17 +634,6 @@
                         Orientation="Horizontal"
                         Spacing="6"
                         VerticalAlignment="Center">
-                <ToggleButton x:Name="AlwaysOnTopToggle"
-                              x:Uid="AlwaysOnTopToggle"
-                              Padding="6,0,6,0"
-                              MinWidth="0"
-                              Height="28"
-                              MinHeight="28"
-                              VerticalAlignment="Center"
-                              Checked="OnAlwaysOnTopToggled"
-                              Unchecked="OnAlwaysOnTopToggled">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE718;" FontSize="14" />
-                </ToggleButton>
 
                 <!-- a DropDownButton rather than a ComboBox, so it matches the other controls'
                      height instead of inheriting the taller text-input metrics -->

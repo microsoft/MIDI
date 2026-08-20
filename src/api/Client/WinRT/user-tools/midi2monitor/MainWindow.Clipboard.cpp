@@ -297,8 +297,112 @@ namespace winrt::midi2monitor::implementation
             CopyUmpWordsMenuItem().IsEnabled(hasAny);
             CopyMidi1BytesMenuItem().IsEnabled(hasMidi1);
             CopySysExBytesMenuItem().IsEnabled(hasSysEx);
+
+            auto const rowCount = MessagesListView().Items().Size();
+
+            SelectAllMenuItem().IsEnabled(rowCount > 0 && MessagesListView().SelectedItems().Size() < rowCount);
+            DeselectAllMenuItem().IsEnabled(MessagesListView().SelectedItems().Size() > 0);
+            ClearCaptureMenuItem().IsEnabled(rowCount > 0);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to prepare the message context menu.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSelectAllClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        // queued so the menu closes before the walk starts
+        m_dispatcherQueue.TryEnqueue(
+            winrt::Microsoft::UI::Dispatching::DispatcherQueuePriority::Low,
+            [weak = get_weak()]()
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                try
+                {
+                    strong->MessagesListView().SelectAll();
+                }
+                MIDI_MONITOR_CATCH_AND_LOG(L"Unable to select every message.")
+            });
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnDeselectAllClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            MessagesListView().SelectedItems().Clear();
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to clear the selection.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSelectAllSysEx7Click(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        m_dispatcherQueue.TryEnqueue(
+            winrt::Microsoft::UI::Dispatching::DispatcherQueuePriority::Low,
+            [weak = get_weak()]()
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                strong->SelectAllSysEx7();
+            });
+    }
+
+    void MainWindow::SelectAllSysEx7() noexcept
+    {
+        try
+        {
+            if (m_listSource == nullptr)
+            {
+                return;
+            }
+
+            auto list = MessagesListView();
+            auto const count = m_listSource->Size();
+
+            list.SelectedItems().Clear();
+
+            // Selected in contiguous runs. Appending item by item forces a view model per row and
+            // raises a selection change each time, which took seconds on a full capture.
+            uint32_t runStart{ 0 };
+            uint32_t runLength{ 0 };
+
+            for (uint32_t i = 0; i < count; i++)
+            {
+                native::MessageRecord record{};
+
+                if (m_pipeline.TryGetVisibleRecord(i, record) && IsSysEx7(record))
+                {
+                    if (runLength == 0)
+                    {
+                        runStart = i;
+                    }
+
+                    runLength++;
+                }
+                else if (runLength > 0)
+                {
+                    list.SelectRange(xaml::Data::ItemIndexRange(static_cast<int32_t>(runStart), runLength));
+                    runLength = 0;
+                }
+            }
+
+            if (runLength > 0)
+            {
+                list.SelectRange(xaml::Data::ItemIndexRange(static_cast<int32_t>(runStart), runLength));
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to select the SysEx messages.")
     }
 
     _Use_decl_annotations_

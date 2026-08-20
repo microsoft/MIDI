@@ -79,7 +79,7 @@
 
   <!-- ================================ Main window ================================ -->
   <data name="EndpointPickerLabel.Text" xml:space="preserve">
-    <value>MIDI device to watch</value>
+    <value>MIDI Device</value>
   </data>
   <data name="EndpointPicker.PlaceholderText" xml:space="preserve">
     <value>Choose a device</value>
@@ -168,6 +168,15 @@
   <data name="ExportButtonText.Text" xml:space="preserve">
     <value>Save to File</value>
   </data>
+  <data name="SelectAllMenuItem.Text" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="DeselectAllMenuItem.Text" xml:space="preserve">
+    <value>Deselect All</value>
+  </data>
+  <data name="SelectAllSysEx7MenuItem.Text" xml:space="preserve">
+    <value>Select All SysEx 7</value>
+  </data>
   <data name="CopyUmpWordsMenuItem.Text" xml:space="preserve">
     <value>Copy as UMP words</value>
   </data>
@@ -178,7 +187,7 @@
     <value>Copy as SysEx bytes</value>
   </data>
   <data name="ClearCaptureMenuItem.Text" xml:space="preserve">
-    <value>Clear</value>
+    <value>Clear All Entries</value>
   </data>
   <data name="ZoomPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Table zoom level</value>

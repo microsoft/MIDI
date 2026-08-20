@@ -27,6 +27,7 @@ namespace winrt::midi2monitor::implementation
         void OnChannelSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnCaptureButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnEndpointChoiceLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnShowClockToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowActiveSenseToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -45,6 +46,9 @@ namespace winrt::midi2monitor::implementation
 
         void OnMessagesContextRequested(xaml::UIElement const& sender, xaml::Input::ContextRequestedEventArgs const& args);
         void OnMessagesContextFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
+        void OnSelectAllClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSelectAllSysEx7Click(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnDeselectAllClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyUmpWordsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyMidi1BytesClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopySysExBytesClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -104,6 +108,7 @@ namespace winrt::midi2monitor::implementation
         winrt::hstring DescribeSelectedGroup() noexcept;
         winrt::hstring DescribeSelectedChannel() noexcept;
         void UpdateCommandStates() noexcept;
+        void SelectAllSysEx7() noexcept;
         void UpdateCaptureButtonLayout() noexcept;
         void UpdateStatusBarLayout() noexcept;
         void ApplyFilterToPipeline() noexcept;
