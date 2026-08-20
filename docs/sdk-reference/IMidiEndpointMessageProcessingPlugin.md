@@ -23,9 +23,15 @@ The main part of message processing is the `ProcessIncomingMessage` callback.
 
 ## Functions
 
+The `ProcessIncomingMessage` callback is synchronous, and needs to be handled quickly and efficiently by the calling application.
+
+Applications are typically much faster than devices at handling messages. However, failing to drain the incoming message queue fast enough can result in transmission errors. With MIDI 2.0 there is no upper performance limit on devices, and USB 3 and Network MIDI devices, among others, are capable of transmitting a large number of messages in a very short period of time.
+
+If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
+
 | Function | Description |
 | ---- | ---- |
 | `Initialize (endpointConnection)` | Called by the endpoint connection. Perform any setup code which requires the endpoint connection pointer here. |
 | `OnEndpointConnectionOpened()` | Callback when the endpoint connection is opened. If the plugin is added after the endpoint connection has already been opened, this is called immediately. |
-| `ProcessIncomingMessage (args, skipFurtherListeners, skipMainMessageReceivedEvent)` | Callback for processing an incoming message. If the code sets `skipFurtherListeners` to true, any plugins after this one will not be called. If the code sets `skipMainMessageReceivedEvent` to true, the endpoint's MessageReceived event will not be called for this message. Note: this callback is synchronous, so code in this should execute quickly and return immediately when complete. |
+| `ProcessIncomingMessage (args, skipFurtherListeners, skipMainMessageReceivedEvent)` | Callback for processing an incoming message. If the code sets `skipFurtherListeners` to true, any plugins after this one will not be called. If the code sets `skipMainMessageReceivedEvent` to true, the endpoint's MessageReceived event will not be called for this message. |
 | `Cleanup()` | Called when the endpoint is tearing down |

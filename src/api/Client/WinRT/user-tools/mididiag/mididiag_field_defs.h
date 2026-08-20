@@ -18,6 +18,9 @@
 
 #define MIDIDIAG_FIELD_LABEL_FILE_VERSION                                L"file_version"
 
+#define MIDIDIAG_SECTION_LABEL_SUCCESSFUL_RUN                           L"successful_run"     
+#define MIDIDIAG_SECTION_LABEL_ABORTED_RUN                              L"aborted_run"     
+
 
 #define MIDIDIAG_HEADER_FIELD_LABEL_VERSION_BUILD_SOURCE                 L"ver_build_source"
 #define MIDIDIAG_HEADER_FIELD_LABEL_VERSION_NAME                         L"ver_build_name"

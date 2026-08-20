@@ -149,6 +149,36 @@
                 Guid="465abd8d-3db8-4441-b84e-70e8e11bf001"
                 NeverOverwrite="false">
                    
+            <!--
+              Earlier versions stamped explicit ACLs on these keys with Permission elements. MSI
+              never repairs the security descriptor of a key that already exists, so upgrading
+              alone would leave those machines broken forever. Removing each key first means it
+              is recreated inheriting from the parent.
+
+              The parent Transport Plugins key is deliberately NOT removed: the other installers
+              register their transports underneath it, and removing it here would unregister
+              them.
+            -->
+            <RemoveRegistryKey Id="RemoveLegacyKSTransportPluginKey"
+                               Root="HKLM"
+                               Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins\Midi2KSTransport"
+                               Action="removeOnInstall" />
+
+            <RemoveRegistryKey Id="RemoveLegacyKSAggregateTransportPluginKey"
+                               Root="HKLM"
+                               Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins\Midi2KSAggregateTransport"
+                               Action="removeOnInstall" />
+
+            <RemoveRegistryKey Id="RemoveLegacyVirtualMidiTransportPluginKey"
+                               Root="HKLM"
+                               Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins\Midi2VirtualMidiTransport"
+                               Action="removeOnInstall" />
+
+            <RemoveRegistryKey Id="RemoveLegacyLoopbackMidiTransportPluginKey"
+                               Root="HKLM"
+                               Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins\Midi2LoopbackMidiTransport"
+                               Action="removeOnInstall" />
+
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 

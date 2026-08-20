@@ -13,6 +13,7 @@
 
 
 #include "stdafx.h"
+#include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 
 //#include "MidiConfigurationManager.h"
 
@@ -161,9 +162,174 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
     return availableTransportLayers;
 }
 
+// Net-new alongside GetEnabledTransports. Identical, except that a plugin subkey which cannot be
+// opened skips that one transport instead of ending the enumeration. Opening the subkey used to
+// sit outside any per-subkey handler, so a single unreadable key escaped to the handler wrapping
+// the whole loop and every transport sorted after it vanished with no diagnostic.
+std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportsSkippingUnreadableKeys() const noexcept
+{
+    std::vector<GUID> availableTransportLayers;
+
+    // the diagnostics transport is always instantiated. We don't want to take the
+    // chance someone removes this from the registry, so it's hard-coded here. It's
+    // needed for support, tools, diagnostics, etc.
+    availableTransportLayers.push_back(__uuidof(Midi2DiagnosticsTransport));
+
+    try
+    {
+        auto rootKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY, wil::reg::key_access::read);
+
+        // current wil NuGet doesn't include the new registry key/value enumeration, so have to do this the hard way
+        // https://github.com/microsoft/wil/commit/a6c9f2d8520e830b04c47c3c395bac428696cc0d
+
+        TCHAR    achKey[MAX_KEY_LENGTH];        // buffer for subkey name
+        DWORD    cbName;                        // size of name string 
+        TCHAR    achClass[MAX_PATH] = TEXT(""); // buffer for class name 
+        DWORD    cchClassName = MAX_PATH;       // size of class string 
+        DWORD    cSubKeys = 0;                  // number of subkeys 
+        DWORD    cbMaxSubKey;                   // longest subkey size 
+        DWORD    cchMaxClass;                   // longest class string 
+        DWORD    cValues;                       // number of values for key 
+        DWORD    cchMaxValue;                   // longest value name 
+        DWORD    cbMaxValueData;                // longest value data 
+        DWORD    cbSecurityDescriptor;          // size of security descriptor 
+        FILETIME ftLastWriteTime;               // last write time 
+
+        DWORD i, retCode;
+
+        // Get the class name and the value count. 
+        retCode = RegQueryInfoKey(
+            rootKey.get(),           // key handle 
+            achClass,                // buffer for class name 
+            &cchClassName,           // size of class string 
+            NULL,                    // reserved 
+            &cSubKeys,               // number of subkeys 
+            &cbMaxSubKey,            // longest subkey size 
+            &cchMaxClass,            // longest class string 
+            &cValues,                // number of values for this key 
+            &cchMaxValue,            // longest value name 
+            &cbMaxValueData,         // longest value data 
+            &cbSecurityDescriptor,   // security descriptor 
+            &ftLastWriteTime);       // last write time 
+
+        // Enumerate the subkeys, until RegEnumKeyEx fails.
+
+        if (cSubKeys)
+        {
+            for (i = 0; i < cSubKeys; i++)
+            {
+                cbName = MAX_KEY_LENGTH;
+
+                retCode = RegEnumKeyEx(
+                    rootKey.get(), 
+                    i,
+                    achKey,
+                    &cbName,
+                    NULL,
+                    NULL,
+                    NULL,
+                    &ftLastWriteTime);
+
+                if (retCode == ERROR_SUCCESS)
+                {
+                    DWORD transportEnabled = 1;
+
+                    // Check to see if that sub key has an Enabled value.
+
+                    std::wstring keyPath = MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY;
+                    keyPath += L"\\";
+                    keyPath += achKey;
+
+                    wil::unique_hkey pluginKey;
+
+                    try
+                    {
+                        pluginKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, keyPath.c_str(), wil::reg::key_access::read);
+                    }
+                    catch (...)
+                    {
+                        // Almost always an installer that stamped an explicit ACL on this key and
+                        // left the service account without read access.
+                        LOG_CAUGHT_EXCEPTION();
+
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_WARNING,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                            TraceLoggingWideString(L"Unable to open transport plugin registry key. Skipping this transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(keyPath.c_str(), "key path"),
+                            TraceLoggingPointer(this, "this")
+                        );
+
+                        continue;
+                    }
+
+                    try
+                    {
+                        // is the transport layer enabled? > 0 or missing Enabled value mean it is
+                        transportEnabled = wil::reg::get_value<DWORD>(pluginKey.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
+                    }
+                    catch (...)
+                    {
+                        // value doesn't exist, so we default to enabled
+                        transportEnabled = (DWORD)1;
+                    }
+
+                    // we only proceed with this transport entry if it's enabled
+                    if (transportEnabled > 0)
+                    {
+                        try
+                        {
+                            GUID transportLayerGuid;
+
+                            auto clsidString = wil::reg::get_value<std::wstring>(pluginKey.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
+
+                            auto result = CLSIDFromString((LPCTSTR)clsidString.c_str(), (LPGUID)&transportLayerGuid);
+
+                            LOG_IF_FAILED(result);
+
+                            if (result == NOERROR)
+                            {
+                                // verify that there are no existing entries for this class id
+
+                                if (std::find(availableTransportLayers.begin(), availableTransportLayers.end(), transportLayerGuid) == availableTransportLayers.end())
+                                {
+                                    // Doesn't already exist, so add to the vector
+                                    availableTransportLayers.push_back(transportLayerGuid);
+                                }
+                                else
+                                {
+                                    TraceLoggingWrite(
+                                        MidiSrvTelemetryProvider::Provider(),
+                                        MIDI_TRACE_EVENT_WARNING,
+                                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                                        TraceLoggingWideString(L"Duplicate transport GUID in registry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                        TraceLoggingGuid(transportLayerGuid, "id"),
+                                        TraceLoggingPointer(this, "this")
+                                    );
+                                }
+                            }
+
+                        }
+                        CATCH_LOG()
+                    }
+                }
+            }
+        }
+
+    }
+    CATCH_LOG()
+
+    // return a copy
+    return availableTransportLayers;
+}
+
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransforms() const noexcept
 {
+
     std::vector<GUID> availableTransforms;
 
     // TODO: We'll want to add the required transforms here, like the translation ones
@@ -318,45 +484,94 @@ std::vector<TRANSPORTMETADATA> CMidiConfigurationManager::GetAllEnabledTransport
 
     std::vector<TRANSPORTMETADATA> results{};
 
-    auto transportIdList = GetEnabledTransports();
-
-    // for each item in the list, activate the MidiServiceTransportPlugin and get the metadata
-
-    for (auto const& transportId : transportIdList)
+    if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
     {
-        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
-        wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> plugin;
+        auto transportIdList = GetEnabledTransportsSkippingUnreadableKeys();
 
-        // Do not load any transports which are untrusted, unless in developer mode.
-        if (SUCCEEDED(internal::IsComponentPermitted(transportId)))
+        // for each item in the list, activate the MidiServiceTransportPlugin and get the metadata
+
+        for (auto const& transportId : transportIdList)
         {
-            if (SUCCEEDED(CoCreateInstance(transportId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))))
+            wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+            wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> plugin;
+
+            // Do not load any transports which are untrusted, unless in developer mode.
+            if (SUCCEEDED(internal::IsComponentPermittedWithCaching(transportId)))
             {
-                if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiServiceTransportPluginMetadataProvider), (void**)&plugin)))
+                if (SUCCEEDED(CoCreateInstance(transportId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))))
                 {
-                    plugin->Initialize();
+                    if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiServiceTransportPluginMetadataProvider), (void**)&plugin)))
+                    {
+                        plugin->Initialize();
 
-                    TRANSPORTMETADATA metadata;
+                        TRANSPORTMETADATA metadata;
 
-                    LOG_IF_FAILED(plugin->GetMetadata(&metadata));
+                        LOG_IF_FAILED(plugin->GetMetadata(&metadata));
 
-                    results.push_back(std::move(metadata));
+                        results.push_back(std::move(metadata));
 
-                    plugin->Shutdown();
+                        plugin->Shutdown();
+                    }
+                    else
+                    {
+                        // log that the interface isn't there, but don't terminate or anything
+
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingWideString(L"Unable to activate IMidiServiceTransportPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(transportId, "transport id"),
+                            TraceLoggingPointer(this, "this")
+                        );
+                    }
                 }
-                else
-                {
-                    // log that the interface isn't there, but don't terminate or anything
+            }
+        }
+    }
+    else
+    {
+        auto transportIdList = GetEnabledTransports();
 
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingWideString(L"Unable to activate IMidiServiceTransportPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(transportId, "transport id"),
-                        TraceLoggingPointer(this, "this")
-                    );
+        // for each item in the list, activate the MidiServiceTransportPlugin and get the metadata
+
+        for (auto const& transportId : transportIdList)
+        {
+            wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+            wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> plugin;
+
+            // Do not load any transports which are untrusted, unless in developer mode.
+            if (SUCCEEDED(internal::IsComponentPermitted(transportId)))
+            {
+                if (SUCCEEDED(CoCreateInstance(transportId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))))
+                {
+                    if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiServiceTransportPluginMetadataProvider), (void**)&plugin)))
+                    {
+                        plugin->Initialize();
+
+                        TRANSPORTMETADATA metadata;
+
+                        LOG_IF_FAILED(plugin->GetMetadata(&metadata));
+
+                        results.push_back(std::move(metadata));
+
+                        plugin->Shutdown();
+                    }
+                    else
+                    {
+                        // log that the interface isn't there, but don't terminate or anything
+
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingWideString(L"Unable to activate IMidiServiceTransportPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(transportId, "transport id"),
+                            TraceLoggingPointer(this, "this")
+                        );
+                    }
                 }
             }
         }

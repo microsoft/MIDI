@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="midi2monitor.SettingsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midi2monitor"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Loaded="OnRootLoaded">
+
+    <ScrollViewer x:Name="RootScrollViewer"
+                  VerticalScrollBarVisibility="Auto"
+                  MaxHeight="520">
+        <StackPanel Spacing="20" Width="400" HorizontalAlignment="Left">
+
+            <TextBlock x:Uid="SettingsPageTitle"
+                       Text="Settings"
+                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="SettingsAppearanceHeader"
+                           Text="Appearance"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock x:Uid="SettingsThemeDescription"
+                           Text="Choose whether the app follows your Windows app colour mode, or always uses light or dark."
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                <ComboBox x:Name="ThemeComboBox"
+                          x:Uid="SettingsThemePicker"
+                          Width="260"
+                          HorizontalAlignment="Left"
+                          SelectionChanged="OnThemeChanged">
+                    <ComboBoxItem x:Uid="SettingsThemeSystem" Content="Use my Windows setting" />
+                    <ComboBoxItem x:Uid="SettingsThemeLight" Content="Light" />
+                    <ComboBoxItem x:Uid="SettingsThemeDark" Content="Dark" />
+                </ComboBox>
+
+                <TextBlock x:Uid="SettingsBackdropDescription"
+                           Text="The window background. Mica and Acrylic pick up the colours behind the window."
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                <ComboBox x:Name="BackdropComboBox"
+                          x:Uid="SettingsBackdropPicker"
+                          Width="260"
+                          HorizontalAlignment="Left"
+                          SelectionChanged="OnBackdropChanged">
+                    <ComboBoxItem x:Uid="SettingsBackdropSolid" Content="Solid" />
+                    <ComboBoxItem x:Uid="SettingsBackdropMica" Content="Mica" />
+                    <ComboBoxItem x:Uid="SettingsBackdropAcrylic" Content="Acrylic" />
+                </ComboBox>
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="SettingsCaptureHeader"
+                           Text="Capture"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock x:Uid="SettingsRetentionDescription"
+                           Text="How many messages to keep. Older messages are discarded once the limit is reached."
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                <NumberBox x:Name="RetentionNumberBox"
+                           x:Uid="SettingsRetentionNumberBox"
+                           Width="260"
+                           HorizontalAlignment="Left"
+                           Minimum="100"
+                           Maximum="500000"
+                           SmallChange="1000"
+                           LargeChange="10000"
+                           SpinButtonPlacementMode="Compact"
+                           ValueChanged="OnRetentionChanged" />
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="SettingsDisplayHeader"
+                           Text="Message list"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <Button x:Name="ResetColumnsButton"
+                        x:Uid="SettingsResetColumnsButton"
+                        Content="Reset the columns to their defaults"
+                        HorizontalAlignment="Left"
+                        Click="OnResetColumnsClick" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="SettingsAboutHeader"
+                           Text="About"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock x:Name="VersionText"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           IsTextSelectionEnabled="True"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

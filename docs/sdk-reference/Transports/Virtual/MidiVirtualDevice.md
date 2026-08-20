@@ -28,6 +28,12 @@ This is the class that a virtual device application uses as its interface to the
 
 ## Events
 
+This class is a message processing plugin, so `StreamConfigRequestReceived` is raised synchronously on the incoming message path and needs to be handled quickly and efficiently by the calling application.
+
+Applications are typically much faster than devices at handling messages. However, failing to drain the incoming message queue fast enough can result in transmission errors. With MIDI 2.0 there is no upper performance limit on devices, and USB 3 and Network MIDI devices, among others, are capable of transmitting a large number of messages in a very short period of time.
+
+If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread. Note that the protocol negotiation response itself should still be sent promptly, per the UMP specification.
+
 | Event | Description |
 | --------------- | ----------- |
 | `StreamConfigRequestReceived (device, args)` | Raised when this device receives a Stream Configuration Request UMP message. The virtual device application should respond per the UMP MIDI 2.0 protocol negotiation specification. |

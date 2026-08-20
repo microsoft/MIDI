@@ -14,6 +14,9 @@
 #include <wintrust.h>
 #include <wil\resource.h>
 
+#include <map>
+#include <string>
+
 #define GUID_STRING_LENGTH 39
 
 const wchar_t appModelPath[]    = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock";
@@ -197,5 +200,85 @@ namespace WindowsMidiServicesInternal
         }
 
         return S_OK;
+    }
+
+
+    // Verifying a component means hashing the entire DLL and then walking the catalog store, which
+    // costs on the order of a second per file on a machine without developer mode. A single client
+    // connection verifies the transport plus every transform it needs, and the KS aggregate proxies
+    // re-verify the same translation DLL once per pin, so the cost is paid many times over for
+    // files that have already been checked moments earlier.
+    struct ComponentSignatureCacheEntries
+    {
+        // paths compare case-insensitively, so the key is compared rather than normalized
+        struct PathLess
+        {
+            bool operator()(std::wstring const& left, std::wstring const& right) const noexcept
+            {
+                return _wcsicmp(left.c_str(), right.c_str()) < 0;
+            }
+        };
+
+        wil::srwlock Lock;
+        std::map<std::wstring, wil::unique_hmodule, PathLess> VerifiedFiles;
+    };
+
+    inline ComponentSignatureCacheEntries& GetComponentSignatureCache()
+    {
+        static ComponentSignatureCacheEntries cache;
+        return cache;
+    }
+
+    // Net-new alongside IsFileCatalogSigned / IsFileDigitallySigned.
+    inline HRESULT IsFilePermittedWithCaching(const std::wstring& filePath)
+    {
+        auto& cache = GetComponentSignatureCache();
+
+        {
+            auto lock = cache.Lock.lock_shared();
+
+            if (cache.VerifiedFiles.find(filePath) != cache.VerifiedFiles.end())
+            {
+                return S_OK;
+            }
+        }
+
+        // first check to see if it's inbox, catalog signed
+        if (FAILED(IsFileCatalogSigned(filePath.c_str())))
+        {
+            // not catalog signed, check to see if this file is signed.
+            RETURN_IF_FAILED(IsFileDigitallySigned(filePath.c_str()));
+        }
+
+        // Pinning is what makes reusing this verdict safe rather than only fast: a mapped image
+        // cannot be written to, renamed or deleted, so the bytes behind this path can no longer
+        // change. Without it the file could be swapped after verification and every later caller
+        // would trust a different binary. Only a pinned file is remembered; if pinning fails the
+        // verified result still stands, it just is not reused.
+        wil::unique_hmodule verifiedModule(LoadLibraryW(filePath.c_str()));
+
+        if (verifiedModule)
+        {
+            auto lock = cache.Lock.lock_exclusive();
+            cache.VerifiedFiles.insert_or_assign(filePath, std::move(verifiedModule));
+        }
+
+        return S_OK;
+    }
+
+    inline HRESULT IsComponentPermittedWithCaching(GUID guid)
+    {
+        // If we are in developer mode, we allow loading of untrusted components.
+        RETURN_HR_IF(S_OK, IsDeveloperModeEnabled());
+
+        wchar_t guidString[GUID_STRING_LENGTH] {NULL};
+        RETURN_HR_IF(E_INVALIDARG, 0 == StringFromGUID2(guid, guidString, _countof(guidString)));
+
+        // Deliberately re-resolved on every call and never cached. This mapping is registry data
+        // and can be repointed at a different file, so only the path a verdict was actually
+        // produced for may be trusted as the cache key.
+        std::wstring fileName = GetFileNameFromCLSID(std::wstring(guidString));
+
+        return IsFilePermittedWithCaching(fileName);
     }
 }

@@ -1,0 +1,705 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midi2monitor.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midi2monitor"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <FontIcon Grid.Column="1"
+                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                      Glyph="&#xEC4F;"
+                      FontSize="16"
+                      Margin="16,0,10,0"
+                      VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <!-- sized like a caption button; lightweight styling removes the button chrome so
+                 it reads as a bare icon until it is switched on -->
+            <ToggleButton x:Name="AlwaysOnTopToggle"
+                          x:Uid="AlwaysOnTopToggle"
+                          Grid.Column="3"
+                          Width="46"
+                          Height="32"
+                          MinWidth="0"
+                          MinHeight="0"
+                          Padding="0"
+                          CornerRadius="0"
+                          Margin="0,0,8,0"
+                          VerticalAlignment="Top"
+                          Checked="OnAlwaysOnTopToggled"
+                          Unchecked="OnAlwaysOnTopToggled">
+                <ToggleButton.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </ToggleButton.Resources>
+                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                          Glyph="&#xE718;"
+                          FontSize="14" />
+            </ToggleButton>
+        </Grid>
+
+        <!-- ============================ Top: what to listen to ============================ -->
+        <Border Grid.Row="1"
+                x:Name="HeaderCard"
+                Margin="12,4,12,8"
+                Padding="14"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid ColumnSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0"
+                        x:Name="EndpointImageBorder"
+                        Width="96"
+                        Height="64"
+                        CornerRadius="6"
+                        Visibility="Collapsed"
+                        VerticalAlignment="Center">
+                    <Image x:Name="EndpointImage" Stretch="Uniform" />
+                </Border>
+
+                <StackPanel Grid.Column="1" Spacing="10">
+                <Grid x:Name="TopControlsGrid" ColumnSpacing="14" RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" MinWidth="150" />
+                        <ColumnDefinition Width="*" MinWidth="130" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                        <TextBlock x:Uid="EndpointPickerLabel"
+                                   Text="MIDI Device"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <ComboBox x:Name="EndpointComboBox"
+                                  x:Uid="EndpointPicker"
+                                  HorizontalAlignment="Stretch"
+                                  SelectionChanged="OnEndpointSelectionChanged">
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:EndpointChoice">
+                                    <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{x:Bind DisplayName}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+                                        <Image x:Name="EndpointChoiceImage"
+                                               Grid.Column="1"
+                                               Source="{x:Bind ImageSource}"
+                                               Visibility="{x:Bind ImageVisibility}"
+                                               Height="18"
+                                               MaxWidth="32"
+                                               Stretch="Uniform"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4" MaxWidth="230" HorizontalAlignment="Stretch">
+                        <TextBlock x:Uid="GroupPickerLabel"
+                                   Text="Group"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <ComboBox x:Name="GroupComboBox"
+                                  x:Uid="GroupPicker"
+                                  HorizontalAlignment="Stretch"
+                                  SelectionChanged="OnGroupSelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:NamedChoice">
+                                    <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4" Width="120">
+                        <TextBlock x:Uid="ChannelPickerLabel"
+                                   Text="Channel"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <ComboBox x:Name="ChannelComboBox"
+                                  x:Uid="ChannelPicker"
+                                  HorizontalAlignment="Stretch"
+                                  SelectionChanged="OnChannelSelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:NamedChoice">
+                                    <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- the only control allowed to wrap to a second row when the window is
+                         narrow; OnRootSizeChanged repositions it -->
+                    <Button x:Name="CaptureButton"
+                            Grid.Row="0"
+                            Grid.Column="3"
+                            MinWidth="150"
+                            VerticalAlignment="Bottom"
+                            HorizontalAlignment="Stretch"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Click="OnCaptureButtonClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon x:Name="CaptureButtonIcon"
+                                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                      Glyph="&#xE768;"
+                                      FontSize="14" />
+                            <TextBlock x:Name="CaptureButtonText" Text="Start listening" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============================== Middle: the messages ============================== -->
+        <Border Grid.Row="2"
+                x:Name="MessagesCard"
+                Margin="12,0,12,8"
+                CornerRadius="8"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0"
+                        x:Name="HeaderRowBorder"
+                        Padding="0,8,0,8"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1">
+
+                    <!-- Advanced customization lives here so it stays out of the way. -->
+                    <Border.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem x:Uid="EditColumnsMenuItem"
+                                            Text="Edit columns"
+                                            Click="OnEditColumnsClick">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE71D;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="DisplayOptionsMenuItem"
+                                            Text="Time and message display"
+                                            Click="OnDisplayOptionsClick">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE823;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </Border.ContextFlyout>
+
+                    <FlyoutBase.AttachedFlyout>
+                        <Flyout>
+                            <StackPanel Spacing="8" Width="290">
+                                <TextBlock x:Uid="ColumnsFlyoutHeader"
+                                           Text="Choose and order the columns"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <ItemsControl x:Name="ColumnsItemsControl">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="local:MonitorColumn">
+                                            <Grid ColumnSpacing="4" Margin="0,2,0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <CheckBox Grid.Column="0"
+                                                          Content="{x:Bind Header}"
+                                                          IsChecked="{x:Bind IsVisible, Mode=TwoWay}"
+                                                          IsEnabled="{x:Bind CanHide}"
+                                                          Checked="OnColumnVisibilityChanged"
+                                                          Unchecked="OnColumnVisibilityChanged" />
+                                                <Button Grid.Column="1"
+                                                        x:Uid="MoveColumnUpButton"
+                                                        Padding="6"
+                                                        Tag="{x:Bind ColumnId}"
+                                                        Click="OnMoveColumnUpClick">
+                                                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE70E;" FontSize="12" />
+                                                </Button>
+                                                <Button Grid.Column="2"
+                                                        x:Uid="MoveColumnDownButton"
+                                                        Padding="6"
+                                                        Tag="{x:Bind ColumnId}"
+                                                        Click="OnMoveColumnDownClick">
+                                                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE70D;" FontSize="12" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <CheckBox x:Name="AutoHideColumnsCheckBox"
+                                          x:Uid="AutoHideColumnsCheckBox"
+                                          Content="Hide extra columns when the window is narrow"
+                                          Checked="OnAutoHideColumnsChanged"
+                                          Unchecked="OnAutoHideColumnsChanged" />
+                            </StackPanel>
+                        </Flyout>
+                    </FlyoutBase.AttachedFlyout>
+
+                    <local:MessageRowPanel x:Name="HeaderRowPanel">
+                        <FlyoutBase.AttachedFlyout>
+                            <Flyout>
+                                <StackPanel Spacing="12" Width="290">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock x:Uid="TimestampFormatLabel"
+                                                   Text="Show message time as"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <ComboBox x:Name="TimestampFormatComboBox"
+                                                  x:Uid="TimestampFormatPicker"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnTimestampFormatChanged">
+                                            <ComboBoxItem x:Uid="TimestampFormatTicks" Content="Clock Ticks since PC startup" />
+                                            <ComboBoxItem x:Uid="TimestampFormatMicroseconds" Content="Microseconds since start" />
+                                            <ComboBoxItem x:Uid="TimestampFormatMilliseconds" Content="Milliseconds since start" />
+                                            <ComboBoxItem x:Uid="TimestampFormatSeconds" Content="Seconds since start" />
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <CheckBox x:Name="ShowMessageNamesCheckBox"
+                                              x:Uid="ShowMessageNamesCheckBox"
+                                              Content="Show the message name under the data"
+                                              Checked="OnShowMessageNamesChanged"
+                                              Unchecked="OnShowMessageNamesChanged" />
+                                </StackPanel>
+                            </Flyout>
+                        </FlyoutBase.AttachedFlyout>
+
+                        <Border />
+                        <TextBlock x:Name="IndexHeaderText" x:Uid="ColumnHeaderIndex" Text="#" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                        <TextBlock x:Name="TimestampHeaderText" x:Uid="ColumnHeaderTimestamp" Text="Message Time" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                        <TextBlock x:Name="DataHeaderText" x:Uid="ColumnHeaderData" Text="Message" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                        <TextBlock x:Name="GroupHeaderText" x:Uid="ColumnHeaderGroup" Text="Group" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                        <TextBlock x:Name="ChannelHeaderText" x:Uid="ColumnHeaderChannel" Text="Channel" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                        <TextBlock x:Name="DecodedHeaderText" x:Uid="ColumnHeaderDecoded" Text="Details" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                        <TextBlock x:Name="DeltaHeaderText" x:Uid="ColumnHeaderDelta" Text="Since last" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                    </local:MessageRowPanel>
+                </Border>
+
+                <ListView x:Name="MessagesListView"
+                          Grid.Row="1"
+                          SelectionMode="Extended"
+                          IsItemClickEnabled="False"
+                          ShowsScrollingPlaceholders="False"
+                          ContextRequested="OnMessagesContextRequested"
+                          ScrollViewer.HorizontalScrollMode="Disabled"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+
+                    <ListView.ContextFlyout>
+                        <MenuFlyout x:Name="MessagesContextFlyout" Opening="OnMessagesContextFlyoutOpening">
+                            <MenuFlyoutItem x:Name="SelectAllMenuItem"
+                                            x:Uid="SelectAllMenuItem"
+                                            Text="Select All"
+                                            Click="OnSelectAllClick">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE8B3;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="DeselectAllMenuItem"
+                                            x:Uid="DeselectAllMenuItem"
+                                            Text="Deselect All"
+                                            Click="OnDeselectAllClick">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE8E6;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Name="SelectAllSysEx7MenuItem"
+                                            x:Uid="SelectAllSysEx7MenuItem"
+                                            Text="Select All SysEx 7"
+                                            Click="OnSelectAllSysEx7Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE8B3;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Name="CopyUmpWordsMenuItem"
+                                            x:Uid="CopyUmpWordsMenuItem"
+                                            Text="Copy as UMP words"
+                                            Click="OnCopyUmpWordsClick" />
+                            <MenuFlyoutItem x:Name="CopyMidi1BytesMenuItem"
+                                            x:Uid="CopyMidi1BytesMenuItem"
+                                            Text="Copy as MIDI 1.0 bytes"
+                                            Click="OnCopyMidi1BytesClick" />
+                            <MenuFlyoutItem x:Name="CopySysExBytesMenuItem"
+                                            x:Uid="CopySysExBytesMenuItem"
+                                            Text="Copy as SysEx bytes"
+                                            Click="OnCopySysExBytesClick" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Name="ClearCaptureMenuItem"
+                                            x:Uid="ClearCaptureMenuItem"
+                                            Text="Clear All Entries"
+                                            Click="OnClearCaptureClick">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE74D;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </ListView.ContextFlyout>
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Orientation="Vertical"
+                                             ItemsUpdatingScrollMode="KeepLastItemInView"
+                                             CacheLength="1.0" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+
+                    <!-- Entrance and reposition animations stagger when rows arrive in bursts,
+                         which lets a later row land before an earlier one -->
+                    <ListView.ItemContainerTransitions>
+                        <TransitionCollection />
+                    </ListView.ItemContainerTransitions>
+
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="MinHeight" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:MidiMessageViewModel">
+                            <Grid Background="{x:Bind RowBackground}" Padding="0,3,0,3">
+
+                                <local:MessageRowPanel Visibility="{x:Bind MessageVisibility}">
+                                    <Button Padding="0"
+                                            Width="{x:Bind CommentButtonSize}"
+                                            Height="{x:Bind CommentButtonSize}"
+                                            MinWidth="0"
+                                            MinHeight="0"
+                                            Margin="2,0,2,0"
+                                            VerticalAlignment="Center"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            ToolTipService.ToolTip="{x:Bind CommentToolTip, Mode=OneWay}"
+                                            x:Uid="AddCommentButton">
+                                        <Grid>
+                                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                      Glyph="&#xE90A;"
+                                                      FontSize="{x:Bind CommentGlyphSize}"
+                                                      Opacity="0.35" />
+                                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                      Glyph="&#xE939;"
+                                                      FontSize="{x:Bind CommentGlyphSize}"
+                                                      Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                                      Visibility="{x:Bind CommentGlyphVisibility, Mode=OneWay}" />
+                                        </Grid>
+                                        <Button.Flyout>
+                                            <Flyout>
+                                                <StackPanel Spacing="8" Width="320">
+                                                    <TextBlock x:Uid="CommentFlyoutHeader"
+                                                               Text="Add a note to this message"
+                                                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                    <TextBox x:Uid="CommentTextBox"
+                                                             AcceptsReturn="False"
+                                                             PlaceholderText="Type a note"
+                                                             Text="{x:Bind Comment, Mode=OneTime}"
+                                                             TextChanged="OnCommentTextChanged" />
+                                                </StackPanel>
+                                            </Flyout>
+                                        </Button.Flyout>
+                                    </Button>
+
+                                    <TextBlock Text="{x:Bind IndexText}" FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" />
+                                    <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}">
+                                        <Run Text="{x:Bind TimestampText}" />
+                                        <Run Text="{x:Bind TimestampUnit}" Foreground="{ThemeResource MidiTimeUnitBrush}" />
+                                    </TextBlock>
+
+                                    <StackPanel Spacing="2" Padding="6,0,6,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{x:Bind Word0Text}" FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorWordTextStyle}" Foreground="{ThemeResource MidiWord0Brush}" />
+                                            <TextBlock Text="{x:Bind Word1Text}" FontSize="{x:Bind RowFontSize}" Visibility="{x:Bind Word1Visibility}" Style="{StaticResource MidiMonitorWordTextStyle}" Foreground="{ThemeResource MidiWord1Brush}" />
+                                            <TextBlock Text="{x:Bind Word2Text}" FontSize="{x:Bind RowFontSize}" Visibility="{x:Bind Word2Visibility}" Style="{StaticResource MidiMonitorWordTextStyle}" Foreground="{ThemeResource MidiWord2Brush}" />
+                                            <TextBlock Text="{x:Bind Word3Text}" FontSize="{x:Bind RowFontSize}" Visibility="{x:Bind Word3Visibility}" Style="{StaticResource MidiMonitorWordTextStyle}" Foreground="{ThemeResource MidiWord3Brush}" />
+                                        </StackPanel>
+                                        <Border Background="{x:Bind MessageNameBackground}"
+                                                Visibility="{x:Bind MessageNameVisibility}"
+                                                CornerRadius="9"
+                                                Padding="8,1,8,1"
+                                                HorizontalAlignment="Left">
+                                            <TextBlock Text="{x:Bind MessageName}"
+                                                       FontSize="{x:Bind ChicletFontSize}"
+                                                       Foreground="{x:Bind MessageNameForeground}" />
+                                        </Border>
+                                    </StackPanel>
+
+                                    <TextBlock Text="{x:Bind GroupText}" FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" />
+                                    <TextBlock Text="{x:Bind ChannelText}" FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" />
+                                    <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                        <Run Text="{x:Bind Detail0Label}" />
+                                        <Run Text="{x:Bind Detail0Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                        <Run Text="{x:Bind Detail1Label}" />
+                                        <Run Text="{x:Bind Detail1Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                        <Run Text="{x:Bind Detail2Label}" />
+                                        <Run Text="{x:Bind Detail2Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                        <Run Text="{x:Bind Detail3Label}" />
+                                        <Run Text="{x:Bind Detail3Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                    </TextBlock>
+                                    <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}">
+                                        <Run Text="{x:Bind DeltaText}" />
+                                        <Run Text="{x:Bind DeltaUnit}" Foreground="{ThemeResource MidiTimeUnitBrush}" />
+                                    </TextBlock>
+                                </local:MessageRowPanel>
+
+                                <Border Visibility="{x:Bind NoticeVisibility}"
+                                        Margin="28,2,8,2"
+                                        Padding="10,3,10,3"
+                                        CornerRadius="4"
+                                        HorizontalAlignment="Left"
+                                        BorderThickness="1"
+                                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                                    <TextBlock Text="{x:Bind NoticeText}"
+                                               FontSize="{x:Bind RowFontSize}"
+                                               FontStyle="Italic"
+                                               Foreground="{ThemeResource MidiNoticeBrush}" />
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <StackPanel x:Name="EmptyStatePanel"
+                            Grid.Row="1"
+                            IsHitTestVisible="False"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="10"
+                            MaxWidth="420">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                              Glyph="&#xEC4F;"
+                              FontSize="36"
+                              Opacity="0.4" />
+                    <TextBlock x:Uid="EmptyStateTitle"
+                               Text="Nothing to show yet"
+                               HorizontalAlignment="Center"
+                               Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock x:Uid="EmptyStateBody"
+                               Text="Pick a device above and select Start listening. Play a note or move a control, and the messages will appear here."
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- =============================== Bottom: status =============================== -->
+        <Grid Grid.Row="3" Margin="14,0,14,12" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Button x:Name="SettingsButton"
+                        x:Uid="SettingsButton"
+                        Padding="6,0,6,0"
+                        MinWidth="0"
+                        Height="28"
+                        MinHeight="28"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        VerticalAlignment="Center"
+                        Click="OnSettingsClick">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE713;" FontSize="14" />
+                </Button>
+
+                <TextBlock x:Name="TotalCountText"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="RealTimeCountText"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="DroppedCountText"
+                           Visibility="Collapsed"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+
+                <Border Width="1"
+                        Height="18"
+                        Margin="2,0,2,0"
+                        VerticalAlignment="Center"
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                <ToggleButton x:Name="ShowClockToggle"
+                              x:Uid="ShowClockToggle"
+                              Padding="6,0,6,0"
+                              MinWidth="0"
+                              Height="28"
+                              MinHeight="28"
+                              VerticalAlignment="Center"
+                              Checked="OnShowClockToggled"
+                              Unchecked="OnShowClockToggled">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE823;" FontSize="14" />
+                </ToggleButton>
+
+                <ToggleButton x:Name="ShowActiveSenseToggle"
+                              x:Uid="ShowActiveSenseToggle"
+                              Padding="6,0,6,0"
+                              MinWidth="0"
+                              Height="28"
+                              MinHeight="28"
+                              VerticalAlignment="Center"
+                              Checked="OnShowActiveSenseToggled"
+                              Unchecked="OnShowActiveSenseToggled">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEA8F;" FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
+
+            <Button Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    x:Name="ExportButton"
+                    x:Uid="ExportButton"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Height="28"
+                    MinHeight="28"
+                    FontSize="12"
+                    Padding="10,0,10,0"
+                    Click="OnExportClick">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEDE1;" FontSize="13" />
+                    <TextBlock x:Uid="ExportButtonText" Text="Save to File" FontSize="12" />
+                </StackPanel>
+            </Button>
+
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        VerticalAlignment="Center">
+
+                <!-- a DropDownButton rather than a ComboBox, so it matches the other controls'
+                     height instead of inheriting the taller text-input metrics -->
+                <DropDownButton x:Name="ZoomButton"
+                                x:Uid="ZoomPicker"
+                                Height="28"
+                                MinHeight="28"
+                                MinWidth="78"
+                                Padding="10,0,8,0"
+                                VerticalAlignment="Center">
+                    <TextBlock x:Name="ZoomButtonText" Text="100%" FontSize="12" />
+                    <DropDownButton.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Text="50%" Tag="50%" Click="OnZoomPresetClick" />
+                            <MenuFlyoutItem Text="75%" Tag="75%" Click="OnZoomPresetClick" />
+                            <MenuFlyoutItem Text="100%" Tag="100%" Click="OnZoomPresetClick" />
+                            <MenuFlyoutItem Text="125%" Tag="125%" Click="OnZoomPresetClick" />
+                            <MenuFlyoutItem Text="150%" Tag="150%" Click="OnZoomPresetClick" />
+                            <MenuFlyoutItem Text="200%" Tag="200%" Click="OnZoomPresetClick" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+
+                <Button x:Name="ZoomOutButton"
+                        x:Uid="ZoomOutButton"
+                        Padding="4,0,4,0"
+                        MinWidth="0"
+                        Height="28"
+                        MinHeight="28"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="OnZoomOutClick">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE71F;" FontSize="12" />
+                </Button>
+
+                <Slider x:Name="ZoomSlider"
+                        x:Uid="ZoomSlider"
+                        Width="120"
+                        Minimum="50"
+                        Maximum="200"
+                        StepFrequency="5"
+                        TickFrequency="25"
+                        SnapsTo="StepValues"
+                        VerticalAlignment="Center"
+                        ValueChanged="OnZoomSliderValueChanged" />
+
+                <Button x:Name="ZoomInButton"
+                        x:Uid="ZoomInButton"
+                        Padding="4,0,4,0"
+                        MinWidth="0"
+                        Height="28"
+                        MinHeight="28"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="OnZoomInClick">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8A3;" FontSize="12" />
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

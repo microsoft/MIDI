@@ -41,6 +41,17 @@
                 Guid="f551be12-739b-4d55-bfe8-3d7c901cc30e"
                 NeverOverwrite="false">
                    
+            <!--
+              Earlier versions of this installer stamped an explicit ACL on the transport plugin
+              key with a Permission element. MSI never repairs the security descriptor of a key
+              that already exists, so upgrading alone would leave those machines broken forever.
+              Removing the key first means it is recreated inheriting from the parent.
+            -->
+            <RemoveRegistryKey Id="RemoveLegacyBasicLoopbackTransportPluginKey"
+                               Root="HKLM"
+                               Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins\Midi2BasicLoopbackMidiTransport"
+                               Action="removeOnInstall" />
+
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 

@@ -71,9 +71,11 @@ namespace rept = winrt::Windows::Devices::Midi2::Reporting;
 #include "wstring_util.h"
 #include "MidiDefs.h"
 #include "swd_helpers.h"
-//#include "resource_util.h"
+#include "resource_util.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
+
+#include "resource.h"
 //#include "midi_naming.h"
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointNameTable.h"

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+        <!-- Shades of one base colour for the MIDI words, per theme, so they stay readable -->
+        <ResourceDictionary x:Key="Default">
+            <SolidColorBrush x:Key="MidiWord0Brush" Color="#FF9CC6FF" />
+            <SolidColorBrush x:Key="MidiWord1Brush" Color="#FF7FB0F2" />
+            <SolidColorBrush x:Key="MidiWord2Brush" Color="#FF6699DE" />
+            <SolidColorBrush x:Key="MidiWord3Brush" Color="#FF5083C6" />
+            <SolidColorBrush x:Key="MidiNoticeBrush" Color="#FFB9A3F0" />
+            <SolidColorBrush x:Key="MidiDetailValueBrush" Color="#FF7ED9A7" />
+            <SolidColorBrush x:Key="MidiTimeUnitBrush" Color="#FF9AA4B2" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="MidiWord0Brush" Color="#FF1A4F9C" />
+            <SolidColorBrush x:Key="MidiWord1Brush" Color="#FF2C64B5" />
+            <SolidColorBrush x:Key="MidiWord2Brush" Color="#FF437ACB" />
+            <SolidColorBrush x:Key="MidiWord3Brush" Color="#FF5B90DE" />
+            <SolidColorBrush x:Key="MidiNoticeBrush" Color="#FF5B3FA8" />
+            <SolidColorBrush x:Key="MidiDetailValueBrush" Color="#FF116B43" />
+            <SolidColorBrush x:Key="MidiTimeUnitBrush" Color="#FF6B7280" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="HighContrast">
+            <SolidColorBrush x:Key="MidiWord0Brush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="MidiWord1Brush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="MidiWord2Brush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="MidiWord3Brush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="MidiNoticeBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="MidiDetailValueBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="MidiTimeUnitBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- Message type chiclets. Deliberately theme independent: these are mid tone fills with a
+         near white glyph, which reads correctly in both light and dark, and they are resolved
+         from code so they must not depend on the active theme dictionary. -->
+    <SolidColorBrush x:Key="MidiMessageType0BackgroundBrush" Color="#FF6E7681" />
+    <SolidColorBrush x:Key="MidiMessageType1BackgroundBrush" Color="#FFB4691A" />
+    <SolidColorBrush x:Key="MidiMessageType2BackgroundBrush" Color="#FF2A6BB8" />
+    <SolidColorBrush x:Key="MidiMessageType3BackgroundBrush" Color="#FF6B4BB5" />
+    <SolidColorBrush x:Key="MidiMessageType4BackgroundBrush" Color="#FF2E8B57" />
+    <SolidColorBrush x:Key="MidiMessageType5BackgroundBrush" Color="#FF1F8A8A" />
+    <SolidColorBrush x:Key="MidiMessageType6BackgroundBrush" Color="#FFA43E85" />
+    <SolidColorBrush x:Key="MidiMessageType7BackgroundBrush" Color="#FF5A6472" />
+
+    <SolidColorBrush x:Key="MidiMessageType0ForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MidiMessageType1ForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MidiMessageType2ForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MidiMessageType3ForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MidiMessageType4ForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MidiMessageType5ForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MidiMessageType6ForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MidiMessageType7ForegroundBrush" Color="#FFFFFFFF" />
+
+    <!-- Batch striping. Low alpha grey works over either theme's list background. -->
+    <SolidColorBrush x:Key="MidiRowBackgroundBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="MidiRowAlternateBackgroundBrush" Color="#16808080" />
+
+    <!-- Font sizes are deliberately absent: the table inherits its size from the list, so the
+         zoom control can scale it at runtime. -->
+    <Style x:Key="MidiMonitorCellTextStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="Padding" Value="6,0,6,0" />
+        <Setter Property="IsTextSelectionEnabled" Value="False" />
+    </Style>
+
+    <Style x:Key="MidiMonitorWordTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Courier New" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+
+    <Style x:Key="MidiMonitorHeaderTextStyle" TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="Padding" Value="6,0,6,0" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+</ResourceDictionary>

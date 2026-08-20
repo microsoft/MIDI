@@ -9,6 +9,7 @@
 #pragma once
 
 #include "pch.h"
+#include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 
 
 _Use_decl_annotations_
@@ -85,7 +86,14 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 
     auto transformId = __uuidof(Midi2BS2UMPTransform);
 
-    RETURN_IF_FAILED(internal::IsComponentPermitted(transformId));
+    if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
+    {
+        RETURN_IF_FAILED(internal::IsComponentPermittedWithCaching(transformId));
+    }
+    else
+    {
+        RETURN_IF_FAILED(internal::IsComponentPermitted(transformId));
+    }
 
     RETURN_IF_FAILED(CoCreateInstance(transformId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformPlugin)));
 

@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ================================ App level ================================ -->
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI Monitor</value>
+  </data>
+  <data name="SessionName" xml:space="preserve">
+    <value>Windows MIDI Monitor</value>
+  </data>
+  <data name="WindowTitleMonitoringFormat" xml:space="preserve">
+    <value>{0} - {1} - {2}</value>
+    <comment>{0} is the device name, {1} is the group, {2} is the app name</comment>
+  </data>
+  <data name="CommonClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="CommonCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+
+  <!-- ================================ Main window ================================ -->
+  <data name="EndpointPickerLabel.Text" xml:space="preserve">
+    <value>MIDI Device</value>
+  </data>
+  <data name="EndpointPicker.PlaceholderText" xml:space="preserve">
+    <value>Choose a device</value>
+  </data>
+  <data name="GroupPickerLabel.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ChannelPickerLabel.Text" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="StartMonitoringButtonText" xml:space="preserve">
+    <value>Start listening</value>
+  </data>
+  <data name="StartMonitoringButtonName" xml:space="preserve">
+    <value>Start listening</value>
+  </data>
+  <data name="StopMonitoringButtonText" xml:space="preserve">
+    <value>Stop listening</value>
+  </data>
+  <data name="StopMonitoringButtonName" xml:space="preserve">
+    <value>Stop listening</value>
+  </data>
+  <data name="ShowClockToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show Clock messages</value>
+  </data>
+  <data name="ShowClockToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show Clock messages</value>
+  </data>
+  <data name="ShowActiveSenseToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show Active Sense messages</value>
+  </data>
+  <data name="ShowActiveSenseToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show Active Sense messages</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window above other windows</value>
+  </data>
+  <data name="EditColumnsMenuItem.Text" xml:space="preserve">
+    <value>Edit columns</value>
+  </data>
+  <data name="DisplayOptionsMenuItem.Text" xml:space="preserve">
+    <value>Time and message display</value>
+  </data>
+  <data name="ShowMessageNamesCheckBox.Content" xml:space="preserve">
+    <value>Show the message name under the data</value>
+  </data>
+  <data name="TimestampFormatLabel.Text" xml:space="preserve">
+    <value>Show message time as</value>
+  </data>
+  <data name="TimestampFormatTicks.Content" xml:space="preserve">
+    <value>Clock Ticks since PC startup</value>
+  </data>
+  <data name="TimestampFormatMicroseconds.Content" xml:space="preserve">
+    <value>Microseconds since start</value>
+  </data>
+  <data name="TimestampFormatMilliseconds.Content" xml:space="preserve">
+    <value>Milliseconds since start</value>
+  </data>
+  <data name="TimestampFormatSeconds.Content" xml:space="preserve">
+    <value>Seconds since start</value>
+  </data>
+  <data name="ColumnsFlyoutHeader.Text" xml:space="preserve">
+    <value>Choose and order the columns</value>
+  </data>
+  <data name="MoveColumnUpButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Move this column earlier</value>
+  </data>
+  <data name="MoveColumnDownButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Move this column later</value>
+  </data>
+  <data name="AutoHideColumnsCheckBox.Content" xml:space="preserve">
+    <value>Hide extra columns when the window is narrow</value>
+  </data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ExportButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Save the captured messages to a file</value>
+  </data>
+  <data name="ExportButtonText.Text" xml:space="preserve">
+    <value>Save to File</value>
+  </data>
+  <data name="SelectAllMenuItem.Text" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="DeselectAllMenuItem.Text" xml:space="preserve">
+    <value>Deselect All</value>
+  </data>
+  <data name="SelectAllSysEx7MenuItem.Text" xml:space="preserve">
+    <value>Select All SysEx 7</value>
+  </data>
+  <data name="CopyUmpWordsMenuItem.Text" xml:space="preserve">
+    <value>Copy as UMP words</value>
+  </data>
+  <data name="CopyMidi1BytesMenuItem.Text" xml:space="preserve">
+    <value>Copy as MIDI 1.0 bytes</value>
+  </data>
+  <data name="CopySysExBytesMenuItem.Text" xml:space="preserve">
+    <value>Copy as SysEx bytes</value>
+  </data>
+  <data name="ClearCaptureMenuItem.Text" xml:space="preserve">
+    <value>Clear All Entries</value>
+  </data>
+  <data name="ZoomPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Table zoom level</value>
+  </data>
+  <data name="ZoomSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Table zoom level</value>
+  </data>
+  <data name="ZoomOutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Make the table text smaller</value>
+  </data>
+  <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Make the table text larger</value>
+  </data>
+  <data name="AddCommentButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a note to this message</value>
+  </data>
+  <data name="CommentFlyoutHeader.Text" xml:space="preserve">
+    <value>Add a note to this message</value>
+  </data>
+  <data name="CommentTextBox.PlaceholderText" xml:space="preserve">
+    <value>Type a note</value>
+  </data>
+  <data name="EmptyStateTitle.Text" xml:space="preserve">
+    <value>Nothing to show yet</value>
+  </data>
+  <data name="EmptyStateBody.Text" xml:space="preserve">
+    <value>Pick a device above and select Start listening. Play a note or move a control, and the messages will appear here.</value>
+  </data>
+
+  <!-- ================================ Columns ================================ -->
+  <data name="ColumnHeaderIndex.Text" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="ColumnHeaderTimestamp.Text" xml:space="preserve">
+    <value>Message Time</value>
+  </data>
+  <data name="ColumnHeaderData.Text" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="ColumnHeaderGroup.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ColumnHeaderChannel.Text" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="ColumnHeaderDecoded.Text" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="ColumnHeaderDelta.Text" xml:space="preserve">
+    <value>Since last</value>
+  </data>
+  <data name="ColumnHeaderIndexText" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="ColumnHeaderTimestampText" xml:space="preserve">
+    <value>Message Time</value>
+  </data>
+  <data name="ColumnHeaderDataText" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="ColumnHeaderGroupText" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ColumnHeaderChannelText" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="ColumnHeaderDecodedText" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="ColumnHeaderDeltaText" xml:space="preserve">
+    <value>Since last</value>
+  </data>
+
+  <!-- ================================ Pickers ================================ -->
+  <data name="GroupChoiceAll" xml:space="preserve">
+    <value>All groups</value>
+  </data>
+  <data name="GroupChoiceFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>{0} is the group number, 1 through 16</comment>
+  </data>
+  <data name="GroupChoiceNamedFormat" xml:space="preserve">
+    <value>Group {0} - {1}</value>
+    <comment>{0} is the group number, {1} is the function block or group terminal block name</comment>
+  </data>
+  <data name="ChannelChoiceAll" xml:space="preserve">
+    <value>All channels</value>
+  </data>
+  <data name="ChannelChoiceFormat" xml:space="preserve">
+    <value>Channel {0}</value>
+    <comment>{0} is the channel number, 1 through 16</comment>
+  </data>
+
+  <!-- ================================ Status ================================ -->
+  <data name="StatusTotalMessagesFormat" xml:space="preserve">
+    <value>{0} messages</value>
+    <comment>{0} is the total number of captured messages</comment>
+  </data>
+  <data name="StatusRealTimeMessagesFormat" xml:space="preserve">
+    <value>{0} real time</value>
+    <comment>{0} is the number of System Real Time messages</comment>
+  </data>
+  <data name="StatusDroppedMessagesFormat" xml:space="preserve">
+    <value>{0} dropped</value>
+    <comment>{0} is the number of messages discarded because capture could not keep up</comment>
+  </data>
+  <data name="MonitoringStoppedNotice" xml:space="preserve">
+    <value>Monitoring stopped</value>
+  </data>
+  <data name="MonitoringStartedNoticeFormat" xml:space="preserve">
+    <value>Monitoring {0} - {1} - {2}</value>
+    <comment>{0} is the device name, {1} is the group, {2} is the channel</comment>
+  </data>
+
+  <!-- ================================ Dialogs ================================ -->
+  <data name="ClearConfirmTitle" xml:space="preserve">
+    <value>Clear the captured messages?</value>
+  </data>
+  <data name="ClearConfirmBody" xml:space="preserve">
+    <value>Every message captured so far will be removed, including any notes you have added. This cannot be undone.</value>
+  </data>
+  <data name="ClearConfirmPrimary" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="ServiceUnavailableTitle" xml:space="preserve">
+    <value>Windows MIDI Services is not available</value>
+  </data>
+  <data name="ServiceUnavailableBody" xml:space="preserve">
+    <value>The MIDI service could not be started, so no devices can be shown. Check that Windows MIDI Services is installed, then try again.</value>
+  </data>
+  <data name="ConnectionFailedTitle" xml:space="preserve">
+    <value>Could not start listening</value>
+  </data>
+  <data name="SessionCreateFailedBody" xml:space="preserve">
+    <value>A MIDI session could not be created. The MIDI service may not be running.</value>
+  </data>
+  <data name="ConnectionCreateFailedBody" xml:space="preserve">
+    <value>A connection to that device could not be created. It may have been unplugged.</value>
+  </data>
+  <data name="ComExtensionsUnavailableBody" xml:space="preserve">
+    <value>This build of Windows MIDI Services does not support the high speed message callback this app needs.</value>
+  </data>
+  <data name="ConnectionOpenFailedBody" xml:space="preserve">
+    <value>The connection to that device could not be opened. Another app may be using it exclusively, or it may have been unplugged.</value>
+  </data>
+
+  <!-- ================================ Command line ================================ -->
+  <data name="CommandLineHelpTitle" xml:space="preserve">
+    <value>Command line options</value>
+  </data>
+  <data name="CommandLineHelpBody" xml:space="preserve">
+    <value>midi2monitor.exe [endpoint device id] [options]
+
+  [endpoint device id]   Optional. The full endpoint device id of the device to
+                         monitor. Wrap it in quotes if it contains spaces.
+
+  --group, -g  number    Optional. The group number, 1 through 16, to monitor.
+                         Only valid when an endpoint device id is supplied.
+
+  --channel, -c number   Optional. The channel number, 1 through 16, to monitor.
+                         Only valid when a group is also supplied.
+
+  --help, -h, -?         Show this help.
+
+Examples
+
+  midi2monitor.exe
+  midi2monitor.exe "\\?\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_A#{e7cce071-3c03-423f-88d3-f1045d02552b}"
+  midi2monitor.exe "\\?\SWD#MIDISRV#..." --group 1 --channel 10</value>
+  </data>
+  <data name="CommandLineErrorTitle" xml:space="preserve">
+    <value>That command line could not be used</value>
+  </data>
+  <data name="CommandLineErrorTooManyEndpoints" xml:space="preserve">
+    <value>Only one endpoint device id can be supplied. Unexpected value: {0}</value>
+  </data>
+  <data name="CommandLineErrorMissingValue" xml:space="preserve">
+    <value>The option {0} needs a value after it.</value>
+  </data>
+  <data name="CommandLineErrorInvalidGroup" xml:space="preserve">
+    <value>The group must be a number from 1 to 16. Value supplied: {0}</value>
+  </data>
+  <data name="CommandLineErrorInvalidChannel" xml:space="preserve">
+    <value>The channel must be a number from 1 to 16. Value supplied: {0}</value>
+  </data>
+  <data name="CommandLineErrorUnknownOption" xml:space="preserve">
+    <value>That option is not recognized: {0}</value>
+  </data>
+  <data name="CommandLineErrorGroupWithoutEndpoint" xml:space="preserve">
+    <value>A group can only be supplied together with an endpoint device id.</value>
+  </data>
+  <data name="CommandLineErrorChannelWithoutGroup" xml:space="preserve">
+    <value>A channel can only be supplied together with a group.</value>
+  </data>
+  <data name="CommandLineErrorGeneral" xml:space="preserve">
+    <value>The command line could not be read.</value>
+  </data>
+
+  <!-- ================================ Export ================================ -->
+  <data name="ExportDefaultFileName" xml:space="preserve">
+    <value>midi-capture</value>
+  </data>
+  <data name="ExportFileTypeText" xml:space="preserve">
+    <value>Text file</value>
+  </data>
+  <data name="ExportHeaderIndex" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="ExportHeaderTimestamp" xml:space="preserve">
+    <value>Message Time</value>
+  </data>
+  <data name="ExportHeaderDelta" xml:space="preserve">
+    <value>Since last</value>
+  </data>
+  <data name="ExportHeaderGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ExportHeaderChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="ExportHeaderData" xml:space="preserve">
+    <value>Message data</value>
+  </data>
+  <data name="ExportHeaderMessageName" xml:space="preserve">
+    <value>Message type</value>
+  </data>
+  <data name="ExportHeaderDecoded" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="ExportCompleteTitle" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="ExportCompleteBodyFormat" xml:space="preserve">
+    <value>{0} rows were saved to {1}</value>
+    <comment>{0} is a row count, {1} is a full file path</comment>
+  </data>
+  <data name="ExportFailedTitle" xml:space="preserve">
+    <value>The file could not be saved</value>
+  </data>
+  <data name="ExportFailedBody" xml:space="preserve">
+    <value>The capture could not be written to that location. Choose a different folder or file name and try again.</value>
+  </data>
+
+  <!-- ================================ Settings ================================ -->
+  <data name="SettingsPageTitle.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsAppearanceHeader.Text" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsThemeDescription.Text" xml:space="preserve">
+    <value>Choose whether the app follows your Windows app colour mode, or always uses light or dark.</value>
+  </data>
+  <data name="SettingsThemePicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>App colour mode</value>
+  </data>
+  <data name="SettingsThemeSystem.Content" xml:space="preserve">
+    <value>Use my Windows setting</value>
+  </data>
+  <data name="SettingsThemeLight.Content" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark.Content" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropDescription.Text" xml:space="preserve">
+    <value>The window background. Mica and Acrylic pick up the colours behind the window.</value>
+  </data>
+  <data name="SettingsBackdropPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="SettingsBackdropSolid.Content" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica.Content" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic.Content" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+
+  <data name="SettingsCaptureHeader.Text" xml:space="preserve">    <value>Capture</value>
+  </data>
+  <data name="SettingsRetentionDescription.Text" xml:space="preserve">
+    <value>How many messages to keep. Older messages are discarded once the limit is reached.</value>
+  </data>
+  <data name="SettingsRetentionNumberBox.Header" xml:space="preserve">
+    <value>Messages to keep</value>
+  </data>
+  <data name="SettingsDisplayHeader.Text" xml:space="preserve">
+    <value>Message list</value>
+  </data>
+  <data name="SettingsResetColumnsButton.Content" xml:space="preserve">
+    <value>Reset the columns to their defaults</value>
+  </data>
+  <data name="SettingsAboutHeader.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="SettingsVersionFormat" xml:space="preserve">
+    <value>Windows MIDI Services {0} ({1})</value>
+    <comment>{0} is the SDK version, {1} is the build source</comment>
+  </data>
+
+  <!-- ================================ Units ================================ -->
+  <data name="UnitAbbreviationMicroseconds" xml:space="preserve">
+    <value>µs</value>
+  </data>
+  <data name="UnitAbbreviationMilliseconds" xml:space="preserve">
+    <value>ms</value>
+  </data>
+  <data name="UnitAbbreviationSeconds" xml:space="preserve">
+    <value>s</value>
+  </data>
+  <data name="UnitAbbreviationMinutes" xml:space="preserve">
+    <value>min</value>
+  </data>
+  <data name="UnitAbbreviationHours" xml:space="preserve">
+    <value>h</value>
+  </data>
+
+  <!-- ============ Decoded message field labels. MIDI proper nouns such as note
+       names and control change names are intentionally not translated. ============ -->
+  <data name="DecodeLabelNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="DecodeLabelVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="DecodeLabelPressure" xml:space="preserve">
+    <value>Pressure</value>
+  </data>
+  <data name="DecodeLabelController" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="DecodeLabelValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="DecodeLabelProgram" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="DecodeLabelBank" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="DecodeLabelBend" xml:space="preserve">
+    <value>Bend</value>
+  </data>
+  <data name="DecodeLabelIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="DecodeLabelBytes" xml:space="preserve">
+    <value>Bytes</value>
+  </data>
+  <data name="DecodeLabelStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="DecodeLabelSong" xml:space="preserve">
+    <value>Song</value>
+  </data>
+  <data name="DecodeLabelPosition" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="DecodeLabelFrame" xml:space="preserve">
+    <value>Frame</value>
+  </data>
+  <data name="DecodeLabelAttribute" xml:space="preserve">
+    <value>Attribute</value>
+  </data>
+  <data name="DecodeLabelText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="DecodeLabelName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="DecodeLabelTicks" xml:space="preserve">
+    <value>Ticks</value>
+  </data>
+  <data name="DecodeLabelTempo" xml:space="preserve">
+    <value>Tempo</value>
+  </data>
+  <data name="DecodeLabelStreamId" xml:space="preserve">
+    <value>Stream</value>
+  </data>
+  <data name="DecodeLabelFunctionBlock" xml:space="preserve">
+    <value>Function block</value>
+  </data>
+  <data name="DecodeLabelForm" xml:space="preserve">
+    <value>Form</value>
+  </data>
+  <data name="DecodeLabelTimeSignature" xml:space="preserve">
+    <value>Time signature</value>
+  </data>
+  <data name="DecodeLabelKeySignature" xml:space="preserve">
+    <value>Key signature</value>
+  </data>
+  <data name="DecodeLabelPerNote" xml:space="preserve">
+    <value>Per note</value>
+  </data>
+  <data name="DecodeLabelOptions" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="DecodeLabelNoteOffValue" xml:space="preserve">
+    <value>Note off value</value>
+  </data>
+</root>

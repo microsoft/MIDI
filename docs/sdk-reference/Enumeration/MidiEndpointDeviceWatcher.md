@@ -35,6 +35,12 @@ Create a `MidiEndpointDeviceWatcher` on a background thread, and use the interna
 
 ## Events
 
+Watcher events are raised synchronously from the underlying Device Watcher, and so follow the same rules and guidance as the WinRT `Windows.Devices.Enumeration.DeviceWatcher` type. In addition, we recommend the following:
+
+- Do not perform any long-running work inside an event handler.
+- Do not create or destroy any virtual devices, loopbacks, or network connections from within a handler, and do not update properties in any way which would cause additional PnP events to be raised.
+- When in doubt, hand the data off to a worker thread and return from the handler quickly.
+
 | Event | Description |
 | --------------- | ----------- |
 | `Added (source, deviceInformationAddedEventArgs)` | A new endpoint has been added.  |

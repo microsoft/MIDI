@@ -43,6 +43,17 @@
                    Guid="1a92e5a9-a210-48d5-a37c-63b0573b68ee"
                    NeverOverwrite="false">
                    
+            <!--
+              Earlier versions of this installer stamped an explicit ACL on the transport plugin
+              key with a Permission element. MSI never repairs the security descriptor of a key
+              that already exists, so upgrading alone would leave those machines broken forever.
+              Removing the key first means it is recreated inheriting from the parent.
+            -->
+            <RemoveRegistryKey Id="RemoveLegacyNetworkTransportPluginKey"
+                               Root="HKLM"
+                               Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins\Midi2NetworkMidiTransport"
+                               Action="removeOnInstall" />
+
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
