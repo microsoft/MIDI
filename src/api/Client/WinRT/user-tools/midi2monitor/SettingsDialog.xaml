@@ -14,7 +14,7 @@
                   MaxHeight="640">
         <!-- the left inset keeps focus rectangles, which draw outside the control bounds, from
              being clipped by the scroll region; the right one leaves room for the scrollbar.
-             The width has to fit the horizontal colour picker, which clips its channel labels
+             The width has to fit the horizontal color picker, which clips its channel labels
              rather than wrapping them when it is squeezed -->
         <StackPanel Spacing="20" Width="560" Margin="4,0,16,0" HorizontalAlignment="Left">
 
@@ -27,7 +27,7 @@
                            Text="Appearance"
                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                 <TextBlock x:Uid="SettingsThemeDescription"
-                           Text="Choose whether the app follows your Windows app colour mode, or always uses light or dark."
+                           Text="Choose whether the app follows your Windows app color mode, or always uses light or dark."
                            TextWrapping="Wrap"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                            Style="{ThemeResource CaptionTextBlockStyle}" />
@@ -42,7 +42,7 @@
                 </ComboBox>
 
                 <TextBlock x:Uid="SettingsBackdropDescription"
-                           Text="The window background. Mica and Acrylic pick up the colours behind the window."
+                           Text="The window background. Mica and Acrylic pick up the colors behind the window."
                            TextWrapping="Wrap"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                            Style="{ThemeResource CaptionTextBlockStyle}" />
@@ -58,7 +58,7 @@
 
                 <CheckBox x:Name="CustomBackgroundColorCheckBox"
                           x:Uid="SettingsCustomBackgroundColorCheckBox"
-                          Content="Use a custom background colour"
+                          Content="Use a custom background color"
                           Checked="OnUseCustomBackgroundColorChanged"
                           Unchecked="OnUseCustomBackgroundColorChanged" />
 

@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.ThemeDictionaries>
-        <!-- Shades of one base colour for the MIDI words, per theme, so they stay readable -->
+        <!-- Shades of one base color for the MIDI words, per theme, so they stay readable -->
         <ResourceDictionary x:Key="Default">
             <SolidColorBrush x:Key="MidiWord0Brush" Color="#FF9CC6FF" />
             <SolidColorBrush x:Key="MidiWord1Brush" Color="#FF7FB0F2" />
@@ -55,7 +55,7 @@
     <SolidColorBrush x:Key="MidiMessageType6ForegroundBrush" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="MidiMessageType7ForegroundBrush" Color="#FFFFFFFF" />
 
-    <!-- Batch striping. Low alpha grey works over either theme's list background. -->
+    <!-- Batch striping. Low alpha gray works over either theme's list background. -->
     <SolidColorBrush x:Key="MidiRowBackgroundBrush" Color="Transparent" />
     <SolidColorBrush x:Key="MidiRowAlternateBackgroundBrush" Color="#16808080" />
 

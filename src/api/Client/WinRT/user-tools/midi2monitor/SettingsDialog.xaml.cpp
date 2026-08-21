@@ -141,7 +141,7 @@ namespace winrt::midi2monitor::implementation
 
             BackgroundColorPicker().IsEnabled(settings.UseCustomBackgroundColor());
         }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the background colour controls.")
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the background color controls.")
     }
 
     _Use_decl_annotations_
@@ -165,7 +165,7 @@ namespace winrt::midi2monitor::implementation
                 winrt::get_self<MainWindow>(m_owner)->ApplyBackgroundColor();
             }
         }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the custom background colour setting.")
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the custom background color setting.")
     }
 
     _Use_decl_annotations_
@@ -193,7 +193,7 @@ namespace winrt::midi2monitor::implementation
                 winrt::get_self<MainWindow>(m_owner)->ApplyBackgroundColor();
             }
         }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the background colour.")
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the background color.")
     }
 
     _Use_decl_annotations_

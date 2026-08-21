@@ -11,7 +11,7 @@
 
 namespace midi2monitor
 {
-    // Value and unit are kept apart so the UI can colour the unit differently, and so the
+    // Value and unit are kept apart so the UI can color the unit differently, and so the
     // export can join them without re-parsing.
     struct FormattedTime
     {

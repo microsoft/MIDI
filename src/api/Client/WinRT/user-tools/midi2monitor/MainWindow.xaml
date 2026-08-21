@@ -33,7 +33,7 @@
                 Grid.RowSpan="4"
                 Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
 
-        <!-- a separate layer, so switching back to the default colour just hides it and the
+        <!-- a separate layer, so switching back to the default color just hides it and the
              theme bound fill underneath returns -->
         <Border x:Name="WindowTint"
                 Grid.Row="0"

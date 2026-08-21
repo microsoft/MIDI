@@ -59,7 +59,7 @@ namespace midi2monitor
         String DeltaText{ get; };
         String DeltaUnit{ get; };
 
-        // decoded contents, split so the values can be coloured independently of the labels
+        // decoded contents, split so the values can be colored independently of the labels
         String Detail0Label{ get; };
         String Detail0Value{ get; };
         String Detail1Label{ get; };

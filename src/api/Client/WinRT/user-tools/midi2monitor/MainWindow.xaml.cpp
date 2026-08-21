@@ -394,7 +394,7 @@ namespace winrt::midi2monitor::implementation
             auto const useCustom = settings.UseCustomBackgroundColor();
             auto const color = ColorFromArgb(settings.BackgroundColorArgb());
 
-            // Solid has no material to tint, so the colour goes on a layer of its own. Mica and
+            // Solid has no material to tint, so the color goes on a layer of its own. Mica and
             // Acrylic take it as the material's tint instead, which keeps their texture.
             auto const showTint = useCustom && settings.Backdrop() == native::WindowBackdrop::Solid;
 
@@ -431,7 +431,7 @@ namespace winrt::midi2monitor::implementation
                 }
             }
         }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the background colour.")
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the background color.")
     }
 
     _Use_decl_annotations_
@@ -453,7 +453,7 @@ namespace winrt::midi2monitor::implementation
                 return;
             }
 
-            // the export button is centred on the whole bar, so each side only gets half the
+            // the export button is centered on the whole bar, so each side only gets half the
             // width. Shed the least important controls first rather than letting them collide.
             constexpr double ZoomSliderMinimumWidth = 800.0;
             constexpr double ZoomPresetsMinimumWidth = 730.0;
@@ -534,7 +534,7 @@ namespace winrt::midi2monitor::implementation
             titleBar.ButtonPressedForegroundColor(foreground);
             titleBar.ButtonInactiveForegroundColor(dark ? winrt::Windows::UI::Colors::Gray() : winrt::Windows::UI::Colors::DimGray());
         }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the title bar colours.")
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the title bar colors.")
     }
 
     void MainWindow::ApplyTheme() noexcept
@@ -553,7 +553,7 @@ namespace winrt::midi2monitor::implementation
             native::MonitorPalette::Invalidate();
             ApplyTitleBarColors();
 
-            // the tinted backgrounds are built from theme colours, so they need rebuilding
+            // the tinted backgrounds are built from theme colors, so they need rebuilding
             if (m_initialized)
             {
                 ApplyBackdrop();
@@ -1194,7 +1194,7 @@ namespace winrt::midi2monitor::implementation
             // standard overlay corner radius and shadow for free
             controls::Flyout flyout{};
 
-            // the stock presenter caps out narrower than the colour picker needs
+            // the stock presenter caps out narrower than the color picker needs
             auto const resources = RootGrid().Resources();
             auto const presenterStyleKey = winrt::box_value(L"SettingsFlyoutPresenterStyle");
 
