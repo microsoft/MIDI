@@ -91,9 +91,6 @@
 // projection for the shared user tool types, generated from midi-app-shared\MidiAppShared.idl
 #include <winrt/MidiAppShared.h>
 
-#include "WindowChrome.h"
-#include "MidiEndpointHelpers.h"
-
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 namespace xaml = ::winrt::Microsoft::UI::Xaml;
@@ -106,10 +103,11 @@ namespace appshared = ::winrt::MidiAppShared;
 
 #include "Telemetry.h"
 
-// XAML generated type info activates these local types by name, so their declarations have to
+#include "WindowChrome.h"
+#include "MidiEndpointHelpers.h"
+#include "AppearanceFlyout.h"
+
+// XAML generated type info activates these shared types by name, so their declarations have to
 // be reachable from every translation unit.
 #include "EndpointChoice.h"
-#include "MessageRowPanel.h"
-#include "MidiMessageViewModel.h"
-#include "MonitorColumn.h"
 #include "NamedChoice.h"

@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Types shared by the Windows MIDI Services user tools. These are compiled into each app
+// rather than shipped as a separate component, so every tool keeps a single self contained
+// executable and there is no winmd to deploy alongside it.
+namespace MidiAppShared
+{
+    // A display name paired with the number it represents. Used for the group and channel
+    // pickers, where zero means "All".
+    [default_interface]
+    runtimeclass NamedChoice
+    {
+        NamedChoice();
+
+        String DisplayName{ get; };
+        Int32 Value{ get; };
+    }
+
+    // One entry in an endpoint picker: the name, the id needed to connect, and the
+    // manufacturer supplied image where there is one.
+    [default_interface]
+    runtimeclass EndpointChoice
+    {
+        EndpointChoice();
+
+        String DisplayName{ get; };
+        String EndpointDeviceId{ get; };
+        String ImagePath{ get; };
+        Microsoft.UI.Xaml.Media.ImageSource ImageSource{ get; };
+        Microsoft.UI.Xaml.Visibility ImageVisibility{ get; };
+    }
+}

@@ -11,9 +11,9 @@
 
 #define VER_FILETYPE                VFT_APP
 #define VER_FILESUBTYPE             VFT2_UNKNOWN
-#define VER_FILEDESCRIPTION_STR     "Windows MIDI Monitor"
-#define VER_INTERNALNAME_STR        "midi2monitor.exe"
-#define VER_ORIGINALFILENAME_STR    "midi2monitor.exe"
+#define VER_FILEDESCRIPTION_STR     "Windows MIDI Scratch Pad"
+#define VER_INTERNALNAME_STR        "midiscratchpad.exe"
+#define VER_ORIGINALFILENAME_STR    "midiscratchpad.exe"
 #undef VER_COMPANYNAME_STR
 #define VER_COMPANYNAME_STR         "Microsoft"
 #define VER_LEGALCOPYRIGHT_STR      "Copyright (c) Microsoft Corporation"
@@ -26,3 +26,4 @@
 // this builds the version resource based on the above
 #include "common.ver"
 
+IDI_APPICON ICON "Assets\\AppIcon.ico"

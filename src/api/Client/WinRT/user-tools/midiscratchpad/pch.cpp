@@ -6,5 +6,6 @@
 // ============================================================================
 
 #include "pch.h"
-#include "EndpointChoice.h"
-#include "EndpointChoice.g.cpp"
+
+// brings in the COM extension interface GUID definitions
+#include "WindowsMidiServicesAppSdkComExtensions_i.c"

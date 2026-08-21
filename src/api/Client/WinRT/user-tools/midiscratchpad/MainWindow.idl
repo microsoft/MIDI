@@ -5,6 +5,11 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
-#include "NamedChoice.h"
-#include "NamedChoice.g.cpp"
+namespace midiscratchpad
+{
+    [default_interface]
+    runtimeclass MainWindow : Microsoft.UI.Xaml.Window
+    {
+        MainWindow();
+    }
+}

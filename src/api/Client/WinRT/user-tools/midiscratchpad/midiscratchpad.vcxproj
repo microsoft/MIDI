@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
     <CppWinRTOptimized>true</CppWinRTOptimized>
@@ -6,11 +6,11 @@
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
     <MinimalCoreWin>false</MinimalCoreWin>
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{6A2F1B4E-9C8D-4A31-8E77-2D5B6C1F0A93}</ProjectGuid>
+    <ProjectGuid>{418A4282-A631-464E-93EE-E84530BC4EAF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>midi2monitor</RootNamespace>
-    <ProjectName>midi2monitor</ProjectName>
-    <TargetName>midi2monitor</TargetName>
+    <RootNamespace>midiscratchpad</RootNamespace>
+    <ProjectName>midiscratchpad</ProjectName>
+    <TargetName>midiscratchpad</TargetName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
@@ -128,69 +128,44 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
-    <ClInclude Include="MessageCapture.h" />
-    <ClInclude Include="MessagePipeline.h" />
-    <ClInclude Include="MessageStore.h" />
-    <ClInclude Include="MessageListSource.h" />
-    <ClInclude Include="MidiMessageDecoder.h" />
-    <ClInclude Include="MonitorPalette.h" />
+    <ClInclude Include="ScratchPadParser.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
-    <ClInclude Include="TimestampFormatter.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
     </ClInclude>
     <ClInclude Include="MainWindow.xaml.h">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClInclude>
-    <ClInclude Include="SettingsDialog.xaml.h">
-      <DependentUpon>SettingsDialog.xaml</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MessageRowPanel.h" />
-    <ClInclude Include="MidiMessageViewModel.h" />
-    <ClInclude Include="MonitorColumn.h" />
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="MessageCapture.cpp" />
-    <ClCompile Include="MessagePipeline.cpp" />
-    <ClCompile Include="MessageStore.cpp" />
-    <ClCompile Include="MessageListSource.cpp" />
-    <ClCompile Include="MidiMessageDecoder.cpp" />
-    <ClCompile Include="MonitorPalette.cpp" />
+    <ClCompile Include="ScratchPadParser.cpp" />
     <ClCompile Include="StringResources.cpp" />
-    <ClCompile Include="TimestampFormatter.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindow.xaml.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MainWindow.Monitoring.cpp" />
-    <ClCompile Include="MainWindow.Clipboard.cpp" />
-    <ClCompile Include="MainWindow.Export.cpp" />
-    <ClCompile Include="SettingsDialog.xaml.cpp">
-      <DependentUpon>SettingsDialog.xaml</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MessageRowPanel.cpp" />
-    <ClCompile Include="MidiMessageViewModel.cpp" />
-    <ClCompile Include="MonitorColumn.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -198,10 +173,6 @@
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
-    <Midl Include="SettingsDialog.idl">
-      <DependentUpon>SettingsDialog.xaml</DependentUpon>
-    </Midl>
-    <Midl Include="MonitorTypes.idl" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -210,21 +181,15 @@
     <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="SettingsDialog.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Styles\MonitorStyles.xaml">
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <PRIResource Include="Strings\en-US\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="midi2monitor.exe.manifest" />
+    <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resources.rc" />
+    <Manifest Include="midiscratchpad.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CppWinRT" Version="3.0.260520.1" />

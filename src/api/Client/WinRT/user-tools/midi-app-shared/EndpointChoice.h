@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include "EndpointChoice.g.h"
+// types outside the consuming app's root namespace get namespace qualified generated headers
+#include "MidiAppShared.EndpointChoice.g.h"
 
-namespace winrt::midi2monitor::implementation
+namespace winrt::MidiAppShared::implementation
 {
     struct EndpointChoice : EndpointChoiceT<EndpointChoice>
     {
@@ -30,16 +31,16 @@ namespace winrt::midi2monitor::implementation
         winrt::hstring ImagePath() const noexcept { return m_imagePath; }
 
         // built on first use: the stored value is a file path, which will not bind to Image.Source
-        media::ImageSource ImageSource() const noexcept
+        winrt::Microsoft::UI::Xaml::Media::ImageSource ImageSource() const noexcept
         {
             if (m_imageSource == nullptr && !m_imagePath.empty())
             {
                 try
                 {
-                    media::Imaging::BitmapImage bitmap{};
+                    winrt::Microsoft::UI::Xaml::Media::Imaging::BitmapImage bitmap{};
 
                     bitmap.DecodePixelHeight(24);
-                    bitmap.UriSource(foundation::Uri{ L"file:///" + m_imagePath });
+                    bitmap.UriSource(winrt::Windows::Foundation::Uri{ L"file:///" + m_imagePath });
 
                     m_imageSource = bitmap;
                 }
@@ -51,20 +52,22 @@ namespace winrt::midi2monitor::implementation
             return m_imageSource;
         }
 
-        xaml::Visibility ImageVisibility() const noexcept
+        winrt::Microsoft::UI::Xaml::Visibility ImageVisibility() const noexcept
         {
-            return m_imagePath.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+            return m_imagePath.empty()
+                ? winrt::Microsoft::UI::Xaml::Visibility::Collapsed
+                : winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
     private:
         winrt::hstring m_displayName{};
         winrt::hstring m_endpointDeviceId{};
         winrt::hstring m_imagePath{};
-        mutable media::ImageSource m_imageSource{ nullptr };
+        mutable winrt::Microsoft::UI::Xaml::Media::ImageSource m_imageSource{ nullptr };
     };
 }
 
-namespace winrt::midi2monitor::factory_implementation
+namespace winrt::MidiAppShared::factory_implementation
 {
     struct EndpointChoice : EndpointChoiceT<EndpointChoice, implementation::EndpointChoice>
     {

@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include "NamedChoice.g.h"
+// types outside the consuming app's root namespace get namespace qualified generated headers
+#include "MidiAppShared.NamedChoice.g.h"
 
-namespace winrt::midi2monitor::implementation
+namespace winrt::MidiAppShared::implementation
 {
     struct NamedChoice : NamedChoiceT<NamedChoice>
     {
@@ -30,7 +31,7 @@ namespace winrt::midi2monitor::implementation
     };
 }
 
-namespace winrt::midi2monitor::factory_implementation
+namespace winrt::MidiAppShared::factory_implementation
 {
     struct NamedChoice : NamedChoiceT<NamedChoice, implementation::NamedChoice>
     {
