@@ -121,6 +121,7 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <ComboBox x:Name="EndpointComboBox"
                                   x:Uid="EndpointPicker"
+                                  TabIndex="1"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnEndpointSelectionChanged">
                             <ComboBox.ItemContainerStyle>
@@ -163,6 +164,7 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <ComboBox x:Name="GroupComboBox"
                                   x:Uid="GroupPicker"
+                                  TabIndex="2"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnGroupSelectionChanged">
                             <ComboBox.ItemTemplate>
@@ -182,6 +184,7 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <ComboBox x:Name="ChannelComboBox"
                                   x:Uid="ChannelPicker"
+                                  TabIndex="3"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnChannelSelectionChanged">
                             <ComboBox.ItemTemplate>
@@ -195,6 +198,7 @@
                     <!-- the only control allowed to wrap to a second row when the window is
                          narrow; OnRootSizeChanged repositions it -->
                     <Button x:Name="CaptureButton"
+                            TabIndex="4"
                             Grid.Row="0"
                             Grid.Column="3"
                             MinWidth="150"
@@ -345,6 +349,7 @@
 
                 <ListView x:Name="MessagesListView"
                           Grid.Row="1"
+                          TabIndex="5"
                           SelectionMode="Extended"
                           IsItemClickEnabled="False"
                           ShowsScrollingPlaceholders="False"
@@ -565,6 +570,7 @@
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                 <Button x:Name="SettingsButton"
                         x:Uid="SettingsButton"
+                        TabIndex="6"
                         Padding="6,0,6,0"
                         MinWidth="0"
                         Height="28"
@@ -598,6 +604,7 @@
 
                 <ToggleButton x:Name="ShowClockToggle"
                               x:Uid="ShowClockToggle"
+                              TabIndex="7"
                               Padding="6,0,6,0"
                               MinWidth="0"
                               Height="28"
@@ -610,6 +617,7 @@
 
                 <ToggleButton x:Name="ShowActiveSenseToggle"
                               x:Uid="ShowActiveSenseToggle"
+                              TabIndex="8"
                               Padding="6,0,6,0"
                               MinWidth="0"
                               Height="28"
@@ -625,6 +633,7 @@
                     Grid.ColumnSpan="3"
                     x:Name="ExportButton"
                     x:Uid="ExportButton"
+                    TabIndex="9"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Height="28"
@@ -647,6 +656,7 @@
                      height instead of inheriting the taller text-input metrics -->
                 <DropDownButton x:Name="ZoomButton"
                                 x:Uid="ZoomPicker"
+                                TabIndex="10"
                                 Height="28"
                                 MinHeight="28"
                                 MinWidth="78"
@@ -667,6 +677,7 @@
 
                 <Button x:Name="ZoomOutButton"
                         x:Uid="ZoomOutButton"
+                        TabIndex="11"
                         Padding="4,0,4,0"
                         MinWidth="0"
                         Height="28"
@@ -679,6 +690,7 @@
 
                 <Slider x:Name="ZoomSlider"
                         x:Uid="ZoomSlider"
+                        TabIndex="12"
                         Width="120"
                         Minimum="50"
                         Maximum="200"
@@ -690,6 +702,7 @@
 
                 <Button x:Name="ZoomInButton"
                         x:Uid="ZoomInButton"
+                        TabIndex="13"
                         Padding="4,0,4,0"
                         MinWidth="0"
                         Height="28"

@@ -91,6 +91,14 @@ namespace winrt::midi2monitor::implementation
         UpdateStatusBarLayout();
         UpdateStatusLine();
         ApplyStartupOptions();
+
+        // Programmatic rather than keyboard focus, so the device picker is where typing and
+        // tabbing begin without drawing a focus rectangle on launch.
+        try
+        {
+            EndpointComboBox().Focus(xaml::FocusState::Programmatic);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to set the initial focus.")
     }
 
     void MainWindow::InitializeCollections() noexcept
