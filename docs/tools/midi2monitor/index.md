@@ -38,7 +38,7 @@ Each row is one MIDI message.
 |---|---|
 | **#** | A running count of messages received |
 | **Message Time** | When the message arrived |
-| **Message** | The raw message data, with a coloured label naming the message underneath |
+| **Message** | The raw message data, with a colored label naming the message underneath |
 | **Group** | Which group the message came in on |
 | **Channel** | Which of the 16 MIDI channels the message is for |
 | **Details** | The message translated into plain terms, such as the note, velocity, or controller |
@@ -49,8 +49,8 @@ means a note, it simply tells you `Note 64 (E3)  Velocity 80`. Note numbers are 
 musical names, and well-known controllers are named too, so controller 10 appears as
 `Pan MSB`.
 
-The coloured label under each message is a quick visual cue. Notes, controllers, SysEx, and
-MIDI 2.0 messages each get their own colour, so a glance is often enough to see what kind of
+The colored label under each message is a quick visual cue. Notes, controllers, SysEx, and
+MIDI 2.0 messages each get their own color, so a glance is often enough to see what kind of
 traffic an instrument is sending.
 
 ## Narrowing down what you see
@@ -79,7 +79,7 @@ whichever form is most useful:
 - **Copy as SysEx bytes** gives you just the SysEx contents, handy for pasting into a patch
   librarian, a forum post, or an email to a manufacturer's support desk.
 
-Commands that don't apply to what you've selected are greyed out, so if **Copy as SysEx bytes**
+Commands that don't apply to what you've selected are grayed out, so if **Copy as SysEx bytes**
 is unavailable, there's no SysEx in your selection.
 
 **Select All SysEx 7** picks out every SysEx message in the capture in one go. If you've just
@@ -133,15 +133,15 @@ The gear button at the bottom left opens the settings.
 ![The settings panel]({{ site.baseurl }}/assets/images/midi2monitor-settings.png)
 
 **Appearance** sets whether the app follows your Windows light or dark mode, and which window
-background to use. Mica and Acrylic pick up colours from your desktop; Acrylic is the one that
+background to use. Mica and Acrylic pick up colors from your desktop; Acrylic is the one that
 lets what's behind the window show through, which some people like when the monitor sits on top
 of a DAW.
 
-Tick **Use a custom background colour** to pick your own colour for the window. It works with all
-three backgrounds, though each treats it a little differently: Solid uses exactly the colour you
+Tick **Use a custom background color** to pick your own color for the window. It works with all
+three backgrounds, though each treats it a little differently: Solid uses exactly the color you
 choose, Mica blends it with your desktop wallpaper, and Acrylic gives the gentlest tint of the
 three because it is still letting what's behind the window through. If you keep more than one
-monitor window open at a time, giving each one its own colour makes it easy to tell at a glance
+monitor window open at a time, giving each one its own color makes it easy to tell at a glance
 which instrument you're looking at.
 
 **Messages to keep** sets how many messages are held before the oldest start being discarded.

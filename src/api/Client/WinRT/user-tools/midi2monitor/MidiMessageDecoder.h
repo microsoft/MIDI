@@ -115,7 +115,7 @@ namespace midi2monitor
     // ---------------------------------------------------------------------------------------
 
     // Decoded content, split into localized labels and their values. Keeping them apart lets the
-    // UI colour the values without any parsing, and keeps the labels translatable.
+    // UI color the values without any parsing, and keeps the labels translatable.
     struct DecodedFields
     {
         static constexpr size_t MaxFields = 4;
@@ -145,6 +145,6 @@ namespace midi2monitor
     // Human readable contents of the message, empty when we have no decoder for it
     DecodedFields DecodeMessage(MessageRecord const& record) noexcept;
 
-    // 0-7, used to pick the chiclet colour for the message type
+    // 0-7, used to pick the chiclet color for the message type
     uint32_t GetMessageTypeColorIndex(uint8_t messageType) noexcept;
 }

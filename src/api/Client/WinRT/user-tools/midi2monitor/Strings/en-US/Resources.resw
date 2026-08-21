@@ -439,10 +439,10 @@ Examples
     <value>Appearance</value>
   </data>
   <data name="SettingsThemeDescription.Text" xml:space="preserve">
-    <value>Choose whether the app follows your Windows app colour mode, or always uses light or dark.</value>
+    <value>Choose whether the app follows your Windows app color mode, or always uses light or dark.</value>
   </data>
   <data name="SettingsThemePicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>App colour mode</value>
+    <value>App color mode</value>
   </data>
   <data name="SettingsThemeSystem.Content" xml:space="preserve">
     <value>Use my Windows setting</value>
@@ -454,7 +454,7 @@ Examples
     <value>Dark</value>
   </data>
   <data name="SettingsBackdropDescription.Text" xml:space="preserve">
-    <value>The window background. Mica and Acrylic pick up the colours behind the window.</value>
+    <value>The window background. Mica and Acrylic pick up the colors behind the window.</value>
   </data>
   <data name="SettingsBackdropPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Window background</value>
@@ -470,10 +470,10 @@ Examples
   </data>
 
   <data name="SettingsCustomBackgroundColorCheckBox.Content" xml:space="preserve">
-    <value>Use a custom background colour</value>
+    <value>Use a custom background color</value>
   </data>
   <data name="SettingsBackgroundColorPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Background colour</value>
+    <value>Background color</value>
   </data>
   <data name="SettingsCaptureHeader.Text" xml:space="preserve">    <value>Capture</value>
   </data>
