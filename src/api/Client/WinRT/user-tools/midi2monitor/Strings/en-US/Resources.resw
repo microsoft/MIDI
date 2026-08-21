@@ -469,6 +469,12 @@ Examples
     <value>Acrylic</value>
   </data>
 
+  <data name="SettingsCustomBackgroundColorCheckBox.Content" xml:space="preserve">
+    <value>Use a custom background colour</value>
+  </data>
+  <data name="SettingsBackgroundColorPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Background colour</value>
+  </data>
   <data name="SettingsCaptureHeader.Text" xml:space="preserve">    <value>Capture</value>
   </data>
   <data name="SettingsRetentionDescription.Text" xml:space="preserve">

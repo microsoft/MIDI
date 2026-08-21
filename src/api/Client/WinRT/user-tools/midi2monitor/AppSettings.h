@@ -69,6 +69,13 @@ namespace midi2monitor
         WindowBackdrop Backdrop() const noexcept { return m_backdrop; }
         void Backdrop(WindowBackdrop value) noexcept;
 
+        bool UseCustomBackgroundColor() const noexcept { return m_useCustomBackgroundColor; }
+        void UseCustomBackgroundColor(bool value) noexcept;
+
+        // 0xAARRGGBB
+        uint32_t BackgroundColorArgb() const noexcept { return m_backgroundColorArgb; }
+        void BackgroundColorArgb(uint32_t value) noexcept;
+
         uint32_t RetainedMessageCount() const noexcept { return m_retainedMessageCount; }
         void RetainedMessageCount(uint32_t value) noexcept;
 
@@ -123,6 +130,8 @@ namespace midi2monitor
         TimestampDisplayFormat m_timestampFormat{ TimestampDisplayFormat::Ticks };
         AppTheme m_theme{ AppTheme::System };
         WindowBackdrop m_backdrop{ WindowBackdrop::Solid };
+        bool m_useCustomBackgroundColor{ false };
+        uint32_t m_backgroundColorArgb{ 0xFF202020 };
         uint32_t m_retainedMessageCount{ DefaultRetainedMessageCount };
         uint32_t m_tableZoomPercent{ DefaultZoomPercent };
         std::wstring m_columnLayout{};

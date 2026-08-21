@@ -293,6 +293,17 @@ namespace winrt::midi2monitor::implementation
                 }
             }
 
+            // A device id on the command line means "watch this now". Flag it before the
+            // selection is assigned, because that synchronously rebuilds the group list.
+            if (selectedIndex >= 0 &&
+                !m_startupMonitorHandled &&
+                previousSelection.empty() &&
+                !options.EndpointDeviceId.empty())
+            {
+                m_startupMonitorHandled = true;
+                m_startupMonitorPending = true;
+            }
+
             EndpointComboBox().SelectedIndex(selectedIndex);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to refresh the endpoint list.")
@@ -465,6 +476,14 @@ namespace winrt::midi2monitor::implementation
             GroupComboBox().SelectedIndex(selectedIndex);
 
             ApplyFilterToPipeline();
+
+            // started here rather than at launch, so the group and channel filters are already
+            // in place for the first message
+            if (m_startupMonitorPending && !m_monitoring && !m_connecting)
+            {
+                m_startupMonitorPending = false;
+                StartMonitoring();
+            }
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to refresh the group list.")
     }

@@ -23,10 +23,13 @@ namespace winrt::midi2monitor::implementation
 
         void OnThemeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnBackdropChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnUseCustomBackgroundColorChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnBackgroundColorChanged(controls::ColorPicker const& sender, controls::ColorChangedEventArgs const& args);
         void OnRetentionChanged(foundation::IInspectable const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnResetColumnsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
     private:
+        void UpdateBackgroundColorState() noexcept;
         midi2monitor::MainWindow m_owner{ nullptr };
         bool m_initialized{ false };
         bool m_initializing{ true };
