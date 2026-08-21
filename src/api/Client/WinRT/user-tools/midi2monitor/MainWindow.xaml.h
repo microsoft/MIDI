@@ -64,6 +64,7 @@ namespace winrt::midi2monitor::implementation
         // called by the settings dialog
         void ApplyTheme() noexcept;
         void ApplyBackdrop() noexcept;
+        void ApplyBackgroundColor() noexcept;
         void ApplyRetention() noexcept;
         void ApplyMessageNameSetting() noexcept;
         void RefreshColumnsAfterReset() noexcept;
@@ -73,6 +74,8 @@ namespace winrt::midi2monitor::implementation
 
     private:
         void InitializeWindowChrome() noexcept;
+        void ReleaseBackdropControllers() noexcept;
+        void UpdateBackdropConfiguration() noexcept;
         void SaveWindowPlacement() noexcept;
         void UpdateTitleBarInsets() noexcept;
         void ApplyTitleBarColors() noexcept;
@@ -164,6 +167,13 @@ namespace winrt::midi2monitor::implementation
         bool m_startupMonitorPending{ false };
         bool m_backdropApplied{ false };
         ::midi2monitor::WindowBackdrop m_appliedBackdrop{ ::midi2monitor::WindowBackdrop::Solid };
+
+        // the material is driven through the controllers rather than the XAML SystemBackdrop
+        // property, because only the controllers expose TintColor
+        winrt::Microsoft::UI::Composition::SystemBackdrops::SystemBackdropConfiguration m_backdropConfiguration{ nullptr };
+        winrt::Microsoft::UI::Composition::SystemBackdrops::MicaController m_micaController{ nullptr };
+        winrt::Microsoft::UI::Composition::SystemBackdrops::DesktopAcrylicController m_acrylicController{ nullptr };
+        winrt::event_token m_activatedToken{};
         bool m_captureButtonStacked{ false };
         bool m_suppressSelectionHandling{ false };
         bool m_suppressZoomHandling{ false };

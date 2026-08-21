@@ -9,6 +9,17 @@
     mc:Ignorable="d">
 
     <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.Resources>
+            <!-- BasedOn matters: an explicit presenter style replaces the implicit one outright,
+                 which loses the rounded corners, border and padding -->
+            <Style x:Key="SettingsFlyoutPresenterStyle"
+                   TargetType="FlyoutPresenter"
+                   BasedOn="{StaticResource DefaultFlyoutPresenterStyle}">
+                <Setter Property="MaxWidth" Value="680" />
+                <Setter Property="MaxHeight" Value="760" />
+            </Style>
+        </Grid.Resources>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -21,6 +32,13 @@
                 Grid.Row="0"
                 Grid.RowSpan="4"
                 Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default colour just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Visibility="Collapsed" />
 
         <!-- ============================ Title bar drag region ============================ -->
         <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">

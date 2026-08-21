@@ -22,11 +22,24 @@
 
 namespace native = ::midi2monitor;
 namespace res = ::midi2monitor::resources;
+namespace backdrops = ::winrt::Microsoft::UI::Composition::SystemBackdrops;
 
 namespace winrt::midi2monitor::implementation
 {
     namespace
     {
+        winrt::Windows::UI::Color ColorFromArgb(uint32_t argb) noexcept
+        {
+            winrt::Windows::UI::Color color{};
+
+            color.A = static_cast<uint8_t>((argb >> 24) & 0xFF);
+            color.R = static_cast<uint8_t>((argb >> 16) & 0xFF);
+            color.G = static_cast<uint8_t>((argb >> 8) & 0xFF);
+            color.B = static_cast<uint8_t>(argb & 0xFF);
+
+            return color;
+        }
+
         // accepts "125" and "125%", with surrounding spaces
         bool TryParseZoomText(std::wstring_view text, uint32_t& percent) noexcept
         {
@@ -156,6 +169,7 @@ namespace winrt::midi2monitor::implementation
                         strong->StopMonitoring(false);
                         strong->StopEndpointWatcher();
                         strong->m_pipeline.Stop();
+                        strong->ReleaseBackdropControllers();
                     }
                 });
         }
@@ -268,35 +282,156 @@ namespace winrt::midi2monitor::implementation
         {
             auto const backdrop = native::AppSettings::Current().Backdrop();
 
-            // Assigning a new backdrop object tears the material down and rebuilds it, which
-            // flickers. Only do it when the material actually changes.
+            // Rebuilding the material tears it down and flickers. Only do it when it changes.
             if (!m_backdropApplied || m_appliedBackdrop != backdrop)
             {
-                switch (backdrop)
+                ReleaseBackdropControllers();
+
+                auto const target = try_as<winrt::Microsoft::UI::Composition::ICompositionSupportsSystemBackdrop>();
+
+                if (target != nullptr)
                 {
-                case native::WindowBackdrop::Mica:
-                    SystemBackdrop(media::MicaBackdrop{});
-                    break;
+                    if (m_backdropConfiguration == nullptr)
+                    {
+                        m_backdropConfiguration = backdrops::SystemBackdropConfiguration{};
+                        m_backdropConfiguration.IsInputActive(true);
 
-                case native::WindowBackdrop::Acrylic:
-                    SystemBackdrop(media::DesktopAcrylicBackdrop{});
-                    break;
+                        // the material dims when the window is not the active one
+                        m_activatedToken = Activated([weak = get_weak()](auto&&, xaml::WindowActivatedEventArgs const& args)
+                            {
+                                auto strong = weak.get();
 
-                default:
-                    SystemBackdrop(nullptr);
-                    break;
+                                if (strong != nullptr && strong->m_backdropConfiguration != nullptr)
+                                {
+                                    strong->m_backdropConfiguration.IsInputActive(
+                                        args.WindowActivationState() != xaml::WindowActivationState::Deactivated);
+                                }
+                            });
+                    }
+
+                    switch (backdrop)
+                    {
+                    case native::WindowBackdrop::Mica:
+                        if (backdrops::MicaController::IsSupported())
+                        {
+                            m_micaController = backdrops::MicaController{};
+                            m_micaController.SetSystemBackdropConfiguration(m_backdropConfiguration);
+                            m_micaController.AddSystemBackdropTarget(target);
+                        }
+                        break;
+
+                    case native::WindowBackdrop::Acrylic:
+                        if (backdrops::DesktopAcrylicController::IsSupported())
+                        {
+                            m_acrylicController = backdrops::DesktopAcrylicController{};
+                            m_acrylicController.SetSystemBackdropConfiguration(m_backdropConfiguration);
+                            m_acrylicController.AddSystemBackdropTarget(target);
+                        }
+                        break;
+
+                    default:
+                        break;
+                    }
                 }
 
                 m_appliedBackdrop = backdrop;
                 m_backdropApplied = true;
             }
 
+            UpdateBackdropConfiguration();
+
             // a system material only shows if the window is not painting over it
             WindowFill().Visibility(backdrop == native::WindowBackdrop::Solid
                 ? xaml::Visibility::Visible
                 : xaml::Visibility::Collapsed);
+
+            ApplyBackgroundColor();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the window backdrop.")
+    }
+
+    void MainWindow::ReleaseBackdropControllers() noexcept
+    {
+        try
+        {
+            if (m_micaController != nullptr)
+            {
+                m_micaController.Close();
+                m_micaController = nullptr;
+            }
+
+            if (m_acrylicController != nullptr)
+            {
+                m_acrylicController.Close();
+                m_acrylicController = nullptr;
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to release the window backdrop.")
+    }
+
+    void MainWindow::UpdateBackdropConfiguration() noexcept
+    {
+        try
+        {
+            if (m_backdropConfiguration == nullptr)
+            {
+                return;
+            }
+
+            m_backdropConfiguration.Theme(RootGrid().ActualTheme() == xaml::ElementTheme::Dark
+                ? backdrops::SystemBackdropTheme::Dark
+                : backdrops::SystemBackdropTheme::Light);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the window backdrop configuration.")
+    }
+
+    void MainWindow::ApplyBackgroundColor() noexcept
+    {
+        try
+        {
+            auto const& settings = native::AppSettings::Current();
+
+            auto const useCustom = settings.UseCustomBackgroundColor();
+            auto const color = ColorFromArgb(settings.BackgroundColorArgb());
+
+            // Solid has no material to tint, so the colour goes on a layer of its own. Mica and
+            // Acrylic take it as the material's tint instead, which keeps their texture.
+            auto const showTint = useCustom && settings.Backdrop() == native::WindowBackdrop::Solid;
+
+            if (showTint)
+            {
+                WindowTint().Background(media::SolidColorBrush{ color });
+            }
+
+            WindowTint().Visibility(showTint ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            if (m_micaController != nullptr)
+            {
+                if (useCustom)
+                {
+                    m_micaController.TintColor(color);
+                    m_micaController.FallbackColor(color);
+                }
+                else
+                {
+                    m_micaController.ResetProperties();
+                }
+            }
+
+            if (m_acrylicController != nullptr)
+            {
+                if (useCustom)
+                {
+                    m_acrylicController.TintColor(color);
+                    m_acrylicController.FallbackColor(color);
+                }
+                else
+                {
+                    m_acrylicController.ResetProperties();
+                }
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the background colour.")
     }
 
     _Use_decl_annotations_
@@ -1058,6 +1193,15 @@ namespace winrt::midi2monitor::implementation
             // a Flyout rather than a ContentDialog: it light dismisses, and picks up the
             // standard overlay corner radius and shadow for free
             controls::Flyout flyout{};
+
+            // the stock presenter caps out narrower than the colour picker needs
+            auto const resources = RootGrid().Resources();
+            auto const presenterStyleKey = winrt::box_value(L"SettingsFlyoutPresenterStyle");
+
+            if (resources.HasKey(presenterStyleKey))
+            {
+                flyout.FlyoutPresenterStyle(resources.Lookup(presenterStyleKey).as<xaml::Style>());
+            }
 
             flyout.Content(content.as<xaml::UIElement>());
             flyout.Placement(controls::Primitives::FlyoutPlacementMode::TopEdgeAlignedLeft);

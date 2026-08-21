@@ -11,8 +11,12 @@
 
     <ScrollViewer x:Name="RootScrollViewer"
                   VerticalScrollBarVisibility="Auto"
-                  MaxHeight="520">
-        <StackPanel Spacing="20" Width="400" HorizontalAlignment="Left">
+                  MaxHeight="640">
+        <!-- the left inset keeps focus rectangles, which draw outside the control bounds, from
+             being clipped by the scroll region; the right one leaves room for the scrollbar.
+             The width has to fit the horizontal colour picker, which clips its channel labels
+             rather than wrapping them when it is squeezed -->
+        <StackPanel Spacing="20" Width="560" Margin="4,0,16,0" HorizontalAlignment="Left">
 
             <TextBlock x:Uid="SettingsPageTitle"
                        Text="Settings"
@@ -51,6 +55,27 @@
                     <ComboBoxItem x:Uid="SettingsBackdropMica" Content="Mica" />
                     <ComboBoxItem x:Uid="SettingsBackdropAcrylic" Content="Acrylic" />
                 </ComboBox>
+
+                <CheckBox x:Name="CustomBackgroundColorCheckBox"
+                          x:Uid="SettingsCustomBackgroundColorCheckBox"
+                          Content="Use a custom background colour"
+                          Checked="OnUseCustomBackgroundColorChanged"
+                          Unchecked="OnUseCustomBackgroundColorChanged" />
+
+                <!-- the stock Horizontal visual state pins the picker to a 312px minimum, ~56px
+                     more than it draws, and the value comes from generic.xaml via StaticResource
+                     so it cannot be overridden; take the reserved space back here -->
+                <ColorPicker x:Name="BackgroundColorPicker"
+                             x:Uid="SettingsBackgroundColorPicker"
+                             IsAlphaEnabled="False"
+                             IsColorSliderVisible="True"
+                             IsColorChannelTextInputVisible="True"
+                             IsHexInputVisible="True"
+                             ColorSpectrumShape="Box"
+                             Orientation="Horizontal"
+                             HorizontalAlignment="Left"
+                             Margin="0,0,0,-56"
+                             ColorChanged="OnBackgroundColorChanged" />
             </StackPanel>
 
             <StackPanel Spacing="8">

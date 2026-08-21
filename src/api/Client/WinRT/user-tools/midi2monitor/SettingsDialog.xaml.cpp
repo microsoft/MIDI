@@ -36,6 +36,20 @@ namespace winrt::midi2monitor::implementation
 
             ThemeComboBox().SelectedIndex(static_cast<int32_t>(settings.Theme()));
             BackdropComboBox().SelectedIndex(static_cast<int32_t>(settings.Backdrop()));
+
+            CustomBackgroundColorCheckBox().IsChecked(settings.UseCustomBackgroundColor());
+
+            auto const argb = settings.BackgroundColorArgb();
+
+            winrt::Windows::UI::Color color{};
+
+            color.A = 255;
+            color.R = static_cast<uint8_t>((argb >> 16) & 0xFF);
+            color.G = static_cast<uint8_t>((argb >> 8) & 0xFF);
+            color.B = static_cast<uint8_t>(argb & 0xFF);
+
+            BackgroundColorPicker().Color(color);
+            UpdateBackgroundColorState();
             RetentionNumberBox().Value(static_cast<double>(settings.RetainedMessageCount()));
 
             VersionText().Text(res::FormatString(L"SettingsVersionFormat",
@@ -109,12 +123,77 @@ namespace winrt::midi2monitor::implementation
 
             native::AppSettings::Current().Backdrop(backdrop);
 
+            UpdateBackgroundColorState();
+
             if (m_owner != nullptr)
             {
                 winrt::get_self<MainWindow>(m_owner)->ApplyBackdrop();
             }
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the window backdrop.")
+    }
+
+    void SettingsDialog::UpdateBackgroundColorState() noexcept
+    {
+        try
+        {
+            auto const& settings = native::AppSettings::Current();
+
+            BackgroundColorPicker().IsEnabled(settings.UseCustomBackgroundColor());
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the background colour controls.")
+    }
+
+    _Use_decl_annotations_
+    void SettingsDialog::OnUseCustomBackgroundColorChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        if (m_initializing)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const isChecked = CustomBackgroundColorCheckBox().IsChecked();
+
+            native::AppSettings::Current().UseCustomBackgroundColor(isChecked != nullptr && isChecked.Value());
+
+            UpdateBackgroundColorState();
+
+            if (m_owner != nullptr)
+            {
+                winrt::get_self<MainWindow>(m_owner)->ApplyBackgroundColor();
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the custom background colour setting.")
+    }
+
+    _Use_decl_annotations_
+    void SettingsDialog::OnBackgroundColorChanged(controls::ColorPicker const&, controls::ColorChangedEventArgs const& args)
+    {
+        if (m_initializing)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const color = args.NewColor();
+
+            auto const argb =
+                (static_cast<uint32_t>(0xFF) << 24) |
+                (static_cast<uint32_t>(color.R) << 16) |
+                (static_cast<uint32_t>(color.G) << 8) |
+                static_cast<uint32_t>(color.B);
+
+            native::AppSettings::Current().BackgroundColorArgb(argb);
+
+            if (m_owner != nullptr)
+            {
+                winrt::get_self<MainWindow>(m_owner)->ApplyBackgroundColor();
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the background colour.")
     }
 
     _Use_decl_annotations_

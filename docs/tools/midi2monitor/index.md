@@ -137,6 +137,13 @@ background to use. Mica and Acrylic pick up colours from your desktop; Acrylic i
 lets what's behind the window show through, which some people like when the monitor sits on top
 of a DAW.
 
+Tick **Use a custom background colour** to pick your own colour for the window. It works with all
+three backgrounds, though each treats it a little differently: Solid uses exactly the colour you
+choose, Mica blends it with your desktop wallpaper, and Acrylic gives the gentlest tint of the
+three because it is still letting what's behind the window through. If you keep more than one
+monitor window open at a time, giving each one its own colour makes it easy to tell at a glance
+which instrument you're looking at.
+
 **Messages to keep** sets how many messages are held before the oldest start being discarded.
 The default of 10,000 is plenty for normal use. Raise it if you're capturing a long session, and
 bear in mind that a larger number uses more memory.

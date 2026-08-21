@@ -20,6 +20,8 @@ namespace midi2monitor
         constexpr wchar_t ValueTimestampFormat[] = L"TimestampFormat";
         constexpr wchar_t ValueTheme[] = L"Theme";
         constexpr wchar_t ValueBackdrop[] = L"WindowBackdrop";
+        constexpr wchar_t ValueUseCustomBackgroundColor[] = L"UseCustomBackgroundColor";
+        constexpr wchar_t ValueBackgroundColor[] = L"BackgroundColorArgb";
         constexpr wchar_t ValueRetainedMessageCount[] = L"RetainedMessageCount";
         constexpr wchar_t ValueShowChiclets[] = L"ShowMessageNameChiclets";
         constexpr wchar_t ValueAutoHideColumns[] = L"AutoHideColumnsWhenNarrow";
@@ -86,6 +88,9 @@ namespace midi2monitor
             ? static_cast<WindowBackdrop>(backdrop)
             : WindowBackdrop::Solid;
 
+        m_useCustomBackgroundColor = ReadDword(ValueUseCustomBackgroundColor, 0) != 0;
+        m_backgroundColorArgb = ReadDword(ValueBackgroundColor, 0xFF202020);
+
         auto const retained = ReadDword(ValueRetainedMessageCount, DefaultRetainedMessageCount);
         m_retainedMessageCount = std::clamp(retained, MinimumRetainedMessageCount, MaximumRetainedMessageCount);
 
@@ -101,6 +106,20 @@ namespace midi2monitor
         m_windowPlacement.Maximized = ReadDword(ValueWindowMaximized, 0) != 0;
         m_windowPlacement.Valid =
             m_windowPlacement.Width >= MinimumWindowWidth && m_windowPlacement.Height >= MinimumWindowHeight;
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::UseCustomBackgroundColor(bool value) noexcept
+    {
+        m_useCustomBackgroundColor = value;
+        WriteDword(ValueUseCustomBackgroundColor, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::BackgroundColorArgb(uint32_t value) noexcept
+    {
+        m_backgroundColorArgb = value;
+        WriteDword(ValueBackgroundColor, value);
     }
 
     _Use_decl_annotations_
