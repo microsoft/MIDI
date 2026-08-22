@@ -229,6 +229,122 @@
   <data name="SendSucceededFormat" xml:space="preserve">
     <value>Sent {0} words</value>
   </data>
+  <data name="SendSucceededMidi1Format" xml:space="preserve">
+    <value>Sent {0} bytes as {1} UMP words</value>
+  </data>
+  <data name="SendSucceededUmpFormat" xml:space="preserve">
+    <value>Sent {0} UMP words</value>
+  </data>
+  <data name="UmpGroupPicker.Header" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="UmpChannelPicker.Header" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="UmpNotePicker.Header" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="UmpControllerPicker.Header" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="Midi2NotesExpander.Header" xml:space="preserve">
+    <value>MIDI 2.0 notes</value>
+  </data>
+  <data name="Midi2VelocityBox.Header" xml:space="preserve">
+    <value>Velocity (16 bit)</value>
+  </data>
+  <data name="AddMidi2NoteOnButton.Content" xml:space="preserve">
+    <value>Note On</value>
+  </data>
+  <data name="AddMidi2NoteOffButton.Content" xml:space="preserve">
+    <value>Note Off</value>
+  </data>
+  <data name="Midi2ControlChangeExpander.Header" xml:space="preserve">
+    <value>MIDI 2.0 control change</value>
+  </data>
+  <data name="Midi2ControllerValueBox.Header" xml:space="preserve">
+    <value>Value (32 bit)</value>
+  </data>
+  <data name="AddMidi2ControlChangeButton.Content" xml:space="preserve">
+    <value>Add control change</value>
+  </data>
+  <data name="Midi1InUmpExpander.Header" xml:space="preserve">
+    <value>MIDI 1.0 in UMP</value>
+  </data>
+  <data name="Midi1VelocityBox.Header" xml:space="preserve">
+    <value>Velocity (7 bit)</value>
+  </data>
+  <data name="AddMidi1NoteOnButton.Content" xml:space="preserve">
+    <value>Note On</value>
+  </data>
+  <data name="AddMidi1NoteOffButton.Content" xml:space="preserve">
+    <value>Note Off</value>
+  </data>
+  <data name="Midi1ControllerValueBox.Header" xml:space="preserve">
+    <value>Value (7 bit)</value>
+  </data>
+  <data name="AddMidi1ControlChangeButton.Content" xml:space="preserve">
+    <value>Add control change</value>
+  </data>
+  <data name="EndpointDiscoveryExpander.Header" xml:space="preserve">
+    <value>Endpoint discovery</value>
+  </data>
+  <data name="DiscoverEndpointInfoCheck.Content" xml:space="preserve">
+    <value>Endpoint info</value>
+  </data>
+  <data name="DiscoverDeviceIdentityCheck.Content" xml:space="preserve">
+    <value>Device identity</value>
+  </data>
+  <data name="DiscoverEndpointNameCheck.Content" xml:space="preserve">
+    <value>Endpoint name</value>
+  </data>
+  <data name="DiscoverProductInstanceIdCheck.Content" xml:space="preserve">
+    <value>Product instance id</value>
+  </data>
+  <data name="DiscoverStreamConfigurationCheck.Content" xml:space="preserve">
+    <value>Stream configuration</value>
+  </data>
+  <data name="AddEndpointDiscoveryButton.Content" xml:space="preserve">
+    <value>Add discovery request</value>
+  </data>
+  <data name="SysEx7Expander.Header" xml:space="preserve">
+    <value>System exclusive 7</value>
+  </data>
+  <data name="SysEx7Note.Text" xml:space="preserve">
+    <value>Inserts a packet with zeroed data bytes, ready to edit.</value>
+  </data>
+  <data name="AddSysEx7CompleteButton.Content" xml:space="preserve">
+    <value>Complete in one packet</value>
+  </data>
+  <data name="AddSysEx7StartButton.Content" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="AddSysEx7ContinueButton.Content" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="AddSysEx7EndButton.Content" xml:space="preserve">
+    <value>End</value>
+  </data>
+
+  <data name="AddMidi2NoteOnButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI 2.0 note on</value>
+  </data>
+  <data name="AddMidi2NoteOffButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI 2.0 note off</value>
+  </data>
+  <data name="AddMidi2ControlChangeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add MIDI 2.0 control change</value>
+  </data>
+  <data name="AddMidi1NoteOnButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI 1.0 note on</value>
+  </data>
+  <data name="AddMidi1NoteOffButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI 1.0 note off</value>
+  </data>
+  <data name="AddMidi1ControlChangeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add MIDI 1.0 control change</value>
+  </data>
+
   <data name="SendErrorNoEndpoint" xml:space="preserve">
     <value>Choose a MIDI device first</value>
   </data>

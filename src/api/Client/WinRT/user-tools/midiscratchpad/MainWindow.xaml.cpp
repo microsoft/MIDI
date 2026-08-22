@@ -206,6 +206,53 @@ namespace winrt::midiscratchpad::implementation
 
             ControllerValueComboBox().ItemsSource(controllerValues);
             ControllerValueComboBox().SelectedIndex(64);
+
+            // the UMP rail shows the same declared groups as the header picker, because the
+            // group still has to be one the endpoint actually has
+            UmpGroupComboBox().ItemsSource(m_groups);
+
+            auto umpChannels = winrt::single_threaded_vector<foundation::IInspectable>();
+            for (int32_t channel = 1; channel <= 16; channel++)
+            {
+                umpChannels.Append(winrt::box_value(res::FormatString(L"ChannelChoiceFormat", channel)));
+            }
+            UmpChannelComboBox().ItemsSource(umpChannels);
+            UmpChannelComboBox().SelectedIndex(0);
+
+            auto umpNotes = winrt::single_threaded_vector<foundation::IInspectable>();
+            auto umpControllers = winrt::single_threaded_vector<foundation::IInspectable>();
+
+            for (uint8_t i = 0; i < 128; i++)
+            {
+                umpNotes.Append(winrt::box_value(winrt::hstring{ NoteDisplayName(i) }));
+                umpControllers.Append(winrt::box_value(winrt::hstring{ ControllerDisplayName(i) }));
+            }
+
+            UmpNoteComboBox().ItemsSource(umpNotes);
+            UmpNoteComboBox().SelectedIndex(60);
+
+            UmpControllerComboBox().ItemsSource(umpControllers);
+            UmpControllerComboBox().SelectedIndex(7);
+
+            // the MIDI 1.0 sections carry their own pickers rather than borrowing the MIDI 2.0
+            // ones, which could be collapsed out of sight
+            auto midi1Notes = winrt::single_threaded_vector<foundation::IInspectable>();
+            auto midi1Controllers = winrt::single_threaded_vector<foundation::IInspectable>();
+
+            for (uint8_t i = 0; i < 128; i++)
+            {
+                midi1Notes.Append(winrt::box_value(winrt::hstring{ NoteDisplayName(i) }));
+                midi1Controllers.Append(winrt::box_value(winrt::hstring{ ControllerDisplayName(i) }));
+            }
+
+            Midi1NoteComboBox().ItemsSource(midi1Notes);
+            Midi1NoteComboBox().SelectedIndex(60);
+
+            Midi1ControllerComboBox().ItemsSource(midi1Controllers);
+            Midi1ControllerComboBox().SelectedIndex(7);
+
+            // set in code: the XAML literal is parsed as float, which rounds 0xFFFFFFFF up to 2^32
+            Midi2ControllerValueBox().Maximum(4294967295.0);
         }
         MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the pick lists.")
     }
@@ -448,6 +495,9 @@ namespace winrt::midiscratchpad::implementation
             }
 
             GroupComboBox().SelectedIndex(selectedIndex);
+
+            // the UMP rail shares the item list, so it needs its own selection kept valid
+            UmpGroupComboBox().SelectedIndex(m_groups.Size() > 0 ? std::max(selectedIndex, 0) : -1);
         }
         MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to refresh the group list.")
     }
@@ -594,11 +644,11 @@ namespace winrt::midiscratchpad::implementation
 
             RunningStatusToggle().Visibility(isMidi1 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
-            // the insert helpers all emit MIDI 1.0 bytes
+            // each mode gets its own insert rail; the MIDI 1.0 helpers emit bytes, the UMP
+            // helpers emit whole packets
             InsertRail().Visibility(isMidi1 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-            InsertRailColumn().Width(isMidi1
-                ? xaml::GridLength{ 1.0, xaml::GridUnitType::Auto }
-                : xaml::GridLength{ 0.0, xaml::GridUnitType::Pixel });
+            UmpInsertRail().Visibility(isMidi1 ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            InsertRailColumn().Width(xaml::GridLength{ 1.0, xaml::GridUnitType::Auto });
 
             EditorTextBox().PlaceholderText(res::GetString(
                 isMidi1 ? L"EditorPlaceholderMidi1" : L"EditorPlaceholderUmp"));
@@ -841,6 +891,216 @@ namespace winrt::midiscratchpad::implementation
     }
 
     // ------------------------------------------------------------------------------------
+    // UMP insert helpers
+    // ------------------------------------------------------------------------------------
+
+    midi2::MidiGroup MainWindow::UmpGroup() noexcept
+    {
+        try
+        {
+            if (auto const choice = UmpGroupComboBox().SelectedItem().try_as<appshared::NamedChoice>())
+            {
+                // the list holds group numbers, 1 to 16, not indexes
+                auto const number = std::clamp(choice.Value(), 1, 16);
+                return midi2::MidiGroup{ static_cast<uint8_t>(number - 1) };
+            }
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to read the UMP group.")
+
+        return midi2::MidiGroup{ static_cast<uint8_t>(0) };
+    }
+
+    midi2::MidiChannel MainWindow::UmpChannel() noexcept
+    {
+        return midi2::MidiChannel{ static_cast<uint8_t>(SelectedIndexOrZero(UmpChannelComboBox())) };
+    }
+
+    // The SDK builders own the bit packing, so the words here match what the rest of Windows
+    // MIDI Services would put on the wire.
+    void MainWindow::AppendPacket(midi2::IMidiUniversalPacket const& packet) noexcept
+    {
+        try
+        {
+            if (packet == nullptr)
+            {
+                return;
+            }
+
+            auto packets = winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
+            packets.Append(packet);
+
+            auto const words = midi2msg::MidiMessageHelper::GetWordListFromPacketList(packets);
+
+            if (words == nullptr || words.Size() == 0)
+            {
+                return;
+            }
+
+            std::wstring text{};
+
+            for (auto const word : words)
+            {
+                if (!text.empty())
+                {
+                    text += L" ";
+                }
+
+                text += std::format(L"{:08X}", word);
+            }
+
+            AppendText(text);
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to insert the UMP message.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddMidi2NoteOn(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const note = static_cast<uint16_t>(SelectedIndexOrZero(UmpNoteComboBox()));
+            auto const velocity = static_cast<uint32_t>(Midi2VelocityBox().Value()) << 16;
+
+            AppendPacket(midi2msg::MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
+                0, UmpGroup(), midi2msg::Midi2ChannelVoiceMessageStatus::NoteOn, UmpChannel(),
+                static_cast<uint16_t>(note << 8), velocity));
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the MIDI 2.0 note on.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddMidi2NoteOff(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const note = static_cast<uint16_t>(SelectedIndexOrZero(UmpNoteComboBox()));
+            auto const velocity = static_cast<uint32_t>(Midi2VelocityBox().Value()) << 16;
+
+            AppendPacket(midi2msg::MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
+                0, UmpGroup(), midi2msg::Midi2ChannelVoiceMessageStatus::NoteOff, UmpChannel(),
+                static_cast<uint16_t>(note << 8), velocity));
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the MIDI 2.0 note off.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddMidi2ControlChange(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const controller = static_cast<uint16_t>(SelectedIndexOrZero(UmpControllerComboBox()));
+            auto const value = static_cast<uint32_t>(Midi2ControllerValueBox().Value());
+
+            AppendPacket(midi2msg::MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
+                0, UmpGroup(), midi2msg::Midi2ChannelVoiceMessageStatus::ControlChange, UmpChannel(),
+                static_cast<uint16_t>(controller << 8), value));
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the MIDI 2.0 control change.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddMidi1UmpNoteOn(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            AppendPacket(midi2msg::MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
+                0, UmpGroup(), midi2msg::Midi1ChannelVoiceMessageStatus::NoteOn, UmpChannel(),
+                static_cast<uint8_t>(SelectedIndexOrZero(Midi1NoteComboBox())),
+                static_cast<uint8_t>(Midi1VelocityBox().Value())));
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the MIDI 1.0 note on.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddMidi1UmpNoteOff(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            AppendPacket(midi2msg::MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
+                0, UmpGroup(), midi2msg::Midi1ChannelVoiceMessageStatus::NoteOff, UmpChannel(),
+                static_cast<uint8_t>(SelectedIndexOrZero(Midi1NoteComboBox())), 0));
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the MIDI 1.0 note off.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddMidi1UmpControlChange(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            AppendPacket(midi2msg::MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
+                0, UmpGroup(), midi2msg::Midi1ChannelVoiceMessageStatus::ControlChange, UmpChannel(),
+                static_cast<uint8_t>(SelectedIndexOrZero(Midi1ControllerComboBox())),
+                static_cast<uint8_t>(Midi1ControllerValueBox().Value())));
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the MIDI 1.0 control change.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddEndpointDiscovery(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto requests = midi2msg::MidiEndpointDiscoveryRequests::None;
+
+            auto const add = [&requests](controls::CheckBox const& box, midi2msg::MidiEndpointDiscoveryRequests flag)
+                {
+                    auto const checked = box.IsChecked();
+
+                    if (checked != nullptr && checked.Value())
+                    {
+                        requests = static_cast<midi2msg::MidiEndpointDiscoveryRequests>(
+                            static_cast<uint32_t>(requests) | static_cast<uint32_t>(flag));
+                    }
+                };
+
+            add(DiscoverEndpointInfoCheck(), midi2msg::MidiEndpointDiscoveryRequests::RequestEndpointInfo);
+            add(DiscoverDeviceIdentityCheck(), midi2msg::MidiEndpointDiscoveryRequests::RequestDeviceIdentity);
+            add(DiscoverEndpointNameCheck(), midi2msg::MidiEndpointDiscoveryRequests::RequestEndpointName);
+            add(DiscoverProductInstanceIdCheck(), midi2msg::MidiEndpointDiscoveryRequests::RequestProductInstanceId);
+            add(DiscoverStreamConfigurationCheck(), midi2msg::MidiEndpointDiscoveryRequests::RequestStreamConfiguration);
+
+            // UMP 1.1, the version these endpoints negotiate with
+            AppendPacket(midi2msg::MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(0, 1, 1, requests));
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the endpoint discovery request.")
+    }
+
+    void MainWindow::AddSysEx7Packet(uint8_t status) noexcept
+    {
+        try
+        {
+            AppendPacket(midi2msg::MidiMessageBuilder::BuildSystemExclusive7Message(
+                0, UmpGroup(), status, 6, 0, 0, 0, 0, 0, 0));
+        }
+        MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to build the SysEx7 message.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddSysEx7Complete(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        AddSysEx7Packet(0);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddSysEx7Start(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        AddSysEx7Packet(1);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddSysEx7Continue(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        AddSysEx7Packet(2);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnAddSysEx7End(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        AddSysEx7Packet(3);
+    }
+
+    // ------------------------------------------------------------------------------------
     // Sending
     // ------------------------------------------------------------------------------------
 
@@ -958,7 +1218,11 @@ namespace winrt::midiscratchpad::implementation
                 return;
             }
 
-            ShowSendResult(res::FormatString(L"SendSucceededFormat", static_cast<int32_t>(words.size())), false);
+            ShowSendResult(isMidi1
+                ? res::FormatString(L"SendSucceededMidi1Format",
+                    static_cast<int32_t>(parsed.Bytes.size()), static_cast<int32_t>(words.size()))
+                : res::FormatString(L"SendSucceededUmpFormat", static_cast<int32_t>(words.size())),
+                false);
         }
         MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to send the messages.")
     }

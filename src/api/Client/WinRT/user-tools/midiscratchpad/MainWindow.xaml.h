@@ -41,6 +41,18 @@ namespace winrt::midiscratchpad::implementation
         void OnAddIdentityRequest(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAddEmptySysEx(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        void OnAddMidi2NoteOn(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddMidi2NoteOff(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddMidi2ControlChange(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddMidi1UmpNoteOn(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddMidi1UmpNoteOff(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddMidi1UmpControlChange(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddEndpointDiscovery(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddSysEx7Complete(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddSysEx7Start(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddSysEx7Continue(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddSysEx7End(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
         void OnClearClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSendAllClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSendSelectionClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -72,6 +84,11 @@ namespace winrt::midiscratchpad::implementation
         void UpdateWindowTitle() noexcept;
 
         void AppendText(std::wstring const& text) noexcept;
+        void AppendPacket(midi2::IMidiUniversalPacket const& packet) noexcept;
+        // the SysEx7 builder takes the raw status nibble: 0 complete, 1 start, 2 continue, 3 end
+        void AddSysEx7Packet(uint8_t status) noexcept;
+        midi2::MidiGroup UmpGroup() noexcept;
+        midi2::MidiChannel UmpChannel() noexcept;
         void SendText(winrt::hstring const& text, bool isSelection) noexcept;
         void ShowSendResult(winrt::hstring const& message, bool isError) noexcept;
 

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Window
     x:Class="midiscratchpad.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -229,7 +229,7 @@
                 </Grid>
             </Border>
 
-            <!-- ============================== Insert rail =============================== -->
+            <!-- ============================ MIDI 1.0 insert rail ========================= -->
             <ScrollViewer x:Name="InsertRail"
                           Grid.Column="1"
                           Width="230"
@@ -291,6 +291,153 @@
                         <StackPanel Spacing="6">
                             <Button x:Name="AddIdentityRequestButton" x:Uid="AddIdentityRequestButton" Content="Identity request" HorizontalAlignment="Stretch" Click="OnAddIdentityRequest" />
                             <Button x:Name="AddEmptySysExButton" x:Uid="AddEmptySysExButton" Content="Empty SysEx block" HorizontalAlignment="Stretch" Click="OnAddEmptySysEx" />
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ============================== UMP insert rail ============================ -->
+            <ScrollViewer x:Name="UmpInsertRail"
+                          Grid.Column="1"
+                          Width="248"
+                          Visibility="Collapsed"
+                          VerticalScrollBarVisibility="Auto"
+                          VerticalScrollMode="Auto">
+                <StackPanel Spacing="4" Margin="0,0,4,0">
+                    <TextBlock x:Uid="InsertHeader"
+                               Text="Insert"
+                               Margin="0,0,0,4"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                    <!-- the group is inside every UMP message, so it is picked here rather than
+                         in the header -->
+                    <ComboBox x:Name="UmpGroupComboBox"
+                              x:Uid="UmpGroupPicker"
+                              Header="Group"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="shared:NamedChoice">
+                                <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox x:Name="UmpChannelComboBox"
+                              x:Uid="UmpChannelPicker"
+                              Header="Channel"
+                              HorizontalAlignment="Stretch"
+                              Margin="0,0,0,4" />
+
+                    <Expander x:Uid="Midi2NotesExpander"
+                              Header="MIDI 2.0 notes"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch"
+                              IsExpanded="True">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="UmpNoteComboBox" x:Uid="UmpNotePicker" Header="Note" HorizontalAlignment="Stretch" />
+                            <NumberBox x:Name="Midi2VelocityBox"
+                                       x:Uid="Midi2VelocityBox"
+                                       Header="Velocity (16 bit)"
+                                       Value="32768"
+                                       Minimum="0"
+                                       Maximum="65535"
+                                       SpinButtonPlacementMode="Compact"
+                                       HorizontalAlignment="Stretch" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="AddMidi2NoteOnButton" x:Uid="AddMidi2NoteOnButton" Content="Note On" Click="OnAddMidi2NoteOn" />
+                                <Button x:Name="AddMidi2NoteOffButton" x:Uid="AddMidi2NoteOffButton" Content="Note Off" Click="OnAddMidi2NoteOff" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="Midi2ControlChangeExpander"
+                              Header="MIDI 2.0 control change"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="UmpControllerComboBox" x:Uid="UmpControllerPicker" Header="Controller" HorizontalAlignment="Stretch" />
+                            <NumberBox x:Name="Midi2ControllerValueBox"
+                                       x:Uid="Midi2ControllerValueBox"
+                                       Header="Value (32 bit)"
+                                       Value="0"
+                                       Minimum="0"
+                                       Maximum="4294967295"
+                                       SpinButtonPlacementMode="Compact"
+                                       HorizontalAlignment="Stretch" />
+                            <Button x:Name="AddMidi2ControlChangeButton" x:Uid="AddMidi2ControlChangeButton" Content="Add control change" HorizontalAlignment="Stretch" Click="OnAddMidi2ControlChange" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="Midi1NotesExpander"
+                              Header="MIDI 1.0 notes"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="Midi1NoteComboBox" x:Uid="Midi1NotePicker" Header="Note" HorizontalAlignment="Stretch" />
+                            <NumberBox x:Name="Midi1VelocityBox"
+                                       x:Uid="Midi1VelocityBox"
+                                       Header="Velocity (7 bit)"
+                                       Value="96"
+                                       Minimum="0"
+                                       Maximum="127"
+                                       SpinButtonPlacementMode="Compact"
+                                       HorizontalAlignment="Stretch" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="AddMidi1NoteOnButton" x:Uid="AddMidi1NoteOnButton" Content="Note On" Click="OnAddMidi1UmpNoteOn" />
+                                <Button x:Name="AddMidi1NoteOffButton" x:Uid="AddMidi1NoteOffButton" Content="Note Off" Click="OnAddMidi1UmpNoteOff" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="Midi1ControlChangeExpander"
+                              Header="MIDI 1.0 control change"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="Midi1ControllerComboBox" x:Uid="Midi1ControllerPicker" Header="Controller" HorizontalAlignment="Stretch" />
+                            <NumberBox x:Name="Midi1ControllerValueBox"
+                                       x:Uid="Midi1ControllerValueBox"
+                                       Header="Value (7 bit)"
+                                       Value="64"
+                                       Minimum="0"
+                                       Maximum="127"
+                                       SpinButtonPlacementMode="Compact"
+                                       HorizontalAlignment="Stretch" />
+                            <Button x:Name="AddMidi1ControlChangeButton" x:Uid="AddMidi1ControlChangeButton" Content="Add control change" HorizontalAlignment="Stretch" Click="OnAddMidi1UmpControlChange" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="EndpointDiscoveryExpander"
+                              Header="Endpoint discovery"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="2">
+                            <CheckBox x:Name="DiscoverEndpointInfoCheck" x:Uid="DiscoverEndpointInfoCheck" Content="Endpoint info" IsChecked="True" />
+                            <CheckBox x:Name="DiscoverDeviceIdentityCheck" x:Uid="DiscoverDeviceIdentityCheck" Content="Device identity" IsChecked="True" />
+                            <CheckBox x:Name="DiscoverEndpointNameCheck" x:Uid="DiscoverEndpointNameCheck" Content="Endpoint name" IsChecked="True" />
+                            <CheckBox x:Name="DiscoverProductInstanceIdCheck" x:Uid="DiscoverProductInstanceIdCheck" Content="Product instance id" IsChecked="True" />
+                            <CheckBox x:Name="DiscoverStreamConfigurationCheck" x:Uid="DiscoverStreamConfigurationCheck" Content="Stream configuration" IsChecked="True" />
+                            <Button x:Uid="AddEndpointDiscoveryButton"
+                                    Content="Add discovery request"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,8,0,0"
+                                    Click="OnAddEndpointDiscovery" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="SysEx7Expander"
+                              Header="System exclusive 7"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="6">
+                            <TextBlock x:Uid="SysEx7Note"
+                                       Text="Inserts a packet with zeroed data bytes, ready to edit."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Button x:Uid="AddSysEx7CompleteButton" Content="Complete in one packet" HorizontalAlignment="Stretch" Click="OnAddSysEx7Complete" />
+                            <Button x:Uid="AddSysEx7StartButton" Content="Start" HorizontalAlignment="Stretch" Click="OnAddSysEx7Start" />
+                            <Button x:Uid="AddSysEx7ContinueButton" Content="Continue" HorizontalAlignment="Stretch" Click="OnAddSysEx7Continue" />
+                            <Button x:Uid="AddSysEx7EndButton" Content="End" HorizontalAlignment="Stretch" Click="OnAddSysEx7End" />
                         </StackPanel>
                     </Expander>
                 </StackPanel>
