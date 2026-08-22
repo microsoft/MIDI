@@ -13,6 +13,10 @@
 #include "StringResources.h"
 #include "resource.h"
 
+// Capability key names, so the app can tell a compatible transport from an older one. Pure
+// preprocessor defines; the SDK includes the same header.
+#include "..\..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
+
 namespace native = ::midinetworksetup;
 namespace res = ::midinetworksetup::resources;
 
@@ -240,6 +244,14 @@ namespace winrt::midinetworksetup::implementation
 
             m_loaded = true;
 
+            // The network transport ships out of band today, and older builds are in the wild.
+            // Nothing here works against one which is missing or too old, so the app says so and
+            // stops rather than failing one operation at a time.
+            if (!VerifyTransportIsUsable())
+            {
+                return;
+            }
+
             if (native::NetworkConfigFile::Current().IsOverridden())
             {
                 SetRemoteStatus(res::FormatString(
@@ -255,9 +267,77 @@ namespace winrt::midinetworksetup::implementation
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }
 
-    _Use_decl_annotations_
-    void MainWindow::OnRootSizeChanged(foundation::IInspectable const&, xaml::SizeChangedEventArgs const&)
+    // The network transport is an out-of-band install today and older builds are still in use, so
+    // presence alone is not enough: the verbs this app relies on have to be there too. Anything
+    // missing means nothing on either page would work, and one clear message beats a series of
+    // individual failures.
+    bool MainWindow::VerifyTransportIsUsable() noexcept
     {
+        bool usable{ false };
+
+        try
+        {
+            if (midi2net::MidiNetworkTransportManager::IsTransportAvailable())
+            {
+                auto const transportId = midi2net::MidiNetworkTransportManager::TransportId();
+
+                static wchar_t const* const requiredCapabilities[]
+                {
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_MDNS,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_CUSTOM_ENDPOINT_NAME_ON_CREATE,
+                };
+
+                usable = true;
+
+                for (auto const& capability : requiredCapabilities)
+                {
+                    if (!winrt::Windows::Devices::Midi2::ServiceConfig::MidiServiceTransportPluginConfigManager::QueryCapability(transportId, capability))
+                    {
+                        TraceLoggingWrite(
+                            MidiNetworkSetupTelemetryProvider::Provider(),
+                            MIDI_NETSETUP_TRACE_EVENT_WARNING,
+                            TraceLoggingString(__FUNCTION__, MIDI_NETSETUP_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                            TraceLoggingWideString(L"Required network transport capability is missing.", MIDI_NETSETUP_TRACE_MESSAGE_FIELD),
+                            TraceLoggingWideString(capability, "capability")
+                        );
+
+                        usable = false;
+                        break;
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            usable = false;
+        }
+
+        if (!usable)
+        {
+            TransportUnavailableBar().IsOpen(true);
+
+            RemoteHostsPanel().Visibility(xaml::Visibility::Collapsed);
+            LocalHostsPanel().Visibility(xaml::Visibility::Collapsed);
+            MainNavigation().IsEnabled(false);
+        }
+
+        return usable;
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnRootSizeChanged(foundation::IInspectable const&, xaml::SizeChangedEventArgs const&)    {
         m_chrome.UpdateTitleBarInsets();
     }
 

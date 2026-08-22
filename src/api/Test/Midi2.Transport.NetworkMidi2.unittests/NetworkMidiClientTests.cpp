@@ -340,7 +340,7 @@ namespace NetworkMidiTest
         // reachable through no command the transport offers, so the device graph is the only
         // place it can be seen at all. The interface class is restated here rather than included,
         // for the same reason NetworkMidiTestProtocol restates the wire format.
-        size_t CountLiveEndpointsNamed(_In_ std::string const& endpointName)
+        size_t CountLiveEndpointsNamedWide(_In_ std::wstring const& endpointName)
         {
             constexpr wchar_t UmpBidirectionalInterfaceClass[]{ L"{E7CCE071-3C03-423f-88D3-F1045D02552B}" };
 
@@ -355,13 +355,11 @@ namespace NetworkMidiTest
                     {},
                     enumeration::DeviceInformationKind::DeviceInterface).get();
 
-                std::wstring wanted(endpointName.begin(), endpointName.end());
-
                 size_t count{ 0 };
 
                 for (auto const& device : devices)
                 {
-                    if (std::wstring{ device.Name() }.find(wanted) != std::wstring::npos)
+                    if (std::wstring{ device.Name() }.find(endpointName) != std::wstring::npos)
                     {
                         count++;
                     }
@@ -375,6 +373,12 @@ namespace NetworkMidiTest
 
                 return 0;
             }
+        }
+
+
+        size_t CountLiveEndpointsNamed(_In_ std::string const& endpointName)
+        {
+            return CountLiveEndpointsNamedWide(std::wstring(endpointName.begin(), endpointName.end()));
         }
     }
 
@@ -1400,8 +1404,172 @@ namespace NetworkMidiTest
         VERIFY_IS_GREATER_THAN(named, static_cast<size_t>(0),
             L"The endpoint carries the name the user supplied when the connection was created.");
 
+        // The remote's own name appearing as well would mean the endpoint was created under it
+        // and renamed after, which is the churn this avoids.
+        VERIFY_ARE_EQUAL(static_cast<size_t>(0), CountLiveEndpointsNamed(host.EndpointName()),
+            L"No endpoint was created under the remote's name first.");
+
         DisconnectClient(entryIdentifier);
         host.Stop();
+    }
+
+
+    void ClientTests::CustomEndpointNameSurvivesUnicode()
+    {
+        if (!RequireService()) return;
+
+        FakeNetworkHost host;
+        VERIFY_IS_TRUE(host.Start());
+
+        auto entryIdentifier = MakeEntryIdentifier();
+
+        // Endpoint names are UTF-8 on the wire and the device name is UTF-16, so a name outside
+        // ASCII exercises a conversion the default names never reach.
+        std::wstring customName{ L"Клавиши \u30B7\u30F3\u30BB " };
+        customName += std::wstring(entryIdentifier.begin() + 1, entryIdentifier.begin() + 9);
+
+        VERIFY_IS_TRUE(
+            ConnectDirectClient(entryIdentifier, FakeNetworkHost::Address(), host.Port(), L"Test Client", customName).IsSuccess());
+
+        VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::Invitation, InvitationTimeout).has_value());
+        VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::UmpData, SessionTimeout).has_value());
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(20000);
+        size_t named{ 0 };
+
+        while (std::chrono::steady_clock::now() < deadline && named == 0)
+        {
+            named = CountLiveEndpointsNamedWide(customName);
+
+            if (named == 0)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            }
+        }
+
+        VERIFY_IS_GREATER_THAN(named, static_cast<size_t>(0),
+            L"A non-ASCII endpoint name survives the round trip to the device graph.");
+
+        DisconnectClient(entryIdentifier);
+        host.Stop();
+    }
+
+
+    void ClientTests::CustomEndpointNameCanComeFromTheConfigFileEntry()
+    {
+        if (!RequireService()) return;
+
+        // The same name, arriving as part of a create entry rather than a command. This is the
+        // path a configuration file takes at service start.
+        FakeNetworkHost host;
+        VERIFY_IS_TRUE(host.Start());
+
+        auto entryIdentifier = MakeEntryIdentifier();
+        std::string customName{ "Config File Named " + host.EndpointName().substr(host.EndpointName().size() - 4) };
+
+        VERIFY_IS_TRUE(
+            CreateDirectClient(
+                entryIdentifier,
+                FakeNetworkHost::Address(),
+                host.Port(),
+                false,
+                std::wstring(customName.begin(), customName.end())).CallSucceeded);
+
+        VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::Invitation, InvitationTimeout).has_value());
+        VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::UmpData, SessionTimeout).has_value());
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(20000);
+        size_t named{ 0 };
+
+        while (std::chrono::steady_clock::now() < deadline && named == 0)
+        {
+            named = CountLiveEndpointsNamed(customName);
+
+            if (named == 0)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            }
+        }
+
+        VERIFY_IS_GREATER_THAN(named, static_cast<size_t>(0),
+            L"A custom name in the create entry is applied to the endpoint.");
+
+        DisconnectClient(entryIdentifier);
+        host.Stop();
+    }
+
+
+    void ClientTests::ConnectMdnsAcceptsACustomEndpointName()
+    {
+        if (!RequireService()) return;
+
+        // The device id will never resolve, so nothing connects. What is verified is that the
+        // verb accepts the argument and records the entry, which is the half that can be tested
+        // without a real advertised host.
+        auto entryIdentifier = MakeEntryIdentifier();
+        auto matchId = L"\\\\?\\MIDI2#TestOnly_" + entryIdentifier + L"#{aabbccdd-0000-0000-0000-000000000000}";
+
+        VERIFY_IS_TRUE(
+            ConnectMdnsClient(entryIdentifier, matchId, L"Mdns Named Test", L"Mdns Custom Name").IsSuccess(),
+            L"connectMdns accepts a custom endpoint name.");
+
+        VERIFY_IS_TRUE(WaitForClientEntry(entryIdentifier, std::chrono::milliseconds(10000)));
+
+        DisconnectClient(entryIdentifier);
+    }
+
+
+    void ClientTests::TransportDeclaresEveryCapabilityAnAppReliesOn()
+    {
+        if (!RequireService()) return;
+
+        auto result = QueryCapabilities();
+
+        VERIFY_IS_TRUE(result.IsSuccess(), L"The transport answers queryCapabilities.");
+
+        json::JsonObject parsed{ nullptr };
+        VERIFY_IS_TRUE(json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, parsed));
+
+        auto capabilities = parsed.GetNamedObject(L"queryCapabilities", nullptr);
+        VERIFY_IS_NOT_NULL(capabilities);
+
+        if (capabilities == nullptr) return;
+
+        // Every verb an app issues, plus the flag that says a name supplied at creation is
+        // honoured. An app refuses to run when any of these is missing, so removing one here is
+        // a breaking change and this test is the reminder.
+        wchar_t const* const required[]
+        {
+            L"enumerateHosts", L"enumerateClients",
+            L"startHost", L"stopHost", L"removeHost",
+            L"connectDirect", L"connectMdns", L"disconnectClient",
+            L"approveRemoteClient", L"denyRemoteClient", L"disconnectRemoteClient",
+            L"getPendingRemoteClients",
+            L"customizeEndpoint", L"customEndpointNameOnCreate",
+        };
+
+        for (auto const& capability : required)
+        {
+            VERIFY_IS_TRUE(capabilities.HasKey(capability),
+                String().Format(L"Capability '%s' is declared", capability));
+
+            if (capabilities.HasKey(capability))
+            {
+                VERIFY_IS_TRUE(capabilities.GetNamedBoolean(capability, false),
+                    String().Format(L"Capability '%s' is true", capability));
+            }
+        }
+
+        // Deliberately false: this transport uses its own host and client verbs instead of the
+        // generic per-endpoint ones, and MIDI 1.0 port naming is not wired up here.
+        for (auto const& notSupported : { L"restartEndpoint", L"disconnectEndpoint", L"reconnectEndpoint", L"customizePorts" })
+        {
+            if (capabilities.HasKey(notSupported))
+            {
+                VERIFY_IS_FALSE(capabilities.GetNamedBoolean(notSupported, true),
+                    String().Format(L"Capability '%s' is reported unsupported", notSupported));
+            }
+        }
     }
 
     void ClientTests::ConnectMdnsCreatesAnEntryMatchedByDeviceId()

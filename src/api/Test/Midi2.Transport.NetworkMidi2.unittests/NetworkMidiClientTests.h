@@ -93,7 +93,14 @@ namespace NetworkMidiTest
         // the moment it exists. Creating it under the remote's name and renaming afterwards
         // would churn the endpoint and its MIDI 1.0 ports.
         TEST_METHOD(CustomEndpointNameIsAppliedWhenTheEndpointIsCreated);
+        TEST_METHOD(CustomEndpointNameSurvivesUnicode);
+        TEST_METHOD(CustomEndpointNameCanComeFromTheConfigFileEntry);
+        TEST_METHOD(ConnectMdnsAcceptsACustomEndpointName);
 
+        // An app uses the declared capabilities to tell a compatible transport from an older
+        // one, and refuses to run against a build missing any verb it needs. Dropping one from
+        // this list is therefore an app-breaking change, not a cosmetic one.
+        TEST_METHOD(TransportDeclaresEveryCapabilityAnAppReliesOn);
         // connectMdns. The service has always been able to follow an mDNS-discovered host, but
         // there was no command to create such an entry: connectDirect was the only one.
         TEST_METHOD(ConnectMdnsCreatesAnEntryMatchedByDeviceId);

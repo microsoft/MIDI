@@ -264,6 +264,31 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
         return E_INVALIDARG;
     }
 
+    // A manually assigned port has to be a real port number. An unparseable or out-of-range
+    // value used to be carried all the way to the socket bind, which failed much later and much
+    // less clearly.
+    if (!definition.UseAutomaticPortAllocation)
+    {
+        auto const portText = internal::TrimmedWStringCopy(std::wstring{ definition.Port });
+
+        bool valid = !portText.empty() &&
+            std::all_of(portText.begin(), portText.end(), [](wchar_t const ch) { return iswdigit(ch) != 0; });
+
+        if (valid)
+        {
+            auto const value = wcstoul(portText.c_str(), nullptr, 10);
+
+            valid = (value >= 1 && value <= 65535);
+        }
+
+        if (!valid)
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_HOST_PORT);
+            errorCode = NETWORK_ERROR_CODE_INVALID_HOST_PORT;
+            return E_INVALIDARG;
+        }
+    }
+
     // validate user authentication
     if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
     {
@@ -1304,12 +1329,16 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_MDNS, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT, true);
 
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT, true);
 
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS, true);
+
+        capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_CUSTOM_ENDPOINT_NAME_ON_CREATE, true);
 
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
@@ -1989,6 +2018,23 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 else
                 {
                     definition->UseAutomaticPortAllocation = false;
+                }
+
+                // Two hosts cannot share a port. Checked against what each started host is
+                // actually bound to, so this also catches a manual port colliding with one the
+                // system handed out automatically. A host waiting for an automatic port has no
+                // number yet and cannot conflict.
+                if (!definition->UseAutomaticPortAllocation &&
+                    TransportState::Current().IsHostPortInUse(
+                        std::wstring{ definition->Port },
+                        definition->EntryIdentifier))
+                {
+                    reportEntryFailure(
+                        it.Current().Key(),
+                        internal::ResourceGetHString(IDS_ERROR_HOST_PORT_IN_USE),
+                        NETWORK_ERROR_CODE_HOST_PORT_IN_USE);
+
+                    continue;
                 }
 
 

@@ -187,6 +187,48 @@ namespace winrt::midinetworksetup::implementation
     }
 
 
+    // Asks for an optional display name before connecting. Returns false if the user cancelled.
+    // The name is left empty when they accept without typing one, which means "use the name the
+    // device reports".
+    foundation::IAsyncOperation<bool> MainWindow::PromptForConnectNameAsync(
+        winrt::hstring const deviceName,
+        std::shared_ptr<winrt::hstring> customName)
+    {
+        if (m_openDialog != nullptr)
+        {
+            co_return false;
+        }
+
+        try
+        {
+            ConnectNameDialogText().Text(res::FormatString(L"ConnectNamePromptFormat", deviceName));
+            ConnectNameDialogTextBox().Text(L"");
+            ConnectNameDialog().XamlRoot(Content().XamlRoot());
+
+            m_openDialog = ConnectNameDialog();
+
+            auto const result = co_await ConnectNameDialog().ShowAsync();
+
+            m_openDialog = nullptr;
+
+            if (result != controls::ContentDialogResult::Primary)
+            {
+                co_return false;
+            }
+
+            *customName = TextOf(ConnectNameDialogTextBox());
+
+            co_return true;
+        }
+        catch (...)
+        {
+            m_openDialog = nullptr;
+
+            co_return false;
+        }
+    }
+
+
     // ------------------------------------------------------------------------------------
     // page 1: connecting to remote hosts
     // ------------------------------------------------------------------------------------
@@ -194,15 +236,27 @@ namespace winrt::midinetworksetup::implementation
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnConnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
-        ConnectRemoteHostAsync(ItemOf<midinetworksetup::RemoteHostItem>(sender), false);
+        auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
 
-        co_return;
+        if (item == nullptr)
+        {
+            co_return;
+        }
+
+        auto customName = std::make_shared<winrt::hstring>();
+
+        if (!co_await PromptForConnectNameAsync(item.DisplayName(), customName))
+        {
+            co_return;
+        }
+
+        ConnectRemoteHostAsync(item, false, *customName);
     }
 
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnRetryRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
-        ConnectRemoteHostAsync(ItemOf<midinetworksetup::RemoteHostItem>(sender), true);
+        ConnectRemoteHostAsync(ItemOf<midinetworksetup::RemoteHostItem>(sender), true, winrt::hstring{});
 
         co_return;
     }
@@ -210,7 +264,8 @@ namespace winrt::midinetworksetup::implementation
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::ConnectRemoteHostAsync(
         midinetworksetup::RemoteHostItem const item,
-        bool const reuseExistingEntry)
+        bool const reuseExistingEntry,
+        winrt::hstring const customEndpointName)
     {
         if (item == nullptr)
         {
@@ -251,6 +306,7 @@ namespace winrt::midinetworksetup::implementation
             midi2net::MidiNetworkClientConnectConfig config{};
             config.ClientId(clientId);
             config.UmpEndpointName(displayName);
+            config.CustomEndpointName(customEndpointName);
             config.MatchCriteria(criteria);
 
             auto const response = co_await midi2net::MidiNetworkTransportManager::ConnectNetworkClientAsync(config);

@@ -127,6 +127,11 @@
 // renamed afterwards. Empty means use the name the remote announces.
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY                      L"customEndpointName"
 
+// Declared in query-capabilities. Says this transport applies a user-supplied endpoint name at
+// creation time rather than renaming afterwards, which is how an app can tell it is talking to a
+// build that supports naming a connection as it is made.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_CUSTOM_ENDPOINT_NAME_ON_CREATE      L"customEndpointNameOnCreate"
+
 
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS                L"enumerateClients"

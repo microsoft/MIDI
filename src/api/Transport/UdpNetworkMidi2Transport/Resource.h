@@ -46,6 +46,8 @@
 #define IDS_ERROR_INVALID_PRODUCT_INSTANCE_ID           2032
 #define IDS_ERROR_MISSING_MATCH_ID                      2033
 #define IDS_ERROR_REMOTE_CLIENT_NOT_FOUND               2034
+#define IDS_ERROR_INVALID_HOST_PORT                     2035
+#define IDS_ERROR_HOST_PORT_IN_USE                      2036
 
 #define IDS_MESSAGE_CONNECTION_ENDED                    2100
 #define IDS_MESSAGE_USER_DISCONNECTED                   2101

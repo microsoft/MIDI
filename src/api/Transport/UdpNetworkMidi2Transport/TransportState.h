@@ -95,6 +95,14 @@ public:
         _In_ std::wstring const& serviceInstanceName,
         _In_ winrt::guid const& excludingEntryIdentifier);
 
+    // A manually assigned port has to be free. Checked against the port each started host is
+    // actually bound to, which is what catches a manual port colliding with one the system
+    // handed out automatically, as well as against other entries which have asked for the same
+    // number but have not started yet.
+    bool IsHostPortInUse(
+        _In_ std::wstring const& port,
+        _In_ winrt::guid const& excludingEntryIdentifier);
+
 
 
 

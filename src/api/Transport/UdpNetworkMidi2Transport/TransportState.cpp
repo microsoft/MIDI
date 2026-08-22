@@ -379,6 +379,80 @@ TransportState::IsHostServiceInstanceNameInUse(
 }
 
 _Use_decl_annotations_
+bool
+TransportState::IsHostPortInUse(
+    std::wstring const& port,
+    winrt::guid const& excludingEntryIdentifier)
+{
+    // Compared as numbers, not as text: "05000" and "5000" are the same socket.
+    auto const parsePort = [](std::wstring const& value) -> uint32_t
+        {
+            auto const trimmed = internal::TrimmedWStringCopy(value);
+
+            if (trimmed.empty() ||
+                !std::all_of(trimmed.begin(), trimmed.end(), [](wchar_t const ch) { return iswdigit(ch) != 0; }))
+            {
+                return 0;
+            }
+
+            auto const parsed = wcstoul(trimmed.c_str(), nullptr, 10);
+
+            return (parsed >= 1 && parsed <= 65535) ? static_cast<uint32_t>(parsed) : 0;
+        };
+
+    auto const wanted = parsePort(port);
+
+    if (wanted == 0)
+    {
+        return false;
+    }
+
+    // Snapshotted first: the accessors take the state lock, and reading a host's socket calls
+    // into it, which must never happen while that lock is held.
+    for (auto const& host : GetHosts())
+    {
+        if (host == nullptr)
+        {
+            continue;
+        }
+
+        if (host->GetDefinition().EntryIdentifier == excludingEntryIdentifier)
+        {
+            continue;
+        }
+
+        // The bound port, not the configured one. A host which asked for an automatic port owns
+        // whatever the system gave it, and a manual entry must not collide with that either.
+        if (parsePort(std::wstring{ host->ActualPort() }) == wanted)
+        {
+            return true;
+        }
+    }
+
+    // Entries which have been accepted but not started yet. Only a manual port can be compared;
+    // one waiting for an automatic port has no number to conflict with.
+    for (auto const& definition : GetPendingHostDefinitions())
+    {
+        if (definition == nullptr || definition->UseAutomaticPortAllocation)
+        {
+            continue;
+        }
+
+        if (definition->EntryIdentifier == excludingEntryIdentifier)
+        {
+            continue;
+        }
+
+        if (parsePort(std::wstring{ definition->Port }) == wanted)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+_Use_decl_annotations_
 std::shared_ptr<MidiNetworkClient>
 TransportState::GetClient(winrt::guid const& clientEntryIdentifier)
 {

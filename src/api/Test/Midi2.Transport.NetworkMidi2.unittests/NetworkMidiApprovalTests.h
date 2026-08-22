@@ -76,6 +76,14 @@ public:
     TEST_METHOD(RemovedHostReleasesItsServiceInstanceName);
     TEST_METHOD(RemovingAnUnknownHostReportsFailure);
 
+    // Two hosts cannot share a UDP port. That includes a manual port colliding with one the
+    // system already handed to a host which asked for automatic allocation.
+    TEST_METHOD(SecondHostWithTheSameManualPortIsRejected);
+    TEST_METHOD(ManualPortMatchingAnAutomaticallyAssignedPortIsRejected);
+    TEST_METHOD(HostWithAnUnusedManualPortIsAccepted);
+    TEST_METHOD(HostWithAnOutOfRangePortIsRejected);
+    TEST_METHOD(HostWithANonNumericPortIsRejected);
+
     // Removing a host straight after creating it races the endpoint creator thread, which
     // used to register the host after the entry had already been taken away. The host was
     // then unreachable and held its socket and service instance name until a restart. Several

@@ -120,6 +120,9 @@ public:
     TEST_METHOD(TestClientConnectConfigRoundTrip);
     TEST_METHOD(TestDisconnectUnknownClientFailsCleanly);
     TEST_METHOD(TestDuplicateServiceInstanceNameIsRejected);
+    TEST_METHOD(TestDuplicateManualPortIsRejected);
+    TEST_METHOD(TestManualPortMatchingAnAutomaticPortIsRejected);
+    TEST_METHOD(TestOutOfRangeManualPortIsRejected);
 
     // Connecting to a discovered host by device id. This used to be silently impossible: the
     // manager only ever issued a direct-address connect, so MatchCriteria.DeviceId was ignored
@@ -141,6 +144,15 @@ public:
     // The default host configuration says what it does. The flag and the comment used to
     // disagree, which is the kind of thing that gets copied into a caller's code.
     TEST_METHOD(TestDefaultHostConfigCreatesUmpEndpointsOnly);
+
+    // Config surface which had no coverage at all. These are pure client-side round trips, so
+    // they run without the service.
+    TEST_METHOD(TestConnectConfigCustomEndpointNameRoundTrip);
+    TEST_METHOD(TestConnectConfigJsonCarriesTheCustomEndpointName);
+    TEST_METHOD(TestHostCreationConfigRemoteClientPolicyRoundTrip);
+    TEST_METHOD(TestHostCreationConfigManualPortRoundTrip);
+    TEST_METHOD(TestHostCreationConfigAuthenticationTypeRoundTrip);
+    TEST_METHOD(TestTransportManagerDnsSdConstantsAreUsable);
 
 private:
 

@@ -10,6 +10,10 @@
 #include "MidiNetworkApiTests.h"
 
 #include <vector>
+#include <optional>
+
+#include <winrt/Windows.Networking.h>
+#include <winrt/Windows.Networking.Sockets.h>
 
 using namespace WEX::Logging;
 using namespace WEX::Common;
@@ -50,6 +54,34 @@ namespace
         return winrt::to_string(winrt::to_hstring(foundation::GuidHelper::CreateNewGuid())).empty()
             ? std::wstring{ L"x" }
             : std::wstring{ winrt::to_hstring(foundation::GuidHelper::CreateNewGuid()).c_str() };
+    }
+
+    // Asks the system for an ephemeral port and gives it straight back. Nothing else is likely
+    // to take it in the meantime, and no network MIDI host holds it, which is what the port
+    // collision tests need.
+    std::optional<uint16_t> PickLikelyFreePort()
+    {
+        try
+        {
+            winrt::Windows::Networking::Sockets::DatagramSocket socket;
+
+            socket.BindEndpointAsync(winrt::Windows::Networking::HostName{ L"127.0.0.1" }, L"").get();
+
+            auto const portText = std::wstring{ socket.Information().LocalPort() };
+
+            socket.Close();
+
+            if (portText.empty())
+            {
+                return std::nullopt;
+            }
+
+            return static_cast<uint16_t>(std::stoul(portText));
+        }
+        catch (...)
+        {
+            return std::nullopt;
+        }
     }
 }
 
@@ -1547,6 +1579,124 @@ void MidiNetworkApiTests::TestDefaultHostConfigCreatesUmpEndpointsOnly()
         L"The default host creates UMP endpoints only; a caller wanting MIDI 1.0 ports clears this.");
 }
 
+void MidiNetworkApiTests::TestConnectConfigCustomEndpointNameRoundTrip()
+{
+    MidiNetworkClientConnectConfig config;
+
+    VERIFY_IS_TRUE(config.CustomEndpointName().empty(), L"No custom name by default");
+
+    config.CustomEndpointName(L"Studio Rack Top");
+
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"Studio Rack Top" }, config.CustomEndpointName());
+
+    // Endpoint names are capped by the MIDI 2.0 specification, and this shares that cap.
+    config.CustomEndpointName(winrt::hstring{ RepeatedString(L'N', MaxUmpEndpointNameBytes * 2) });
+
+    VERIFY_IS_LESS_THAN_OR_EQUAL(
+        (uint32_t)winrt::to_string(config.CustomEndpointName()).length(),
+        MaxUmpEndpointNameBytes,
+        L"An oversize custom name is truncated rather than passed on");
+}
+
+void MidiNetworkApiTests::TestConnectConfigJsonCarriesTheCustomEndpointName()
+{
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DirectHostNameOrIPAddress(L"127.0.0.1");
+    criteria.DirectPort(5004);
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(foundation::GuidHelper::CreateNewGuid());
+    config.UmpEndpointName(L"Local Name");
+    config.CustomEndpointName(L"Name In Windows");
+    config.MatchCriteria(criteria);
+
+    auto json = config.ConfigJson();
+
+    VERIFY_IS_NOT_NULL(json);
+
+    // The name has to reach the configuration file, or it would be forgotten on restart.
+    auto text = json.Stringify();
+
+    Log::Comment(String().Format(L"Connect config json: %s", text.c_str()));
+
+    VERIFY_IS_TRUE(
+        std::wstring{ text }.find(L"Name In Windows") != std::wstring::npos,
+        L"The custom endpoint name is written into the configuration entry");
+}
+
+void MidiNetworkApiTests::TestHostCreationConfigRemoteClientPolicyRoundTrip()
+{
+    MidiNetworkHostCreationConfig config;
+
+    // The default has to stay permissive, or existing configurations change behaviour.
+    VERIFY_ARE_EQUAL(MidiNetworkRemoteClientPolicy::AllowAny, config.RemoteClientPolicy());
+
+    config.RemoteClientPolicy(MidiNetworkRemoteClientPolicy::RequireApproval);
+
+    VERIFY_ARE_EQUAL(MidiNetworkRemoteClientPolicy::RequireApproval, config.RemoteClientPolicy());
+
+    auto text = config.ConfigJson().Stringify();
+
+    Log::Comment(String().Format(L"Host config json: %s", text.c_str()));
+
+    VERIFY_IS_TRUE(
+        std::wstring{ text }.find(L"requireApproval") != std::wstring::npos,
+        L"The approval policy reaches the configuration entry");
+}
+
+void MidiNetworkApiTests::TestHostCreationConfigManualPortRoundTrip()
+{
+    MidiNetworkHostCreationConfig config;
+
+    config.UseAutomaticPortAllocation(false);
+    config.ManuallyAssignedPort(L"5008");
+
+    VERIFY_IS_FALSE(config.UseAutomaticPortAllocation());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"5008" }, config.ManuallyAssignedPort());
+
+    auto text = config.ConfigJson().Stringify();
+
+    VERIFY_IS_TRUE(
+        std::wstring{ text }.find(L"5008") != std::wstring::npos,
+        L"A manually assigned port reaches the configuration entry");
+}
+
+void MidiNetworkApiTests::TestHostCreationConfigAuthenticationTypeRoundTrip()
+{
+    MidiNetworkHostCreationConfig config;
+
+    // Authentication is not implemented yet, and the service refuses a host configured for it.
+    // The property still has to round-trip, because that refusal is what has to keep working.
+    VERIFY_ARE_EQUAL(MidiNetworkAuthenticationType::NoAuthentication, config.AuthenticationType());
+
+    config.AuthenticationType(MidiNetworkAuthenticationType::UserAuthentication);
+
+    VERIFY_ARE_EQUAL(MidiNetworkAuthenticationType::UserAuthentication, config.AuthenticationType());
+}
+
+void MidiNetworkApiTests::TestTransportManagerDnsSdConstantsAreUsable()
+{
+    // An app builds its own device queries from these, so an empty one is a silent failure.
+    VERIFY_IS_FALSE(MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType().empty());
+    VERIFY_IS_FALSE(MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryString().empty());
+    VERIFY_IS_FALSE(MidiNetworkTransportManager::MidiNetworkUdpDnsDomain().empty());
+
+    Log::Comment(String().Format(
+        L"service type '%s', domain '%s'",
+        MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType().c_str(),
+        MidiNetworkTransportManager::MidiNetworkUdpDnsDomain().c_str()));
+
+    // Spec section 4.4 and RFC 6763: the advertisement lives under _midi2._udp
+    VERIFY_IS_TRUE(
+        std::wstring{ MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType() }.find(L"_udp") != std::wstring::npos,
+        L"The DNS-SD service type names the UDP protocol");
+
+    auto additionalProperties = MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryAdditionalProperties();
+
+    VERIFY_IS_NOT_NULL(additionalProperties);
+    VERIFY_IS_GREATER_THAN(additionalProperties.Size(), 0u, L"Discovery asks for the DNS-SD properties it needs");
+}
+
 void MidiNetworkApiTests::TestDuplicateServiceInstanceNameIsRejected()
 {
     SKIP_IF_NO_NETWORK_TRANSPORT();
@@ -1598,6 +1748,168 @@ void MidiNetworkApiTests::TestDuplicateServiceInstanceNameIsRejected()
     VERIFY_IS_TRUE(HostIsAbsent(secondId));
 
     Log::Comment(String().Format(L"Duplicate rejected: %s", secondResponse.ErrorMessage().c_str()));
+}
+
+
+// Two hosts on one port would mean two sockets fighting over the same inbound datagrams. The
+// second bind is what actually fails, at start time, so the collision is caught up front.
+void MidiNetworkApiTests::TestDuplicateManualPortIsRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto port = PickLikelyFreePort();
+
+    VERIFY_IS_TRUE(port.has_value(), L"A free port could be found to test with");
+
+    auto const sharedPort = winrt::hstring{ std::to_wstring(port.value()) };
+
+    MidiNetworkHostCreationConfig firstConfig;
+    MidiNetworkHostCreationConfig secondConfig;
+
+    auto firstId = firstConfig.HostId();
+    auto secondId = secondConfig.HostId();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            RemoveTestHost(firstId);
+            RemoveTestHost(secondId);
+        });
+
+    auto const firstSuffix = MakeUniqueSuffix();
+
+    firstConfig.Name(L"Duplicate Port Test A");
+    firstConfig.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + firstSuffix });
+    firstConfig.ProductInstanceId(L"DuplicatePortA");
+    firstConfig.UseAutomaticPortAllocation(false);
+    firstConfig.ManuallyAssignedPort(sharedPort);
+    firstConfig.Advertise(false);
+
+    auto firstResponse = MidiNetworkTransportManager::CreateNetworkHostAsync(firstConfig).get();
+
+    VERIFY_IS_NOT_NULL(firstResponse);
+    VERIFY_IS_TRUE(firstResponse.Success(), L"The first host claimed the port");
+
+    VerifyHostAppeared(firstId);
+
+    auto const secondSuffix = MakeUniqueSuffix();
+
+    secondConfig.Name(L"Duplicate Port Test B");
+    secondConfig.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + secondSuffix });
+    secondConfig.ProductInstanceId(L"DuplicatePortB");
+    secondConfig.UseAutomaticPortAllocation(false);
+    secondConfig.ManuallyAssignedPort(sharedPort);
+    secondConfig.Advertise(false);
+
+    auto secondResponse = MidiNetworkTransportManager::CreateNetworkHostAsync(secondConfig).get();
+
+    VERIFY_IS_NOT_NULL(secondResponse);
+    VERIFY_IS_FALSE(secondResponse.Success(), L"A second host asking for the same port is rejected");
+    VERIFY_ARE_EQUAL(MidiNetworkHostCreationErrorCode::NetworkPortInUse, secondResponse.ErrorCode());
+
+    VERIFY_IS_TRUE(HostIsAbsent(secondId));
+
+    Log::Comment(String().Format(L"Duplicate port rejected: %s", secondResponse.ErrorMessage().c_str()));
+}
+
+
+// The automatic case is the easy one to miss: the first entry says "automatic", so comparing
+// requested ports finds nothing, yet its socket is bound to a real number.
+void MidiNetworkApiTests::TestManualPortMatchingAnAutomaticPortIsRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto automaticHostId = CreateTestHost(MakeUniqueSuffix());
+
+    MidiNetworkHostCreationConfig manualConfig;
+
+    auto manualHostId = manualConfig.HostId();
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            RemoveTestHost(automaticHostId);
+            RemoveTestHost(manualHostId);
+        });
+
+    VerifyHostAppeared(automaticHostId);
+
+    // Whatever the system handed the automatic host.
+    winrt::hstring assignedPort{ };
+
+    for (int attempt = 0; attempt < 50 && assignedPort.empty(); attempt++)
+    {
+        auto hosts = MidiNetworkTransportManager::GetConfiguredHosts();
+
+        if (hosts != nullptr)
+        {
+            for (auto const& host : hosts)
+            {
+                if (host.HostId() == automaticHostId)
+                {
+                    assignedPort = host.ActualPort();
+                    break;
+                }
+            }
+        }
+
+        if (assignedPort.empty())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+
+    VERIFY_IS_FALSE(assignedPort.empty(), L"The automatic host reported the port it was given");
+
+    Log::Comment(String().Format(L"Automatic host was given port %s", assignedPort.c_str()));
+
+    manualConfig.Name(L"Automatic Port Collision Test");
+    manualConfig.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + MakeUniqueSuffix() });
+    manualConfig.ProductInstanceId(L"AutoPortCollision");
+    manualConfig.UseAutomaticPortAllocation(false);
+    manualConfig.ManuallyAssignedPort(assignedPort);
+    manualConfig.Advertise(false);
+
+    auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(manualConfig).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success(), L"A manual port duplicating an automatically assigned one is rejected");
+    VERIFY_ARE_EQUAL(MidiNetworkHostCreationErrorCode::NetworkPortInUse, response.ErrorCode());
+
+    VERIFY_IS_TRUE(HostIsAbsent(manualHostId));
+}
+
+
+void MidiNetworkApiTests::TestOutOfRangeManualPortIsRejected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // 65535 is the highest there is, and a port has to be a number at all.
+    for (auto const& portText : { winrt::hstring{ L"65536" }, winrt::hstring{ L"not a port" } })
+    {
+        MidiNetworkHostCreationConfig config;
+
+        auto hostId = config.HostId();
+
+        auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+        config.Name(L"Out Of Range Port Test");
+        config.ServiceInstanceName(winrt::hstring{ TestHostNamePrefix + MakeUniqueSuffix() });
+        config.ProductInstanceId(L"OutOfRangePort");
+        config.UseAutomaticPortAllocation(false);
+        config.ManuallyAssignedPort(portText);
+        config.Advertise(false);
+
+        auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
+
+        VERIFY_IS_NOT_NULL(response);
+
+        VERIFY_IS_FALSE(
+            response.Success(),
+            String().Format(L"A port of '%s' is rejected", portText.c_str()));
+
+        VERIFY_ARE_EQUAL(MidiNetworkHostCreationErrorCode::InvalidNetworkPort, response.ErrorCode());
+
+        VERIFY_IS_TRUE(HostIsAbsent(hostId));
+    }
 }
 
 

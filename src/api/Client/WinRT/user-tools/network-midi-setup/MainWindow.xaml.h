@@ -100,6 +100,10 @@ namespace winrt::midinetworksetup::implementation
         void SetRemoteStatus(winrt::hstring const& text) noexcept;
         void SetLocalStatus(winrt::hstring const& text) noexcept;
 
+        // False when the transport is missing or older than the verbs this app needs. It has
+        // already shown the customer why by the time it returns.
+        bool VerifyTransportIsUsable() noexcept;
+
         // yes / cancel confirmation, used before anything destructive
         foundation::IAsyncOperation<bool> ConfirmAsync(winrt::hstring const& title, winrt::hstring const& message);
 
@@ -117,7 +121,12 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::fire_and_forget ConnectRemoteHostAsync(
             midinetworksetup::RemoteHostItem const item,
-            bool const reuseExistingEntry);
+            bool const reuseExistingEntry,
+            winrt::hstring const customEndpointName);
+
+        foundation::IAsyncOperation<bool> PromptForConnectNameAsync(
+            winrt::hstring const deviceName,
+            std::shared_ptr<winrt::hstring> customName);
 
         static winrt::hstring DescribeLatency(uint64_t const ticks) noexcept;
         static winrt::hstring JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept;

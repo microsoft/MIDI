@@ -212,6 +212,36 @@
   <data name="ManualCustomNameTextBox.PlaceholderText" xml:space="preserve">
     <value>Optional</value>
   </data>
+  <data name="ConnectNameDialog.Title" xml:space="preserve">
+    <value>Connect to this device</value>
+  </data>
+  <data name="ConnectNameDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="ConnectNameDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConnectNameDialogTextBox.Header" xml:space="preserve">
+    <value>Name to show in Windows</value>
+  </data>
+  <data name="ConnectNameDialogTextBox.PlaceholderText" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="ConnectNameDialogHint.Text" xml:space="preserve">
+    <value>Leave this empty to use the name the device reports.</value>
+  </data>
+  <data name="ConnectNamePromptFormat" xml:space="preserve">
+    <value>Windows will connect to {0}.</value>
+  </data>
+  <data name="TransportUnavailableMessage" xml:space="preserve">
+    <value>A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC.</value>
+  </data>
+  <data name="TransportUnavailableBar.Title" xml:space="preserve">
+    <value>Network MIDI 2.0 is not available</value>
+  </data>
+  <data name="TransportUnavailableBar.Message" xml:space="preserve">
+    <value>A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC.</value>
+  </data>
   <data name="ManualConnectButton.Content" xml:space="preserve">
     <value>Connect</value>
   </data>

@@ -128,6 +128,18 @@
             </NavigationView.MenuItems>
 
             <Grid>
+                <!-- Shown instead of everything else when the transport is missing or too old -->
+                <InfoBar x:Name="TransportUnavailableBar"
+                         x:Uid="TransportUnavailableBar"
+                         VerticalAlignment="Top"
+                         Margin="16,12,16,12"
+                         Canvas.ZIndex="1"
+                         Severity="Error"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Title="Network MIDI 2.0 is not available"
+                         Message="A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC." />
+
                 <!-- ========================== Page 1: network devices ========================== -->
                 <Grid x:Name="RemoteHostsPanel" Margin="16,8,16,12">
                     <Grid.RowDefinitions>
@@ -752,6 +764,26 @@
                        CloseButtonText="Cancel"
                        DefaultButton="Close">
             <TextBlock x:Name="ConfirmDialogText" TextWrapping="Wrap" MaxWidth="420" />
+        </ContentDialog>
+
+        <ContentDialog x:Name="ConnectNameDialog"
+                       x:Uid="ConnectNameDialog"
+                       Title="Connect to this device"
+                       PrimaryButtonText="Connect"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="8" MaxWidth="420">
+                <TextBlock x:Name="ConnectNameDialogText" TextWrapping="Wrap" />
+                <TextBox x:Name="ConnectNameDialogTextBox"
+                         x:Uid="ConnectNameDialogTextBox"
+                         Header="Name to show in Windows"
+                         PlaceholderText="Optional" />
+                <TextBlock x:Uid="ConnectNameDialogHint"
+                           Text="Leave this empty to use the name the device reports."
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
         </ContentDialog>
     </Grid>
 </Window>

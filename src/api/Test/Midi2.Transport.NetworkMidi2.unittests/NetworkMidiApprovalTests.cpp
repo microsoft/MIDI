@@ -422,6 +422,67 @@ namespace
     {
         return "APPROVALTEST-" + suffix;
     }
+
+
+    // A distinct service instance name for every host the port tests create, so a rejection can
+    // only ever be about the port.
+    std::wstring MakeUniqueServiceInstanceName(_In_ std::wstring const& tag)
+    {
+        static std::atomic<uint32_t> counter{ 0 };
+
+        return L"midi2-approval-test-" + tag + L"-" +
+            std::to_wstring(GetTickCount64()) + L"-" +
+            std::to_wstring(counter.fetch_add(1));
+    }
+
+
+    // Asks the system for an ephemeral port and gives it straight back. Nothing else on the
+    // machine is likely to take it in the meantime, and no other network MIDI host holds it,
+    // which is what these tests actually need.
+    std::optional<uint16_t> PickLikelyFreePort()
+    {
+        SOCKET probe = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+        if (probe == INVALID_SOCKET)
+        {
+            return std::nullopt;
+        }
+
+        auto closeProbe = wil::scope_exit([&]() { closesocket(probe); });
+
+        sockaddr_in address{ };
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        address.sin_port = 0;
+
+        if (bind(probe, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == SOCKET_ERROR)
+        {
+            return std::nullopt;
+        }
+
+        sockaddr_in bound{ };
+        int boundLength = sizeof(bound);
+
+        if (getsockname(probe, reinterpret_cast<sockaddr*>(&bound), &boundLength) == SOCKET_ERROR)
+        {
+            return std::nullopt;
+        }
+
+        return ntohs(bound.sin_port);
+    }
+
+
+    uint32_t ReportedErrorCode(_In_ ServiceConfigResult const& result)
+    {
+        auto response = ParseResponse(result);
+
+        if (!response.has_value() || !response->HasKey(L"errorCode"))
+        {
+            return 0;
+        }
+
+        return static_cast<uint32_t>(response->GetNamedNumber(L"errorCode", 0));
+    }
 }
 
 
@@ -1353,6 +1414,195 @@ void NetworkMidiApprovalTests::RemovingAnUnknownHostReportsFailure()
     VERIFY_IS_FALSE(
         result.ReportedSuccess,
         L"Removing a host which does not exist is reported rather than silently succeeding");
+}
+
+
+// Two hosts sharing a port would mean two sockets fighting over the same inbound datagrams. The
+// second bind is the one that fails, at start time, long after the user pressed the button, so
+// the collision is caught up front instead.
+void NetworkMidiApprovalTests::SecondHostWithTheSameManualPortIsRejected()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto port = PickLikelyFreePort();
+
+    VERIFY_IS_TRUE(port.has_value(), L"A free port could be found to test with");
+
+    auto const portText = std::to_wstring(port.value());
+
+    Log::Comment(String().Format(L"Both hosts will ask for port %s", portText.c_str()));
+
+    auto firstEntryIdentifier = MakeEntryIdentifier();
+
+    auto first = CreateHost(
+        firstEntryIdentifier,
+        L"Manual Port Host One",
+        L"MANUALPORTONE",
+        MakeUniqueServiceInstanceName(L"port-first"),
+        false,
+        portText);
+
+    auto cleanupFirst = wil::scope_exit([&]() { RemoveHost(firstEntryIdentifier); });
+
+    VERIFY_IS_TRUE(first.IsSuccess(), L"The first host claimed the port");
+
+    auto secondEntryIdentifier = MakeEntryIdentifier();
+
+    auto second = CreateHost(
+        secondEntryIdentifier,
+        L"Manual Port Host Two",
+        L"MANUALPORTTWO",
+        MakeUniqueServiceInstanceName(L"port-second"),
+        false,
+        portText);
+
+    // If the check ever regresses, the host must not survive into the next run.
+    auto cleanupSecond = wil::scope_exit([&]() { RemoveHost(secondEntryIdentifier); });
+
+    VERIFY_IS_TRUE(second.CallSucceeded, L"The configuration call itself completed");
+
+    VERIFY_IS_FALSE(
+        second.ReportedSuccess,
+        L"A second host claiming a port already spoken for is rejected");
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(NETWORK_ERROR_CODE_HOST_PORT_IN_USE),
+        ReportedErrorCode(second),
+        L"The error code identifies a port collision rather than a generic failure");
+}
+
+
+// The automatic case is the one that is easy to miss: the entry says "auto", so comparing
+// configured ports would find nothing, yet the socket is bound to a real number a manual entry
+// can collide with.
+void NetworkMidiApprovalTests::ManualPortMatchingAnAutomaticallyAssignedPortIsRejected()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    // g_hostPort is what the system handed the class host, which asked for automatic allocation.
+    auto const portText = std::to_wstring(g_hostPort);
+
+    Log::Comment(String().Format(
+        L"The class host was automatically assigned port %s; claiming it manually", portText.c_str()));
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"Automatic Port Collision Host",
+        L"AUTOPORTCOLLISION",
+        MakeUniqueServiceInstanceName(L"port-auto"),
+        false,
+        portText);
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The configuration call itself completed");
+
+    VERIFY_IS_FALSE(
+        result.ReportedSuccess,
+        L"A manual port which duplicates an automatically assigned one is rejected");
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(NETWORK_ERROR_CODE_HOST_PORT_IN_USE),
+        ReportedErrorCode(result),
+        L"The error code identifies a port collision");
+}
+
+
+// Without this, a check which rejected every manual port would pass the collision tests.
+void NetworkMidiApprovalTests::HostWithAnUnusedManualPortIsAccepted()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto port = PickLikelyFreePort();
+
+    VERIFY_IS_TRUE(port.has_value(), L"A free port could be found to test with");
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"Free Manual Port Host",
+        L"FREEMANUALPORT",
+        MakeUniqueServiceInstanceName(L"port-free"),
+        false,
+        std::to_wstring(port.value()));
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(
+        result.IsSuccess(),
+        L"A host asking for a port nobody else holds is accepted");
+}
+
+
+void NetworkMidiApprovalTests::HostWithAnOutOfRangePortIsRejected()
+{
+    // 0 means "pick one for me" at the socket layer, which is not what a manual entry asked for,
+    // and 65536 does not exist.
+    for (auto const& portText : { std::wstring{ L"0" }, std::wstring{ L"65536" }, std::wstring{ L"70000" } })
+    {
+        auto entryIdentifier = MakeEntryIdentifier();
+
+        auto result = CreateHost(
+            entryIdentifier,
+            L"Out Of Range Port Host",
+            L"OUTOFRANGEPORT",
+            MakeUniqueServiceInstanceName(L"port-range"),
+            false,
+            portText);
+
+        auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+        VERIFY_IS_TRUE(result.CallSucceeded, L"The configuration call itself completed");
+
+        if (portText == L"0")
+        {
+            // "0" is a documented way of saying automatic, so it is accepted, not rejected.
+            VERIFY_IS_TRUE(
+                result.IsSuccess(),
+                L"A port of zero is treated as a request for automatic allocation");
+
+            continue;
+        }
+
+        VERIFY_IS_FALSE(
+            result.ReportedSuccess,
+            String().Format(L"A port of %s is rejected", portText.c_str()));
+
+        VERIFY_ARE_EQUAL(
+            static_cast<uint32_t>(NETWORK_ERROR_CODE_INVALID_HOST_PORT),
+            ReportedErrorCode(result),
+            L"The error code identifies an invalid port");
+    }
+}
+
+
+void NetworkMidiApprovalTests::HostWithANonNumericPortIsRejected()
+{
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"Non Numeric Port Host",
+        L"NONNUMERICPORT",
+        MakeUniqueServiceInstanceName(L"port-text"),
+        false,
+        L"five thousand");
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The configuration call itself completed");
+
+    VERIFY_IS_FALSE(
+        result.ReportedSuccess,
+        L"A port which is not a number is rejected rather than silently becoming zero");
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(NETWORK_ERROR_CODE_INVALID_HOST_PORT),
+        ReportedErrorCode(result),
+        L"The error code identifies an invalid port");
 }
 
 

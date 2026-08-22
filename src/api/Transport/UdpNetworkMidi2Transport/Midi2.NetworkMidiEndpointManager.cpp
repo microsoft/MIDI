@@ -1672,8 +1672,78 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
 
 //    std::wstring endpointDescription = definition->EndpointDescription;
 
-    // no user or in-protocol data in this case
-    std::wstring friendlyName = endpointName;
+    // A name the user chose for this connection, resolved before anything is activated so the
+    // endpoint and its MIDI 1.0 ports are created under it rather than being renamed a moment
+    // later. The customization is cached by the configuration manager whether or not the
+    // endpoint existed when it arrived, which is what makes this work for a connection the user
+    // names as they create it.
+    WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
+    matchCriteria.TransportSuppliedEndpointName = endpointName;
+    matchCriteria.DeviceProductInstanceId = remoteEndpointProductInstanceId;
+    matchCriteria.NetworkStaticIPAddress = hostName != nullptr ? hostName.CanonicalName() : L"";
+    matchCriteria.NetworkPort = static_cast<uint16_t>(_wtoi(networkPort.c_str()));
+
+    std::wstring customName{ };
+    std::wstring customDescription{ };
+
+    // Looked up by configuration entry id, because at connection time that is the only thing we
+    // reliably know: a direct connection has not yet learned the remote's name or product
+    // instance id.
+    {
+        GUID parsed{};
+
+        winrt::guid entryId = internal::TryParseGuidString(configIdentifier, parsed)
+            ? winrt::guid{ parsed }
+            : winrt::guid{};
+
+        if (entryId != winrt::guid{})
+        {
+            for (auto const& definition : TransportState::Current().GetPendingClientDefinitions())
+            {
+                if (definition != nullptr && definition->EntryIdentifier == entryId && !definition->CustomEndpointName.empty())
+                {
+                    customName = definition->CustomEndpointName;
+                    break;
+                }
+            }
+
+            if (customName.empty())
+            {
+                auto host = TransportState::Current().GetHost(entryId);
+
+                if (host != nullptr && !host->GetDefinition().CustomEndpointName.empty())
+                {
+                    customName = host->GetDefinition().CustomEndpointName;
+                }
+            }
+        }
+    }
+
+    auto configurationManager = TransportState::Current().GetConfigurationManager();
+
+    if (configurationManager != nullptr)
+    {
+        auto customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
+
+        if (customProperties != nullptr)
+        {
+            // A customization matched by identity wins: it is the more specific answer, and it
+            // is what a later rename writes.
+            if (!customProperties->Name.empty())
+            {
+                customName = customProperties->Name;
+            }
+
+            if (!customProperties->Description.empty())
+            {
+                customDescription = customProperties->Description;
+            }
+        }
+    }
+
+    // The user's name is the one shown everywhere, including to apps which know nothing about
+    // MIDI properties, so it becomes the device node name too and not just PKEY_MIDI_CustomEndpointName.
+    std::wstring friendlyName = customName.empty() ? endpointName : customName;
 
 
     TraceLoggingWrite(
@@ -1760,88 +1830,8 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     commonProperties.TransportCode = transportCode.c_str();
     commonProperties.EndpointName = endpointName.c_str();
     commonProperties.EndpointDescription = endpointDescription.c_str();
-    commonProperties.CustomEndpointName = nullptr;
-    commonProperties.CustomEndpointDescription = nullptr;
-
-    // A name the user chose for this connection, applied before the device node is activated so
-    // the endpoint and its MIDI 1.0 ports are never created under the default name and renamed
-    // a moment later. The customization is cached by the configuration manager whether or not
-    // the endpoint existed when it arrived, which is what makes this work for a connection the
-    // user names as they create it.
-    WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
-    matchCriteria.TransportSuppliedEndpointName = endpointName;
-    matchCriteria.DeviceProductInstanceId = remoteEndpointProductInstanceId;
-    matchCriteria.NetworkStaticIPAddress = hostName != nullptr ? hostName.CanonicalName() : L"";
-    matchCriteria.NetworkPort = static_cast<uint16_t>(_wtoi(networkPort.c_str()));
-
-    std::wstring customName{ };
-    std::wstring customDescription{ };
-
-    // The name the user gave this connection when they created it. Looked up by configuration
-    // entry id, because at connection time that is the only thing we reliably know: a direct
-    // connection has not yet learned the remote's name or product instance id.
-    {
-        winrt::guid entryId{};
-
-        try
-        {
-            entryId = winrt::guid{ std::wstring_view{ configIdentifier } };
-        }
-        catch (...)
-        {
-            entryId = winrt::guid{};
-        }
-
-        if (entryId != winrt::guid{})
-        {
-            for (auto const& definition : TransportState::Current().GetPendingClientDefinitions())
-            {
-                if (definition != nullptr && definition->EntryIdentifier == entryId && !definition->CustomEndpointName.empty())
-                {
-                    customName = definition->CustomEndpointName;
-                    break;
-                }
-            }
-
-            if (customName.empty())
-            {
-                auto host = TransportState::Current().GetHost(entryId);
-
-                if (host != nullptr && !host->GetDefinition().CustomEndpointName.empty())
-                {
-                    customName = host->GetDefinition().CustomEndpointName;
-                }
-            }
-        }
-    }
-
-    auto configurationManager = TransportState::Current().GetConfigurationManager();
-
-    if (configurationManager != nullptr)
-    {
-        auto customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
-
-        if (customProperties != nullptr)
-        {
-            // A customization matched by identity wins: it is the more specific answer, and it
-            // is what a later rename writes.
-            if (!customProperties->Name.empty())
-            {
-                customName = customProperties->Name;
-            }
-
-            if (!customProperties->Description.empty())
-            {
-                customDescription = customProperties->Description;
-                commonProperties.CustomEndpointDescription = customDescription.c_str();
-            }
-        }
-    }
-
-    if (!customName.empty())
-    {
-        commonProperties.CustomEndpointName = customName.c_str();
-    }
+    commonProperties.CustomEndpointName = customName.empty() ? nullptr : customName.c_str();
+    commonProperties.CustomEndpointDescription = customDescription.empty() ? nullptr : customDescription.c_str();
 
     commonProperties.UniqueIdentifier = swdUniqueIdentifier.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
