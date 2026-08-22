@@ -2,6 +2,9 @@
 // Microsoft Visual C++ generated include file.
 // Used by Resources.rc
 
+// Explorer and Task Manager show the lowest numbered icon group, so this stays at 1.
+#define IDI_APPICON                     1
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
