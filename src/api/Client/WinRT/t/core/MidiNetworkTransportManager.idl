@@ -31,6 +31,8 @@ import "MidiNetworkConfiguredClient.idl";
 
 import "MidiNetworkRemoteClientApprovalConfig.idl";
 import "MidiNetworkRemoteClientApprovalResponse.idl";
+import "MidiNetworkRemoteClientDisconnectConfig.idl";
+import "MidiNetworkRemoteClientDisconnectResponse.idl";
 import "MidiNetworkPendingRemoteClient.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
@@ -66,6 +68,12 @@ namespace Windows.Devices.Midi2.Transports.Network
         // Approves or denies a pending client connection request. 
         [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(
             MidiNetworkRemoteClientApprovalConfig approvalConfig);
+
+        // Ends one remote client's session with a host on this PC. Nothing is recorded, so the
+        // remote may connect again. Denying it through ApproveOrDenyRemoteClientConnectRequestAsync
+        // is what refuses it in future.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkRemoteClientDisconnectResponse> DisconnectRemoteClientAsync(
+            MidiNetworkRemoteClientDisconnectConfig disconnectConfig);
 
 
 

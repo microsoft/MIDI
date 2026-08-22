@@ -199,7 +199,7 @@ namespace midiapp
             auto const useCustom = m_settings->UseCustomBackgroundColor();
             auto const color = ColorFromArgb(m_settings->BackgroundColorArgb());
 
-            // Solid has no material to tint, so the colour goes on a layer of its own. Mica and
+            // Solid has no material to tint, so the color goes on a layer of its own. Mica and
             // Acrylic take it as the material's tint instead, which keeps their texture.
             auto const showTint = useCustom && m_settings->Backdrop() == WindowBackdrop::Solid;
 

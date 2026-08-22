@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiGroup.idl";
+import "MidiEndpointConnection.idl";
+import "MidiSystemExclusiveReceivedEventArgs.idl";
+
+namespace Windows.Devices.Midi2.Utilities.SysExTransfer
+{
+    [contract(MidiSysExTransferUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.SysExTransfer.IMidiSystemExclusiveReceiver", UUID_IMidiSystemExclusiveReceiver)]
+    [constructor_name("Windows.Devices.Midi2.Utilities.SysExTransfer.IMidiSystemExclusiveReceiverFactory", UUID_IMidiSystemExclusiveReceiverFactory)]
+    runtimeclass MidiSystemExclusiveReceiver : Windows.Foundation.IClosable
+    {
+        // maximumBytesPerEvent bounds how much is buffered before an event is raised, so a
+        // display can keep up and the caller controls the memory footprint. 256 is a good
+        // starting point.
+        MidiSystemExclusiveReceiver(
+            Windows.Devices.Midi2.MidiEndpointConnection sourceConnection,
+            Windows.Devices.Midi2.MidiGroup sourceGroup,
+            UInt32 maximumBytesPerEvent);
+
+        // Raised when a message completes, or sooner if maximumBytesPerEvent accumulate first.
+        event Windows.Foundation.TypedEventHandler<MidiSystemExclusiveReceiver, MidiSystemExclusiveReceivedEventArgs> BytesReceived;
+
+        Boolean Start();
+
+        // Stop flushes whatever is still buffered, so it may raise one or more further
+        // BytesReceived events before it returns.
+        void Stop();
+
+        Boolean IsReceiving{ get; };
+
+        UInt64 CountBytesReceived{ get; };
+        UInt64 CountMessagesReceived{ get; };
+    };
+}

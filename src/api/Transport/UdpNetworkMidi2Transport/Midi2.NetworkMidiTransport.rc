@@ -134,6 +134,8 @@ BEGIN
     IDS_ERROR_PRODUCT_INSTANCE_ID_TOO_LONG          "The product instance id is longer than the 42 bytes the MIDI 2.0 specification allows."
     IDS_ERROR_CLIENT_NOT_FOUND                      "Client not found."
     IDS_ERROR_INVALID_PRODUCT_INSTANCE_ID           "Product instance id contains characters which are not allowed in a device identifier."
+    IDS_ERROR_MISSING_MATCH_ID                      "Connecting to a discovered host needs the device id it was discovered with."
+    IDS_ERROR_REMOTE_CLIENT_NOT_FOUND               "That remote client is not connected to this host."
 
     IDS_MESSAGE_CONNECTION_ENDED                    "Windows MIDI Services ended this connection."
     IDS_MESSAGE_USER_DISCONNECTED                   "Disconnected by the user."

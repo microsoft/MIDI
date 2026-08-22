@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "MidiEndpointMatchCriteria.h"
+
 
 
 class CMidi2NetworkMidiEndpointManager :
@@ -58,6 +60,12 @@ public:
     ));
 
     STDMETHOD(DeleteEndpoint(_In_ std::wstring deviceInstanceId));
+
+    // The endpoint device id for a live endpoint matching these criteria, or empty. Used when a
+    // customization arrives for something already connected, so a rename does not require the
+    // connection to be torn down and rebuilt.
+    winrt::hstring FindMatchingInstantiatedEndpoint(
+        _In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
 
     STDMETHOD(StartRemoteHostWatcher)();
     STDMETHOD(StartBackgroundEndpointCreator)();
@@ -120,6 +128,19 @@ private:
     HRESULT OnDeviceWatcherStopped(_In_ enumeration::DeviceWatcher const&, _In_ foundation::IInspectable const&);
 
     std::map<winrt::hstring, enumeration::DeviceInformation> m_foundAdvertisedHosts;
+
+    // What each live endpoint was created from, so a customization arriving later can be matched
+    // back to it. The remote's identity is not otherwise recoverable from an endpoint id.
+    struct CreatedEndpointRecord
+    {
+        winrt::hstring EndpointDeviceId;
+        winrt::hstring DeviceInstanceId;
+        winrt::hstring TransportSuppliedEndpointName;
+        winrt::hstring ProductInstanceId;
+    };
+
+    wil::critical_section m_createdEndpointsLock;
+    std::vector<CreatedEndpointRecord> m_createdEndpoints;
 
     bool m_initialized{ false };
 

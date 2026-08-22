@@ -879,7 +879,7 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
     if (previousClient != nullptr)
     {
         LOG_IF_FAILED(previousClient->Shutdown());
-        LOG_IF_FAILED(TransportState::Current().RemoveClient(clientDefinition->EntryIdentifier));
+        LOG_IF_FAILED(TransportState::Current().RemoveLiveClient(clientDefinition->EntryIdentifier));
     }
 
     auto initHr = client->Initialize(*clientDefinition);
@@ -894,8 +894,26 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
         auto startHr = client->Start(hostName, portNumberString);
         RETURN_IF_FAILED(startHr);
 
-        // Add the client and mark it live so the creator loop leaves it alone
-        TransportState::Current().AddClient(client);
+        // Building a client means an invitation, a reply and then endpoint creation, and the
+        // entry can be removed while that is in flight. Registering it anyway leaves a client
+        // no caller can see or disconnect, still holding its socket and its MIDI endpoint.
+        if (!TransportState::Current().AddClientIfStillPending(client, clientDefinition->EntryIdentifier))
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Client entry was removed while the client was being created. Shutting it back down.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingGuid(clientDefinition->EntryIdentifier, "entry identifier")
+            );
+
+            LOG_IF_FAILED(client->Shutdown());
+
+            return S_OK;
+        }
+
         LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionLive(clientDefinition->EntryIdentifier));
 
         return S_OK;
@@ -1370,6 +1388,18 @@ CMidi2NetworkMidiEndpointManager::DeleteEndpoint(
     if (!instanceId.empty())
     {
         RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(instanceId.c_str()));
+
+        auto lock = m_createdEndpointsLock.lock();
+
+        m_createdEndpoints.erase(
+            std::remove_if(
+                m_createdEndpoints.begin(),
+                m_createdEndpoints.end(),
+                [&instanceId](auto const& record)
+                {
+                    return std::wstring{ record.DeviceInstanceId } == instanceId;
+                }),
+            m_createdEndpoints.end());
     }
     else
     {
@@ -1732,6 +1762,87 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     commonProperties.EndpointDescription = endpointDescription.c_str();
     commonProperties.CustomEndpointName = nullptr;
     commonProperties.CustomEndpointDescription = nullptr;
+
+    // A name the user chose for this connection, applied before the device node is activated so
+    // the endpoint and its MIDI 1.0 ports are never created under the default name and renamed
+    // a moment later. The customization is cached by the configuration manager whether or not
+    // the endpoint existed when it arrived, which is what makes this work for a connection the
+    // user names as they create it.
+    WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
+    matchCriteria.TransportSuppliedEndpointName = endpointName;
+    matchCriteria.DeviceProductInstanceId = remoteEndpointProductInstanceId;
+    matchCriteria.NetworkStaticIPAddress = hostName != nullptr ? hostName.CanonicalName() : L"";
+    matchCriteria.NetworkPort = static_cast<uint16_t>(_wtoi(networkPort.c_str()));
+
+    std::wstring customName{ };
+    std::wstring customDescription{ };
+
+    // The name the user gave this connection when they created it. Looked up by configuration
+    // entry id, because at connection time that is the only thing we reliably know: a direct
+    // connection has not yet learned the remote's name or product instance id.
+    {
+        winrt::guid entryId{};
+
+        try
+        {
+            entryId = winrt::guid{ std::wstring_view{ configIdentifier } };
+        }
+        catch (...)
+        {
+            entryId = winrt::guid{};
+        }
+
+        if (entryId != winrt::guid{})
+        {
+            for (auto const& definition : TransportState::Current().GetPendingClientDefinitions())
+            {
+                if (definition != nullptr && definition->EntryIdentifier == entryId && !definition->CustomEndpointName.empty())
+                {
+                    customName = definition->CustomEndpointName;
+                    break;
+                }
+            }
+
+            if (customName.empty())
+            {
+                auto host = TransportState::Current().GetHost(entryId);
+
+                if (host != nullptr && !host->GetDefinition().CustomEndpointName.empty())
+                {
+                    customName = host->GetDefinition().CustomEndpointName;
+                }
+            }
+        }
+    }
+
+    auto configurationManager = TransportState::Current().GetConfigurationManager();
+
+    if (configurationManager != nullptr)
+    {
+        auto customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
+
+        if (customProperties != nullptr)
+        {
+            // A customization matched by identity wins: it is the more specific answer, and it
+            // is what a later rename writes.
+            if (!customProperties->Name.empty())
+            {
+                customName = customProperties->Name;
+            }
+
+            if (!customProperties->Description.empty())
+            {
+                customDescription = customProperties->Description;
+                commonProperties.CustomEndpointDescription = customDescription.c_str();
+            }
+        }
+    }
+
+    if (!customName.empty())
+    {
+        commonProperties.CustomEndpointName = customName.c_str();
+    }
+
     commonProperties.UniqueIdentifier = swdUniqueIdentifier.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
     commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
@@ -1799,7 +1910,15 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     createdNewDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
     createdNewEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
 
+    {
+        auto lock = m_createdEndpointsLock.lock();
 
+        m_createdEndpoints.push_back(CreatedEndpointRecord{
+            winrt::hstring{ createdNewEndpointDeviceInterfaceId },
+            winrt::hstring{ createdNewDeviceInstanceId },
+            winrt::hstring{ endpointName },
+            winrt::hstring{ remoteEndpointProductInstanceId } });
+    }
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1811,6 +1930,34 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     );
 
     return S_OK;
+}
+
+
+_Use_decl_annotations_
+winrt::hstring
+CMidi2NetworkMidiEndpointManager::FindMatchingInstantiatedEndpoint(
+    WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
+{
+    criteria.Normalize();
+
+    auto lock = m_createdEndpointsLock.lock();
+
+    for (auto const& record : m_createdEndpoints)
+    {
+        WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria available{};
+
+        available.EndpointDeviceId = record.EndpointDeviceId;
+        available.DeviceInstanceId = record.DeviceInstanceId;
+        available.TransportSuppliedEndpointName = record.TransportSuppliedEndpointName;
+        available.DeviceProductInstanceId = record.ProductInstanceId;
+
+        if (available.Matches(criteria))
+        {
+            return available.EndpointDeviceId;
+        }
+    }
+
+    return L"";
 }
 
 

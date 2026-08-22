@@ -18,7 +18,6 @@ namespace Windows.Devices.Midi2.Transports.Network
     runtimeclass MidiNetworkConfiguredClient
     {
         [noexcept] Guid ClientId{ get; };  // internal id we use to match up in config file
-        [noexcept] Guid HostId{ get; }; // the id of the host this client is connected to
 
         //Boolean IsEnabled;                    // true if this is allows to connect. Mostly for pre-configured connections
         [noexcept] Boolean IsSessionActive{ get; };                // true if a session is active
@@ -30,6 +29,11 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] Boolean IsDirectConnection{ get; };             // configured by address and port rather than discovered
         [noexcept] String ConfiguredDirectAddress{ get; };
         [noexcept] String ConfiguredDirectPort{ get; };
+
+        // The advertised host this entry was configured to match, as a Windows device id. Empty
+        // for a direct connection. This is what ties a configured client back to a discovered
+        // host, so an app can show one row instead of two.
+        [noexcept] String MatchDeviceId{ get; };
 
         [noexcept] String ConnectedRemoteAddress{ get; };
         [noexcept] String ConnectedRemotePort{ get; };

@@ -20,6 +20,11 @@ struct MidiNetworkClientDefinition
     winrt::hstring LocalEndpointName;       // this is required by protocol
     winrt::hstring LocalProductInstanceId;  // also required by protocol
 
+    // What the user chose to call this connection. Applied when the endpoint is created, so it
+    // is never built under the remote's own name and renamed afterwards. Empty means use the
+    // name the remote announces.
+    winrt::hstring CustomEndpointName;
+
 
     bool CreateMidi1Ports{ MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT };
 
@@ -72,8 +77,8 @@ public:
 
     bool IsSessionActive() { auto conn = GetConnection(); return conn != nullptr ? conn->IsSessionActive() : false; }
 
-    uint32_t GetRetransmitCount() { return m_retransmitCount; }
-    uint32_t GetRetransmitRequestCount() { return m_retransmitRequestCount; }
+    uint32_t GetRetransmitCount() { auto conn = GetConnection(); return conn ? conn->GetRetransmitCount() : 0; }
+    uint32_t GetRetransmitRequestCount() { auto conn = GetConnection(); return conn ? conn->GetRetransmitRequestCount() : 0; }
     uint64_t GetAndResetAverageLatencyTicks()
     { 
         auto conn = GetConnection();
@@ -95,9 +100,6 @@ public:
 
 private:
     MidiNetworkClientDefinition m_clientDefinition;
-
-    uint32_t m_retransmitCount{ 0 };
-    uint32_t m_retransmitRequestCount{ 0 };
 
     winrt::guid m_configIdentifier{};
 

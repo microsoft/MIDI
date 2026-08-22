@@ -79,6 +79,11 @@ public:
     // A user refused this pending remote. Sends the Bye the spec has for exactly this.
     HRESULT DenyByUser();
 
+    // A user ended this remote's session. Nothing is recorded, so the remote may invite itself
+    // back in; DenyByUser plus the deny list is what refuses it for good. A remote which is
+    // still waiting on an approval decision is closed out the same way DenyByUser would.
+    HRESULT DisconnectByUser();
+
 protected:
     HRESULT HandleIncomingInvitation(
         _In_ MidiNetworkCommandPacketHeader const& header,

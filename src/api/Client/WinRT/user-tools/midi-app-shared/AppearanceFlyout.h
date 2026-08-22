@@ -30,9 +30,12 @@ namespace midiapp
 
     // Shows the shared appearance controls in a light dismiss flyout anchored to a button.
     // onChanged fires after any setting is written, so the caller can re-apply the chrome.
+    // extraContent, when supplied, is placed below the shared controls for app settings that
+    // belong in the same flyout.
     void ShowAppearanceFlyout(
         winrt::Microsoft::UI::Xaml::FrameworkElement const& anchor,
         MidiAppSettings& settings,
         AppearanceStrings const& strings,
-        std::function<void()> const& onChanged) noexcept;
+        std::function<void()> const& onChanged,
+        winrt::Microsoft::UI::Xaml::UIElement const& extraContent = nullptr) noexcept;
 }

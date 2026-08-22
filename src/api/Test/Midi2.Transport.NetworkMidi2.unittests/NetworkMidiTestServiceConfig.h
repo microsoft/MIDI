@@ -66,6 +66,14 @@ namespace NetworkMidiTest
         _In_ std::wstring const& entryIdentifier,
         _In_ std::wstring const& hostNameOrAddress,
         _In_ uint16_t const port,
+        _In_ std::wstring const& umpEndpointName = L"Test Client",
+        _In_ std::wstring const& customEndpointName = L"");
+
+    // The connectMdns command. Names a host by the Windows device id it was discovered with,
+    // rather than an address, so the service re-resolves the address every time it appears.
+    ServiceConfigResult ConnectMdnsClient(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::wstring const& matchId,
         _In_ std::wstring const& umpEndpointName = L"Test Client");
 
     // Returns the enumerateClients response, for tests which need to see what the service
@@ -117,6 +125,13 @@ namespace NetworkMidiTest
         _In_ std::wstring const& umpEndpointName,
         _In_ std::wstring const& productInstanceId,
         _In_ std::wstring const& scope);
+
+    // Ends one remote client's session with a host on this PC. Records no decision, unlike a
+    // denial, so the remote is free to invite itself back in.
+    ServiceConfigResult DisconnectRemoteClient(
+        _In_ std::wstring const& hostEntryIdentifier,
+        _In_ std::wstring const& umpEndpointName,
+        _In_ std::wstring const& productInstanceId);
 
     // A fresh GUID string in the "{...}" form the configuration uses.
     std::wstring MakeEntryIdentifier();

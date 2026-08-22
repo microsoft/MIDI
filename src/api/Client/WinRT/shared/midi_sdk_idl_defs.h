@@ -211,6 +211,12 @@
 
 #define UUID_IMidiSystemExclusiveSenderStatics			   	                8087b303-0519-c0de-31d1-ee00E0302000
 
+#define UUID_IMidiSystemExclusiveReceivedEventArgs                          8087b303-0519-c0de-31d1-dd00E0303000
+
+#define UUID_IMidiSystemExclusiveReceiver                                   8087b303-0519-c0de-31d1-dd00E0304000
+
+#define UUID_IMidiSystemExclusiveReceiverFactory                            8087b303-0519-c0de-31d1-ff00E0305000
+
 
 // ========== Transports : Interface number 0F ========================================================================
 
@@ -305,6 +311,13 @@
 #define UUID_IMidiNetworkAdvertisedHostAddedEventArgs           8087b303-0519-c0de-31d1-dd00F0313000
 #define UUID_IMidiNetworkAdvertisedHostRemovedEventArgs         8087b303-0519-c0de-31d1-dd00F0314000
 #define UUID_IMidiNetworkAdvertisedHostUpdatedEventArgs         8087b303-0519-c0de-31d1-dd00F0315000
+
+#define UUID_IMidiNetworkHostConnection                         8087b303-0519-c0de-31d1-dd00F0316000
+
+#define UUID_IMidiNetworkRemoteClientDisconnectConfig           8087b303-0519-c0de-31d1-dd00F0317000
+#define UUID_IMidiNetworkRemoteClientDisconnectConfigFactory    8087b303-0519-c0de-31d1-ff00F0317000
+
+#define UUID_IMidiNetworkRemoteClientDisconnectResponse         8087b303-0519-c0de-31d1-dd00F0318000
 
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04

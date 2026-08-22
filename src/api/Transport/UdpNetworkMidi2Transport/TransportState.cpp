@@ -425,10 +425,83 @@ TransportState::AddClient(
     return S_OK;
 }
 
+// The mirror of AddHostIfStillPending. Both the add and RemoveClient take the state lock
+// exclusively, so a client can no longer be registered after the entry it belongs to has gone.
+_Use_decl_annotations_
+bool
+TransportState::AddClientIfStillPending(
+    std::shared_ptr<MidiNetworkClient> client,
+    winrt::guid const& clientEntryIdentifier)
+{
+    if (client == nullptr)
+    {
+        return false;
+    }
+
+    auto lock = m_stateLock.lock_exclusive();
+
+    auto const stillPending = std::any_of(
+        m_pendingClientDefinitions.begin(),
+        m_pendingClientDefinitions.end(),
+        [&clientEntryIdentifier](auto const& definition)
+        {
+            return definition != nullptr && definition->EntryIdentifier == clientEntryIdentifier;
+        });
+
+    if (!stillPending)
+    {
+        return false;
+    }
+
+    m_clients.push_back(client);
+
+    return true;
+}
+
 _Use_decl_annotations_
 HRESULT 
-TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier)
+TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier, bool& removedPendingDefinition)
 {
+    removedPendingDefinition = false;
+
+    auto lock = m_stateLock.lock_exclusive();
+
+    bool removedLiveClient{ false };
+
+    for (auto it = m_clients.begin(); it != m_clients.end(); it++)
+    {
+        if ((*it)->GetDefinition().EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            m_clients.erase(it);
+
+            removedLiveClient = true;
+
+            break;
+        }
+    }
+
+    // The definition is what enumerateClients walks, and it is also what the endpoint creator
+    // thread would use to build the client again on its next pass.
+    auto const before = m_pendingClientDefinitions.size();
+
+    m_pendingClientDefinitions.erase(
+        std::remove_if(
+            m_pendingClientDefinitions.begin(),
+            m_pendingClientDefinitions.end(),
+            [&clientConfigEntryIdentifier](auto const& definition)
+            {
+                return definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier;
+            }),
+        m_pendingClientDefinitions.end());
+
+    removedPendingDefinition = m_pendingClientDefinitions.size() != before;
+
+    return (removedLiveClient || removedPendingDefinition) ? S_OK : E_NOTFOUND;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::RemoveLiveClient(winrt::guid const& clientConfigEntryIdentifier){
     auto lock = m_stateLock.lock_exclusive();
 
     for (auto it = m_clients.begin(); it != m_clients.end(); it++)

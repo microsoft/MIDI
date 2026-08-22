@@ -33,7 +33,7 @@ namespace midiapp
         // call once the root element has loaded, before the window is activated
         void Initialize(WindowChromeElements const& elements, MidiAppSettings& settings) noexcept;
 
-        // theme, then everything whose colours are derived from it
+        // theme, then everything whose colors are derived from it
         void ApplyTheme() noexcept;
 
         void ApplyBackdrop() noexcept;

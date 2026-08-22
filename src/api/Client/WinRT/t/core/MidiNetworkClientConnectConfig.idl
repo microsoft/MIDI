@@ -31,6 +31,12 @@ namespace Windows.Devices.Midi2.Transports.Network
 
 		[noexcept] String UmpEndpointName;				// the ump endpoint name to create
 
+		// Optional. What the user chose to call the MIDI endpoint this connection creates. It is
+		// applied before the endpoint is activated, so the endpoint and its MIDI 1.0 ports are
+		// never created under the remote's own name and renamed afterwards. Leave it empty to use
+		// the name the remote device announces.
+		[noexcept] String CustomEndpointName;
+
 
 		// sets the criteria we look for when creating the endpoint. mDNS is generally preferred.
 		[noexcept] MidiNetworkClientMatchCriteria MatchCriteria;

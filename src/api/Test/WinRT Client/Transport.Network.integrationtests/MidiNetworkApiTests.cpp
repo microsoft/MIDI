@@ -1241,6 +1241,312 @@ void MidiNetworkApiTests::TestDisconnectUnknownClientFailsCleanly()
         response.ErrorMessage().c_str()));
 }
 
+
+// ------------------------------------------------------------------------------
+// Connecting by device id
+// ------------------------------------------------------------------------------
+
+namespace
+{
+    // The configured client entry for an id, from the service, or nothing. Polled because the
+    // service registers the definition on its own threads.
+    MidiNetworkConfiguredClient FindConfiguredClient(_In_ winrt::guid const& clientId)
+    {
+        for (int attempt = 0; attempt < 40; attempt++)
+        {
+            auto clients = MidiNetworkTransportManager::GetConfiguredClients();
+
+            if (clients != nullptr)
+            {
+                for (auto const& client : clients)
+                {
+                    if (client != nullptr && client.ClientId() == clientId)
+                    {
+                        return client;
+                    }
+                }
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+
+        return nullptr;
+    }
+
+    bool ConfiguredClientIsGone(_In_ winrt::guid const& clientId)
+    {
+        for (int attempt = 0; attempt < 40; attempt++)
+        {
+            auto clients = MidiNetworkTransportManager::GetConfiguredClients();
+
+            bool found{ false };
+
+            if (clients != nullptr)
+            {
+                for (auto const& client : clients)
+                {
+                    if (client != nullptr && client.ClientId() == clientId)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                return true;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+
+        return false;
+    }
+
+    // Best effort, so a failed assert cannot leave an entry in the service.
+    void RemoveTestClient(_In_ winrt::guid const& clientId)
+    {
+        try
+        {
+            MidiNetworkClientDisconnectConfig config(clientId);
+            MidiNetworkTransportManager::DisconnectNetworkClientAsync(config).get();
+        }
+        catch (...)
+        {
+        }
+    }
+}
+
+void MidiNetworkApiTests::TestConnectByDeviceIdCreatesAnMdnsMatchedEntry()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // A device id which resolves to nothing, so no connection is attempted. What matters is
+    // that the entry the service records is a device id match rather than an address, because
+    // only that survives the remote moving to a new address or port.
+    auto clientId = foundation::GuidHelper::CreateNewGuid();
+    auto deviceId = winrt::hstring{ std::wstring{ L"MidiApiTest_NoSuchDevice_" } + MakeUniqueSuffix() };
+
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DeviceId(deviceId);
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(clientId);
+    config.UmpEndpointName(L"MidiApiTest Device Id Match");
+    config.MatchCriteria(criteria);
+
+    auto response = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+
+    if (response != nullptr)
+    {
+        Log::Comment(String().Format(
+            L"Connect by device id: success=%d code=0x%08X message='%s'",
+            response.Success() ? 1 : 0,
+            (uint32_t)response.ErrorCode(),
+            response.ErrorMessage().c_str()));
+    }
+
+    VERIFY_IS_TRUE(response.Success(), L"A device id is enough to connect with");
+
+    if (!response.Success())
+    {
+        return;
+    }
+
+    auto entry = FindConfiguredClient(clientId);
+
+    VERIFY_IS_NOT_NULL(entry);
+
+    if (entry != nullptr)
+    {
+        VERIFY_ARE_EQUAL(deviceId, entry.MatchDeviceId(), L"The entry matches on the device id it was given");
+        VERIFY_IS_FALSE(entry.IsDirectConnection(), L"A device id match is not a direct connection");
+    }
+
+    RemoveTestClient(clientId);
+}
+
+void MidiNetworkApiTests::TestConnectWithNoMatchCriteriaValuesFailsCleanly()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // Criteria which name nothing at all. Previously this reached the service as a direct
+    // connect with an empty address, which is a much less useful error.
+    MidiNetworkClientMatchCriteria criteria;
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(foundation::GuidHelper::CreateNewGuid());
+    config.UmpEndpointName(L"MidiApiTest Empty Criteria");
+    config.MatchCriteria(criteria);
+
+    auto response = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+
+    VERIFY_ARE_EQUAL(
+        MidiNetworkClientConnectErrorCode::InvalidOrMissingMatchCriteria,
+        response.ErrorCode(),
+        L"Criteria with neither a device id nor an address are rejected as such");
+}
+
+void MidiNetworkApiTests::TestConnectByDeviceIdEntryCanBeDisconnected()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto clientId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DeviceId(winrt::hstring{ std::wstring{ L"MidiApiTest_NoSuchDevice_" } + MakeUniqueSuffix() });
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(clientId);
+    config.UmpEndpointName(L"MidiApiTest Device Id Removal");
+    config.MatchCriteria(criteria);
+
+    auto connectResponse = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
+    VERIFY_IS_TRUE(connectResponse != nullptr && connectResponse.Success());
+
+    VERIFY_IS_NOT_NULL(FindConfiguredClient(clientId));
+
+    // This entry never became a live client, and removing one used to report "client not found"
+    // and leave it in the list for good.
+    MidiNetworkClientDisconnectConfig disconnectConfig(clientId);
+
+    auto disconnectResponse = MidiNetworkTransportManager::DisconnectNetworkClientAsync(disconnectConfig).get();
+
+    VERIFY_IS_NOT_NULL(disconnectResponse);
+    VERIFY_IS_TRUE(disconnectResponse.Success(), L"An entry which never connected can still be removed");
+
+    VERIFY_IS_TRUE(ConfiguredClientIsGone(clientId), L"The entry is no longer reported");
+}
+
+void MidiNetworkApiTests::TestDisconnectRemovesTheConfiguredClientEntry()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    // Loopback port 1, so nothing answers and the entry stays a definition.
+    auto clientId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DirectHostNameOrIPAddress(L"127.0.0.1");
+    criteria.DirectPort(1);
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(clientId);
+    config.UmpEndpointName(L"MidiApiTest Direct Removal");
+    config.MatchCriteria(criteria);
+
+    auto connectResponse = MidiNetworkTransportManager::ConnectNetworkClientAsync(config).get();
+    VERIFY_IS_TRUE(connectResponse != nullptr && connectResponse.Success());
+
+    VERIFY_IS_NOT_NULL(FindConfiguredClient(clientId));
+
+    MidiNetworkClientDisconnectConfig disconnectConfig(clientId);
+
+    auto disconnectResponse = MidiNetworkTransportManager::DisconnectNetworkClientAsync(disconnectConfig).get();
+    VERIFY_IS_TRUE(disconnectResponse != nullptr && disconnectResponse.Success());
+
+    VERIFY_IS_TRUE(
+        ConfiguredClientIsGone(clientId),
+        L"A disconnected entry is removed rather than left reporting as unavailable");
+}
+
+
+// ------------------------------------------------------------------------------
+// Disconnecting a remote client from one of our hosts
+// ------------------------------------------------------------------------------
+
+void MidiNetworkApiTests::TestRemoteClientDisconnectConfigRoundTrip()
+{
+    auto hostId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkRemoteClientDisconnectConfig config(hostId, L"Some Remote", L"SOMEREMOTE01");
+
+    VERIFY_ARE_EQUAL(hostId, config.HostId());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"Some Remote" }, config.RemoteClientName());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"SOMEREMOTE01" }, config.RemoteClientProductInstanceId());
+
+    VERIFY_ARE_EQUAL(MidiNetworkTransportManager::TransportId(), config.TransportId());
+
+    // Nothing is written to the configuration file for a disconnect, but the generic transport
+    // plugin surface must still hand back an object rather than null.
+    VERIFY_IS_NOT_NULL(config.ConfigJson());
+
+    MidiNetworkRemoteClientDisconnectConfig settable;
+
+    settable.HostId(hostId);
+    settable.RemoteClientName(L"Renamed");
+    settable.RemoteClientProductInstanceId(L"RENAMED01");
+
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"Renamed" }, settable.RemoteClientName());
+    VERIFY_ARE_EQUAL(winrt::hstring{ L"RENAMED01" }, settable.RemoteClientProductInstanceId());
+}
+
+void MidiNetworkApiTests::TestDisconnectRemoteClientWithEmptyIdentityFailsWithoutCallingService()
+{
+    // A remote client is named by the pair. Half of it could match the wrong device, so this is
+    // rejected client-side rather than being sent on.
+    MidiNetworkRemoteClientDisconnectConfig config(foundation::GuidHelper::CreateNewGuid(), L"", L"");
+
+    auto response = MidiNetworkTransportManager::DisconnectRemoteClientAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+
+    VERIFY_ARE_EQUAL(
+        MidiNetworkRemoteClientDisconnectErrorCode::InvalidOrMissingRemoteClientIdentity,
+        response.ErrorCode());
+}
+
+void MidiNetworkApiTests::TestDisconnectUnknownRemoteClientFailsCleanly()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    MidiNetworkRemoteClientDisconnectConfig config(
+        foundation::GuidHelper::CreateNewGuid(),
+        L"Nobody Is Connected Under This Name",
+        L"NOBODY01");
+
+    auto response = MidiNetworkTransportManager::DisconnectRemoteClientAsync(config).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+
+    Log::Comment(String().Format(
+        L"Disconnect of unknown remote client failed with 0x%08X: %s",
+        (uint32_t)response.ErrorCode(),
+        response.ErrorMessage().c_str()));
+}
+
+void MidiNetworkApiTests::TestDisconnectRemoteClientWithNullConfigFailsCleanly()
+{
+    // The whole surface is noexcept, so a null here must fail rather than terminate.
+    auto response = MidiNetworkTransportManager::DisconnectRemoteClientAsync(nullptr).get();
+
+    VERIFY_IS_NOT_NULL(response);
+    VERIFY_IS_FALSE(response.Success());
+    VERIFY_ARE_EQUAL(MidiNetworkRemoteClientDisconnectErrorCode::InvalidArgument, response.ErrorCode());
+}
+
+void MidiNetworkApiTests::TestDefaultHostConfigCreatesUmpEndpointsOnly()
+{
+    auto config = MidiNetworkHostCreationConfig::CreateDefault();
+
+    VERIFY_IS_NOT_NULL(config);
+
+    if (config == nullptr) return;
+
+    // UMP endpoints only. The comment above this line in the implementation used to claim the
+    // opposite, which is exactly the sort of thing a caller copies.
+    VERIFY_IS_TRUE(
+        config.CreateOnlyUmpEndpoints(),
+        L"The default host creates UMP endpoints only; a caller wanting MIDI 1.0 ports clears this.");
+}
+
 void MidiNetworkApiTests::TestDuplicateServiceInstanceNameIsRejected()
 {
     SKIP_IF_NO_NETWORK_TRANSPORT();

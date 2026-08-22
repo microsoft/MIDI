@@ -101,7 +101,29 @@ public:
 
 
     HRESULT AddClient(_In_ std::shared_ptr<MidiNetworkClient>);
-    HRESULT RemoveClient(_In_ winrt::guid const& clientConfigEntryIdentifier);
+
+    // Registers a client only if its definition is still pending, the same way
+    // AddHostIfStillPending does for hosts. A client takes seconds to build - invitation,
+    // reply, then endpoint creation - and the entry can be removed in that window. Losing
+    // that race means the client is unreachable: enumerateClients is definition-driven, so
+    // nothing would ever list it, and nothing would ever disconnect it, while it keeps a
+    // socket and a live MIDI endpoint. Returns false in that case, and the caller must shut
+    // the client down instead.
+    bool AddClientIfStillPending(
+        _In_ std::shared_ptr<MidiNetworkClient> client,
+        _In_ winrt::guid const& clientEntryIdentifier);
+
+    // Removes the live client AND the configured definition it was built from. enumerateClients
+    // is definition-driven, so leaving the definition behind keeps reporting an entry the user
+    // has already disconnected. Returns S_OK if either was found, E_NOTFOUND if neither was.
+    // removedPendingDefinition says whether an entry which never connected was taken away.
+    HRESULT RemoveClient(
+        _In_ winrt::guid const& clientConfigEntryIdentifier,
+        _Out_ bool& removedPendingDefinition);
+
+    // Drops only the live client, keeping the definition. Used when reconnecting an entry: the
+    // dead client object has to go, but the entry it was built from is still wanted.
+    HRESULT RemoveLiveClient(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
     std::vector<std::shared_ptr<MidiNetworkClient>> GetClients();
 

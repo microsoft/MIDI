@@ -170,57 +170,61 @@ MidiNetworkConnection::ConnectionWatcherThreadWorker(std::stop_token stopToken)
 
         if (m_lastIncomingValidUdpPacketTimestamp > threadWaitStartTimestamp)
         {
-            // all good. Wait again
+            // Traffic is flowing, so liveness is not in question. Still ping below: a Ping Reply
+            // is the only round trip we can time, and a session which is carrying MIDI would
+            // otherwise never produce a latency sample at all.
             m_connectionTimeoutEvent.ResetEvent();
-
-            continue;
-        }
-
-        uint16_t consecutiveFailures{ 0 };
-
-        {
-            auto lock = m_pingTrackingLock.lock();
-
-            // check our ping entries. We want to check the last N entries and if all of them
-            // have been ignored, we will take action.
-            for (auto pingEntry = m_outgoingPingTracking.rbegin();
-                pingEntry != m_outgoingPingTracking.rend() && consecutiveFailures <= m_outgoingPingMaxIgnoredBeforeDisconnect; pingEntry++)
-            {
-                if (!pingEntry->Received)
-                {
-                    consecutiveFailures++;
-                }
-                else
-                {
-                    // the first time we find one that has been received, we bail
-                    break;
-                }
-            }
-        }
-
-        if (m_shuttingDown || stopToken.stop_requested())
-        {
-            break;
-        }
-
-        if (consecutiveFailures >= m_outgoingPingMaxIgnoredBeforeDisconnect)
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Remote endpoint stopped responding to pings. Ending session.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingUInt16(consecutiveFailures, "consecutive missed pings")
-            );
-
-            LOG_IF_FAILED(EndActiveSessionDueToTimeout());
         }
         else
         {
-            LOG_IF_FAILED(SendPing());
+            uint16_t consecutiveFailures{ 0 };
+
+            {
+                auto lock = m_pingTrackingLock.lock();
+
+                // check our ping entries. We want to check the last N entries and if all of them
+                // have been ignored, we will take action.
+                for (auto pingEntry = m_outgoingPingTracking.rbegin();
+                    pingEntry != m_outgoingPingTracking.rend() && consecutiveFailures <= m_outgoingPingMaxIgnoredBeforeDisconnect; pingEntry++)
+                {
+                    if (!pingEntry->Received)
+                    {
+                        consecutiveFailures++;
+                    }
+                    else
+                    {
+                        // the first time we find one that has been received, we bail
+                        break;
+                    }
+                }
+            }
+
+            if (m_shuttingDown || stopToken.stop_requested())
+            {
+                break;
+            }
+
+            if (consecutiveFailures >= m_outgoingPingMaxIgnoredBeforeDisconnect)
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Remote endpoint stopped responding to pings. Ending session.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt16(consecutiveFailures, "consecutive missed pings")
+                );
+
+                LOG_IF_FAILED(EndActiveSessionDueToTimeout());
+
+                continue;
+            }
         }
+
+        // Only a remote which has gone quiet can be disconnected for missed pings, so a remote
+        // which streams to us but never answers a Ping keeps its session exactly as before.
+        LOG_IF_FAILED(SendPing());
     }
 
     return S_OK;
@@ -1847,6 +1851,10 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    // Counted before any of the ways this can be refused, so the measure says how often the
+    // remote had to ask, not how often we were able to answer.
+    m_retransmitRequestCount++;
+
     // the retransmit buffer is guarded by the socket writer lock
     auto lock = m_socketWriterLock.lock();
 
@@ -1932,6 +1940,8 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(
 
             std::advance(it, countThisDatagram);
             countRemaining -= countThisDatagram;
+
+            m_retransmitCount += static_cast<uint32_t>(countThisDatagram);
         }
     }
 

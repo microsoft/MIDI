@@ -32,11 +32,15 @@
 #include "MidiServiceTransportPluginConfigManager.h"
 
 #include "MidiNetworkConfiguredHost.h"
+#include "MidiNetworkHostConnection.h"
 #include "MidiNetworkConfiguredClient.h"
 #include "MidiNetworkPendingRemoteClient.h"
 
 #include "MidiNetworkRemoteClientApprovalConfig.h"
 #include "MidiNetworkRemoteClientApprovalResponse.h"
+
+#include "MidiNetworkRemoteClientDisconnectConfig.h"
+#include "MidiNetworkRemoteClientDisconnectResponse.h"
 
 //#include <pplawait.h>
 
@@ -88,6 +92,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             }
 
             return network::MidiNetworkClientEntryState::Pending;
+        }
+
+        network::MidiNetworkRemoteClientPolicy RemoteClientPolicyFromString(_In_ winrt::hstring const& value) noexcept
+        {
+            if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL)
+            {
+                return network::MidiNetworkRemoteClientPolicy::RequireApproval;
+            }
+
+            return network::MidiNetworkRemoteClientPolicy::AllowAny;
         }
 
         // The service turns a submitted host definition into a live host on its creator worker,
@@ -326,8 +340,45 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY, false),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY, L""),
-                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY, false)
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY, false),
+                                RemoteClientPolicyFromString(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REMOTE_CLIENT_POLICY_KEY, L""))
                             );
+
+                            // remote clients on this host. The service reports an empty array when
+                            // nothing has connected, so an older service simply yields no entries.
+                            if (entryObject.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY))
+                            {
+                                auto connectionsArray = entryObject.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY);
+
+                                for (auto const& connectionEntry : connectionsArray)
+                                {
+                                    auto connectionObject = connectionEntry.GetObject();
+
+                                    if (connectionObject == nullptr)
+                                    {
+                                        continue;
+                                    }
+
+                                    auto connection = winrt::make_self<MidiNetworkHostConnection>();
+
+                                    connection->InternalInitialize(
+                                        connectionObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L""),
+                                        connectionObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L""),
+                                        connectionObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY, L""),
+                                        connectionObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_PORT_KEY, L""),
+                                        connectionObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SESSION_ACTIVE_KEY, false),
+                                        connectionObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_PENDING_APPROVAL_KEY, false),
+                                        connectionObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_UMP_ENDPOINT_ID_KEY, L""),
+
+                                        static_cast<uint64_t>(connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_LATENCY_KEY, 0)),
+                                        static_cast<uint32_t>(connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_COUNT_KEY, 0)),
+                                        static_cast<uint32_t>(connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY, 0)),
+                                        static_cast<uint64_t>(connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_SENT_KEY, 0)),
+                                        static_cast<uint64_t>(connectionObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_RECEIVED_KEY, 0)));
+
+                                    host->InternalAddConnection(*connection);
+                                }
+                            }
 
                             results.Append(*host);
                         }
@@ -419,15 +470,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 continue;
                             }
 
-                            // the host association is optional, so an unparseable one is left empty
-                            winrt::guid clientHostId{};
-                            TryParseGuid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_HOST_ID_KEY, L""), clientHostId);
-
                             auto client = winrt::make_self<MidiNetworkConfiguredClient>();
 
                             client->InternalInitialize(
                                 clientId,
-                                clientHostId,
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY, false),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_ADDRESS_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REMOTE_PORT_KEY, L""),
@@ -445,7 +491,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 EntryStateFromString(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_ENTRY_STATE_KEY, L"")),
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_DIRECT_KEY, false),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_ADDRESS_KEY, L""),
-                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY, L"")
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_DIRECT_PORT_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_MDNS_MATCH_ID_KEY, L"")
                                 );
 
                             results.Append(*client);
@@ -882,7 +929,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 co_return *result;
             }
 
-            // TODO: Right now this is only doing direct connects, not MDNS connects
             auto matchCriteria = creationConfig.MatchCriteria();
 
             if (matchCriteria == nullptr)
@@ -895,11 +941,45 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             }
 
             svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
-            cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT);
-            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, winrt::to_hstring(creationConfig.ClientId()));
-            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS, matchCriteria.DirectHostNameOrIPAddress());
-            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT, winrt::to_hstring(matchCriteria.DirectPort()));
-            cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME, creationConfig.UmpEndpointName());
+
+            auto const deviceId = matchCriteria.DeviceId();
+
+            if (!deviceId.empty())
+            {
+                // A discovered host is matched by device id, and the service re-resolves its
+                // address from the advertisement every time it appears. That is what lets the
+                // connection survive the remote moving to a new address or port, which a direct
+                // connection cannot do.
+                cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_MDNS);
+                cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, winrt::to_hstring(creationConfig.ClientId()));
+                cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_MATCH_ID, deviceId);
+                cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME, creationConfig.UmpEndpointName());
+            }
+            else if (!matchCriteria.DirectHostNameOrIPAddress().empty())
+            {
+                cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT);
+                cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER, winrt::to_hstring(creationConfig.ClientId()));
+                cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_ADDRESS, matchCriteria.DirectHostNameOrIPAddress());
+                cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_REMOTE_PORT, winrt::to_hstring(matchCriteria.DirectPort()));
+                cmd.Arguments().Insert(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME, creationConfig.UmpEndpointName());
+            }
+            else
+            {
+                result->InternalSetError(
+                    network::MidiNetworkClientConnectErrorCode::InvalidOrMissingMatchCriteria,
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_MISSING_MATCH_CRITERIA));
+
+                co_return *result;
+            }
+
+            // Optional. The service applies this before it activates the endpoint, so a named
+            // connection is never created under the remote's name and renamed a moment later.
+            if (!creationConfig.CustomEndpointName().empty())
+            {
+                cmd.Arguments().Insert(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY,
+                    creationConfig.CustomEndpointName());
+            }
 
             co_await winrt::resume_background();
 
@@ -1163,6 +1243,112 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         }
     }
 
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<network::MidiNetworkRemoteClientDisconnectResponse> MidiNetworkTransportManager::DisconnectRemoteClientAsync(
+        network::MidiNetworkRemoteClientDisconnectConfig const& disconnectConfig) noexcept
+    {
+        auto response = winrt::make_self<MidiNetworkRemoteClientDisconnectResponse>();
+
+        try
+        {
+            if (disconnectConfig == nullptr)
+            {
+                response->InternalSetError(
+                    network::MidiNetworkRemoteClientDisconnectErrorCode::InvalidArgument,
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_NULL_DISCONNECT_CONFIG));
+
+                co_return *response;
+            }
+
+            // Captured before the thread switch because the projected object may be apartment-bound
+            auto const hostId = disconnectConfig.HostId();
+            auto const remoteClientName = disconnectConfig.RemoteClientName();
+            auto const remoteClientProductInstanceId = disconnectConfig.RemoteClientProductInstanceId();
+
+            response->InternalSetHostId(hostId);
+            response->InternalSetRemoteClientName(remoteClientName);
+            response->InternalSetRemoteClientProductInstanceId(remoteClientProductInstanceId);
+
+            if (remoteClientName.empty() || remoteClientProductInstanceId.empty())
+            {
+                response->InternalSetError(
+                    network::MidiNetworkRemoteClientDisconnectErrorCode::InvalidOrMissingRemoteClientIdentity,
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_MISSING_REMOTE_CLIENT_IDENTITY));
+
+                co_return *response;
+            }
+
+            svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
+
+            cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT);
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                winrt::to_hstring(hostId));
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                remoteClientName);
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                remoteClientProductInstanceId);
+
+            co_await resume_background();
+
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                response->InternalSetSuccess();
+            }
+            else
+            {
+                response->InternalSetError(
+                    static_cast<network::MidiNetworkRemoteClientDisconnectErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
+            }
+
+            co_return *response;
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to disconnect remote client. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            response->InternalSetError(network::MidiNetworkRemoteClientDisconnectErrorCode::ClientApiException, ex.message());
+
+            co_return *response;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to disconnect remote client. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            response->InternalSetError(network::MidiNetworkRemoteClientDisconnectErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+
+            co_return *response;
+        }
+    }
 
 
 

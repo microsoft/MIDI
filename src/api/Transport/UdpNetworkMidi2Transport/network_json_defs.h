@@ -95,6 +95,16 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_CLIENT                L"disconnectClient"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_DIRECT                   L"connectDirect"
 
+// Connects to a host which was discovered over mDNS, named by its Windows device id. The
+// address and port come from the advertisement, and are re-resolved every time the host
+// reappears, so a device which moves to a new address still reconnects.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_CONNECT_MDNS                     L"connectMdns"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_MATCH_ID                    L"matchId"
+
+// Ends one remote client's session with a host on this PC. Unlike denyRemoteClient this records
+// no decision: the remote is free to invite itself back in.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT         L"disconnectRemoteClient"
+
 // Approval of a remote client which is waiting in the pending state, or pre-approval of one
 // which has not connected yet. "always" and "denyAlways" also need writing to the config file
 // by the caller; the service applies them immediately either way.
@@ -112,13 +122,17 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_CLIENT_ENTRY_IDENTIFIER     L"entryIdentifier"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME           L"umpEndpointName"
 
+// Optional. What the user chose to call the endpoint this connection creates. Applied before the
+// device node is activated, so the endpoint is never created under the remote's own name and
+// renamed afterwards. Empty means use the name the remote announces.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY                      L"customEndpointName"
+
 
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS                L"enumerateClients"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CLIENTS_ARRAY_KEY       MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CONFIG_ID_KEY           L"entryIdentifier"
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_HOST_ID_KEY             L"hostId"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_MDNS_MATCH_ID_KEY       L"mdnsMatchId"
 //#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_ENABLED_KEY          MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY   L"sessionActive"
@@ -171,6 +185,14 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY                 L"remoteAddress"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_PORT_KEY                    L"remotePort"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_UMP_ENDPOINT_ID_KEY                L"endpointDeviceId"
+
+// Same measures the client entries carry, so an app can show one connection detail panel
+// whichever side of the connection this PC is on.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_CURRENT_LATENCY_KEY                MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_LATENCY_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_SENT_KEY     MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_SENT_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_NETWORK_PACKETS_RECEIVED_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_RECEIVED_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_COUNT_KEY         MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY
 
 
 // getPendingRemoteClients response. This is what the settings app polls, so each entry carries

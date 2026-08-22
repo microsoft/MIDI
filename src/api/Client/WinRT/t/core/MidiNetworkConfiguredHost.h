@@ -30,6 +30,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         bool CreateMidi1Ports() const noexcept { return m_createMidi1Ports; }
 
+        network::MidiNetworkRemoteClientPolicy RemoteClientPolicy() const noexcept { return m_remoteClientPolicy; }
+
+        winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkHostConnection> Connections() const noexcept
+        {
+            return m_connections.GetView();
+        }
+
         void InternalInitialize(
             _In_ bool const isEnabled,
             _In_ winrt::guid const& hostId,
@@ -39,7 +46,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             _In_ bool const hasStarted,
             _In_ winrt::hstring const& actualAddress,
             _In_ winrt::hstring const& actualPort,
-            _In_ bool const createMidi1Ports) noexcept
+            _In_ bool const createMidi1Ports,
+            _In_ network::MidiNetworkRemoteClientPolicy const remoteClientPolicy) noexcept
         {
             m_isEnabled = isEnabled;
             m_hostId = hostId;
@@ -50,6 +58,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_actualAddress = actualAddress;
             m_actualPort = actualPort;
             m_createMidi1Ports = createMidi1Ports;
+            m_remoteClientPolicy = remoteClientPolicy;
+        }
+
+        void InternalAddConnection(_In_ network::MidiNetworkHostConnection const& connection) noexcept
+        {
+            if (connection != nullptr)
+            {
+                m_connections.Append(connection);
+            }
         }
 
     private:
@@ -62,7 +79,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_actualAddress{};
         winrt::hstring m_actualPort{};
         bool m_createMidi1Ports{ false };
+        network::MidiNetworkRemoteClientPolicy m_remoteClientPolicy{ network::MidiNetworkRemoteClientPolicy::AllowAny };
 
-
+        winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkHostConnection> m_connections{
+            winrt::single_threaded_vector<network::MidiNetworkHostConnection>() };
     };
 }

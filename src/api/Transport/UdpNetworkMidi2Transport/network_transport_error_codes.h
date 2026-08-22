@@ -45,6 +45,7 @@
 #define NETWORK_ERROR_CODE_MISSING_REMOTE_PORT                      0x00000062
 #define NETWORK_ERROR_CODE_INVALID_REMOTE_PORT                      0x00000063
 #define NETWORK_ERROR_CODE_MISSING_MATCH_ENTRY                      0x00000064
+#define NETWORK_ERROR_CODE_MISSING_MATCH_ID                         0x00000065
 
 // invitations and remote client approval
 #define NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION                   0x00000071
@@ -63,6 +64,7 @@
 // lookup failures
 #define NETWORK_ERROR_CODE_HOST_NOT_FOUND                           0x00001065
 #define NETWORK_ERROR_CODE_CLIENT_NOT_FOUND                         0x00001066
+#define NETWORK_ERROR_CODE_REMOTE_CLIENT_NOT_FOUND                  0x00001067
 
 // raised by the client SDK rather than the service
 #define NETWORK_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT              0x11000055

@@ -29,6 +29,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
         void UmpEndpointName(_In_ winrt::hstring const& value) noexcept { m_umpEndpointName = internal::TruncateToUtf8ByteCount(value.c_str(), MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT); }
 
+        winrt::hstring CustomEndpointName() const noexcept { return m_customEndpointName; }
+        void CustomEndpointName(_In_ winrt::hstring const& value) noexcept { m_customEndpointName = internal::TruncateToUtf8ByteCount(value.c_str(), MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT); }
+
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
         void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }
 
@@ -40,6 +43,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
     private:
         winrt::hstring m_umpEndpointName{};
+        winrt::hstring m_customEndpointName{};
         winrt::guid m_id{};
         bool m_umpOnly{ false };
         bool m_autoReconnect{ true };

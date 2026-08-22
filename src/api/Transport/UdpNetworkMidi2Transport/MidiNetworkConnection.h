@@ -115,6 +115,15 @@ public:
     uint64_t GetTotalNetworkPacketsSent() { return m_writer ? m_writer->GetCountNetworkPacketsSent() : 0; }
     uint64_t GetTotalNetworkPacketsReceived() { return m_totalNetworkPacketsReceived; }
 
+    // Command packets we have resent because the remote asked for them.
+    uint32_t GetRetransmitCount() { return m_retransmitCount; }
+
+    // Retransmit requests the remote has sent us.
+    uint32_t GetRetransmitRequestCount() { return m_retransmitRequestCount; }
+
+    // Averages the round trips measured since the last read and starts a fresh window. A window
+    // with no ping reply in it reports the previous answer rather than zero: callers poll faster
+    // than the ping interval, and reporting zero there reads as "no latency", not "no new data".
     uint64_t GetAndResetAverageLatencyTicks() 
     { 
         auto lock = m_latencyLock.lock();
@@ -125,9 +134,12 @@ public:
         m_latencyTotalTicks = 0;
         m_latencyCountEntries = 0;
 
-        auto latency = countEntries > 0 ? totalLatency / countEntries : 0;
-        
-        return latency; 
+        if (countEntries > 0)
+        {
+            m_lastAverageLatencyTicks = totalLatency / countEntries;
+        }
+
+        return m_lastAverageLatencyTicks;
     }
 
     void AddLatencyToAverageLatencyTicks(_In_ uint64_t latencyTicks)
@@ -140,6 +152,8 @@ public:
         // reset so we don't have overflow issues when the values aren't read
         if (m_latencyCountEntries > 5000)
         {
+            m_lastAverageLatencyTicks = m_latencyTotalTicks / m_latencyCountEntries;
+
             m_latencyTotalTicks = 0;
             m_latencyCountEntries = 0;
         }
@@ -217,7 +231,10 @@ protected:
     wil::critical_section m_latencyLock;
     uint64_t m_latencyTotalTicks{ 0 };
     uint32_t m_latencyCountEntries{ 0 };
+    uint64_t m_lastAverageLatencyTicks{ 0 };
     std::atomic<uint64_t> m_totalNetworkPacketsReceived{ 0 };
+    std::atomic<uint32_t> m_retransmitCount{ 0 };
+    std::atomic<uint32_t> m_retransmitRequestCount{ 0 };
 
     HRESULT EndActiveSession(_In_ bool respondWithByeReply);
 

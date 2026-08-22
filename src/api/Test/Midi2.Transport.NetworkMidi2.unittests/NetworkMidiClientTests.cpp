@@ -12,6 +12,9 @@ using namespace WEX::Common;
 using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 
+namespace json = winrt::Windows::Data::Json;
+namespace enumeration = winrt::Windows::Devices::Enumeration;
+
 namespace NetworkMidiTest
 {
     namespace
@@ -151,6 +154,227 @@ namespace NetworkMidiTest
                 std::chrono::milliseconds(8000));
 
             return true;
+        }
+
+
+        // ----------------------------------------------------------------------
+        // enumerateClients helpers. That response is the only view an app has of what the
+        // service believes is configured, so the entry lifetime tests read it directly.
+        // ----------------------------------------------------------------------
+
+        std::optional<json::JsonArray> ReadClientsArray()
+        {
+            auto response = EnumerateClients();
+
+            json::JsonObject parsed{ nullptr };
+
+            if (!json::JsonObject::TryParse(winrt::hstring{ response.ResponseJson }, parsed))
+            {
+                return std::nullopt;
+            }
+
+            if (parsed == nullptr || !parsed.HasKey(L"clients"))
+            {
+                return std::nullopt;
+            }
+
+            auto clients = parsed.GetNamedArray(L"clients", nullptr);
+
+            if (clients == nullptr)
+            {
+                return std::nullopt;
+            }
+
+            return clients;
+        }
+
+
+        std::optional<json::JsonObject> FindClientEntry(_In_ std::wstring const& entryIdentifier)
+        {
+            auto clients = ReadClientsArray();
+
+            if (!clients.has_value())
+            {
+                return std::nullopt;
+            }
+
+            for (uint32_t i = 0; i < clients->Size(); i++)
+            {
+                auto entry = clients->GetObjectAt(i);
+
+                if (entry != nullptr &&
+                    std::wstring{ entry.GetNamedString(L"entryIdentifier", L"") } == entryIdentifier)
+                {
+                    return entry;
+                }
+            }
+
+            return std::nullopt;
+        }
+
+
+        size_t CountClientEntries(_In_ std::wstring const& entryIdentifier)
+        {
+            auto clients = ReadClientsArray();
+
+            if (!clients.has_value())
+            {
+                return 0;
+            }
+
+            size_t count{ 0 };
+
+            for (uint32_t i = 0; i < clients->Size(); i++)
+            {
+                auto entry = clients->GetObjectAt(i);
+
+                if (entry != nullptr &&
+                    std::wstring{ entry.GetNamedString(L"entryIdentifier", L"") } == entryIdentifier)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+
+        bool WaitForClientEntry(
+            _In_ std::wstring const& entryIdentifier,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto deadline = std::chrono::steady_clock::now() + timeout;
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                if (FindClientEntry(entryIdentifier).has_value())
+                {
+                    return true;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            }
+
+            return false;
+        }
+
+
+        std::optional<json::JsonObject> WaitForClientEntryObject(
+            _In_ std::wstring const& entryIdentifier,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto deadline = std::chrono::steady_clock::now() + timeout;
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                auto entry = FindClientEntry(entryIdentifier);
+
+                if (entry.has_value())
+                {
+                    return entry;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            }
+
+            return std::nullopt;
+        }
+
+
+        bool WaitForClientEntryGone(
+            _In_ std::wstring const& entryIdentifier,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto deadline = std::chrono::steady_clock::now() + timeout;
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                if (!FindClientEntry(entryIdentifier).has_value())
+                {
+                    return true;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            }
+
+            return false;
+        }
+
+
+        uint64_t ReadClientLatency(_In_ std::wstring const& entryIdentifier)
+        {
+            auto entry = FindClientEntry(entryIdentifier);
+
+            if (!entry.has_value())
+            {
+                return 0;
+            }
+
+            return static_cast<uint64_t>(entry->GetNamedNumber(L"currentLatencyTicks", 0));
+        }
+
+
+        uint64_t WaitForNonZeroClientLatency(
+            _In_ std::wstring const& entryIdentifier,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto deadline = std::chrono::steady_clock::now() + timeout;
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                auto latency = ReadClientLatency(entryIdentifier);
+
+                if (latency > 0)
+                {
+                    return latency;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
+
+            return 0;
+        }
+
+
+        // Counts live bidirectional UMP endpoints whose name matches. An orphaned endpoint is
+        // reachable through no command the transport offers, so the device graph is the only
+        // place it can be seen at all. The interface class is restated here rather than included,
+        // for the same reason NetworkMidiTestProtocol restates the wire format.
+        size_t CountLiveEndpointsNamed(_In_ std::string const& endpointName)
+        {
+            constexpr wchar_t UmpBidirectionalInterfaceClass[]{ L"{E7CCE071-3C03-423f-88D3-F1045D02552B}" };
+
+            try
+            {
+                std::wstring selector{ L"System.Devices.InterfaceClassGuid:=\"" };
+                selector += UmpBidirectionalInterfaceClass;
+                selector += L"\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+
+                auto devices = enumeration::DeviceInformation::FindAllAsync(
+                    winrt::hstring{ selector },
+                    {},
+                    enumeration::DeviceInformationKind::DeviceInterface).get();
+
+                std::wstring wanted(endpointName.begin(), endpointName.end());
+
+                size_t count{ 0 };
+
+                for (auto const& device : devices)
+                {
+                    if (std::wstring{ device.Name() }.find(wanted) != std::wstring::npos)
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
+            }
+            catch (...)
+            {
+                Log::Warning(L"Could not enumerate MIDI endpoints.");
+
+                return 0;
+            }
         }
     }
 
@@ -933,5 +1157,315 @@ namespace NetworkMidiTest
         auto packet = client.Host().WaitForCommand(CommandCode::PingReply, ShortTimeout);
 
         VERIFY_IS_TRUE(packet.has_value(), L"The established session must be undisturbed by a datagram from another peer.");
+    }
+
+
+    // ------------------------------------------------------------------------------
+    // Latency measurement
+    // ------------------------------------------------------------------------------
+
+    void ClientTests::ClientPingsEvenWhileTheHostIsSendingTraffic()
+    {
+        if (!RequireService()) return;
+
+        LogSpecRequirement(L"6.14: Ping is how round trip time is measured. Suppressing it whenever anything "
+            L"else arrived meant a session carrying MIDI could never be measured.");
+
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(EstablishClientSession(client));
+
+        client.Host().ClearHistory();
+
+        // Keep the link busy for longer than the ping interval. Under the old behaviour the
+        // watchdog saw recent traffic on every tick and skipped the ping entirely.
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(12000);
+        uint16_t sequenceNumber{ 0 };
+
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            // a NOOP UMP, which is valid to send and has no side effects on the endpoint
+            client.Host().SendUmpData(sequenceNumber++, std::vector<uint32_t>{ 0x00000000u });
+
+            if (client.Host().CountReceived(CommandCode::Ping) > 0)
+            {
+                break;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+
+        VERIFY_IS_GREATER_THAN(
+            client.Host().CountReceived(CommandCode::Ping), static_cast<size_t>(0),
+            L"A busy session must still be pinged, or its latency can never be measured.");
+    }
+
+
+    void ClientTests::ClientReportsLatencyOnceThePingIsAnswered()
+    {
+        if (!RequireService()) return;
+
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(EstablishClientSession(client));
+
+        // The fake host answers pings automatically, so this only depends on the service pinging.
+        auto latency = WaitForNonZeroClientLatency(client.EntryIdentifier(), std::chrono::milliseconds(30000));
+
+        Log::Comment(String().Format(L"currentLatencyTicks reported as %llu", latency));
+
+        VERIFY_IS_GREATER_THAN(latency, 0ull, L"An active session must report a measured round trip.");
+    }
+
+
+    void ClientTests::ReportedLatencySurvivesBeingReadTwice()
+    {
+        if (!RequireService()) return;
+
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(EstablishClientSession(client));
+
+        auto first = WaitForNonZeroClientLatency(client.EntryIdentifier(), std::chrono::milliseconds(30000));
+        VERIFY_IS_GREATER_THAN(first, 0ull, L"An active session must report a measured round trip.");
+
+        // An app polls faster than the ping interval, so most reads land in a window with no new
+        // sample in it. Reporting zero there reads as "no latency", not "nothing new".
+        auto second = ReadClientLatency(client.EntryIdentifier());
+
+        Log::Comment(String().Format(L"first read %llu, immediate second read %llu", first, second));
+
+        VERIFY_IS_GREATER_THAN(second, 0ull, L"Reading the latency twice in a row must not clear it.");
+    }
+
+
+    // ------------------------------------------------------------------------------
+    // Entry lifetime
+    // ------------------------------------------------------------------------------
+
+    void ClientTests::DisconnectRemovesTheEntryFromEnumerateClients()
+    {
+        if (!RequireService()) return;
+
+        ClientUnderTest client;
+        VERIFY_IS_TRUE(EstablishClientSession(client));
+
+        auto entryIdentifier = client.EntryIdentifier();
+
+        VERIFY_IS_TRUE(FindClientEntry(entryIdentifier).has_value(), L"The connected client is reported.");
+
+        auto result = DisconnectClient(entryIdentifier);
+        VERIFY_IS_TRUE(result.IsSuccess(), L"disconnectClient reported success.");
+
+        // enumerateClients walks the configured definitions, not the live clients. Removing only
+        // the live client left the entry being reported as unavailable forever, with no way to
+        // get rid of it short of restarting the service.
+        VERIFY_IS_TRUE(
+            WaitForClientEntryGone(entryIdentifier, std::chrono::milliseconds(10000)),
+            L"A disconnected client stops being reported at all.");
+    }
+
+
+    void ClientTests::DisconnectingAnEntryWhichNeverConnectedSucceeds()
+    {
+        if (!RequireService()) return;
+
+        // Port 1 on loopback: nothing is listening, so this entry never becomes a live client.
+        auto entryIdentifier = MakeEntryIdentifier();
+
+        auto created = CreateDirectClient(entryIdentifier, L"127.0.0.1", 1);
+        VERIFY_IS_TRUE(created.CallSucceeded, L"The entry was accepted.");
+
+        VERIFY_IS_TRUE(
+            WaitForClientEntry(entryIdentifier, std::chrono::milliseconds(10000)),
+            L"An entry which has not connected is still reported.");
+
+        // The only reason this used to fail is that the lookup went to the live clients. An
+        // entry the user can see is an entry the user has to be able to remove.
+        auto result = DisconnectClient(entryIdentifier);
+
+        VERIFY_IS_TRUE(result.IsSuccess(), L"Removing an entry which never connected is a success.");
+
+        VERIFY_IS_TRUE(
+            WaitForClientEntryGone(entryIdentifier, std::chrono::milliseconds(10000)),
+            L"The entry is gone afterwards.");
+    }
+
+
+    void ClientTests::DisconnectingAnUnknownEntryFailsCleanly()
+    {
+        if (!RequireService()) return;
+
+        // Still has to fail: reporting success would tell a caller something was removed.
+        auto result = DisconnectClient(MakeEntryIdentifier());
+
+        VERIFY_IS_TRUE(result.CallSucceeded, L"The transport answered rather than faulting.");
+        VERIFY_IS_FALSE(result.ReportedSuccess, L"An entry the service does not have is not a success.");
+    }
+
+
+    void ClientTests::DisconnectDuringClientCreationLeavesNoLiveClient()
+    {
+        if (!RequireService()) return;
+
+        // Disconnect the instant the host has seen the invitation. The service is then partway
+        // through building the client: the session is being agreed and the endpoint is queued.
+        FakeNetworkHost host;
+        VERIFY_IS_TRUE(host.Start());
+
+        auto entryIdentifier = MakeEntryIdentifier();
+
+        VERIFY_IS_TRUE(CreateDirectClient(entryIdentifier, FakeNetworkHost::Address(), host.Port()).CallSucceeded);
+
+        auto invitation = host.WaitForCommand(CommandCode::Invitation, InvitationTimeout);
+        VERIFY_IS_TRUE(invitation.has_value(), L"The service sent an Invitation.");
+
+        auto result = DisconnectClient(entryIdentifier);
+        VERIFY_IS_TRUE(result.IsSuccess(), L"Disconnecting mid-creation is accepted.");
+
+        VERIFY_IS_TRUE(
+            WaitForClientEntryGone(entryIdentifier, std::chrono::milliseconds(15000)),
+            L"The entry is gone from enumerateClients.");
+
+        // The reply to our invitation arrives on the socket receive path and used to build an
+        // endpoint regardless of the disconnect, leaving a device node no command could reach.
+        // Assert on the device graph, not on the protocol: an orphan is silent, so asking it
+        // for a Ping Reply would pass whether or not the endpoint exists.
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(20000);
+        size_t liveEndpoints{ 0 };
+
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            liveEndpoints = CountLiveEndpointsNamed(host.EndpointName());
+
+            if (liveEndpoints > 0)
+            {
+                break;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+
+        Log::Comment(String().Format(
+            L"Live endpoints named '%S' after the disconnect: %zu", host.EndpointName().c_str(), liveEndpoints));
+
+        VERIFY_ARE_EQUAL(
+            static_cast<size_t>(0), liveEndpoints,
+            L"An entry disconnected while its client was being created leaves no MIDI endpoint behind.");
+
+        host.Stop();
+    }
+
+
+    // ------------------------------------------------------------------------------
+    // connectMdns
+    // ------------------------------------------------------------------------------
+    void ClientTests::CustomEndpointNameIsAppliedWhenTheEndpointIsCreated()
+    {
+        if (!RequireService()) return;
+
+        FakeNetworkHost host;
+        VERIFY_IS_TRUE(host.Start());
+
+        auto entryIdentifier = MakeEntryIdentifier();
+        std::string customName{ "Renamed By User " + host.EndpointName().substr(host.EndpointName().size() - 4) };
+
+        VERIFY_IS_TRUE(
+            ConnectDirectClient(
+                entryIdentifier,
+                FakeNetworkHost::Address(),
+                host.Port(),
+                L"Test Client",
+                std::wstring(customName.begin(), customName.end())).IsSuccess());
+
+        // Wait for the session, which is what triggers endpoint creation.
+        VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::Invitation, InvitationTimeout).has_value());
+        VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::UmpData, SessionTimeout).has_value());
+
+        // The endpoint must appear under the user's name, never under the remote's. Anything
+        // matching the remote's own name would mean it was created first and renamed after,
+        // which is the churn this avoids.
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(20000);
+        size_t named{ 0 };
+
+        while (std::chrono::steady_clock::now() < deadline && named == 0)
+        {
+            named = CountLiveEndpointsNamed(customName);
+
+            if (named == 0)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            }
+        }
+
+        Log::Comment(String().Format(L"Endpoints named '%S': %zu", customName.c_str(), named));
+
+        VERIFY_IS_GREATER_THAN(named, static_cast<size_t>(0),
+            L"The endpoint carries the name the user supplied when the connection was created.");
+
+        DisconnectClient(entryIdentifier);
+        host.Stop();
+    }
+
+    void ClientTests::ConnectMdnsCreatesAnEntryMatchedByDeviceId()
+    {
+        if (!RequireService()) return;
+
+        // A device id which will never resolve, so nothing is connected to. What is being tested
+        // is that the entry is created as an mDNS match at all: until this verb existed, the only
+        // runtime path created a direct address entry, so a discovered host could not be followed.
+        auto entryIdentifier = MakeEntryIdentifier();
+        auto matchId = L"\\\\?\\MIDI2#TestOnly_" + entryIdentifier + L"#{aabbccdd-0000-0000-0000-000000000000}";
+
+        auto result = ConnectMdnsClient(entryIdentifier, matchId, L"Mdns Match Test");
+
+        VERIFY_IS_TRUE(result.IsSuccess(), L"connectMdns was accepted.");
+
+        auto entry = WaitForClientEntryObject(entryIdentifier, std::chrono::milliseconds(10000));
+
+        VERIFY_IS_TRUE(entry.has_value(), L"The entry is reported by enumerateClients.");
+
+        if (entry.has_value())
+        {
+            VERIFY_ARE_EQUAL(
+                matchId, std::wstring{ entry->GetNamedString(L"mdnsMatchId", L"") },
+                L"The entry carries the device id it was asked to match.");
+
+            VERIFY_IS_FALSE(
+                entry->GetNamedBoolean(L"isDirectConnection", true),
+                L"An mDNS match is not a direct connection.");
+        }
+
+        DisconnectClient(entryIdentifier);
+    }
+
+
+    void ClientTests::ConnectMdnsWithoutAMatchIdFailsCleanly()
+    {
+        if (!RequireService()) return;
+
+        auto result = ConnectMdnsClient(MakeEntryIdentifier(), L"", L"No Match Id");
+
+        VERIFY_IS_TRUE(result.CallSucceeded, L"The transport answered rather than faulting.");
+        VERIFY_IS_FALSE(result.ReportedSuccess, L"An empty device id is rejected.");
+    }
+
+
+    void ClientTests::ConnectMdnsForAnExistingEntryRearmsIt()
+    {
+        if (!RequireService()) return;
+
+        auto entryIdentifier = MakeEntryIdentifier();
+        auto matchId = L"\\\\?\\MIDI2#TestOnly_" + entryIdentifier + L"#{aabbccdd-0000-0000-0000-000000000000}";
+
+        VERIFY_IS_TRUE(ConnectMdnsClient(entryIdentifier, matchId, L"Rearm Test").IsSuccess());
+        VERIFY_IS_TRUE(WaitForClientEntry(entryIdentifier, std::chrono::milliseconds(10000)));
+
+        // The same entry arriving again is the app saying "try it now", exactly as it is for a
+        // direct connection. It must not create a second entry for the same identifier.
+        VERIFY_IS_TRUE(ConnectMdnsClient(entryIdentifier, matchId, L"Rearm Test").IsSuccess());
+
+        VERIFY_ARE_EQUAL(
+            static_cast<size_t>(1), CountClientEntries(entryIdentifier),
+            L"Re-arming an entry does not duplicate it.");
+
+        DisconnectClient(entryIdentifier);
     }
 }

@@ -53,7 +53,8 @@ namespace midiapp
         wux::FrameworkElement const& anchor,
         MidiAppSettings& settings,
         AppearanceStrings const& strings,
-        std::function<void()> const& onChanged) noexcept
+        std::function<void()> const& onChanged,
+        wux::UIElement const& extraContent) noexcept
     {
         try
         {
@@ -157,6 +158,13 @@ namespace midiapp
             panel.Children().Append(backdropBox);
             panel.Children().Append(customColor);
             panel.Children().Append(picker);
+
+            // safe to follow the picker: its negative bottom margin only gives back space the
+            // picker measures but never draws in
+            if (extraContent != nullptr)
+            {
+                panel.Children().Append(extraContent);
+            }
 
             wuxc::ScrollViewer scroller{};
             scroller.VerticalScrollBarVisibility(wuxc::ScrollBarVisibility::Auto);

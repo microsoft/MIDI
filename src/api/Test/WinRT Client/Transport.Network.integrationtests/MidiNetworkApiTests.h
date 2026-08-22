@@ -121,6 +121,27 @@ public:
     TEST_METHOD(TestDisconnectUnknownClientFailsCleanly);
     TEST_METHOD(TestDuplicateServiceInstanceNameIsRejected);
 
+    // Connecting to a discovered host by device id. This used to be silently impossible: the
+    // manager only ever issued a direct-address connect, so MatchCriteria.DeviceId was ignored
+    // and an app had to resolve the address itself.
+    TEST_METHOD(TestConnectByDeviceIdCreatesAnMdnsMatchedEntry);
+    TEST_METHOD(TestConnectWithNoMatchCriteriaValuesFailsCleanly);
+    TEST_METHOD(TestConnectByDeviceIdEntryCanBeDisconnected);
+
+    // A configured client which never connected is still reported, so it also has to be
+    // removable. Removing one used to report "client not found".
+    TEST_METHOD(TestDisconnectRemovesTheConfiguredClientEntry);
+
+    // Ending one remote client's session with a host on this PC.
+    TEST_METHOD(TestRemoteClientDisconnectConfigRoundTrip);
+    TEST_METHOD(TestDisconnectRemoteClientWithEmptyIdentityFailsWithoutCallingService);
+    TEST_METHOD(TestDisconnectUnknownRemoteClientFailsCleanly);
+    TEST_METHOD(TestDisconnectRemoteClientWithNullConfigFailsCleanly);
+
+    // The default host configuration says what it does. The flag and the comment used to
+    // disagree, which is the kind of thing that gets copied into a caller's code.
+    TEST_METHOD(TestDefaultHostConfigCreatesUmpEndpointsOnly);
+
 private:
 
     // Creates a host with a unique name and returns its id. Returns a zero guid on failure.

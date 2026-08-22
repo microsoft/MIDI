@@ -242,8 +242,16 @@ namespace NetworkMidiTest
         std::wstring const& entryIdentifier,
         std::wstring const& hostNameOrAddress,
         uint16_t const port,
-        std::wstring const& umpEndpointName)
+        std::wstring const& umpEndpointName,
+        std::wstring const& customEndpointName)
     {
+        std::wstring customNameArgument{};
+
+        if (!customEndpointName.empty())
+        {
+            customNameArgument = L",\"customEndpointName\":\"" + EscapeJsonString(customEndpointName) + L"\"";
+        }
+
         std::wstring json =
             L"{\"transportCommand\":{"
             L"\"commandName\":\"connectDirect\","
@@ -251,6 +259,25 @@ namespace NetworkMidiTest
             L"\"entryIdentifier\":\"" + EscapeJsonString(entryIdentifier) + L"\","
             L"\"remoteAddress\":\"" + EscapeJsonString(hostNameOrAddress) + L"\","
             L"\"remotePort\":\"" + std::to_wstring(port) + L"\","
+            L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\""
+            + customNameArgument +
+            L"}}}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
+    ServiceConfigResult ConnectMdnsClient(
+        std::wstring const& entryIdentifier,
+        std::wstring const& matchId,
+        std::wstring const& umpEndpointName)
+    {
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"connectMdns\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(entryIdentifier) + L"\","
+            L"\"matchId\":\"" + EscapeJsonString(matchId) + L"\","
             L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\""
             L"}}}";
 
@@ -440,5 +467,28 @@ namespace NetworkMidiTest
     {
         return RemoteClientDecision(
             L"denyRemoteClient", hostEntryIdentifier, umpEndpointName, productInstanceId, scope);
+    }
+
+
+    ServiceConfigResult DisconnectRemoteClient(
+        std::wstring const& hostEntryIdentifier,
+        std::wstring const& umpEndpointName,
+        std::wstring const& productInstanceId)
+    {
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"disconnectRemoteClient\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(hostEntryIdentifier) + L"\","
+            L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\","
+            L"\"productInstanceId\":\"" + EscapeJsonString(productInstanceId) + L"\""
+            L"}}}";
+
+        Log::Comment(String().Format(
+            L"disconnectRemoteClient %s (%s)",
+            umpEndpointName.c_str(),
+            productInstanceId.c_str()));
+
+        return SendNetworkTransportConfig(json);
     }
 }

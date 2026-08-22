@@ -50,6 +50,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool Advertise() const noexcept { return m_advertise; }
         void Advertise(_In_ bool const value) noexcept { m_advertise = value; }
 
+        network::MidiNetworkRemoteClientPolicy RemoteClientPolicy() const noexcept { return m_remoteClientPolicy; }
+        void RemoteClientPolicy(_In_ network::MidiNetworkRemoteClientPolicy const& value) noexcept { m_remoteClientPolicy = value; }
+
  //       collections::IVector<winrt::Windows::Networking::HostName> AllowedClientConnectionList() { return m_allowedClientConnectionList; }
 
         network::MidiNetworkAuthenticationType AuthenticationType() noexcept { return m_authenticationType; }
@@ -65,6 +68,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_useAutomaticPortAllocation{ true };
         winrt::hstring m_manuallyAssignedPort{};
         bool m_advertise{ true };
+
+        network::MidiNetworkRemoteClientPolicy m_remoteClientPolicy{ network::MidiNetworkRemoteClientPolicy::AllowAny };
 
         network::MidiNetworkAuthenticationType m_authenticationType{ network::MidiNetworkAuthenticationType::NoAuthentication };
 
