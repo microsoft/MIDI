@@ -34,7 +34,7 @@ namespace midinetworksetup
 
         static constexpr uint32_t MinimumRefreshIntervalSeconds = 1;
         static constexpr uint32_t MaximumRefreshIntervalSeconds = 60;
-        static constexpr uint32_t DefaultRefreshIntervalSeconds = 2;
+        static constexpr uint32_t DefaultRefreshIntervalSeconds = 3;
 
         static constexpr uint32_t PageIndexRemoteHosts = 0;
         static constexpr uint32_t PageIndexLocalHosts = 1;

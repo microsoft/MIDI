@@ -581,6 +581,7 @@ namespace midinetworksetup
 
         m_path = path;
         m_isOverridden = true;
+        m_cachedConfig = nullptr;
     }
 
     bool NetworkConfigFile::Exists() const noexcept
@@ -651,6 +652,59 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
+    bool NetworkConfigFile::LoadCached(json::JsonObject& config) noexcept
+    {
+        try
+        {
+            WIN32_FILE_ATTRIBUTE_DATA attributes{};
+
+            auto const stamped = !m_path.empty() &&
+                ::GetFileAttributesExW(m_path.c_str(), GetFileExInfoStandard, &attributes) != FALSE;
+
+            uint64_t const size = stamped ?
+                ((static_cast<uint64_t>(attributes.nFileSizeHigh) << 32) | attributes.nFileSizeLow) : 0;
+
+            if (stamped &&
+                m_cachedConfig != nullptr &&
+                m_cachedSize == size &&
+                ::CompareFileTime(&attributes.ftLastWriteTime, &m_cachedWriteTime) == 0)
+            {
+                config = m_cachedConfig;
+
+                return true;
+            }
+
+            if (!Load(config))
+            {
+                m_cachedConfig = nullptr;
+
+                return false;
+            }
+
+            // Without a usable stamp there is nothing to invalidate against, so the parse is not
+            // cached rather than being cached and never refreshed.
+            if (stamped)
+            {
+                m_cachedConfig = config;
+                m_cachedWriteTime = attributes.ftLastWriteTime;
+                m_cachedSize = size;
+            }
+            else
+            {
+                m_cachedConfig = nullptr;
+            }
+
+            return true;
+        }
+        catch (...)
+        {
+            m_cachedConfig = nullptr;
+
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
     bool NetworkConfigFile::Save(json::JsonObject const& config) noexcept
     {
         try
@@ -669,48 +723,35 @@ namespace midinetworksetup
 
             if (bytes.empty())
             {
-                m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
+                m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
                 return false;
             }
 
-            // written beside the real file so the replace is on the same volume
-            auto const temporaryPath = m_path + L".new";
-
-            if (!WriteAllBytes(temporaryPath, bytes))
+            // Written in place rather than swapped in from a temporary file. ReplaceFileW needs
+            // delete rights on the replacement, and the ACL on %ProgramData%\Microsoft\MIDI grants
+            // Authenticated Users write but not delete, so the temporary file could neither be
+            // swapped in nor cleaned up afterwards and simply accumulated beside the real file.
+            // The MIDI Settings app writes in place for the same reason.
+            if (WriteAllBytes(m_path, bytes))
             {
-                m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
-                return false;
+                m_lastError = winrt::hstring{};
+
+                // the file just changed under the cache
+                m_cachedConfig = nullptr;
+
+                return true;
             }
 
-            if (Exists())
-            {
-                auto const backupPath = m_path + L".bak";
+            m_lastError = resources::FormatString(
+                L"ConfigFileWriteError",
+                m_path,
+                winrt::hstring{ std::to_wstring(::GetLastError()) });
 
-                // ReplaceFileW keeps the original as the backup and swaps atomically, so a
-                // failure part way through cannot leave a half written configuration behind
-                if (!::ReplaceFileW(m_path.c_str(), temporaryPath.c_str(), backupPath.c_str(), 0, nullptr, nullptr))
-                {
-                    ::DeleteFileW(temporaryPath.c_str());
-
-                    m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
-                    return false;
-                }
-            }
-            else if (!::MoveFileExW(temporaryPath.c_str(), m_path.c_str(), MOVEFILE_REPLACE_EXISTING))
-            {
-                ::DeleteFileW(temporaryPath.c_str());
-
-                m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
-                return false;
-            }
-
-            m_lastError = winrt::hstring{};
-
-            return true;
+            return false;
         }
         catch (...)
         {
-            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
+            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
             return false;
         }
     }
@@ -823,7 +864,7 @@ namespace midinetworksetup
     {
         json::JsonObject config{ nullptr };
 
-        if (!Load(config))
+        if (!LoadCached(config))
         {
             return false;
         }
@@ -978,7 +1019,7 @@ namespace midinetworksetup
 
         json::JsonObject config{ nullptr };
 
-        if (!Load(config))
+        if (!LoadCached(config))
         {
             return results;
         }
@@ -1040,7 +1081,7 @@ namespace midinetworksetup
 
         json::JsonObject config{ nullptr };
 
-        if (!Load(config))
+        if (!LoadCached(config))
         {
             return results;
         }
@@ -1095,7 +1136,7 @@ namespace midinetworksetup
 
         json::JsonObject config{ nullptr };
 
-        if (!Load(config))
+        if (!LoadCached(config))
         {
             return results;
         }

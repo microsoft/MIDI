@@ -254,6 +254,34 @@ namespace winrt::midinetworksetup::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
+
+        if (item == nullptr || item.EndpointDeviceId().empty())
+        {
+            return;
+        }
+
+        try
+        {
+            winrt::Windows::ApplicationModel::DataTransfer::DataPackage package{};
+
+            package.RequestedOperation(
+                winrt::Windows::ApplicationModel::DataTransfer::DataPackageOperation::Copy);
+            package.SetText(item.EndpointDeviceId());
+
+            winrt::Windows::ApplicationModel::DataTransfer::Clipboard::SetContent(package);
+
+            SetRemoteStatus(res::GetString(L"EndpointDeviceIdCopied"));
+        }
+        catch (...)
+        {
+            SetRemoteStatus(res::GetString(L"EndpointDeviceIdCopyFailed"));
+        }
+    }
+
+    _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnRetryRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
         ConnectRemoteHostAsync(ItemOf<midinetworksetup::RemoteHostItem>(sender), true, winrt::hstring{});
@@ -280,6 +308,7 @@ namespace winrt::midinetworksetup::implementation
 
         auto const deviceId = item.DeviceId();
         auto const displayName = item.DisplayName();
+        auto const productInstanceId = item.ProductInstanceId();
 
         // re-arming an entry the service already knows about keeps its identifier, so the
         // configuration file entry stays the one the customer already has
@@ -303,9 +332,18 @@ namespace winrt::midinetworksetup::implementation
             // survive the device moving to a new address or picking a new port.
             criteria.DeviceId(deviceId);
 
+            // The device's own identity, so the entry still resolves if its DNS-SD instance
+            // label changes. A responder renames a colliding label, and a firmware update or a
+            // user can change it outright.
+            criteria.ProductInstanceId(productInstanceId);
+            criteria.UmpEndpointName(displayName);
+
             midi2net::MidiNetworkClientConnectConfig config{};
             config.ClientId(clientId);
-            config.UmpEndpointName(displayName);
+
+            // Deliberately not set: UmpEndpointName here is the name THIS PC announces to the
+            // remote, not the remote's name. Leaving it empty lets the service derive it from the
+            // machine name, which is what a config file created entry also gets.
             config.CustomEndpointName(customEndpointName);
             config.MatchCriteria(criteria);
 

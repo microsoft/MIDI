@@ -37,13 +37,24 @@ struct MidiNetworkClientDefinition
 
     winrt::hstring MatchId{};
 
+    // The device's own identity. Used when MatchId no longer finds anything, because the DNS-SD
+    // instance label MatchId holds is a name a responder or a user can change.
+    winrt::hstring MatchProductInstanceId{};
+    winrt::hstring MatchUmpEndpointName{};
+
     // these are direct connections. HostName or IP are required, plus the port
     winrt::hstring MatchDirectHostNameOrIPAddress{};
     winrt::hstring MatchDirectPort{};
 
     // An advertised host announces its return, so it can be retried for free. A direct address
     // never does, which is why the two are paced differently.
-    bool IsDirectConnection() const { return MatchId.empty() && !MatchDirectPort.empty(); }
+    bool IsDirectConnection() const
+    {
+        return MatchId.empty() &&
+            MatchProductInstanceId.empty() &&
+            MatchUmpEndpointName.empty() &&
+            !MatchDirectPort.empty();
+    }
 };
 
 

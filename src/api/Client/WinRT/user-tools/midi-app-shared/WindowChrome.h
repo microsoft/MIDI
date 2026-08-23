@@ -46,6 +46,13 @@ namespace midiapp
         // executable. Uses WM_SETICON rather than AppWindow.SetIcon, which has been unreliable.
         void SetWindowIconFromResource(uint16_t resourceId) noexcept;
 
+        // The same embedded icon as an image source, for the icon drawn in a custom title bar.
+        // Sourced from the executable's own resource so there is one icon to keep up to date,
+        // and so it works without the app being packaged. Returns null on any failure.
+        static winrt::Microsoft::UI::Xaml::Media::Imaging::WriteableBitmap LoadIconImageSource(
+            uint16_t resourceId,
+            int32_t sizePixels) noexcept;
+
         // Static, because this runs before Activate and therefore before Initialize.
         static void RestorePlacement(
             winrt::Microsoft::UI::Xaml::Window const& window,

@@ -1606,6 +1606,137 @@ void NetworkMidiApprovalTests::HostWithANonNumericPortIsRejected()
 }
 
 
+// Spec 6.4 sizes the UMP Endpoint Name at 98 bytes and the Product Instance Id at 42. Neither is
+// a multiple of four, and the writer used to round its cap down to a whole 32-bit word, so a full
+// length Product Instance Id went onto the wire two bytes short. The mDNS advertisement carried
+// the untruncated value, so a remote device saw the advertised identity and the in-session
+// identity as two different devices and could not join the one it could see.
+void NetworkMidiApprovalTests::MaximumLengthIdentityStringsSurviveTheWire()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    // Unique, but still exactly at the maximum, so the boundary is what is under test.
+    auto const suffix = Widen(std::string{ "-" }) + std::to_wstring(GetTickCount64());
+
+    std::wstring endpointName(MaxEndpointNameBytes - suffix.length(), L'N');
+    endpointName += suffix;
+
+    std::wstring productInstanceId(MaxProductInstanceIdBytes - suffix.length(), L'P');
+    productInstanceId += suffix;
+
+    VERIFY_ARE_EQUAL(MaxEndpointNameBytes, endpointName.length());
+    VERIFY_ARE_EQUAL(MaxProductInstanceIdBytes, productInstanceId.length());
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(
+        CreateHost(
+            entryIdentifier,
+            endpointName,
+            productInstanceId,
+            MakeUniqueServiceInstanceName(L"maxid"),
+            false).IsSuccess(),
+        L"Host created with maximum length identity strings");
+
+    StartHost(entryIdentifier);
+
+    // find the port it was given
+    uint16_t port{ 0 };
+
+    auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+
+    while (std::chrono::steady_clock::now() < deadline && port == 0)
+    {
+        auto response = ParseResponse(EnumerateHosts());
+
+        if (response.has_value() && response->HasKey(L"hosts"))
+        {
+            auto hosts = response->GetNamedArray(L"hosts", nullptr);
+
+            for (uint32_t i = 0; hosts != nullptr && i < hosts.Size(); i++)
+            {
+                auto host = hosts.GetObjectAt(i);
+
+                if (host != nullptr &&
+                    std::wstring{ host.GetNamedString(L"entryIdentifier", L"") } == entryIdentifier &&
+                    host.GetNamedBoolean(L"hasStarted", false))
+                {
+                    auto const portText = std::wstring{ host.GetNamedString(L"actualPort", L"") };
+
+                    if (!portText.empty())
+                    {
+                        port = static_cast<uint16_t>(std::stoul(portText));
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        if (port == 0)
+        {
+            std::this_thread::sleep_for(PendingPollInterval);
+        }
+    }
+
+    VERIFY_ARE_NOT_EQUAL(static_cast<uint16_t>(0), port, L"The host started and reported a port");
+
+    HostEndpointAddress address{};
+    address.HostNameOrAddress = L"127.0.0.1";
+    address.Port = port;
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(address));
+
+    auto& context = ProtocolTestContext::Current();
+
+    PacketBuilder builder;
+    builder.StartPacket().AddInvitation(
+        context.MakeUniqueEndpointName("MaxId"),
+        context.MakeUniqueProductInstanceId("M"));
+
+    VERIFY_IS_TRUE(client.Send(builder));
+
+    auto reply = client.WaitForCommand(CommandCode::InvitationReplyAccepted, ReplyTimeout);
+
+    VERIFY_IS_TRUE(reply.has_value(), L"The host accepted the invitation");
+
+    auto accepted = reply->Find(CommandCode::InvitationReplyAccepted);
+    VERIFY_IS_NOT_NULL(accepted);
+
+    size_t const nameBytes = static_cast<size_t>(accepted->CommandSpecificData1) * sizeof(uint32_t);
+    size_t const payloadBytes = static_cast<size_t>(accepted->PayloadLengthWords) * sizeof(uint32_t);
+
+    auto const reportedName = accepted->GetPayloadString(0, nameBytes);
+    auto const reportedProductInstanceId = accepted->GetPayloadString(nameBytes, payloadBytes - nameBytes);
+
+    Log::Comment(String().Format(
+        L"Host reported name of %zu bytes and product instance id of %zu bytes",
+        reportedName.length(),
+        reportedProductInstanceId.length()));
+
+    VERIFY_ARE_EQUAL(
+        MaxProductInstanceIdBytes, reportedProductInstanceId.length(),
+        L"A maximum length Product Instance Id reaches the wire whole");
+
+    VERIFY_ARE_EQUAL(
+        MaxEndpointNameBytes, reportedName.length(),
+        L"A maximum length UMP Endpoint Name reaches the wire whole");
+
+    VERIFY_ARE_EQUAL(
+        winrt::to_string(productInstanceId), reportedProductInstanceId,
+        L"The Product Instance Id on the wire is the one the host was configured with");
+
+    VERIFY_ARE_EQUAL(
+        winrt::to_string(endpointName), reportedName,
+        L"The UMP Endpoint Name on the wire is the one the host was configured with");
+
+    EndSession(client);
+}
+
+
 void NetworkMidiApprovalTests::CreateThenImmediatelyRemoveLeavesNoHostBehind()
 {
     Log::Comment(

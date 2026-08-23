@@ -29,7 +29,7 @@ namespace Windows.Devices.Midi2.Transports.Network
 		//Boolean AutoReconnect;				// true if we reconnect after any disconnects. Otherwise, we connect only once.
 
 
-		[noexcept] String UmpEndpointName;				// the ump endpoint name to create
+		[noexcept] String UmpEndpointName;				// the name THIS PC announces to the remote. Empty means derive it from the machine name.
 
 		// Optional. What the user chose to call the MIDI endpoint this connection creates. It is
 		// applied before the endpoint is activated, so the endpoint and its MIDI 1.0 ports are

@@ -40,6 +40,22 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 				json::JsonValue::CreateStringValue(winrt::to_hstring(DirectPort())));
 		}
 
+		// Written alongside whichever of the above applies, not instead of it. These are what
+		// let a reconnect still find the device once its DNS-SD label has changed.
+		if (!ProductInstanceId().empty())
+		{
+			matchObject.SetNamedValue(
+				MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY,
+				json::JsonValue::CreateStringValue(ProductInstanceId()));
+		}
+
+		if (!UmpEndpointName().empty())
+		{
+			matchObject.SetNamedValue(
+				MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY,
+				json::JsonValue::CreateStringValue(UmpEndpointName()));
+		}
+
 		return matchObject.Stringify();
 	}
 

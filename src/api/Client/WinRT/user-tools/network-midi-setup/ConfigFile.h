@@ -77,6 +77,13 @@ namespace midinetworksetup
         NetworkConfigFile() noexcept;
 
         bool Load(_Out_ winrt::Windows::Data::Json::JsonObject& config) noexcept;
+
+        // Same as Load, but hands back a shared parse which is only redone when the file's write
+        // time or size has changed. The pages poll several times a minute and the file is 25 KB,
+        // so re-parsing it per poll is pure waste. The object returned is shared: callers which
+        // intend to modify and save must use Load instead.
+        bool LoadCached(_Out_ winrt::Windows::Data::Json::JsonObject& config) noexcept;
+
         bool Save(_In_ winrt::Windows::Data::Json::JsonObject const& config) noexcept;
 
         // hosts or clients object inside create, created on demand when creating is true
@@ -90,5 +97,9 @@ namespace midinetworksetup
         std::wstring m_path{};
         bool m_isOverridden{ false };
         winrt::hstring m_lastError{};
+
+        winrt::Windows::Data::Json::JsonObject m_cachedConfig{ nullptr };
+        FILETIME m_cachedWriteTime{};
+        uint64_t m_cachedSize{ 0 };
     };
 }

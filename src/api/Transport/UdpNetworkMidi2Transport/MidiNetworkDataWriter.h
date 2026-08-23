@@ -74,17 +74,15 @@ private:
             internal::TruncateToUtf8ByteCount(s, EffectiveMaxByteCount(maxByteCount)));
     }
 
-    // The declared length and the bytes actually written must always agree, otherwise every
-    // field after this one in the datagram is misaligned. Caps are therefore rounded down to a
-    // whole number of 32-bit words.
+    // Only the 255-word field limit is enforced here. The declared length is in whole 32-bit
+    // words, WritePaddedString zero pads up to that boundary and the reader trims the padding, so
+    // a cap which is not a multiple of four round trips correctly. Rounding the cap DOWN to a
+    // word multiple, as this used to, silently clipped exactly the two fields the specification
+    // sizes at 98 and 42 bytes: a 42 byte Product Instance Id went out as 40, which made a remote
+    // device see the advertised identity and the in-session identity as two different devices.
     static inline size_t EffectiveMaxByteCount(_In_ size_t maxByteCount)
     {
-        if (maxByteCount > 255 * sizeof(uint32_t))
-        {
-            maxByteCount = 255 * sizeof(uint32_t);
-        }
-
-        return (maxByteCount / sizeof(uint32_t)) * sizeof(uint32_t);
+        return min(maxByteCount, static_cast<size_t>(255 * sizeof(uint32_t)));
     }
 
     inline void WritePaddedString(_In_ std::string s, _In_ size_t maxByteCount)

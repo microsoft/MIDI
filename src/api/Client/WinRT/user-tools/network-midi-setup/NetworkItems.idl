@@ -67,6 +67,15 @@ namespace midinetworksetup
         Microsoft.UI.Xaml.Visibility RetryVisibility{ get; };
         Microsoft.UI.Xaml.Visibility DisconnectVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NotAdvertisedVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
+
+        // Round trip latency over the last several polls, newest at the right. Rendered as a
+        // filled sparkline, so the geometry is produced here rather than in the template.
+        Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection LatencyLinePoints{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection LatencyFillPoints{ get; };
+        String LatencyPeakText{ get; };
     }
 
     // One remote client which has reached a host on this PC.
@@ -82,9 +91,17 @@ namespace midinetworksetup
         String ProductInstanceId{ get; };
         String AddressText{ get; };
         String StatusText{ get; };
+        String StatisticsText{ get; };
 
         Boolean IsPendingApproval{ get; };
         Boolean IsBusy;
+
+        // matches the remote host rows: round trip latency over a rolling window
+        Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection LatencyLinePoints{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection LatencyFillPoints{ get; };
+        String LatencyPeakText{ get; };
     }
 
     // A remote client this PC remembers deciding about, from a host's allow or deny list.
@@ -127,6 +144,7 @@ namespace midinetworksetup
 
         Microsoft.UI.Xaml.Visibility NoConnectionsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NoKnownClientsVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility KnownClientsVisibility{ get; };
 
         Windows.Foundation.Collections.IObservableVector<HostConnectionItem> Connections{ get; };
         Windows.Foundation.Collections.IObservableVector<KnownClientItem> KnownClients{ get; };

@@ -13,6 +13,10 @@
 #include "KnownClientItem.g.h"
 #include "LocalHostItem.g.h"
 
+#include "AppSettings.h"
+
+#include <chrono>
+
 // The pages refresh from the service on a timer, so every row type raises property changed
 // rather than being replaced. Nothing here throws: a failing notification must never take
 // down a UI callback.
@@ -61,6 +65,156 @@
 
 namespace winrt::midinetworksetup::implementation
 {
+    // Round trip latency over a rolling window, rendered as a filled sparkline. Shared by the
+    // remote host rows and by the per-connection rows on the This PC page.
+    //
+    // The axis is real elapsed time rather than one step per sample: a refresh is also requested
+    // by navigation, the Refresh button and settings changes, and a tick is skipped when the
+    // previous refresh is still running, so a per-sample axis scrolls at an uneven rate.
+    struct LatencyHistory
+    {
+        // how many polls' worth of history the window covers
+        static constexpr size_t SampleCapacity = 100;
+
+        // hard ceiling, in case something requests refreshes far faster than the poll interval
+        static constexpr size_t MaxSamples = 400;
+
+        winrt::Microsoft::UI::Xaml::Media::PointCollection LinePoints{ nullptr };
+        winrt::Microsoft::UI::Xaml::Media::PointCollection FillPoints{ nullptr };
+        winrt::hstring PeakText{};
+
+        bool HasSamples() const noexcept { return !m_samples.empty(); }
+
+        void Record(
+            _In_ uint64_t const ticks,
+            _In_ bool const isConnected,
+            _In_ double const graphWidth,
+            _In_ double const graphHeight) noexcept
+        {
+            if (!isConnected)
+            {
+                if (!m_samples.empty())
+                {
+                    m_samples.clear();
+                    Rebuild(Clock::now(), graphWidth, graphHeight);
+                }
+
+                return;
+            }
+
+            auto const now = Clock::now();
+
+            // Zero means the ping has not been answered yet. Carrying the previous value keeps a
+            // gap from reading as a latency collapse to zero.
+            auto const milliseconds = ticks == 0 ?
+                (m_samples.empty() ? 0.0 : m_samples.back().second) :
+                static_cast<double>(ticks) / 10000.0;
+
+            m_samples.push_back({ now, milliseconds });
+
+            auto const window = std::chrono::duration<double>{ WindowSeconds() };
+
+            while (m_samples.size() > 1 && (now - m_samples.front().first) > window)
+            {
+                m_samples.pop_front();
+            }
+
+            while (m_samples.size() > MaxSamples)
+            {
+                m_samples.pop_front();
+            }
+
+            Rebuild(now, graphWidth, graphHeight);
+        }
+
+    private:
+        using Clock = std::chrono::steady_clock;
+
+        static double WindowSeconds() noexcept
+        {
+            auto const interval = ::midinetworksetup::AppSettings::Current().RefreshIntervalSeconds();
+
+            return static_cast<double>(SampleCapacity) *
+                static_cast<double>(interval == 0 ? 1 : interval);
+        }
+
+        void Rebuild(
+            _In_ Clock::time_point const now,
+            _In_ double const graphWidth,
+            _In_ double const graphHeight) noexcept
+        {
+            try
+            {
+                winrt::Microsoft::UI::Xaml::Media::PointCollection line{};
+                winrt::Microsoft::UI::Xaml::Media::PointCollection fill{};
+
+                if (m_samples.empty())
+                {
+                    LinePoints = line;
+                    FillPoints = fill;
+                    PeakText = winrt::hstring{};
+
+                    return;
+                }
+
+                auto const peak = std::max_element(
+                    m_samples.begin(),
+                    m_samples.end(),
+                    [](auto const& left, auto const& right) { return left.second < right.second; })->second;
+
+                // A flat trace at the very top would imply the scale means something absolute, so
+                // the axis keeps a little headroom above the peak.
+                auto const scale = peak > 0.0 ? peak * 1.15 : 1.0;
+
+                // Logarithmic, because a single wake-from-idle spike is often two orders of
+                // magnitude above the settled latency and would otherwise flatten the whole trace
+                // onto the baseline. log1p keeps zero at the baseline instead of diverging.
+                auto const scaleLog = std::log1p(scale);
+
+                auto const window = WindowSeconds();
+
+                for (auto const& sample : m_samples)
+                {
+                    auto const age = std::chrono::duration<double>{ now - sample.first }.count();
+
+                    auto x = graphWidth - ((age / window) * graphWidth);
+
+                    x = std::clamp(x, 0.0, graphWidth);
+
+                    auto const normalized = scaleLog > 0.0 ?
+                        std::clamp(std::log1p(sample.second) / scaleLog, 0.0, 1.0) : 0.0;
+
+                    auto const y = graphHeight - (normalized * graphHeight);
+
+                    line.Append(winrt::Windows::Foundation::Point{
+                        static_cast<float>(x), static_cast<float>(y) });
+                }
+
+                for (auto const& point : line)
+                {
+                    fill.Append(point);
+                }
+
+                // close the area down to the baseline so the polygon fills under the trace
+                fill.Append(winrt::Windows::Foundation::Point{
+                    static_cast<float>(line.GetAt(line.Size() - 1).X), static_cast<float>(graphHeight) });
+
+                fill.Append(winrt::Windows::Foundation::Point{
+                    static_cast<float>(line.GetAt(0).X), static_cast<float>(graphHeight) });
+
+                LinePoints = line;
+                FillPoints = fill;
+
+                PeakText = winrt::hstring{ std::format(L"peak {:.2f} ms, log scale", peak) };
+            }
+            catch (...)
+            {
+            }
+        }
+
+        std::deque<std::pair<Clock::time_point, double>> m_samples{};
+    };
+
     struct PendingInvitationItem : PendingInvitationItemT<PendingInvitationItem>
     {
         PendingInvitationItem() = default;
@@ -165,6 +319,39 @@ namespace winrt::midinetworksetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        winrt::Microsoft::UI::Xaml::Visibility ConnectedBadgeVisibility() const noexcept
+        {
+            return m_isConnected ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility EndpointDeviceIdVisibility() const noexcept
+        {
+            return m_endpointDeviceId.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
+        {
+            return m_latency.HasSamples() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        winrt::Microsoft::UI::Xaml::Media::PointCollection LatencyLinePoints() const noexcept
+        {
+            return m_latency.LinePoints;
+        }
+
+        winrt::Microsoft::UI::Xaml::Media::PointCollection LatencyFillPoints() const noexcept
+        {
+            return m_latency.FillPoints;
+        }
+
+        winrt::hstring LatencyPeakText() const noexcept { return m_latency.PeakText; }
+
         void InternalInitialize(_In_ winrt::hstring const& matchKey) noexcept
         {
             m_matchKey = matchKey;
@@ -182,6 +369,7 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const& statisticsText,
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ winrt::hstring const& clientId,
+            _In_ uint64_t const latencyTicks,
             _In_ bool const isConnected,
             _In_ bool const isConfigured,
             _In_ bool const isAdvertised) noexcept
@@ -195,7 +383,12 @@ namespace winrt::midinetworksetup::implementation
             UpdateField(m_connectPort, connectPort, L"ConnectPort");
             UpdateField(m_statusText, statusText, L"StatusText");
             UpdateField(m_statisticsText, statisticsText, L"StatisticsText");
-            UpdateField(m_endpointDeviceId, endpointDeviceId, L"EndpointDeviceId");
+
+            if (UpdateField(m_endpointDeviceId, endpointDeviceId, L"EndpointDeviceId"))
+            {
+                RaisePropertyChanged(L"EndpointDeviceIdVisibility");
+            }
+
             UpdateField(m_clientId, clientId, L"ClientId");
 
             auto const connectedChanged = UpdateField(m_isConnected, isConnected, L"IsConnected");
@@ -206,6 +399,13 @@ namespace winrt::midinetworksetup::implementation
                 RaisePropertyChanged(L"NotAdvertisedVisibility");
             }
 
+            if (connectedChanged)
+            {
+                RaisePropertyChanged(L"ConnectedBadgeVisibility");
+            }
+
+            RecordLatencySample(latencyTicks, isConnected);
+
             if (connectedChanged || configuredChanged)
             {
                 RaiseButtonVisibilities();
@@ -213,6 +413,25 @@ namespace winrt::midinetworksetup::implementation
         }
 
     private:
+        // must match the sparkline's size in the remote host item template
+        static constexpr double LatencyGraphWidth = 360.0;
+        static constexpr double LatencyGraphHeight = 44.0;
+
+        void RecordLatencySample(_In_ uint64_t const ticks, _In_ bool const isConnected) noexcept
+        {
+            m_latency.Record(ticks, isConnected, LatencyGraphWidth, LatencyGraphHeight);
+
+            RaiseLatencyProperties();
+        }
+
+        void RaiseLatencyProperties() noexcept
+        {
+            RaisePropertyChanged(L"LatencyLinePoints");
+            RaisePropertyChanged(L"LatencyFillPoints");
+            RaisePropertyChanged(L"LatencyPeakText");
+            RaisePropertyChanged(L"LatencyGraphVisibility");
+        }
+
         void RaiseButtonVisibilities() noexcept
         {
             RaisePropertyChanged(L"ConnectVisibility");
@@ -230,6 +449,9 @@ namespace winrt::midinetworksetup::implementation
         uint16_t m_connectPort{ 0 };
         winrt::hstring m_statusText{};
         winrt::hstring m_statisticsText{};
+
+        LatencyHistory m_latency{};
+
         winrt::hstring m_endpointDeviceId{};
         winrt::hstring m_clientId{};
         bool m_isConnected{ false };
@@ -252,8 +474,35 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
         winrt::hstring AddressText() const noexcept { return m_addressText; }
         winrt::hstring StatusText() const noexcept { return m_statusText; }
+        winrt::hstring StatisticsText() const noexcept { return m_statisticsText; }
 
         bool IsPendingApproval() const noexcept { return m_isPendingApproval; }
+
+        winrt::Microsoft::UI::Xaml::Visibility ConnectedBadgeVisibility() const noexcept
+        {
+            return m_isSessionActive ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
+        {
+            return m_latency.HasSamples() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        winrt::Microsoft::UI::Xaml::Media::PointCollection LatencyLinePoints() const noexcept
+        {
+            return m_latency.LinePoints;
+        }
+
+        winrt::Microsoft::UI::Xaml::Media::PointCollection LatencyFillPoints() const noexcept
+        {
+            return m_latency.FillPoints;
+        }
+
+        winrt::hstring LatencyPeakText() const noexcept { return m_latency.PeakText; }
 
         bool IsBusy() const noexcept { return m_isBusy; }
         void IsBusy(bool const value) noexcept { UpdateField(m_isBusy, value, L"IsBusy"); }
@@ -272,22 +521,48 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const& displayName,
             _In_ winrt::hstring const& addressText,
             _In_ winrt::hstring const& statusText,
+            _In_ winrt::hstring const& statisticsText,
+            _In_ uint64_t const latencyTicks,
+            _In_ bool const isSessionActive,
             _In_ bool const isPendingApproval) noexcept
         {
             UpdateField(m_displayName, displayName, L"DisplayName");
             UpdateField(m_addressText, addressText, L"AddressText");
             UpdateField(m_statusText, statusText, L"StatusText");
+            UpdateField(m_statisticsText, statisticsText, L"StatisticsText");
             UpdateField(m_isPendingApproval, isPendingApproval, L"IsPendingApproval");
+
+            if (UpdateField(m_isSessionActive, isSessionActive, L"IsSessionActive"))
+            {
+                RaisePropertyChanged(L"ConnectedBadgeVisibility");
+            }
+
+            m_latency.Record(latencyTicks, isSessionActive, LatencyGraphWidth, LatencyGraphHeight);
+
+            RaisePropertyChanged(L"LatencyLinePoints");
+            RaisePropertyChanged(L"LatencyFillPoints");
+            RaisePropertyChanged(L"LatencyPeakText");
+            RaisePropertyChanged(L"LatencyGraphVisibility");
         }
 
     private:
+        // Narrower than the remote host rows: these sit nested inside a host card. Must match the
+        // sparkline's size in the connection item template.
+        static constexpr double LatencyGraphWidth = 240.0;
+        static constexpr double LatencyGraphHeight = 32.0;
+
         winrt::hstring m_matchKey{};
         winrt::hstring m_hostId{};
         winrt::hstring m_displayName{};
         winrt::hstring m_productInstanceId{};
         winrt::hstring m_addressText{};
         winrt::hstring m_statusText{};
+        winrt::hstring m_statisticsText{};
+
+        LatencyHistory m_latency{};
+
         bool m_isPendingApproval{ false };
+        bool m_isSessionActive{ false };
         bool m_isBusy{ false };
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
@@ -371,6 +646,13 @@ namespace winrt::midinetworksetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
         }
 
+        winrt::Microsoft::UI::Xaml::Visibility KnownClientsVisibility() const noexcept
+        {
+            return m_knownClients.Size() == 0 ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::HostConnectionItem> Connections() const noexcept
         {
             return m_connections;
@@ -418,6 +700,7 @@ namespace winrt::midinetworksetup::implementation
         {
             RaisePropertyChanged(L"NoConnectionsVisibility");
             RaisePropertyChanged(L"NoKnownClientsVisibility");
+            RaisePropertyChanged(L"KnownClientsVisibility");
         }
 
     private:

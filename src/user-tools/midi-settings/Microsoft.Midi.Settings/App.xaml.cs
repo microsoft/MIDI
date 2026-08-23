@@ -159,9 +159,6 @@ public partial class App : Application
                     services.AddTransient<GlobalMidiSettingsPage>();
                     services.AddTransient<GlobalMidiSettingsViewModel>();
 
-                    services.AddTransient<NetworkMidi2SetupPage>();
-                    services.AddTransient<NetworkMidi2SetupViewModel>();
-
                     services.AddTransient<EndpointsLoopPage>();
                     services.AddTransient<EndpointsLoopViewModel>();
 
@@ -182,15 +179,8 @@ public partial class App : Application
 
                     services.AddTransient<ConfigurationsPage>();
                     services.AddTransient<ConfigurationsViewModel>();
-
-                    services.AddTransient<ToolsSysExPage>();
-                    services.AddTransient<ToolsSysExViewModel>();
-
                     services.AddTransient<ToolsTestPage>();
                     services.AddTransient<ToolsTestViewModel>();
-
-                    services.AddTransient<ToolsScratchPadPage>();
-                    services.AddTransient<ToolsScratchPadViewModel>();
 
                     services.AddTransient<TroubleshootingPage>();
                     services.AddTransient<TroubleshootingViewModel>();

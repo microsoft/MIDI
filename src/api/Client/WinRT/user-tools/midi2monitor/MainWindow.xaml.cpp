@@ -19,6 +19,7 @@
 #include "MonitorPalette.h"
 #include "NamedChoice.h"
 #include "StringResources.h"
+#include "resource.h"
 
 namespace native = ::midi2monitor;
 namespace res = ::midi2monitor::resources;
@@ -193,6 +194,10 @@ namespace winrt::midi2monitor::implementation
             elements.RightInset = TitleBarRightInsetColumn();
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
+            m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // 32px source for a 16px slot, so it stays crisp on a high DPI display
+            AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));
 
             // the shared chrome does not know about the palette or the list rows
             native::MonitorPalette::Invalidate();

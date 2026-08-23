@@ -2145,7 +2145,8 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                         definition->MatchDirectHostNameOrIPAddress = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_OR_IP_ADDRESS_KEY, L""));
                         definition->MatchDirectPort = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT_KEY, L""));
 
-                        // TODO: Validate port range, etc. and return an error if invalid
+                    definition->MatchProductInstanceId = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY, L""));
+                    definition->MatchUmpEndpointName = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY, L""));
 
 
                         TransportState::Current().AddPendingClientDefinition(definition);

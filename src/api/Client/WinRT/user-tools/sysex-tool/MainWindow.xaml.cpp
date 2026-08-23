@@ -168,6 +168,9 @@ namespace winrt::midisysextool::implementation
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // 32px source for a 16px slot, so it stays crisp on a high DPI display
+            AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));
         }
         MIDI_SYSEXTOOL_CATCH_AND_LOG(L"Unable to set up the window chrome.")
     }

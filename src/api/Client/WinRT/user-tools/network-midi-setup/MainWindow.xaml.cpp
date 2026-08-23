@@ -17,13 +17,18 @@
 // preprocessor defines; the SDK includes the same header.
 #include "..\..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
+#include <winrt/Microsoft.UI.Xaml.Media.Animation.h>
+
 namespace native = ::midinetworksetup;
 namespace res = ::midinetworksetup::resources;
+namespace animation = ::winrt::Microsoft::UI::Xaml::Media::Animation;
 
 namespace winrt::midinetworksetup::implementation
 {
     namespace
     {
+        // Long enough to read, short enough that it is gone before it becomes untrue.
+        constexpr std::chrono::seconds StatusMessageLifetime{ 8 };
         // Entry identifiers are written to and read from the configuration file in the unbraced
         // lowercase form, which is what winrt::to_hstring produces for a guid.
         winrt::hstring EntryKey(_In_ winrt::guid const& value) noexcept
@@ -208,6 +213,9 @@ namespace winrt::midinetworksetup::implementation
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // 32px source for a 16px slot, so it stays crisp on a high DPI display
+            AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));
 
             AlwaysOnTopToggle().IsChecked(native::AppSettings::Current().AlwaysOnTop());
 
@@ -479,26 +487,112 @@ namespace winrt::midinetworksetup::implementation
         }
     }
 
-    void MainWindow::SetRemoteStatus(winrt::hstring const& text) noexcept
+    _Use_decl_annotations_
+    void MainWindow::ShowTransientStatus(
+        xaml::Controls::TextBlock const& target,
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer& timer,
+        winrt::hstring const& text) noexcept
     {
         try
         {
-            RemoteStatusText().Text(text);
+            if (target == nullptr)
+            {
+                return;
+            }
+
+            if (timer != nullptr)
+            {
+                timer.Stop();
+            }
+
+            target.Opacity(1.0);
+            target.Text(text);
+
+            if (text.empty())
+            {
+                return;
+            }
+
+            auto queue = DispatcherQueue();
+
+            if (queue == nullptr)
+            {
+                return;
+            }
+
+            if (timer == nullptr)
+            {
+                timer = queue.CreateTimer();
+
+                if (timer == nullptr)
+                {
+                    return;
+                }
+
+                timer.IsRepeating(false);
+            }
+
+            timer.Interval(StatusMessageLifetime);
+
+            timer.Tick([weak = get_weak(), target](auto&& sender, auto&&)
+                {
+                    sender.Stop();
+
+                    auto strong = weak.get();
+
+                    if (strong == nullptr || strong->m_closing)
+                    {
+                        return;
+                    }
+
+                    try
+                    {
+                        animation::DoubleAnimation fade{};
+
+                        fade.To(0.0);
+                        fade.Duration(winrt::Microsoft::UI::Xaml::DurationHelper::FromTimeSpan(
+                            std::chrono::milliseconds{ 600 }));
+
+                        animation::Storyboard::SetTarget(fade, target);
+                        animation::Storyboard::SetTargetProperty(fade, L"Opacity");
+
+                        animation::Storyboard storyboard{};
+                        storyboard.Children().Append(fade);
+
+                        storyboard.Completed([target](auto&&, auto&&)
+                            {
+                                try
+                                {
+                                    target.Text(L"");
+                                    target.Opacity(1.0);
+                                }
+                                catch (...)
+                                {
+                                }
+                            });
+
+                        storyboard.Begin();
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
+            timer.Start();
         }
         catch (...)
         {
         }
     }
 
+    void MainWindow::SetRemoteStatus(winrt::hstring const& text) noexcept
+    {
+        ShowTransientStatus(RemoteStatusText(), m_remoteStatusTimer, text);
+    }
+
     void MainWindow::SetLocalStatus(winrt::hstring const& text) noexcept
     {
-        try
-        {
-            LocalStatusText().Text(text);
-        }
-        catch (...)
-        {
-        }
+        ShowTransientStatus(LocalStatusText(), m_localStatusTimer, text);
     }
 
 
@@ -622,12 +716,6 @@ namespace winrt::midinetworksetup::implementation
         }
     }
 
-    _Use_decl_annotations_
-    void MainWindow::OnRefreshRemoteHostsClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
-    {
-        RequestRefreshAsync();
-    }
-
     MainWindow::ServiceSnapshot MainWindow::GatherSnapshot() noexcept
     {
         ServiceSnapshot snapshot{};
@@ -641,8 +729,11 @@ namespace winrt::midinetworksetup::implementation
                 return snapshot;
             }
 
-            snapshot.ConfiguredClients = midi2net::MidiNetworkTransportManager::GetConfiguredClients();
+            // Both pages are gathered even when only one is visible. The latency graphs plot
+            // against elapsed time, so a page which stopped sampling while hidden would come back
+            // with a flat segment across the gap and read as a bug.
             snapshot.ConfiguredHosts = midi2net::MidiNetworkTransportManager::GetConfiguredHosts();
+            snapshot.ConfiguredClients = midi2net::MidiNetworkTransportManager::GetConfiguredClients();
             snapshot.PendingRemoteClients = midi2net::MidiNetworkTransportManager::GetPendingRemoteClients();
 
             snapshot.ClientDisplayNames = native::NetworkConfigFile::Current().GetClientDisplayNames();
@@ -753,8 +844,8 @@ namespace winrt::midinetworksetup::implementation
             m_transportMissingReported = false;
 
             ApplyPendingInvitations(snapshot);
-            ApplyRemoteHosts(snapshot);
             ApplyLocalHosts(snapshot);
+            ApplyRemoteHosts(snapshot);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to show the current network state.")
     }
@@ -927,6 +1018,7 @@ namespace winrt::midinetworksetup::implementation
                 winrt::hstring Statistics{};
                 winrt::hstring EndpointDeviceId{};
                 winrt::hstring ClientId{};
+                uint64_t LatencyTicks{ 0 };
                 bool Connected{ false };
                 bool Configured{ false };
                 bool Advertised{ false };
@@ -1000,8 +1092,8 @@ namespace winrt::midinetworksetup::implementation
                 }
 
                 row.Subtitle = res::FormatString(L"RemoteHostSubtitleFormat", host.HostName(), host.Port());
-                row.ProductInstanceId = res::FormatString(L"ProductInstanceIdFormat", host.ProductInstanceId());
-                row.Addresses = res::FormatString(L"AddressesFormat", JoinAddresses(host.IPAddresses()));
+                row.ProductInstanceId = host.ProductInstanceId();
+                row.Addresses = JoinAddresses(host.IPAddresses());
                 row.Status = res::GetString(L"RemoteHostAvailable");
                 row.ConnectAddress = PreferredAddress(host);
                 row.ConnectPort = host.Port();
@@ -1038,13 +1130,21 @@ namespace winrt::midinetworksetup::implementation
                     auto const clientKey = EntryKey(client.ClientId());
 
                     // The configuration file is this app's record of which entries are meant to
-                    // exist. An entry the service still reports but the file no longer has is on
-                    // its way out, and showing it would look like a row the customer removed came
-                    // back broken.
-                    if (std::find(
+                    // exist, and an entry the service still reports but the file no longer has is
+                    // usually one on its way out. A live session is the exception: the service is
+                    // the authority on what is actually connected, and hiding a connection which
+                    // is passing traffic tells the customer a plain untruth. This also covers an
+                    // entry created before the file could be written, or by another tool.
+                    auto const listedInConfigFile = std::find(
                         snapshot.ConfiguredClientIds.begin(),
                         snapshot.ConfiguredClientIds.end(),
-                        std::wstring{ Lowered(clientKey) }) == snapshot.ConfiguredClientIds.end())
+                        std::wstring{ Lowered(clientKey) }) != snapshot.ConfiguredClientIds.end();
+
+                    auto const liveInService =
+                        client.IsSessionActive() ||
+                        client.EntryState() == midi2net::MidiNetworkClientEntryState::Active;
+
+                    if (!listedInConfigFile && !liveInService)
                     {
                         continue;
                     }
@@ -1093,9 +1193,7 @@ namespace winrt::midinetworksetup::implementation
                                 client.ConfiguredDirectAddress(),
                                 client.ConfiguredDirectPort());
 
-                        created.Addresses = res::FormatString(
-                            L"AddressesFormat",
-                            client.ConfiguredDirectAddress());
+                        created.Addresses = client.ConfiguredDirectAddress();
 
                         created.ConnectAddress = client.ConfiguredDirectAddress();
 
@@ -1116,9 +1214,7 @@ namespace winrt::midinetworksetup::implementation
 
                     row->Configured = true;
                     row->ClientId = clientKey;
-                    row->EndpointDeviceId = client.EndpointDeviceId().empty() ?
-                        winrt::hstring{} :
-                        res::FormatString(L"EndpointDeviceIdFormat", client.EndpointDeviceId());
+                    row->EndpointDeviceId = client.EndpointDeviceId();
 
                     row->Connected = client.IsSessionActive();
 
@@ -1145,6 +1241,8 @@ namespace winrt::midinetworksetup::implementation
 
                     if (client.IsSessionActive())
                     {
+                        row->LatencyTicks = client.CurrentLatencyTicks();
+
                         row->Statistics = res::FormatString(
                             L"RemoteHostStatisticsFormat",
                             DescribeLatency(client.CurrentLatencyTicks()),
@@ -1218,6 +1316,7 @@ namespace winrt::midinetworksetup::implementation
                     row.Statistics,
                     row.EndpointDeviceId,
                     row.ClientId,
+                    row.LatencyTicks,
                     row.Connected,
                     row.Configured,
                     row.Advertised);
@@ -1318,9 +1417,9 @@ namespace winrt::midinetworksetup::implementation
 
                     self->InternalUpdate(
                         host.UmpEndpointName().empty() ? host.ServiceInstanceName() : host.UmpEndpointName(),
-                        res::FormatString(L"HostServiceInstanceFormat", host.ServiceInstanceName()),
-                        res::FormatString(L"ProductInstanceIdFormat", host.ProductInstanceId()),
-                        res::FormatString(L"HostAddressFormat", host.ActualAddress(), host.ActualPort()),
+                        host.ServiceInstanceName(),
+                        host.ProductInstanceId(),
+                        res::FormatString(L"HostAddressValueFormat", host.ActualAddress(), host.ActualPort()),
                         host.ActualPort(),
                         host.HasStarted() ?
                             res::FormatString(L"HostStartedFormat", host.ActualPort()) :
@@ -1385,6 +1484,16 @@ namespace winrt::midinetworksetup::implementation
                                     res::GetString(L"UnnamedDevice") : connection.UmpEndpointName(),
                                 res::FormatString(L"AddressesFormat", connection.RemoteAddress()),
                                 status,
+                                connection.IsSessionActive() ?
+                                    res::FormatString(
+                                        L"RemoteHostStatisticsFormat",
+                                        DescribeLatency(connection.CurrentLatencyTicks()),
+                                        FormatCount(connection.TotalCountNetworkPacketsSent()),
+                                        FormatCount(connection.TotalCountNetworkPacketsReceived()),
+                                        FormatCount(connection.RetransmitCount())) :
+                                    winrt::hstring{},
+                                connection.CurrentLatencyTicks(),
+                                connection.IsSessionActive(),
                                 connection.IsPendingApproval());
                         }
                     }

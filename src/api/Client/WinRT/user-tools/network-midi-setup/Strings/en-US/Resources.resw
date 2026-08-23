@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -58,14 +58,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-
   <data name="AppTitle" xml:space="preserve">
     <value>Windows MIDI Network Setup</value>
   </data>
   <data name="UnnamedDevice" xml:space="preserve">
     <value>Unnamed device</value>
   </data>
-
   <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -78,14 +76,12 @@
   <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Keep this window on top</value>
   </data>
-
   <data name="RemoteHostsNavigationItem.Content" xml:space="preserve">
     <value>Network devices</value>
   </data>
   <data name="LocalHostsNavigationItem.Content" xml:space="preserve">
     <value>This PC</value>
   </data>
-
   <data name="PendingInvitationsBar.Title" xml:space="preserve">
     <value>Devices are waiting for permission</value>
   </data>
@@ -106,21 +102,14 @@
     <comment>{0} is the remote device name, {1} is the name of the host on this PC</comment>
   </data>
   <data name="PendingInvitationDetailFormat" xml:space="preserve">
-    <value>From {0}. Product instance id {1}.</value>
+    <value>From {0}. Product Instance Id {1}.</value>
     <comment>{0} is the network address the request came from, {1} is the device's product instance id</comment>
   </data>
-
   <data name="RemoteHostsHeader.Text" xml:space="preserve">
     <value>Network MIDI 2.0 devices</value>
   </data>
   <data name="RemoteHostsDescription.Text" xml:space="preserve">
     <value>Devices found on your network, and the ones this PC is connected to.</value>
-  </data>
-  <data name="RefreshRemoteHostsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Refresh the list</value>
-  </data>
-  <data name="RefreshButtonText.Text" xml:space="preserve">
-    <value>Refresh</value>
   </data>
   <data name="RemoteHostsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Network MIDI 2.0 devices</value>
@@ -143,7 +132,6 @@
   <data name="NoRemoteHostsText.Text" xml:space="preserve">
     <value>Looking for Network MIDI 2.0 devices...</value>
   </data>
-
   <data name="RemoteHostAvailable" xml:space="preserve">
     <value>Available</value>
   </data>
@@ -181,16 +169,30 @@
   <data name="LatencyUnknown" xml:space="preserve">
     <value>Round trip not measured yet</value>
   </data>
-  <data name="ProductInstanceIdFormat" xml:space="preserve">
-    <value>Product instance id: {0}</value>
-  </data>
   <data name="AddressesFormat" xml:space="preserve">
     <value>Addresses: {0}</value>
   </data>
-  <data name="EndpointDeviceIdFormat" xml:space="preserve">
-    <value>MIDI endpoint: {0}</value>
+  <data name="ProductInstanceIdLabel.Text" xml:space="preserve">
+    <value>Product Instance Id</value>
   </data>
-
+  <data name="AddressesLabel.Text" xml:space="preserve">
+    <value>Addresses</value>
+  </data>
+  <data name="EndpointDeviceIdLabel.Text" xml:space="preserve">
+    <value>MIDI Endpoint</value>
+  </data>
+  <data name="CopyEndpointDeviceIdButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copy the MIDI Endpoint id</value>
+  </data>
+  <data name="CopyEndpointDeviceIdButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Copy the MIDI Endpoint id</value>
+  </data>
+  <data name="EndpointDeviceIdCopied" xml:space="preserve">
+    <value>The MIDI Endpoint id was copied to the clipboard.</value>
+  </data>
+  <data name="EndpointDeviceIdCopyFailed" xml:space="preserve">
+    <value>The MIDI Endpoint id could not be copied to the clipboard.</value>
+  </data>
   <data name="ManualConnectExpander.Header" xml:space="preserve">
     <value>Connect to a device by address</value>
   </data>
@@ -245,7 +247,6 @@
   <data name="ManualConnectButton.Content" xml:space="preserve">
     <value>Connect</value>
   </data>
-
   <data name="LocalHostsHeader.Text" xml:space="preserve">
     <value>Network MIDI 2.0 hosts on this PC</value>
   </data>
@@ -264,9 +265,6 @@
   <data name="DeleteHostButton.Content" xml:space="preserve">
     <value>Delete</value>
   </data>
-  <data name="ConnectedDevicesHeader.Text" xml:space="preserve">
-    <value>Connected devices</value>
-  </data>
   <data name="NoConnectedDevicesText.Text" xml:space="preserve">
     <value>No devices are connected to this host.</value>
   </data>
@@ -279,9 +277,6 @@
   <data name="RememberedDevicesExpander.Header" xml:space="preserve">
     <value>Remembered decisions</value>
   </data>
-  <data name="NoRememberedDevicesText.Text" xml:space="preserve">
-    <value>Nothing has been allowed or blocked for this host yet.</value>
-  </data>
   <data name="ForgetClientButton.Content" xml:space="preserve">
     <value>Forget</value>
   </data>
@@ -291,7 +286,6 @@
   <data name="NoLocalHostsText.Text" xml:space="preserve">
     <value>This PC does not have a Network MIDI 2.0 host yet. Create one so other devices can connect to it.</value>
   </data>
-
   <data name="HostStartedFormat" xml:space="preserve">
     <value>Started, listening on port {0}</value>
   </data>
@@ -304,11 +298,8 @@
   <data name="HostStoppedMessageFormat" xml:space="preserve">
     <value>{0} stopped.</value>
   </data>
-  <data name="HostServiceInstanceFormat" xml:space="preserve">
-    <value>Network service name: {0}</value>
-  </data>
-  <data name="HostAddressFormat" xml:space="preserve">
-    <value>Listening on {0}, port {1}</value>
+  <data name="HostAddressValueFormat" xml:space="preserve">
+    <value>{0}, port {1}</value>
   </data>
   <data name="HostPolicyAllowAny" xml:space="preserve">
     <value>Any device on your network can connect to this host.</value>
@@ -343,7 +334,6 @@
   <data name="KnownClientBlocked" xml:space="preserve">
     <value>Blocked</value>
   </data>
-
   <data name="CreateHostDialog.Title" xml:space="preserve">
     <value>Create a Network MIDI 2.0 host</value>
   </data>
@@ -387,13 +377,13 @@
     <value>Advanced</value>
   </data>
   <data name="HostProductInstanceIdTextBox.Header" xml:space="preserve">
-    <value>Product instance id</value>
+    <value>Product Instance Id</value>
   </data>
   <data name="HostProductInstanceIdHelp.Text" xml:space="preserve">
     <value>Identifies this PC to other devices. 42 characters or fewer.</value>
   </data>
   <data name="HostProductInstanceIdTooLong" xml:space="preserve">
-    <value>The product instance id has to be 42 characters or fewer.</value>
+    <value>The Product Instance Id has to be 42 characters or fewer.</value>
   </data>
   <data name="HostAutomaticPortCheckBox.Content" xml:space="preserve">
     <value>Let Windows choose the network port</value>
@@ -401,7 +391,6 @@
   <data name="HostPortNumberBox.Header" xml:space="preserve">
     <value>Port</value>
   </data>
-
   <data name="SettingsTitle" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -441,7 +430,6 @@
   <data name="SettingsRefreshIntervalHelp" xml:space="preserve">
     <value>How often this tool asks the MIDI service for connection state, round trip times and packet counts.</value>
   </data>
-
   <data name="TransportUnavailableError" xml:space="preserve">
     <value>The Network MIDI 2.0 transport is not available. Check that Windows MIDI Services is installed and running.</value>
   </data>
@@ -458,12 +446,11 @@
     <value>The MIDI configuration file is not valid JSON, so it was left alone: {0}</value>
   </data>
   <data name="ConfigFileWriteError" xml:space="preserve">
-    <value>The MIDI configuration file could not be written, so this change will be lost when the service restarts: {0}</value>
+    <value>The MIDI configuration file could not be written, so this change will be lost when the service restarts: {0} (error {1})</value>
   </data>
   <data name="ConfigFileHostEntryMissingError" xml:space="preserve">
     <value>The change was applied, but there is no entry for this host in the configuration file to remember it in.</value>
   </data>
-
   <data name="ConnectingToDeviceFormat" xml:space="preserve">
     <value>Connecting to {0}...</value>
   </data>
@@ -491,7 +478,6 @@
   <data name="DisconnectFailedFormat" xml:space="preserve">
     <value>Windows could not disconnect that device. {0}</value>
   </data>
-
   <data name="InvitationAllowedOnceFormat" xml:space="preserve">
     <value>{0} was allowed to connect this time.</value>
   </data>
@@ -510,7 +496,6 @@
   <data name="InvitationAnswerFailedFormat" xml:space="preserve">
     <value>Windows could not answer that request. {0}</value>
   </data>
-
   <data name="CreatingHostFormat" xml:space="preserve">
     <value>Creating {0}...</value>
   </data>
@@ -538,7 +523,6 @@
   <data name="HostDeletedFormat" xml:space="preserve">
     <value>{0} was deleted.</value>
   </data>
-
   <data name="DisconnectRemoteClientConfirmTitle" xml:space="preserve">
     <value>Disconnect this device?</value>
   </data>
@@ -563,11 +547,22 @@
   <data name="KnownClientForgetFailedGeneral" xml:space="preserve">
     <value>Windows could not forget that device.</value>
   </data>
-
   <data name="CommandLineUnrecognizedArgument" xml:space="preserve">
     <value>Unrecognized command line argument.</value>
   </data>
   <data name="CommandLineMissingConfigFilePath" xml:space="preserve">
     <value>The configfile switch needs a file path after it.</value>
+  </data>
+  <data name="ServiceInstanceNameLabel.Text" xml:space="preserve">
+    <value>Network service name</value>
+  </data>
+  <data name="HostProductInstanceIdLabel.Text" xml:space="preserve">
+    <value>Product Instance Id</value>
+  </data>
+  <data name="HostAddressLabel.Text" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="HostDetailsPolicyLabel.Text" xml:space="preserve">
+    <value>New connections</value>
   </data>
 </root>

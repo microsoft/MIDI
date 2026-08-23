@@ -84,6 +84,10 @@ public:
     TEST_METHOD(HostWithAnOutOfRangePortIsRejected);
     TEST_METHOD(HostWithANonNumericPortIsRejected);
 
+    // The identity a host puts on the wire has to be the identity it was configured with, or a
+    // remote sees the advertised device and the connected device as two different things.
+    TEST_METHOD(MaximumLengthIdentityStringsSurviveTheWire);
+
     // Removing a host straight after creating it races the endpoint creator thread, which
     // used to register the host after the entry had already been taken away. The host was
     // then unreachable and held its socket and service instance name until a restart. Several

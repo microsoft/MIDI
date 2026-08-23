@@ -8,6 +8,8 @@
 #include "pch.h"
 #include "WindowChrome.h"
 
+#include <robuffer.h>
+
 namespace backdrops = ::winrt::Microsoft::UI::Composition::SystemBackdrops;
 namespace wux = ::winrt::Microsoft::UI::Xaml;
 namespace wuw = ::winrt::Microsoft::UI::Windowing;
@@ -29,6 +31,107 @@ namespace midiapp
             color.B = static_cast<uint8_t>(argb & 0xFF);
 
             return color;
+        }
+    }
+
+    wux::Media::Imaging::WriteableBitmap WindowChrome::LoadIconImageSource(
+        uint16_t const resourceId,
+        int32_t const sizePixels) noexcept
+    {
+        try
+        {
+            if (sizePixels <= 0)
+            {
+                return nullptr;
+            }
+
+            auto const instance = reinterpret_cast<HINSTANCE>(&__ImageBase);
+
+            wil::unique_hicon icon{ static_cast<HICON>(::LoadImageW(
+                instance, MAKEINTRESOURCEW(resourceId), IMAGE_ICON, sizePixels, sizePixels, LR_DEFAULTCOLOR)) };
+
+            if (!icon)
+            {
+                return nullptr;
+            }
+
+            ICONINFO info{};
+
+            if (!::GetIconInfo(icon.get(), &info))
+            {
+                return nullptr;
+            }
+
+            wil::unique_hbitmap colorBitmap{ info.hbmColor };
+            wil::unique_hbitmap maskBitmap{ info.hbmMask };
+
+            if (!colorBitmap)
+            {
+                return nullptr;
+            }
+
+            BITMAPINFO bitmapInfo{};
+            bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+            bitmapInfo.bmiHeader.biWidth = sizePixels;
+            bitmapInfo.bmiHeader.biHeight = -sizePixels;      // negative for a top down DIB
+            bitmapInfo.bmiHeader.biPlanes = 1;
+            bitmapInfo.bmiHeader.biBitCount = 32;
+            bitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+            std::vector<uint8_t> pixels(static_cast<size_t>(sizePixels) * sizePixels * 4);
+
+            // CreateCompatibleDC pairs with DeleteDC, which is what wil::unique_hdc does. A DC
+            // from GetDC would need ReleaseDC instead.
+            wil::unique_hdc memoryDC{ ::CreateCompatibleDC(nullptr) };
+
+            if (!memoryDC)
+            {
+                return nullptr;
+            }
+
+            if (::GetDIBits(memoryDC.get(), colorBitmap.get(), 0, sizePixels,
+                    pixels.data(), &bitmapInfo, DIB_RGB_COLORS) == 0)
+            {
+                return nullptr;
+            }
+
+            // WriteableBitmap wants premultiplied BGRA; an icon's colour bitmap carries straight
+            // alpha, so without this every semi transparent edge pixel reads too bright.
+            for (size_t i = 0; i < pixels.size(); i += 4)
+            {
+                auto const alpha = pixels[i + 3];
+
+                pixels[i + 0] = static_cast<uint8_t>((pixels[i + 0] * alpha) / 255);
+                pixels[i + 1] = static_cast<uint8_t>((pixels[i + 1] * alpha) / 255);
+                pixels[i + 2] = static_cast<uint8_t>((pixels[i + 2] * alpha) / 255);
+            }
+
+            wux::Media::Imaging::WriteableBitmap bitmap{ sizePixels, sizePixels };
+
+            auto buffer = bitmap.PixelBuffer();
+
+            auto byteAccess = buffer.as<::Windows::Storage::Streams::IBufferByteAccess>();
+
+            uint8_t* destination{ nullptr };
+
+            if (FAILED(byteAccess->Buffer(&destination)) ||
+                destination == nullptr ||
+                buffer.Capacity() < pixels.size())
+            {
+                return nullptr;
+            }
+
+            memcpy(destination, pixels.data(), pixels.size());
+
+            bitmap.Invalidate();
+
+            return bitmap;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+
+            return nullptr;
         }
     }
 

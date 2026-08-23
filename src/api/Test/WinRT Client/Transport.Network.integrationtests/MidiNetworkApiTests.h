@@ -149,6 +149,8 @@ public:
     // they run without the service.
     TEST_METHOD(TestConnectConfigCustomEndpointNameRoundTrip);
     TEST_METHOD(TestConnectConfigJsonCarriesTheCustomEndpointName);
+    TEST_METHOD(TestMatchCriteriaJsonCarriesDeviceIdentity);
+    TEST_METHOD(TestMatchCriteriaIdentityIsWrittenAlongsideDeviceId);
     TEST_METHOD(TestHostCreationConfigRemoteClientPolicyRoundTrip);
     TEST_METHOD(TestHostCreationConfigManualPortRoundTrip);
     TEST_METHOD(TestHostCreationConfigAuthenticationTypeRoundTrip);

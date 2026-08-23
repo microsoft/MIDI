@@ -32,10 +32,10 @@ namespace winrt::midinetworksetup::implementation
             controls::NavigationView const& sender,
             controls::NavigationViewSelectionChangedEventArgs const& args);
 
-        void OnRefreshRemoteHostsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         winrt::fire_and_forget OnConnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnRetryRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDisconnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnManualConnectFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
@@ -100,6 +100,13 @@ namespace winrt::midinetworksetup::implementation
         void SetRemoteStatus(winrt::hstring const& text) noexcept;
         void SetLocalStatus(winrt::hstring const& text) noexcept;
 
+        // A status line describes something that just happened, so it stops being true within
+        // seconds. Shows the text, then fades it away rather than leaving a stale claim on screen.
+        void ShowTransientStatus(
+            winrt::Microsoft::UI::Xaml::Controls::TextBlock const& target,
+            winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer& timer,
+            winrt::hstring const& text) noexcept;
+
         // False when the transport is missing or older than the verbs this app needs. It has
         // already shown the customer why by the time it returns.
         bool VerifyTransportIsUsable() noexcept;
@@ -141,6 +148,8 @@ namespace winrt::midinetworksetup::implementation
         winrt::event_token m_watcherUpdatedToken{};
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_refreshTimer{ nullptr };
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_remoteStatusTimer{ nullptr };
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_localStatusTimer{ nullptr };
 
         collections::IObservableVector<midinetworksetup::PendingInvitationItem> m_pendingInvitations{
             winrt::single_threaded_observable_vector<midinetworksetup::PendingInvitationItem>() };

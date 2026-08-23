@@ -40,11 +40,12 @@
                 <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
             </Grid.ColumnDefinitions>
 
-            <FontIcon Grid.Column="1"
-                      Glyph="&#xE8D6;"
-                      FontSize="14"
-                      Margin="12,0,0,0"
-                      VerticalAlignment="Center" />
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
 
             <TextBlock x:Name="AppTitleTextBlock"
                        Grid.Column="2"

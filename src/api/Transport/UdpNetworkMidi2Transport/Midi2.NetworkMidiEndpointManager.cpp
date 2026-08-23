@@ -1051,11 +1051,30 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
             }
 
             // --- connect via mDNS entry
-            if (!clientDefinition->MatchId.empty())
+            if (!clientDefinition->MatchId.empty() ||
+                !clientDefinition->MatchProductInstanceId.empty() ||
+                !clientDefinition->MatchUmpEndpointName.empty())
             {
                 enumeration::DeviceInformation advertisedHost{ nullptr };
 
-                if (TryFindAdvertisedHost(m_foundAdvertisedHosts, clientDefinition->MatchId, advertisedHost))
+                // The device id first, then the device's own identity. A responder renames a
+                // colliding DNS-SD instance label and a user or firmware update can change it, so
+                // the id alone would silently stop matching a device which is still right there.
+                auto found = TryFindAdvertisedHost(m_foundAdvertisedHosts, clientDefinition->MatchId, advertisedHost);
+
+                if (!found)
+                {
+                    found = TryFindAdvertisedHost(
+                        m_foundAdvertisedHosts, clientDefinition->MatchProductInstanceId, advertisedHost);
+                }
+
+                if (!found)
+                {
+                    found = TryFindAdvertisedHost(
+                        m_foundAdvertisedHosts, clientDefinition->MatchUmpEndpointName, advertisedHost);
+                }
+
+                if (found)
                 {
                     TraceLoggingWrite(
                         MidiNetworkMidiTransportTelemetryProvider::Provider(),

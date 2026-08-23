@@ -1598,9 +1598,52 @@ void MidiNetworkApiTests::TestConnectConfigCustomEndpointNameRoundTrip()
         L"An oversize custom name is truncated rather than passed on");
 }
 
-void MidiNetworkApiTests::TestConnectConfigJsonCarriesTheCustomEndpointName()
+// The DNS-SD instance label behind DeviceId is a name, not an identity: a responder renames a
+// colliding label and a firmware update can change it outright. Without the device's own identity
+// alongside it, a reconnect after any of that would silently never match.
+void MidiNetworkApiTests::TestMatchCriteriaJsonCarriesDeviceIdentity()
 {
     MidiNetworkClientMatchCriteria criteria;
+    criteria.DeviceId(L"DnsSd#contoso-synth._midi2._udp.local#0");
+    criteria.ProductInstanceId(L"CONTOSO-PID-12345");
+    criteria.UmpEndpointName(L"Contoso Synth");
+
+    auto const text = std::wstring{ criteria.GetConfigJson() };
+
+    Log::Comment(String().Format(L"Match criteria json: %s", text.c_str()));
+
+    VERIFY_IS_TRUE(
+        text.find(L"CONTOSO-PID-12345") != std::wstring::npos,
+        L"The product instance id reaches the configuration file");
+
+    VERIFY_IS_TRUE(
+        text.find(L"Contoso Synth") != std::wstring::npos,
+        L"The advertised endpoint name reaches the configuration file");
+}
+
+
+void MidiNetworkApiTests::TestMatchCriteriaIdentityIsWrittenAlongsideDeviceId()
+{
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DeviceId(L"DnsSd#contoso-synth._midi2._udp.local#0");
+    criteria.ProductInstanceId(L"CONTOSO-PID-12345");
+
+    auto const text = std::wstring{ criteria.GetConfigJson() };
+
+    // Not an either/or: the id is the fast path and the identity is the fallback, so losing
+    // either one to an if/else would defeat the point.
+    VERIFY_IS_TRUE(
+        text.find(L"contoso-synth._midi2._udp.local") != std::wstring::npos,
+        L"The device id is still written when an identity is supplied");
+
+    VERIFY_IS_TRUE(
+        text.find(L"CONTOSO-PID-12345") != std::wstring::npos,
+        L"The identity is written even though a device id was supplied");
+}
+
+
+void MidiNetworkApiTests::TestConnectConfigJsonCarriesTheCustomEndpointName()
+{    MidiNetworkClientMatchCriteria criteria;
     criteria.DirectHostNameOrIPAddress(L"127.0.0.1");
     criteria.DirectPort(5004);
 
