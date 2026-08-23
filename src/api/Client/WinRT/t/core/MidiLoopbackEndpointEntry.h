@@ -18,16 +18,22 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
         winrt::hstring Name() const noexcept { return m_name; }
         winrt::hstring Description() const noexcept { return m_description; }
+        winrt::hstring ImageFileName() const noexcept { return m_imageFileName; }
 
         bool InternalInitialize(
             _In_ winrt::hstring const& endpointDeviceId, 
             _In_ winrt::hstring const& name, 
-            _In_ winrt::hstring const& description
+            _In_ winrt::hstring const& description,
+            _In_ winrt::hstring const& imageFileName
             ) noexcept
         {
             m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
             m_name = internal::TrimmedHStringCopy(name);
             m_description = internal::TrimmedHStringCopy(description);
+
+            // the service reports what the configuration file said, and that file is editable by
+            // any standard user, so it is cleaned again on the way in
+            m_imageFileName = winrt::hstring{ internal::CleanImageFileName(imageFileName.c_str()) };
 
             return true;
         }
@@ -37,6 +43,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         winrt::hstring m_endpointDeviceId{ };
         winrt::hstring m_name{ };
         winrt::hstring m_description{ };
+        winrt::hstring m_imageFileName{ };
 
     };
 }

@@ -76,6 +76,8 @@ namespace json = ::winrt::Windows::Data::Json;
 //#pragma pop_macro("GetObject")
 
 #include "Feature_Servicing_MIDI2LoopbackMuteAndList.h"
+#include "Feature_Servicing_MIDI2LoopbackCreateMuted.h"
+#include "Feature_Servicing_MIDI2LoopbackCreateWithImage.h"
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
 #include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
 

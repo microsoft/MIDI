@@ -158,6 +158,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                         deviceId,
                         creationConfig.EndpointDefinition().Name(),
                         creationConfig.EndpointDefinition().Description(),
+                        creationConfig.EndpointDefinition().ImageFileName(),
                         creationConfig.IsMuted());
 
                     result->InternalSetSuccess(creationConfig.AssociationId(), *entry);
@@ -628,7 +629,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_NAME_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L""),
-                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY, L"")
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_IMAGE_KEY, L""),
+                                // the default was L"", which is a pointer and so converted to
+                                // true: an entry with no muted key reported itself muted
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY, false)
                             );
 
                             results.Append(*entry);

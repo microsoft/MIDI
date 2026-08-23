@@ -76,6 +76,9 @@ CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandListEntries(
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
             json::JsonValue::CreateStringValue(def.EndpointDescription.c_str()));
 
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_IMAGE_KEY,
+            json::JsonValue::CreateStringValue(def.ImageFileName.c_str()));
+
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY,
             json::JsonValue::CreateBooleanValue(def.IsMuted));
 
@@ -149,6 +152,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);        // mute implies unmute
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE, true);
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
@@ -321,6 +325,11 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         definition->EndpointUniqueIdentifier = endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
                         definition->InstanceIdPrefix = instanceIdPrefix;
                         definition->IsMuted = endpointObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY, false);
+
+                        // anyone can hand-edit the configuration file, so a path here is cut back
+                        // to a bare file name rather than trusted
+                        definition->ImageFileName = internal::CleanImageFileName(
+                            endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY, L"").c_str());
 
                         if (definition->EndpointName.empty())
                         {

@@ -36,6 +36,9 @@
 #define CHARACTER_STRING_ALPHANUMERIC_LEGACY            CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS
 #define CHARACTER_STRING_SWD_UNIQUE_ID_ALLOWED_LEGACY   L"-_" CHARACTER_STRING_ALPHAUPPER_LEGACY CHARACTER_STRING_ALPHALOWER CHARACTER_STRING_DIGITS
 
+// a bare file name inside the shared endpoint assets folder, never a path
+#define MIDI_MAX_IMAGE_FILE_NAME_CHARACTER_COUNT        255
+
 namespace WindowsMidiServicesInternal
 {
     inline std::wstring RemoveDisallowedStringCharacters(_In_ std::wstring const& stringToClean, _In_ std::wstring const& allowedCharacters)
@@ -147,6 +150,95 @@ namespace WindowsMidiServicesInternal
         InPlaceTrim(newString);
 
         return newString;
+    }
+
+    // An endpoint image file name arrives from the configuration file, which any standard user
+    // can edit, and is later joined to the shared assets folder by whatever displays it. Only a
+    // bare file name is ever legitimate, so anything carrying a path is cut down to its final
+    // component and anything still holding a path character is refused rather than repaired.
+    // Returns an empty string when there is nothing usable left.
+    inline std::wstring CleanImageFileName(_In_ std::wstring const& fileName)
+    {
+        auto result = TrimmedWStringCopy(fileName);
+
+        if (result.empty())
+        {
+            return {};
+        }
+
+        if (result.length() > MIDI_MAX_IMAGE_FILE_NAME_CHARACTER_COUNT)
+        {
+            return {};
+        }
+
+        // keep only the last component, so a stored path cannot walk out of the assets folder
+        auto const lastSeparator = result.find_last_of(L"\\/");
+
+        if (lastSeparator != std::wstring::npos)
+        {
+            result = result.substr(lastSeparator + 1);
+        }
+
+        // "." and ".." name directories rather than a file
+        if (result.empty() || result.find_first_not_of(L'.') == std::wstring::npos)
+        {
+            return {};
+        }
+
+        // ':' would name a drive or an alternate data stream; the rest are not legal in a file
+        // name, and a control character has no business in one
+        for (auto const ch : result)
+        {
+            if (ch < 0x20 || ch == L':' || ch == L'<' || ch == L'>' ||
+                ch == L'"' || ch == L'|' || ch == L'?' || ch == L'*')
+            {
+                return {};
+            }
+        }
+
+        return result;
+    }
+
+    // True when the value is safe to store as an endpoint image: either nothing at all, or a
+    // bare file name inside the shared assets folder.
+    //
+    // Unlike CleanImageFileName this repairs nothing. A configuration file is writable by any
+    // standard user, so a path where a file name belongs is tampering rather than a typo, and
+    // the entry carrying it is refused instead of quietly rewritten.
+    inline bool IsBareImageFileName(_In_ std::wstring const& fileName)
+    {
+        auto const trimmed = TrimmedWStringCopy(fileName);
+
+        // no picture at all is a legitimate answer, and is how one gets cleared
+        if (trimmed.empty())
+        {
+            return true;
+        }
+
+        if (trimmed.length() > MIDI_MAX_IMAGE_FILE_NAME_CHARACTER_COUNT)
+        {
+            return false;
+        }
+
+        // "." and ".." name directories rather than a file
+        if (trimmed.find_first_not_of(L'.') == std::wstring::npos)
+        {
+            return false;
+        }
+
+        // '\' and '/' would leave the assets folder, ':' would name a drive or an alternate
+        // data stream, and the rest are not legal in a file name
+        for (auto const ch : trimmed)
+        {
+            if (ch < 0x20 ||
+                ch == L'\\' || ch == L'/' || ch == L':' || ch == L'<' ||
+                ch == L'>' || ch == L'"' || ch == L'|' || ch == L'?' || ch == L'*')
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     inline std::wstring ToUpperWStringCopy(_In_ std::wstring s)

@@ -11,6 +11,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
         winrt::hstring Name() const noexcept { return m_name; }
         winrt::hstring Description() const noexcept { return m_description; }
+        winrt::hstring ImageFileName() const noexcept { return m_imageFileName; }
         bool IsMuted() const noexcept { return m_isMuted; }
 
         void InternalInitialize(
@@ -18,6 +19,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             _In_ winrt::hstring const& endpointDeviceId, 
             _In_ winrt::hstring const& name, 
             _In_ winrt::hstring const& description, 
+            _In_ winrt::hstring const& imageFileName,
             _In_ bool const isMuted) noexcept;
 
     private:
@@ -25,6 +27,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         winrt::hstring m_endpointDeviceId{};
         winrt::hstring m_name{};
         winrt::hstring m_description{};
+        winrt::hstring m_imageFileName{};
         bool m_isMuted{ false };
 
     };

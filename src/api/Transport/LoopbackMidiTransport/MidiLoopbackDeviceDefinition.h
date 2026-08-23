@@ -19,6 +19,9 @@ struct MidiLoopbackDeviceDefinition
     std::wstring EndpointName{};
     std::wstring EndpointDescription{};
 
+    // bare file name in the shared endpoint assets folder, never a path
+    std::wstring ImageFileName{};
+
     std::wstring EndpointUniqueIdentifier{};
 
     std::wstring InstanceIdPrefix{};
@@ -27,5 +30,8 @@ struct MidiLoopbackDeviceDefinition
     std::wstring CreatedEndpointInterfaceId{};
 
     bool UMPOnly{ false };
+
+    // what the configuration asked for, so a loopback which was saved muted comes back muted
+    bool IsMuted{ false };
 
 };

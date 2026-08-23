@@ -76,6 +76,12 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandListEntries(
         objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
             json::JsonValue::CreateStringValue(device->DefinitionA.EndpointDescription.c_str()));
 
+        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+        {
+            objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_IMAGE_KEY,
+                json::JsonValue::CreateStringValue(device->DefinitionA.ImageFileName.c_str()));
+        }
+
 
         auto objEndpointB = json::JsonObject();
 
@@ -87,6 +93,12 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandListEntries(
 
         objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
             json::JsonValue::CreateStringValue(device->DefinitionB.EndpointDescription.c_str()));
+
+        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+        {
+            objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_IMAGE_KEY,
+                json::JsonValue::CreateStringValue(device->DefinitionB.ImageFileName.c_str()));
+        }
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_A_KEY, objEndpointA);
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_B_KEY, objEndpointB);
@@ -172,6 +184,17 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
         {
             capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT, true);        // mute implies unmute
             capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, true);
+        }
+
+        // A rolled back build ignores the image, so it must not claim to honour one or a client
+        // offers the customer a picture that never appears.
+        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+        {
+            capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE, true);
+        }
+        else
+        {
+            capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE, false);
         }
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
@@ -343,6 +366,16 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                     definitionA->AssociationId = associationKey;
                     definitionB->AssociationId = definitionA->AssociationId;
 
+                    if (Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+                    {
+                        // the flag sits on the association because muting a loopback mutes
+                        // both directions at once
+                        definitionA->IsMuted = associationObj.GetNamedBoolean(
+                            MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY, false);
+
+                        definitionB->IsMuted = definitionA->IsMuted;
+                    }
+
 
                     auto endpointAObject = associationObj.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY, nullptr);
                     auto endpointBObject = associationObj.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY, nullptr);
@@ -357,12 +390,26 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         definitionA->InstanceIdPrefix = instanceIdPrefixA;
                         definitionA->UMPOnly = endpointAObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
 
+                        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+                        {
+                            // anyone can hand-edit the configuration file, so a path here is cut
+                            // back to a bare file name rather than trusted
+                            definitionA->ImageFileName = internal::CleanImageFileName(
+                                endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY, L"").c_str());
+                        }
+
 
                         definitionB->EndpointName = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
                         definitionB->EndpointDescription = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
                         definitionB->EndpointUniqueIdentifier = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
                         definitionB->InstanceIdPrefix = instanceIdPrefixB;
                         definitionB->UMPOnly = endpointBObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
+
+                        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+                        {
+                            definitionB->ImageFileName = internal::CleanImageFileName(
+                                endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY, L"").c_str());
+                        }
 
 
                         // Validate that the values that came out of the json are constrained to expected limits.

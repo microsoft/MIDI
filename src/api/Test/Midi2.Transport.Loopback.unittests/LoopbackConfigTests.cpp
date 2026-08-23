@@ -62,6 +62,168 @@ namespace
     }
 
 
+    // Same as above, with the muted flag on the association where the configuration file and
+    // the SDK's creation config both put it.
+    std::wstring BuildCreateJsonWithMuted(
+        std::wstring const& associationId,
+        std::wstring const& nameA,
+        std::wstring const& uniqueIdA,
+        std::wstring const& nameB,
+        std::wstring const& uniqueIdB,
+        bool const muted)
+    {
+        return
+            L"{\"create\":{\"" + EscapeJsonString(associationId) + L"\":{"
+            L"\"muted\":" + (muted ? L"true" : L"false") + L","
+            L"\"endpointA\":{"
+            L"\"name\":\"" + EscapeJsonString(nameA) + L"\","
+            L"\"description\":\"Service test endpoint A\","
+            L"\"uniqueIdentifier\":\"" + EscapeJsonString(uniqueIdA) + L"\""
+            L"},"
+            L"\"endpointB\":{"
+            L"\"name\":\"" + EscapeJsonString(nameB) + L"\","
+            L"\"description\":\"Service test endpoint B\","
+            L"\"uniqueIdentifier\":\"" + EscapeJsonString(uniqueIdB) + L"\""
+            L"}}}}";
+    }
+
+
+    // Same as above, with an image file name on each endpoint.
+    std::wstring BuildCreateJsonWithImage(
+        std::wstring const& associationId,
+        std::wstring const& nameA,
+        std::wstring const& uniqueIdA,
+        std::wstring const& nameB,
+        std::wstring const& uniqueIdB,
+        std::wstring const& imageValue)
+    {
+        return
+            L"{\"create\":{\"" + EscapeJsonString(associationId) + L"\":{"
+            L"\"endpointA\":{"
+            L"\"name\":\"" + EscapeJsonString(nameA) + L"\","
+            L"\"description\":\"Service test endpoint A\","
+            L"\"image\":\"" + EscapeJsonString(imageValue) + L"\","
+            L"\"uniqueIdentifier\":\"" + EscapeJsonString(uniqueIdA) + L"\""
+            L"},"
+            L"\"endpointB\":{"
+            L"\"name\":\"" + EscapeJsonString(nameB) + L"\","
+            L"\"description\":\"Service test endpoint B\","
+            L"\"image\":\"" + EscapeJsonString(imageValue) + L"\","
+            L"\"uniqueIdentifier\":\"" + EscapeJsonString(uniqueIdB) + L"\""
+            L"}}}}";
+    }
+
+
+    // Reads back what the transport reports for one association's A-side endpoint. Key names are
+    // spelled out rather than taken from the transport's own headers, so this stays an
+    // independent check of the wire shape.
+    std::optional<std::wstring> GetReportedImage(std::wstring const& associationId)
+    {
+        auto result = SendLoopbackConfig(
+            LR"({"transportCommand":{"commandName":"listEntries"}})");
+
+        if (!result.IsSuccess())
+        {
+            return std::nullopt;
+        }
+
+        winrt::Windows::Data::Json::JsonObject response{ nullptr };
+
+        if (!winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, response) || response == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        if (!response.HasKey(L"entries"))
+        {
+            return std::nullopt;
+        }
+
+        auto const wanted = winrt::guid{ associationId };
+
+        for (auto const& value : response.GetNamedArray(L"entries"))
+        {
+            auto entry = value.GetObject();
+
+            if (entry == nullptr)
+            {
+                continue;
+            }
+
+            auto const reported = entry.GetNamedString(L"associationIdentifier", L"");
+
+            if (reported.empty() || winrt::guid{ reported } != wanted)
+            {
+                continue;
+            }
+
+            auto endpointA = entry.GetNamedObject(L"endpointA", nullptr);
+
+            if (endpointA == nullptr)
+            {
+                return std::nullopt;
+            }
+
+            return std::wstring{ endpointA.GetNamedString(L"image", L"") };
+        }
+
+        return std::nullopt;
+    }
+
+    // Reads the muted flag the transport reports for one association. Returns nothing when the
+    // transport does not list the entry at all. Key names are spelled out rather than taken
+    // from the transport's own headers, so this stays an independent check of the wire shape.
+    std::optional<bool> GetReportedMutedState(std::wstring const& associationId)
+    {
+        auto result = SendLoopbackConfig(
+            LR"({"transportCommand":{"commandName":"listEntries"}})");
+
+        if (!result.IsSuccess())
+        {
+            return std::nullopt;
+        }
+
+        winrt::Windows::Data::Json::JsonObject response{ nullptr };
+
+        if (!winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, response) || response == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        if (!response.HasKey(L"entries"))
+        {
+            return std::nullopt;
+        }
+
+        // the transport reports the association braced and lowercased, so compare on the guid
+        auto const wanted = winrt::guid{ associationId };
+
+        for (auto const& value : response.GetNamedArray(L"entries"))
+        {
+            auto entry = value.GetObject();
+
+            if (entry == nullptr)
+            {
+                continue;
+            }
+
+            auto const reported = entry.GetNamedString(L"associationIdentifier", L"");
+
+            if (reported.empty())
+            {
+                continue;
+            }
+
+            if (winrt::guid{ reported } == wanted)
+            {
+                return entry.GetNamedBoolean(L"muted", false);
+            }
+        }
+
+        return std::nullopt;
+    }
+
+
     ServiceConfigResult RemoveLoopback(std::wstring const& associationId)
     {
         return SendLoopbackConfig(L"{\"remove\":[\"" + EscapeJsonString(associationId) + L"\"]}");
@@ -177,8 +339,188 @@ void LoopbackConfigTests::TestCreateWithDuplicateUniqueIdIsRejected()
 }
 
 
-void LoopbackConfigTests::TestUniqueIdWithInvalidCharactersIsRejected()
+void LoopbackConfigTests::TestCreateMutedLoopbackIsMuted()
 {
+    // The behaviour under test is KIR-gated, so the test has to no-op when the KIR is off,
+    // otherwise a rollback turns this suite red.
+    if (!Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackCreateMuted is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    auto associationId = MakeGuidString();
+    auto uniqueId = MakeUniqueIdString();
+
+    auto result = SendLoopbackConfig(
+        BuildCreateJsonWithMuted(associationId, L"Service Test Muted A", uniqueId, L"Service Test Muted B", uniqueId, true));
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const muted = GetReportedMutedState(associationId);
+
+    VERIFY_IS_TRUE(muted.has_value());
+    VERIFY_IS_TRUE(muted.value());
+}
+
+
+void LoopbackConfigTests::TestCreateWithoutMutedKeyIsNotMuted()
+{
+    if (!Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackCreateMuted is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    // an older configuration file has no muted key at all, and has to keep working
+    auto associationId = MakeGuidString();
+    auto uniqueId = MakeUniqueIdString();
+
+    auto result = SendLoopbackConfig(
+        BuildCreateJson(associationId, L"Service Test Unmuted A", uniqueId, L"Service Test Unmuted B", uniqueId));
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const muted = GetReportedMutedState(associationId);
+
+    VERIFY_IS_TRUE(muted.has_value());
+    VERIFY_IS_FALSE(muted.value());
+}
+
+
+void LoopbackConfigTests::TestCreateWithImageIsReported()
+{
+    // The behaviour under test is KIR-gated, so the test has to no-op when the KIR is off,
+    // otherwise a rollback turns this suite red.
+    if (!Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackCreateWithImage is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    auto associationId = MakeGuidString();
+    auto uniqueId = MakeUniqueIdString();
+
+    auto result = SendLoopbackConfig(
+        BuildCreateJsonWithImage(associationId, L"Service Test Image A", uniqueId, L"Service Test Image B", uniqueId, L"ep-test.png"));
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const image = GetReportedImage(associationId);
+
+    VERIFY_IS_TRUE(image.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"ep-test.png" }, image.value());
+}
+
+
+void LoopbackConfigTests::TestCreateWithImagePathKeepsOnlyTheFileName()
+{
+    if (!Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackCreateWithImage is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    // The configuration file is writable by any standard user, so a relative path here must not
+    // survive to whatever later joins it to the shared assets folder.
+    auto associationId = MakeGuidString();
+    auto uniqueId = MakeUniqueIdString();
+
+    auto result = SendLoopbackConfig(
+        BuildCreateJsonWithImage(
+            associationId,
+            L"Service Test Traversal A", uniqueId,
+            L"Service Test Traversal B", uniqueId,
+            L"..\\\\..\\\\..\\\\Windows\\\\System32\\\\evil.png"));
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const image = GetReportedImage(associationId);
+
+    VERIFY_IS_TRUE(image.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"evil.png" }, image.value());
+}
+
+
+void LoopbackConfigTests::TestTransportDeclaresImageCapability()
+{
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    auto result = SendLoopbackConfig(
+        LR"({"transportCommand":{"commandName":"queryCapabilities"}})");
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    // A client decides whether to offer the customer a picture based on this, so the declaration
+    // has to track the KIR rather than being assumed.
+    auto const expected = Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled() ?
+        std::wstring{ L"\"createWithImage\":true" } : std::wstring{ L"\"createWithImage\":false" };
+
+    VERIFY_IS_TRUE(result.ResponseJson.find(expected) != std::wstring::npos);
+}
+
+
+void LoopbackConfigTests::TestUniqueIdWithInvalidCharactersIsRejected(){
     // The behaviour under test is KIR-gated, so the test has to no-op when the KIR is off,
     // otherwise a rollback turns this suite red.
     if (!Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled())

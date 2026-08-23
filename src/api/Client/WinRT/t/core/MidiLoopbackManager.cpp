@@ -343,7 +343,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                                 loopbackA->InternalInitialize(
                                     endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY, L""),
                                     endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY, L""),
-                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L"")
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L""),
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_IMAGE_KEY, L"")
                                 );
                             }
 
@@ -355,7 +356,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                                 loopbackB->InternalInitialize(
                                     endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY, L""),
                                     endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY, L""),
-                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L"")
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L""),
+                                    endpointObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_IMAGE_KEY, L"")
                                 );
 
                             }
@@ -499,7 +501,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                         entryA->InternalInitialize(
                             deviceIdA, 
                             creationConfig.EndpointDefinitionA().Name(),
-                            creationConfig.EndpointDefinitionA().Description()
+                            creationConfig.EndpointDefinitionA().Description(),
+                            creationConfig.EndpointDefinitionA().ImageFileName()
                         );
                     }
 
@@ -509,7 +512,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                         entryB->InternalInitialize(
                             deviceIdB,
                             creationConfig.EndpointDefinitionB().Name(),
-                            creationConfig.EndpointDefinitionB().Description()
+                            creationConfig.EndpointDefinitionB().Description(),
+                            creationConfig.EndpointDefinitionB().ImageFileName()
                         );
                     }
 

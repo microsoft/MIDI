@@ -313,6 +313,12 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
         interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_IsMuted, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropFalse });
     }
+
+    if (!definition->ImageFileName.empty())
+    {
+        interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (definition->ImageFileName.length() + 1)), (PVOID)definition->ImageFileName.c_str() });
+    }
    
     
     // Device properties

@@ -66,6 +66,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
                 json::JsonValue::CreateStringValue(internal::TrimmedHStringCopy(m_definition.UniqueId()).c_str()));
 
+            if (!m_definition.ImageFileName().empty())
+            {
+                endpointDeviceObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY,
+                    json::JsonValue::CreateStringValue(m_definition.ImageFileName()));
+            }
+
             endpointDeviceObject.SetNamedValue(
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
                 json::JsonValue::CreateBooleanValue(IsMuted()));
