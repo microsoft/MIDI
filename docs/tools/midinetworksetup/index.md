@@ -5,8 +5,8 @@ tool: midinetworksetup
 description: Connect this PC to Network MIDI 2.0 devices over your local network
 ---
 
-Network MIDI 2.0 Setup connects this PC to MIDI devices over your local network, with no cables
-between them. If you have an interface, a synth, or another computer that speaks Network MIDI 2.0,
+Network MIDI 2.0 Setup connects this PC to MIDI devices over your local network, with no traditional MIDI cables
+between them. If you have an interface, a synth, or another computer that speaks Network MIDI 2.0 over Ethernet or WiFi,
 this is where you set up the connection.
 
 Once a connection is made, the device appears in Windows like any other MIDI device, so your DAW
@@ -14,23 +14,21 @@ and other MIDI software can use it straight away.
 
 ![The Network MIDI 2.0 Setup main window]({{ site.baseurl }}/assets/images/midinetworksetup.png)
 
-There are two pages, and it's worth knowing which one you want:
+There are two pages, each with a different but related function:
 
-- **Network devices** is for connecting *this PC to something else*, such as an interface or a synth.
-- **This PC** is for letting *other devices connect to this PC*, such as a laptop or a phone that
-  wants to send MIDI here.
-
-Most people spend their time on the first page.
+- **Network devices** is for connecting *this PC to something else*, such as an interface or a synth. The remote device is a "host", and this PC is a "client". The connection is initiated from this PC.
+- **This PC** is for letting *other devices connect to this PC*, such as a laptop or a phone or external device that
+  wants to communicate over MIDI. In this case, this PC is the "host" and the remote device is the "client". The connection is initiated by the remote device.
 
 ## Finding and connecting to devices
 
 Devices that advertise themselves on your network appear on the **Network devices** page on their
 own. There's nothing to scan or search: as long as the device is switched on and on the same
-network, it shows up within a few seconds.
+network (and same subnet), it shows up within a few seconds.
 
 Each device shows its name, where it is on the network, and whether you're connected to it.
 
-To connect, select **Connect**. You'll be asked what to call the device in Windows.
+To connect, select **Connect**. You'll be asked what to call the MIDI Endpoint for this device in Windows.
 
 ![Naming a device as you connect to it]({{ site.baseurl }}/assets/images/midinetworksetup-connect-name.png)
 
@@ -74,6 +72,10 @@ the device is on Wi-Fi and its radio is going to sleep between messages; the fir
 quiet moment then has to wait for it to wake up. That's normal for Wi-Fi, but it's the reason a
 wired connection is worth having for anything timing-critical.
 
+For MIDI, you normally want a situation where the round-trip latency is under 5 milliseconds. In general, the lower the better. Most wired networks will get you under a millisecond round trip latency.
+
+> If all your connections show high round-trip network latency, it's worth looking at your network usage, and if you are saturating the same network with other audio or video. Most wired networks have plenty of bandwidth though, so the most common cause of high latency is using a WiFi connection instead of Wired. You may also find you have gaming-focused network accelerator software running, which may actually cause worse performance. 
+
 Select **Disconnect** to end a connection. The device stays in the list and can be reconnected
 whenever you like. Disconnecting doesn't block anything.
 
@@ -84,7 +86,7 @@ Select **Details** under a device for the identifying information.
 ![Device details]({{ site.baseurl }}/assets/images/midinetworksetup-details.png)
 
 **Product Instance Id** is the device's own serial-number-like identity. **Addresses** is where it
-is on the network. **MIDI Endpoint** is the Windows device id, which is what other MIDI tools want
+is on the network. **MIDI Endpoint** is the Windows device id, which is what other MIDI tools and DAWs want
 when they ask you to identify a device. The small copy button on the right puts it on the
 clipboard.
 
@@ -101,6 +103,8 @@ the device here.
 
 Windows keeps the entry and keeps trying, so if the device isn't switched on yet it will connect
 later when it appears.
+
+> Connecting to devices by using mDNS / advertising is more efficient than by IP. When you connect by IP address or name, Windows must keep checking for a response at that address. But if the device advertizes using mDNS, we can simply wait until the ad appears on the network.
 
 ## Letting other devices connect to this PC
 
@@ -135,7 +139,7 @@ who's on the network, ask first.
 Switch it off and devices can still connect, but they'll need the address typed in by hand.
 
 **Also create MIDI 1.0 ports for connected devices** makes connected devices usable from older
-software that doesn't understand MIDI 2.0 yet. Leave it off unless you need it.
+software that doesn't understand the new combined MIDI 1.0/MIDI 2.0 API. Most apps today will fall under that category.
 
 ### When a device asks to connect
 
@@ -174,8 +178,8 @@ from your desktop; Acrylic lets what's behind the window show through. Tick **Us
 background color** to choose your own.
 
 **Refresh connection details every (seconds)** sets how often the app asks the MIDI service for
-connection state, round trip times, and packet counts. Three seconds suits most people. A shorter
-interval gives a more detailed graph at the cost of asking the service more often.
+connection state, round trip times, and packet counts. Three to five seconds suits most people. A shorter
+interval gives a more detailed graph at the cost of asking the service more often. The polling only happens while this app is running.
 
 The pin button next to the minimize button keeps the window above your other windows, which is
 handy while you're setting a device up.
@@ -186,9 +190,9 @@ A few things to check, roughly in order:
 
 **Look at the other device.** As above, it may be waiting for you to allow the connection there.
 
-**Check they're on the same network.** Devices are found by announcing themselves locally, and
+**Check they're on the same network and same subnet.** Devices are found by announcing themselves locally, and
 those announcements don't usually cross between separate networks, or between a guest network and
-your main one.
+your main one. Usually the product manual for the other device will have information about how to ensure the subnet is the same, or how to set the IP address so it matches the network your PC is on.
 
 **Try connecting by address.** If the device works when you type its address but never appears in
 the list, the announcements aren't reaching this PC even though the network path is fine.
