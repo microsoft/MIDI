@@ -37,10 +37,14 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         winrt::hstring Description() const noexcept { return m_description; }
         void Description(_In_ winrt::hstring const& value) noexcept { m_description = value; }
 
+        winrt::hstring ImageFileName() const noexcept { return m_imageFileName; }
+        void ImageFileName(_In_ winrt::hstring const& value) noexcept { m_imageFileName = winrt::hstring{ internal::CleanImageFileName(value.c_str()) }; }
+
     private:
         winrt::hstring m_name{};
         winrt::hstring m_uniqueId{};
         winrt::hstring m_description{};
+        winrt::hstring m_imageFileName{};
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::factory_implementation

@@ -10,6 +10,8 @@
 #include "pch.h"
 #include "json_transport_command_helper.h"
 
+#include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
+
 
 _Use_decl_annotations_
 HRESULT
@@ -97,7 +99,14 @@ CMidi2KSMidiConfigurationManager::ProcessCustomProperties(
     {
         auto customPropsJson = updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey);
 
-        customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(customPropsJson);
+        if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+        {
+            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(customPropsJson);
+        }
+        else
+        {
+            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(customPropsJson);
+        }
 
         if (customProperties != nullptr)
         {

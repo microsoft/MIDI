@@ -10,6 +10,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         winrt::hstring const& endpointDeviceId,
         winrt::hstring const& name,
         winrt::hstring const& description,
+        winrt::hstring const& imageFileName,
         bool const isMuted) noexcept
     {
         m_associationId = associationId;
@@ -18,5 +19,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         m_description = description;
         m_isMuted = isMuted;
 
+        // the service reports what the configuration file said, and that file is editable by any
+        // standard user, so it is cleaned again on the way in
+        m_imageFileName = winrt::hstring{ internal::CleanImageFileName(imageFileName.c_str()) };
     }
 }

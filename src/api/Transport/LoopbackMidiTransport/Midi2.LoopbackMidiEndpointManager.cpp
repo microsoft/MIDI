@@ -20,6 +20,20 @@ using namespace Microsoft::WRL::Wrappers;
 GUID TransportLayerGUID = TRANSPORT_LAYER_GUID;
 
 
+// Net-new. Answers what PKEY_MIDI_IsMuted should be set to when the endpoint is first created,
+// which before this was always false regardless of what the configuration asked for.
+static DEVPROP_BOOLEAN GetInitialMutedDevPropValue(
+    _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition)
+{
+    if (definition == nullptr)
+    {
+        return DEVPROP_FALSE;
+    }
+
+    return definition->IsMuted ? DEVPROP_TRUE : DEVPROP_FALSE;
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiEndpointManager::Initialize(
@@ -327,12 +341,31 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     // Device properties
 
+    // has to outlive ActivateEndpoint below: DEVPROPERTY holds a pointer, not a copy
+    DEVPROP_BOOLEAN devPropIsMuted = DEVPROP_FALSE;
+
     if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
     {
-        DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+        if (Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+        {
+            devPropIsMuted = GetInitialMutedDevPropValue(definition);
+        }
+        else
+        {
+            devPropIsMuted = DEVPROP_FALSE;
+        }
 
         interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_IsMuted, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropFalse });
+            DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropIsMuted });
+    }
+
+    if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+    {
+        if (!definition->ImageFileName.empty())
+        {
+            interfaceDevProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (definition->ImageFileName.length() + 1)), (PVOID)definition->ImageFileName.c_str() });
+        }
     }
 
 
@@ -511,6 +544,11 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
          //   device.IsFromConfigurationFile = isFromConfigurationFile;
             device.DefinitionA = *definitionA;
             device.DefinitionB = *definitionB;
+
+            if (Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+            {
+                device.IsMuted = definitionA->IsMuted;
+            }
 
             TransportState::Current().GetEndpointTable()->SetDevice(associationId, device);
         }

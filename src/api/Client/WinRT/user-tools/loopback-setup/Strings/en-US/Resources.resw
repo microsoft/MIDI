@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Windows MIDI Loopback Setup</value>
+  </data>
+
+  <!-- title bar -->
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+
+  <!-- navigation -->
+  <data name="BasicLoopbacksNavigationItem.Content" xml:space="preserve">
+    <value>MIDI 1.0 Basic Loopbacks</value>
+  </data>
+  <data name="LoopbacksNavigationItem.Content" xml:space="preserve">
+    <value>MIDI 2.0 Loopbacks</value>
+  </data>
+
+  <!-- loopback pairs page -->
+  <data name="LoopbacksHeader.Text" xml:space="preserve">
+    <value>MIDI 2.0 Loopbacks</value>
+  </data>
+  <data name="LoopbackDiagram.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Diagram of a MIDI 2.0 loopback: two apps each connected to one endpoint of a pair, so what one app sends the other receives.</value>
+  </data>
+  <data name="LoopbacksDescription.Text" xml:space="preserve">
+    <value>A loopback is a pair of MIDI endpoints wired together. Anything an app sends to one side arrives on the other, so two apps on this PC can talk to each other.</value>
+  </data>
+  <data name="CreateLoopbackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New loopback</value>
+  </data>
+  <data name="CreateLoopbackButtonText.Text" xml:space="preserve">
+    <value>New loopback</value>
+  </data>
+  <data name="LoopbackUnavailableBar.Title" xml:space="preserve">
+    <value>Loopback MIDI is not available</value>
+  </data>
+  <data name="LoopbacksListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Loopbacks on this PC. Drag a row, or press Ctrl+Shift+Up or Ctrl+Shift+Down, to change its position.</value>
+  </data>
+  <data name="DeleteLoopbackButton.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="NoLoopbacksText.Text" xml:space="preserve">
+    <value>There are no loopbacks on this PC yet. Create one so two apps can send MIDI to each other.</value>
+  </data>
+  <data name="LoopbackMissingMessage" xml:space="preserve">
+    <value>The loopback transport is not installed or not enabled on this PC.</value>
+  </data>
+  <data name="LoopbackTooOldMessage" xml:space="preserve">
+    <value>The loopback transport on this PC is older than this tool needs. Update Windows MIDI Services to manage loopbacks here.</value>
+  </data>
+
+  <!-- basic loopbacks page -->
+  <data name="BasicLoopbacksHeader.Text" xml:space="preserve">
+    <value>MIDI 1.0 Basic Loopbacks</value>
+  </data>
+  <data name="BasicLoopbackDiagram.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Diagram of a basic MIDI 1.0 loopback: a single endpoint whose output port feeds straight back into its own input port.</value>
+  </data>
+  <data name="BasicLoopbacksDescription.Text" xml:space="preserve">
+    <value>A basic loopback is a single MIDI 1.0 endpoint which sends back everything it receives. Use one when an app expects a single port with matching input and output, the way older loopback drivers work.</value>
+  </data>
+  <data name="CreateBasicLoopbackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New basic loopback</value>
+  </data>
+  <data name="CreateBasicLoopbackButtonText.Text" xml:space="preserve">
+    <value>New basic loopback</value>
+  </data>
+  <data name="BasicLoopbackUnavailableBar.Title" xml:space="preserve">
+    <value>Basic loopback MIDI is not available</value>
+  </data>
+  <data name="BasicLoopbacksListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Basic loopbacks on this PC. Drag a row, or press Ctrl+Shift+Up or Ctrl+Shift+Down, to change its position.</value>
+  </data>
+  <data name="DeleteBasicLoopbackButton.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="NoBasicLoopbacksText.Text" xml:space="preserve">
+    <value>There are no basic loopbacks on this PC yet.</value>
+  </data>
+  <data name="BasicLoopbackMissingMessage" xml:space="preserve">
+    <value>The basic loopback transport is not installed or not enabled on this PC.</value>
+  </data>
+  <data name="BasicLoopbackTooOldMessage" xml:space="preserve">
+    <value>The basic loopback transport on this PC is older than this tool needs. Update Windows MIDI Services to manage basic loopbacks here.</value>
+  </data>
+
+  <!-- rows -->
+  <data name="UnnamedLoopback" xml:space="preserve">
+    <value>Unnamed loopback</value>
+  </data>
+  <data name="LoopbackPairNameFormat" xml:space="preserve">
+    <value>{0} and {1}</value>
+    <comment>{0} is the name of the A side, {1} the name of the B side</comment>
+  </data>
+  <data name="MuteButtonText" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="UnmuteButtonText" xml:space="preserve">
+    <value>Unmute</value>
+  </data>
+  <data name="MuteButtonAccessibleNameFormat" xml:space="preserve">
+    <value>Mute {0}</value>
+    <comment>{0} is the name of the loopback. Every row has one of these buttons, so the name has to say which loopback it acts on.</comment>
+  </data>
+  <data name="UnmuteButtonAccessibleNameFormat" xml:space="preserve">
+    <value>Unmute {0}</value>
+    <comment>{0} is the name of the loopback</comment>
+  </data>
+  <data name="DeleteButtonAccessibleNameFormat" xml:space="preserve">
+    <value>Delete {0}</value>
+    <comment>{0} is the name of the loopback</comment>
+  </data>
+  <data name="LoopbackIsPersistedText" xml:space="preserve">
+    <value>Saved. This loopback comes back after a restart.</value>
+  </data>
+  <data name="LoopbackIsTransientText" xml:space="preserve">
+    <value>Not saved. This loopback disappears when the MIDI service restarts.</value>
+  </data>
+
+  <!-- endpoint pictures -->
+  <data name="LoopbackImageHeader.Text" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="BasicLoopbackImageHeader.Text" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="LoopbackChooseImageButton.Content" xml:space="preserve">
+    <value>Choose picture...</value>
+  </data>
+  <data name="BasicLoopbackChooseImageButton.Content" xml:space="preserve">
+    <value>Choose picture...</value>
+  </data>
+  <data name="LoopbackClearImageButton.Content" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="BasicLoopbackClearImageButton.Content" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="LoopbackImagePreview.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Preview of the chosen picture</value>
+  </data>
+  <data name="BasicLoopbackImagePreview.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Preview of the chosen picture</value>
+  </data>
+  <data name="NoImageChosenText" xml:space="preserve">
+    <value>No picture chosen. The list will show the standard icon.</value>
+  </data>
+  <data name="ImageCopyError" xml:space="preserve">
+    <value>That picture could not be copied into the shared MIDI assets folder.</value>
+  </data>
+  <data name="ImageFolderError" xml:space="preserve">
+    <value>The shared MIDI assets folder could not be opened or created.</value>
+  </data>
+  <data name="ImageNameError" xml:space="preserve">
+    <value>That file name cannot be used for an endpoint picture.</value>
+  </data>
+
+  <!-- new loopback dialog -->
+  <data name="CreateLoopbackDialog.Title" xml:space="preserve">
+    <value>New loopback</value>
+  </data>
+  <data name="CreateLoopbackDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CreateLoopbackDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="LoopbackNameTextBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="LoopbackNameHelp.Text" xml:space="preserve">
+    <value>The two endpoints are named after this, with (A) and (B) on the end.</value>
+  </data>
+  <data name="LoopbackDescriptionTextBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="LoopbackPersistCheckBox.Content" xml:space="preserve">
+    <value>Keep this loopback after a restart</value>
+  </data>
+  <data name="LoopbackAdvancedExpander.Header" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="LoopbackUniqueIdTextBox.Header" xml:space="preserve">
+    <value>Unique identifier</value>
+  </data>
+  <data name="LoopbackUniqueIdHelp.Text" xml:space="preserve">
+    <value>Keeps the endpoints recognizable to apps across restarts. Letters and digits only.</value>
+  </data>
+  <data name="LoopbackSeparateNamesHelp.Text" xml:space="preserve">
+    <value>Leave these empty to use the name above. Fill in both to name each side yourself.</value>
+  </data>
+  <data name="LoopbackNameATextBox.Header" xml:space="preserve">
+    <value>Name of the A side</value>
+  </data>
+  <data name="LoopbackDescriptionATextBox.Header" xml:space="preserve">
+    <value>Description of the A side</value>
+  </data>
+  <data name="LoopbackNameBTextBox.Header" xml:space="preserve">
+    <value>Name of the B side</value>
+  </data>
+  <data name="LoopbackDescriptionBTextBox.Header" xml:space="preserve">
+    <value>Description of the B side</value>
+  </data>
+  <data name="LoopbackSideANameFormat" xml:space="preserve">
+    <value>{0} (A)</value>
+    <comment>{0} is the name the customer typed. The suffix tells the two sides apart.</comment>
+  </data>
+  <data name="LoopbackSideBNameFormat" xml:space="preserve">
+    <value>{0} (B)</value>
+    <comment>{0} is the name the customer typed. The suffix tells the two sides apart.</comment>
+  </data>
+
+  <!-- new basic loopback dialog -->
+  <data name="CreateBasicLoopbackDialog.Title" xml:space="preserve">
+    <value>New basic loopback</value>
+  </data>
+  <data name="CreateBasicLoopbackDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CreateBasicLoopbackDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="BasicLoopbackNameTextBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="BasicLoopbackDescriptionTextBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="BasicLoopbackPersistCheckBox.Content" xml:space="preserve">
+    <value>Keep this loopback after a restart</value>
+  </data>
+  <data name="BasicLoopbackAdvancedExpander.Header" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="BasicLoopbackUniqueIdTextBox.Header" xml:space="preserve">
+    <value>Unique identifier</value>
+  </data>
+  <data name="BasicLoopbackUniqueIdHelp.Text" xml:space="preserve">
+    <value>Keeps the endpoint recognizable to apps across restarts. Letters and digits only.</value>
+  </data>
+
+  <!-- confirmation -->
+  <data name="ConfirmDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ConfirmDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConfirmDeleteTitle" xml:space="preserve">
+    <value>Delete this loopback?</value>
+  </data>
+  <data name="ConfirmDeleteMessageFormat" xml:space="preserve">
+    <value>"{0}" will be removed from this PC. Apps which are using it will lose the connection.</value>
+    <comment>{0} is the name of the loopback</comment>
+  </data>
+
+  <!-- validation -->
+  <data name="ValidationLoopbackNameRequired" xml:space="preserve">
+    <value>Type a name, or name both sides yourself under Advanced.</value>
+  </data>
+  <data name="ValidationBasicLoopbackNameRequired" xml:space="preserve">
+    <value>Type a name for this loopback.</value>
+  </data>
+  <data name="ValidationUniqueIdRequired" xml:space="preserve">
+    <value>The unique identifier needs at least one letter or digit.</value>
+  </data>
+  <data name="ValidationUniqueIdInUse" xml:space="preserve">
+    <value>Another loopback is already using this unique identifier.</value>
+  </data>
+
+  <!-- results -->
+  <data name="LoopbackCreated" xml:space="preserve">
+    <value>Loopback created.</value>
+  </data>
+  <data name="CreateLoopbackFailed" xml:space="preserve">
+    <value>Windows MIDI Services could not create the loopback.</value>
+  </data>
+  <data name="CreateLoopbackFailedFormat" xml:space="preserve">
+    <value>Windows MIDI Services could not create the loopback. {0}</value>
+    <comment>{0} is the message the service returned</comment>
+  </data>
+  <data name="LoopbackCreatedNotSavedFormat" xml:space="preserve">
+    <value>The loopback was created, but it could not be saved, so it will disappear when the MIDI service restarts. {0}</value>
+    <comment>{0} is the reason the file could not be written</comment>
+  </data>
+  <data name="LoopbackMuted" xml:space="preserve">
+    <value>Loopback muted.</value>
+  </data>
+  <data name="LoopbackUnmuted" xml:space="preserve">
+    <value>Loopback unmuted.</value>
+  </data>
+  <data name="MuteFailed" xml:space="preserve">
+    <value>Windows MIDI Services could not change the muted state.</value>
+  </data>
+  <data name="MuteFailedFormat" xml:space="preserve">
+    <value>Windows MIDI Services could not change the muted state. {0}</value>
+    <comment>{0} is the message the service returned</comment>
+  </data>
+  <data name="MuteNotSavedFormat" xml:space="preserve">
+    <value>The muted state was changed, but it could not be saved, so it will not survive a restart. {0}</value>
+    <comment>{0} is the reason the file could not be written</comment>
+  </data>
+  <data name="LoopbackDeleted" xml:space="preserve">
+    <value>Loopback deleted.</value>
+  </data>
+  <data name="DeleteFailed" xml:space="preserve">
+    <value>Windows MIDI Services could not delete the loopback.</value>
+  </data>
+  <data name="DeleteFailedFormat" xml:space="preserve">
+    <value>Windows MIDI Services could not delete the loopback. {0}</value>
+    <comment>{0} is the message the service returned</comment>
+  </data>
+  <data name="DeleteNotSavedFormat" xml:space="preserve">
+    <value>The loopback was deleted, but the configuration file still asks for it, so it will come back after a restart. {0}</value>
+    <comment>{0} is the reason the file could not be written</comment>
+  </data>
+
+  <!-- configuration file -->
+  <data name="ConfigFileOverrideNotice" xml:space="preserve">
+    <value>Using the configuration file {0}</value>
+    <comment>{0} is the full path of the file</comment>
+  </data>
+  <data name="ConfigFileNoPathError" xml:space="preserve">
+    <value>There is no Windows MIDI Services configuration file on this PC.</value>
+  </data>
+  <data name="ConfigFileReadError" xml:space="preserve">
+    <value>The configuration file {0} could not be read.</value>
+    <comment>{0} is the full path of the file</comment>
+  </data>
+  <data name="ConfigFileParseError" xml:space="preserve">
+    <value>The configuration file {0} is not valid JSON.</value>
+    <comment>{0} is the full path of the file</comment>
+  </data>
+  <data name="ConfigFileWriteError" xml:space="preserve">
+    <value>The configuration file {0} could not be written. Error {1}.</value>
+    <comment>{0} is the full path of the file, {1} the Windows error number</comment>
+  </data>
+  <data name="ConfigFileEntryMissingError" xml:space="preserve">
+    <value>The configuration file has no entry for this loopback.</value>
+  </data>
+
+  <!-- settings flyout -->
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropLabel" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="SettingsBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom window color</value>
+  </data>
+  <data name="SettingsColorPickerName" xml:space="preserve">
+    <value>Custom window color</value>
+  </data>
+  <data name="SettingsRefreshIntervalLabel" xml:space="preserve">
+    <value>Refresh every (seconds)</value>
+  </data>
+  <data name="SettingsRefreshIntervalHelp" xml:space="preserve">
+    <value>How often this tool asks Windows MIDI Services what it is running.</value>
+  </data>
+
+  <!-- command line -->
+  <data name="CommandLineMissingConfigFilePath" xml:space="preserve">
+    <value>The {0} option needs the path of a configuration file after it.</value>
+    <comment>{0} is the option as the customer typed it</comment>
+  </data>
+  <data name="CommandLineUnrecognizedArgument" xml:space="preserve">
+    <value>{0} is not an option this tool understands.</value>
+    <comment>{0} is the argument as the customer typed it</comment>
+  </data>
+</root>

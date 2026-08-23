@@ -30,6 +30,15 @@ public:
     TEST_METHOD(TestCreateWithMissingUniqueIdIsRejected);
     TEST_METHOD(TestCreateWithDuplicateUniqueIdIsRejected);
 
+    // a loopback saved while muted has to come back muted
+    TEST_METHOD(TestCreateMutedLoopbackIsMuted);
+    TEST_METHOD(TestCreateWithoutMutedKeyIsNotMuted);
+
+    // custom endpoint pictures
+    TEST_METHOD(TestCreateWithImageIsReported);
+    TEST_METHOD(TestCreateWithImagePathKeepsOnlyTheFileName);
+    TEST_METHOD(TestTransportDeclaresImageCapability);
+
     // untrusted config entries
     TEST_METHOD(TestUniqueIdWithInvalidCharactersIsRejected);
     TEST_METHOD(TestOverlongUniqueIdIsRejected);

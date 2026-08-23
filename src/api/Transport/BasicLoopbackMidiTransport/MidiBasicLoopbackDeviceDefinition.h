@@ -19,6 +19,9 @@ struct MidiBasicLoopbackDeviceDefinition
     std::wstring EndpointName{};
     std::wstring EndpointDescription{};
 
+    // bare file name in the shared endpoint assets folder, never a path
+    std::wstring ImageFileName{};
+
     std::wstring EndpointUniqueIdentifier{};
 
     std::wstring InstanceIdPrefix{};

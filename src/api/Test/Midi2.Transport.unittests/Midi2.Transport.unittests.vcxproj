@@ -95,7 +95,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midikscommon.lib;midiksenum.lib;midiswenum.lib;miditestcommon.lib;setupapi.lib;$(CoreLibraryDependencies);minmidicontrol.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midikscommon.lib;midiksenum.lib;midiswenum.lib;miditestcommon.lib;setupapi.lib;$(CoreLibraryDependencies);minmidicontrol.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -106,12 +106,12 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midikscommon.lib;midiksenum.lib;midiswenum.lib;miditestcommon.lib;setupapi.lib;$(CoreLibraryDependencies);minmidicontrol.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midikscommon.lib;midiksenum.lib;midiswenum.lib;miditestcommon.lib;setupapi.lib;$(CoreLibraryDependencies);minmidicontrol.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midikscommon.lib;midiksenum.lib;midiswenum.lib;miditestcommon.lib;setupapi.lib;$(CoreLibraryDependencies);minmidicontrol.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midikscommon.lib;midiksenum.lib;midiswenum.lib;miditestcommon.lib;setupapi.lib;$(CoreLibraryDependencies);minmidicontrol.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <ClCompile>
@@ -123,7 +123,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midikscommon.lib;midiksenum.lib;midiswenum.lib;miditestcommon.lib;setupapi.lib;$(CoreLibraryDependencies);minmidicontrol.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midikscommon.lib;midiksenum.lib;midiswenum.lib;miditestcommon.lib;setupapi.lib;$(CoreLibraryDependencies);minmidicontrol.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib</AdditionalDependencies>
     </Link>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -138,9 +138,11 @@
     <ClCompile Include="Midi2KSTransportTests.cpp" />
     <ClCompile Include="Midi2SrvTransportTests.cpp" />
     <ClCompile Include="Midi2TransportTestsBase.cpp" />
+    <ClCompile Include="MidiEndpointCustomPropertiesTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Midi2TransportTests.h" />
+    <ClInclude Include="MidiEndpointCustomPropertiesTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

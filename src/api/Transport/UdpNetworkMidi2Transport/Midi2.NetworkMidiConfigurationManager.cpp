@@ -8,6 +8,8 @@
 
 #include "pch.h"
 
+#include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
+
 using namespace winrt::Windows::Networking;
 
 namespace
@@ -783,8 +785,19 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
             }
 
             auto matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
-            auto customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(
-                updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey));
+
+            std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
+
+            if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+            {
+                customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(
+                    updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey));
+            }
+            else
+            {
+                customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(
+                    updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey));
+            }
 
             if (matchCriteria == nullptr || customProperties == nullptr)
             {

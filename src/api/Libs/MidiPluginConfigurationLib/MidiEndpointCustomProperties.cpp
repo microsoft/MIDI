@@ -253,6 +253,27 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
 }
 
 _Use_decl_annotations_
+std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::FromJsonRejectingImagePath(
+    json::JsonObject const& customPropertiesObject)
+{
+    auto props = FromJson(customPropertiesObject);
+
+    if (props == nullptr)
+    {
+        return nullptr;
+    }
+
+    if (!internal::IsBareImageFileName(props->Image.c_str()))
+    {
+        OutputDebugString(L"MIDI Endpoint Custom Properties rejected: image is not a bare file name.");
+
+        return nullptr;
+    }
+
+    return props;
+}
+
+_Use_decl_annotations_
 bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesObject)
 {
     Normalize();

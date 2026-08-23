@@ -108,6 +108,12 @@ namespace WindowsMidiServicesPluginConfigurationLib
         static std::shared_ptr<MidiEndpointCustomProperties> FromJson(
             _In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
 
+        // Net-new alongside FromJson. Same parse, except that an "image" carrying anything but
+        // a bare file name refuses the whole set rather than being stored. The configuration
+        // file is writable by any standard user, so a path there is tampering.
+        static std::shared_ptr<MidiEndpointCustomProperties> FromJsonRejectingImagePath(
+            _In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
+
         _Success_(return == true)
         bool WriteAllProperties(_In_ std::vector<DEVPROPERTY>& destination);
 

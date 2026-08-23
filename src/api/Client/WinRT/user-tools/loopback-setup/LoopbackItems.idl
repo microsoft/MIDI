@@ -1,0 +1,75 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Row types for the two lists in this tool. They implement INotifyPropertyChanged because the
+// pages poll the service every couple of seconds: rebuilding the collections instead would
+// throw away the scroll position, any open expander, and the drag the customer is part way
+// through.
+namespace midiloopbacksetup
+{
+    // One configured loopback. A MIDI 2.0 style loopback is a pair of endpoints and fills in
+    // both sides; a basic loopback is a single endpoint and leaves the B side empty. The two
+    // are one type because everything around them - muting, removal, ordering, persistence -
+    // is identical, and only the second endpoint block differs on screen.
+    [default_interface]
+    runtimeclass LoopbackItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        LoopbackItem();
+
+        // unbraced lowercase form of the association id, which is how the entries are keyed
+        String AssociationId{ get; };
+
+        String DisplayName{ get; };
+
+        String NameA{ get; };
+        String DescriptionA{ get; };
+        String EndpointDeviceIdA{ get; };
+
+        String NameB{ get; };
+        String DescriptionB{ get; };
+        String EndpointDeviceIdB{ get; };
+
+        Boolean HasSecondEndpoint{ get; };
+        Microsoft.UI.Xaml.Visibility SecondEndpointVisibility{ get; };
+
+        // A picture the customer attached, resolved from the shared assets folder. Falls back to
+        // the transport's glyph when there is none or the file has gone missing.
+        String ImageFileName{ get; };
+        Microsoft.UI.Xaml.Media.ImageSource ImageSource{ get; };
+        Microsoft.UI.Xaml.Visibility ImageVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility GlyphVisibility{ get; };
+
+        Microsoft.UI.Xaml.Visibility DescriptionAVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility DescriptionBVisibility{ get; };
+
+        Boolean IsMuted{ get; };
+        String MuteButtonLabel{ get; };
+        String MuteButtonGlyph{ get; };
+        Microsoft.UI.Xaml.Visibility MutedBadgeVisibility{ get; };
+
+        // Every row has one of each of these buttons, so the visible label alone would give a
+        // screen reader the same name many times over. These name the loopback as well.
+        String MuteButtonAccessibleName{ get; };
+        String DeleteButtonAccessibleName{ get; };
+
+        // The transport reports which commands it supports, so a build without mute shows no
+        // mute button rather than one which always fails.
+        Boolean CanMute;
+        Microsoft.UI.Xaml.Visibility MuteVisibility{ get; };
+
+        // true when the configuration file has an entry for this loopback, so it comes back
+        // after a restart of the service
+        Boolean IsPersisted;
+        String PersistenceText{ get; };
+
+        Boolean IsBusy;
+
+        // position within the list, persisted in the configuration file so the customer's
+        // arrangement survives a restart
+        Int32 DisplayOrder;
+    }
+}

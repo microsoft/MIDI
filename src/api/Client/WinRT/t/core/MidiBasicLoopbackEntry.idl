@@ -23,6 +23,9 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
         [noexcept] String Name{ get; };
         [noexcept] String Description{ get; };
 
+        // bare file name within the shared endpoint assets folder, empty when there is none
+        [noexcept] String ImageFileName{ get; };
+
         [noexcept] Boolean IsMuted{ get;};
 
     }
