@@ -48,6 +48,23 @@ public:
     // A decision naming an identity nobody is waiting under must not disturb the pending client.
     TEST_METHOD(DecisionForAnUnknownIdentityLeavesThePendingClientWaiting);
 
+    // disconnectRemoteClient. Ends one remote's session without recording anything, which is
+    // what separates it from a denial. There was previously no way to do this at all.
+    TEST_METHOD(DisconnectRemoteClientEndsAnEstablishedSession);
+    TEST_METHOD(DisconnectRemoteClientReleasesTheConnectionFromTheFeed);
+    TEST_METHOD(DisconnectedRemoteClientIsNotRememberedAsDenied);
+    TEST_METHOD(DisconnectRemoteClientForAnUnknownIdentityFailsCleanly);
+    TEST_METHOD(DisconnectRemoteClientForAnUnknownHostFailsCleanly);
+    TEST_METHOD(DisconnectRemoteClientWithoutAnIdentityFailsCleanly);
+
+    // Every verb addresses a remote by its identity pair, so a remote which supplied only half
+    // of one must not be listed as a connected device: the row could never be acted on.
+    TEST_METHOD(RemoteWithAnIncompleteIdentityIsNotListedAsConnected);
+
+    // Per-connection statistics on the host side, which the settings app polls. Latency is only
+    // ever non-zero if the host actually pings an active session.
+    TEST_METHOD(HostConnectionReportsStatisticsForAnActiveSession);
+
     // Two hosts cannot share a service instance name: it is the DNS-SD instance and the virtual
     // parent device id. The rejection has to carry a code and a description.
     TEST_METHOD(SecondHostWithTheSameServiceInstanceNameIsRejected);
@@ -58,6 +75,18 @@ public:
     // stopHost keeps the entry and its name; removeHost is what gives the name back.
     TEST_METHOD(RemovedHostReleasesItsServiceInstanceName);
     TEST_METHOD(RemovingAnUnknownHostReportsFailure);
+
+    // Two hosts cannot share a UDP port. That includes a manual port colliding with one the
+    // system already handed to a host which asked for automatic allocation.
+    TEST_METHOD(SecondHostWithTheSameManualPortIsRejected);
+    TEST_METHOD(ManualPortMatchingAnAutomaticallyAssignedPortIsRejected);
+    TEST_METHOD(HostWithAnUnusedManualPortIsAccepted);
+    TEST_METHOD(HostWithAnOutOfRangePortIsRejected);
+    TEST_METHOD(HostWithANonNumericPortIsRejected);
+
+    // The identity a host puts on the wire has to be the identity it was configured with, or a
+    // remote sees the advertised device and the connected device as two different things.
+    TEST_METHOD(MaximumLengthIdentityStringsSurviveTheWire);
 
     // Removing a host straight after creating it races the endpoint creator thread, which
     // used to register the host after the entry had already been taken away. The host was

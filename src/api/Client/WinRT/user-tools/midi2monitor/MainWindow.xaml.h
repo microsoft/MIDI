@@ -74,11 +74,8 @@ namespace winrt::midi2monitor::implementation
 
     private:
         void InitializeWindowChrome() noexcept;
-        void ReleaseBackdropControllers() noexcept;
-        void UpdateBackdropConfiguration() noexcept;
         void SaveWindowPlacement() noexcept;
         void UpdateTitleBarInsets() noexcept;
-        void ApplyTitleBarColors() noexcept;
         void InitializeCollections() noexcept;
         void InitializePipeline() noexcept;
         void InitializeControlsFromSettings() noexcept;
@@ -151,12 +148,12 @@ namespace winrt::midi2monitor::implementation
         winrt::event_token m_watcherRemovedToken{};
         winrt::event_token m_watcherUpdatedToken{};
 
-        collections::IObservableVector<midi2monitor::EndpointChoice> m_endpoints{ nullptr };
+        collections::IObservableVector<appshared::EndpointChoice> m_endpoints{ nullptr };
         // parallel to m_endpoints. Held so group discovery never has to re-resolve an endpoint,
         // which would block the STA UI thread inside the SDK.
         std::vector<midi2enum::MidiEndpointDeviceInformation> m_endpointDevices{};
-        collections::IObservableVector<midi2monitor::NamedChoice> m_groups{ nullptr };
-        collections::IObservableVector<midi2monitor::NamedChoice> m_channels{ nullptr };
+        collections::IObservableVector<appshared::NamedChoice> m_groups{ nullptr };
+        collections::IObservableVector<appshared::NamedChoice> m_channels{ nullptr };
         collections::IObservableVector<midi2monitor::MonitorColumn> m_columns{ nullptr };
 
         bool m_monitoring{ false };
@@ -165,15 +162,8 @@ namespace winrt::midi2monitor::implementation
         bool m_startupFilterApplied{ false };
         bool m_startupMonitorHandled{ false };
         bool m_startupMonitorPending{ false };
-        bool m_backdropApplied{ false };
-        ::midi2monitor::WindowBackdrop m_appliedBackdrop{ ::midi2monitor::WindowBackdrop::Solid };
 
-        // the material is driven through the controllers rather than the XAML SystemBackdrop
-        // property, because only the controllers expose TintColor
-        winrt::Microsoft::UI::Composition::SystemBackdrops::SystemBackdropConfiguration m_backdropConfiguration{ nullptr };
-        winrt::Microsoft::UI::Composition::SystemBackdrops::MicaController m_micaController{ nullptr };
-        winrt::Microsoft::UI::Composition::SystemBackdrops::DesktopAcrylicController m_acrylicController{ nullptr };
-        winrt::event_token m_activatedToken{};
+        midiapp::WindowChrome m_chrome{};
         bool m_captureButtonStacked{ false };
         bool m_suppressSelectionHandling{ false };
         bool m_suppressZoomHandling{ false };

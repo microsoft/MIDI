@@ -9,6 +9,9 @@
 #include "..\..\shared\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
+import "MidiNetworkHostConnection.idl";
+import "MidiNetworkRemoteClientPolicyEnum.idl";
+
 
 // TODO: Change to runtimeclass
 
@@ -32,6 +35,11 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] String ServiceInstanceName{ get; };
 
         [noexcept] Boolean CreateMidi1Ports{ get; };
+
+        [noexcept] MidiNetworkRemoteClientPolicy RemoteClientPolicy{ get; };
+
+        // remote clients which have reached this host, including any waiting for user approval
+        [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkHostConnection> Connections{ get; };
     };
 }
 

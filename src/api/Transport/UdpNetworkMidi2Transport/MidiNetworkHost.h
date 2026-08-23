@@ -39,6 +39,10 @@ struct MidiNetworkHostDefinition
     winrt::hstring UmpEndpointName;
     winrt::hstring ProductInstanceId;
 
+    // What the user chose to call endpoints created for remote clients reaching this host.
+    // Empty means use the name each remote client announces.
+    winrt::hstring CustomEndpointName;
+
     //bool UmpOnly{ true };
     bool IsEnabled{ true };
     bool Advertise{ true };

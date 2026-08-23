@@ -241,6 +241,30 @@ namespace
     }
 
 
+    // Same, with a caller-chosen budget, for the retry loop which re-invites between rounds.
+    bool WaitForPendingWithin(
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId,
+        _In_ std::chrono::milliseconds const timeout)
+    {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            auto state = PollConnectionState(umpEndpointName, productInstanceId);
+
+            if (state.Present && state.PendingApproval)
+            {
+                return true;
+            }
+
+            std::this_thread::sleep_for(PendingPollInterval);
+        }
+
+        return false;
+    }
+
+
     bool WaitForSessionActive(
         _In_ std::string const& umpEndpointName,
         _In_ std::string const& productInstanceId)
@@ -397,6 +421,67 @@ namespace
     std::string UniqueProductInstanceId(_In_ std::string const& suffix)
     {
         return "APPROVALTEST-" + suffix;
+    }
+
+
+    // A distinct service instance name for every host the port tests create, so a rejection can
+    // only ever be about the port.
+    std::wstring MakeUniqueServiceInstanceName(_In_ std::wstring const& tag)
+    {
+        static std::atomic<uint32_t> counter{ 0 };
+
+        return L"midi2-approval-test-" + tag + L"-" +
+            std::to_wstring(GetTickCount64()) + L"-" +
+            std::to_wstring(counter.fetch_add(1));
+    }
+
+
+    // Asks the system for an ephemeral port and gives it straight back. Nothing else on the
+    // machine is likely to take it in the meantime, and no other network MIDI host holds it,
+    // which is what these tests actually need.
+    std::optional<uint16_t> PickLikelyFreePort()
+    {
+        SOCKET probe = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+        if (probe == INVALID_SOCKET)
+        {
+            return std::nullopt;
+        }
+
+        auto closeProbe = wil::scope_exit([&]() { closesocket(probe); });
+
+        sockaddr_in address{ };
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        address.sin_port = 0;
+
+        if (bind(probe, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == SOCKET_ERROR)
+        {
+            return std::nullopt;
+        }
+
+        sockaddr_in bound{ };
+        int boundLength = sizeof(bound);
+
+        if (getsockname(probe, reinterpret_cast<sockaddr*>(&bound), &boundLength) == SOCKET_ERROR)
+        {
+            return std::nullopt;
+        }
+
+        return ntohs(bound.sin_port);
+    }
+
+
+    uint32_t ReportedErrorCode(_In_ ServiceConfigResult const& result)
+    {
+        auto response = ParseResponse(result);
+
+        if (!response.has_value() || !response->HasKey(L"errorCode"))
+        {
+            return 0;
+        }
+
+        return static_cast<uint32_t>(response->GetNamedNumber(L"errorCode", 0));
     }
 }
 
@@ -832,6 +917,385 @@ void NetworkMidiApprovalTests::DecisionForAnUnknownIdentityLeavesThePendingClien
 }
 
 
+// ------------------------------------------------------------------------------
+// disconnectRemoteClient
+//
+// Before this verb existed there was no way to end one remote client's session with a host on
+// this PC. A settings app had to deny the client instead, which also refuses it in future - a
+// very different thing from "stop this connection now".
+// ------------------------------------------------------------------------------
+
+namespace
+{
+    // Brings one identity all the way to an active session on the class host. Returns false
+    // having already logged, so the callers stay readable.
+    bool EstablishApprovedSession(
+        _In_ UdpTestClient& client,
+        _In_ std::string const& name,
+        _In_ std::string const& productInstanceId)
+    {
+        if (!client.Open(LocalHostAddress()))
+        {
+            Log::Error(L"Could not open the test client socket.");
+            return false;
+        }
+
+        // Spec 6.4: a client repeats its invitation until it is answered. UdpTestClient does not
+        // do that on its own, and a single datagram is not enough here: these tests run straight
+        // after one which tears an endpoint down, and the host's receive path can stall while
+        // that teardown runs. One lost invitation would otherwise wait out the whole timeout for
+        // a pending state which nothing was left to ask for.
+        bool pending{ false };
+
+        for (uint16_t attempt = 0; attempt < 5 && !pending; attempt++)
+        {
+            if (!Invite(client, name, productInstanceId).has_value())
+            {
+                Log::Comment(String().Format(L"No reply to invitation attempt %u", attempt + 1));
+            }
+
+            pending = WaitForPendingWithin(name, productInstanceId, std::chrono::milliseconds(6000));
+        }
+
+        if (!pending)
+        {
+            Log::Error(L"The client never reached the pending state.");
+            return false;
+        }
+
+        auto approved = ApproveRemoteClient(
+            g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"once");
+
+        if (!approved.IsSuccess())
+        {
+            Log::Error(String().Format(L"approveRemoteClient failed: %s", approved.ResponseJson.c_str()));
+            return false;
+        }
+
+        if (!WaitForCommand(client, CommandCode::InvitationReplyAccepted, PendingPollTimeout))
+        {
+            Log::Error(L"The host never accepted the approved invitation.");
+            return false;
+        }
+
+        if (!WaitForSessionActive(name, productInstanceId))
+        {
+            Log::Error(L"The approved client never showed an active session in the feed.");
+            return false;
+        }
+
+        return true;
+    }
+}
+
+
+void NetworkMidiApprovalTests::DisconnectRemoteClientEndsAnEstablishedSession()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("DisconnectBye");
+    auto productInstanceId = UniqueProductInstanceId("DisconnectBye");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(EstablishApprovedSession(client, name, productInstanceId));
+
+    client.ClearHistory();
+
+    auto result = DisconnectRemoteClient(g_hostEntryIdentifier, Widen(name), Widen(productInstanceId));
+
+    VERIFY_IS_TRUE(result.IsSuccess(), L"disconnectRemoteClient reported success for a connected client");
+
+    // Spec 6.16: ending a session tells the remote, with a reason. A disconnect the user asked
+    // for is 0x01 User Terminated, the same reason the client role sends.
+    VERIFY_IS_TRUE(
+        WaitForCommand(client, CommandCode::Bye, PendingPollTimeout),
+        L"The disconnected remote client is told the session has ended");
+
+    client.Close();
+}
+
+
+void NetworkMidiApprovalTests::DisconnectRemoteClientReleasesTheConnectionFromTheFeed()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("DisconnectFeed");
+    auto productInstanceId = UniqueProductInstanceId("DisconnectFeed");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(EstablishApprovedSession(client, name, productInstanceId));
+
+    auto result = DisconnectRemoteClient(g_hostEntryIdentifier, Widen(name), Widen(productInstanceId));
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    // Absence from the connections array is the only way an app learns a remote went away, so a
+    // disconnected client which lingers there is indistinguishable from one still connected.
+    VERIFY_IS_TRUE(
+        WaitForConnectionReleased(name, productInstanceId),
+        L"A disconnected remote client stops being reported as a connection");
+
+    client.Close();
+}
+
+
+void NetworkMidiApprovalTests::DisconnectedRemoteClientIsNotRememberedAsDenied()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("DisconnectThenReturn");
+    auto productInstanceId = UniqueProductInstanceId("DisconnectThenReturn");
+
+    {
+        UdpTestClient client;
+        VERIFY_IS_TRUE(EstablishApprovedSession(client, name, productInstanceId));
+
+        auto result = DisconnectRemoteClient(g_hostEntryIdentifier, Widen(name), Widen(productInstanceId));
+        VERIFY_IS_TRUE(result.IsSuccess());
+
+        client.Close();
+    }
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionReleased(name, productInstanceId),
+        L"The first session was released before the client returns");
+
+    // The whole point of the verb: nothing was written down, so this identity is treated as new
+    // again rather than being refused. A denial would send a Bye instead of holding it pending.
+    UdpTestClient returning;
+    VERIFY_IS_TRUE(returning.Open(LocalHostAddress()));
+
+    auto reply = Invite(returning, name, productInstanceId);
+    VERIFY_IS_TRUE(reply.has_value(), L"The host replied to the returning client");
+
+    VERIFY_IS_TRUE(
+        WaitForPending(name, productInstanceId),
+        L"A disconnected client is asked about again rather than refused outright");
+
+    DenyRemoteClient(g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"untilRestart");
+
+    returning.Close();
+}
+
+
+void NetworkMidiApprovalTests::DisconnectRemoteClientForAnUnknownIdentityFailsCleanly()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    // Reporting success here would tell a caller a disconnect happened when nothing did.
+    auto result = DisconnectRemoteClient(
+        g_hostEntryIdentifier,
+        Widen(UniqueName("NobodyIsConnectedUnderThisName")),
+        Widen(UniqueProductInstanceId("NOBODY")));
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The transport answered rather than faulting");
+    VERIFY_IS_FALSE(result.ReportedSuccess, L"Disconnecting a client which is not connected is not a success");
+}
+
+
+void NetworkMidiApprovalTests::DisconnectRemoteClientForAnUnknownHostFailsCleanly()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto result = DisconnectRemoteClient(
+        MakeEntryIdentifier(),
+        Widen(UniqueName("AnyName")),
+        Widen(UniqueProductInstanceId("ANY")));
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The transport answered rather than faulting");
+    VERIFY_IS_FALSE(result.ReportedSuccess, L"A host the service does not have is not a success");
+}
+
+
+void NetworkMidiApprovalTests::DisconnectRemoteClientWithoutAnIdentityFailsCleanly()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    // A remote client is named by the pair. Half of it could match the wrong device.
+    auto result = DisconnectRemoteClient(g_hostEntryIdentifier, L"", L"");
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The transport answered rather than faulting");
+    VERIFY_IS_FALSE(result.ReportedSuccess, L"An empty identity is rejected");
+}
+
+
+void NetworkMidiApprovalTests::RemoteWithAnIncompleteIdentityIsNotListedAsConnected()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("HalfIdentity");
+
+    // Counted first, because other tests in this class may legitimately have connections up.
+    auto connectionCountNow = []() -> uint32_t
+        {
+            auto response = ParseResponse(EnumerateHosts());
+
+            if (!response.has_value())
+            {
+                return 0;
+            }
+
+            auto host = FindOurHost(response.value());
+
+            if (!host.has_value() || !host->HasKey(L"connections"))
+            {
+                return 0;
+            }
+
+            auto connections = host->GetNamedArray(L"connections", nullptr);
+
+            return connections == nullptr ? 0 : connections.Size();
+        };
+
+    auto const before = connectionCountNow();
+
+    // An invitation with no product instance id. The host refuses it, but the connection object
+    // it allocated to read the datagram lives on until the idle reaper takes it. Reporting that
+    // as a connected device gave the user a row whose Disconnect and Block buttons could never
+    // work, because both address a remote by the identity pair this remote never supplied.
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+    PacketBuilder builder;
+    builder.StartPacket().AddInvitation(name, "");
+
+    VERIFY_IS_TRUE(client.Send(builder));
+
+    // Long enough for the host to have processed it and for a poll to have seen it.
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+    auto response = ParseResponse(EnumerateHosts());
+    VERIFY_IS_TRUE(response.has_value());
+
+    auto host = FindOurHost(response.value());
+    VERIFY_IS_TRUE(host.has_value());
+
+    if (host.has_value() && host->HasKey(L"connections"))
+    {
+        auto connections = host->GetNamedArray(L"connections", nullptr);
+
+        for (uint32_t i = 0; connections != nullptr && i < connections.Size(); i++)
+        {
+            auto connection = connections.GetObjectAt(i);
+
+            if (connection == nullptr)
+            {
+                continue;
+            }
+
+            auto listedName = std::wstring{ connection.GetNamedString(L"umpEndpointName", L"") };
+            auto listedProductInstanceId = std::wstring{ connection.GetNamedString(L"productInstanceId", L"") };
+
+            VERIFY_ARE_NOT_EQUAL(Widen(name), listedName, L"A remote with no product instance id is not listed");
+
+            // Nothing listed may be missing either half, whoever put it there.
+            VERIFY_IS_FALSE(listedName.empty(), L"A listed connection always has a UMP endpoint name");
+            VERIFY_IS_FALSE(listedProductInstanceId.empty(), L"A listed connection always has a product instance id");
+        }
+
+        VERIFY_ARE_EQUAL(before, connections == nullptr ? 0u : connections.Size(),
+            L"A refused remote does not add a connected device");
+    }
+
+    client.Close();
+}
+
+
+void NetworkMidiApprovalTests::HostConnectionReportsStatisticsForAnActiveSession(){
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("HostStats");
+    auto productInstanceId = UniqueProductInstanceId("HostStats");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(EstablishApprovedSession(client, name, productInstanceId));
+
+    // The host only measures a round trip when it pings and the remote answers. The test client
+    // answers pings automatically, so this is purely a question of whether the host pings at all
+    // while a session is up. It used to ping only when the link had gone silent, which meant a
+    // live session never produced a latency sample.
+    auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+
+    uint64_t latencyTicks{ 0 };
+    uint64_t packetsSent{ 0 };
+    uint64_t packetsReceived{ 0 };
+
+    while (std::chrono::steady_clock::now() < deadline && latencyTicks == 0)
+    {
+        auto response = ParseResponse(EnumerateHosts());
+
+        if (response.has_value())
+        {
+            auto host = FindOurHost(response.value());
+
+            if (host.has_value() && host->HasKey(L"connections"))
+            {
+                auto connections = host->GetNamedArray(L"connections", nullptr);
+
+                for (uint32_t i = 0; connections != nullptr && i < connections.Size(); i++)
+                {
+                    auto connection = connections.GetObjectAt(i);
+
+                    if (connection == nullptr ||
+                        std::wstring{ connection.GetNamedString(L"umpEndpointName", L"") } != Widen(name))
+                    {
+                        continue;
+                    }
+
+                    latencyTicks = static_cast<uint64_t>(connection.GetNamedNumber(L"currentLatencyTicks", 0));
+                    packetsSent = static_cast<uint64_t>(connection.GetNamedNumber(L"totalNetworkPacketsSent", 0));
+                    packetsReceived = static_cast<uint64_t>(connection.GetNamedNumber(L"totalNetworkPacketsReceived", 0));
+                }
+            }
+        }
+
+        if (latencyTicks == 0)
+        {
+            std::this_thread::sleep_for(PendingPollInterval);
+        }
+    }
+
+    Log::Comment(String().Format(
+        L"latency ticks %llu, packets sent %llu, packets received %llu",
+        latencyTicks, packetsSent, packetsReceived));
+
+    VERIFY_IS_GREATER_THAN(packetsSent, 0ull, L"The host counts what it has sent to this remote");
+    VERIFY_IS_GREATER_THAN(packetsReceived, 0ull, L"The host counts what it has received from this remote");
+    VERIFY_IS_GREATER_THAN(latencyTicks, 0ull, L"An active session measures a round trip from the ping reply");
+
+    // The average is retained rather than being consumed by the first reader, so an app polling
+    // faster than the ping interval does not see it flicker back to zero.
+    auto response = ParseResponse(EnumerateHosts());
+    uint64_t secondReadLatency{ 0 };
+
+    if (response.has_value())
+    {
+        auto host = FindOurHost(response.value());
+
+        if (host.has_value() && host->HasKey(L"connections"))
+        {
+            auto connections = host->GetNamedArray(L"connections", nullptr);
+
+            for (uint32_t i = 0; connections != nullptr && i < connections.Size(); i++)
+            {
+                auto connection = connections.GetObjectAt(i);
+
+                if (connection != nullptr &&
+                    std::wstring{ connection.GetNamedString(L"umpEndpointName", L"") } == Widen(name))
+                {
+                    secondReadLatency = static_cast<uint64_t>(connection.GetNamedNumber(L"currentLatencyTicks", 0));
+                }
+            }
+        }
+    }
+
+    VERIFY_IS_GREATER_THAN(secondReadLatency, 0ull, L"Reading the latency twice in a row does not clear it");
+
+    DisconnectRemoteClient(g_hostEntryIdentifier, Widen(name), Widen(productInstanceId));
+
+    client.Close();
+}
+
+
 void NetworkMidiApprovalTests::SecondHostWithTheSameServiceInstanceNameIsRejected()
 {
     VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
@@ -950,6 +1414,326 @@ void NetworkMidiApprovalTests::RemovingAnUnknownHostReportsFailure()
     VERIFY_IS_FALSE(
         result.ReportedSuccess,
         L"Removing a host which does not exist is reported rather than silently succeeding");
+}
+
+
+// Two hosts sharing a port would mean two sockets fighting over the same inbound datagrams. The
+// second bind is the one that fails, at start time, long after the user pressed the button, so
+// the collision is caught up front instead.
+void NetworkMidiApprovalTests::SecondHostWithTheSameManualPortIsRejected()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto port = PickLikelyFreePort();
+
+    VERIFY_IS_TRUE(port.has_value(), L"A free port could be found to test with");
+
+    auto const portText = std::to_wstring(port.value());
+
+    Log::Comment(String().Format(L"Both hosts will ask for port %s", portText.c_str()));
+
+    auto firstEntryIdentifier = MakeEntryIdentifier();
+
+    auto first = CreateHost(
+        firstEntryIdentifier,
+        L"Manual Port Host One",
+        L"MANUALPORTONE",
+        MakeUniqueServiceInstanceName(L"port-first"),
+        false,
+        portText);
+
+    auto cleanupFirst = wil::scope_exit([&]() { RemoveHost(firstEntryIdentifier); });
+
+    VERIFY_IS_TRUE(first.IsSuccess(), L"The first host claimed the port");
+
+    auto secondEntryIdentifier = MakeEntryIdentifier();
+
+    auto second = CreateHost(
+        secondEntryIdentifier,
+        L"Manual Port Host Two",
+        L"MANUALPORTTWO",
+        MakeUniqueServiceInstanceName(L"port-second"),
+        false,
+        portText);
+
+    // If the check ever regresses, the host must not survive into the next run.
+    auto cleanupSecond = wil::scope_exit([&]() { RemoveHost(secondEntryIdentifier); });
+
+    VERIFY_IS_TRUE(second.CallSucceeded, L"The configuration call itself completed");
+
+    VERIFY_IS_FALSE(
+        second.ReportedSuccess,
+        L"A second host claiming a port already spoken for is rejected");
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(NETWORK_ERROR_CODE_HOST_PORT_IN_USE),
+        ReportedErrorCode(second),
+        L"The error code identifies a port collision rather than a generic failure");
+}
+
+
+// The automatic case is the one that is easy to miss: the entry says "auto", so comparing
+// configured ports would find nothing, yet the socket is bound to a real number a manual entry
+// can collide with.
+void NetworkMidiApprovalTests::ManualPortMatchingAnAutomaticallyAssignedPortIsRejected()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    // g_hostPort is what the system handed the class host, which asked for automatic allocation.
+    auto const portText = std::to_wstring(g_hostPort);
+
+    Log::Comment(String().Format(
+        L"The class host was automatically assigned port %s; claiming it manually", portText.c_str()));
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"Automatic Port Collision Host",
+        L"AUTOPORTCOLLISION",
+        MakeUniqueServiceInstanceName(L"port-auto"),
+        false,
+        portText);
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The configuration call itself completed");
+
+    VERIFY_IS_FALSE(
+        result.ReportedSuccess,
+        L"A manual port which duplicates an automatically assigned one is rejected");
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(NETWORK_ERROR_CODE_HOST_PORT_IN_USE),
+        ReportedErrorCode(result),
+        L"The error code identifies a port collision");
+}
+
+
+// Without this, a check which rejected every manual port would pass the collision tests.
+void NetworkMidiApprovalTests::HostWithAnUnusedManualPortIsAccepted()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto port = PickLikelyFreePort();
+
+    VERIFY_IS_TRUE(port.has_value(), L"A free port could be found to test with");
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"Free Manual Port Host",
+        L"FREEMANUALPORT",
+        MakeUniqueServiceInstanceName(L"port-free"),
+        false,
+        std::to_wstring(port.value()));
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(
+        result.IsSuccess(),
+        L"A host asking for a port nobody else holds is accepted");
+}
+
+
+void NetworkMidiApprovalTests::HostWithAnOutOfRangePortIsRejected()
+{
+    // 0 means "pick one for me" at the socket layer, which is not what a manual entry asked for,
+    // and 65536 does not exist.
+    for (auto const& portText : { std::wstring{ L"0" }, std::wstring{ L"65536" }, std::wstring{ L"70000" } })
+    {
+        auto entryIdentifier = MakeEntryIdentifier();
+
+        auto result = CreateHost(
+            entryIdentifier,
+            L"Out Of Range Port Host",
+            L"OUTOFRANGEPORT",
+            MakeUniqueServiceInstanceName(L"port-range"),
+            false,
+            portText);
+
+        auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+        VERIFY_IS_TRUE(result.CallSucceeded, L"The configuration call itself completed");
+
+        if (portText == L"0")
+        {
+            // "0" is a documented way of saying automatic, so it is accepted, not rejected.
+            VERIFY_IS_TRUE(
+                result.IsSuccess(),
+                L"A port of zero is treated as a request for automatic allocation");
+
+            continue;
+        }
+
+        VERIFY_IS_FALSE(
+            result.ReportedSuccess,
+            String().Format(L"A port of %s is rejected", portText.c_str()));
+
+        VERIFY_ARE_EQUAL(
+            static_cast<uint32_t>(NETWORK_ERROR_CODE_INVALID_HOST_PORT),
+            ReportedErrorCode(result),
+            L"The error code identifies an invalid port");
+    }
+}
+
+
+void NetworkMidiApprovalTests::HostWithANonNumericPortIsRejected()
+{
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"Non Numeric Port Host",
+        L"NONNUMERICPORT",
+        MakeUniqueServiceInstanceName(L"port-text"),
+        false,
+        L"five thousand");
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The configuration call itself completed");
+
+    VERIFY_IS_FALSE(
+        result.ReportedSuccess,
+        L"A port which is not a number is rejected rather than silently becoming zero");
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(NETWORK_ERROR_CODE_INVALID_HOST_PORT),
+        ReportedErrorCode(result),
+        L"The error code identifies an invalid port");
+}
+
+
+// Spec 6.4 sizes the UMP Endpoint Name at 98 bytes and the Product Instance Id at 42. Neither is
+// a multiple of four, and the writer used to round its cap down to a whole 32-bit word, so a full
+// length Product Instance Id went onto the wire two bytes short. The mDNS advertisement carried
+// the untruncated value, so a remote device saw the advertised identity and the in-session
+// identity as two different devices and could not join the one it could see.
+void NetworkMidiApprovalTests::MaximumLengthIdentityStringsSurviveTheWire()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    // Unique, but still exactly at the maximum, so the boundary is what is under test.
+    auto const suffix = Widen(std::string{ "-" }) + std::to_wstring(GetTickCount64());
+
+    std::wstring endpointName(MaxEndpointNameBytes - suffix.length(), L'N');
+    endpointName += suffix;
+
+    std::wstring productInstanceId(MaxProductInstanceIdBytes - suffix.length(), L'P');
+    productInstanceId += suffix;
+
+    VERIFY_ARE_EQUAL(MaxEndpointNameBytes, endpointName.length());
+    VERIFY_ARE_EQUAL(MaxProductInstanceIdBytes, productInstanceId.length());
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(
+        CreateHost(
+            entryIdentifier,
+            endpointName,
+            productInstanceId,
+            MakeUniqueServiceInstanceName(L"maxid"),
+            false).IsSuccess(),
+        L"Host created with maximum length identity strings");
+
+    StartHost(entryIdentifier);
+
+    // find the port it was given
+    uint16_t port{ 0 };
+
+    auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+
+    while (std::chrono::steady_clock::now() < deadline && port == 0)
+    {
+        auto response = ParseResponse(EnumerateHosts());
+
+        if (response.has_value() && response->HasKey(L"hosts"))
+        {
+            auto hosts = response->GetNamedArray(L"hosts", nullptr);
+
+            for (uint32_t i = 0; hosts != nullptr && i < hosts.Size(); i++)
+            {
+                auto host = hosts.GetObjectAt(i);
+
+                if (host != nullptr &&
+                    std::wstring{ host.GetNamedString(L"entryIdentifier", L"") } == entryIdentifier &&
+                    host.GetNamedBoolean(L"hasStarted", false))
+                {
+                    auto const portText = std::wstring{ host.GetNamedString(L"actualPort", L"") };
+
+                    if (!portText.empty())
+                    {
+                        port = static_cast<uint16_t>(std::stoul(portText));
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        if (port == 0)
+        {
+            std::this_thread::sleep_for(PendingPollInterval);
+        }
+    }
+
+    VERIFY_ARE_NOT_EQUAL(static_cast<uint16_t>(0), port, L"The host started and reported a port");
+
+    HostEndpointAddress address{};
+    address.HostNameOrAddress = L"127.0.0.1";
+    address.Port = port;
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(address));
+
+    auto& context = ProtocolTestContext::Current();
+
+    PacketBuilder builder;
+    builder.StartPacket().AddInvitation(
+        context.MakeUniqueEndpointName("MaxId"),
+        context.MakeUniqueProductInstanceId("M"));
+
+    VERIFY_IS_TRUE(client.Send(builder));
+
+    auto reply = client.WaitForCommand(CommandCode::InvitationReplyAccepted, ReplyTimeout);
+
+    VERIFY_IS_TRUE(reply.has_value(), L"The host accepted the invitation");
+
+    auto accepted = reply->Find(CommandCode::InvitationReplyAccepted);
+    VERIFY_IS_NOT_NULL(accepted);
+
+    size_t const nameBytes = static_cast<size_t>(accepted->CommandSpecificData1) * sizeof(uint32_t);
+    size_t const payloadBytes = static_cast<size_t>(accepted->PayloadLengthWords) * sizeof(uint32_t);
+
+    auto const reportedName = accepted->GetPayloadString(0, nameBytes);
+    auto const reportedProductInstanceId = accepted->GetPayloadString(nameBytes, payloadBytes - nameBytes);
+
+    Log::Comment(String().Format(
+        L"Host reported name of %zu bytes and product instance id of %zu bytes",
+        reportedName.length(),
+        reportedProductInstanceId.length()));
+
+    VERIFY_ARE_EQUAL(
+        MaxProductInstanceIdBytes, reportedProductInstanceId.length(),
+        L"A maximum length Product Instance Id reaches the wire whole");
+
+    VERIFY_ARE_EQUAL(
+        MaxEndpointNameBytes, reportedName.length(),
+        L"A maximum length UMP Endpoint Name reaches the wire whole");
+
+    VERIFY_ARE_EQUAL(
+        winrt::to_string(productInstanceId), reportedProductInstanceId,
+        L"The Product Instance Id on the wire is the one the host was configured with");
+
+    VERIFY_ARE_EQUAL(
+        winrt::to_string(endpointName), reportedName,
+        L"The UMP Endpoint Name on the wire is the one the host was configured with");
+
+    EndSession(client);
 }
 
 

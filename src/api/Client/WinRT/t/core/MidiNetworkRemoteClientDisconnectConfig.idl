@@ -1,0 +1,41 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // Ends one remote client's session with a host on this PC. This records no decision, so the
+    // remote is free to invite itself back in. Refusing it for good is
+    // MidiNetworkRemoteClientApprovalConfig with Approve false and ScopeIsThisRequestOnly false.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkRemoteClientDisconnectConfig", UUID_IMidiNetworkRemoteClientDisconnectConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkRemoteClientDisconnectConfigFactory", UUID_IMidiNetworkRemoteClientDisconnectConfigFactory)]
+    runtimeclass MidiNetworkRemoteClientDisconnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkRemoteClientDisconnectConfig();
+
+        MidiNetworkRemoteClientDisconnectConfig(
+            Guid hostId,
+            String remoteClientName,
+            String remoteClientProductInstanceId);
+
+        // the host on this PC which the remote client is connected to
+        [noexcept] Guid HostId{ get; set; };
+
+        // A remote client is identified by this pair, never by its address: it may use a new
+        // ephemeral port for every session, and its address can move.
+        [noexcept] String RemoteClientName{ get; set; };
+        [noexcept] String RemoteClientProductInstanceId{ get; set; };
+    }
+}

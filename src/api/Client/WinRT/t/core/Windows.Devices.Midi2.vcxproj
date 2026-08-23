@@ -296,6 +296,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="MidiBytestreamToUmpMessageConverterState.h" />
+    <ClInclude Include="MidiSystemExclusiveReceivedEventArgs.h" />
+    <ClInclude Include="MidiSystemExclusiveReceiver.h" />
     <ClInclude Include="MidiSystemExclusiveSender.h" />
     <ClInclude Include="midi_api_mode_defs.h" />
     <ClInclude Include="midi_function_block_prop_util.h" />
@@ -548,11 +550,20 @@
     <ClInclude Include="MidiNetworkConfiguredHost.h">
       <DependentUpon>MidiNetworkConfiguredHost.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiNetworkHostConnection.h">
+      <DependentUpon>MidiNetworkHostConnection.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiNetworkRemoteClientApprovalConfig.h">
       <DependentUpon>MidiNetworkRemoteClientApprovalConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiNetworkRemoteClientApprovalResponse.h">
       <DependentUpon>MidiNetworkRemoteClientApprovalResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientDisconnectConfig.h">
+      <DependentUpon>MidiNetworkRemoteClientDisconnectConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientDisconnectResponse.h">
+      <DependentUpon>MidiNetworkRemoteClientDisconnectResponse.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="winrt_devpkey_util.h" />
     <ClInclude Include="MidiNetworkClientConnectResponse.h">
@@ -609,6 +620,8 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp" />
+    <ClCompile Include="MidiSystemExclusiveReceivedEventArgs.cpp" />
+    <ClCompile Include="MidiSystemExclusiveReceiver.cpp" />
     <ClCompile Include="MidiSystemExclusiveSender.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -930,11 +943,20 @@
     <ClCompile Include="MidiNetworkConfiguredHost.cpp">
       <DependentUpon>MidiNetworkConfiguredHost.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiNetworkHostConnection.cpp">
+      <DependentUpon>MidiNetworkHostConnection.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkRemoteClientApprovalConfig.cpp">
       <DependentUpon>MidiNetworkRemoteClientApprovalConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiNetworkRemoteClientApprovalResponse.cpp">
       <DependentUpon>MidiNetworkRemoteClientApprovalResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientDisconnectConfig.cpp">
+      <DependentUpon>MidiNetworkRemoteClientDisconnectConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientDisconnectResponse.cpp">
+      <DependentUpon>MidiNetworkRemoteClientDisconnectResponse.idl</DependentUpon>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -954,6 +976,9 @@
     <Midl Include="MidiNetworkRemoteClientApprovalErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkRemoteClientApprovalResponse.idl" />
     <Midl Include="MidiNetworkRemoteClientApprovalConfig.idl" />
+    <Midl Include="MidiNetworkRemoteClientDisconnectErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkRemoteClientDisconnectResponse.idl" />
+    <Midl Include="MidiNetworkRemoteClientDisconnectConfig.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiApi.idl" />
     <Midl Include="MidiApiModeEnum.idl" />
@@ -965,6 +990,8 @@
     <Midl Include="MidiMessage96.idl" />
     <Midl Include="MidiMessageTypeEnum.idl" />
     <Midl Include="MidiPacketTypeEnum.idl" />
+    <Midl Include="MidiSystemExclusiveReceivedEventArgs.idl" />
+    <Midl Include="MidiSystemExclusiveReceiver.idl" />
     <Midl Include="MidiSystemExclusiveSender.idl" />
     <Midl Include="MidiSystemExclusiveSendProgress.idl" />
     <Midl Include="MidiSystemTimerSettings.idl" />
@@ -1071,6 +1098,8 @@
     <Midl Include="MidiNetworkClientEntryStateEnum.idl" />
     <Midl Include="MidiNetworkConfiguredClient.idl" />
     <Midl Include="MidiNetworkConfiguredHost.idl" />
+    <Midl Include="MidiNetworkHostConnection.idl" />
+    <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl" />
     <Midl Include="MidiNetworkHostCreationErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostRemovalErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostUpdateResponse.idl" />

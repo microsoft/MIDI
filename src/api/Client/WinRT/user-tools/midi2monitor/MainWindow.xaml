@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:midi2monitor"
+    xmlns:shared="using:MidiAppShared"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -50,12 +51,12 @@
                 <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
             </Grid.ColumnDefinitions>
 
-            <FontIcon Grid.Column="1"
-                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                      Glyph="&#xEC4F;"
-                      FontSize="16"
-                      Margin="16,0,10,0"
-                      VerticalAlignment="Center" />
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="16,0,10,0"
+                   VerticalAlignment="Center" />
 
             <TextBlock x:Name="AppTitleTextBlock"
                        Grid.Column="2"
@@ -148,7 +149,7 @@
                                 </Style>
                             </ComboBox.ItemContainerStyle>
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="local:EndpointChoice">
+                                <DataTemplate x:DataType="shared:EndpointChoice">
                                     <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -186,7 +187,7 @@
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnGroupSelectionChanged">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="local:NamedChoice">
+                                <DataTemplate x:DataType="shared:NamedChoice">
                                     <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
@@ -206,7 +207,7 @@
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnChannelSelectionChanged">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="local:NamedChoice">
+                                <DataTemplate x:DataType="shared:NamedChoice">
                                     <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>

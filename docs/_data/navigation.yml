@@ -19,6 +19,8 @@
     url: /tools/midi2monitor/
   - text: MIDI 1 Monitor
     url: /tools/midi1monitor/
+  - text: Network MIDI 2.0 Setup
+    url: /tools/midinetworksetup/
   - text: MIDI 1 Enumerator
     url: /tools/midi1enum/
   - text: MIDI Kernel Streaming Info

@@ -1,0 +1,969 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midinetworksetup.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midinetworksetup"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style x:Key="SectionHeaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="Margin" Value="0,0,0,4" />
+            </Style>
+
+            <Style x:Key="CardBorderStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="12" />
+            </Style>
+        </Grid.Resources>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="Windows MIDI Network Setup"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <Button x:Name="AppearanceButton"
+                    x:Uid="AppearanceButton"
+                    Grid.Column="3"
+                    Width="46"
+                    Height="32"
+                    VerticalAlignment="Top"
+                    Padding="0"
+                    BorderThickness="0"
+                    Background="Transparent"
+                    Click="OnAppearanceButtonClick">
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
+            </Button>
+
+            <ToggleButton x:Name="AlwaysOnTopToggle"
+                          x:Uid="AlwaysOnTopToggle"
+                          Grid.Column="4"
+                          Width="46"
+                          Height="32"
+                          VerticalAlignment="Top"
+                          Padding="0"
+                          BorderThickness="0"
+                          Click="OnAlwaysOnTopToggled">
+                <ToggleButton.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </ToggleButton.Resources>
+                <FontIcon Glyph="&#xE718;" FontSize="14" />
+            </ToggleButton>
+        </Grid>
+
+        <!-- ================================= Navigation ================================= -->
+        <NavigationView x:Name="MainNavigation"
+                        Grid.Row="1"
+                        IsSettingsVisible="False"
+                        IsBackButtonVisible="Collapsed"
+                        IsPaneToggleButtonVisible="False"
+                        OpenPaneLength="220"
+                        PaneDisplayMode="Left"
+                        SelectionChanged="OnNavigationSelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="RemoteHostsNavigationItem"
+                                    x:Uid="RemoteHostsNavigationItem"
+                                    Content="Network devices"
+                                    Tag="remote">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE968;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="LocalHostsNavigationItem"
+                                    x:Uid="LocalHostsNavigationItem"
+                                    Content="This PC"
+                                    Tag="local">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE977;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Time sensitive: someone is waiting on the customer to decide, so this sits
+                     above both pages rather than inside either one -->
+                <InfoBar x:Name="PendingInvitationsBar"
+                         x:Uid="PendingInvitationsBar"
+                         Grid.Row="0"
+                         Severity="Warning"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Title="Devices are waiting for permission"
+                         Margin="16,12,16,0">
+                    <InfoBar.Content>
+                        <ItemsControl x:Name="PendingInvitationsList" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:PendingInvitationItem">
+                                    <Grid Margin="0,0,0,10" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" MinWidth="120" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind Headline, Mode=OneWay}"
+                                                       TextWrapping="Wrap"
+                                                       Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                            <TextBlock Text="{x:Bind Detail, Mode=OneWay}"
+                                                       TextWrapping="Wrap"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1"
+                                                    Orientation="Horizontal"
+                                                    Spacing="8"
+                                                    VerticalAlignment="Center">
+                                            <Button x:Uid="AllowOnceButton"
+                                                    Content="Allow once"
+                                                    Click="OnAllowInvitationOnceClick" />
+                                            <Button x:Uid="AllowAlwaysButton"
+                                                    Content="Always allow"
+                                                    Style="{ThemeResource AccentButtonStyle}"
+                                                    Click="OnAllowInvitationAlwaysClick" />
+                                            <Button x:Uid="DenyOnceButton"
+                                                    Content="Deny"
+                                                    Click="OnDenyInvitationOnceClick" />
+                                            <Button x:Uid="BlockButton"
+                                                    Content="Block"
+                                                    Click="OnBlockInvitationClick" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </InfoBar.Content>
+                </InfoBar>
+
+                <Grid Grid.Row="1">
+                <!-- Shown instead of everything else when the transport is missing or too old -->
+                <InfoBar x:Name="TransportUnavailableBar"
+                         x:Uid="TransportUnavailableBar"
+                         VerticalAlignment="Top"
+                         Margin="16,12,16,12"
+                         Canvas.ZIndex="1"
+                         Severity="Error"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Title="Network MIDI 2.0 is not available"
+                         Message="A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC." />
+
+                <!-- ========================== Page 1: network devices ========================== -->
+                <Grid x:Name="RemoteHostsPanel" Margin="16,8,16,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+
+                    <Grid Grid.Row="0" Margin="0,0,0,8" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Uid="RemoteHostsHeader"
+                                       Text="Network MIDI 2.0 devices"
+                                       Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock x:Uid="RemoteHostsDescription"
+                                       Text="Devices found on your network, and the ones this PC is connected to."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <ListView x:Name="RemoteHostsListView"
+                              x:Uid="RemoteHostsListView"
+                              Grid.Row="1"
+                              SelectionMode="None"
+                              IsItemClickEnabled="False"
+                              ScrollViewer.HorizontalScrollMode="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,4,0,4" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:RemoteHostItem">
+                                <Border Style="{StaticResource CardBorderStyle}">
+                                    <StackPanel Spacing="6">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" MinWidth="140" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid Grid.Column="0" VerticalAlignment="Center">
+                                                <FontIcon Glyph="&#xE968;"
+                                                          FontSize="20" />
+                                                <!-- NetworkConnectedCheckmark is drawn as a badge in the
+                                                     lower right of its own box, so it overlays without offsets -->
+                                                <FontIcon Glyph="&#xF386;"
+                                                          FontSize="20"
+                                                          Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                                          Visibility="{x:Bind ConnectedBadgeVisibility, Mode=OneWay}" />
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind SubtitleText, Mode=OneWay}"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                            </StackPanel>
+
+                                            <!-- Latency history. The geometry is generated against a
+                                                 fixed 360x44 box in RemoteHostItem, so this size must match. -->
+                                            <StackPanel Grid.Column="2"
+                                                        VerticalAlignment="Center"
+                                                        HorizontalAlignment="Center"
+                                                        Spacing="2"
+                                                        Visibility="{x:Bind LatencyGraphVisibility, Mode=OneWay}">
+                                                <!-- the scale sits above the plot rather than inside it,
+                                                     because the trace reaches the top of the box by design -->
+                                                <TextBlock Text="{x:Bind LatencyPeakText, Mode=OneWay}"
+                                                           HorizontalAlignment="Right"
+                                                           Margin="0,0,2,0"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                                <Border Width="360"
+                                                        Height="44"
+                                                        HorizontalAlignment="Center"
+                                                        CornerRadius="4"
+                                                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                        BorderThickness="1"
+                                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                    <Grid>
+                                                        <Polygon Points="{x:Bind LatencyFillPoints, Mode=OneWay}"
+                                                                 Fill="{ThemeResource AccentFillColorTertiaryBrush}"
+                                                                 Opacity="0.45" />
+                                                        <Polyline Points="{x:Bind LatencyLinePoints, Mode=OneWay}"
+                                                                  Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                                                                  StrokeThickness="1.5"
+                                                                  StrokeLineJoin="Round" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <TextBlock Text="{x:Bind StatisticsText, Mode=OneWay}"
+                                                           HorizontalAlignment="Center"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="4"
+                                                        Orientation="Horizontal"
+                                                        Spacing="8"
+                                                        VerticalAlignment="Center">
+                                                <Button x:Uid="ConnectButton"
+                                                        Content="Connect"
+                                                        Style="{ThemeResource AccentButtonStyle}"
+                                                        Visibility="{x:Bind ConnectVisibility, Mode=OneWay}"
+                                                        Click="OnConnectRemoteHostClick" />
+                                                <Button x:Uid="RetryButton"
+                                                        Content="Try again"
+                                                        Visibility="{x:Bind RetryVisibility, Mode=OneWay}"
+                                                        Click="OnRetryRemoteHostClick" />
+                                                <Button x:Uid="DisconnectButton"
+                                                        Content="Disconnect"
+                                                        Visibility="{x:Bind DisconnectVisibility, Mode=OneWay}"
+                                                        Click="OnDisconnectRemoteHostClick" />
+                                                <ProgressRing IsActive="{x:Bind IsBusy, Mode=OneWay}"
+                                                              Width="20"
+                                                              Height="20" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Expander x:Uid="RemoteHostDetailsExpander"
+                                                  Header="Details"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Background="Transparent"
+                                                  BorderThickness="0">
+                                            <Grid Margin="0,4,0,4"
+                                                  ColumnSpacing="12"
+                                                  RowSpacing="4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" MinWidth="120" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock x:Uid="ProductInstanceIdLabel"
+                                                           Grid.Row="0" Grid.Column="0"
+                                                           Text="Product Instance Id"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                                           Text="{x:Bind ProductInstanceId, Mode=OneWay}"
+                                                           IsTextSelectionEnabled="True"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="AddressesLabel"
+                                                           Grid.Row="1" Grid.Column="0"
+                                                           Text="Addresses"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                                           Text="{x:Bind AddressesText, Mode=OneWay}"
+                                                           IsTextSelectionEnabled="True"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="EndpointDeviceIdLabel"
+                                                           Grid.Row="2" Grid.Column="0"
+                                                           Text="MIDI Endpoint"
+                                                           Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                                           Text="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                                           IsTextSelectionEnabled="True"
+                                                           TextWrapping="Wrap"
+                                                           Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                <Button x:Uid="CopyEndpointDeviceIdButton"
+                                                        Grid.Row="2" Grid.Column="2"
+                                                        Padding="6,2,6,2"
+                                                        VerticalAlignment="Top"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                        Click="OnCopyEndpointDeviceIdClick">
+                                                    <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                                </Button>
+
+                                                <TextBlock x:Uid="RemoteHostNotAdvertisedText"
+                                                           Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                                                           Text="This device is no longer being advertised on the network."
+                                                           TextWrapping="Wrap"
+                                                           Visibility="{x:Bind NotAdvertisedVisibility, Mode=OneWay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </Grid>
+                                        </Expander>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <TextBlock x:Name="NoRemoteHostsText"
+                               x:Uid="NoRemoteHostsText"
+                               Grid.Row="1"
+                               Text="Looking for Network MIDI 2.0 devices..."
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <Expander x:Name="ManualConnectExpander"
+                              x:Uid="ManualConnectExpander"
+                              Grid.Row="2"
+                              Header="Connect to a device by address"
+                              Margin="0,12,0,0"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8" Margin="0,4,0,4">
+                            <TextBlock x:Uid="ManualConnectDescription"
+                                       Text="Use this when a device is not advertised on your network. Windows will keep the entry and try again later if the device is not answering now."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <Grid ColumnSpacing="12" RowSpacing="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" MinWidth="160" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="2*" MinWidth="140" />
+                                    <ColumnDefinition Width="2*" MinWidth="140" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBox x:Name="ManualAddressTextBox"
+                                         x:Uid="ManualAddressTextBox"
+                                         Grid.Row="0" Grid.Column="0"
+                                         Header="Host name or IP address"
+                                         PlaceholderText="192.168.1.100"
+                                         TextChanged="OnManualConnectFieldChanged" />
+
+                                <NumberBox x:Name="ManualPortNumberBox"
+                                           x:Uid="ManualPortNumberBox"
+                                           Grid.Row="0" Grid.Column="1"
+                                           Header="Port"
+                                           Width="120"
+                                           Minimum="1"
+                                           Maximum="65535"
+                                           Value="5004"
+                                           SpinButtonPlacementMode="Compact"
+                                           ValueChanged="OnManualConnectPortChanged" />
+
+                                <TextBox x:Name="ManualNameTextBox"
+                                         x:Uid="ManualNameTextBox"
+                                         Grid.Row="0" Grid.Column="2"
+                                         Header="Name that device will see"
+                                         TextChanged="OnManualConnectFieldChanged" />
+
+                                <TextBox x:Name="ManualCustomNameTextBox"
+                                         x:Uid="ManualCustomNameTextBox"
+                                         Grid.Row="0" Grid.Column="3"
+                                         Header="Name to show in Windows"
+                                         PlaceholderText="Optional" />
+
+                                <Button x:Name="ManualConnectButton"
+                                        x:Uid="ManualConnectButton"
+                                        Grid.Row="0" Grid.Column="4"
+                                        Content="Connect"
+                                        VerticalAlignment="Bottom"
+                                        Style="{ThemeResource AccentButtonStyle}"
+                                        IsEnabled="False"
+                                        Click="OnManualConnectClick" />
+                            </Grid>
+                        </StackPanel>
+                    </Expander>
+
+                    <TextBlock x:Name="RemoteStatusText"
+                               Grid.Row="3"
+                               Margin="0,8,0,0"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
+
+                <!-- =========================== Page 2: hosts on this PC ========================= -->
+                <Grid x:Name="LocalHostsPanel" Margin="16,8,16,12" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,8" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Uid="LocalHostsHeader"
+                                       Text="Network MIDI 2.0 hosts on this PC"
+                                       Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock x:Uid="LocalHostsDescription"
+                                       Text="A host lets other devices on your network connect to this PC. Most people need only one."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <Button x:Name="CreateHostButton"
+                                x:Uid="CreateHostButton"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Click="OnCreateHostClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                <TextBlock x:Uid="CreateHostButtonText" Text="Create host" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <ListView x:Name="LocalHostsListView"
+                              x:Uid="LocalHostsListView"
+                              Grid.Row="1"
+                              SelectionMode="None"
+                              IsItemClickEnabled="False"
+                              ScrollViewer.HorizontalScrollMode="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,4,0,4" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:LocalHostItem">
+                                <Border Style="{StaticResource CardBorderStyle}">
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" MinWidth="140" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <FontIcon Grid.Column="0"
+                                                      Glyph="&#xE977;"
+                                                      FontSize="20"
+                                                      VerticalAlignment="Center" />
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind ConnectionCountText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2"
+                                                        Orientation="Horizontal"
+                                                        Spacing="8"
+                                                        VerticalAlignment="Center">
+                                                <Button Content="{x:Bind StartStopLabel, Mode=OneWay}"
+                                                        Click="OnStartStopHostClick" />
+                                                <Button x:Uid="DeleteHostButton"
+                                                        Content="Delete"
+                                                        Click="OnDeleteHostClick" />
+                                                <ProgressRing IsActive="{x:Bind IsBusy, Mode=OneWay}"
+                                                              Width="20"
+                                                              Height="20" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <StackPanel Spacing="4">
+                                            <TextBlock x:Uid="NoConnectedDevicesText"
+                                                       Text="No devices are connected to this host."
+                                                       Visibility="{x:Bind NoConnectionsVisibility, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                            <ItemsControl ItemsSource="{x:Bind Connections, Mode=OneWay}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="local:HostConnectionItem">
+                                                        <Border Margin="0,0,0,6"
+                                                                Padding="10,6,10,6"
+                                                                CornerRadius="4"
+                                                                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                                BorderThickness="1"
+                                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                        <Grid ColumnSpacing="12">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" MinWidth="120" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Grid Grid.Column="0" VerticalAlignment="Center">
+                                                                <FontIcon Glyph="&#xE968;"
+                                                                          FontSize="18" />
+                                                                <!-- NetworkConnectedCheckmark badges itself into the lower
+                                                                     right of its own box, so it needs no offset -->
+                                                                <FontIcon Glyph="&#xF386;"
+                                                                          FontSize="18"
+                                                                          Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                                                          Visibility="{x:Bind ConnectedBadgeVisibility, Mode=OneWay}" />
+                                                            </Grid>
+
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                                           TextWrapping="NoWrap"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                                           TextWrapping="Wrap"
+                                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                            </StackPanel>
+
+                                                            <!-- Latency history. The geometry is generated against a
+                                                                 fixed 240x32 box in HostConnectionItem, so this must match. -->
+                                                            <StackPanel Grid.Column="2"
+                                                                        VerticalAlignment="Center"
+                                                                        HorizontalAlignment="Center"
+                                                                        Spacing="2"
+                                                                        Visibility="{x:Bind LatencyGraphVisibility, Mode=OneWay}">
+                                                                <TextBlock Text="{x:Bind LatencyPeakText, Mode=OneWay}"
+                                                                           HorizontalAlignment="Right"
+                                                                           Margin="0,0,2,0"
+                                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                                                <Border Width="240"
+                                                                        Height="32"
+                                                                        HorizontalAlignment="Center"
+                                                                        CornerRadius="4"
+                                                                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                                        BorderThickness="1"
+                                                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                                    <Grid>
+                                                                        <Polygon Points="{x:Bind LatencyFillPoints, Mode=OneWay}"
+                                                                                 Fill="{ThemeResource AccentFillColorTertiaryBrush}"
+                                                                                 Opacity="0.45" />
+                                                                        <Polyline Points="{x:Bind LatencyLinePoints, Mode=OneWay}"
+                                                                                  Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                                                                                  StrokeThickness="1.5"
+                                                                                  StrokeLineJoin="Round" />
+                                                                    </Grid>
+                                                                </Border>
+
+                                                                <TextBlock Text="{x:Bind StatisticsText, Mode=OneWay}"
+                                                                           HorizontalAlignment="Center"
+                                                                           TextWrapping="NoWrap"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                            </StackPanel>
+
+                                                            <StackPanel Grid.Column="4"
+                                                                        Orientation="Horizontal"
+                                                                        Spacing="8"
+                                                                        VerticalAlignment="Center">
+                                                                <Button x:Uid="DisconnectRemoteClientButton"
+                                                                        Content="Disconnect"
+                                                                        Click="OnDisconnectRemoteClientClick" />
+                                                                <Button x:Uid="BlockRemoteClientButton"
+                                                                        Content="Block"
+                                                                        Click="OnBlockRemoteClientClick" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <Expander x:Uid="RememberedDevicesExpander"
+                                                  Header="Remembered decisions"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Visibility="{x:Bind KnownClientsVisibility, Mode=OneWay}"
+                                                  Background="Transparent"
+                                                  BorderThickness="0">
+                                            <StackPanel Spacing="4" Margin="0,4,0,4">
+                                                <ItemsControl ItemsSource="{x:Bind KnownClients, Mode=OneWay}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="local:KnownClientItem">
+                                                            <Grid ColumnSpacing="12" Margin="0,4,0,4">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{x:Bind DisplayName}"
+                                                                               TextWrapping="NoWrap"
+                                                                               TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Text="{x:Bind DecisionText}"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                </StackPanel>
+
+                                                                <Button Grid.Column="1"
+                                                                        x:Uid="ForgetClientButton"
+                                                                        Content="Forget"
+                                                                        VerticalAlignment="Center"
+                                                                        Click="OnForgetKnownClientClick" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Expander>
+
+                                        <Expander x:Uid="HostDetailsExpander"
+                                                  Header="Details"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Background="Transparent"
+                                                  BorderThickness="0">
+                                            <Grid Margin="0,4,0,4"
+                                                  ColumnSpacing="12"
+                                                  RowSpacing="4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" MinWidth="120" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock x:Uid="ServiceInstanceNameLabel"
+                                                           Grid.Row="0" Grid.Column="0"
+                                                           Text="Network service name"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                                           Text="{x:Bind ServiceInstanceName, Mode=OneWay}"
+                                                           IsTextSelectionEnabled="True"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="HostProductInstanceIdLabel"
+                                                           Grid.Row="1" Grid.Column="0"
+                                                           Text="Product Instance Id"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                                           Text="{x:Bind ProductInstanceId, Mode=OneWay}"
+                                                           IsTextSelectionEnabled="True"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="HostAddressLabel"
+                                                           Grid.Row="2" Grid.Column="0"
+                                                           Text="Address"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                                           Text="{x:Bind AddressText, Mode=OneWay}"
+                                                           IsTextSelectionEnabled="True"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                <TextBlock x:Uid="HostDetailsPolicyLabel"
+                                                           Grid.Row="3" Grid.Column="0"
+                                                           Text="New connections"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Grid.Row="3" Grid.Column="1"
+                                                           Text="{x:Bind PolicyText, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                            </Grid>
+                                        </Expander>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <TextBlock x:Name="NoLocalHostsText"
+                               x:Uid="NoLocalHostsText"
+                               Grid.Row="1"
+                               Text="This PC does not have a Network MIDI 2.0 host yet. Create one so other devices can connect to it."
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               MaxWidth="420"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <TextBlock x:Name="LocalStatusText"
+                               Grid.Row="2"
+                               Margin="0,8,0,0"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
+                </Grid>
+            </Grid>
+        </NavigationView>
+
+        <!-- Declared here rather than built in code so the fields stay localizable through the
+             normal x:Uid pipeline. A ContentDialog draws nothing until it is shown. -->
+        <ContentDialog x:Name="CreateHostDialog"
+                       x:Uid="CreateHostDialog"
+                       Title="Create a Network MIDI 2.0 host"
+                       PrimaryButtonText="Create"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="460">
+                <StackPanel Spacing="12" Width="440" Margin="0,4,4,4">
+                    <TextBox x:Name="HostNameTextBox"
+                             x:Uid="HostNameTextBox"
+                             Header="Name other devices will see"
+                             TextChanged="OnCreateHostFieldChanged" />
+
+                    <StackPanel Spacing="4">
+                        <TextBox x:Name="HostServiceInstanceNameTextBox"
+                                 x:Uid="HostServiceInstanceNameTextBox"
+                                 Header="Network service name"
+                                 TextChanged="OnCreateHostFieldChanged" />
+                        <TextBlock x:Uid="HostServiceInstanceNameHelp"
+                                   Text="This has to be different from every other host on this PC. Periods are removed."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Uid="HostPolicyLabel"
+                                   Text="When a device asks to connect"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <RadioButton x:Name="HostPolicyAskRadio"
+                                     x:Uid="HostPolicyAskRadio"
+                                     Content="Ask me first"
+                                     GroupName="HostPolicy"
+                                     IsChecked="True" />
+                        <RadioButton x:Name="HostPolicyAllowAnyRadio"
+                                     x:Uid="HostPolicyAllowAnyRadio"
+                                     Content="Let any device connect"
+                                     GroupName="HostPolicy" />
+                    </StackPanel>
+
+                    <CheckBox x:Name="HostAdvertiseCheckBox"
+                              x:Uid="HostAdvertiseCheckBox"
+                              Content="Advertise this host on the network"
+                              IsChecked="True" />
+
+                    <CheckBox x:Name="HostCreateMidi1PortsCheckBox"
+                              x:Uid="HostCreateMidi1PortsCheckBox"
+                              Content="Also create MIDI 1.0 ports for connected devices"
+                              IsChecked="True" />
+
+                    <Expander x:Uid="HostAdvancedExpander"
+                              Header="Advanced"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="12" Margin="0,4,0,4">
+                            <StackPanel Spacing="4">
+                                <TextBox x:Name="HostProductInstanceIdTextBox"
+                                         x:Uid="HostProductInstanceIdTextBox"
+                                         Header="Product instance id"
+                                         TextChanged="OnCreateHostFieldChanged" />
+                                <TextBlock x:Uid="HostProductInstanceIdHelp"
+                                           Text="Identifies this PC to other devices. 42 characters or fewer."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
+                            <CheckBox x:Name="HostAutomaticPortCheckBox"
+                                      x:Uid="HostAutomaticPortCheckBox"
+                                      Content="Let Windows choose the network port"
+                                      IsChecked="True"
+                                      Checked="OnCreateHostPortModeChanged"
+                                      Unchecked="OnCreateHostPortModeChanged" />
+
+                            <NumberBox x:Name="HostPortNumberBox"
+                                       x:Uid="HostPortNumberBox"
+                                       Header="Port"
+                                       Width="140"
+                                       HorizontalAlignment="Left"
+                                       Minimum="1"
+                                       Maximum="65535"
+                                       Value="5004"
+                                       IsEnabled="False"
+                                       SpinButtonPlacementMode="Compact" />
+                        </StackPanel>
+                    </Expander>
+
+                    <TextBlock x:Name="CreateHostStatusText"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+
+        <ContentDialog x:Name="ConfirmDialog"
+                       x:Uid="ConfirmDialog"
+                       PrimaryButtonText="Yes"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Close">
+            <TextBlock x:Name="ConfirmDialogText" TextWrapping="Wrap" MaxWidth="420" />
+        </ContentDialog>
+
+        <ContentDialog x:Name="ConnectNameDialog"
+                       x:Uid="ConnectNameDialog"
+                       Title="Connect to this device"
+                       PrimaryButtonText="Connect"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="8" MaxWidth="420">
+                <TextBlock x:Name="ConnectNameDialogText" TextWrapping="Wrap" />
+                <TextBox x:Name="ConnectNameDialogTextBox"
+                         x:Uid="ConnectNameDialogTextBox"
+                         Header="Name to show in Windows"
+                         PlaceholderText="Optional" />
+                <TextBlock x:Uid="ConnectNameDialogHint"
+                           Text="Leave this empty to use the name the device reports."
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </ContentDialog>
+    </Grid>
+</Window>

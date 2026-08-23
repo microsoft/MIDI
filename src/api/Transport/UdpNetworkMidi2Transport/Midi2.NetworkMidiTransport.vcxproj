@@ -156,7 +156,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -174,7 +174,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -192,7 +192,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -229,7 +229,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -246,7 +246,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -273,7 +273,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;bcrypt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.NetworkMidiTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>

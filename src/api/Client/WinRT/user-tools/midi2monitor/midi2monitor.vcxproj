@@ -92,10 +92,13 @@
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;DISABLE_XAML_GENERATED_MAIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
+    </Midl>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
@@ -146,8 +149,12 @@
     <ClInclude Include="MessageRowPanel.h" />
     <ClInclude Include="MidiMessageViewModel.h" />
     <ClInclude Include="MonitorColumn.h" />
-    <ClInclude Include="NamedChoice.h" />
-    <ClInclude Include="EndpointChoice.h" />
+    <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
+    <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
+    <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
+    <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -179,11 +186,15 @@
     <ClCompile Include="MessageRowPanel.cpp" />
     <ClCompile Include="MidiMessageViewModel.cpp" />
     <ClCompile Include="MonitorColumn.cpp" />
-    <ClCompile Include="NamedChoice.cpp" />
-    <ClCompile Include="EndpointChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
+    <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>

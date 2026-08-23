@@ -42,6 +42,14 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
         }
 
+        if (!CustomEndpointName().empty())
+        {
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY,
+                json::JsonValue::CreateStringValue(CustomEndpointName())
+            );
+        }
+
         clientObject.SetNamedValue(
             WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey,
             matchObject);

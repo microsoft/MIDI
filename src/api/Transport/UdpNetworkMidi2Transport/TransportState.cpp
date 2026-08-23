@@ -379,6 +379,80 @@ TransportState::IsHostServiceInstanceNameInUse(
 }
 
 _Use_decl_annotations_
+bool
+TransportState::IsHostPortInUse(
+    std::wstring const& port,
+    winrt::guid const& excludingEntryIdentifier)
+{
+    // Compared as numbers, not as text: "05000" and "5000" are the same socket.
+    auto const parsePort = [](std::wstring const& value) -> uint32_t
+        {
+            auto const trimmed = internal::TrimmedWStringCopy(value);
+
+            if (trimmed.empty() ||
+                !std::all_of(trimmed.begin(), trimmed.end(), [](wchar_t const ch) { return iswdigit(ch) != 0; }))
+            {
+                return 0;
+            }
+
+            auto const parsed = wcstoul(trimmed.c_str(), nullptr, 10);
+
+            return (parsed >= 1 && parsed <= 65535) ? static_cast<uint32_t>(parsed) : 0;
+        };
+
+    auto const wanted = parsePort(port);
+
+    if (wanted == 0)
+    {
+        return false;
+    }
+
+    // Snapshotted first: the accessors take the state lock, and reading a host's socket calls
+    // into it, which must never happen while that lock is held.
+    for (auto const& host : GetHosts())
+    {
+        if (host == nullptr)
+        {
+            continue;
+        }
+
+        if (host->GetDefinition().EntryIdentifier == excludingEntryIdentifier)
+        {
+            continue;
+        }
+
+        // The bound port, not the configured one. A host which asked for an automatic port owns
+        // whatever the system gave it, and a manual entry must not collide with that either.
+        if (parsePort(std::wstring{ host->ActualPort() }) == wanted)
+        {
+            return true;
+        }
+    }
+
+    // Entries which have been accepted but not started yet. Only a manual port can be compared;
+    // one waiting for an automatic port has no number to conflict with.
+    for (auto const& definition : GetPendingHostDefinitions())
+    {
+        if (definition == nullptr || definition->UseAutomaticPortAllocation)
+        {
+            continue;
+        }
+
+        if (definition->EntryIdentifier == excludingEntryIdentifier)
+        {
+            continue;
+        }
+
+        if (parsePort(std::wstring{ definition->Port }) == wanted)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+_Use_decl_annotations_
 std::shared_ptr<MidiNetworkClient>
 TransportState::GetClient(winrt::guid const& clientEntryIdentifier)
 {
@@ -425,10 +499,83 @@ TransportState::AddClient(
     return S_OK;
 }
 
+// The mirror of AddHostIfStillPending. Both the add and RemoveClient take the state lock
+// exclusively, so a client can no longer be registered after the entry it belongs to has gone.
+_Use_decl_annotations_
+bool
+TransportState::AddClientIfStillPending(
+    std::shared_ptr<MidiNetworkClient> client,
+    winrt::guid const& clientEntryIdentifier)
+{
+    if (client == nullptr)
+    {
+        return false;
+    }
+
+    auto lock = m_stateLock.lock_exclusive();
+
+    auto const stillPending = std::any_of(
+        m_pendingClientDefinitions.begin(),
+        m_pendingClientDefinitions.end(),
+        [&clientEntryIdentifier](auto const& definition)
+        {
+            return definition != nullptr && definition->EntryIdentifier == clientEntryIdentifier;
+        });
+
+    if (!stillPending)
+    {
+        return false;
+    }
+
+    m_clients.push_back(client);
+
+    return true;
+}
+
 _Use_decl_annotations_
 HRESULT 
-TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier)
+TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier, bool& removedPendingDefinition)
 {
+    removedPendingDefinition = false;
+
+    auto lock = m_stateLock.lock_exclusive();
+
+    bool removedLiveClient{ false };
+
+    for (auto it = m_clients.begin(); it != m_clients.end(); it++)
+    {
+        if ((*it)->GetDefinition().EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            m_clients.erase(it);
+
+            removedLiveClient = true;
+
+            break;
+        }
+    }
+
+    // The definition is what enumerateClients walks, and it is also what the endpoint creator
+    // thread would use to build the client again on its next pass.
+    auto const before = m_pendingClientDefinitions.size();
+
+    m_pendingClientDefinitions.erase(
+        std::remove_if(
+            m_pendingClientDefinitions.begin(),
+            m_pendingClientDefinitions.end(),
+            [&clientConfigEntryIdentifier](auto const& definition)
+            {
+                return definition != nullptr && definition->EntryIdentifier == clientConfigEntryIdentifier;
+            }),
+        m_pendingClientDefinitions.end());
+
+    removedPendingDefinition = m_pendingClientDefinitions.size() != before;
+
+    return (removedLiveClient || removedPendingDefinition) ? S_OK : E_NOTFOUND;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::RemoveLiveClient(winrt::guid const& clientConfigEntryIdentifier){
     auto lock = m_stateLock.lock_exclusive();
 
     for (auto it = m_clients.begin(); it != m_clients.end(); it++)

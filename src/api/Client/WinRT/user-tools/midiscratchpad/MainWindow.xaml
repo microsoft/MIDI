@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midiscratchpad.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midiscratchpad"
+    xmlns:shared="using:MidiAppShared"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="Windows MIDI Scratch Pad"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <ToggleButton x:Name="AlwaysOnTopToggle"
+                          x:Uid="AlwaysOnTopToggle"
+                          Grid.Column="3"
+                          Width="46"
+                          Height="32"
+                          VerticalAlignment="Top"
+                          Padding="0"
+                          BorderThickness="0"
+                          Click="OnAlwaysOnTopToggled">
+                <ToggleButton.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </ToggleButton.Resources>
+                <FontIcon Glyph="&#xE718;" FontSize="14" />
+            </ToggleButton>
+        </Grid>
+
+        <!-- ============================== Destination header ============================= -->
+        <Border x:Name="HeaderCard"
+                Grid.Row="1"
+                Margin="12,4,12,8"
+                Padding="12,10,12,10"
+                CornerRadius="8">
+            <Grid x:Name="TopControlsGrid" ColumnSpacing="12" RowSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" MinWidth="150" />
+                    <ColumnDefinition x:Name="GroupColumn" Width="*" MinWidth="130" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                    <TextBlock x:Uid="EndpointPickerLabel"
+                               Text="MIDI Device"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <ComboBox x:Name="EndpointComboBox"
+                              x:Uid="EndpointPicker"
+                              TabIndex="1"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Choose a device"
+                              SelectionChanged="OnEndpointSelectionChanged">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="shared:EndpointChoice">
+                                <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{x:Bind DisplayName}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <Image x:Name="EndpointChoiceImage"
+                                           Grid.Column="1"
+                                           Height="18"
+                                           MaxWidth="32"
+                                           Source="{x:Bind ImageSource}"
+                                           Visibility="{x:Bind ImageVisibility}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel x:Name="GroupPanel" Grid.Row="0" Grid.Column="1" Spacing="4">
+                    <TextBlock x:Uid="GroupPickerLabel"
+                               Text="Group"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <ComboBox x:Name="GroupComboBox"
+                              x:Uid="GroupPicker"
+                              TabIndex="2"
+                              HorizontalAlignment="Stretch"
+                              SelectionChanged="OnGroupSelectionChanged">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="shared:NamedChoice">
+                                <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- a segmented control rather than tabs: the mode changes what the group picker
+                     means, so these are two views of one document, not two documents -->
+                <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4" VerticalAlignment="Bottom">
+                    <TextBlock x:Uid="ModePickerLabel"
+                               Text="Send as"
+                               TextWrapping="NoWrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="0">
+                        <RadioButton x:Name="Midi1ModeButton"
+                                     x:Uid="Midi1ModeButton"
+                                     GroupName="ScratchPadMode"
+                                     Content="MIDI 1.0 bytes"
+                                     TabIndex="3"
+                                     Style="{ThemeResource DefaultRadioButtonStyle}"
+                                     Checked="OnModeChanged" />
+                        <RadioButton x:Name="UmpModeButton"
+                                     x:Uid="UmpModeButton"
+                                     GroupName="ScratchPadMode"
+                                     Content="UMP words"
+                                     TabIndex="4"
+                                     Margin="12,0,0,0"
+                                     Checked="OnModeChanged" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ================================== Editor ==================================== -->
+        <Grid Grid.Row="2" Margin="12,0,12,8" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="InsertRailColumn" Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox x:Name="EditorTextBox"
+                             x:Uid="EditorTextBox"
+                             Grid.Row="0"
+                             TabIndex="5"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             IsSpellCheckEnabled="False"
+                             FontFamily="Cascadia Mono, Consolas, Courier New"
+                             FontSize="15"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             TextChanged="OnEditorTextChanged"
+                             SelectionChanged="OnEditorSelectionChanged" />
+
+                    <!-- live parse feedback, so a typo shows up while typing rather than on send -->
+                    <Border x:Name="StatusStrip"
+                            Grid.Row="1"
+                            Padding="10,6,10,6"
+                            CornerRadius="0,0,8,8"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon x:Name="StatusIcon"
+                                      Glyph="&#xE73E;"
+                                      FontSize="14"
+                                      VerticalAlignment="Center"
+                                      Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                            <TextBlock x:Name="StatusText"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       Style="{ThemeResource CaptionTextBlockStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- ============================ MIDI 1.0 insert rail ========================= -->
+            <ScrollViewer x:Name="InsertRail"
+                          Grid.Column="1"
+                          Width="230"
+                          VerticalScrollBarVisibility="Auto"
+                          VerticalScrollMode="Auto">
+                <StackPanel Spacing="4" Margin="0,0,4,0">
+                    <TextBlock x:Uid="InsertHeader"
+                               Text="Insert"
+                               Margin="0,0,0,4"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                    <Expander x:Name="NotesExpander"
+                              x:Uid="NotesExpander"
+                              Header="Notes"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch"
+                              IsExpanded="True">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="ChannelComboBox" x:Uid="ChannelPicker" Header="Channel" HorizontalAlignment="Stretch" />
+                            <ComboBox x:Name="NoteComboBox" x:Uid="NotePicker" Header="Note" HorizontalAlignment="Stretch" />
+                            <ComboBox x:Name="VelocityComboBox" x:Uid="VelocityPicker" Header="Velocity" HorizontalAlignment="Stretch" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="AddNoteOnButton" x:Uid="AddNoteOnButton" Content="Note On" Click="OnAddNoteOn" />
+                                <Button x:Name="AddNoteOffButton" x:Uid="AddNoteOffButton" Content="Note Off" Click="OnAddNoteOff" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Name="ControlChangeExpander"
+                              x:Uid="ControlChangeExpander"
+                              Header="Control change"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="ControllerComboBox" x:Uid="ControllerPicker" Header="Controller" HorizontalAlignment="Stretch" />
+                            <ComboBox x:Name="ControllerValueComboBox" x:Uid="ControllerValuePicker" Header="Value" HorizontalAlignment="Stretch" />
+                            <Button x:Name="AddControlChangeButton" x:Uid="AddControlChangeButton" Content="Add control change" Click="OnAddControlChange" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Name="MoreMessagesExpander"
+                              x:Uid="MoreMessagesExpander"
+                              Header="More messages"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="6">
+                            <Button x:Name="AddProgramChangeButton" x:Uid="AddProgramChangeButton" Content="Program change" HorizontalAlignment="Stretch" Click="OnAddProgramChange" />
+                            <Button x:Name="AddPitchBendButton" x:Uid="AddPitchBendButton" Content="Pitch bend (centre)" HorizontalAlignment="Stretch" Click="OnAddPitchBend" />
+                            <Button x:Name="AddChannelPressureButton" x:Uid="AddChannelPressureButton" Content="Channel pressure" HorizontalAlignment="Stretch" Click="OnAddChannelPressure" />
+                            <Button x:Name="AddAllNotesOffButton" x:Uid="AddAllNotesOffButton" Content="All notes off" HorizontalAlignment="Stretch" Click="OnAddAllNotesOff" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Name="SysExExpander"
+                              x:Uid="SysExExpander"
+                              Header="System exclusive"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="6">
+                            <Button x:Name="AddIdentityRequestButton" x:Uid="AddIdentityRequestButton" Content="Identity request" HorizontalAlignment="Stretch" Click="OnAddIdentityRequest" />
+                            <Button x:Name="AddEmptySysExButton" x:Uid="AddEmptySysExButton" Content="Empty SysEx block" HorizontalAlignment="Stretch" Click="OnAddEmptySysEx" />
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ============================== UMP insert rail ============================ -->
+            <ScrollViewer x:Name="UmpInsertRail"
+                          Grid.Column="1"
+                          Width="248"
+                          Visibility="Collapsed"
+                          VerticalScrollBarVisibility="Auto"
+                          VerticalScrollMode="Auto">
+                <StackPanel Spacing="4" Margin="0,0,4,0">
+                    <TextBlock x:Uid="InsertHeader"
+                               Text="Insert"
+                               Margin="0,0,0,4"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                    <!-- the group is inside every UMP message, so it is picked here rather than
+                         in the header -->
+                    <ComboBox x:Name="UmpGroupComboBox"
+                              x:Uid="UmpGroupPicker"
+                              Header="Group"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="shared:NamedChoice">
+                                <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox x:Name="UmpChannelComboBox"
+                              x:Uid="UmpChannelPicker"
+                              Header="Channel"
+                              HorizontalAlignment="Stretch"
+                              Margin="0,0,0,4" />
+
+                    <Expander x:Uid="Midi2NotesExpander"
+                              Header="MIDI 2.0 notes"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch"
+                              IsExpanded="True">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="UmpNoteComboBox" x:Uid="UmpNotePicker" Header="Note" HorizontalAlignment="Stretch" />
+                            <NumberBox x:Name="Midi2VelocityBox"
+                                       x:Uid="Midi2VelocityBox"
+                                       Header="Velocity (16 bit)"
+                                       Value="32768"
+                                       Minimum="0"
+                                       Maximum="65535"
+                                       SpinButtonPlacementMode="Compact"
+                                       HorizontalAlignment="Stretch" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="AddMidi2NoteOnButton" x:Uid="AddMidi2NoteOnButton" Content="Note On" Click="OnAddMidi2NoteOn" />
+                                <Button x:Name="AddMidi2NoteOffButton" x:Uid="AddMidi2NoteOffButton" Content="Note Off" Click="OnAddMidi2NoteOff" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="Midi2ControlChangeExpander"
+                              Header="MIDI 2.0 control change"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="UmpControllerComboBox" x:Uid="UmpControllerPicker" Header="Controller" HorizontalAlignment="Stretch" />
+                            <NumberBox x:Name="Midi2ControllerValueBox"
+                                       x:Uid="Midi2ControllerValueBox"
+                                       Header="Value (32 bit)"
+                                       Value="0"
+                                       Minimum="0"
+                                       Maximum="4294967295"
+                                       SpinButtonPlacementMode="Compact"
+                                       HorizontalAlignment="Stretch" />
+                            <Button x:Name="AddMidi2ControlChangeButton" x:Uid="AddMidi2ControlChangeButton" Content="Add control change" HorizontalAlignment="Stretch" Click="OnAddMidi2ControlChange" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="Midi1NotesExpander"
+                              Header="MIDI 1.0 notes"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="Midi1NoteComboBox" x:Uid="Midi1NotePicker" Header="Note" HorizontalAlignment="Stretch" />
+                            <NumberBox x:Name="Midi1VelocityBox"
+                                       x:Uid="Midi1VelocityBox"
+                                       Header="Velocity (7 bit)"
+                                       Value="96"
+                                       Minimum="0"
+                                       Maximum="127"
+                                       SpinButtonPlacementMode="Compact"
+                                       HorizontalAlignment="Stretch" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="AddMidi1NoteOnButton" x:Uid="AddMidi1NoteOnButton" Content="Note On" Click="OnAddMidi1UmpNoteOn" />
+                                <Button x:Name="AddMidi1NoteOffButton" x:Uid="AddMidi1NoteOffButton" Content="Note Off" Click="OnAddMidi1UmpNoteOff" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="Midi1ControlChangeExpander"
+                              Header="MIDI 1.0 control change"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="8">
+                            <ComboBox x:Name="Midi1ControllerComboBox" x:Uid="Midi1ControllerPicker" Header="Controller" HorizontalAlignment="Stretch" />
+                            <NumberBox x:Name="Midi1ControllerValueBox"
+                                       x:Uid="Midi1ControllerValueBox"
+                                       Header="Value (7 bit)"
+                                       Value="64"
+                                       Minimum="0"
+                                       Maximum="127"
+                                       SpinButtonPlacementMode="Compact"
+                                       HorizontalAlignment="Stretch" />
+                            <Button x:Name="AddMidi1ControlChangeButton" x:Uid="AddMidi1ControlChangeButton" Content="Add control change" HorizontalAlignment="Stretch" Click="OnAddMidi1UmpControlChange" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="EndpointDiscoveryExpander"
+                              Header="Endpoint discovery"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="2">
+                            <CheckBox x:Name="DiscoverEndpointInfoCheck" x:Uid="DiscoverEndpointInfoCheck" Content="Endpoint info" IsChecked="True" />
+                            <CheckBox x:Name="DiscoverDeviceIdentityCheck" x:Uid="DiscoverDeviceIdentityCheck" Content="Device identity" IsChecked="True" />
+                            <CheckBox x:Name="DiscoverEndpointNameCheck" x:Uid="DiscoverEndpointNameCheck" Content="Endpoint name" IsChecked="True" />
+                            <CheckBox x:Name="DiscoverProductInstanceIdCheck" x:Uid="DiscoverProductInstanceIdCheck" Content="Product instance id" IsChecked="True" />
+                            <CheckBox x:Name="DiscoverStreamConfigurationCheck" x:Uid="DiscoverStreamConfigurationCheck" Content="Stream configuration" IsChecked="True" />
+                            <Button x:Uid="AddEndpointDiscoveryButton"
+                                    Content="Add discovery request"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,8,0,0"
+                                    Click="OnAddEndpointDiscovery" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Uid="SysEx7Expander"
+                              Header="System exclusive 7"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="6">
+                            <TextBlock x:Uid="SysEx7Note"
+                                       Text="Inserts a packet with zeroed data bytes, ready to edit."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Button x:Uid="AddSysEx7CompleteButton" Content="Complete in one packet" HorizontalAlignment="Stretch" Click="OnAddSysEx7Complete" />
+                            <Button x:Uid="AddSysEx7StartButton" Content="Start" HorizontalAlignment="Stretch" Click="OnAddSysEx7Start" />
+                            <Button x:Uid="AddSysEx7ContinueButton" Content="Continue" HorizontalAlignment="Stretch" Click="OnAddSysEx7Continue" />
+                            <Button x:Uid="AddSysEx7EndButton" Content="End" HorizontalAlignment="Stretch" Click="OnAddSysEx7End" />
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ================================= Send bar =================================== -->
+        <Grid Grid.Row="3" Margin="12,0,12,12" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button x:Name="SettingsButton"
+                        x:Uid="SettingsButton"
+                        TabIndex="10"
+                        Width="36"
+                        Height="32"
+                        Padding="0"
+                        Click="OnSettingsClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="16" />
+                </Button>
+                <ToggleSwitch x:Name="RunningStatusToggle"
+                              x:Uid="RunningStatusToggle"
+                              TabIndex="6"
+                              OnContent="Running status"
+                              OffContent="Running status"
+                              Toggled="OnRunningStatusToggled" />
+            </StackPanel>
+
+            <TextBlock x:Name="SendResultText"
+                       Grid.Column="1"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="ClearButton"
+                        x:Uid="ClearButton"
+                        TabIndex="7"
+                        Content="Clear"
+                        Click="OnClearClick" />
+                <Button x:Name="SendSelectionButton"
+                        x:Uid="SendSelectionButton"
+                        TabIndex="8"
+                        Content="Send selection"
+                        Click="OnSendSelectionClick" />
+                <Button x:Name="SendAllButton"
+                        x:Uid="SendAllButton"
+                        TabIndex="9"
+                        MinWidth="120"
+                        Content="Send all"
+                        Style="{ThemeResource AccentButtonStyle}"
+                        Click="OnSendAllClick" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

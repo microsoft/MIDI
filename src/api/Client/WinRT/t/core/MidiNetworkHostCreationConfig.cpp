@@ -111,7 +111,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             // yes, we advertise over mDNS
             config->m_advertise = true;
 
-            // create MIDI 1 API ports for this
+            // UMP endpoints only by default. A caller which wants the compatibility MIDI 1.0
+            // ports for connected clients sets CreateOnlyUmpEndpoints to false.
             config->m_umpOnly = true;
 
             // default to no authentication.
@@ -188,7 +189,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY,
-            json::JsonValue::CreateStringValue(MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
+            json::JsonValue::CreateStringValue(
+                RemoteClientPolicy() == network::MidiNetworkRemoteClientPolicy::RequireApproval ?
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL :
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
 
 
         json::JsonObject hostsContainer{};

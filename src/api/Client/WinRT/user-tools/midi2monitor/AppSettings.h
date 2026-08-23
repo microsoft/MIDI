@@ -7,8 +7,16 @@
 
 #pragma once
 
+#include "MidiAppSettings.h"
+
 namespace midi2monitor
 {
+    // appearance and window placement live in the shared base, but stay reachable through the
+    // app's own namespace so existing call sites read the same
+    using midiapp::AppTheme;
+    using midiapp::WindowBackdrop;
+    using midiapp::WindowPlacementInfo;
+
     enum class TimestampDisplayFormat : int32_t
     {
         Ticks = 0,
@@ -17,34 +25,9 @@ namespace midi2monitor
         Seconds = 3
     };
 
-    enum class AppTheme : int32_t
-    {
-        System = 0,
-        Light = 1,
-        Dark = 2
-    };
-
-    enum class WindowBackdrop : int32_t
-    {
-        Solid = 0,
-        Mica = 1,
-        Acrylic = 2
-    };
-
-    // Restore bounds, so a maximized window still reopens at its previous size.
-    struct WindowPlacementInfo
-    {
-        int32_t X{ 0 };
-        int32_t Y{ 0 };
-        int32_t Width{ 0 };
-        int32_t Height{ 0 };
-        bool Maximized{ false };
-        bool Valid{ false };
-    };
-
     // Per-user settings, persisted under HKCU so that every instance of the app picks up the
     // same defaults. Reads and writes never throw; on failure the in-memory value is used.
-    class AppSettings
+    class AppSettings : public midiapp::MidiAppSettings
     {
     public:
         static AppSettings& Current() noexcept;
@@ -57,24 +40,8 @@ namespace midi2monitor
         bool ShowActiveSenseMessages() const noexcept { return m_showActiveSenseMessages; }
         void ShowActiveSenseMessages(bool value) noexcept;
 
-        bool AlwaysOnTop() const noexcept { return m_alwaysOnTop; }
-        void AlwaysOnTop(bool value) noexcept;
-
         TimestampDisplayFormat TimestampFormat() const noexcept { return m_timestampFormat; }
         void TimestampFormat(TimestampDisplayFormat value) noexcept;
-
-        AppTheme Theme() const noexcept { return m_theme; }
-        void Theme(AppTheme value) noexcept;
-
-        WindowBackdrop Backdrop() const noexcept { return m_backdrop; }
-        void Backdrop(WindowBackdrop value) noexcept;
-
-        bool UseCustomBackgroundColor() const noexcept { return m_useCustomBackgroundColor; }
-        void UseCustomBackgroundColor(bool value) noexcept;
-
-        // 0xAARRGGBB
-        uint32_t BackgroundColorArgb() const noexcept { return m_backgroundColorArgb; }
-        void BackgroundColorArgb(uint32_t value) noexcept;
 
         uint32_t RetainedMessageCount() const noexcept { return m_retainedMessageCount; }
         void RetainedMessageCount(uint32_t value) noexcept;
@@ -91,9 +58,6 @@ namespace midi2monitor
 
         uint32_t TableZoomPercent() const noexcept { return m_tableZoomPercent; }
         void TableZoomPercent(uint32_t value) noexcept;
-
-        WindowPlacementInfo const& WindowPlacement() const noexcept { return m_windowPlacement; }
-        void WindowPlacement(WindowPlacementInfo const& value) noexcept;
 
         static constexpr uint32_t MinimumRetainedMessageCount = 100;
         static constexpr uint32_t MaximumRetainedMessageCount = 500000;
@@ -115,26 +79,15 @@ namespace midi2monitor
         static constexpr int32_t MinimumWindowHeight = 400;
 
     private:
-        AppSettings() = default;
-
-        void WriteDword(std::wstring_view valueName, uint32_t value) const noexcept;
-        void WriteString(std::wstring_view valueName, std::wstring const& value) const noexcept;
-        uint32_t ReadDword(std::wstring_view valueName, uint32_t defaultValue) const noexcept;
-        std::wstring ReadString(std::wstring_view valueName, std::wstring const& defaultValue) const noexcept;
+        AppSettings() noexcept;
 
         bool m_showClockMessages{ false };
         bool m_showActiveSenseMessages{ false };
-        bool m_alwaysOnTop{ false };
         bool m_showMessageNameChiclets{ true };
         bool m_autoHideColumnsWhenNarrow{ true };
         TimestampDisplayFormat m_timestampFormat{ TimestampDisplayFormat::Ticks };
-        AppTheme m_theme{ AppTheme::System };
-        WindowBackdrop m_backdrop{ WindowBackdrop::Solid };
-        bool m_useCustomBackgroundColor{ false };
-        uint32_t m_backgroundColorArgb{ 0xFF202020 };
         uint32_t m_retainedMessageCount{ DefaultRetainedMessageCount };
         uint32_t m_tableZoomPercent{ DefaultZoomPercent };
         std::wstring m_columnLayout{};
-        WindowPlacementInfo m_windowPlacement{};
     };
 }

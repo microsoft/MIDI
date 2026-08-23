@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace midisysextool
+{
+    // One received UMP message: the two words as they arrived, and the MIDI 1.0 bytes they
+    // carry. A dump runs to thousands of messages, so rows are plain data and the ListView
+    // realizes only the handful on screen.
+    [default_interface]
+    runtimeclass SysExRow
+    {
+        SysExRow();
+
+        String MessageNumber{ get; };
+
+        // "30160020 3C010001"
+        String Words{ get; };
+
+        // status derived, drives the word color: 0 data/continue, 1 start, 2 end, 4 complete
+        UInt8 WordKind{ get; };
+
+        // "F0 " when this message opens a SysEx, otherwise three spaces so the data lines up
+        String BytePrefix{ get; };
+
+        String ByteData{ get; };
+
+        // " F7" when this message closes a SysEx
+        String ByteSuffix{ get; };
+
+        // set when the status nibble does not follow on from the previous message
+        Boolean IsOutOfSequence{ get; };
+    }
+}

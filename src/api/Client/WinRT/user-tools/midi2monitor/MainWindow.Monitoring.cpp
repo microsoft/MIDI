@@ -21,140 +21,6 @@ namespace res = ::midi2monitor::resources;
 
 namespace winrt::midi2monitor::implementation
 {
-    namespace
-    {
-        constexpr wchar_t EndpointImageFolder[] = LR"(%allusersprofile%\Microsoft\MIDI\Assets\Endpoints\)";
-
-        winrt::hstring ExpandPath(std::wstring const& path) noexcept
-        {
-            wchar_t expanded[MAX_PATH + 1]{};
-
-            if (::ExpandEnvironmentStringsW(path.c_str(), expanded, ARRAYSIZE(expanded)) == 0)
-            {
-                return {};
-            }
-
-            return winrt::hstring{ expanded };
-        }
-
-        // The stored value is a bare file name inside the shared assets folder. Anything with a
-        // path separator, a wildcard, or an environment variable is rejected rather than
-        // resolved, so a tampered configuration cannot point us at an arbitrary file.
-        winrt::hstring ResolveEndpointImagePath(winrt::hstring const& imageFileName) noexcept
-        {
-            try
-            {
-                if (imageFileName.empty() || imageFileName.size() > MAX_PATH)
-                {
-                    return {};
-                }
-
-                for (auto const ch : imageFileName)
-                {
-                    if (ch == L'\\' || ch == L'/' || ch == L':' || ch == L'%' || ch == L'?' || ch == L'*' || ch == L'"')
-                    {
-                        return {};
-                    }
-                }
-
-                if (imageFileName == L"." || imageFileName == L"..")
-                {
-                    return {};
-                }
-
-                auto const fullPath = ExpandPath(std::wstring{ EndpointImageFolder } + std::wstring{ imageFileName });
-
-                if (fullPath.empty() || !::PathFileExistsW(fullPath.c_str()))
-                {
-                    return {};
-                }
-
-                return fullPath;
-            }
-            MIDI_MONITOR_CATCH_AND_LOG(L"Unable to resolve the endpoint image path.")
-
-            return {};
-        }
-
-        winrt::hstring DescribeGroup(midi2enum::MidiEndpointDeviceInformation const& endpoint, uint8_t groupIndex) noexcept
-        {
-            try
-            {
-                if (endpoint != nullptr)
-                {
-                    midi2::MidiGroup const group{ groupIndex };
-
-                    for (auto const& functionBlock : endpoint.GetDeclaredFunctionBlocks())
-                    {
-                        if (functionBlock.IncludesGroup(group) && !functionBlock.Name().empty())
-                        {
-                            return functionBlock.Name();
-                        }
-                    }
-
-                    for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
-                    {
-                        if (terminalBlock.IncludesGroup(group) && !terminalBlock.Name().empty())
-                        {
-                            return terminalBlock.Name();
-                        }
-                    }
-                }
-            }
-            MIDI_MONITOR_CATCH_AND_LOG(L"Unable to describe the group.")
-
-            return {};
-        }
-
-        // Union of every group covered by a declared function block or group terminal block.
-        // A block covers GroupCount contiguous groups starting at FirstGroup, so FirstGroup 3
-        // with GroupCount 2 contributes groups 3 and 4.
-        std::array<bool, 16> DeclaredGroups(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept
-        {
-            std::array<bool, 16> declared{};
-
-            try
-            {
-                if (endpoint != nullptr)
-                {
-                    auto const cover = [&declared](uint8_t firstGroupIndex, uint8_t groupCount) noexcept
-                        {
-                            auto const last = static_cast<uint32_t>(firstGroupIndex) + groupCount;
-
-                            for (uint32_t i = firstGroupIndex; i < last && i < declared.size(); i++)
-                            {
-                                declared[i] = true;
-                            }
-                        };
-
-                    for (auto const& functionBlock : endpoint.GetDeclaredFunctionBlocks())
-                    {
-                        if (auto const first = functionBlock.FirstGroup())
-                        {
-                            cover(first.Index(), functionBlock.GroupCount());
-                        }
-                    }
-
-                    for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
-                    {
-                        if (auto const first = terminalBlock.FirstGroup())
-                        {
-                            cover(first.Index(), terminalBlock.GroupCount());
-                        }
-                    }
-                }
-            }
-            MIDI_MONITOR_CATCH_AND_LOG(L"Unable to read the declared groups.")
-
-            // a device that declares nothing still has to be watchable
-            if (std::none_of(declared.begin(), declared.end(), [](bool value) { return value; }))
-            {
-                declared.fill(true);
-            }
-
-            return declared;
-        }
-    }
 
     // ------------------------------------------------------------------------------------
     // Endpoint watcher
@@ -237,19 +103,7 @@ namespace winrt::midi2monitor::implementation
 
             auto const previousSelection = SelectedEndpointDeviceId();
 
-            std::vector<midi2enum::MidiEndpointDeviceInformation> devices{};
-
-            for (auto const& entry : m_watcher.EnumeratedEndpointDevices())
-            {
-                devices.push_back(entry.Value());
-            }
-
-            std::sort(devices.begin(), devices.end(),
-                [](auto const& left, auto const& right)
-                {
-                    return ::CompareStringOrdinal(
-                        left.Name().c_str(), -1, right.Name().c_str(), -1, TRUE) == CSTR_LESS_THAN;
-                });
+            auto const devices = midiapp::SortedEndpoints(m_watcher);
 
             m_suppressSelectionHandling = true;
 
@@ -262,10 +116,10 @@ namespace winrt::midi2monitor::implementation
 
                 if (auto const userInfo = device.GetUserSuppliedInfo())
                 {
-                    imagePath = ResolveEndpointImagePath(userInfo.ImageFileName());
+                    imagePath = midiapp::ResolveEndpointImagePath(userInfo.ImageFileName());
                 }
 
-                m_endpoints.Append(winrt::make<EndpointChoice>(device.Name(), device.EndpointDeviceId(), imagePath));
+                m_endpoints.Append(winrt::make<appshared::implementation::EndpointChoice>(device.Name(), device.EndpointDeviceId(), imagePath));
                 m_endpointDevices.push_back(device);
             }
 
@@ -315,7 +169,7 @@ namespace winrt::midi2monitor::implementation
         {
             auto const selected = EndpointComboBox().SelectedItem();
 
-            if (auto const choice = selected.try_as<midi2monitor::EndpointChoice>())
+            if (auto const choice = selected.try_as<appshared::EndpointChoice>())
             {
                 return choice.EndpointDeviceId();
             }
@@ -329,7 +183,7 @@ namespace winrt::midi2monitor::implementation
     {
         try
         {
-            if (auto const choice = GroupComboBox().SelectedItem().try_as<midi2monitor::NamedChoice>())
+            if (auto const choice = GroupComboBox().SelectedItem().try_as<appshared::NamedChoice>())
             {
                 return static_cast<uint8_t>(std::clamp(choice.Value(), 0, 16));
             }
@@ -343,7 +197,7 @@ namespace winrt::midi2monitor::implementation
     {
         try
         {
-            if (auto const choice = ChannelComboBox().SelectedItem().try_as<midi2monitor::NamedChoice>())
+            if (auto const choice = ChannelComboBox().SelectedItem().try_as<appshared::NamedChoice>())
             {
                 return static_cast<uint8_t>(std::clamp(choice.Value(), 0, 16));
             }
@@ -416,12 +270,12 @@ namespace winrt::midi2monitor::implementation
             m_suppressSelectionHandling = true;
 
             m_groups.Clear();
-            m_groups.Append(winrt::make<NamedChoice>(res::GetString(L"GroupChoiceAll"), 0));
+            m_groups.Append(winrt::make<appshared::implementation::NamedChoice>(res::GetString(L"GroupChoiceAll"), 0));
 
             if (endpointIndex >= 0 && static_cast<size_t>(endpointIndex) < m_endpointDevices.size())
             {
                 auto const& endpoint = m_endpointDevices[static_cast<size_t>(endpointIndex)];
-                auto const declared = DeclaredGroups(endpoint);
+                auto const declared = midiapp::DeclaredGroups(endpoint);
 
                 for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
                 {
@@ -430,14 +284,14 @@ namespace winrt::midi2monitor::implementation
                         continue;
                     }
 
-                    auto const description = DescribeGroup(endpoint, groupIndex);
+                    auto const description = midiapp::DescribeGroup(endpoint, groupIndex);
                     auto const groupNumber = static_cast<int32_t>(groupIndex) + 1;
 
                     auto const label = description.empty()
                         ? res::FormatString(L"GroupChoiceFormat", groupNumber)
                         : res::FormatString(L"GroupChoiceNamedFormat", groupNumber, description);
 
-                    m_groups.Append(winrt::make<NamedChoice>(label, groupNumber));
+                    m_groups.Append(winrt::make<appshared::implementation::NamedChoice>(label, groupNumber));
                 }
             }
 
@@ -511,7 +365,7 @@ namespace winrt::midi2monitor::implementation
     {
         try
         {
-            auto const choice = EndpointComboBox().SelectedItem().try_as<midi2monitor::EndpointChoice>();
+            auto const choice = EndpointComboBox().SelectedItem().try_as<appshared::EndpointChoice>();
 
             if (choice == nullptr || choice.ImagePath().empty())
             {
@@ -637,7 +491,7 @@ namespace winrt::midi2monitor::implementation
         {
             endpointId = SelectedEndpointDeviceId();
 
-            if (auto const choice = EndpointComboBox().SelectedItem().try_as<midi2monitor::EndpointChoice>())
+            if (auto const choice = EndpointComboBox().SelectedItem().try_as<appshared::EndpointChoice>())
             {
                 endpointName = choice.DisplayName();
             }

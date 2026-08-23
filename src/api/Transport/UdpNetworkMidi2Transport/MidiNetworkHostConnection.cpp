@@ -229,6 +229,58 @@ MidiNetworkHostConnection::DenyByUser()
     return EndActiveSession(false);
 }
 
+HRESULT
+MidiNetworkHostConnection::DisconnectByUser()
+{
+    auto identity = GetRemoteClientIdentity();
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"A user disconnected this remote client.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(identity.UmpEndpointName.c_str(), "client endpoint name"),
+        TraceLoggingWideString(identity.ProductInstanceId.c_str(), "client product instance id")
+    );
+
+    // A remote which is still parked on an approval decision has had a Pending reply and nothing
+    // since. Spec 6.6 says that has to be closed out with a Bye, which is what DenyByUser sends.
+    if (m_awaitingUserApproval)
+    {
+        RETURN_IF_FAILED(DenyByUser());
+    }
+    else
+    {
+        LOG_IF_FAILED(SendUserTerminatedByeAndAwaitReply());
+    }
+
+    // Releasing the connection is what makes the remote disappear from the enumerateHosts feed.
+    // Left registered it would linger until the idle reaper happened to run, which needs a new
+    // invitation to arrive, so a disconnected client could sit in the list indefinitely.
+    auto remoteHostName = GetRemoteHostName();
+
+    if (remoteHostName != nullptr)
+    {
+        LOG_IF_FAILED(TransportState::Current().RemoveNetworkConnection(
+            remoteHostName,
+            winrt::hstring{ GetRemotePort() }));
+    }
+
+    // Teardown deletes the MIDI endpoint, which blocks on the device manager. This is called
+    // from a service configuration call, so it goes to the worker rather than blocking it.
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    if (endpointManager != nullptr)
+    {
+        return endpointManager->QueueConnectionShutdown(
+            std::static_pointer_cast<MidiNetworkConnection>(shared_from_this()));
+    }
+
+    return Shutdown();
+}
+
 _Use_decl_annotations_
 HRESULT
 MidiNetworkHostConnection::HandleIncomingInvitation(

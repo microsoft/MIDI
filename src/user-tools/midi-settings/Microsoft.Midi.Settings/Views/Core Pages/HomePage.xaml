@@ -178,18 +178,7 @@
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
-                                    <controls:SettingsCard IsClickEnabled="True" 
-                                                           Visibility="{x:Bind ViewModel.IsNetworkMidi2Available, Mode=OneWay,Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                           Command="{x:Bind ViewModel.CommonTaskSetUpNetworkMidi2Command}">
-                                        <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_SetUpNetworkMidi2" TextWrapping="WrapWholeWords" />
-                                        </controls:SettingsCard.Header>
-                                        <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xee77;" Style="{StaticResource CommonTasksIconStyles}"/>
-                                        </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>
-
-                                    
+                                  
                                     
                                     
                                     

@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI Scratch Pad</value>
+  </data>
+  <data name="WindowTitleFormat" xml:space="preserve">
+    <value>{0} - {1}</value>
+    <comment>{0} is the device name, {1} is the app name</comment>
+  </data>
+  <data name="CommonClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+
+  <data name="EndpointPickerLabel.Text" xml:space="preserve">
+    <value>MIDI Device</value>
+  </data>
+  <data name="EndpointPicker.PlaceholderText" xml:space="preserve">
+    <value>Choose a device</value>
+  </data>
+  <data name="EndpointPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI device</value>
+  </data>
+  <data name="GroupPickerLabel.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="GroupPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ModePickerLabel.Text" xml:space="preserve">
+    <value>Send as</value>
+  </data>
+  <data name="Midi1ModeButton.Content" xml:space="preserve">
+    <value>MIDI 1.0 bytes</value>
+  </data>
+  <data name="UmpModeButton.Content" xml:space="preserve">
+    <value>UMP words</value>
+  </data>
+
+  <data name="GroupChoiceFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="GroupChoiceNamedFormat" xml:space="preserve">
+    <value>Group {0} - {1}</value>
+  </data>
+  <data name="ChannelChoiceFormat" xml:space="preserve">
+    <value>Channel {0}</value>
+  </data>
+
+  <data name="EditorTextBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Message editor</value>
+  </data>
+  <data name="EditorPlaceholderMidi1" xml:space="preserve">
+    <value>Type MIDI 1.0 bytes in hex, for example 90 3C 40. Use # for a comment.</value>
+  </data>
+  <data name="EditorPlaceholderUmp" xml:space="preserve">
+    <value>Type UMP words in hex, eight digits each, for example 20903C40. Use # for a comment.</value>
+  </data>
+
+  <data name="InsertHeader.Text" xml:space="preserve">
+    <value>Insert</value>
+  </data>
+  <data name="NotesExpander.Header" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="ControlChangeExpander.Header" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="MoreMessagesExpander.Header" xml:space="preserve">
+    <value>More messages</value>
+  </data>
+  <data name="SysExExpander.Header" xml:space="preserve">
+    <value>System exclusive</value>
+  </data>
+  <data name="ChannelPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="NotePicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="VelocityPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="ControllerPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="ControllerValuePicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Controller value</value>
+  </data>
+  <data name="AddNoteOnButton.Content" xml:space="preserve">
+    <value>Note On</value>
+  </data>
+  <data name="AddNoteOffButton.Content" xml:space="preserve">
+    <value>Note Off</value>
+  </data>
+  <data name="AddControlChangeButton.Content" xml:space="preserve">
+    <value>Add control change</value>
+  </data>
+  <data name="AddProgramChangeButton.Content" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="AddPitchBendButton.Content" xml:space="preserve">
+    <value>Pitch bend (center)</value>
+  </data>
+  <data name="AddChannelPressureButton.Content" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="AddAllNotesOffButton.Content" xml:space="preserve">
+    <value>All notes off</value>
+  </data>
+  <data name="AddIdentityRequestButton.Content" xml:space="preserve">
+    <value>Identity request</value>
+  </data>
+  <data name="AddEmptySysExButton.Content" xml:space="preserve">
+    <value>Empty SysEx block</value>
+  </data>
+
+  <data name="StatusEmpty" xml:space="preserve">
+    <value>Nothing to send yet</value>
+  </data>
+  <data name="StatusMidi1Format" xml:space="preserve">
+    <value>{0} bytes ready to send</value>
+  </data>
+  <data name="StatusUmpFormat" xml:space="preserve">
+    <value>{0} words, {1} packets ready to send</value>
+  </data>
+  <data name="StatusErrorWithLine" xml:space="preserve">
+    <value>Line {0}: {1}</value>
+  </data>
+  <data name="ParseErrorNotHex" xml:space="preserve">
+    <value>"{0}" is not a hexadecimal value</value>
+  </data>
+  <data name="ParseErrorOddDigits" xml:space="preserve">
+    <value>"{0}" has an odd number of digits, so it is not a whole number of bytes</value>
+  </data>
+  <data name="ParseErrorWordLength" xml:space="preserve">
+    <value>"{0}" is not eight digits, so it is not a whole UMP word</value>
+  </data>
+  <data name="ParseErrorIncompletePacket" xml:space="preserve">
+    <value>the last message is missing some of its words</value>
+  </data>
+  <data name="ParseErrorUnknownMessageType" xml:space="preserve">
+    <value>that message type is not recognized</value>
+  </data>
+  <data name="ParseErrorGeneral" xml:space="preserve">
+    <value>the text could not be read</value>
+  </data>
+
+  <data name="RunningStatusToggle.OnContent" xml:space="preserve">
+    <value>Running status</value>
+  </data>
+  <data name="RunningStatusToggle.OffContent" xml:space="preserve">
+    <value>Running status</value>
+  </data>
+  <data name="ClearButton.Content" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="SendSelectionButton.Content" xml:space="preserve">
+    <value>Send selection</value>
+  </data>
+  <data name="SendAllButton.Content" xml:space="preserve">
+    <value>Send all</value>
+  </data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+
+  <data name="SendSucceededFormat" xml:space="preserve">
+    <value>Sent {0} words</value>
+  </data>
+  <data name="SendSucceededMidi1Format" xml:space="preserve">
+    <value>Sent {0} bytes as {1} UMP words</value>
+  </data>
+  <data name="SendSucceededUmpFormat" xml:space="preserve">
+    <value>Sent {0} UMP words</value>
+  </data>
+  <data name="UmpGroupPicker.Header" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="UmpChannelPicker.Header" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="UmpNotePicker.Header" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="UmpControllerPicker.Header" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="Midi2NotesExpander.Header" xml:space="preserve">
+    <value>MIDI 2.0 notes</value>
+  </data>
+  <data name="Midi2VelocityBox.Header" xml:space="preserve">
+    <value>Velocity (16 bit)</value>
+  </data>
+  <data name="AddMidi2NoteOnButton.Content" xml:space="preserve">
+    <value>Note On</value>
+  </data>
+  <data name="AddMidi2NoteOffButton.Content" xml:space="preserve">
+    <value>Note Off</value>
+  </data>
+  <data name="Midi2ControlChangeExpander.Header" xml:space="preserve">
+    <value>MIDI 2.0 control change</value>
+  </data>
+  <data name="Midi2ControllerValueBox.Header" xml:space="preserve">
+    <value>Value (32 bit)</value>
+  </data>
+  <data name="AddMidi2ControlChangeButton.Content" xml:space="preserve">
+    <value>Add control change</value>
+  </data>
+  <data name="Midi1InUmpExpander.Header" xml:space="preserve">
+    <value>MIDI 1.0 in UMP</value>
+  </data>
+  <data name="Midi1VelocityBox.Header" xml:space="preserve">
+    <value>Velocity (7 bit)</value>
+  </data>
+  <data name="AddMidi1NoteOnButton.Content" xml:space="preserve">
+    <value>Note On</value>
+  </data>
+  <data name="AddMidi1NoteOffButton.Content" xml:space="preserve">
+    <value>Note Off</value>
+  </data>
+  <data name="Midi1ControllerValueBox.Header" xml:space="preserve">
+    <value>Value (7 bit)</value>
+  </data>
+  <data name="AddMidi1ControlChangeButton.Content" xml:space="preserve">
+    <value>Add control change</value>
+  </data>
+  <data name="EndpointDiscoveryExpander.Header" xml:space="preserve">
+    <value>Endpoint discovery</value>
+  </data>
+  <data name="DiscoverEndpointInfoCheck.Content" xml:space="preserve">
+    <value>Endpoint info</value>
+  </data>
+  <data name="DiscoverDeviceIdentityCheck.Content" xml:space="preserve">
+    <value>Device identity</value>
+  </data>
+  <data name="DiscoverEndpointNameCheck.Content" xml:space="preserve">
+    <value>Endpoint name</value>
+  </data>
+  <data name="DiscoverProductInstanceIdCheck.Content" xml:space="preserve">
+    <value>Product instance id</value>
+  </data>
+  <data name="DiscoverStreamConfigurationCheck.Content" xml:space="preserve">
+    <value>Stream configuration</value>
+  </data>
+  <data name="AddEndpointDiscoveryButton.Content" xml:space="preserve">
+    <value>Add discovery request</value>
+  </data>
+  <data name="SysEx7Expander.Header" xml:space="preserve">
+    <value>System exclusive 7</value>
+  </data>
+  <data name="SysEx7Note.Text" xml:space="preserve">
+    <value>Inserts a packet with zeroed data bytes, ready to edit.</value>
+  </data>
+  <data name="AddSysEx7CompleteButton.Content" xml:space="preserve">
+    <value>Complete in one packet</value>
+  </data>
+  <data name="AddSysEx7StartButton.Content" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="AddSysEx7ContinueButton.Content" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="AddSysEx7EndButton.Content" xml:space="preserve">
+    <value>End</value>
+  </data>
+
+  <data name="AddMidi2NoteOnButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI 2.0 note on</value>
+  </data>
+  <data name="AddMidi2NoteOffButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI 2.0 note off</value>
+  </data>
+  <data name="AddMidi2ControlChangeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add MIDI 2.0 control change</value>
+  </data>
+  <data name="AddMidi1NoteOnButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI 1.0 note on</value>
+  </data>
+  <data name="AddMidi1NoteOffButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI 1.0 note off</value>
+  </data>
+  <data name="AddMidi1ControlChangeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add MIDI 1.0 control change</value>
+  </data>
+
+  <data name="SendErrorNoEndpoint" xml:space="preserve">
+    <value>Choose a MIDI device first</value>
+  </data>
+  <data name="SendErrorNoGroup" xml:space="preserve">
+    <value>Choose a group first</value>
+  </data>
+  <data name="SendErrorNothingToSend" xml:space="preserve">
+    <value>There is nothing valid to send</value>
+  </data>
+  <data name="SendErrorSelectionInvalid" xml:space="preserve">
+    <value>The selected text is not a complete set of messages</value>
+  </data>
+  <data name="SendErrorConversionFailed" xml:space="preserve">
+    <value>Those bytes did not convert to MIDI messages</value>
+  </data>
+  <data name="SendErrorNoSession" xml:space="preserve">
+    <value>Unable to start a MIDI session</value>
+  </data>
+  <data name="SendErrorOpenFailed" xml:space="preserve">
+    <value>Unable to open a connection to that device</value>
+  </data>
+  <data name="SendErrorSendFailed" xml:space="preserve">
+    <value>The device did not accept the messages</value>
+  </data>
+
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>App color mode</value>
+  </data>
+  <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Use my Windows setting</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropLabel" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="SettingsBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom background color</value>
+  </data>
+  <data name="SettingsColorPickerName" xml:space="preserve">
+    <value>Background color</value>
+  </data>
+
+  <data name="ServiceUnavailableTitle" xml:space="preserve">
+    <value>Windows MIDI Services is not available</value>
+  </data>
+  <data name="ServiceUnavailableBody" xml:space="preserve">
+    <value>The MIDI service is not running, so no devices can be reached. Start the service and open this app again.</value>
+  </data>
+
+  <data name="CommandLineErrorTooManyEndpoints" xml:space="preserve">
+    <value>More than one device id was supplied: {0}</value>
+  </data>
+  <data name="CommandLineErrorMissingValue" xml:space="preserve">
+    <value>{0} needs a value</value>
+  </data>
+  <data name="CommandLineErrorInvalidGroup" xml:space="preserve">
+    <value>"{0}" is not a group number between 1 and 16</value>
+  </data>
+  <data name="CommandLineErrorInvalidMode" xml:space="preserve">
+    <value>"{0}" is not a mode. Use bytes or ump.</value>
+  </data>
+  <data name="CommandLineErrorUnknownOption" xml:space="preserve">
+    <value>"{0}" is not an option this app understands</value>
+  </data>
+  <data name="CommandLineErrorGroupWithoutEndpoint" xml:space="preserve">
+    <value>A group only makes sense together with a device id</value>
+  </data>
+  <data name="CommandLineErrorGroupWithUmpMode" xml:space="preserve">
+    <value>A group cannot be used with UMP mode, because the group travels inside the message</value>
+  </data>
+  <data name="CommandLineErrorGeneral" xml:space="preserve">
+    <value>The command line could not be read</value>
+  </data>
+</root>

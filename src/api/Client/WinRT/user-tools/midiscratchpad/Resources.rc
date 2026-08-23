@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include <windows.h>
+#include <ntverp.h>
+#include "resource.h"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows MIDI Scratch Pad"
+#define VER_INTERNALNAME_STR        "midiscratchpad.exe"
+#define VER_ORIGINALFILENAME_STR    "midiscratchpad.exe"
+#undef VER_COMPANYNAME_STR
+#define VER_COMPANYNAME_STR         "Microsoft"
+#define VER_LEGALCOPYRIGHT_STR      "Copyright (c) Microsoft Corporation"
+#undef VER_PRODUCTNAME_STR
+#define VER_PRODUCTNAME_STR         "Windows MIDI Services"
+#define VER_FILEVERSION_STR         "1.0.0.1"
+#undef VER_PRODUCTVERSION_STR
+#define VER_PRODUCTVERSION_STR      "1.0.0.1"
+
+// this builds the version resource based on the above
+#include "common.ver"
+
+IDI_APPICON ICON "Assets\\AppIcon.ico"

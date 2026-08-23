@@ -202,17 +202,33 @@ namespace NetworkMidiTest
     }
 
 
+    ServiceConfigResult QueryCapabilities()
+    {
+        return SendNetworkTransportConfig(
+            L"{\"transportCommand\":{\"commandName\":\"queryCapabilities\"}}");
+    }
+
+
     ServiceConfigResult CreateDirectClient(
         std::wstring const& entryIdentifier,
         std::wstring const& hostNameOrAddress,
         uint16_t const port,
-        bool const createMidi1Ports)
+        bool const createMidi1Ports,
+        std::wstring const& customEndpointName)
     {
+        std::wstring customNameEntry{};
+
+        if (!customEndpointName.empty())
+        {
+            customNameEntry = L"\"customEndpointName\":\"" + EscapeJsonString(customEndpointName) + L"\",";
+        }
+
         // directPort is read with GetNamedString, so it has to be quoted
         std::wstring json =
             L"{\"create\":{\"clients\":{\"" + EscapeJsonString(entryIdentifier) + L"\":{"
             L"\"networkProtocol\":\"udp\","
             L"\"enabled\":true,"
+            + customNameEntry +
             L"\"createMidi1Ports\":" + std::wstring(createMidi1Ports ? L"true" : L"false") + L","
             L"\"match\":{"
             L"\"directHostNameOrIP\":\"" + EscapeJsonString(hostNameOrAddress) + L"\","
@@ -242,8 +258,16 @@ namespace NetworkMidiTest
         std::wstring const& entryIdentifier,
         std::wstring const& hostNameOrAddress,
         uint16_t const port,
-        std::wstring const& umpEndpointName)
+        std::wstring const& umpEndpointName,
+        std::wstring const& customEndpointName)
     {
+        std::wstring customNameArgument{};
+
+        if (!customEndpointName.empty())
+        {
+            customNameArgument = L",\"customEndpointName\":\"" + EscapeJsonString(customEndpointName) + L"\"";
+        }
+
         std::wstring json =
             L"{\"transportCommand\":{"
             L"\"commandName\":\"connectDirect\","
@@ -252,6 +276,34 @@ namespace NetworkMidiTest
             L"\"remoteAddress\":\"" + EscapeJsonString(hostNameOrAddress) + L"\","
             L"\"remotePort\":\"" + std::to_wstring(port) + L"\","
             L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\""
+            + customNameArgument +
+            L"}}}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
+    ServiceConfigResult ConnectMdnsClient(
+        std::wstring const& entryIdentifier,
+        std::wstring const& matchId,
+        std::wstring const& umpEndpointName,
+        std::wstring const& customEndpointName)
+    {
+        std::wstring customNameArgument{};
+
+        if (!customEndpointName.empty())
+        {
+            customNameArgument = L",\"customEndpointName\":\"" + EscapeJsonString(customEndpointName) + L"\"";
+        }
+
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"connectMdns\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(entryIdentifier) + L"\","
+            L"\"matchId\":\"" + EscapeJsonString(matchId) + L"\","
+            L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\""
+            + customNameArgument +
             L"}}}";
 
         return SendNetworkTransportConfig(json);
@@ -279,7 +331,8 @@ namespace NetworkMidiTest
         std::wstring const& umpEndpointName,
         std::wstring const& productInstanceId,
         std::wstring const& serviceInstanceName,
-        bool const requireApproval)
+        bool const requireApproval,
+        std::wstring const& port)
     {
         // advertise is off so these short-lived test hosts do not appear over mDNS and get
         // picked up by anything else on the network.
@@ -292,7 +345,7 @@ namespace NetworkMidiTest
             L"\"productInstanceId\":\"" + EscapeJsonString(productInstanceId) + L"\","
             L"\"serviceInstanceName\":\"" + EscapeJsonString(serviceInstanceName) + L"\","
             L"\"networkProtocol\":\"udp\","
-            L"\"port\":\"auto\","
+            L"\"port\":\"" + EscapeJsonString(port) + L"\","
             L"\"enabled\":true,"
             L"\"advertise\":false,"
             L"\"remoteClientPolicy\":\"" +
@@ -300,10 +353,11 @@ namespace NetworkMidiTest
             L"}}}}";
 
         Log::Comment(String().Format(
-            L"Creating host %s (%s) serviceInstanceName=%s policy=%s",
+            L"Creating host %s (%s) serviceInstanceName=%s port=%s policy=%s",
             entryIdentifier.c_str(),
             umpEndpointName.c_str(),
             serviceInstanceName.c_str(),
+            port.c_str(),
             requireApproval ? L"requireApproval" : L"allowAny"));
 
         return SendNetworkTransportConfig(json);
@@ -440,5 +494,28 @@ namespace NetworkMidiTest
     {
         return RemoteClientDecision(
             L"denyRemoteClient", hostEntryIdentifier, umpEndpointName, productInstanceId, scope);
+    }
+
+
+    ServiceConfigResult DisconnectRemoteClient(
+        std::wstring const& hostEntryIdentifier,
+        std::wstring const& umpEndpointName,
+        std::wstring const& productInstanceId)
+    {
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"disconnectRemoteClient\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(hostEntryIdentifier) + L"\","
+            L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\","
+            L"\"productInstanceId\":\"" + EscapeJsonString(productInstanceId) + L"\""
+            L"}}}";
+
+        Log::Comment(String().Format(
+            L"disconnectRemoteClient %s (%s)",
+            umpEndpointName.c_str(),
+            productInstanceId.c_str()));
+
+        return SendNetworkTransportConfig(json);
     }
 }

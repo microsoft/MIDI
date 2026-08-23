@@ -26,7 +26,6 @@ public class PageService : IPageService
 
         Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
         Configure<EndpointsBasicLoopViewModel, EndpointsBasicLoopPage>();
-        Configure<NetworkMidi2SetupViewModel, NetworkMidi2SetupPage>();
         Configure<EndpointsBle10ViewModel, EndpointsBle10Page>();
 
 
@@ -40,12 +39,7 @@ public class PageService : IPageService
         Configure<PluginsTransportViewModel, PluginsTransportPage>();
         Configure<SettingsViewModel, SettingsPage>();
         Configure<ConfigurationsViewModel, ConfigurationsPage>();
-        //Configure<ShellViewModel, ShellPage>();
-        //Configure<ToolsConsoleViewModel, ToolsConsolePage>();
-        //Configure<ToolsMonitorViewModel, ToolsMonitorPage>();
-        Configure<ToolsSysExViewModel, ToolsSysExPage>();
         Configure<ToolsTestViewModel, ToolsTestPage>();
-        Configure<ToolsScratchPadViewModel, ToolsScratchPadPage>();
         Configure<TroubleshootingViewModel, TroubleshootingPage>();
 
         Configure<GlobalMidiSettingsViewModel, GlobalMidiSettingsPage>();

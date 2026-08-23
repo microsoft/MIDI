@@ -88,6 +88,12 @@
 #include <microsoft.ui.xaml.window.h>
 #include <shobjidl.h>
 
+// projection for the shared user tool types, generated from midi-app-shared\MidiAppShared.idl
+#include <winrt/MidiAppShared.h>
+
+#include "WindowChrome.h"
+#include "MidiEndpointHelpers.h"
+
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 namespace xaml = ::winrt::Microsoft::UI::Xaml;
@@ -96,6 +102,7 @@ namespace media = ::winrt::Microsoft::UI::Xaml::Media;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
 namespace midi2msg = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
+namespace appshared = ::winrt::MidiAppShared;
 
 #include "Telemetry.h"
 

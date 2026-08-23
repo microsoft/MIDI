@@ -7,29 +7,6 @@
 
 namespace midi2monitor
 {
-    // A display name paired with the number it represents. Used for the group and channel
-    // pickers, where zero means "All".
-    [default_interface]
-    runtimeclass NamedChoice
-    {
-        NamedChoice();
-
-        String DisplayName{ get; };
-        Int32 Value{ get; };
-    }
-
-    [default_interface]
-    runtimeclass EndpointChoice
-    {
-        EndpointChoice();
-
-        String DisplayName{ get; };
-        String EndpointDeviceId{ get; };
-        String ImagePath{ get; };
-        Microsoft.UI.Xaml.Media.ImageSource ImageSource{ get; };
-        Microsoft.UI.Xaml.Visibility ImageVisibility{ get; };
-    }
-
     [default_interface]
     runtimeclass MonitorColumn : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
     {

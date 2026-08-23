@@ -19,6 +19,7 @@
 #include "MonitorPalette.h"
 #include "NamedChoice.h"
 #include "StringResources.h"
+#include "resource.h"
 
 namespace native = ::midi2monitor;
 namespace res = ::midi2monitor::resources;
@@ -120,9 +121,9 @@ namespace winrt::midi2monitor::implementation
         {
             m_dispatcherQueue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
 
-            m_endpoints = winrt::single_threaded_observable_vector<midi2monitor::EndpointChoice>();
-            m_groups = winrt::single_threaded_observable_vector<midi2monitor::NamedChoice>();
-            m_channels = winrt::single_threaded_observable_vector<midi2monitor::NamedChoice>();
+            m_endpoints = winrt::single_threaded_observable_vector<appshared::EndpointChoice>();
+            m_groups = winrt::single_threaded_observable_vector<appshared::NamedChoice>();
+            m_channels = winrt::single_threaded_observable_vector<appshared::NamedChoice>();
             m_columns = winrt::single_threaded_observable_vector<midi2monitor::MonitorColumn>();
 
             EndpointComboBox().ItemsSource(m_endpoints);
@@ -169,7 +170,7 @@ namespace winrt::midi2monitor::implementation
                         strong->StopMonitoring(false);
                         strong->StopEndpointWatcher();
                         strong->m_pipeline.Stop();
-                        strong->ReleaseBackdropControllers();
+                        strong->m_chrome.Shutdown();
                     }
                 });
         }
@@ -182,256 +183,47 @@ namespace winrt::midi2monitor::implementation
         {
             UpdateWindowTitle();
 
-            ExtendsContentIntoTitleBar(true);
-            SetTitleBar(AppTitleBar());
+            midiapp::WindowChromeElements elements{};
 
-            ApplyTitleBarColors();
-            UpdateTitleBarInsets();
-            ApplyTheme();
-            ApplyBackdrop();
+            elements.Window = *this;
+            elements.Root = RootGrid();
+            elements.Fill = WindowFill();
+            elements.Tint = WindowTint();
+            elements.TitleBar = AppTitleBar();
+            elements.LeftInset = TitleBarLeftInsetColumn();
+            elements.RightInset = TitleBarRightInsetColumn();
+
+            m_chrome.Initialize(elements, native::AppSettings::Current());
+            m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // 32px source for a 16px slot, so it stays crisp on a high DPI display
+            AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));
+
+            // the shared chrome does not know about the palette or the list rows
+            native::MonitorPalette::Invalidate();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to set up the window chrome.")
     }
 
     void MainWindow::RestoreWindowPlacement() noexcept
     {
-        try
-        {
-            auto appWindow = AppWindow();
-
-            if (appWindow == nullptr)
-            {
-                return;
-            }
-
-            auto const& saved = native::AppSettings::Current().WindowPlacement();
-
-            if (!saved.Valid)
-            {
-                appWindow.Resize(winrt::Windows::Graphics::SizeInt32{ 1280, 800 });
-                return;
-            }
-
-            winrt::Windows::Graphics::RectInt32 bounds{ saved.X, saved.Y, saved.Width, saved.Height };
-
-            // The saved monitor may be gone or smaller now, so pull the window back onto a
-            // display that actually exists before showing it.
-            auto const display = winrt::Microsoft::UI::Windowing::DisplayArea::GetFromRect(
-                bounds, winrt::Microsoft::UI::Windowing::DisplayAreaFallback::Nearest);
-
-            if (display != nullptr)
-            {
-                auto const work = display.WorkArea();
-
-                bounds.Width = std::min(bounds.Width, work.Width);
-                bounds.Height = std::min(bounds.Height, work.Height);
-                bounds.X = std::clamp(bounds.X, work.X, work.X + work.Width - bounds.Width);
-                bounds.Y = std::clamp(bounds.Y, work.Y, work.Y + work.Height - bounds.Height);
-            }
-
-            appWindow.MoveAndResize(bounds);
-
-            if (saved.Maximized)
-            {
-                if (auto presenter = appWindow.Presenter().try_as<winrt::Microsoft::UI::Windowing::OverlappedPresenter>())
-                {
-                    presenter.Maximize();
-                }
-            }
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to restore the saved window position.")
+        // static, because this runs before the chrome is initialized
+        midiapp::WindowChrome::RestorePlacement(*this, native::AppSettings::Current(), 1280, 800);
     }
 
     void MainWindow::SaveWindowPlacement() noexcept
     {
-        try
-        {
-            auto const handle = WindowHandle();
-
-            if (handle == nullptr)
-            {
-                return;
-            }
-
-            // WINDOWPLACEMENT carries the restore rectangle, so a window closed while maximized
-            // still reopens at the size the customer chose.
-            WINDOWPLACEMENT placement{};
-            placement.length = sizeof(placement);
-
-            if (!::GetWindowPlacement(handle, &placement))
-            {
-                return;
-            }
-
-            native::WindowPlacementInfo info{};
-
-            info.X = placement.rcNormalPosition.left;
-            info.Y = placement.rcNormalPosition.top;
-            info.Width = placement.rcNormalPosition.right - placement.rcNormalPosition.left;
-            info.Height = placement.rcNormalPosition.bottom - placement.rcNormalPosition.top;
-            info.Maximized = placement.showCmd == SW_SHOWMAXIMIZED;
-
-            native::AppSettings::Current().WindowPlacement(info);
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to save the window position.")
+        m_chrome.SavePlacement();
     }
 
     void MainWindow::ApplyBackdrop() noexcept
     {
-        try
-        {
-            auto const backdrop = native::AppSettings::Current().Backdrop();
-
-            // Rebuilding the material tears it down and flickers. Only do it when it changes.
-            if (!m_backdropApplied || m_appliedBackdrop != backdrop)
-            {
-                ReleaseBackdropControllers();
-
-                auto const target = try_as<winrt::Microsoft::UI::Composition::ICompositionSupportsSystemBackdrop>();
-
-                if (target != nullptr)
-                {
-                    if (m_backdropConfiguration == nullptr)
-                    {
-                        m_backdropConfiguration = backdrops::SystemBackdropConfiguration{};
-                        m_backdropConfiguration.IsInputActive(true);
-
-                        // the material dims when the window is not the active one
-                        m_activatedToken = Activated([weak = get_weak()](auto&&, xaml::WindowActivatedEventArgs const& args)
-                            {
-                                auto strong = weak.get();
-
-                                if (strong != nullptr && strong->m_backdropConfiguration != nullptr)
-                                {
-                                    strong->m_backdropConfiguration.IsInputActive(
-                                        args.WindowActivationState() != xaml::WindowActivationState::Deactivated);
-                                }
-                            });
-                    }
-
-                    switch (backdrop)
-                    {
-                    case native::WindowBackdrop::Mica:
-                        if (backdrops::MicaController::IsSupported())
-                        {
-                            m_micaController = backdrops::MicaController{};
-                            m_micaController.SetSystemBackdropConfiguration(m_backdropConfiguration);
-                            m_micaController.AddSystemBackdropTarget(target);
-                        }
-                        break;
-
-                    case native::WindowBackdrop::Acrylic:
-                        if (backdrops::DesktopAcrylicController::IsSupported())
-                        {
-                            m_acrylicController = backdrops::DesktopAcrylicController{};
-                            m_acrylicController.SetSystemBackdropConfiguration(m_backdropConfiguration);
-                            m_acrylicController.AddSystemBackdropTarget(target);
-                        }
-                        break;
-
-                    default:
-                        break;
-                    }
-                }
-
-                m_appliedBackdrop = backdrop;
-                m_backdropApplied = true;
-            }
-
-            UpdateBackdropConfiguration();
-
-            // a system material only shows if the window is not painting over it
-            WindowFill().Visibility(backdrop == native::WindowBackdrop::Solid
-                ? xaml::Visibility::Visible
-                : xaml::Visibility::Collapsed);
-
-            ApplyBackgroundColor();
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the window backdrop.")
-    }
-
-    void MainWindow::ReleaseBackdropControllers() noexcept
-    {
-        try
-        {
-            if (m_micaController != nullptr)
-            {
-                m_micaController.Close();
-                m_micaController = nullptr;
-            }
-
-            if (m_acrylicController != nullptr)
-            {
-                m_acrylicController.Close();
-                m_acrylicController = nullptr;
-            }
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to release the window backdrop.")
-    }
-
-    void MainWindow::UpdateBackdropConfiguration() noexcept
-    {
-        try
-        {
-            if (m_backdropConfiguration == nullptr)
-            {
-                return;
-            }
-
-            m_backdropConfiguration.Theme(RootGrid().ActualTheme() == xaml::ElementTheme::Dark
-                ? backdrops::SystemBackdropTheme::Dark
-                : backdrops::SystemBackdropTheme::Light);
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the window backdrop configuration.")
+        m_chrome.ApplyBackdrop();
     }
 
     void MainWindow::ApplyBackgroundColor() noexcept
     {
-        try
-        {
-            auto const& settings = native::AppSettings::Current();
-
-            auto const useCustom = settings.UseCustomBackgroundColor();
-            auto const color = ColorFromArgb(settings.BackgroundColorArgb());
-
-            // Solid has no material to tint, so the color goes on a layer of its own. Mica and
-            // Acrylic take it as the material's tint instead, which keeps their texture.
-            auto const showTint = useCustom && settings.Backdrop() == native::WindowBackdrop::Solid;
-
-            if (showTint)
-            {
-                WindowTint().Background(media::SolidColorBrush{ color });
-            }
-
-            WindowTint().Visibility(showTint ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-
-            if (m_micaController != nullptr)
-            {
-                if (useCustom)
-                {
-                    m_micaController.TintColor(color);
-                    m_micaController.FallbackColor(color);
-                }
-                else
-                {
-                    m_micaController.ResetProperties();
-                }
-            }
-
-            if (m_acrylicController != nullptr)
-            {
-                if (useCustom)
-                {
-                    m_acrylicController.TintColor(color);
-                    m_acrylicController.FallbackColor(color);
-                }
-                else
-                {
-                    m_acrylicController.ResetProperties();
-                }
-            }
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the background color.")
+        m_chrome.ApplyBackgroundColor();
     }
 
     _Use_decl_annotations_
@@ -477,87 +269,17 @@ namespace winrt::midi2monitor::implementation
 
     void MainWindow::UpdateTitleBarInsets() noexcept
     {
-        try
-        {
-            auto appWindow = AppWindow();
-
-            if (appWindow == nullptr)
-            {
-                return;
-            }
-
-            auto const titleBar = appWindow.TitleBar();
-
-            auto scale = 1.0;
-
-            if (auto const xamlRoot = RootGrid().XamlRoot())
-            {
-                scale = xamlRoot.RasterizationScale();
-            }
-
-            if (scale <= 0.0)
-            {
-                scale = 1.0;
-            }
-
-            // insets are physical pixels; XAML columns are in DIPs
-            TitleBarLeftInsetColumn().Width(xaml::GridLength{ titleBar.LeftInset() / scale, xaml::GridUnitType::Pixel });
-            TitleBarRightInsetColumn().Width(xaml::GridLength{ titleBar.RightInset() / scale, xaml::GridUnitType::Pixel });
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the title bar insets.")
-    }
-
-    void MainWindow::ApplyTitleBarColors() noexcept
-    {
-        try
-        {
-            auto appWindow = AppWindow();
-
-            if (appWindow == nullptr)
-            {
-                return;
-            }
-
-            auto titleBar = appWindow.TitleBar();
-
-            auto const transparent = winrt::Windows::UI::Colors::Transparent();
-
-            titleBar.ButtonBackgroundColor(transparent);
-            titleBar.ButtonInactiveBackgroundColor(transparent);
-
-            auto const dark = (RootGrid().ActualTheme() == xaml::ElementTheme::Dark);
-
-            auto const foreground = dark ? winrt::Windows::UI::Colors::White() : winrt::Windows::UI::Colors::Black();
-
-            titleBar.ButtonForegroundColor(foreground);
-            titleBar.ButtonHoverForegroundColor(foreground);
-            titleBar.ButtonPressedForegroundColor(foreground);
-            titleBar.ButtonInactiveForegroundColor(dark ? winrt::Windows::UI::Colors::Gray() : winrt::Windows::UI::Colors::DimGray());
-        }
-        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to apply the title bar colors.")
+        m_chrome.UpdateTitleBarInsets();
     }
 
     void MainWindow::ApplyTheme() noexcept
     {
         try
         {
-            auto const theme = native::AppSettings::Current().Theme();
+            m_chrome.ApplyTheme();
 
-            auto const requested =
-                theme == native::AppTheme::Light ? xaml::ElementTheme::Light :
-                theme == native::AppTheme::Dark ? xaml::ElementTheme::Dark :
-                xaml::ElementTheme::Default;
-
-            RootGrid().RequestedTheme(requested);
-
+            // the palette and the already built rows are the app's own, not the chrome's
             native::MonitorPalette::Invalidate();
-            ApplyTitleBarColors();
-
-            // the tinted backgrounds are built from theme colors, so they need rebuilding
-            if (m_initialized)
-            {
-                ApplyBackdrop();
-            }
 
             if (m_listSource != nullptr)
             {
@@ -785,11 +507,11 @@ namespace winrt::midi2monitor::implementation
         try
         {
             m_channels.Clear();
-            m_channels.Append(winrt::make<NamedChoice>(res::GetString(L"ChannelChoiceAll"), 0));
+            m_channels.Append(winrt::make<appshared::implementation::NamedChoice>(res::GetString(L"ChannelChoiceAll"), 0));
 
             for (int32_t channel = 1; channel <= 16; channel++)
             {
-                m_channels.Append(winrt::make<NamedChoice>(
+                m_channels.Append(winrt::make<appshared::implementation::NamedChoice>(
                     res::FormatString(L"ChannelChoiceFormat", channel), channel));
             }
 

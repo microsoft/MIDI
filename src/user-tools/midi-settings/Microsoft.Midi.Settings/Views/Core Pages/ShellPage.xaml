@@ -352,25 +352,7 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                
-                <NavigationViewItem x:Name="SectionNET2UDP" 
-                                    Visibility="{x:Bind ViewModel.ShowNetworkMidi2InLeftNav, Mode=OneWay}"  
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
-                    <NavigationViewItem.Icon>
-                        <ImageIcon Source="/Assets/LeftNav-NetworkMidi.svg" />
-                    </NavigationViewItem.Icon>
-                    
-                    <NavigationViewItem.Content>
-                        <Grid>
-                            <TextBlock x:Uid="Shell_EndpointsNet2Udp" />
-
-                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
-                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
-                            </Grid>
-                        </Grid>
-                    </NavigationViewItem.Content>
-                </NavigationViewItem>
-                
+               
 
                 <NavigationViewItem x:Name="SectionBLE10" 
                                     Visibility="Collapsed" 
@@ -416,91 +398,6 @@
                         </Grid>
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
-
-
-
-
-                <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"
-                                          Visibility="{x:Bind ViewModel.ShowToolsSectionInLeftNav}"/>
-
-                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
-                                    Visibility="{x:Bind ViewModel.ShowSysExToolsInLeftNav, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <NavigationViewItem.Icon>
-                        <ImageIcon Source="/Assets/LeftNav-SysEx.svg" />
-                    </NavigationViewItem.Icon>
-                    <NavigationViewItem.Content>
-                        <Grid>
-                            <TextBlock x:Uid="Shell_ToolsSysEx" />
-
-                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
-                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
-                            </Grid>
-                        </Grid>
-                    </NavigationViewItem.Content>
-                </NavigationViewItem>
-
-                <!--<NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsTestViewModel"
-                                    Visibility="{x:Bind ViewModel.ShowToolsTestInLeftNav, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <NavigationViewItem.Icon>
-                        <ImageIcon Source="/Assets/LeftNav-SysEx.svg" />
-                    </NavigationViewItem.Icon>
-                    <NavigationViewItem.Content>
-                        <Grid>
-                            <TextBlock x:Uid="Shell_ToolsTest" />
-
-                            <Grid Style="{StaticResource NavigationViewItemPreviewTagContainer}">
-                                <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
-                            </Grid>
-                        </Grid>
-                    </NavigationViewItem.Content>
-                </NavigationViewItem>-->
-
-                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsScratchPadViewModel"
-                                    Visibility="{x:Bind ViewModel.ShowToolsScratchPadInLeftNav, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <NavigationViewItem.Icon>
-                        <ImageIcon Source="/Assets/LeftNav-Midi1ScratchPad.svg" />
-                    </NavigationViewItem.Icon>
-                    <NavigationViewItem.Content>
-                        <Grid>
-                            <TextBlock x:Uid="Shell_ToolsScratchPad" />
-                        </Grid>
-                    </NavigationViewItem.Content>
-                </NavigationViewItem>                
-                <!--<NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WindowsSettingsViewModel"
-                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <NavigationViewItem.Icon>
-                        <ImageIcon Source="/Assets/LeftNav-WindowsSettings.svg" />
-                    </NavigationViewItem.Icon>
-                    <NavigationViewItem.Content>
-                        <Grid>
-                            <TextBlock x:Uid="Shell_WindowsSettings" />
-
-                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
-                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
-                            </Grid>
-                        </Grid>
-                    </NavigationViewItem.Content>
-                </NavigationViewItem>-->
-
-
-                <!--
-                <NavigationViewItem 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.LivePerformanceSettingsViewModel"
-                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <NavigationViewItem.Icon>
-                        <ImageIcon Source="/Assets/LeftNav-LivePerformanceMode.svg" />
-                    </NavigationViewItem.Icon>
-                    <NavigationViewItem.Content>
-                        <Grid>
-                            <TextBlock x:Uid="Shell_LivePerformanceMode" />
-
-                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
-                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
-                            </Grid>
-                        </Grid>
-                    </NavigationViewItem.Content>
-                </NavigationViewItem>
-                -->
 
 
                 <NavigationViewItem x:Uid="Shell_Configurations" 

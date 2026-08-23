@@ -24,10 +24,6 @@ namespace Microsoft.Midi.Settings.ViewModels
     public partial class HomeViewModel : ObservableRecipient, INavigationAware
     {
 
-        public ICommand CommonTaskSetUpNetworkMidi2Command
-        {
-            get; private set;
-        }
         
         public ICommand CommonTaskAssignMidi1DeviceToNewDriverCommand
         {
@@ -203,14 +199,6 @@ namespace Microsoft.Midi.Settings.ViewModels
             _consoleToolsService = consoleToolsService;
             _diagnosticsService = diagnosticsService;
 
-
-            CommonTaskSetUpNetworkMidi2Command = new RelayCommand(
-                () =>
-                {
-                    _navigationService.NavigateTo(typeof(NetworkMidi2SetupViewModel).FullName!);
-                });
-
-
             CommonTaskAssignMidi1DeviceToNewDriverCommand = new RelayCommand(
                 () =>
                 {
@@ -241,12 +229,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                     _navigationService.NavigateTo(typeof(EndpointsBasicLoopViewModel).FullName!, "create");
                 });
 
-            CommonTaskSendSysExCommand = new RelayCommand(
-                () =>
-                {
-                    _navigationService.NavigateTo(typeof(ToolsSysExViewModel).FullName!, "send");
-                });
-
 
             // TODO: need to display an error if it returns false
             CommonTaskOpenMidiConsoleCommand = new RelayCommand(
@@ -262,7 +244,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                     _diagnosticsService.CaptureMidiDiagOutputToNotepad();
                 });
 
-            IsNetworkMidi2Available = _transportInfoService.IsTransportAvailable("NET2UDP") && IsValidConfigLoaded;
             IsBasicLoopbackTransportAvailable = _transportInfoService.IsTransportAvailable("BLOOP") && IsValidConfigLoaded;
 
             //LaunchNewSdkVersionUpdateCommand = new RelayCommand(

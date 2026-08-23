@@ -33,6 +33,8 @@ namespace Windows.Devices.Midi2.Transports.Network
         ProductInstanceIdTooLong =              NETWORK_ERROR_CODE_PRODUCT_INSTANCE_ID_TOO_LONG,
         ServiceInstanceNameInUse =              NETWORK_ERROR_CODE_SERVICE_INSTANCE_NAME_IN_USE,
         InvalidNetworkProtocol =                NETWORK_ERROR_CODE_INVALID_NETWORK_PROTOCOL,
+        InvalidNetworkPort =                    NETWORK_ERROR_CODE_INVALID_HOST_PORT,
+        NetworkPortInUse =                      NETWORK_ERROR_CODE_HOST_PORT_IN_USE,
 
         InvalidOrMissingCredentialIdentifier =  NETWORK_ERROR_CODE_MISSING_CREDENTIAL_IDENTIFIER,
         MalformedCredentialIdentifier =         NETWORK_ERROR_CODE_INVALID_CREDENTIAL_IDENTIFIER,

@@ -247,6 +247,26 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
     std::wstring newDeviceInstanceId{ };
     std::wstring newEndpointDeviceInterfaceId{ };
 
+    // A user disconnect can land between our invitation going out and this reply arriving, and
+    // this runs on the socket receive path rather than through the endpoint creator, so nothing
+    // upstream has already vetted it. Building the endpoint now would leave a device node no
+    // caller owns: the connection is already torn down, so nothing will ever delete it. The host
+    // role has the same protection via OnSessionEndedBeforeEndpointCreated.
+    if (m_shuttingDown)
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Invitation was answered after this connection was shut down. Not creating an endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingGuid(m_configIdentifier, "entry identifier")
+        );
+
+        return S_OK;
+    }
+
     // Captured once. It can be torn down while a datagram is in flight, and each call to
     // GetEndpointManager() is a fresh read, so re-reading it per use is a null deref waiting
     // to happen.
@@ -269,6 +289,26 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
             newDeviceInstanceId,
             newEndpointDeviceInterfaceId
         );
+
+        // Creation takes a noticeable amount of time, so the disconnect can also arrive while it
+        // is running. Shutdown already deleted whatever it knew about, which at that point was
+        // nothing, so this one has to be cleaned up here.
+        if (SUCCEEDED(hr) && m_shuttingDown)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"This connection was shut down while its endpoint was being created. Removing it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingGuid(m_configIdentifier, "entry identifier")
+            );
+
+            LOG_IF_FAILED(endpointManager->DeleteEndpoint(internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId)));
+
+            return S_OK;
+        }
 
         if (SUCCEEDED(hr))
         {

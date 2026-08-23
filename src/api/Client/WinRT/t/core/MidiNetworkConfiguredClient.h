@@ -16,7 +16,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         MidiNetworkConfiguredClient() = default;
 
         winrt::guid ClientId() const noexcept { return m_clientId; }
-        winrt::guid HostId() const noexcept { return m_hostId; }
 
         bool IsSessionActive() const noexcept { return m_isSessionActive; }
 
@@ -25,6 +24,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool IsDirectConnection() const noexcept { return m_isDirectConnection; }
         winrt::hstring ConfiguredDirectAddress() const noexcept { return m_configuredDirectAddress; }
         winrt::hstring ConfiguredDirectPort() const noexcept { return m_configuredDirectPort; }
+        winrt::hstring MatchDeviceId() const noexcept { return m_matchDeviceId; }
 
         winrt::hstring ConnectedRemoteAddress() const noexcept { return m_connectedRemoteAddress; }
         winrt::hstring ConnectedRemotePort() const noexcept { return m_connectedRemotePort; }
@@ -42,7 +42,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         void InternalInitialize(
             _In_ winrt::guid const& clientId,
-            _In_ winrt::guid const& hostId,
             _In_ bool const isSessionActive,
             _In_ winrt::hstring const& connectedRemoteAddress,
             _In_ winrt::hstring const& connectedRemotePort,
@@ -60,11 +59,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             _In_ network::MidiNetworkClientEntryState const entryState,
             _In_ bool const isDirectConnection,
             _In_ winrt::hstring const& configuredDirectAddress,
-            _In_ winrt::hstring const& configuredDirectPort
+            _In_ winrt::hstring const& configuredDirectPort,
+            _In_ winrt::hstring const& matchDeviceId
         ) noexcept
         {
             m_clientId = clientId;
-            m_hostId = hostId;
             m_isSessionActive = isSessionActive;
             m_connectedRemoteAddress = connectedRemoteAddress;
             m_connectedRemotePort = connectedRemotePort;
@@ -80,11 +79,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_isDirectConnection = isDirectConnection;
             m_configuredDirectAddress = configuredDirectAddress;
             m_configuredDirectPort = configuredDirectPort;
+            m_matchDeviceId = matchDeviceId;
         }
 
     private:
         winrt::guid m_clientId{};
-        winrt::guid m_hostId{};
         bool m_isSessionActive{ false };
         winrt::hstring m_connectedRemoteAddress{};
         winrt::hstring m_connectedRemotePort{};
@@ -102,5 +101,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_isDirectConnection{ false };
         winrt::hstring m_configuredDirectAddress{};
         winrt::hstring m_configuredDirectPort{};
+        winrt::hstring m_matchDeviceId{};
     };
 }

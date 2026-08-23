@@ -1,0 +1,197 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "pch.h"
+#include "MidiEndpointHelpers.h"
+
+namespace midi2 = ::winrt::Windows::Devices::Midi2;
+namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
+
+namespace midiapp
+{
+    namespace
+    {
+        constexpr wchar_t EndpointImageFolder[] = LR"(%allusersprofile%\Microsoft\MIDI\Assets\Endpoints\)";
+
+        winrt::hstring ExpandPath(std::wstring const& path) noexcept
+        {
+            wchar_t expanded[MAX_PATH + 1]{};
+
+            if (::ExpandEnvironmentStringsW(path.c_str(), expanded, ARRAYSIZE(expanded)) == 0)
+            {
+                return {};
+            }
+
+            return winrt::hstring{ expanded };
+        }
+    }
+
+    // The stored value is a bare file name inside the shared assets folder. Anything with a
+    // path separator, a wildcard, or an environment variable is rejected rather than
+    // resolved, so a tampered configuration cannot point us at an arbitrary file.
+    winrt::hstring ResolveEndpointImagePath(winrt::hstring const& imageFileName) noexcept
+    {
+        try
+        {
+            if (imageFileName.empty() || imageFileName.size() > MAX_PATH)
+            {
+                return {};
+            }
+
+            for (auto const ch : imageFileName)
+            {
+                if (ch == L'\\' || ch == L'/' || ch == L':' || ch == L'%' || ch == L'?' || ch == L'*' || ch == L'"')
+                {
+                    return {};
+                }
+            }
+
+            if (imageFileName == L"." || imageFileName == L"..")
+            {
+                return {};
+            }
+
+            auto const fullPath = ExpandPath(std::wstring{ EndpointImageFolder } + std::wstring{ imageFileName });
+
+            if (fullPath.empty() || !::PathFileExistsW(fullPath.c_str()))
+            {
+                return {};
+            }
+
+            return fullPath;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return {};
+    }
+
+    winrt::hstring DescribeGroup(
+        midi2enum::MidiEndpointDeviceInformation const& endpoint,
+        uint8_t groupIndex) noexcept
+    {
+        try
+        {
+            if (endpoint != nullptr)
+            {
+                midi2::MidiGroup const group{ groupIndex };
+
+                for (auto const& functionBlock : endpoint.GetDeclaredFunctionBlocks())
+                {
+                    if (functionBlock.IncludesGroup(group) && !functionBlock.Name().empty())
+                    {
+                        return functionBlock.Name();
+                    }
+                }
+
+                for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
+                {
+                    if (terminalBlock.IncludesGroup(group) && !terminalBlock.Name().empty())
+                    {
+                        return terminalBlock.Name();
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return {};
+    }
+
+    // A block covers GroupCount contiguous groups starting at FirstGroup, so FirstGroup 3
+    // with GroupCount 2 contributes groups 3 and 4.
+    std::array<bool, 16> DeclaredGroups(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept
+    {
+        std::array<bool, 16> declared{};
+
+        try
+        {
+            if (endpoint != nullptr)
+            {
+                auto const cover = [&declared](uint8_t firstGroupIndex, uint8_t groupCount) noexcept
+                    {
+                        auto const last = static_cast<uint32_t>(firstGroupIndex) + groupCount;
+
+                        for (uint32_t i = firstGroupIndex; i < last && i < declared.size(); i++)
+                        {
+                            declared[i] = true;
+                        }
+                    };
+
+                for (auto const& functionBlock : endpoint.GetDeclaredFunctionBlocks())
+                {
+                    if (auto const first = functionBlock.FirstGroup())
+                    {
+                        cover(first.Index(), functionBlock.GroupCount());
+                    }
+                }
+
+                for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
+                {
+                    if (auto const first = terminalBlock.FirstGroup())
+                    {
+                        cover(first.Index(), terminalBlock.GroupCount());
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        // a device that declares nothing still has to be usable
+        if (std::none_of(declared.begin(), declared.end(), [](bool value) { return value; }))
+        {
+            declared.fill(true);
+        }
+
+        return declared;
+    }
+
+    std::vector<midi2enum::MidiEndpointDeviceInformation> SortedEndpoints(
+        midi2enum::MidiEndpointDeviceWatcher const& watcher) noexcept
+    {
+        std::vector<midi2enum::MidiEndpointDeviceInformation> devices{};
+
+        try
+        {
+            if (watcher == nullptr)
+            {
+                return devices;
+            }
+
+            for (auto const& entry : watcher.EnumeratedEndpointDevices())
+            {
+                devices.push_back(entry.Value());
+            }
+
+            std::sort(devices.begin(), devices.end(),
+                [](auto const& left, auto const& right)
+                {
+                    return ::CompareStringOrdinal(
+                        left.Name().c_str(), -1, right.Name().c_str(), -1, TRUE) == CSTR_LESS_THAN;
+                });
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return devices;
+    }
+
+    bool EndpointIdsMatch(winrt::hstring const& left, winrt::hstring const& right) noexcept
+    {
+        return ::CompareStringOrdinal(left.c_str(), -1, right.c_str(), -1, TRUE) == CSTR_EQUAL;
+    }
+}

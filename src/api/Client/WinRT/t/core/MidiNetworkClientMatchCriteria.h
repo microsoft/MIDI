@@ -18,6 +18,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring DeviceId() const noexcept { return m_deviceId; }
         void DeviceId(_In_ winrt::hstring const& value) noexcept { m_deviceId = value; }
 
+        winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
+        void ProductInstanceId(_In_ winrt::hstring const& value) noexcept { m_productInstanceId = value; }
+
+        winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
+        void UmpEndpointName(_In_ winrt::hstring const& value) noexcept { m_umpEndpointName = value; }
+
 
         winrt::hstring DirectHostNameOrIPAddress() const noexcept { return m_directAddress; }
         void DirectHostNameOrIPAddress(_In_ winrt::hstring const& value) noexcept { m_directAddress = value; }
@@ -30,6 +36,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
     private:
         winrt::hstring m_deviceId{};
+        winrt::hstring m_productInstanceId{};
+        winrt::hstring m_umpEndpointName{};
 
         winrt::hstring m_directAddress{ };
 

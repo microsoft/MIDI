@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiNetworkAuthenticationTypeEnum.idl";
+import "MidiNetworkRemoteClientPolicyEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -40,6 +41,9 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] String ManuallyAssignedPort;
 
         [noexcept] Boolean Advertise;
+
+        // what the host does when a remote client which is on neither list asks to connect
+        [noexcept] MidiNetworkRemoteClientPolicy RemoteClientPolicy;
 
         [noexcept] MidiNetworkAuthenticationType AuthenticationType;
 
