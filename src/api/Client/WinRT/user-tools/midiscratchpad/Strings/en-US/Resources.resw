@@ -130,17 +130,32 @@
   <data name="SysExExpander.Header" xml:space="preserve">
     <value>System exclusive</value>
   </data>
+  <data name="ChannelPicker.Header" xml:space="preserve">
+    <value>Channel</value>
+  </data>
   <data name="ChannelPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Channel</value>
+  </data>
+  <data name="NotePicker.Header" xml:space="preserve">
+    <value>Note</value>
   </data>
   <data name="NotePicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Note</value>
   </data>
+  <data name="VelocityPicker.Header" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
   <data name="VelocityPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Velocity</value>
   </data>
+  <data name="ControllerPicker.Header" xml:space="preserve">
+    <value>Controller</value>
+  </data>
   <data name="ControllerPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Controller</value>
+  </data>
+  <data name="ControllerValuePicker.Header" xml:space="preserve">
+    <value>Value</value>
   </data>
   <data name="ControllerValuePicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Controller value</value>
@@ -226,9 +241,6 @@
     <value>Keep this window on top</value>
   </data>
 
-  <data name="SendSucceededFormat" xml:space="preserve">
-    <value>Sent {0} words</value>
-  </data>
   <data name="SendSucceededMidi1Format" xml:space="preserve">
     <value>Sent {0} bytes as {1} UMP words</value>
   </data>
@@ -268,8 +280,11 @@
   <data name="AddMidi2ControlChangeButton.Content" xml:space="preserve">
     <value>Add control change</value>
   </data>
-  <data name="Midi1InUmpExpander.Header" xml:space="preserve">
-    <value>MIDI 1.0 in UMP</value>
+  <data name="Midi1NotesExpander.Header" xml:space="preserve">
+    <value>MIDI 1.0 notes</value>
+  </data>
+  <data name="Midi1NotePicker.Header" xml:space="preserve">
+    <value>Note</value>
   </data>
   <data name="Midi1VelocityBox.Header" xml:space="preserve">
     <value>Velocity (7 bit)</value>
@@ -279,6 +294,12 @@
   </data>
   <data name="AddMidi1NoteOffButton.Content" xml:space="preserve">
     <value>Note Off</value>
+  </data>
+  <data name="Midi1ControlChangeExpander.Header" xml:space="preserve">
+    <value>MIDI 1.0 control change</value>
+  </data>
+  <data name="Midi1ControllerPicker.Header" xml:space="preserve">
+    <value>Controller</value>
   </data>
   <data name="Midi1ControllerValueBox.Header" xml:space="preserve">
     <value>Value (7 bit)</value>
