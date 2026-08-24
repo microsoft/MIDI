@@ -105,8 +105,6 @@ class Build : NukeBuild
 
     AbsolutePath BuildRootFolder => NukeBuild.RootDirectory / "build";
 
-    AbsolutePath ElectronProjectionRootFolder => BuildRootFolder / "electron-projection";
-
     AbsolutePath StagingRootFolder => BuildRootFolder / "staging";
     AbsolutePath AppSdkStagingFolder => StagingRootFolder / "app-sdk";
 
@@ -120,10 +118,9 @@ class Build : NukeBuild
     AbsolutePath AppSdkImplementationInstallerReleaseFolder => BuildRootFolder / "app-sdk-impl";
 
     AbsolutePath SourceRootFolder => NukeBuild.RootDirectory / "src";
-    AbsolutePath AppSdkSolutionFolder => SourceRootFolder / "app-sdk";
     AbsolutePath ApiSolutionFolder => SourceRootFolder / "api";
 
-    AbsolutePath AppSdkSetupSolutionFolder => AppSdkSolutionFolder / "sdk-runtime-installer";
+    AbsolutePath AppSdkSetupSolutionFolder => SourceRootFolder / "app-sdk" / "sdk-runtime-installer";
 
     //AbsolutePath AppSdkSetupRuntimeFolder => AppSdkSetupSolutionFolder / "sdk-package";
     //AbsolutePath AppSdkSetupSettingsFolder => AppSdkSetupSolutionFolder / "settings-package";
@@ -134,7 +131,7 @@ class Build : NukeBuild
     AbsolutePath UserToolsRootFolder => SourceRootFolder / "user-tools";
 
 
-    AbsolutePath MidiPowerShellSolutionFolder => AppSdkSolutionFolder / "projections" / "powershell" ;
+    //AbsolutePath MidiPowerShellSolutionFolder => AppSdkSolutionFolder / "projections" / "powershell" ;
     AbsolutePath MidiPowerShellStagingFolder => StagingRootFolder / "midi-powershell";
 
 
@@ -152,11 +149,6 @@ class Build : NukeBuild
 
     AbsolutePath SetupBundleInfoIncludeFile => StagingRootFolder / "version" / "BundleInfo.wxi";
     AbsolutePath BuildVersionFile => StagingRootFolder / "version" / "SDK_BuildNumber.txt";
-
-    AbsolutePath SdkVersionFilesFolder => StagingRootFolder / "version";
-    AbsolutePath SdkVersionHeaderFile => SdkVersionFilesFolder / "WindowsMidiServicesSdkRuntimeVersion.h";
-    AbsolutePath NuGetVersionHeaderFile => SdkVersionFilesFolder / "WindowsMidiServicesVersion.h";
-    AbsolutePath CommonVersionCSharpFile => SdkVersionFilesFolder / "WindowsMidiServicesVersion.cs";
 
     AbsolutePath SamplesRootFolder => NukeBuild.RootDirectory / "samples";
     AbsolutePath SamplesCppWinRTSolutionFolder => SamplesRootFolder / "cpp-winrt";
@@ -236,24 +228,6 @@ class Build : NukeBuild
                 Environment.SetEnvironmentVariable("MIDI_REPO_ROOT", NukeBuild.RootDirectory);
             }
 
-            // this updates the build number and writes hte new value to the file
-            IncrementBuildNumber();
-
-            if (BuildType == MidiBuildType.Stable)
-            {
-                BuildVersionPreviewString = "";
-                NugetPackageVersion = BuildMajorMinorPatch;
-            }
-            else if (BuildType == MidiBuildType.RC)
-            {
-                BuildVersionPreviewString = "rc." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
-                NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
-            }
-            else if (BuildType == MidiBuildType.Preview)
-            {
-                BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
-                NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
-            }
 
             // they are the same, for our use here.
             BuildVersionFullString = NugetPackageVersion;
@@ -274,62 +248,15 @@ class Build : NukeBuild
         });
 
 
-    Target T_CreateVersionIncludes => _ => _
-        .DependsOn(T_Prerequisites)
-        .Executes(() =>
-        {
-
-
-            string buildSource = "GitHub Preview";
-            string versionName = VersionName;
-            //string versionString = BuildVersionFullString;
-
-            string buildVersionMajor = BuildVersionMajor.ToString();
-            string buildVersionMinor = BuildVersionMinor.ToString();
-            string buildVersionPatch = BuildVersionPatch.ToString();
-
-            string buildDate = BuildDate.ToString("yyyy-MM-dd");
-
-            // create directories if they do not exist
-
-            ThisReleaseFolder.CreateDirectory();
-            SdkVersionFilesFolder.CreateDirectory();
-
-            var msbuildProperties = new Dictionary<string, object>();
-            msbuildProperties.Add("MidiBuildType", $"{BuildType.ToString().ToLower()}");
-            msbuildProperties.Add("MidiBuildSource", $"{buildSource}");
-            msbuildProperties.Add("MidiVersionName", $"{versionName}");
-            msbuildProperties.Add("MidiBuildVersionMajor", BuildVersionMajor);
-            msbuildProperties.Add("MidiBuildVersionMinor", BuildVersionMinor);
-            msbuildProperties.Add("MidiBuildVersionPatch", BuildVersionPatch);
-            msbuildProperties.Add("MidiBuildVersionBuildNumber", BuildVersionBuildNumber);
-            msbuildProperties.Add("MidiBuildVersionPreviewString", $"{BuildVersionPreviewString}");
-
-            msbuildProperties.Add("MidiVersionOutputFolder", (StagingRootFolder / "version").ToString());
-
-            MSBuildTasks.MSBuild(_ => _
-                .SetProcessToolPath(MSBuildTasks.MSBuildPath)
-                .SetTargetPath(SourceRootFolder / "build-gen-version-includes" / "GenVersionIncludes.csproj")
-                .SetMaxCpuCount(null)
-                .AddProcessAdditionalArguments("/t:TransformAll")
-                .SetProperties(msbuildProperties)
-                .SetVerbosity(MSBuildVerbosity.Normal)
-                .EnableNodeReuse()
-            );
-
-        });
 
 
     Target T_BuildAndPackAllAppSDKs => _ => _
         .DependsOn(T_Prerequisites)
-        .DependsOn(T_CreateVersionIncludes)
         .Executes(() =>
         {
-        //    bool wxsWritten = false;
-
             foreach (var platform in SdkPlatformsIncludingAnyCpu)
             {
-                string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
+                string solutionDir = ApiSolutionFolder.ToString() + @"\";
 
                 var msbuildProperties = new Dictionary<string, object>();
                 msbuildProperties.Add("Platform", platform);
@@ -346,7 +273,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetProcessToolPath(MSBuildTasks.MSBuildPath)
-                    .SetTargetPath(AppSdkSolutionFolder / "app-sdk.sln")
+                    .SetTargetPath(ApiSolutionFolder / "Midi2-AppSDK.sln")
                     .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
@@ -358,8 +285,8 @@ class Build : NukeBuild
                 );
             }
 
-            var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
-            var sdkIntermediateRootFolder = AppSdkSolutionFolder / "vsfiles" / "intermediate";
+            var sdkOutputRootFolder = ApiSolutionFolder / "vsfiles-sdk" / "out";
+            var sdkIntermediateRootFolder = ApiSolutionFolder / "vsfiles-sdk" / "intermediate";
 
 
             // these are not architecture-specific
@@ -368,38 +295,16 @@ class Build : NukeBuild
            // (sdkIntermediateRootFolder / "com-extensions-idl" / "x64" / Configuration.Release / "WindowsMidiServicesAppSdkComExtensions_p.c").CopyToDirectory(AppSdkStagingFolder, ExistsPolicy.FileOverwrite);
 
 
-            // header files and similar
-            foreach (var sourcePlatform in SdkPlatforms)
-            {
-                // the solution compiles these apps to Arm64 when target is EC.
-                string stagingPlatform = sourcePlatform;
-                if (sourcePlatform.ToLower() == "arm64ec")
-                {
-                    stagingPlatform = "Arm64";
-                }
-
-                // sample manifest
-                //     (AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
-
-                // bootstrap files
-                (AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
-                //(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
-
-            }
-
-
-            //        string rid = $"net8.0-windows{TargetWindowsSdkVersion}";
-
             foreach (var sourcePlatform in SdkPlatformsIncludingAnyCpu)
             {
                 if (sourcePlatform == "AnyCPU") continue;
 
                 var sdkBinaries = new List<AbsolutePath>();
 
-                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.winmd");
-                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.dll");
-                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.pri");
-                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.pdb");
+                sdkBinaries.Add(sdkOutputRootFolder / "Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Windows.Devices.Midi2.winmd");
+                sdkBinaries.Add(sdkOutputRootFolder / "Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Windows.Devices.Midi2.dll");
+                sdkBinaries.Add(sdkOutputRootFolder / "Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Windows.Devices.Midi2.pri");
+                sdkBinaries.Add(sdkOutputRootFolder / "Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Windows.Devices.Midi2.pdb");
 
                 string stagingPlatform = sourcePlatform;
                 if (sourcePlatform.ToLower() == "arm64ec")
@@ -420,9 +325,7 @@ class Build : NukeBuild
                 Console.Out.WriteLine($"NuGet Version: {BuildVersionFullString}");
 
                 NuGetTasks.NuGetPack(_ => _
-                    .SetTargetPath(AppSdkSolutionFolder / "projections" / "dotnet-and-cpp" / "nuget" / "Microsoft.Windows.Devices.Midi2.nuspec")
-                    .AddProperty("version", NugetPackageVersion)
-                    .AddProperty("id", NugetPackageId)
+                    .SetTargetPath(ApiSolutionFolder / "Client" / "WinRT" / "NuGet" / "Windows.Devices.Midi2.NuGet" / "nuget" / "Windows.Devices.Midi2.nuspec")
                     .SetOutputDirectory(AppSdkNugetOutputFolder)
                 );
 
@@ -435,95 +338,6 @@ class Build : NukeBuild
                 ThisReleaseFolder, 
                 ExistsPolicy.FileOverwrite);
 
-
-        });
-
-
-    Target T_BuildAppSDKToolsAndTests => _ => _
-        .DependsOn(T_BuildAndPackAllAppSDKs)
-        .Executes(() =>
-        {
-
-            foreach (var platform in SdkPlatforms)
-            {
-                string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
-
-                var msbuildProperties = new Dictionary<string, object>();
-                msbuildProperties.Add("Platform", platform);
-                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
-                msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
-                msbuildProperties.Add("VersionPrefix", BuildMajorMinorPatch);
-                msbuildProperties.Add("Version", BuildVersionFullString);
-                msbuildProperties.Add("AssemblyVersion", BuildVersionAssemblyFullString);
-                msbuildProperties.Add("FileVersion", BuildVersionFileFullString);
-
-                Console.Out.WriteLine($"----------------------------------------------------------------------");
-                Console.Out.WriteLine($"SolutionDir:   {solutionDir}");
-                Console.Out.WriteLine($"Platform:      {platform}");
-
-                string[] toolsDirectoriesNeedingSdkPackageUpdates =
-                    {
-                        Path.Combine(solutionDir, @"tools\mididiag"),
-                        Path.Combine(solutionDir, @"tools\midiusbinfo"),
-                        Path.Combine(solutionDir, @"tools\midimdnsinfo"),
-                        //Path.Combine(solutionDir, @"tools\midifixreg"),
-
-                        Path.Combine(solutionDir, @"tests\InitializationExe"),
-                        Path.Combine(solutionDir, @"tests\Benchmarks"),
-                        Path.Combine(solutionDir, @"tests\Offline.unittests"),
-                        Path.Combine(solutionDir, @"tests\SdkInitialization.unittests"),
-                        Path.Combine(solutionDir, @"tests\Service.integrationtests"),
-                        /* Path.Combine(solutionDir, "midi1monitor"), */
-                        /* Path.Combine(solutionDir, "midiksinfo"), */
-                    };
-
-                foreach (var projectFolder in toolsDirectoriesNeedingSdkPackageUpdates)
-                {
-                    // only send paths that have a packages config in them
-
-                    var configFilePath = Path.Combine(projectFolder, "packages.config");
-
-                    if (File.Exists(configFilePath))
-                    {
-                        Console.WriteLine($"Updating {configFilePath}");
-                        UpdatePackagesConfigForCPPProject(configFilePath);
-
-                        var vcxprojFilePaths = Directory.GetFiles(projectFolder, "*.vcxproj");
-
-                        foreach (var path in vcxprojFilePaths)
-                        {
-                            Console.WriteLine($"Updating {path}");
-                            UpdateWindowsMidiServicesSdkPackagePropertyForCppProject(path);
-
-                            // nuget restore
-                            RestoreNuGetPackagesForCPPProject(path, AppSdkSolutionFolder, configFilePath);
-
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Not a project folder {projectFolder}");
-                    }
-
-                }
-
-
-                MSBuildTasks.MSBuild(_ => _
-                    .SetProcessToolPath(MSBuildTasks.MSBuildPath)
-                    .SetTargetPath(AppSdkSolutionFolder / "app-sdk-tools-and-tests.sln")
-                    .SetMaxCpuCount(null)
-                    /*.SetOutDir(outputFolder) */
-                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
-                    /*.SetTargets("Build") */
-                    .SetProperties(msbuildProperties)
-                    .SetConfiguration(Configuration.Release)
-                    .SetVerbosity(BuildVerbosity)
-                    .EnableNodeReuse()
-                );
-
-            }
-
-            var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
 
             foreach (var sourcePlatform in SdkPlatforms)
             {
@@ -543,12 +357,55 @@ class Build : NukeBuild
                 (sdkOutputRootFolder / "midifixreg" / stagingPlatform / Configuration.Release / $"midifixreg.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
                 (sdkOutputRootFolder / "midicheckservice" / stagingPlatform / Configuration.Release / $"midicheckservice.exe").CopyToDirectory(AppSdkStagingFolder / stagingPlatform, ExistsPolicy.FileOverwrite);
             }
+
+        });
+
+
+    Target T_BuildAppSDKToolsAndTests => _ => _
+        .DependsOn(T_BuildAndPackAllAppSDKs)
+        .Executes(() =>
+        {
+
+            foreach (var platform in SdkPlatforms)
+            {
+                string solutionDir = ApiSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+                msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+                msbuildProperties.Add("VersionPrefix", BuildMajorMinorPatch);
+                msbuildProperties.Add("Version", BuildVersionFullString);
+                msbuildProperties.Add("AssemblyVersion", BuildVersionAssemblyFullString);
+                msbuildProperties.Add("FileVersion", BuildVersionFileFullString);
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir:   {solutionDir}");
+                Console.Out.WriteLine($"Platform:      {platform}");
+
+                MSBuildTasks.MSBuild(_ => _
+                    .SetProcessToolPath(MSBuildTasks.MSBuildPath)
+                    .SetTargetPath(AppSdkSolutionFolder / "app-sdk-tools-and-tests.sln")
+                    .SetMaxCpuCount(null)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    .SetVerbosity(BuildVerbosity)
+                    .EnableNodeReuse()
+                );
+
+            }
+
+            var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
+
+
         });
 
 
     Target T_BuildAppSdkRuntimeAndToolsInstaller => _ => _
         .DependsOn(T_Prerequisites)
-        .DependsOn(T_CreateVersionIncludes)
         .DependsOn(T_BuildConsoleApp)
         .DependsOn(T_BuildSettingsApp)
         .DependsOn(T_BuildPowerShellProjection)
@@ -607,76 +464,9 @@ class Build : NukeBuild
 
         });
 
-
-    void IncrementBuildNumber()
-    {
-        int newBuildNumber = 0;
-
-        if (File.Exists(BuildVersionFile))
-        {
-            using (StreamReader reader = System.IO.File.OpenText(BuildVersionFile))
-            {
-                // first line is major/minor/revision. Second is build number.
-                var versionLine = reader.ReadLine();
-                var buildLine = reader.ReadLine();
-
-                if (versionLine.Trim() == BuildMajorMinorPatch)
-                {
-                    if (int.TryParse(buildLine, out newBuildNumber))
-                    {
-                        newBuildNumber++;
-                    }
-                    else
-                    {
-                        newBuildNumber = 0;
-                    }
-                }
-                else
-                {
-                    // we'll write the new info
-                }
-
-            }
-        }
-
-        using (StreamWriter writer = System.IO.File.CreateText(BuildVersionFile))
-        {
-            writer.WriteLine(BuildMajorMinorPatch);
-            writer.WriteLine(newBuildNumber.ToString());
-        }
-
-        BuildVersionBuildNumber = (ushort)newBuildNumber;
-
-    }
-
-
-    void UpdateSetupBundleInfoIncludeFile(string platform)
-    {
-        //string versionString = $"{SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
-
-        using (StreamWriter writer = System.IO.File.CreateText(SetupBundleInfoIncludeFile))
-        {
-            writer.WriteLine("<Include>");
-            writer.WriteLine($"  <?define SetupVersionName=\"{VersionName} {platform}\" ?>");
-            writer.WriteLine($"  <?define SetupVersionNumber=\"{BuildVersionFullString}\" ?>");
-            writer.WriteLine($"  <?define MidiSdkAndToolsVersion=\"{BuildVersionFullString}\" ?>");
-            writer.WriteLine("</Include>");
-        }
-    }
-
-    Target T_BuildUserToolsSharedComponents => _ => _
-        .DependsOn(T_Prerequisites)
-        .DependsOn(T_BuildAndPackAllAppSDKs)
-        .Executes(() =>
-        {
-            // build x64 and Arm64
-        });
-
-
     Target T_BuildSettingsApp => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildAndPackAllAppSDKs)
-        .DependsOn(T_BuildUserToolsSharedComponents)
         .Executes(() =>
         {
             var solution = MidiSettingsSolutionFolder / "midi-settings.sln";
@@ -1004,7 +794,6 @@ class Build : NukeBuild
     Target T_CopySharedDesignAssets => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildAndPackAllAppSDKs)
-        .DependsOn(T_BuildUserToolsSharedComponents)
         .Executes(() =>
         {
             var designSourceFolder = RootDirectory / "design";
@@ -1041,7 +830,6 @@ class Build : NukeBuild
     Target T_BuildConsoleApp => _ => _
         .DependsOn(T_Prerequisites)
         .DependsOn(T_BuildAndPackAllAppSDKs)
-        .DependsOn(T_BuildUserToolsSharedComponents)
         .Executes(() =>
         {
             var solution = MidiConsoleSolutionFolder / "midi-console.sln";
@@ -1067,19 +855,6 @@ class Build : NukeBuild
                 string solutionDir = MidiConsoleSolutionFolder.ToString() + @"\";
 
                 string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
-
-
-                //var msbuildProperties = new Dictionary<string, object>();
-                //msbuildProperties.Add("Platform", platform);
-                //msbuildProperties.Add("SolutionDir", solutionDir);          // to include trailing slash
-                //msbuildProperties.Add("RuntimeIdentifier", rid);          
-                ////msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
-
-                //Console.Out.WriteLine($"----------------------------------------------------------------------");
-                //Console.Out.WriteLine($"Solution:    {solution}");
-                //Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-                //Console.Out.WriteLine($"Platform:    {platform}");
-                //Console.Out.WriteLine($"RID:         {rid}");
 
 
                 DotNetTasks.DotNetBuild(_ => _
@@ -1114,7 +889,7 @@ class Build : NukeBuild
 
                 (consoleOutputFolder / "WinRT.Runtime.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 
-                (consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
+                (consoleOutputFolder / "Windows.Devices.Midi2.NetProjection.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
                 (consoleOutputFolder / "Microsoft.Windows.SDK.NET.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
 
                 (consoleOutputFolder / "Spectre.Console.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite, createDirectories: true);
@@ -1165,20 +940,6 @@ class Build : NukeBuild
 
             string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
 
-
-            //var msbuildProperties = new Dictionary<string, object>();
-            //msbuildProperties.Add("Platform", platform);
-            //msbuildProperties.Add("SolutionDir", solutionDir);          // to include trailing slash
-            //msbuildProperties.Add("RuntimeIdentifier", rid);          
-            ////msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
-
-            //Console.Out.WriteLine($"----------------------------------------------------------------------");
-            //Console.Out.WriteLine($"Solution:    {solution}");
-            //Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-            //Console.Out.WriteLine($"Platform:    {platform}");
-            //Console.Out.WriteLine($"RID:         {rid}");
-
-
             DotNetTasks.DotNetBuild(_ => _
                 .SetProjectFile(MidiPowerShellSolutionFolder / "WindowsMidiServices.csproj")
                 .SetConfiguration(Configuration.Release)
@@ -1224,12 +985,6 @@ class Build : NukeBuild
             (psOutputFolder / "System.Security.Cryptography.ProtectedData.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
             (psOutputFolder / "System.Security.Permissions.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
             (psOutputFolder / "System.Windows.Extensions.dll").CopyToDirectory(stagingFolder, ExistsPolicy.FileOverwrite);
-
-
-            //    (runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, ExistsPolicy.FileOverwrite);
-            //    (runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, ExistsPolicy.FileOverwrite);
-            //(runtimesFolder / ns + ".winmd", stagingFolder, ExistsPolicy.FileOverwrite);
-
         }
 
     });
@@ -1255,460 +1010,190 @@ class Build : NukeBuild
         );
     }
 
-    void UpdateWindowsMidiServicesSdkPackagePropertyForCppProject(string vcxprojFilePath)
-    {
-        if (File.Exists(vcxprojFilePath))
-        {
-            // this is ugly and annoying to have to do.
-            //   XmlTasks.XmlPoke(configFilePath, @"/packages/package/id", NugetFullPackageId)
-
-            var doc = new XmlDocument();
-            doc.Load(vcxprojFilePath);
-
-            var manager = new XmlNamespaceManager(doc.NameTable);
-            manager.AddNamespace("msb", "http://schemas.microsoft.com/developer/msbuild/2003");
+    //Target T_BuildCppSamples => _ => _
+    //    .DependsOn(T_BuildAndPackAllAppSDKs)
+    //    .Executes(() =>
+    //    {
+    //        var solution = SamplesCppWinRTSolutionFolder / "cpp-winrt-samples.sln";
+
+    //        // update nuget packages for each project 
+    //        foreach (var projectFolder in Directory.GetDirectories(SamplesCppWinRTSolutionFolder))
+    //        {
+    //            // only send paths that have a packages config in them
+
+    //            var configFilePath = Path.Combine(projectFolder, "packages.config");
+
+    //            if (File.Exists(configFilePath))
+    //            {
+    //                Console.WriteLine($"Updating {configFilePath}");
+    //                UpdatePackagesConfigForCPPProject(configFilePath);
+
+    //                var vcxprojFilePaths = Directory.GetFiles(projectFolder, "*.vcxproj");
+
+    //                foreach (var path in vcxprojFilePaths)
+    //                {
+    //                    Console.WriteLine($"Updating {path}");
+    //                    UpdateWindowsMidiServicesSdkPackagePropertyForCppProject(path);
+
+    //                    // nuget restore
+    //                    RestoreNuGetPackagesForCPPProject(path, SamplesCppWinRTSolutionFolder, configFilePath);
+
+    //                }
+    //            }
+    //            else
+    //            {
+    //                Console.WriteLine($"Not a project folder {projectFolder}");
+    //            }
+
+    //        }
+
+
+
+    //        // for cppwinrt
+    //        NuGetTasks.NuGetInstall(_ => _
+    //            .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+    //            .SetSource("https://api.nuget.org/v3/index.json")
+    //            .SetPackageID("Microsoft.Windows.CppWinRT")
+    //            .SetDependencyVersion(DependencyVersion.Highest)
+    //        );
+
+    //        // for WIL
+    //        //NuGetTasks.NuGetInstall(_ => _
+    //        //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+    //        //    .SetPreRelease(true)
+    //        //    .SetSource("https://api.nuget.org/v3/index.json")
+    //        //    .SetPackageID("Microsoft.Windows.ImplementationLibrary")
+    //        //);
+
+
+    //        // for the MIDI nuget package
+    //        // the install and restore should work with the above 
+    //        // manual managing of the packages.config
+    //        //NuGetTasks.NuGetInstall(_ => _
+    //        //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+    //        //    .SetPreRelease(true)
+    //        //    .SetSource(AppSdkNugetOutputFolder)
+    //        //    .SetPackageID(NugetFullPackageId)
+    //        //    .SetDependencyVersion(DependencyVersion.Highest)
+    //        //);
+
+    //        //NuGetTasks.NuGetRestore(_ => _
+    //        //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+    //        //    .SetSolutionDirectory(SamplesCppWinRTSolutionFolder)
+    //        //    .SetSource(AppSdkNugetOutputFolder)
+    //        //);
+
+
+    //        // make sure they compile
+    //        foreach (var platform in NativeSamplesPlatforms)
+    //        {
+    //            string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
+
+    //            var msbuildProperties = new Dictionary<string, object>();
+    //            msbuildProperties.Add("Platform", platform);
+    //            msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+    //            //msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+
+    //            Console.Out.WriteLine($"----------------------------------------------------------------------");
+    //            Console.Out.WriteLine($"Solution:    {solution}");
+    //            Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+    //            Console.Out.WriteLine($"Platform:    {platform}");
+
+
+    //            MSBuildTasks.MSBuild(_ => _
+    //                .SetProcessToolPath(MSBuildTasks.MSBuildPath)
+    //                .SetTargetPath(solution)
+    //                .SetMaxCpuCount(null)
+    //                /*.SetOutDir(outputFolder) */
+    //                /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+    //                /*.SetTargets("Build") */
+    //                .SetProperties(msbuildProperties)
+    //                .SetConfiguration(Configuration.Release)
+    //                .SetVerbosity(BuildVerbosity)
+    //                .EnableNodeReuse()
+    //            );
+
+
+
+
+    //        }
+    //    });
+
+
+    //Target T_BuildCSharpSamples => _ => _
+    //    .DependsOn(T_BuildAndPackAllAppSDKs)
+    //    .Executes(() =>
+    //{
+    //    var solution = SamplesCSWinRTSolutionFolder / "csharp-net-samples.sln";
+
+
+    //    // for cswinrt
+    //    NuGetTasks.NuGetInstall(_ => _
+    //        .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
+    //        .SetSource("https://api.nuget.org/v3/index.json")
+    //        .SetPackageID("Microsoft.Windows.CsWinRT")
+    //        .SetDependencyVersion(DependencyVersion.Highest)
+    //    );
+
+
+    //    // for the MIDI nuget package
+    //    // the install and restore should work with the above 
+    //    // manual managing of the packages.config
+    //    NuGetTasks.NuGetInstall(_ => _
+    //        .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
+    //        .SetPreRelease(true)
+    //        .SetSource(AppSdkNugetOutputFolder)
+    //        .SetPackageID(NugetPackageId)
+    //        .SetDependencyVersion(DependencyVersion.Highest)
+    //    );
+
+    //    NuGetTasks.NuGetRestore(_ => _
+    //        .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
+    //        .SetSolutionDirectory(SamplesCSWinRTSolutionFolder)
+    //        .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
+    //    );
+
+
+    //    // make sure they compile
+    //    foreach (var platform in ManagedSamplesPlatforms)
+    //    {
+    //        string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
+
+    //        //DotNetTasks.DotNetBuild(_ => _
+    //        //    .SetProjectFile(SamplesCSWinRTSolutionFolder / "Midi" / "Midi.csproj")
+    //        //    .SetConfiguration(Configuration.Release)
+    //        //    .SetPublishSingleFile(false)
+    //        //    .SetPublishTrimmed(false)
+    //        //    .SetSelfContained(false)
+    //        //    .SetRuntime(rid)
+    //        //);
+
+
+    //        var msbuildProperties = new Dictionary<string, object>();
+    //        msbuildProperties.Add("Platform", platform);
+    //        msbuildProperties.Add("SolutionDir", SamplesCSWinRTSolutionFolder);      // to include trailing slash
+    //                                                                //msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+
+    //        Console.Out.WriteLine($"----------------------------------------------------------------------");
+    //        Console.Out.WriteLine($"Solution:    {solution}");
+    //        Console.Out.WriteLine($"SolutionDir: {SamplesCSWinRTSolutionFolder}");
+    //        Console.Out.WriteLine($"Platform:    {platform}");
+
+
+    //        MSBuildTasks.MSBuild(_ => _
+    //            .SetTargetPath(solution)
+    //            .SetMaxCpuCount(null)
+    //            /*.SetOutDir(outputFolder) */
+    //            .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
+    //            /*.SetTargets("Build") */
+    //            .SetProperties(msbuildProperties)
+    //            .SetConfiguration(Configuration.Release)
+    //            .SetVerbosity(BuildVerbosity)
+    //            .EnableNodeReuse()
+    //        );
+    //    }
+    //});
 
-            XmlElement element = doc.SelectSingleNode($"/msb:Project/msb:PropertyGroup/msb:WindowsMidiServicesSdkPackage", manager) as XmlElement;
-
-            // change the version attribute
-            if (element != null)
-            {
-                element.InnerText = NugetFullPackageIdWithVersion;
-
-                doc.Save(vcxprojFilePath);
-
-                Console.WriteLine($"Updated {vcxprojFilePath}");
-            }
-            else
-            {
-                throw new ArgumentException($"Failed to update SDK Package Value for '{vcxprojFilePath}'.");
-            }
-
-        }
-        else
-        {
-            throw new ArgumentException($"vcxproj file does not exist '{vcxprojFilePath}'.");
-        }
-
-    }
-
-    void UpdatePackagesConfigForCPPProject(string configFilePath)
-    {
-        if (File.Exists(configFilePath))
-        {
-            // this is ugly and annoying to have to do.
-            //   XmlTasks.XmlPoke(configFilePath, @"/packages/package/id", NugetFullPackageId)
-
-            var doc = new XmlDocument();
-            doc.Load(configFilePath);
-
-            XmlElement element = doc.SelectSingleNode($"/packages/package[@id = \"{NugetPackageId}\"]") as XmlElement;
-
-            // change the version attribute
-            if (element != null)
-            {
-                Console.WriteLine($"Updating {element}");
-
-                element.SetAttribute("version", NugetPackageVersion);
-
-                doc.Save(configFilePath);
-
-                Console.WriteLine($"Updated {configFilePath}");
-            }
-            else
-            {
-                throw new ArgumentException($"Failed to update NuGet Package Value for '{configFilePath}'.");
-            }
-
-        }
-        else
-        {
-            throw new ArgumentException($"Packages.config file does not exist '{configFilePath}'.");
-        }
-    }
-
-
-    Target T_BuildCppSamples => _ => _
-        .DependsOn(T_BuildAndPackAllAppSDKs)
-        .Executes(() =>
-        {
-            var solution = SamplesCppWinRTSolutionFolder / "cpp-winrt-samples.sln";
-
-            // update nuget packages for each project 
-            foreach (var projectFolder in Directory.GetDirectories(SamplesCppWinRTSolutionFolder))
-            {
-                // only send paths that have a packages config in them
-
-                var configFilePath = Path.Combine(projectFolder, "packages.config");
-
-                if (File.Exists(configFilePath))
-                {
-                    Console.WriteLine($"Updating {configFilePath}");
-                    UpdatePackagesConfigForCPPProject(configFilePath);
-
-                    var vcxprojFilePaths = Directory.GetFiles(projectFolder, "*.vcxproj");
-
-                    foreach (var path in vcxprojFilePaths)
-                    {
-                        Console.WriteLine($"Updating {path}");
-                        UpdateWindowsMidiServicesSdkPackagePropertyForCppProject(path);
-
-                        // nuget restore
-                        RestoreNuGetPackagesForCPPProject(path, SamplesCppWinRTSolutionFolder, configFilePath);
-
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"Not a project folder {projectFolder}");
-                }
-
-            }
-
-
-
-            // for cppwinrt
-            NuGetTasks.NuGetInstall(_ => _
-                .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
-                .SetSource("https://api.nuget.org/v3/index.json")
-                .SetPackageID("Microsoft.Windows.CppWinRT")
-                .SetDependencyVersion(DependencyVersion.Highest)
-            );
-
-            // for WIL
-            //NuGetTasks.NuGetInstall(_ => _
-            //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
-            //    .SetPreRelease(true)
-            //    .SetSource("https://api.nuget.org/v3/index.json")
-            //    .SetPackageID("Microsoft.Windows.ImplementationLibrary")
-            //);
-
-
-            // for the MIDI nuget package
-            // the install and restore should work with the above 
-            // manual managing of the packages.config
-            //NuGetTasks.NuGetInstall(_ => _
-            //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
-            //    .SetPreRelease(true)
-            //    .SetSource(AppSdkNugetOutputFolder)
-            //    .SetPackageID(NugetFullPackageId)
-            //    .SetDependencyVersion(DependencyVersion.Highest)
-            //);
-
-            //NuGetTasks.NuGetRestore(_ => _
-            //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
-            //    .SetSolutionDirectory(SamplesCppWinRTSolutionFolder)
-            //    .SetSource(AppSdkNugetOutputFolder)
-            //);
-
-
-            // make sure they compile
-            foreach (var platform in NativeSamplesPlatforms)
-            {
-                string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
-
-                var msbuildProperties = new Dictionary<string, object>();
-                msbuildProperties.Add("Platform", platform);
-                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
-                //msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
-
-                Console.Out.WriteLine($"----------------------------------------------------------------------");
-                Console.Out.WriteLine($"Solution:    {solution}");
-                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-                Console.Out.WriteLine($"Platform:    {platform}");
-
-
-                MSBuildTasks.MSBuild(_ => _
-                    .SetProcessToolPath(MSBuildTasks.MSBuildPath)
-                    .SetTargetPath(solution)
-                    .SetMaxCpuCount(null)
-                    /*.SetOutDir(outputFolder) */
-                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
-                    /*.SetTargets("Build") */
-                    .SetProperties(msbuildProperties)
-                    .SetConfiguration(Configuration.Release)
-                    .SetVerbosity(BuildVerbosity)
-                    .EnableNodeReuse()
-                );
-
-
-
-
-            }
-        });
-
-
-    Target T_BuildCSharpSamples => _ => _
-        .DependsOn(T_BuildAndPackAllAppSDKs)
-        .Executes(() =>
-    {
-        var solution = SamplesCSWinRTSolutionFolder / "csharp-net-samples.sln";
-
-
-        // for cswinrt
-        NuGetTasks.NuGetInstall(_ => _
-            .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
-            .SetSource("https://api.nuget.org/v3/index.json")
-            .SetPackageID("Microsoft.Windows.CsWinRT")
-            .SetDependencyVersion(DependencyVersion.Highest)
-        );
-
-
-        // for the MIDI nuget package
-        // the install and restore should work with the above 
-        // manual managing of the packages.config
-        NuGetTasks.NuGetInstall(_ => _
-            .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
-            .SetPreRelease(true)
-            .SetSource(AppSdkNugetOutputFolder)
-            .SetPackageID(NugetPackageId)
-            .SetDependencyVersion(DependencyVersion.Highest)
-        );
-
-        NuGetTasks.NuGetRestore(_ => _
-            .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
-            .SetSolutionDirectory(SamplesCSWinRTSolutionFolder)
-            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
-        );
-
-
-        // make sure they compile
-        foreach (var platform in ManagedSamplesPlatforms)
-        {
-            string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
-
-            //DotNetTasks.DotNetBuild(_ => _
-            //    .SetProjectFile(SamplesCSWinRTSolutionFolder / "Midi" / "Midi.csproj")
-            //    .SetConfiguration(Configuration.Release)
-            //    .SetPublishSingleFile(false)
-            //    .SetPublishTrimmed(false)
-            //    .SetSelfContained(false)
-            //    .SetRuntime(rid)
-            //);
-
-
-            var msbuildProperties = new Dictionary<string, object>();
-            msbuildProperties.Add("Platform", platform);
-            msbuildProperties.Add("SolutionDir", SamplesCSWinRTSolutionFolder);      // to include trailing slash
-                                                                    //msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
-
-            Console.Out.WriteLine($"----------------------------------------------------------------------");
-            Console.Out.WriteLine($"Solution:    {solution}");
-            Console.Out.WriteLine($"SolutionDir: {SamplesCSWinRTSolutionFolder}");
-            Console.Out.WriteLine($"Platform:    {platform}");
-
-
-            MSBuildTasks.MSBuild(_ => _
-                .SetTargetPath(solution)
-                .SetMaxCpuCount(null)
-                /*.SetOutDir(outputFolder) */
-                .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
-                /*.SetTargets("Build") */
-                .SetProperties(msbuildProperties)
-                .SetConfiguration(Configuration.Release)
-                .SetVerbosity(BuildVerbosity)
-                .EnableNodeReuse()
-            );
-        }
-    });
-
-
-    // hard-coded paths to just get around some runtime limitations. This should
-    // be re-done to make this build more portable
-
-    [LocalPath(@"g:\github\microsoft\midi\build\electron-projection\nodert\src\NodeRtCmd\bin\Debug\NodeRtCmd.exe")]
-    readonly Tool NodeRT;
-
-
-    [LocalPath(@"C:\Users\peteb\AppData\Roaming\npm\node-gyp.cmd")]
-    readonly Tool NodeGyp;
-
-
-    Target T_BuildAndPackageElectronProjection => _ => _
-        .DependsOn(T_BuildAndPackAllAppSDKs)
-        //.DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
-        .Executes(() =>
-    {
-      //  var projectionOutputRoot = ElectronProjectionRootFolder / "projection";
-      //  projectionOutputRoot.CreateOrCleanDirectory();
-
-      ////  var projectionReleaseRoot = ElectronProjectionRootFolder / "projection_release";
-      ////  projectionReleaseRoot.CreateOrCleanDirectory();
-
-
-      //  foreach (var platform in OutOfProcPlatforms)
-      //  {
-      //      var platformOutputRootFolder = projectionOutputRoot / platform;
-      //      platformOutputRootFolder.CreateDirectory();
-
-
-      //      // copy the winmd and impl libs from staging
-
-      //      var sdkFiles = (AppSdkStagingFolder / platform).GlobFiles("*.dll", "*.winmd", "*.pri");
-
-      //      foreach (var sdkFile in sdkFiles)
-      //      {
-      //          (
-      //              sdkFile,
-      //              platformOutputRootFolder,
-      //              FileExistsPolicy.Overwrite,
-      //              true);
-      //      }
-
-
-      //      // main windows metadata file
-      //      //(
-      //      //    @"C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd",
-      //      //    platformOutputRootFolder,
-      //      //    ExistsPolicy.FileOverwrite);
-
-      //      foreach (var ns in AppSdkAssemblies)
-      //      {
-      //          var nsRootFolder = platformOutputRootFolder / ns.ToLower();
-      //          nsRootFolder.CreateDirectory();
-
-      //          var namespaceBuildFolder = nsRootFolder / "build";
-      //          namespaceBuildFolder.CreateOrCleanDirectory();
-
-      //          // the winmd files are in the parent folder
-      //          //NodeRT($"--winmd {AppSdkStagingFolder / platform / ns + ".winmd"} --outdir {platformOutputRootFolder} --verbose");
-      //          NodeRT($"--winmd {AppSdkStagingFolder / platform / ns + ".winmd"} --outdir {platformOutputRootFolder}");
-
-      //          // todo: need to capture return code
-      //      }
-
-      //      // the NodeRt tool creates folders for each namespace, not for 
-      //      // each winmd, so we then need to loop through and compile the
-      //      // dll for each namespace.
-
-      //      var platformNamespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder, "microsoft.windows.devices.midi2*");
-      //      //var namespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder);
-
-      //      foreach (var platformNamespaceFolder in platformNamespaceFolders)
-      //      {
-      //          // build the projection
-      //          Console.Out.WriteLine("--------------");
-      //          Console.Out.WriteLine($"Rebuilding: {platformNamespaceFolder}");
-
-      //          //NodeGyp(
-      //          //    arguments: $"rebuild --msvs_version=2022",
-      //          //    workingDirectory: platformNamespaceFolder,
-      //          //    logOutput: false
-      //          //    );
-
-      //          // node-gyp rebuild --target=32.0.0 --arch=x64 --dist-url=https://electronjs.org/headers
-
-      //          //NpmTasks.Npm(
-      //          //    "install electron --save-dev",
-      //          //    platformNamespaceFolder);
-
-
-      //          //NodeGyp(
-      //          //    arguments: $"configure" +
-      //          //        $" --node_use_v8_platform=false " +
-      //          //        $" --node_use_bundled_v8=false" +
-      //          //        $" --msvs_version=2022" +
-      //          //        $" --target=32.0.0" +
-      //          //        $" --dist-url=https://electronjs.org/headers" +
-      //          //        
-      //          //    workingDirectory: platformNamespaceFolder,
-      //          //    logOutput: false
-      //          //    );
-
-      //          NodeGyp(
-      //              arguments: $"rebuild" +
-      //                  $" --openssl_fips=X" +
-      //                  $" --arch={platform.ToLower()}" +
-      //                 /* $" --verbose" + */
-      //                  $" --msvs_version=2022",
-      //              workingDirectory: platformNamespaceFolder,
-      //              logOutput: true
-      //              );
-
-
-
-
-      //          // todo: need to capture return code
-
-      //          //NpmTasks.Npm(
-      //          //    "install --save-dev @electron/rebuild",
-      //          //    nsFolder);
-
-      //          // Next step is to execute the electron-rebuild.cmd
-      //          // .\node_modules\.bin\electron-rebuild.cmd
-      //          // but that path is different for each one, and nuke
-      //          // doesn't seem to support that with their Tools.
-
-
-      //          // now copy the output files
-
-      //          //var nsReleaseRootFolder = projectionReleaseRoot / platform / nsFolder.Name.ToLower();
-      //          //nsReleaseRootFolder.CreateDirectory();
-
-      //          //binding.node is the binary
-
-      //          // Because of electron versioning vs node versioning, it's easier for the
-      //          // consumer if we just ship all the source, as crazy as that is for this.
-
-      //          //FileSystemTasks.CopyDirectoryRecursively(
-      //          //    platformNamespaceFolder,
-      //          //    projectionReleaseRoot / platform,
-      //          //    DirectoryExistsPolicy.Merge
-      //          //    );
-
-
-      //          //var sourceBinFolder = platformNamespaceFolder / "build" / "Release";
-
-      //          //(
-      //          //    sourceBinFolder / "binding.node",
-      //          //    nsReleaseRootFolder / "build" / "Release",
-      //          //    ExistsPolicy.FileOverwrite);
-
-      //          //// we also want the three files in the lib folder
-
-      //          //var sourceLibFolder = nsFolder / "lib";
-
-      //          //var libFiles = sourceLibFolder.GlobFiles("*.js", "*.ts");
-
-      //          //foreach (var libFile in libFiles)
-      //          //{
-      //          //    //Console.WriteLine($"Copying Projection File: {libFile}");
-
-      //          //    (
-      //          //        libFile,
-      //          //        nsReleaseRootFolder / "lib",
-      //          //        ExistsPolicy.FileOverwrite);
-      //          //}
-
-      //          //(
-      //          //    nsFolder / "package.json",
-      //          //    nsReleaseRootFolder,
-      //          //    ExistsPolicy.FileOverwrite);
-
-
-      //      }
-
-
-
-      //      // copy the manifest over and name it the default for electron apps
-      //      FileSystemTasks.CopyFile(
-      //          AppSdkStagingFolder / platform / "ExampleMidiApp.exe.manifest",
-      //          platformOutputRootFolder / "electron.exe.manifest" ,
-      //          FileExistsPolicy.Overwrite, 
-      //          true);
-
-      //      // Remove windows.winmd
-
-
-
-      //      // now, we zip it all up and put it over into the release folder
-
-      //      platformOutputRootFolder.ZipTo(ThisReleaseFolder / $"electron-node-projection-{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}-{platform.ToLower()}.zip");
-
-
-      //  }
-
-    });
 
 
     Target T_CopyCollectMidiLogs => _ => _
@@ -1728,83 +1213,81 @@ class Build : NukeBuild
 
 
 
-    Target T_ZipSamples => _ => _
-        .DependsOn(T_Prerequisites)
-        .DependsOn(T_CreateVersionIncludes)
-        .DependsOn(T_BuildAndPackAllAppSDKs)
-        .DependsOn(T_BuildCSharpSamples)
-        .DependsOn(T_BuildCppSamples)
-        .Executes(() =>
-        {
-            var samplesFolder = RootDirectory / "samples" ;
+    //Target T_ZipSamples => _ => _
+    //    .DependsOn(T_Prerequisites)
+    //    .DependsOn(T_BuildAndPackAllAppSDKs)
+    //    .DependsOn(T_BuildCSharpSamples)
+    //    .DependsOn(T_BuildCppSamples)
+    //    .Executes(() =>
+    //    {
+    //        var samplesFolder = RootDirectory / "samples" ;
 
-            // have to do a string compare on the folders here because the type throws
-            // an exception if you use the HasDirectory or similar methods, and the directory
-            // does not exist
-            samplesFolder.ZipTo(
-                ThisReleaseFolder / $"samples.zip",
-                filter: x =>
-                    !x.HasExtension("nupkg") &&
-                    !x.HasExtension("user") &&
-                    !x.HasExtension("log") &&
-                    !x.HasExtension("pfx") &&
-                    !x.ToString().Contains(@"\packages\") &&
-                    !x.ToString().Contains(@"\.vs\") &&
-                    !x.ToString().Contains(@"\obj\") &&
-                    !x.ToString().Contains(@"\bin\") &&
-                    !x.ToString().Contains(@"\intermediate\") &&
-                    !x.ToString().Contains(@"\vsfiles\") &&
-                    !x.ToString().Contains(@"\node_modules\")
-                //filter: x =>
-                //    x.HasExtension("ps1") ||
+    //        // have to do a string compare on the folders here because the type throws
+    //        // an exception if you use the HasDirectory or similar methods, and the directory
+    //        // does not exist
+    //        samplesFolder.ZipTo(
+    //            ThisReleaseFolder / $"samples.zip",
+    //            filter: x =>
+    //                !x.HasExtension("nupkg") &&
+    //                !x.HasExtension("user") &&
+    //                !x.HasExtension("log") &&
+    //                !x.HasExtension("pfx") &&
+    //                !x.ToString().Contains(@"\packages\") &&
+    //                !x.ToString().Contains(@"\.vs\") &&
+    //                !x.ToString().Contains(@"\obj\") &&
+    //                !x.ToString().Contains(@"\bin\") &&
+    //                !x.ToString().Contains(@"\intermediate\") &&
+    //                !x.ToString().Contains(@"\vsfiles\") &&
+    //                !x.ToString().Contains(@"\node_modules\")
+    //            //filter: x =>
+    //            //    x.HasExtension("ps1") ||
 
-                //    x.HasExtension("md") ||
+    //            //    x.HasExtension("md") ||
 
-                //    x.HasExtension("sln") ||
-                //    x.HasExtension("props") ||
-                //    x.HasExtension("pfx") ||
+    //            //    x.HasExtension("sln") ||
+    //            //    x.HasExtension("props") ||
+    //            //    x.HasExtension("pfx") ||
 
-                //    x.HasExtension("vcxproj") ||
-                //    x.HasExtension("cpp") ||
-                //    x.HasExtension("h") ||
-                //    x.HasExtension("config") ||
-                //    x.HasExtension("filters") ||
+    //            //    x.HasExtension("vcxproj") ||
+    //            //    x.HasExtension("cpp") ||
+    //            //    x.HasExtension("h") ||
+    //            //    x.HasExtension("config") ||
+    //            //    x.HasExtension("filters") ||
 
-                //    x.HasExtension("csproj") ||
-                //    x.HasExtension("cs") ||
-                //    x.HasExtension("xaml") ||
-                //    x.HasExtension("json") ||
+    //            //    x.HasExtension("csproj") ||
+    //            //    x.HasExtension("cs") ||
+    //            //    x.HasExtension("xaml") ||
+    //            //    x.HasExtension("json") ||
 
-                //    x.HasExtension("js") ||
-                //    x.HasExtension("html") 
-                );
-        });
+    //            //    x.HasExtension("js") ||
+    //            //    x.HasExtension("html") 
+    //            );
+    //    });
 
 
-    Target T_ZipPowershellDevUtilities => _ => _
-        .DependsOn(T_Prerequisites)
-        .DependsOn(T_CreateVersionIncludes)
-        .Executes(() =>
-        {
-            var regHelpersFolder = RootDirectory / "src" / "dev-tools" / "reg-helpers";
+    //Target T_ZipPowershellDevUtilities => _ => _
+    //    .DependsOn(T_Prerequisites)
+    //    .DependsOn(T_CreateVersionIncludes)
+    //    .Executes(() =>
+    //    {
+    //        var regHelpersFolder = RootDirectory / "src" / "dev-tools" / "reg-helpers";
 
-            regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
-        });
+    //        regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
+    //    });
 
     
 
     Target BuildAndPublishAll => _ => _
         .DependsOn(T_Prerequisites)
-        .DependsOn(T_CreateVersionIncludes)
         .DependsOn(T_BuildAndPackAllAppSDKs)
         .DependsOn(T_BuildConsoleApp)
         .DependsOn(T_BuildSettingsApp)
         .DependsOn(T_BuildAppSdkRuntimeAndToolsInstaller)
       //  .DependsOn(BuildAndPackageElectronProjection)
-        .DependsOn(T_BuildCppSamples)
-        .DependsOn(T_BuildCSharpSamples)
-        .DependsOn(T_ZipPowershellDevUtilities)
-        .DependsOn(T_ZipSamples)
+        //.DependsOn(T_BuildCppSamples)
+        //.DependsOn(T_BuildCSharpSamples)
+        //.DependsOn(T_ZipPowershellDevUtilities)
+        //.DependsOn(T_ZipSamples)
         .DependsOn(T_CopyCollectMidiLogs)
         .Executes(() =>
         {
