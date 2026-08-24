@@ -3,12 +3,7 @@
     <OutputType>Bundle</OutputType>
     <OutputName>WindowsMidiServicesSdkRuntimeSetup</OutputName>
     <BuildDate>$([System.DateTime]::Now.ToString("yyyyMMddhhmm"))</BuildDate>
-
-    <!-- Set to 1 by build\build.ps1 -IncludePowerShellModule. The PowerShell projection still
-         targets the pre-rename SDK namespaces, so it is excluded by default. -->
-    <IncludePowerShell Condition="'$(IncludePowerShell)'==''">0</IncludePowerShell>
-
-    <DefineConstants>BuildDate=$(BuildDate);IncludePowerShell=$(IncludePowerShell)</DefineConstants>
+    <DefineConstants>BuildDate=$(BuildDate)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SuppressValidation>true</SuppressValidation>
@@ -28,6 +23,6 @@
     <ProjectReference Include="..\console-package\console-package.wixproj" />
     <ProjectReference Include="..\sdk-package\sdk-redist-package.wixproj" />
     <ProjectReference Include="..\settings-package\settings-package.wixproj" />
-    <ProjectReference Include="..\powershell-package\powershell-package.wixproj" Condition="'$(IncludePowerShell)'=='1'" />
+    <ProjectReference Include="..\powershell-package\powershell-package.wixproj" />
   </ItemGroup>
 </Project>

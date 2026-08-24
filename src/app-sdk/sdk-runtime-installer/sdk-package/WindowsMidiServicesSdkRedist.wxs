@@ -37,7 +37,7 @@
             The SDK runtime, the in-box console tools and the in-box GUI tools are all listed in
             the generated _SetupFiles.wxs (ComponentGroup SdkRedistFiles). Start Menu shortcuts for
             the GUI tools are in the generated _StartMenu.wxs (ComponentGroup ToolAppShortcuts).
-            build\build.ps1 writes both from $ConsoleTools/$GuiTools, so adding a tool is a
+            build\build-sdk.ps1 writes both from $ConsoleTools/$GuiTools, so adding a tool is a
             one-line change there plus a Directory entry above.
         -->
 

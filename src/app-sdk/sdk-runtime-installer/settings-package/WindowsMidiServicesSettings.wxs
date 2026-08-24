@@ -21,7 +21,7 @@
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <!-- Subfolders (Assets, Controls, Styles, Themes, Views\...) are generated
-                         into _SetupFiles.wxs from the staged tree by build\build.ps1. -->
+                         into _SetupFiles.wxs from the staged tree by build\build-sdk.ps1. -->
                     <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
                 </Directory>
             </Directory>
@@ -77,7 +77,7 @@
     <!--
         All Settings app payload - the exe, its dependency closure, Assets, Controls, Styles,
         Themes, every Views subfolder, and the shared endpoint/transport SVGs - is in the
-        generated _SetupFiles.wxs (ComponentGroup SettingsAppFiles). build\build.ps1 walks
+        generated _SetupFiles.wxs (ComponentGroup SettingsAppFiles). build\build-sdk.ps1 walks
         build\staging and writes it, so new pages and new NuGet dependencies are picked up
         automatically.
     -->

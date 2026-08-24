@@ -10,12 +10,6 @@
     <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\AppSdkVersion.wxi ?>
     <?include $(StagingVersionIncludeFile) ?>
 
-    <!-- Set by build\build.ps1 -IncludePowerShellModule. The PowerShell projection has not been
-         ported to the current SDK namespaces, so it is excluded by default. -->
-    <?ifndef IncludePowerShell ?>
-        <?define IncludePowerShell=0 ?>
-    <?endif?>
-
     <!-- TODO: Gate on Arm64 or x64. No x86 installation -->
     
     <!-- TODO: Gate on Windows 10 22H2 or later -->
@@ -167,15 +161,13 @@
                 SourceFile="WindowsMIDIServicesSettingsAppStandAloneSetup.msi">
             </MsiPackage>
 
-            <?if $(IncludePowerShell) = 1 ?>
-                <MsiPackage
-                    Id="MidiServicesPowerShellSetup"
-                    Vital="yes"
-                    Permanent="no"
-                    Compressed="yes"
-                    SourceFile="WindowsMIDIServicesPowerShellSetup.msi">
-                </MsiPackage>
-            <?endif?>
+            <MsiPackage
+                Id="MidiServicesPowerShellSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMIDIServicesPowerShellSetup.msi">
+            </MsiPackage>
 
         </PackageGroup>
         
