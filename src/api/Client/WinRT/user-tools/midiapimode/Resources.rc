@@ -87,7 +87,7 @@ IDS_PROMPT_YES_NO_KEYS										L"Press Y for yes, or any other key for no."
 
 // Status and results
 
-IDS_STATUS_CANCELLED										L"Cancelled. No changes have been made."
+IDS_STATUS_CANCELED										L"Canceled. No changes have been made."
 IDS_STATUS_MODE_CHANGED										L"The API mode has been updated in the registry."
 IDS_STATUS_RESTARTING										L"Restarting the PC. Save your work now."
 IDS_STATUS_RESTART_LATER									L"The new API mode will not take effect until you restart the PC."

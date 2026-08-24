@@ -163,17 +163,28 @@
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
 
-                        <Button x:Name="CreateLoopbackButton"
-                                x:Uid="CreateLoopbackButton"
-                                Grid.Column="1"
-                                VerticalAlignment="Center"
-                                Style="{ThemeResource AccentButtonStyle}"
-                                Click="OnCreateLoopbackClick">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE710;" FontSize="14" />
-                                <TextBlock x:Uid="CreateLoopbackButtonText" Text="New loopback" />
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    VerticalAlignment="Center">
+                            <!-- Only offered while the well known default pair is missing, which
+                                 is the one case where there is nothing to fill in. -->
+                            <Button x:Name="CreateDefaultLoopbackButton"
+                                    x:Uid="CreateDefaultLoopbackButton"
+                                    Content="Create default loopback"
+                                    Visibility="Collapsed"
+                                    Click="OnCreateDefaultLoopbackClick" />
+
+                            <Button x:Name="CreateLoopbackButton"
+                                    x:Uid="CreateLoopbackButton"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Click="OnCreateLoopbackClick">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                    <TextBlock x:Uid="CreateLoopbackButtonText" Text="New loopback" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </Grid>
 
                     <!-- The diagram art carries no width or height of its own (the svg root is
@@ -260,7 +271,7 @@
                                                          Fill="{ThemeResource SystemFillColorCriticalBrush}" />
                                                 <!-- the critical fill is light in dark theme and
                                                      dark in light theme, so the glyph takes the
-                                                     page background colour to stay legible -->
+                                                      page background color to stay legible -->
                                                 <FontIcon Glyph="&#xE74F;"
                                                           FontSize="10"
                                                           Foreground="{ThemeResource SolidBackgroundFillColorBaseBrush}"
@@ -382,17 +393,26 @@
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
 
-                        <Button x:Name="CreateBasicLoopbackButton"
-                                x:Uid="CreateBasicLoopbackButton"
-                                Grid.Column="1"
-                                VerticalAlignment="Center"
-                                Style="{ThemeResource AccentButtonStyle}"
-                                Click="OnCreateBasicLoopbackClick">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE710;" FontSize="14" />
-                                <TextBlock x:Uid="CreateBasicLoopbackButtonText" Text="New basic loopback" />
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    VerticalAlignment="Center">
+                            <Button x:Name="CreateDefaultBasicLoopbackButton"
+                                    x:Uid="CreateDefaultBasicLoopbackButton"
+                                    Content="Create default basic loopback"
+                                    Visibility="Collapsed"
+                                    Click="OnCreateDefaultBasicLoopbackClick" />
+
+                            <Button x:Name="CreateBasicLoopbackButton"
+                                    x:Uid="CreateBasicLoopbackButton"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Click="OnCreateBasicLoopbackClick">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                    <TextBlock x:Uid="CreateBasicLoopbackButtonText" Text="New basic loopback" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </Grid>
 
                     <!-- source art is 1211 x 230; keep that ratio when changing the width -->
@@ -570,7 +590,7 @@
                              Header="Description"
                              TextChanged="OnCreateLoopbackFieldChanged" />
 
-                    <!-- Hidden unless the transport says it honours a picture, so the customer is
+                    <!-- Hidden unless the transport says it honors a picture, so the customer is
                          never offered one that would silently never appear. -->
                     <StackPanel x:Name="LoopbackImagePanel" Spacing="4" Visibility="Collapsed">
                         <TextBlock x:Uid="LoopbackImageHeader"

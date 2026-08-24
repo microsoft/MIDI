@@ -272,7 +272,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
     if (!PromptForYes(internal::ResourceGetWString(IDS_PROMPT_YES_NO_KEYS)))
     {
         WriteBlankLine();
-        WriteInfoLine(internal::ResourceGetWString(IDS_STATUS_CANCELLED));
+        WriteInfoLine(internal::ResourceGetWString(IDS_STATUS_CANCELED));
 
         return RETURN_SUCCESS;
     }

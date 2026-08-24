@@ -865,7 +865,7 @@ namespace winrt::midiscratchpad::implementation
     _Use_decl_annotations_
     void MainWindow::OnAddPitchBend(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
-        // 0x2000 is centre: LSB 0x00, MSB 0x40
+        // 0x2000 is center: LSB 0x00, MSB 0x40
         AppendText(std::format(L"E{:X} 00 40", SelectedIndexOrZero(ChannelComboBox())));
     }
 
@@ -1170,7 +1170,7 @@ namespace winrt::midiscratchpad::implementation
 
                 midi2::MidiGroup const group{ static_cast<uint8_t>(groupNumber - 1) };
 
-                // the SDK owns running status and SysEx7 packetisation, so the wire format here
+                // the SDK owns running status and SysEx7 packetization, so the wire format here
                 // matches everything else in Windows MIDI Services
                 auto const converted = midi2msg::MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(
                     group, parsed.Bytes, RunningStatusToggle().IsOn());

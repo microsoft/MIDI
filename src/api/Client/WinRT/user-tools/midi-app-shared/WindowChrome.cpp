@@ -95,7 +95,7 @@ namespace midiapp
                 return nullptr;
             }
 
-            // WriteableBitmap wants premultiplied BGRA; an icon's colour bitmap carries straight
+            // WriteableBitmap wants premultiplied BGRA; an icon's color bitmap carries straight
             // alpha, so without this every semi transparent edge pixel reads too bright.
             for (size_t i = 0; i < pixels.size(); i += 4)
             {

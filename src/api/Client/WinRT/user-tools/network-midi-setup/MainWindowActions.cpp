@@ -187,7 +187,7 @@ namespace winrt::midinetworksetup::implementation
     }
 
 
-    // Asks for an optional display name before connecting. Returns false if the user cancelled.
+    // Asks for an optional display name before connecting. Returns false if the user canceled.
     // The name is left empty when they accept without typing one, which means "use the name the
     // device reports".
     foundation::IAsyncOperation<bool> MainWindow::PromptForConnectNameAsync(

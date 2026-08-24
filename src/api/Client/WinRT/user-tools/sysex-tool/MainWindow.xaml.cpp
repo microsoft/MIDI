@@ -801,7 +801,7 @@ namespace winrt::midisysextool::implementation
             m_sendOperation = nullptr;
             m_isSending = false;
 
-            StatusText().Text(res::GetString(L"SendCancelled"));
+            StatusText().Text(res::GetString(L"SendCanceled"));
             UpdateCommandStates();
         }
         catch (...)

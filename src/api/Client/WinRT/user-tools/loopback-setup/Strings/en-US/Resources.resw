@@ -187,6 +187,36 @@
     <value>Not saved. This loopback disappears when the MIDI service restarts.</value>
   </data>
 
+  <!-- the well known defaults. The names and descriptions match what earlier releases created,
+       so an existing setup and a rebuilt one look the same. -->
+  <data name="CreateDefaultLoopbackButton.Content" xml:space="preserve">
+    <value>Create default loopback</value>
+  </data>
+  <data name="CreateDefaultBasicLoopbackButton.Content" xml:space="preserve">
+    <value>Create default basic loopback</value>
+  </data>
+  <data name="DefaultLoopbackNameA" xml:space="preserve">
+    <value>Default App Loopback (A)</value>
+  </data>
+  <data name="DefaultLoopbackNameB" xml:space="preserve">
+    <value>Default App Loopback (B)</value>
+  </data>
+  <data name="DefaultLoopbackDescriptionA" xml:space="preserve">
+    <value>Default loopback endpoint for use by applications. This is the A-side of the loopback pair.</value>
+  </data>
+  <data name="DefaultLoopbackDescriptionB" xml:space="preserve">
+    <value>Default loopback endpoint for use by applications. This is the B-side of the loopback pair.</value>
+  </data>
+  <data name="DefaultBasicLoopbackName" xml:space="preserve">
+    <value>Default Basic App Loopback</value>
+  </data>
+  <data name="DefaultBasicLoopbackDescription" xml:space="preserve">
+    <value>Default basic MIDI 1.0 loopback endpoint for use by applications.</value>
+  </data>
+  <data name="DefaultLoopbackCreated" xml:space="preserve">
+    <value>Default loopback created and saved.</value>
+  </data>
+
   <!-- endpoint pictures -->
   <data name="LoopbackImageHeader.Text" xml:space="preserve">
     <value>Picture</value>

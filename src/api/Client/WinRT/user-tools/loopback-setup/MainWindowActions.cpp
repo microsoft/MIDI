@@ -581,6 +581,201 @@ namespace winrt::midiloopbacksetup::implementation
 
 
     // ------------------------------------------------------------------------------------
+    // the well known defaults
+    // ------------------------------------------------------------------------------------
+    //
+    // These take no input: the names and identifiers are fixed, because apps look for them by
+    // identifier. Always saved to the configuration file, since a default that vanished on the
+    // next restart would not be much of a default. The buttons are hidden once one exists.
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnCreateDefaultLoopbackClick(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        midi2loop::MidiLoopbackCreationConfig creationConfig{ nullptr };
+
+        try
+        {
+            midi2loop::MidiLoopbackEndpointDefinition definitionA{};
+            midi2loop::MidiLoopbackEndpointDefinition definitionB{};
+
+            definitionA.Name(res::GetString(L"DefaultLoopbackNameA"));
+            definitionB.Name(res::GetString(L"DefaultLoopbackNameB"));
+
+            definitionA.Description(res::GetString(L"DefaultLoopbackDescriptionA"));
+            definitionB.Description(res::GetString(L"DefaultLoopbackDescriptionB"));
+
+            definitionA.UniqueId(native::DefaultLoopbackUniqueId);
+            definitionB.UniqueId(native::DefaultLoopbackUniqueId);
+
+            creationConfig = midi2loop::MidiLoopbackCreationConfig{ definitionA, definitionB };
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to prepare the default loopback.")
+
+        if (creationConfig == nullptr)
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        co_await winrt::resume_background();
+
+        bool created{ false };
+        bool saved{ false };
+        winrt::hstring errorMessage{};
+
+        try
+        {
+            auto const response = midi2loop::MidiLoopbackManager::CreateTransientLoopback(creationConfig);
+
+            created = response != nullptr && response.Success();
+
+            if (!created)
+            {
+                errorMessage = response == nullptr ? winrt::hstring{} : response.ErrorMessage();
+            }
+            else
+            {
+                saved = native::LoopbackConfigFile::Current().MergeSection(creationConfig.ConfigJson());
+
+                if (!saved)
+                {
+                    errorMessage = native::LoopbackConfigFile::Current().LastErrorMessage();
+                }
+            }
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to create the default loopback.")
+
+        if (queue == nullptr)
+        {
+            co_return;
+        }
+
+        queue.TryEnqueue([weak, created, saved, errorMessage]()
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr || strong->m_closing)
+                {
+                    return;
+                }
+
+                if (!created)
+                {
+                    strong->SetLoopbackStatus(errorMessage.empty() ?
+                        res::GetString(L"CreateLoopbackFailed") :
+                        res::FormatString(L"CreateLoopbackFailedFormat", errorMessage));
+                }
+                else if (!saved)
+                {
+                    strong->SetLoopbackStatus(res::FormatString(L"LoopbackCreatedNotSavedFormat", errorMessage));
+                }
+                else
+                {
+                    strong->SetLoopbackStatus(res::GetString(L"DefaultLoopbackCreated"));
+                }
+
+                strong->RequestRefreshAsync();
+            });
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnCreateDefaultBasicLoopbackClick(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        midi2bloop::MidiBasicLoopbackCreationConfig creationConfig{ nullptr };
+
+        try
+        {
+            midi2bloop::MidiBasicLoopbackEndpointDefinition definition{};
+
+            definition.Name(res::GetString(L"DefaultBasicLoopbackName"));
+            definition.Description(res::GetString(L"DefaultBasicLoopbackDescription"));
+            definition.UniqueId(native::DefaultBasicLoopbackUniqueId);
+
+            creationConfig = midi2bloop::MidiBasicLoopbackCreationConfig{ definition };
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to prepare the default basic loopback.")
+
+        if (creationConfig == nullptr)
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        co_await winrt::resume_background();
+
+        bool created{ false };
+        bool saved{ false };
+        winrt::hstring errorMessage{};
+
+        try
+        {
+            auto const response = midi2bloop::MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
+
+            created = response != nullptr && response.Success();
+
+            if (!created)
+            {
+                errorMessage = response == nullptr ? winrt::hstring{} : response.ErrorMessage();
+            }
+            else
+            {
+                saved = native::LoopbackConfigFile::Current().MergeSection(creationConfig.ConfigJson());
+
+                if (!saved)
+                {
+                    errorMessage = native::LoopbackConfigFile::Current().LastErrorMessage();
+                }
+            }
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to create the default basic loopback.")
+
+        if (queue == nullptr)
+        {
+            co_return;
+        }
+
+        queue.TryEnqueue([weak, created, saved, errorMessage]()
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr || strong->m_closing)
+                {
+                    return;
+                }
+
+                if (!created)
+                {
+                    strong->SetBasicLoopbackStatus(errorMessage.empty() ?
+                        res::GetString(L"CreateLoopbackFailed") :
+                        res::FormatString(L"CreateLoopbackFailedFormat", errorMessage));
+                }
+                else if (!saved)
+                {
+                    strong->SetBasicLoopbackStatus(res::FormatString(L"LoopbackCreatedNotSavedFormat", errorMessage));
+                }
+                else
+                {
+                    strong->SetBasicLoopbackStatus(res::GetString(L"DefaultLoopbackCreated"));
+                }
+
+                strong->RequestRefreshAsync();
+            });
+    }
+
+
+    // ------------------------------------------------------------------------------------
     // muting
     // ------------------------------------------------------------------------------------
 

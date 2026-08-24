@@ -572,6 +572,12 @@ namespace winrt::midiloopbacksetup::implementation
                 snapshot.Loopback.CanSetImage = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
                     transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE);
 
+                // either side answering means the pair is there, which is what the settings app
+                // used to check before offering to make one
+                snapshot.Loopback.DefaultExists =
+                    midi2loop::MidiLoopbackManager::DoesLoopbackAExist(native::DefaultLoopbackUniqueId) ||
+                    midi2loop::MidiLoopbackManager::DoesLoopbackBExist(native::DefaultLoopbackUniqueId);
+
                 if (snapshot.Loopback.CanList)
                 {
                     snapshot.LoopbackEntries = midi2loop::MidiLoopbackManager::GetActiveLoopbackEntries();
@@ -598,6 +604,9 @@ namespace winrt::midiloopbacksetup::implementation
 
                 snapshot.BasicLoopback.CanSetImage = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
                     transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE);
+
+                snapshot.BasicLoopback.DefaultExists =
+                    midi2bloop::MidiBasicLoopbackManager::DoesLoopbackExist(native::DefaultBasicLoopbackUniqueId);
 
                 if (snapshot.BasicLoopback.CanList)
                 {
@@ -724,6 +733,10 @@ namespace winrt::midiloopbacksetup::implementation
             LoopbackImagePanel().Visibility(
                 transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
+            // there is only ever one default pair, so the offer disappears once it exists
+            CreateDefaultLoopbackButton().Visibility(
+                (usable && !transport.DefaultExists) ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
             if (!usable)
             {
                 m_loopbacks.Clear();
@@ -802,6 +815,9 @@ namespace winrt::midiloopbacksetup::implementation
 
             BasicLoopbackImagePanel().Visibility(
                 transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            CreateDefaultBasicLoopbackButton().Visibility(
+                (usable && !transport.DefaultExists) ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             if (!usable)
             {

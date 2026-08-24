@@ -40,7 +40,7 @@
 
 // Status and results
 
-#define IDS_STATUS_CANCELLED										50500
+#define IDS_STATUS_CANCELED										50500
 #define IDS_STATUS_MODE_CHANGED										50501
 #define IDS_STATUS_RESTARTING										50502
 #define IDS_STATUS_RESTART_LATER									50503
