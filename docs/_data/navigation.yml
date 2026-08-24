@@ -17,6 +17,8 @@
     url: /tools/midisysextool/
   - text: Network MIDI 2.0 Setup
     url: /tools/midinetworksetup/
+  - text: MIDI Loopback Setup
+    url: /tools/midiloopbacksetup/
   - text: MIDI Console
     url: /tools/console/
   - text: MIDI Diagnostics
