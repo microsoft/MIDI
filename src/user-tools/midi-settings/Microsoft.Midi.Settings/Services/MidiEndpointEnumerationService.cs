@@ -122,7 +122,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
             App.GetService<IMidiTransportInfoService>(),
             App.GetService<INavigationService>(),
             _synchronizationContextService,
-            App.GetService<IMidiConsoleToolsService>(),
+            App.GetService<IMidiToolsService>(),
             App.GetService<IMidiPanicService>(),
             _loggingService);
 

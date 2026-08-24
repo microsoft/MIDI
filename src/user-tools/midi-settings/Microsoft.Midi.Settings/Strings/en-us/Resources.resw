@@ -780,6 +780,54 @@ This change will require a MIDI Service restart before it will take effect.</val
   <data name="SettingsPage_ShowPreviewToolsExpander.Header" xml:space="preserve">
     <value>Enable Preview Tools</value>
   </data>
+  <data name="SettingsPage_MonitorToolExpander.Header" xml:space="preserve">
+    <value>Endpoint Monitoring Tool</value>
+  </data>
+  <data name="SettingsPage_MonitorToolExpander.Description" xml:space="preserve">
+    <value>Choose which tool opens when you select Monitor for an endpoint.</value>
+  </data>
+  <data name="SettingsPage_MonitorTool_MonitorApp.Content" xml:space="preserve">
+    <value>MIDI Monitor app</value>
+  </data>
+  <data name="SettingsPage_MonitorTool_MidiConsole.Content" xml:space="preserve">
+    <value>Windows MIDI Services Console</value>
+  </data>
+  <data name="HomePage_MidiToolsHeader.Text" xml:space="preserve">
+    <value>Windows MIDI Services tools</value>
+  </data>
+  <data name="HomePage_MidiToolsDescription.Text" xml:space="preserve">
+    <value>MIDI tools installed on this PC. Select one to open it.</value>
+  </data>
+  <data name="ToolApp_LoopbackSetup_Name" xml:space="preserve">
+    <value>MIDI Loopback Setup</value>
+  </data>
+  <data name="ToolApp_LoopbackSetup_Description" xml:space="preserve">
+    <value>Create and manage the loopback endpoints applications use to talk to each other.</value>
+  </data>
+  <data name="ToolApp_NetworkSetup_Name" xml:space="preserve">
+    <value>Network MIDI 2.0 Setup</value>
+  </data>
+  <data name="ToolApp_NetworkSetup_Description" xml:space="preserve">
+    <value>Set up Network MIDI 2.0 hosts and connections to devices on your local network.</value>
+  </data>
+  <data name="ToolApp_ScratchPad_Name" xml:space="preserve">
+    <value>MIDI Scratch Pad</value>
+  </data>
+  <data name="ToolApp_ScratchPad_Description" xml:space="preserve">
+    <value>Send individual MIDI messages, notes, and control changes to an endpoint.</value>
+  </data>
+  <data name="ToolApp_SysEx_Name" xml:space="preserve">
+    <value>MIDI SysEx Tool</value>
+  </data>
+  <data name="ToolApp_SysEx_Description" xml:space="preserve">
+    <value>Send and receive System Exclusive data, like patches and firmware, to and from a device.</value>
+  </data>
+  <data name="ToolApp_Monitor_Name" xml:space="preserve">
+    <value>MIDI Monitor</value>
+  </data>
+  <data name="ToolApp_Monitor_Description" xml:space="preserve">
+    <value>Watch the MIDI messages flowing in and out of an endpoint.</value>
+  </data>
   <data name="SettingsPage_ShowPreviewToolsExpander.Description" xml:space="preserve">
     <value>Enable preview tools like the System Exclusive message sender. These tools are not yet stable and may have bugs or incomplete functionality. Requires restarting this app to see the changes.</value>
   </data>

@@ -19,6 +19,7 @@ class GeneralSettingsService : IGeneralSettingsService
     private const string MainWindowPositionAndSize_SettingsKey = "MainWindowPositionAndSize";
     private const string EndpointListLastUsedView_SettingsKey = "EndpointListLastUsedView";
     private const string PreviewToolsEnabled_SettingsKey = "PreviewToolsEnabled";
+    private const string MonitorTool_SettingsKey = "MonitorTool";
 
 
     private readonly ILocalSettingsService _localSettingsService;
@@ -102,6 +103,28 @@ class GeneralSettingsService : IGeneralSettingsService
     public void SetPreviewToolsEnabled(bool value)
     {
         _localSettingsService.SaveSetting<bool>(PreviewToolsEnabled_SettingsKey, value);
+    }
+
+
+    public MidiMonitorTool GetMonitorTool()
+    {
+        _loggingService.LogInfo($"Enter");
+
+        try
+        {
+            return _localSettingsService.ReadSetting<MidiMonitorTool>(MonitorTool_SettingsKey, MidiMonitorTool.MonitorApp);
+        }
+        catch (Exception ex)
+        {
+            _loggingService.LogError("Error getting the endpoint monitoring tool preference", ex);
+
+            return MidiMonitorTool.MonitorApp;
+        }
+    }
+
+    public void SetMonitorTool(MidiMonitorTool value)
+    {
+        _localSettingsService.SaveSetting<MidiMonitorTool>(MonitorTool_SettingsKey, value);
     }
 
 

@@ -62,6 +62,26 @@
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
+                <controls:SettingsExpander x:Name="MonitorToolExpander"
+                                           x:Uid="SettingsPage_MonitorToolExpander"
+                                           IsExpanded="True">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE9D9;" />
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical">
+                            <StackPanel Margin="0,0,0,0">
+                                <RadioButton x:Uid="SettingsPage_MonitorTool_MonitorApp"
+                                             GroupName="MonitorTool"
+                                             IsChecked="{x:Bind ViewModel.UseMonitorAppForMonitoring, Mode=TwoWay}" />
+                                <RadioButton x:Uid="SettingsPage_MonitorTool_MidiConsole"
+                                             GroupName="MonitorTool"
+                                             IsChecked="{x:Bind ViewModel.UseMidiConsoleForMonitoring, Mode=TwoWay}" />
+                            </StackPanel>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
                 <controls:SettingsExpander x:Name="ShowPreviewToolsExpander"
                                            x:Uid="SettingsPage_ShowPreviewToolsExpander"
                                            IsExpanded="True">

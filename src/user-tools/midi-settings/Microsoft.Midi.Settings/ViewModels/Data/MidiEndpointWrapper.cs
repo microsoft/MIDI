@@ -400,14 +400,14 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly ISynchronizationContextService _synchronizationContextService;
         private readonly IMidiPanicService _panicService;
         private readonly IMidiTransportInfoService _transportInfoService;
-        private readonly IMidiConsoleToolsService _consoleToolsService;
+        private readonly IMidiToolsService _toolsService;
         private readonly ILoggingService _loggingService;
 
         public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,
             IMidiTransportInfoService transportInfoService,
             INavigationService navigationService,
             ISynchronizationContextService synchronizationContextService,
-            IMidiConsoleToolsService consoleToolsService,
+            IMidiToolsService toolsService,
             IMidiPanicService panicService,
             ILoggingService loggingService)
         {
@@ -419,9 +419,9 @@ namespace Microsoft.Midi.Settings.ViewModels
             _synchronizationContextService = synchronizationContextService;
             _panicService = panicService;
             _transportInfoService = transportInfoService;
-            _consoleToolsService = consoleToolsService;
+            _toolsService = toolsService;
 
-            CanMonitor = consoleToolsService.IsMidiConsolePresent();
+            CanMonitor = toolsService.IsEndpointMonitoringAvailable();
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointWrapper>(
                 (param) =>
@@ -459,7 +459,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     System.Diagnostics.Debug.WriteLine("Monitor");
 
-                    _consoleToolsService.MonitorEndpoint(DeviceInformation);                   
+                    _toolsService.MonitorEndpoint(DeviceInformation);                   
 
                 });
 

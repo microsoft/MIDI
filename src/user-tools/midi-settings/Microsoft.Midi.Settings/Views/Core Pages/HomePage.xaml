@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="using:Microsoft.Midi.Settings.Views"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
+    xmlns:models="using:Microsoft.Midi.Settings.Models"
     xmlns:midi2="using:Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
@@ -142,7 +143,36 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Left Column -->
-                        <StackPanel Grid.Column="0" >
+                        <StackPanel Grid.Column="0" Spacing="16" >
+
+                            <controls:SettingsExpander IsExpanded="True"
+                                                       ItemsSource="{x:Bind ViewModel.ToolApps}"
+                                                       Visibility="{x:Bind ViewModel.HasToolApps, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <controls:SettingsExpander.Resources>
+                                    <!-- 2x the default, so the app icons read clearly -->
+                                    <x:Double x:Key="SettingsCardHeaderIconMaxSize">40</x:Double>
+                                </controls:SettingsExpander.Resources>
+                                <controls:SettingsExpander.Header>
+                                    <StackPanel>
+                                        <TextBlock x:Uid="HomePage_MidiToolsHeader" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                                        <TextBlock x:Uid="HomePage_MidiToolsDescription" Style="{StaticResource HomeCardHeaderDescriptionStyle}" TextWrapping="WrapWholeWords" />
+                                    </StackPanel>
+                                </controls:SettingsExpander.Header>
+                                <controls:SettingsExpander.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MidiToolAppInfo">
+                                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                               Header="{x:Bind Name}"
+                                                               Description="{x:Bind Description}"
+                                                               AutomationProperties.Name="{x:Bind Name}"
+                                                               Command="{x:Bind LaunchCommand}">
+                                            <controls:SettingsCard.HeaderIcon>
+                                                <ImageIcon Source="{x:Bind Icon}" />
+                                            </controls:SettingsCard.HeaderIcon>
+                                        </controls:SettingsCard>
+                                    </DataTemplate>
+                                </controls:SettingsExpander.ItemTemplate>
+                            </controls:SettingsExpander>
+
                             <controls:SettingsExpander IsExpanded="True"  >
                                 <controls:SettingsExpander.Header>
                                     <StackPanel>
@@ -151,50 +181,7 @@
                                     </StackPanel>
                                 </controls:SettingsExpander.Header>
                                 <controls:SettingsExpander.Items>
-
-                                    <!--<Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0">
-                                <TextBlock x:Uid="CommonTasksGroup_Endpoints" Style="{StaticResource HomeCardItemSeparatorStyle}" />
-                            </Border>-->
-
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
-                                                       Visibility="{x:Bind ViewModel.IsBasicLoopbackTransportAvailable, Mode=OneWay,Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                       Command="{x:Bind ViewModel.CommonTaskCreateBasicLoopbackEndpointsCommand}">
-                                        <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_CreateBasicLoopbackEndpoints" TextWrapping="WrapWholeWords" />
-                                        </controls:SettingsCard.Header>
-                                        <controls:SettingsCard.HeaderIcon>
-                                            <ImageIcon Source="/Assets/LeftNav-CreateBasicLoopbackEndpoints.svg" />
-                                        </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>
-
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
-                                                       Visibility="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                       Command="{x:Bind ViewModel.CommonTaskCreateLoopbackEndpointsCommand}">
-                                        <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_CreateLoopbackEndpoints" TextWrapping="WrapWholeWords" />
-                                        </controls:SettingsCard.Header>
-                                        <controls:SettingsCard.HeaderIcon>
-                                            <ImageIcon Source="/Assets/LeftNav-CreateLoopbackEndpoints.svg" />
-                                        </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>
-
                                   
-                                    
-                                    
-                                    
-                                    <!--<controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
-                                                       Command="{x:Bind ViewModel.CommonTaskSendSysExCommand}"
-                                                       Visibility="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay,Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_SendSysExFile" TextWrapping="WrapWholeWords" />
-                                        </controls:SettingsCard.Header>
-                                        <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe898;" Style="{StaticResource CommonTasksIconStyles}"/>
-                                        </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>-->
-
-                                    
-                                    
                                     
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
@@ -207,17 +194,6 @@
                                                       Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
-
-                                    <!--<controls:SettingsCard IsClickEnabled="True" IsEnabled="False"
-                                                           Command="{x:Bind ViewModel.CommonTaskAssignMidi1DeviceToNewDriverCommand}">
-                                        <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_AssignMidi1DeviceToNewDriver" TextWrapping="WrapWholeWords" />
-                                        </controls:SettingsCard.Header>
-                                        <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb9d;" Style="{StaticResource CommonTasksIconStyles}"/>
-                                        </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>-->
-
 
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
                                                        Command="{x:Bind ViewModel.CommonTaskOpenMidiConsoleCommand}">
@@ -425,9 +401,9 @@
 
                                     <controls:SettingsCard IsClickEnabled="False">
                                         <controls:SettingsCard.Header>
-                                            <HyperlinkButton NavigateUri="https://github.com/PowerShell/PowerShell/releases/tag/v7.6.0-preview.6">
+                                            <HyperlinkButton NavigateUri="https://github.com/PowerShell/PowerShell/releases#release-v7.6.5">
                                                 <HyperlinkButton.Content>
-                                                    <TextBlock Text="PowerShell 7.6 (useful for MIDI scripting and more)" TextWrapping="WrapWholeWords"/>
+                                                    <TextBlock Text="PowerShell 7.6.5 (useful for MIDI scripting and more)" TextWrapping="WrapWholeWords"/>
                                                 </HyperlinkButton.Content>
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
