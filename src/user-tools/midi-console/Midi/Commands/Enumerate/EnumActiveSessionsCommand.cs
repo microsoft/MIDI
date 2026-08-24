@@ -104,20 +104,38 @@ namespace Microsoft.Midi.ConsoleApp
                                     connectionInfoString += $" [paleturquoise1]x{connection.InstanceCount}[/] ";
                                 }
 
-                                var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(connection.EndpointDeviceId);
+                                string epName = string.Empty;
+                                string icon = string.Empty;
 
-                                string epName;
-                                string icon;
-
-                                if (di != null)
+                                if (MidiEndpointDeviceHelper.IsPossibleWindowsMidiServicesEndpointDeviceId(connection.EndpointOrPortDeviceId))
                                 {
-                                    epName = di.Name;
-                                    icon = AnsiMarkupFormatter.GetEndpointIcon(di.EndpointPurpose);
+                                    var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(connection.EndpointOrPortDeviceId);
+
+                                    if (di != null)
+                                    {
+                                        epName = di.Name;
+                                        icon = AnsiMarkupFormatter.GetEndpointIcon(di.EndpointPurpose);
+                                    }
+                                    else
+                                    {
+                                        epName = "Unknown";
+                                        icon = AnsiMarkupFormatter.GetEndpointIcon(MidiEndpointDevicePurpose.NormalMessageEndpoint);
+                                    }
                                 }
-                                else
+                                else if(MidiEndpointDeviceHelper.IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(connection.EndpointOrPortDeviceId))
                                 {
-                                    epName = "Unknown";
-                                    icon = AnsiMarkupFormatter.GetEndpointIcon(MidiEndpointDevicePurpose.NormalMessageEndpoint);
+                                    var di = MidiLegacyPortDeviceInformation.CreateFromPortDeviceId(connection.EndpointOrPortDeviceId);
+
+                                    if (di != null)
+                                    {
+                                        epName = di.Name;
+                                        //icon = AnsiMarkupFormatter.GetEndpointIcon(di.EndpointPurpose);
+                                    }
+                                    else
+                                    {
+                                        epName = "Unknown";
+                                        //icon = AnsiMarkupFormatter.GetEndpointIcon(MidiEndpointDevicePurpose.NormalMessageEndpoint);
+                                    }
                                 }
 
                                 if (epName != string.Empty)
@@ -126,7 +144,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                                 }
 
-                                table.AddRow("", $"{connectionInfoString} {AnsiMarkupFormatter.FormatFullEndpointInterfaceId(connection.EndpointDeviceId)}");
+                                table.AddRow("", $"{connectionInfoString} {AnsiMarkupFormatter.FormatFullEndpointInterfaceId(connection.EndpointOrPortDeviceId)}");
                                 table.AddEmptyRow();
                             }
 

@@ -158,7 +158,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 watcher.Removed += (s, e) =>
                 {
-                    if (e.EndpointDeviceId.ToLower() == endpointId.ToLower())
+                    if (e.RemovedDevice.EndpointDeviceId.ToLower() == endpointId.ToLower())
                     {
                         _hasEndpointDisconnected = true;
                         _continueWatchingDevice = false;

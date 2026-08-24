@@ -110,7 +110,7 @@ namespace Microsoft.Midi.ConsoleApp
         private void OnWatcherDeviceRemoved(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationRemovedEventArgs args)
         {
             AnsiConsole.Markup($"[indianred1]{Strings.NotificationEndpointDeviceWatcherEndpointRemoved}[/]");
-            AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.EndpointDeviceId));
+            AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.RemovedDevice.EndpointDeviceId));
 
             AnsiConsole.MarkupLine("");
         }
@@ -121,7 +121,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         private void OnWatcherDeviceUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
         {
-            var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(args.EndpointDeviceId);
+            var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(args.UpdatedDevice.EndpointDeviceId);
 
             AnsiConsole.Markup($"[steelblue1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdated}[/]");
             AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.EndpointDeviceId));
