@@ -394,14 +394,11 @@ int __cdecl main()
 
     winrt::init_apartment();
 
-    WriteDoubleSeparatorLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
-    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
-    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
     WriteDoubleSeparatorLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION_1));
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION_2));
-    WriteSingleSeparatorLine();
+    WriteBlankLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_SERVICE_RUNNING_WARNING));
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_SERVICE_STOP_REQUIRED));
     WriteBlankLine();

@@ -47,10 +47,8 @@ BEGIN
 
 // Application banner
 
-IDS_BANNER_TOOL_INFO										L" This tool is part of the Windows MIDI Services API and tools"
-IDS_BANNER_COPYRIGHT										L" Copyright 2026- Microsoft Corporation."
-IDS_BANNER_INFO_URL											L" Information, license, and source available at https://aka.ms/midi"
-IDS_BANNER_DESCRIPTION										L" View or change the Windows MIDI API mode"
+IDS_BANNER_TOOL_INFO										L"This tool is part of Windows MIDI Services. Information and source available at https://aka.ms/midi"
+IDS_BANNER_DESCRIPTION										L"View or change the Windows MIDI API mode"
 
 // Help text
 

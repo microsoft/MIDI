@@ -490,13 +490,11 @@ int __cdecl main(int argc, char* argv[])
     }
 
 
-    WriteDoubleSeparatorLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
-    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
-    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
     WriteDoubleSeparatorLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
-    WriteDoubleSeparatorLine();
+    WriteBlankLine();
+
 
     LoadWinMMDevices();
 
