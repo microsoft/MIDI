@@ -1,6 +1,6 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
   <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
   <?include $(StagingVersionIncludeFile) ?>
 
@@ -24,36 +24,12 @@
             </Directory>
         </StandardDirectory>
 
-        <Component Id="PowerShellCmdlets"
+        <!-- Module payload is in the generated _SetupFiles.wxs (ComponentGroup PowerShellModuleFiles) -->
+
+        <Component Id="PowerShellModuleRegistration"
                    Bitness="always64"
                    Directory="POWERSHELL_MODULE_INSTALLFOLDER"
                    Guid="f460814c-4cf6-47af-a1d1-20ebacb3730f">
-
-            <!-- PowerShell Module Binary -->
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.dll" Vital="true" PatchWholeFile="yes"  />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.deps.json" Vital="true" PatchWholeFile="yes" />
-
-            <!-- PowerShell Module Definition -->
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WindowsMidiServices.psd1" Vital="true" PatchWholeFile="yes" />
-
-            <!-- C# / WinRT -->
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\WinRT.Runtime.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" Vital="true" PatchWholeFile="yes" />
-
-            <!-- Other .NET libs -->
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.ApplicationInsights.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Microsoft.Win32.Registry.AccessControl.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\Newtonsoft.Json.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.CodeDom.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Configuration.ConfigurationManager.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Diagnostics.EventLog.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.DirectoryServices.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Management.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Cryptography.Pkcs.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Cryptography.ProtectedData.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Security.Permissions.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-powershell\$(var.Platform)\System.Windows.Extensions.dll" Vital="true" PatchWholeFile="yes" />
 
             <!-- Add folder to powershell path -->
             <Environment Id="AddCmdletsToPowerShellPath"
@@ -61,10 +37,15 @@
                          Action="set" Part="last" System="yes"
                          Value="[POWERSHELL_ROOT_INSTALLFOLDER]" 
                          Permanent="no"/>
+
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+                <RegistryValue Type="string" Name="PowerShellModule" Value="[POWERSHELL_MODULE_INSTALLFOLDER]" KeyPath="yes" />
+            </RegistryKey>
         </Component>
 
         <Feature Id="WindowsMidiServicesPowerShell">
-            <ComponentRef Id="PowerShellCmdlets"/>
+            <ComponentGroupRef Id="PowerShellModuleFiles"/>
+            <ComponentRef Id="PowerShellModuleRegistration"/>
         </Feature>
     </Package>
 </Wix>

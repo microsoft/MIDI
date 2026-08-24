@@ -1,6 +1,6 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
   <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
   <?include $(StagingVersionIncludeFile) ?>
 
@@ -25,44 +25,16 @@
             </Directory>
         </StandardDirectory>
 
-        <Component Id="ConsoleAppExe"
+        <!--
+            The console app payload is in the generated _SetupFiles.wxs
+            (ComponentGroup ConsoleAppFiles), produced from the dotnet publish output so the
+            dependency closure never has to be hand-maintained here.
+        -->
+
+        <Component Id="ConsoleAppRegistration"
                    Bitness="always64"
                    Directory="CONSOLEAPP_INSTALLFOLDER"
                    Guid="8fbfa42a-554c-481a-93e3-0999d2abf3ab">
-
-            <!-- Install Tools: Console app -->
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.exe" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.deps.json" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.runtimeconfig.json" Vital="true" PatchWholeFile="yes" />
-            <!--<File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.exe.manifest" />-->
-
-            <!-- C# / WinRT -->
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\WinRT.Runtime.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" Vital="true" PatchWholeFile="yes" />
-
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Devices.Midi2.Tools.Shared.dll" Vital="true" PatchWholeFile="yes" />
-
-          <!-- WinRT Projections -->
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" Vital="true" PatchWholeFile="yes" />
-
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.pri" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.pdb" />
-
-
-
-          <!-- Spectre Console -->
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.Cli.dll" Vital="true" PatchWholeFile="yes" />
-
-            <!-- Other .NET libs -->
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.CodeDom.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Diagnostics.EventLog.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Diagnostics.EventLog.Messages.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Management.dll" Vital="true" PatchWholeFile="yes" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.ServiceProcess.ServiceController.dll" Vital="true" PatchWholeFile="yes" />
-
 
             <!-- Add folder to path -->
             <Environment Id="AddConsoleAppToSystemPath"
@@ -72,13 +44,14 @@
           <RegistryKey Root="HKLM"
                        Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
 
-            <RegistryValue Type="string" Name="MidiConsole" Value="[CONSOLEAPP_INSTALLFOLDER]midi.exe" />
+            <RegistryValue Type="string" Name="MidiConsole" Value="[CONSOLEAPP_INSTALLFOLDER]midi.exe" KeyPath="yes" />
 
           </RegistryKey>
         </Component>
 
         <Feature Id="WindowsMidiServicesConsole">
-            <ComponentRef Id="ConsoleAppExe"/>
+            <ComponentGroupRef Id="ConsoleAppFiles"/>
+            <ComponentRef Id="ConsoleAppRegistration"/>
         </Feature>
     </Package>
 </Wix>

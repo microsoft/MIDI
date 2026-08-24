@@ -6,9 +6,15 @@
 
     <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
   
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
     <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
     <?include $(StagingVersionIncludeFile) ?>
+
+    <!-- Set by build\build.ps1 -IncludePowerShellModule. The PowerShell projection has not been
+         ported to the current SDK namespaces, so it is excluded by default. -->
+    <?ifndef IncludePowerShell ?>
+        <?define IncludePowerShell=0 ?>
+    <?endif?>
 
     <!-- TODO: Gate on Arm64 or x64. No x86 installation -->
     
@@ -161,13 +167,15 @@
                 SourceFile="WindowsMIDIServicesSettingsAppStandAloneSetup.msi">
             </MsiPackage>
 
-            <MsiPackage
-                Id="MidiServicesPowerShellSetup"
-                Vital="yes"
-                Permanent="no"
-                Compressed="yes"
-                SourceFile="WindowsMIDIServicesPowerShellSetup.msi">
-            </MsiPackage>
+            <?if $(IncludePowerShell) = 1 ?>
+                <MsiPackage
+                    Id="MidiServicesPowerShellSetup"
+                    Vital="yes"
+                    Permanent="no"
+                    Compressed="yes"
+                    SourceFile="WindowsMIDIServicesPowerShellSetup.msi">
+                </MsiPackage>
+            <?endif?>
 
         </PackageGroup>
         
