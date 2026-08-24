@@ -6,9 +6,7 @@
 // Application banner
 
 #define IDS_BANNER_TOOL_INFO										50000
-#define IDS_BANNER_COPYRIGHT										50001
-#define IDS_BANNER_INFO_URL											50002
-#define IDS_BANNER_DESCRIPTION										50003
+#define IDS_BANNER_DESCRIPTION										50001
 
 // Help text
 
@@ -32,8 +30,7 @@
 
 #define IDS_LABEL_CURRENT_MODE										50300
 #define IDS_LABEL_REQUESTED_MODE									50301
-#define IDS_MODE_NOT_SET_USING_DEFAULT								50302
-#define IDS_MODE_ALREADY_SET										50303
+#define IDS_MODE_ALREADY_SET										50302
 
 // Prompts
 
@@ -52,9 +49,8 @@
 
 #define IDS_ERROR_NOT_ADMINISTRATOR									50600
 #define IDS_ERROR_INVALID_MODE_PARAMETER							50601
-#define IDS_ERROR_UNABLE_TO_READ_REGISTRY							50602
-#define IDS_ERROR_UNABLE_TO_WRITE_REGISTRY							50603
-#define IDS_ERROR_UNABLE_TO_RESTART									50604
+#define IDS_ERROR_UNABLE_TO_WRITE_REGISTRY							50602
+#define IDS_ERROR_UNABLE_TO_RESTART									50603
 
 
 // Next default values for new objects

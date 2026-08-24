@@ -11,6 +11,11 @@
 #include <ntverp.h>
 #include "resource.h"
 
+// ntverp.h supplies product-wide defaults for some of these
+#undef VER_COMPANYNAME_STR
+#undef VER_PRODUCTNAME_STR
+#undef VER_PRODUCTVERSION_STR
+
 #define VER_FILETYPE                VFT_APP
 #define VER_FILESUBTYPE             VFT2_UNKNOWN
 #define VER_FILEDESCRIPTION_STR     "Windows MIDI Services Tools"
@@ -72,7 +77,6 @@ IDS_MODE_UNKNOWN_NAME										L"Unknown mode"
 
 IDS_LABEL_CURRENT_MODE										L"Current API mode:"
 IDS_LABEL_REQUESTED_MODE									L"You have asked to change the API mode to:"
-IDS_MODE_NOT_SET_USING_DEFAULT								L"(not set in the registry, so the default is used)"
 IDS_MODE_ALREADY_SET										L"That is already the current API mode. No changes have been made."
 
 // Prompts
@@ -92,7 +96,6 @@ IDS_STATUS_RESTART_LATER									L"The new API mode will not take effect until y
 
 IDS_ERROR_NOT_ADMINISTRATOR									L"This tool must be run from an administrator command prompt in order to change the API mode."
 IDS_ERROR_INVALID_MODE_PARAMETER							L"The API mode must be 0, 1, or 2."
-IDS_ERROR_UNABLE_TO_READ_REGISTRY							L"Unable to read the API mode from the registry."
 IDS_ERROR_UNABLE_TO_WRITE_REGISTRY							L"Unable to write the API mode to the registry."
 IDS_ERROR_UNABLE_TO_RESTART									L"Unable to restart the PC. Please restart it manually."
 

@@ -238,7 +238,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
         if (!requestedModeProvided)
         {
             WriteErrorLine(internal::ResourceGetWString(IDS_ERROR_INVALID_MODE_PARAMETER));
-            fmt::println(L"");
+            WriteBlankLine();
         }
     }
 
@@ -271,7 +271,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
 
     if (!PromptForYes(internal::ResourceGetWString(IDS_PROMPT_YES_NO_KEYS)))
     {
-        fmt::println(L"");
+        WriteBlankLine();
         WriteInfoLine(internal::ResourceGetWString(IDS_STATUS_CANCELLED));
 
         return RETURN_SUCCESS;
@@ -286,7 +286,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
     }
 
     WriteHighlightLine(internal::ResourceGetWString(IDS_STATUS_MODE_CHANGED));
-    fmt::println(L"");
+    WriteBlankLine();
 
     WritePromptLine(internal::ResourceGetWString(IDS_PROMPT_CONFIRM_RESTART));
 
@@ -303,7 +303,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
     }
     else
     {
-        fmt::println(L"");
+        WriteBlankLine();
         WriteWarningLine(internal::ResourceGetWString(IDS_STATUS_RESTART_LATER));
     }
 
