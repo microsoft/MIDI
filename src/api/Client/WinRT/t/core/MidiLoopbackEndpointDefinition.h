@@ -48,11 +48,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         winrt::hstring ImageFileName() const noexcept { return m_imageFileName; }
         void ImageFileName(_In_ winrt::hstring const& value) noexcept { m_imageFileName = winrt::hstring{ internal::CleanImageFileName(value.c_str()) }; }
 
+        bool CreateOnlyUmpEndpoint() const noexcept { return m_umpOnly; }
+        void CreateOnlyUmpEndpoint(_In_ bool const value) noexcept { m_umpOnly = value; }
+
     private:
         winrt::hstring m_description{ };
         winrt::hstring m_name{ };
         winrt::hstring m_uniqueId{ };
         winrt::hstring m_imageFileName{ };
+        bool m_umpOnly{ false };
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::Loopback::factory_implementation

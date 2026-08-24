@@ -329,9 +329,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
 
                             auto associationIdString = entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY, L"");
 
-                            if (associationIdString.empty())
+                            GUID associationId{};
+
+                            // The association id originates as a key in the configuration file, which
+                            // anyone can hand-edit. Constructing a winrt::guid from a malformed one
+                            // throws, and that would discard every other entry in the list as well.
+                            if (!internal::TryParseGuidString(associationIdString.c_str(), associationId))
                             {
-                                // invalid entry
                                 continue;
                             }
 
@@ -363,7 +367,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                             }
 
                             // overall loopback
-                            entry->InternalSetAssociationId(winrt::guid(associationIdString));
+                            entry->InternalSetAssociationId(associationId);
                             entry->InternalSetMuted(entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_MUTED_KEY, false));
                             entry->InternalSetEndpointEntries(*loopbackA, *loopbackB);
 
