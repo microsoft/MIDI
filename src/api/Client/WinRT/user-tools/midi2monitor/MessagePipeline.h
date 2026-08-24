@@ -37,7 +37,7 @@ namespace midi2monitor
         }
 
         // Raised on the capture worker thread, already coalesced. The handler is responsible
-        // for marshalling to the UI thread, and calls AcknowledgeContentChanged when it runs.
+        // for marshaling to the UI thread, and calls AcknowledgeContentChanged when it runs.
         void ContentChangedHandler(std::function<void()> handler) noexcept;
         void AcknowledgeContentChanged() noexcept;
 

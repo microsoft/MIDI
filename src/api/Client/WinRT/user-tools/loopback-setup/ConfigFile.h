@@ -17,6 +17,13 @@ namespace midiloopbacksetup
         BasicLoopback   // BLOOP - a single endpoint
     };
 
+    // Identifiers of the well known default loopbacks. Apps look for these, and the shipped
+    // configuration file creates them, so the tool offers to put one back only when it is
+    // missing. Both sides of the pair deliberately share one identifier; the service gives the
+    // A and B endpoints different instance id prefixes.
+    constexpr wchar_t DefaultLoopbackUniqueId[] = L"DEFAULT";
+    constexpr wchar_t DefaultBasicLoopbackUniqueId[] = L"BASIC_DEF";
+
     // Reads and writes the Windows MIDI Services configuration file. The service applies a
     // change immediately when it is asked to; the file is what makes it survive a restart, so
     // everything here runs only after the matching service call has succeeded.

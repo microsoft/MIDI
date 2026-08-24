@@ -16,6 +16,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <format>
+#include <tuple>
 
 #include <wrl\module.h>
 #include <wrl\event.h>
@@ -32,13 +34,32 @@
 #include "console_tools_shared.h"
 
 #include "wstring_util.h"
+#include "resource_util.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
+
+#include "resource.h"
 
 #pragma warning (pop)
 
 const wchar_t* VALUE_NAME_MidisrvTransferComplete = L"MidisrvTransferComplete";
 const wchar_t* VALUE_NAME_UseLegacyMidi = L"UseLegacyMidi";
+
+
+// The format string comes from the string table and uses std::format {0}-style placeholders
+// so translators can reorder the substitutions.
+template <typename... TArgs>
+std::wstring FormatResourceString(_In_ UINT const resourceId, TArgs&&... args)
+{
+    auto values = std::make_tuple(std::forward<TArgs>(args)...);
+
+    return std::apply(
+        [resourceId](auto&... unpacked)
+        {
+            return std::vformat(internal::ResourceGetWString(resourceId), std::make_wformat_args(unpacked...));
+        },
+        values);
+}
 
 
 
@@ -114,7 +135,7 @@ std::vector<std::wstring> CheckRegistryAndGetValuesToDelete(_In_ std::wstring co
     std::vector<std::wstring> valuesToDelete{};
 
     WriteBlankLine();
-    WriteInfoLine(L"Checking '" + key + L"'.");
+    WriteInfoLine(FormatResourceString(IDS_STATUS_CHECKING_KEY, key));
 
     wil::unique_hkey keyForDelete;  // closes when it goes out of scope
 
@@ -149,37 +170,37 @@ std::vector<std::wstring> CheckRegistryAndGetValuesToDelete(_In_ std::wstring co
 
                         if (valueName == L"midi" && driverName == L"wdmaud.drv")
                         {
-                            WriteInfoDetailLine(L"Found correct required 'midi' value '" + driverName + L"'. Leaving it alone.");
+                            WriteInfoDetailLine(FormatResourceString(IDS_FOUND_CORRECT_MIDI_VALUE, driverName));
                         }
                         else if (valueName == L"midi1" && driverName == L"wdmaud2.drv")
                         {
-                            WriteInfoDetailLine(L"Found correct required 'midi1' value '" + driverName + L"'. Leaving it alone.");
+                            WriteInfoDetailLine(FormatResourceString(IDS_FOUND_CORRECT_MIDI1_VALUE, driverName));
                         }
                         else if (valueName == L"midimapper")
                         {
-                            WriteInfoDetailLine(L"Found 'midimapper' with value '" + driverName + L"'. Leaving it alone.");
+                            WriteInfoDetailLine(FormatResourceString(IDS_FOUND_MIDI_MAPPER, driverName));
                         }
                         else if (driverName == L"korgbm64.drv" && valueName != L"midi" && valueName != L"midi1")
                         {
-                            WriteInfoDetailLine(L"Found KORG BLE driver '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
+                            WriteInfoDetailLine(FormatResourceString(IDS_FOUND_KORG_BLE_DRIVER, driverName, valueName));
                         }
                         else if (driverName == L"midimapper.dll" && valueName != L"midi" && valueName != L"midi1")
                         {
-                            WriteInfoDetailLine(L"Found CoolSoft MIDI Mapper '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
+                            WriteInfoDetailLine(FormatResourceString(IDS_FOUND_COOLSOFT_MIDI_MAPPER, driverName, valueName));
                         }
                         else if (driverName == L"virtualmidisynth.dll" && valueName != L"midi" && valueName != L"midi1")
                         {
-                            WriteInfoDetailLine(L"Found CoolSoft Virtual MIDI Synth '" + driverName + L"' in '" + valueName + L"', which is fine. Leaving it alone.");
+                            WriteInfoDetailLine(FormatResourceString(IDS_FOUND_COOLSOFT_VIRTUAL_MIDI_SYNTH, driverName, valueName));
                         }
                         else
                         {
-                            WriteErrorDetailLine(L"Found value '" + valueName + L"' with value '" + driverName + L"'");
+                            WriteErrorDetailLine(FormatResourceString(IDS_FOUND_INCORRECT_VALUE, valueName, driverName));
                             valuesToDelete.push_back(value_data.name);
                         }
                     }
                     else
                     {
-                        WriteErrorDetailLine(L"Found value '" + valueName + L"' with incorrect value type.");
+                        WriteErrorDetailLine(FormatResourceString(IDS_FOUND_INCORRECT_VALUE_TYPE, valueName));
                         valuesToDelete.push_back(value_data.name);
                     }
 
@@ -187,7 +208,7 @@ std::vector<std::wstring> CheckRegistryAndGetValuesToDelete(_In_ std::wstring co
                 else
                 {
                     // the string starts with "midi" but includes other characters than a number. Leaving it alone.
-                    WriteInfoDetailLine(L"Found value '" + valueName + L"'. Leaving it alone.");
+                    WriteInfoDetailLine(FormatResourceString(IDS_FOUND_OTHER_VALUE, valueName));
                 }
             }
         }
@@ -196,7 +217,7 @@ std::vector<std::wstring> CheckRegistryAndGetValuesToDelete(_In_ std::wstring co
     
     if (valuesToDelete.empty())
     {
-        WriteInfoLine(L"No values require deleting from this location.");
+        WriteInfoLine(internal::ResourceGetWString(IDS_STATUS_NO_VALUES_TO_DELETE));
     }
 
     WriteBlankLine();
@@ -230,11 +251,11 @@ bool FixRegistryValues(_In_ std::wstring const& key, _In_ std::vector<std::wstri
 
             if (ret == ERROR_SUCCESS)
             {
-                WriteInfoDetailLine(L"Deleted registry value '" + valueNameW + L"'");
+                WriteInfoDetailLine(FormatResourceString(IDS_STATUS_DELETED_VALUE, valueNameW));
             }
             else
             {
-                WriteErrorDetailLine(L"Error deleting value '" + valueNameW + L"'");
+                WriteErrorDetailLine(FormatResourceString(IDS_ERROR_DELETING_VALUE, valueNameW));
                 return false;
             }
         }
@@ -246,12 +267,12 @@ bool FixRegistryValues(_In_ std::wstring const& key, _In_ std::vector<std::wstri
             hr = wil::reg::set_value_string_nothrow(HKEY_LOCAL_MACHINE, key.c_str(), L"midi", L"wdmaud.drv");
             if (!SUCCEEDED(hr))
             {
-                WriteErrorDetailLine(L"Unable to write 'midi' value of 'wdmaud.drv'");
+                WriteErrorDetailLine(internal::ResourceGetWString(IDS_ERROR_UNABLE_TO_WRITE_MIDI_VALUE));
                 return false;
             }
             else
             {
-                WriteInfoDetailLine(L"Updated registry value 'midi' to 'wdmaud.drv'");
+                WriteInfoDetailLine(internal::ResourceGetWString(IDS_STATUS_UPDATED_MIDI_VALUE));
             }
         }
 
@@ -260,12 +281,12 @@ bool FixRegistryValues(_In_ std::wstring const& key, _In_ std::vector<std::wstri
             hr = wil::reg::set_value_string_nothrow(HKEY_LOCAL_MACHINE, key.c_str(), L"midi1", L"wdmaud2.drv");
             if (!SUCCEEDED(hr))
             {
-                WriteErrorDetailLine(L"Unable to write 'midi1' value of 'wdmaud2.drv'");
+                WriteErrorDetailLine(internal::ResourceGetWString(IDS_ERROR_UNABLE_TO_WRITE_MIDI1_VALUE));
                 return false;
             }
             else
             {
-                WriteInfoDetailLine(L"Updated registry value 'midi1' to 'wdmaud2.drv'");
+                WriteInfoDetailLine(internal::ResourceGetWString(IDS_STATUS_UPDATED_MIDI1_VALUE));
             }
         }
 
@@ -287,15 +308,14 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
 
     if (!SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
     {
-        WriteErrorLine(L"Unable to initialize COM.");
-        return -1;
+        WriteErrorLine(internal::ResourceGetWString(IDS_ERROR_UNABLE_TO_INITIALIZE_COM));
+        return RETURN_GENERAL_FAILURE;
     }
 
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
     WriteDoubleSeparatorLine();
-    WriteInfoLine(L"This tool is part of the Windows MIDI Services SDK and tools");
-    WriteInfoLine(L"Copyright 2026- Microsoft Corporation.");
-    WriteInfoLine(L"Information, license, and source available at https://aka.ms/midi");
-    WriteDoubleSeparatorLine();
+    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
+    WriteBlankLine();
 
 
     // TODO: Change to check API mode
@@ -305,16 +325,16 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
     //    WriteBlankLine();
     //    WriteErrorLine(L"Windows MIDI Services is not present on this PC. No changes will be made.");
 
-    //    RETURN_NO_MIDI_SERVICES;
+    //    return RETURN_NO_MIDI_SERVICES;
     //}
 
     // check that we're running as admin. Bail if we're not.
     if (!CheckForAdminPermissions())
     {
         WriteBlankLine();
-        WriteErrorLine(L"Access Denied. Administrator permissions are needed to modify the registry entries. Use an administrator command prompt to run this utility.");
+        WriteErrorLine(internal::ResourceGetWString(IDS_ERROR_NOT_ADMINISTRATOR));
 
-        RETURN_INSUFFICIENT_PERMISSIONS;
+        return RETURN_INSUFFICIENT_PERMISSIONS;
     }
 
 
@@ -342,33 +362,33 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
         std::wstring response{};
 
         WriteBlankLine();
-        WriteHighlightLine(L"Changes are required for Windows MIDI Services to work correctly with older applications.");
-        WriteHighlightLine(L"Before continuing, please close any other apps which use MIDI, and save your work.");
+        WriteHighlightLine(internal::ResourceGetWString(IDS_PROMPT_CHANGES_REQUIRED));
+        WriteHighlightLine(internal::ResourceGetWString(IDS_PROMPT_CLOSE_OTHER_APPS));
         WriteBlankLine();
 
         if (!midiSrvTransferCompleteFound || !valuesToDelete64.empty() ||
             midiValueNeedsReplacing || midi1ValueNeedsReplacing)
         {
-            WriteHighlightLine(L"Proposed changes for 64 bit app location:");
+            WriteHighlightLine(internal::ResourceGetWString(IDS_LABEL_PROPOSED_CHANGES_64_BIT));
 
             for (auto const& valueNameW : valuesToDelete64)
             {
-                WriteInfoDetailLine(L"Delete registry value '" + valueNameW + L"'");
+                WriteInfoDetailLine(FormatResourceString(IDS_PROPOSED_DELETE_VALUE, valueNameW));
             }
 
             if (midiValueNeedsReplacing)
             {
-                WriteInfoDetailLine(L"Update registry value 'midi' to 'wdmaud.drv'");
+                WriteInfoDetailLine(internal::ResourceGetWString(IDS_PROPOSED_UPDATE_MIDI_VALUE));
             }
 
             if (midi1ValueNeedsReplacing)
             {
-                WriteInfoDetailLine(L"Update registry value 'midi1' to 'wdmaud2.drv'");
+                WriteInfoDetailLine(internal::ResourceGetWString(IDS_PROPOSED_UPDATE_MIDI1_VALUE));
             }
 
             if (!midiSrvTransferCompleteFound)
             {
-                WriteInfoDetailLine(L"Update registry value 'MidisrvTransferComplete' to '1'");
+                WriteInfoDetailLine(internal::ResourceGetWString(IDS_PROPOSED_UPDATE_TRANSFER_COMPLETE));
             }
 
             WriteBlankLine();
@@ -376,20 +396,21 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
 
         if (!valuesToDeleteWOW.empty() || midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing)
         {
-            WriteHighlightLine(L"Proposed changes for 32 bit app location:");
+            WriteHighlightLine(internal::ResourceGetWString(IDS_LABEL_PROPOSED_CHANGES_32_BIT));
+
             for (auto const& valueNameW : valuesToDeleteWOW)
             {
-                WriteInfoDetailLine(L"Delete registry value '" + valueNameW + L"'");
+                WriteInfoDetailLine(FormatResourceString(IDS_PROPOSED_DELETE_VALUE, valueNameW));
             }
 
             if (midiWOWValueNeedsReplacing)
             {
-                WriteInfoDetailLine(L"Update registry value 'midi' to wdmaud.drv");
+                WriteInfoDetailLine(internal::ResourceGetWString(IDS_PROPOSED_UPDATE_MIDI_VALUE));
             }
 
             if (midi1WOWValueNeedsReplacing)
             {
-                WriteInfoDetailLine(L"Update registry value 'midi1' to wdmaud2.drv");
+                WriteInfoDetailLine(internal::ResourceGetWString(IDS_PROPOSED_UPDATE_MIDI1_VALUE));
             }
 
             WriteBlankLine();
@@ -397,11 +418,11 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
 
         WriteBlankLine();
 
-        if (PromptForYes(L"Please enter 'Y' to make the proposed changes, or any other key to exit."))
+        if (PromptForYes(internal::ResourceGetWString(IDS_PROMPT_YES_NO_KEYS)))
         {
             if (!midiSrvTransferCompleteFound || midiValueNeedsReplacing || midi1ValueNeedsReplacing || !valuesToDelete64.empty())
             {
-                WriteHighlightLine(L"Making required changes for 64 bit apps");
+                WriteHighlightLine(internal::ResourceGetWString(IDS_STATUS_MAKING_CHANGES_64_BIT));
                 FixRegistryValues(drivers32HklmKey, valuesToDelete64, midiValueNeedsReplacing, midi1ValueNeedsReplacing);
 
                 if (!midiSrvTransferCompleteFound)
@@ -412,9 +433,9 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
                 WriteBlankLine();
             }
 
-            if (! midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing || !valuesToDeleteWOW.empty())
+            if (midiWOWValueNeedsReplacing || midi1WOWValueNeedsReplacing || !valuesToDeleteWOW.empty())
             {
-                WriteHighlightLine(L"Making required changes for 32 bit apps");
+                WriteHighlightLine(internal::ResourceGetWString(IDS_STATUS_MAKING_CHANGES_32_BIT));
                 FixRegistryValues(drivers32WOWHklmKey, valuesToDeleteWOW, midiWOWValueNeedsReplacing, midi1WOWValueNeedsReplacing);
                 WriteBlankLine();
             }
@@ -424,22 +445,25 @@ int __cdecl main(int /*argc*/, char* /*argv[]*/)
             // ask the user to reboot. It looks lazy, but it's more about not crashing other
             // apps and causing a potential loss of data.
 
-            WriteHighlightLine2(L"Changes made. Please reboot your PC.");
+            WriteHighlightLine2(internal::ResourceGetWString(IDS_STATUS_CHANGES_MADE_REBOOT));
             WriteBlankLine();
-            RETURN_SUCCESS;
+
+            return RETURN_SUCCESS;
         }
         else
         {
-            WriteHighlightLine(L"No changes made.");
+            WriteHighlightLine(internal::ResourceGetWString(IDS_STATUS_NO_CHANGES_MADE));
             WriteBlankLine();
-            RETURN_USER_ABORTED;
+
+            return RETURN_USER_ABORTED;
         }
     }
     else
     {
-        WriteHighlightLine2(L"No incorrect values found. This part of the registry seems fine.");
+        WriteHighlightLine2(internal::ResourceGetWString(IDS_STATUS_NO_INCORRECT_VALUES));
         WriteBlankLine();
-        RETURN_NO_CHANGES_NEEDED;
+
+        return RETURN_NO_CHANGES_NEEDED;
     }
 
 }

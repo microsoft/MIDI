@@ -83,6 +83,9 @@ public interface IGeneralSettingsService
     public bool GetPreviewToolsEnabled();
     public void SetPreviewToolsEnabled(bool value);
 
+    public MidiMonitorTool GetMonitorTool();
+    public void SetMonitorTool(MidiMonitorTool value);
+
     Task InitializeAsync();
 
 //    event EventHandler SettingsChanged;

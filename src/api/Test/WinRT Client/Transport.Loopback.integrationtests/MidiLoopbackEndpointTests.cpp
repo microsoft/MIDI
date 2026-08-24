@@ -9,6 +9,9 @@
 
 #include "stdafx.h"
 
+#include <winrt/Windows.Data.Json.h>
+// ConfigJson() is declared on IMidiServiceTransportPluginConfig with a deferred auto return type
+#include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
 #include <mmsystem.h>
 #include <vector>
 #include <atomic>
@@ -954,6 +957,108 @@ void MidiLoopbackEndpointTests::TestCreateLoopback()
 
         VERIFY_FAIL();
     }
+}
+
+// The service reads umpOnly from each endpoint object and defaults it to false. If the SDK
+// omits the key, the caller's choice is silently replaced by that default, so verify the
+// key is always written and that the two sides are independent.
+void MidiLoopbackEndpointTests::TestCreationConfigJsonCarriesUmpOnly()
+{
+    MidiLoopbackEndpointDefinition definitionA(L"UMP Only Test A");
+    MidiLoopbackEndpointDefinition definitionB(L"UMP Only Test B");
+
+    VERIFY_IS_FALSE(definitionA.CreateOnlyUmpEndpoint());
+    VERIFY_IS_FALSE(definitionB.CreateOnlyUmpEndpoint());
+
+    definitionA.CreateOnlyUmpEndpoint(true);
+
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
+
+    auto configJson = creationConfig.ConfigJson();
+    VERIFY_IS_NOT_NULL(configJson);
+
+    std::wcout << L"Config json: " << configJson.Stringify().c_str() << std::endl;
+
+    // literal key names rather than the json_defs.h macros, because what matters here is the
+    // on-disk format the service parses
+    auto transports = configJson.GetNamedObject(L"endpointTransportPluginSettings");
+    auto transport = transports.First().Current().Value().GetObject();
+    auto createObject = transport.GetNamedObject(L"create");
+    auto association = createObject.First().Current().Value().GetObject();
+
+    auto endpointA = association.GetNamedObject(L"endpointA");
+    auto endpointB = association.GetNamedObject(L"endpointB");
+
+    VERIFY_IS_TRUE(endpointA.HasKey(L"umpOnly"));
+    VERIFY_IS_TRUE(endpointB.HasKey(L"umpOnly"));
+
+    VERIFY_IS_TRUE(endpointA.GetNamedBoolean(L"umpOnly"));
+    VERIFY_IS_FALSE(endpointB.GetNamedBoolean(L"umpOnly"));
+}
+
+// The mirror of TestCreateLegacyPorts: with CreateOnlyUmpEndpoint set, the MIDI 1.0 ports must
+// not appear. An ordinary loopback is created alongside as a positive control, because the ports
+// are created asynchronously and an absence check on its own would pass just as happily if we
+// simply looked too early.
+void MidiLoopbackEndpointTests::TestCreateOnlyUmpEndpointSuppressesLegacyPorts()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiLoopbackManager::IsTransportAvailable());
+
+    auto uniqueId = L"ID" + winrt::to_hstring(MidiClock::Now());
+
+    MidiLoopbackEndpointDefinition definitionA(L"Test Ump Only A", L"", uniqueId + L"UA");
+    MidiLoopbackEndpointDefinition definitionB(L"Test Ump Only B", L"", uniqueId + L"UB");
+
+    definitionA.CreateOnlyUmpEndpoint(true);
+    definitionB.CreateOnlyUmpEndpoint(true);
+
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
+
+    auto response = MidiLoopbackManager::CreateTransientLoopback(creationConfig);
+    VERIFY_IS_NOT_NULL(response);
+
+    if (!response.Success())
+    {
+        std::wcout << L"Error Message: " << response.ErrorMessage().c_str() << std::endl;
+        VERIFY_FAIL();
+    }
+
+    auto controlResponse = CreateTestLoopback(L"Test Ump Only Control");
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            RemoveTestLoopback(response.CreatedLoopbackEntry().AssociationId());
+            RemoveTestLoopback(controlResponse.CreatedLoopbackEntry().AssociationId());
+        });
+
+    auto countPortsFor = [](winrt::hstring const& endpointDeviceId) -> uint32_t
+        {
+            auto ports = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(endpointDeviceId);
+            return ports == nullptr ? 0 : ports.Size();
+        };
+
+    // wait for the control's ports to show up, which tells us the service has had long enough
+    bool controlHasPorts = false;
+
+    for (int i = 0; i < 100 && !controlHasPorts; i++)
+    {
+        controlHasPorts = countPortsFor(controlResponse.CreatedLoopbackEntry().EndpointA().EndpointDeviceId()) > 0 &&
+                          countPortsFor(controlResponse.CreatedLoopbackEntry().EndpointB().EndpointDeviceId()) > 0;
+
+        if (!controlHasPorts) Sleep(100);
+    }
+
+    VERIFY_IS_TRUE(controlHasPorts);
+
+    auto umpOnlyPortCountA = countPortsFor(response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId());
+    auto umpOnlyPortCountB = countPortsFor(response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId());
+
+    std::wcout << L"MIDI 1.0 port count, UMP-only A: " << umpOnlyPortCountA << std::endl;
+    std::wcout << L"MIDI 1.0 port count, UMP-only B: " << umpOnlyPortCountB << std::endl;
+
+    VERIFY_ARE_EQUAL(0u, umpOnlyPortCountA);
+    VERIFY_ARE_EQUAL(0u, umpOnlyPortCountB);
 }
 
 void MidiLoopbackEndpointTests::TestCreateLegacyPorts()

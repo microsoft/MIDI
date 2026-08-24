@@ -49,6 +49,26 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <CsWinRTIncludes>
+      Windows.Devices.Midi2
+      Windows.Devices.Midi2.CapabilityInquiry
+      Windows.Devices.Midi2.ClientPlugins
+      Windows.Devices.Midi2.Diagnostics
+      Windows.Devices.Midi2.Enumeration
+      Windows.Devices.Midi2.Enumeration.Legacy
+      Windows.Devices.Midi2.Reporting
+      Windows.Devices.Midi2.ServiceConfig
+      Windows.Devices.Midi2.Transports
+      Windows.Devices.Midi2.Transports.BasicLoopback
+      Windows.Devices.Midi2.Transports.Loopback
+      Windows.Devices.Midi2.Transports.Network
+      Windows.Devices.Midi2.Transports.Virtual
+      Windows.Devices.Midi2.Utilities.Messages
+      Windows.Devices.Midi2.Utilities.SysEx
+    </CsWinRTIncludes>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <NoWarn>$(NoWarn);CS8625;CS8618;CS8305</NoWarn>
     <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
   </PropertyGroup>
@@ -56,14 +76,17 @@
   <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
     <PackageReference Include="Spectre.Console" Version="0.53.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.53.0" />
     <PackageReference Include="System.Management" Version="10.0.2" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.2" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="0.99.36-devpreview.4" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\api\Client\WinRT\NuGet\Windows.Devices.Midi2.NuGet\Windows.Devices.Midi2.NuGet.csproj">
+      <Private>True</Private>
+      <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
     <ProjectReference Include="..\..\shared\Microsoft.Devices.Midi2.Tools.Shared\Microsoft.Devices.Midi2.Tools.Shared.csproj" />
   </ItemGroup>
 

@@ -31,6 +31,7 @@ The entry point for all Network MIDI 2.0 management. All members are static.
 | `ConnectNetworkClientAsync(connectConfig)` | Connect to a remote host, by discovery or by direct address. Returns a `MidiNetworkClientConnectResponse`. For a `ClientId` which already exists, this retries an entry which was previously marked unavailable. |
 | `DisconnectNetworkClientAsync(disconnectConfig)` | Disconnect a client connection. Returns a `MidiNetworkClientDisconnectResponse`. A client disconnected this way is not reconnected automatically. |
 | `ApproveOrDenyRemoteClientConnectRequestAsync(approvalConfig)` | Approve or deny a remote client which is waiting on a host that requires approval. Returns a `MidiNetworkRemoteClientApprovalResponse`. |
+| `DisconnectRemoteClientAsync(disconnectConfig)` | Ends one remote client's active session with one of this PC's hosts. Returns a `MidiNetworkRemoteClientDisconnectResponse`. This does not record an allow/deny decision for future reconnects. |
 | `GetConfiguredHosts()` | Returns a collection of `MidiNetworkConfiguredHost` for every host configured in this service instance. |
 | `GetConfiguredClients()` | Returns a collection of `MidiNetworkConfiguredClient` for every configured client, connected or not. |
 | `GetPendingRemoteClients()` | Returns a collection of `MidiNetworkPendingRemoteClient` waiting for a user decision. Poll this to drive an approval UI. |

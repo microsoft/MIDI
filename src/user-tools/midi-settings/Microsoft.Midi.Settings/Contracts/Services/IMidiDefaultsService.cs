@@ -16,9 +16,6 @@ public interface IMidiDefaultsService
     string GetDefaultMidiConfigName();
     string GetDefaultMidiConfigFileName();
 
-    MidiLoopbackCreationConfig GetDefaultLoopbackCreationConfig();
-    MidiBasicLoopbackCreationConfig GetDefaultBasicLoopbackCreationConfig();
-
     bool DoesDefaultLoopbackAlreadyExist();
 
     bool DoesDefaultBasicLoopbackAlreadyExist();

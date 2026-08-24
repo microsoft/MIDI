@@ -224,13 +224,10 @@ int __cdecl main(_In_ int argc, _In_ wchar_t* argv[])
         return RETURN_ERROR_SETTING_CONSOLE_MODE;
     }
 
-    WriteDoubleSeparatorLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
-    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
-    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
     WriteDoubleSeparatorLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
-    WriteDoubleSeparatorLine();
+    WriteBlankLine();
 
     bool loop{ false };
 

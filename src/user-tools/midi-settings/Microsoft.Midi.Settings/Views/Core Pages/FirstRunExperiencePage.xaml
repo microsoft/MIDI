@@ -48,23 +48,6 @@
                     <Border Height="1" HorizontalAlignment="Stretch"
                             Margin="12,6,12,6"
                             Background="{StaticResource SmokeFillColorDefaultBrush}"/>
-
-
-                    <TextBlock TextWrapping="WrapWholeWords" 
-                               x:Uid="FirstRunSetup_DefaultLoopbacksDescription"
-                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
-                               Margin="13"/>
-
-                    <ToggleSwitch Margin="13"
-                                  x:Uid="FirstRunSetup_CreateDefaultLoopbacksSwitch"
-                                  IsEnabled="{x:Bind ViewModel.CanPersistChanges, Mode=OneWay}"
-                                  IsOn="{x:Bind ViewModel.CreateDefaultLoopbackEndpoints, Mode=TwoWay}"
-                                  />
-
-                    <Border Height="1" HorizontalAlignment="Stretch"
-                            Margin="12,6,12,6"
-                            Background="{StaticResource SmokeFillColorDefaultBrush}"/>
-
                     
 
                     <TextBlock TextWrapping="WrapWholeWords" 
@@ -83,22 +66,6 @@
                             Background="{StaticResource SmokeFillColorDefaultBrush}"/>
 
                     
-                    
-                    <TextBlock TextWrapping="WrapWholeWords" 
-                               x:Uid="FirstRunSetup_MidiServiceStartupDescription"
-                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
-                               Margin="13"/>
-
-                    <TextBlock TextWrapping="WrapWholeWords"
-                               x:Uid="FirstRunSetup_MidiServiceStartupDescription2"
-                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
-                               Margin="13"/>
-
-                    <ToggleSwitch Margin="13"
-                                  x:Uid="FirstRunSetup_SetServiceAutoStartSwitch"
-                                  IsEnabled="{x:Bind ViewModel.CreateConfigurationFile, Mode=OneWay}"
-                                  IsOn="{x:Bind ViewModel.SetServiceToAutoStart, Mode=TwoWay}"
-                                  />
 
                     <TextBlock Text="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
                            Margin="13"

@@ -25,11 +25,6 @@ namespace Microsoft.Midi.ConsoleApp
             [LocalizedDescription("ParameterCreateBasicLoopbackUniqueIdentifier")]
             [CommandOption("-u|--unique-identifier")]
             public string? UniqueId { get; set; }
-
-
-            [LocalizedDescription("ParameterCreateBasicLoopbackAssociationId")]
-            [CommandOption("-i|--association-id")]
-            public Guid? AssociationId { get; set; }
         }
 
         const int MaxWinMMPortNameLength = 31;
@@ -76,17 +71,17 @@ namespace Microsoft.Midi.ConsoleApp
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            Guid associationId;
+           // Guid associationId;
             string uniqueId;
 
-            if (settings.AssociationId is null || settings.AssociationId == Guid.Empty)
-            {
-                associationId = Guid.NewGuid();
-            }
-            else
-            {
-                associationId = settings.AssociationId.GetValueOrDefault();
-            }
+            //if (settings.AssociationId is null || settings.AssociationId == Guid.Empty)
+            //{
+            //    associationId = Guid.NewGuid();
+            //}
+            //else
+            //{
+            //    associationId = settings.AssociationId.GetValueOrDefault();
+            //}
 
             if (string.IsNullOrEmpty(settings.UniqueId))
             {
@@ -106,7 +101,7 @@ namespace Microsoft.Midi.ConsoleApp
                 UniqueId = uniqueId,
             };
 
-            creationConfig.AssociationId = associationId;
+            //creationConfig.AssociationId = associationId;
             creationConfig.EndpointDefinition = definition;
 
             var creationResult = MidiBasicLoopbackManager.CreateTransientLoopback(creationConfig);

@@ -35,59 +35,6 @@ public class MidiDefaultsService : IMidiDefaultsService
         _loggingService = loggingService;
     }
 
-    public MidiLoopbackCreationConfig GetDefaultLoopbackCreationConfig()
-    {
-        _loggingService.LogInfo($"Enter");
-
-        var endpointA = new MidiLoopbackEndpointDefinition();
-        var endpointB = new MidiLoopbackEndpointDefinition();
-
-        // if endpoint A or B names are empty, do not close. display an error
-
-        // if endpoint A or B unique ids are empty, do not close. display suggestion to generate them
-        // todo: need to limit to alpha plus just a couple other characters, and only 32 in length
-
-        endpointA.Name = "DefaultLoopbackAName".GetLocalized();
-        endpointB.Name = "DefaultLoopbackBName".GetLocalized();
-
-        endpointA.UniqueId = DefaultLoopbackAUniqueId;
-        endpointB.UniqueId = DefaultLoopbackBUniqueId;
-
-        // descriptions are optional
-        endpointA.Description = "DefaultLoopbackADescription".GetLocalized();
-        endpointB.Description = "DefaultLoopbackBDescription".GetLocalized();
-
-        // TODO: entries for the default groups to create, and their gtb names
-
-        var associationId = GuidHelper.CreateNewGuid();
-
-        var creationConfig = new MidiLoopbackCreationConfig(associationId, endpointA, endpointB);
-
-        return creationConfig;
-    }
-
-    public MidiBasicLoopbackCreationConfig GetDefaultBasicLoopbackCreationConfig()
-    {
-        _loggingService.LogInfo($"Enter");
-
-        var endpoint = new MidiBasicLoopbackEndpointDefinition();
-
-        endpoint.Name = "DefaultBasicLoopbackName".GetLocalized();
-
-        endpoint.UniqueId = DefaultBasicLoopbackUniqueId;
-
-        // descriptions are optional
-        endpoint.Description = "DefaultBasicLoopbackDescription".GetLocalized();
-
-        // TODO: entries for the default groups to create, and their gtb names
-
-        var associationId = GuidHelper.CreateNewGuid();
-
-        var creationConfig = new MidiBasicLoopbackCreationConfig(associationId, endpoint);
-
-        return creationConfig;
-    }
-
     public bool DoesDefaultLoopbackAlreadyExist()
     {
         _loggingService.LogInfo($"Enter");

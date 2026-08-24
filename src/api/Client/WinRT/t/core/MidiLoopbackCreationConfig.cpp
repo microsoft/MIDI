@@ -80,6 +80,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                     json::JsonValue::CreateStringValue(m_definitionA.ImageFileName()));
             }
 
+            endpointDeviceAObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY,
+                json::JsonValue::CreateBooleanValue(m_definitionA.CreateOnlyUmpEndpoint()));
+
             // build Endpoint B
 
             endpointDeviceBObject.SetNamedValue(
@@ -100,6 +104,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                     MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY,
                     json::JsonValue::CreateStringValue(m_definitionB.ImageFileName()));
             }
+
+            endpointDeviceBObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY,
+                json::JsonValue::CreateBooleanValue(m_definitionB.CreateOnlyUmpEndpoint()));
 
             // create the association object with the two devices as children
 

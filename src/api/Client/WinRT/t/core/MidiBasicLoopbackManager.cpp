@@ -618,14 +618,18 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
                             auto associationIdString = entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY, L"");
 
-                            if (associationIdString.empty())
+                            GUID associationId{};
+
+                            // The association id originates as a key in the configuration file, which
+                            // anyone can hand-edit. Constructing a winrt::guid from a malformed one
+                            // throws, and that would discard every other entry in the list as well.
+                            if (!internal::TryParseGuidString(associationIdString.c_str(), associationId))
                             {
-                                // invalid entry
                                 continue;
                             }
 
                             entry->InternalInitialize(
-                                winrt::guid(associationIdString),
+                                associationId,
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_NAME_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY, L""),

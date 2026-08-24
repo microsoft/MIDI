@@ -21,7 +21,11 @@ Returned by `MidiNetworkTransportManager.GetConfiguredHosts()`.
 | `ProductInstanceId` | The Product Instance Id advertised for this host |
 | `ServiceInstanceName` | The mDNS service instance name |
 | `CreateMidi1Ports` | True if MIDI 1.0 ports are created alongside the UMP endpoints |
+| `RemoteClientPolicy` | What this host does when an unknown remote client requests a connection. See `MidiNetworkRemoteClientPolicy`. |
+| `Connections` | The current remote clients that have reached this host, including clients waiting for approval. |
 
 ## Remarks
 
 `ActualPort` is the port the host actually bound, which is what you want to display when the host was created with `UseAutomaticPortAllocation`.
+
+`Connections` is a snapshot, not a live collection. Poll `GetConfiguredHosts()` to refresh.

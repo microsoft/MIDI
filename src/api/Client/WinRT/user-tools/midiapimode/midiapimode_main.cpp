@@ -220,14 +220,11 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
         return RETURN_ERROR_SETTING_CONSOLE_MODE;
     }
 
-    WriteDoubleSeparatorLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_TOOL_INFO));
-    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_COPYRIGHT));
-    WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_INFO_URL));
     WriteDoubleSeparatorLine();
     WriteInfoLine(internal::ResourceGetWString(IDS_BANNER_DESCRIPTION));
-    WriteDoubleSeparatorLine();
     WriteBlankLine();
+
 
     auto currentMode = GetRegistryApiMode();
 
@@ -241,7 +238,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
         if (!requestedModeProvided)
         {
             WriteErrorLine(internal::ResourceGetWString(IDS_ERROR_INVALID_MODE_PARAMETER));
-            fmt::println(L"");
+            WriteBlankLine();
         }
     }
 
@@ -274,8 +271,8 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
 
     if (!PromptForYes(internal::ResourceGetWString(IDS_PROMPT_YES_NO_KEYS)))
     {
-        fmt::println(L"");
-        WriteInfoLine(internal::ResourceGetWString(IDS_STATUS_CANCELLED));
+        WriteBlankLine();
+        WriteInfoLine(internal::ResourceGetWString(IDS_STATUS_CANCELED));
 
         return RETURN_SUCCESS;
     }
@@ -289,7 +286,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
     }
 
     WriteHighlightLine(internal::ResourceGetWString(IDS_STATUS_MODE_CHANGED));
-    fmt::println(L"");
+    WriteBlankLine();
 
     WritePromptLine(internal::ResourceGetWString(IDS_PROMPT_CONFIRM_RESTART));
 
@@ -306,7 +303,7 @@ int __cdecl main(_In_ int argc, _In_ char* argv[])
     }
     else
     {
-        fmt::println(L"");
+        WriteBlankLine();
         WriteWarningLine(internal::ResourceGetWString(IDS_STATUS_RESTART_LATER));
     }
 

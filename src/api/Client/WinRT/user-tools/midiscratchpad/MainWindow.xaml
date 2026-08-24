@@ -278,7 +278,7 @@
                               HorizontalContentAlignment="Stretch">
                         <StackPanel Spacing="6">
                             <Button x:Name="AddProgramChangeButton" x:Uid="AddProgramChangeButton" Content="Program change" HorizontalAlignment="Stretch" Click="OnAddProgramChange" />
-                            <Button x:Name="AddPitchBendButton" x:Uid="AddPitchBendButton" Content="Pitch bend (centre)" HorizontalAlignment="Stretch" Click="OnAddPitchBend" />
+                            <Button x:Name="AddPitchBendButton" x:Uid="AddPitchBendButton" Content="Pitch bend (center)" HorizontalAlignment="Stretch" Click="OnAddPitchBend" />
                             <Button x:Name="AddChannelPressureButton" x:Uid="AddChannelPressureButton" Content="Channel pressure" HorizontalAlignment="Stretch" Click="OnAddChannelPressure" />
                             <Button x:Name="AddAllNotesOffButton" x:Uid="AddAllNotesOffButton" Content="All notes off" HorizontalAlignment="Stretch" Click="OnAddAllNotesOff" />
                         </StackPanel>

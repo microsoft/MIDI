@@ -152,7 +152,7 @@ try
         $writer.Write([byte] $dimension)      # height
         $writer.Write([byte] 0)               # palette entries, 0 for 32bpp
         $writer.Write([byte] 0)               # reserved
-        $writer.Write([uint16] 1)             # colour planes
+        $writer.Write([uint16] 1)             # color planes
         $writer.Write([uint16] 32)            # bits per pixel
         $writer.Write([uint32] $bytes.Length)
         $writer.Write([uint32] $offset)

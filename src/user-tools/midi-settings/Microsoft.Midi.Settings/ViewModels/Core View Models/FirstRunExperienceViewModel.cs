@@ -86,11 +86,11 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         public bool createConfigurationFile;
 
-        [ObservableProperty]
-        public bool createDefaultLoopbackEndpoints;
+        //[ObservableProperty]
+        //public bool createDefaultLoopbackEndpoints;
 
-        [ObservableProperty]
-        public bool setServiceToAutoStart;
+        //[ObservableProperty]
+        //public bool setServiceToAutoStart;
 
         [ObservableProperty]
         public string errorMessage;
@@ -147,53 +147,53 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             }
 
-            if (CreateDefaultLoopbackEndpoints)
-            {
-                if (_configFileService.CurrentConfig != null)
-                {
-                    var midi2CreationConfig = _defaultsService.GetDefaultLoopbackCreationConfig();
+            //if (CreateDefaultLoopbackEndpoints)
+            //{
+            //    if (_configFileService.CurrentConfig != null)
+            //    {
+            //        var midi2CreationConfig = _defaultsService.GetDefaultLoopbackCreationConfig();
 
-                    // Create the MIDI 2.0 loopback
+            //        // Create the MIDI 2.0 loopback
 
-                    var midi2result = MidiLoopbackManager.CreateTransientLoopback(midi2CreationConfig);
+            //        var midi2result = MidiLoopbackManager.CreateTransientLoopback(midi2CreationConfig);
 
-                    if (midi2result.Success)
-                    {
-                        _configFileService.CurrentConfig.StoreLoopback(midi2CreationConfig);
-                    }
-                    else
-                    {
-                        // update error information
-                        ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI2 Bidirectional) " + midi2result.ErrorMessage;
-                    }
-
-
-                    // Create the basic loopback
-
-                    var midi1CreationConfig = _defaultsService.GetDefaultBasicLoopbackCreationConfig();
-
-                    var midi1Result = MidiBasicLoopbackManager.CreateTransientLoopback(midi1CreationConfig);
-
-                    if (midi1Result.Success)
-                    {
-                        _configFileService.CurrentConfig.StoreBasicLoopback(midi1CreationConfig);
-                    }
-                    else
-                    {
-                        // update error information
-                        ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI1 Basic) " + midi1Result.ErrorMessage;
-
-                    }
+            //        if (midi2result.Success)
+            //        {
+            //            _configFileService.CurrentConfig.StoreLoopback(midi2CreationConfig);
+            //        }
+            //        else
+            //        {
+            //            // update error information
+            //            ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI2 Bidirectional) " + midi2result.ErrorMessage;
+            //        }
 
 
-                }
-                else
-                {
-                    // TODO: Report that a config file is needed
-                    ErrorMessage = "Error_UnableToCreateLoopbackEndpointMissingConfigurationFile".GetLocalized();
-                }
+            //        // Create the basic loopback
 
-            }
+            //        var midi1CreationConfig = _defaultsService.GetDefaultBasicLoopbackCreationConfig();
+
+            //        var midi1Result = MidiBasicLoopbackManager.CreateTransientLoopback(midi1CreationConfig);
+
+            //        if (midi1Result.Success)
+            //        {
+            //            _configFileService.CurrentConfig.StoreBasicLoopback(midi1CreationConfig);
+            //        }
+            //        else
+            //        {
+            //            // update error information
+            //            ErrorMessage = "Error_UnableToCreateLoopbackWithMessage".GetLocalized() + " (MIDI1 Basic) " + midi1Result.ErrorMessage;
+
+            //        }
+
+
+            //    }
+            //    else
+            //    {
+            //        // TODO: Report that a config file is needed
+            //        ErrorMessage = "Error_UnableToCreateLoopbackEndpointMissingConfigurationFile".GetLocalized();
+            //    }
+            //
+            //}
 
             if (UseNewStyleWinMMPortNames)
             {
@@ -214,26 +214,26 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
             }
 
-            if (SetServiceToAutoStart)
-            {
-                ProcessStartInfo info = new ProcessStartInfo();
-                info.FileName = "cmd.exe";
-                info.UseShellExecute = true;
-                info.Verb = "runas";
+            //if (SetServiceToAutoStart)
+            //{
+            //    ProcessStartInfo info = new ProcessStartInfo();
+            //    info.FileName = "cmd.exe";
+            //    info.UseShellExecute = true;
+            //    info.Verb = "runas";
 
-                info.Arguments = "/c \"midi service set-auto-start --restart=true\"";
+            //    info.Arguments = "/c \"midi service set-auto-start --restart=true\"";
 
-                using (var proc = Process.Start(info))
-                {
-                    if (proc != null)
-                    {
-                        proc.WaitForExit();
-                    }
+            //    using (var proc = Process.Start(info))
+            //    {
+            //        if (proc != null)
+            //        {
+            //            proc.WaitForExit();
+            //        }
 
-                    needServiceRestart = false; // we take care of service restart above
-                    serviceRestarted = true;
-                }
-            }
+            //        needServiceRestart = false; // we take care of service restart above
+            //        serviceRestarted = true;
+            //    }
+            //}
 
 
             // TODO: If ErrorMessage is not empty, we should display it here and not restart the service or app
@@ -310,8 +310,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             _loggingService = loggingService;
 
             CreateConfigurationFile = true;
-            CreateDefaultLoopbackEndpoints = true;
-            SetServiceToAutoStart = true;
+//            CreateDefaultLoopbackEndpoints = true;
+//            SetServiceToAutoStart = true;
 
             // todo: if that config exists, we use it and disable that control.
 

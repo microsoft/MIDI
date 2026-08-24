@@ -336,6 +336,20 @@
   <ItemGroup>
     <ResourceCompile Include="Midi2.NetworkMidiTransport.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\idl\IDL.vcxproj">
+      <Project>{efb7cf90-7def-44cf-868a-191ca30e0fcf}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj">
+      <Project>{fb45bb5e-f3cb-4079-ad0c-6cac3a14029e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj">
+      <Project>{a631658b-3552-48e3-9df1-eea3e5016257}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiSrvTransportLib\MidiSrvTransportLib.vcxproj">
+      <Project>{02d828be-2362-4733-b82e-dc3a511d6fee}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />

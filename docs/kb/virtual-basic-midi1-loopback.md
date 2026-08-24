@@ -7,7 +7,7 @@ description: All about the MIDI 1.0 basic loopback (MIDI 1.0 app-to-app MIDI) tr
 
 | Property | Value |
 | -------- | ----- |
-| Transport Id | `{8BEBE745-291B-4860-A82A-C9726E402E49}` |
+| Transport Id | `{10088473-9478-4E62-850B-3D2315E135B8}` |
 | Abbreviation | `BLOOP` |
 
 ## Overview
@@ -31,7 +31,7 @@ Here's an example configuration section for the Virtual Basic Loopback MIDI 1.0 
 
 "endpointTransportPluginSettings":
 {
-    "{8BEBE745-291B-4860-A82A-C9726E402E49}":
+    "{10088473-9478-4E62-850B-3D2315E135B8}":
     {
         "_comment": "Basic MIDI 1.0 Loopback MIDI",
 
@@ -70,8 +70,8 @@ Each loopback endpoint is identified by a GUID for the association id. This was 
 | endpoint | Data for the endpoint |
 | (endpoint) name | Required. This becomes the transport-supplied name for the loopback endpoint. |
 | (endpoint) description | Optional. This becomes the transport-supplied description for the loopback endpoint. |
-| (endpoint) uniqueId | Required. This is a short (32 characters or fewer) case-insensitive unique Id for the endpoint. When combined with the basic loopback prefix in the service, it must be unique across all loopback endpoints in Windows. |
+| (endpoint) uniqueIdentifier | Required. This is a short (32 characters or fewer) case-insensitive unique Id for the endpoint. When combined with the basic loopback prefix in the service, it must be unique across all loopback endpoints in Windows. |
 
 # Implementation
 
-Internally, the Virtual Loopback is implemented as one endpoint which is wired out-to-in. So anything sent out to the loopback Destination/Output port arrives on the Source/Input of the same loopback endpoint. There's no practical limit to the number of loopback pairs you can define.
+Internally, the Basic Loopback transport creates one endpoint that is wired out-to-in. Anything sent to the loopback Destination/Output port arrives on the Source/Input port of that same endpoint. There's no practical limit to the number of loopback endpoints you can define.

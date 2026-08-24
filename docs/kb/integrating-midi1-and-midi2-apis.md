@@ -21,7 +21,7 @@ In addition, the presence of the UMP endpoint for a device does not mean that th
 
 `Windows.Devices.Midi2.Enumeration` includes a `Legacy` sub-namespace specifically focused on integration with older APIs. This includes a class for WinMM/WinRT MIDI 1.0 port device information, as well as a Device Watcher implementation just for MIDI 1.0 ports.
 
-Documentation for this namespace is here TODO_URL
+Documentation for this namespace is here: [SDK Reference: Legacy Enumeration](/sdk-reference/Enumeration/Legacy/)
 
 # Scenarios using both legacy and the modern API.
 

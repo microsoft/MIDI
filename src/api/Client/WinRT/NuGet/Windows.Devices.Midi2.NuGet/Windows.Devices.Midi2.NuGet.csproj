@@ -30,8 +30,10 @@
       Windows.Devices.Midi2.Transports
       Windows.Devices.Midi2.Transports.BasicLoopback
       Windows.Devices.Midi2.Transports.Loopback
+      Windows.Devices.Midi2.Transports.Network
       Windows.Devices.Midi2.Transports.Virtual
       Windows.Devices.Midi2.Utilities.Messages
+      Windows.Devices.Midi2.Utilities.SysEx
     </CsWinRTIncludes>
   </PropertyGroup>
 
@@ -40,14 +42,12 @@
     <NuspecFile>$(GeneratedNugetDir)Windows.Devices.Midi2.nuspec</NuspecFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>$(SolutionDir)vsfiles-sdk\PublishedNuGet\</PackageOutputPath>
-
-
     
     <EnableComInterop>true</EnableComInterop>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
   </ItemGroup>
 
 

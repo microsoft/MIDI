@@ -47,8 +47,9 @@ Here's an example of a bare-bones file, with sections for three different transp
     "header":
     {
         "_comment": "NOTE: All json keys are case-sensitive, including GUIDs.",
+        "configName": "Default",
         "product" : "Windows MIDI Services",
-        "fileVersion": 1.0
+        "fileVersion": 1
     },
     
     "endpointTransportPluginSettings":
@@ -103,6 +104,9 @@ Here's how the KS (USB using the new UMP driver) transport works as an example a
 ```
 
 > TODO: Include KSA endpoints and their generated group terminal blocks / groups.
+
+> <h4>NOTE</h4>
+> Endpoint-level matching details and mutability rules vary by transport and continue to evolve. Prefer using the Settings app or SDK APIs over editing this section by hand.
 
 
 Valid properties you can set:

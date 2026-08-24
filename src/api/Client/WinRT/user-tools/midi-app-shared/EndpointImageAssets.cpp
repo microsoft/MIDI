@@ -333,7 +333,7 @@ namespace midiapp
                 LOG_IF_FAILED(dialog->SetDefaultFolder(pictures.get()));
             }
 
-            // cancelling is reported as a failure hresult, so this is not logged as an error
+            // canceling is reported as a failure hresult, so this is not logged as an error
             if (FAILED(dialog->Show(owner)))
             {
                 return {};

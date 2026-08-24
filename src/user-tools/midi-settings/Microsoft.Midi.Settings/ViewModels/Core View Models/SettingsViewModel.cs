@@ -28,7 +28,7 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
     public static IList<string> GetSearchKeywords()
     {
         // TODO: these need to be localized, so should refer to resources instead
-        return new[] { "app settings", "auto update", "developer mode", "theme", "light mode", "dark mode" };
+        return new[] { "app settings", "auto update", "developer mode", "theme", "light mode", "dark mode", "monitor", "midi monitor", "console" };
     }
 
     public static string GetSearchPageTitle()
@@ -52,6 +52,8 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
 
     private bool _arePreviewToolsEnabled = false;
 
+    private MidiMonitorTool _monitorTool = MidiMonitorTool.MonitorApp;
+
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
     public bool ShowHowToEnableDeveloperMode => !IsDeveloperModeEnabled;
@@ -72,6 +74,44 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
 
             _arePreviewToolsEnabled = newValue;
         });
+    }
+
+    public bool UseMonitorAppForMonitoring
+    {
+        get => _monitorTool == MidiMonitorTool.MonitorApp;
+        set
+        {
+            if (value)
+            {
+                SetMonitorTool(MidiMonitorTool.MonitorApp);
+            }
+        }
+    }
+
+    public bool UseMidiConsoleForMonitoring
+    {
+        get => _monitorTool == MidiMonitorTool.MidiConsole;
+        set
+        {
+            if (value)
+            {
+                SetMonitorTool(MidiMonitorTool.MidiConsole);
+            }
+        }
+    }
+
+    private void SetMonitorTool(MidiMonitorTool tool)
+    {
+        if (_monitorTool == tool)
+        {
+            return;
+        }
+
+        _monitorTool = tool;
+        _generalSettingsService.SetMonitorTool(tool);
+
+        OnPropertyChanged(nameof(UseMonitorAppForMonitoring));
+        OnPropertyChanged(nameof(UseMidiConsoleForMonitoring));
     }
 
     public ElementTheme ElementTheme
@@ -112,6 +152,7 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
 
 
         _arePreviewToolsEnabled = _generalSettingsService.GetPreviewToolsEnabled();
+        _monitorTool = _generalSettingsService.GetMonitorTool();
 
     }
 

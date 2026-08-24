@@ -50,22 +50,20 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public IReadOnlyList<MidiToolAppInfo> ToolApps
+        {
+            get; private set;
+        }
+
+        public bool HasToolApps => ToolApps.Count > 0;
+
         
         //public ICommand LaunchNewSdkVersionUpdateCommand
         //{
         //    get; private set;
         //}
 
-        public ICommand CommonTaskCreateLoopbackEndpointsCommand
-        {
-            get; private set;
-        }
-
-        public ICommand CommonTaskCreateBasicLoopbackEndpointsCommand
-        {
-            get; private set;
-        }
-        
+      
 
         public ICommand CommonTaskSendSysExCommand
         {
@@ -176,6 +174,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiConfigFileService _configFileService;
         private readonly IMidiSdkService _sdkService;
         private readonly IMidiConsoleToolsService _consoleToolsService;
+        private readonly IMidiToolsService _toolsService;
         private readonly IMidiDiagnosticsService _diagnosticsService;
         private readonly ILoggingService _loggingService;
 
@@ -186,6 +185,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             IMidiSdkService sdkService,
             IMidiTransportInfoService transportInfoService,
             IMidiConsoleToolsService consoleToolsService,
+            IMidiToolsService toolsService,
             IMidiDiagnosticsService diagnosticsService,
             ILoggingService loggingService
             )
@@ -197,7 +197,10 @@ namespace Microsoft.Midi.Settings.ViewModels
             _sdkService = sdkService;
             _transportInfoService = transportInfoService;
             _consoleToolsService = consoleToolsService;
+            _toolsService = toolsService;
             _diagnosticsService = diagnosticsService;
+
+            ToolApps = _toolsService.GetInstalledTools();
 
             CommonTaskAssignMidi1DeviceToNewDriverCommand = new RelayCommand(
                 () =>
@@ -215,18 +218,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                 () =>
                 {
                     _navigationService.NavigateTo(typeof(FirstRunExperienceViewModel).FullName!);
-                });
-
-            CommonTaskCreateLoopbackEndpointsCommand = new RelayCommand(
-                () =>
-                {
-                    _navigationService.NavigateTo(typeof(EndpointsLoopViewModel).FullName!, "create");
-                });
-
-            CommonTaskCreateBasicLoopbackEndpointsCommand = new RelayCommand(
-                () =>
-                {
-                    _navigationService.NavigateTo(typeof(EndpointsBasicLoopViewModel).FullName!, "create");
                 });
 
 

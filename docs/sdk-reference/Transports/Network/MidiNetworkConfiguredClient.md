@@ -13,12 +13,12 @@ Returned by `MidiNetworkTransportManager.GetConfiguredClients()`.
 | Property | Description |
 | -------- | ----------- |
 | `ClientId` | The GUID which identifies this client entry |
-| `HostId` | The GUID of the host this client is associated with |
 | `IsSessionActive` | True if a MIDI session is currently established |
 | `EntryState` | Where this entry is in its life. See `MidiNetworkClientEntryState` |
 | `IsDirectConnection` | True if this client was configured with an address and port rather than discovered |
 | `ConfiguredDirectAddress` | The configured remote address, for a direct connection |
 | `ConfiguredDirectPort` | The configured remote port, for a direct connection |
+| `MatchDeviceId` | The Windows device id for the discovered host this client targets. Empty for direct connections. |
 | `ConnectedRemoteAddress` | The remote address currently in use |
 | `ConnectedRemotePort` | The remote port currently in use |
 | `ConnectedLocalAddress` | The local address currently in use |

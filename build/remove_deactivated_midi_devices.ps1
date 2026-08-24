@@ -530,7 +530,7 @@ if (-not $Force)
     if (-not $PSCmdlet.ShouldContinue(
             "Remove $($candidates.Count) unused MIDI device node(s)?", "Confirm removal"))
     {
-        Write-Host "Cancelled. Nothing was removed." -ForegroundColor Yellow
+        Write-Host "Canceled. Nothing was removed." -ForegroundColor Yellow
         return
     }
 }

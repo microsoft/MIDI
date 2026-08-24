@@ -35,6 +35,9 @@ namespace winrt::midiloopbacksetup::implementation
         winrt::fire_and_forget OnCreateLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCreateLoopbackFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
 
+        winrt::fire_and_forget OnCreateDefaultLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnCreateDefaultBasicLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
         winrt::fire_and_forget OnCreateBasicLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCreateBasicLoopbackFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
 
@@ -92,9 +95,10 @@ namespace winrt::midiloopbacksetup::implementation
             bool CanMute{ false };
             bool CanList{ false };
 
-            // the transport honours a picture given at creation, so the option is worth offering
+            // the transport honors a picture given at creation, so the option is worth offering
             bool CanSetImage{ false };
-
+            // the well known default loopback is already on this PC, so there is nothing to offer
+            bool DefaultExists{ false };
             // association identifiers the configuration file has an entry for, lowercase and
             // unbraced so they compare directly with what the service reports
             std::vector<std::wstring> ConfiguredIds{};

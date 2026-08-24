@@ -1,0 +1,34 @@
+{
+  "$comment": [
+    "Single source of truth for all Windows MIDI Services App SDK version numbers.",
+    "build.ps1 stamps this into the NuGet nuspec, AppSdkVersion.wxi, the PowerShell module",
+    "manifest, and every MSBuild Version/FileVersion/AssemblyVersion property.",
+    "Do not hand-edit versions anywhere else.",
+    "",
+    "channel:       devpreview | preview | rc | stable",
+    "channelNumber: ignored when channel is 'stable'",
+    "",
+    "SemVer/NuGet string is <major>.<minor>.<patch>-<channel>.<channelNumber>, for example",
+    "0.99.57-devpreview.5. Bump 'patch' for each release; that is what makes builds distinct.",
+    "",
+    "build:         4th field of the numeric assembly/file/MSI version only. It does NOT appear",
+    "               in the SemVer string. CI can override with -BuildNumber <n> without touching",
+    "               this file; -BumpBuildNumber increments and persists it.",
+    "",
+    "IMPORTANT: Windows Installer only compares the first THREE fields of a version.",
+    "Bump 'patch' for any release that must upgrade over a previously installed one."
+  ],
+
+  "major": 0,
+  "minor": 99,
+  "patch": 57,
+
+  "channel": "devpreview",
+  "channelNumber": 5,
+
+  "build": 0,
+
+  "versionName": "SDK Dev Preview 5",
+
+  "nuGetPackageId": "Windows.Devices.Midi2"
+}

@@ -25,24 +25,7 @@ public interface IMidiConfigFile
     string FileName { get; }
     bool Load();
 
-
-    bool StoreLoopback(MidiLoopbackCreationConfig creationConfig);
-    bool RemoveLoopback(Guid associationId);
-
-    bool StoreBasicLoopback(MidiBasicLoopbackCreationConfig creationConfig);
-    bool RemoveBasicLoopback(Guid associationId);
-    bool StoreBasicLoopbackMutedProperty(Guid associationId, bool isMuted);
-
-
-    bool StoreNetworkHost(MidiNetworkHostCreationConfig creationConfig);
-    bool StoreNetworkClient(MidiNetworkClientConnectConfig creationConfig);
-
-
-
-    bool RemoveNetworkHost(Guid hostEntryId);
-
     bool StoreEndpointCustomization(MidiServiceEndpointCustomizationConfig updateConfig);
-
 
 }
 

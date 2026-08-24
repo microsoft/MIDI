@@ -6,8 +6,8 @@
 
     <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
   
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
-    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\AppSdkVersion.wxi ?>
     <?include $(StagingVersionIncludeFile) ?>
 
     <!-- TODO: Gate on Arm64 or x64. No x86 installation -->

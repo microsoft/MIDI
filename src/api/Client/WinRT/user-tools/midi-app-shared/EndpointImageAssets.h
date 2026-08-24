@@ -45,7 +45,7 @@ namespace midiapp
         static bool IsScalableVector(_In_ std::wstring const& fileName) noexcept;
 
         // Asks the customer for a picture and hands back the full path they chose, or an empty
-        // string if they cancelled.
+        // string if they canceled.
         //
         // This is the Win32 common item dialog rather than Windows.Storage.Pickers on purpose:
         // the WinRT picker's completion never resumes when it is raised over an open

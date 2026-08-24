@@ -31,5 +31,8 @@ namespace Windows.Devices.Midi2.Transports.Loopback
         // Bare file name of a picture in the shared endpoint assets folder, not a path. An app
         // is expected to copy the customer's chosen file into that folder and name it here.
         [noexcept] String ImageFileName;
+
+        // Defaults to false so that MIDI 1.0 ports are created alongside the UMP endpoint.
+        [noexcept] Boolean CreateOnlyUmpEndpoint;
     };
 }

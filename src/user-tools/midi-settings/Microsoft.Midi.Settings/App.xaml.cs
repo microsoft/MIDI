@@ -132,6 +132,7 @@ public partial class App : Application
 
                     services.AddSingleton<IMidiDiagnosticsService, MidiDiagnosticsService>();
                     services.AddSingleton<IMidiConsoleToolsService, MidiConsoleToolsService>();
+                    services.AddSingleton<IMidiToolsService, MidiToolsService>();
 
                     services.AddSingleton<IMessageBoxService, MessageBoxService>();
                     services.AddSingleton<IMidiEndpointImageService, MidiEndpointImageService>();
@@ -158,12 +159,6 @@ public partial class App : Application
 
                     services.AddTransient<GlobalMidiSettingsPage>();
                     services.AddTransient<GlobalMidiSettingsViewModel>();
-
-                    services.AddTransient<EndpointsLoopPage>();
-                    services.AddTransient<EndpointsLoopViewModel>();
-
-                    services.AddTransient<EndpointsBasicLoopPage>();
-                    services.AddTransient<EndpointsBasicLoopViewModel>();
 
                     services.AddTransient<DeviceDetailPage>();
                     services.AddTransient<DeviceDetailViewModel>();

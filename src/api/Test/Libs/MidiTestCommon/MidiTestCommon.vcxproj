@@ -214,6 +214,14 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\idl\IDL.vcxproj">
+      <Project>{efb7cf90-7def-44cf-868a-191ca30e0fcf}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Transport\MidiSrvTransport\Midi2.MidiSrvTransport.vcxproj">
+      <Project>{9991ff5b-e0f0-4373-a7c2-20b1efde5f70}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
