@@ -27,6 +27,8 @@ public:
 
     TEST_METHOD(TestCreateLoopback);
     TEST_METHOD(TestCreateLegacyPorts);
+    TEST_METHOD(TestCreationConfigJsonCarriesUmpOnly);
+    TEST_METHOD(TestCreateOnlyUmpEndpointSuppressesLegacyPorts);
     TEST_METHOD(TestUmpSendReceive);
 
     // Verifies that unique ids containing invalid characters on both the A and B

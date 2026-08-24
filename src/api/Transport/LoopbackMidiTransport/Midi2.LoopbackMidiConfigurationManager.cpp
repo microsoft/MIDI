@@ -186,7 +186,7 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
             capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, true);
         }
 
-        // A rolled back build ignores the image, so it must not claim to honour one or a client
+        // A rolled back build ignores the image, so it must not claim to honor one or a client
         // offers the customer a picture that never appears.
         if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
         {
@@ -216,24 +216,48 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
                 if (auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID);
                     arg != commandHelper.Arguments()->end())
                 {
-                    auto associationId = internal::StringToGuid(arg->second);
+                    GUID associationId{};
 
-                    auto hr = ExecuteCommandChangeMutedState(associationId, mute);
+                    // The argument is caller-supplied text. StringToGuid hands back an
+                    // uninitialized GUID when it will not parse, which then gets used as a
+                    // lookup key.
+                    bool associationIdIsValid{ true };
 
-                    if (hr == E_NOTFOUND)
+                    if (Feature_Servicing_MIDI2TransportAssociationIdGuidValidation::IsEnabled())
                     {
-                        internal::SetConfigurationResponseObjectFailWithErrorCode(
-                            responseObject,
-                            LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
-                            internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
-                    }
-                    else if (SUCCEEDED(hr))
-                    {
-                        internal::SetConfigurationResponseObjectSuccess(responseObject);
+                        associationIdIsValid = internal::TryParseGuidString(arg->second, associationId);
                     }
                     else
                     {
-                        RETURN_IF_FAILED(hr);
+                        associationId = internal::StringToGuid(arg->second);
+                    }
+
+                    if (!associationIdIsValid)
+                    {
+                        internal::SetConfigurationResponseObjectFailWithErrorCode(
+                            responseObject,
+                            LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+                            internal::ResourceGetWString(IDS_ERROR_INVALID_ASSOCIATION_ID));
+                    }
+                    else
+                    {
+                        auto hr = ExecuteCommandChangeMutedState(associationId, mute);
+
+                        if (hr == E_NOTFOUND)
+                        {
+                            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                responseObject,
+                                LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                                internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+                        }
+                        else if (SUCCEEDED(hr))
+                        {
+                            internal::SetConfigurationResponseObjectSuccess(responseObject);
+                        }
+                        else
+                        {
+                            RETURN_IF_FAILED(hr);
+                        }
                     }
                 }
                 else
@@ -260,13 +284,31 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
             }
             else
             {
-                internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+                if (Feature_Servicing_MIDI2LoopbackErrorStringResources::IsEnabled())
+                {
+                    internal::SetConfigurationResponseObjectFail(
+                        responseObject,
+                        internal::ResourceGetWString(IDS_ERROR_UNRECOGNIZED_COMMAND));
+                }
+                else
+                {
+                    internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+                }
             }
 
         }
         else
         {
-            internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+            if (Feature_Servicing_MIDI2LoopbackErrorStringResources::IsEnabled())
+            {
+                internal::SetConfigurationResponseObjectFail(
+                    responseObject,
+                    internal::ResourceGetWString(IDS_ERROR_UNRECOGNIZED_COMMAND));
+            }
+            else
+            {
+                internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+            }
         }
     }
 

@@ -24,7 +24,7 @@ public:
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
     END_TEST_CLASS()
 
-    // basic behaviour through hand-rolled json
+    // basic behavior through hand-rolled json
     TEST_METHOD(TestCreateAndRemoveLoopbackPair);
     TEST_METHOD(TestCreateWithMissingNameIsRejected);
     TEST_METHOD(TestCreateWithMissingUniqueIdIsRejected);
@@ -45,4 +45,12 @@ public:
     TEST_METHOD(TestUniqueIdInvalidOnSecondEndpointIsRejected);
     TEST_METHOD(TestOverlongUnicodeNameIsAccepted);
     TEST_METHOD(TestMalformedJsonIsRejected);
+
+    // an association id that is not a guid must be named as such, not silently turned into an
+    // uninitialized value and looked up
+    TEST_METHOD(TestMuteWithMalformedAssociationIdIsRejected);
+
+    // Basic Loopback keys its endpoints by a real GUID parsed from the configuration file, so a
+    // hand-edited non-guid there used to become the endpoint's identity
+    TEST_METHOD(TestBasicLoopbackMalformedAssociationKeySkipsOnlyThatEntry);
 };

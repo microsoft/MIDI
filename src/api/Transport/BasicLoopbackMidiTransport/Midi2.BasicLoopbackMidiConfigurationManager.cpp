@@ -166,24 +166,36 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
         if (auto arg = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID); 
             arg != commandHelper.Arguments()->end())
         {
-            auto associationId = internal::StringToGuid(arg->second);
+            GUID associationId{};
 
-            auto hr = ExecuteCommandChangeMutedState(associationId, mute);
-
-            if (hr == E_NOTFOUND)
+            // caller-supplied text, so reject it rather than acting on the uninitialized value
+            // StringToGuid returns when it will not parse
+            if (!internal::TryParseGuidString(arg->second, associationId))
             {
                 internal::SetConfigurationResponseObjectFailWithErrorCode(
-                    responseObject, 
-                    BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
-                    internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
-            }
-            else if (SUCCEEDED(hr))
-            {
-                internal::SetConfigurationResponseObjectSuccess(responseObject);
+                    responseObject,
+                    BASIC_LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+                    internal::ResourceGetWString(IDS_ERROR_INVALID_ASSOCIATION_ID));
             }
             else
             {
-                RETURN_IF_FAILED(hr);
+                auto hr = ExecuteCommandChangeMutedState(associationId, mute);
+
+                if (hr == E_NOTFOUND)
+                {
+                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                        responseObject, 
+                        BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                        internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+                }
+                else if (SUCCEEDED(hr))
+                {
+                    internal::SetConfigurationResponseObjectSuccess(responseObject);
+                }
+                else
+                {
+                    RETURN_IF_FAILED(hr);
+                }
             }
         }
         else
@@ -311,7 +323,43 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                
                 if (associationObj)
                 {
-                    auto associationIdGuid = internal::StringToGuid(associationKey.c_str());
+                    GUID associationIdGuid{};
+
+                    // The key comes from the configuration file, which any user on the PC can
+                    // edit. Without this the endpoint would take on an uninitialized GUID as its
+                    // identity, which is both unpredictable and capable of colliding.
+                    if (!internal::TryParseGuidString(associationKey.c_str(), associationIdGuid))
+                    {
+                        TraceLoggingWrite(
+                            MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Association id is not a valid GUID", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(associationKey.c_str(), "association key")
+                        );
+
+                        if (!processingMultipleCreates)
+                        {
+                            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                responseObject,
+                                BASIC_LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+                                internal::ResourceGetWString(IDS_ERROR_INVALID_ASSOCIATION_ID));
+
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                            return S_FALSE;
+                        }
+                        else
+                        {
+                            // skip this one and keep going, so one bad entry in the file does not
+                            // take out every other loopback
+                            o.MoveNext();
+                            continue;
+                        }
+                    }
+
                     definition->AssociationId = associationIdGuid;
 
                     auto endpointObject = associationObj.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY, nullptr);
@@ -636,7 +684,30 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                 // each entry is an association id
 
                 auto associationId = o.Current().GetString();
-                auto associationIdGuid = internal::StringToGuid(associationId.c_str());
+
+                GUID associationIdGuid{};
+
+                // untrusted client JSON: a malformed id can never match a device, and parsing it
+                // with StringToGuid would give us an uninitialized value to look up
+                if (!internal::TryParseGuidString(associationId.c_str(), associationIdGuid))
+                {
+                    TraceLoggingWrite(
+                        MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Remove requested with an association id that is not a valid GUID", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(associationId.c_str(), "association id")
+                    );
+
+                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                        responseObject,
+                        BASIC_LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+                        internal::ResourceGetWString(IDS_ERROR_INVALID_ASSOCIATION_ID));
+
+                    return S_FALSE;
+                }
 
                 auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationIdGuid);
 

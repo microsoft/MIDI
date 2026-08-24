@@ -10,6 +10,10 @@
 
 #include "LoopbackConfigTests.h"
 
+// the transport's own error codes, so the test asserts the exact rejection reason rather than
+// just "it failed"
+#include "..\..\Transport\LoopbackMidiTransport\loopback_transport_error_codes.h"
+
 using namespace WEX::Common;
 using namespace WEX::Logging;
 using namespace TransportConfigTest;
@@ -23,6 +27,14 @@ namespace
     };
 
     constexpr wchar_t LoopbackTransportIdString[]{ L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" };
+
+    // {10088473-9478-4E62-850B-3D2315E135B8}
+    constexpr GUID BasicLoopbackTransportId
+    {
+        0x10088473, 0x9478, 0x4E62, { 0x85, 0x0B, 0x3D, 0x23, 0x15, 0xE1, 0x35, 0xB8 }
+    };
+
+    constexpr wchar_t BasicLoopbackTransportIdString[]{ L"{10088473-9478-4E62-850B-3D2315E135B8}" };
 
     // 42 is the limit, so this is one over
     constexpr size_t OverlongUniqueIdCharacterCount = 43;
@@ -114,6 +126,27 @@ namespace
     }
 
 
+    // The association id is a configuration file key, so the list can legitimately contain one
+    // that is not a guid. Constructing a winrt::guid from it throws, which would abandon the
+    // whole scan and hide the entry the test is actually looking for.
+    bool ReportedAssociationMatches(winrt::hstring const& reported, winrt::guid const& wanted)
+    {
+        if (reported.empty())
+        {
+            return false;
+        }
+
+        try
+        {
+            return winrt::guid{ reported } == wanted;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+
     // Reads back what the transport reports for one association's A-side endpoint. Key names are
     // spelled out rather than taken from the transport's own headers, so this stays an
     // independent check of the wire shape.
@@ -152,7 +185,7 @@ namespace
 
             auto const reported = entry.GetNamedString(L"associationIdentifier", L"");
 
-            if (reported.empty() || winrt::guid{ reported } != wanted)
+            if (!ReportedAssociationMatches(reported, wanted))
             {
                 continue;
             }
@@ -209,12 +242,7 @@ namespace
 
             auto const reported = entry.GetNamedString(L"associationIdentifier", L"");
 
-            if (reported.empty())
-            {
-                continue;
-            }
-
-            if (winrt::guid{ reported } == wanted)
+            if (ReportedAssociationMatches(reported, wanted))
             {
                 return entry.GetNamedBoolean(L"muted", false);
             }
@@ -341,7 +369,7 @@ void LoopbackConfigTests::TestCreateWithDuplicateUniqueIdIsRejected()
 
 void LoopbackConfigTests::TestCreateMutedLoopbackIsMuted()
 {
-    // The behaviour under test is KIR-gated, so the test has to no-op when the KIR is off,
+    // The behavior under test is KIR-gated, so the test has to no-op when the KIR is off,
     // otherwise a rollback turns this suite red.
     if (!Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
     {
@@ -418,7 +446,7 @@ void LoopbackConfigTests::TestCreateWithoutMutedKeyIsNotMuted()
 
 void LoopbackConfigTests::TestCreateWithImageIsReported()
 {
-    // The behaviour under test is KIR-gated, so the test has to no-op when the KIR is off,
+    // The behavior under test is KIR-gated, so the test has to no-op when the KIR is off,
     // otherwise a rollback turns this suite red.
     if (!Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
     {
@@ -521,7 +549,7 @@ void LoopbackConfigTests::TestTransportDeclaresImageCapability()
 
 
 void LoopbackConfigTests::TestUniqueIdWithInvalidCharactersIsRejected(){
-    // The behaviour under test is KIR-gated, so the test has to no-op when the KIR is off,
+    // The behavior under test is KIR-gated, so the test has to no-op when the KIR is off,
     // otherwise a rollback turns this suite red.
     if (!Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled())
     {
@@ -653,4 +681,126 @@ void LoopbackConfigTests::TestMalformedJsonIsRejected()
 
     // the service has to still be answering after both
     VERIFY_IS_TRUE(LoopbackAvailable());
+}
+
+
+void LoopbackConfigTests::TestMuteWithMalformedAssociationIdIsRejected()
+{
+    if (!Feature_Servicing_MIDI2TransportAssociationIdGuidValidation::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2TransportAssociationIdGuidValidation is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    // right shape and length, but 'M' is not a hexadecimal digit
+    auto result = SendLoopbackConfig(
+        LR"({"transportCommand":{"commandName":"mute","commandArguments":{"associationId":"{1E5A0001-0000-4000-8000-00000000BMC1}"}}})");
+
+    VERIFY_IS_TRUE(result.CallSucceeded);
+    VERIFY_IS_FALSE(result.IsSuccess());
+
+    // Asserting the specific code matters: an unparsed id used to become an uninitialized GUID
+    // which then simply missed the lookup, so the caller saw ENDPOINT_NOT_FOUND and the failure
+    // looked identical to a stale id.
+    winrt::Windows::Data::Json::JsonObject response{ nullptr };
+
+    VERIFY_IS_TRUE(winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, response));
+    VERIFY_IS_NOT_NULL(response);
+
+    auto const reportedErrorCode = static_cast<uint32_t>(response.GetNamedNumber(L"errorCode", 0));
+
+    VERIFY_ARE_EQUAL(static_cast<uint32_t>(LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID), reportedErrorCode);
+
+    // and the service is still answering
+    VERIFY_IS_TRUE(LoopbackAvailable());
+}
+
+
+// Basic Loopback stores AssociationId as a real GUID parsed from the configuration file key, so
+// this is the site where a hand-edited non-guid used to become the endpoint's own identity. A
+// good entry is sent in the same batch, because rejecting the bad one must not cost the rest.
+void LoopbackConfigTests::TestBasicLoopbackMalformedAssociationKeySkipsOnlyThatEntry()
+{
+    if (!IsTransportAvailable(BasicLoopbackTransportId, BasicLoopbackTransportIdString))
+    {
+        Log::Result(TestResults::Skipped, L"Basic loopback transport is not available.");
+        return;
+    }
+
+    auto const goodAssociation = MakeGuidString();
+    auto const goodUniqueId = MakeUniqueIdString();
+
+    // right shape and length, but 'M' is not a hexadecimal digit
+    std::wstring const badAssociation{ L"{1E5A0001-0000-4000-8000-00000000BMC1}" };
+
+    std::wstring json =
+        L"{\"create\":{"
+        L"\"" + badAssociation + L"\":{\"endpoint\":{"
+            L"\"name\":\"Malformed Key Test Bad\","
+            L"\"description\":\"Should never be created\","
+            L"\"uniqueIdentifier\":\"" + MakeUniqueIdString() + L"\"}},"
+        L"\"" + goodAssociation + L"\":{\"endpoint\":{"
+            L"\"name\":\"Malformed Key Test Good\","
+            L"\"description\":\"Should survive the bad sibling\","
+            L"\"uniqueIdentifier\":\"" + goodUniqueId + L"\"}}"
+        L"}}";
+
+    auto result = SendTransportConfig(BasicLoopbackTransportId, BasicLoopbackTransportIdString, json);
+
+    VERIFY_IS_TRUE(result.CallSucceeded);
+
+    // the good sibling has to exist, and the bad one must not
+    auto listResult = SendTransportConfig(
+        BasicLoopbackTransportId,
+        BasicLoopbackTransportIdString,
+        LR"({"transportCommand":{"commandName":"listEntries"}})");
+
+    VERIFY_IS_TRUE(listResult.CallSucceeded);
+
+    winrt::Windows::Data::Json::JsonObject response{ nullptr };
+
+    VERIFY_IS_TRUE(winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ listResult.ResponseJson }, response));
+    VERIFY_IS_NOT_NULL(response);
+
+    bool foundGood{ false };
+    bool foundBad{ false };
+
+    if (response.HasKey(L"entries"))
+    {
+        for (auto const& value : response.GetNamedArray(L"entries"))
+        {
+            auto entry = value.GetObject();
+
+            if (entry == nullptr) continue;
+
+            auto const name = entry.GetNamedString(L"name", L"");
+
+            if (name == L"Malformed Key Test Good") foundGood = true;
+            if (name == L"Malformed Key Test Bad") foundBad = true;
+        }
+    }
+
+    // clean up before asserting, so a failure does not leave the endpoint behind
+    if (foundGood)
+    {
+        SendTransportConfig(
+            BasicLoopbackTransportId,
+            BasicLoopbackTransportIdString,
+            L"{\"remove\":[\"" + EscapeJsonString(goodAssociation) + L"\"]}");
+    }
+
+    VERIFY_IS_TRUE(foundGood, L"the entry with a valid association key should still have been created");
+    VERIFY_IS_FALSE(foundBad, L"the entry with a malformed association key should have been skipped");
 }
