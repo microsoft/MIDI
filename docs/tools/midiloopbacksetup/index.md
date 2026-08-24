@@ -45,6 +45,30 @@ has nothing to do with the other.
 
 > Both types of loopbacks create MIDI 1.0 API ports. The Basic Loopback creates an In (Source) and Out (Destination) pair of ports. The MIDI 2.0 style loopback creates two Sources and two Destinations. Send to Destination A and it comes in on Source B and vice versa.
 
+## The default loopbacks
+
+Windows MIDI Services has one well-known loopback of each kind, and a lot of apps and tutorials
+expect them to be there. A normal install creates them for you, so most of the time there's nothing
+to do.
+
+If one is missing, because it was deleted or because the configuration was rebuilt, a
+**Create default loopback** or **Create default basic loopback** button appears next to the normal
+create button on that page. Select it and the loopback is recreated exactly as it shipped, with no
+dialog and nothing to fill in:
+
+| | Name | Identifier |
+|---|---|---|
+| MIDI 1.0 Basic Loopbacks | Default Basic App Loopback | `BASIC_DEF` |
+| MIDI 2.0 Loopbacks | Default App Loopback (A) and (B) | `DEFAULT` |
+
+The names and identifiers are fixed, because that's how apps find them. The identifier is the part
+that matters: an app that remembers `DEFAULT` finds the loopback again even though the name is only
+there for you to read.
+
+Defaults are always saved to the configuration, since a default that disappeared on the next
+restart wouldn't be much of a default. The button goes away as soon as the loopback exists, so if
+you don't see one, you already have it.
+
 ## Creating a loopback
 
 Select **New loopback** or **New basic loopback**.
