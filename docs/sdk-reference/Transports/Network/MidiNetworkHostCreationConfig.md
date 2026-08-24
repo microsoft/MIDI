@@ -34,6 +34,7 @@ Describes a host for remote clients to connect to. Pass to `MidiNetworkTransport
 | `UseAutomaticPortAllocation` | When true, the service picks a UDP port. When false, `ManuallyAssignedPort` is used. |
 | `ManuallyAssignedPort` | The UDP port to bind, as a string. Ignored when `UseAutomaticPortAllocation` is true. |
 | `Advertise` | When true, the host is advertised over mDNS so remote devices can discover it. When false, it is reachable only by direct address. |
+| `RemoteClientPolicy` | How this host handles unknown remote clients. `AllowAny` accepts unless explicitly denied; `RequireApproval` keeps clients pending until approved or denied. |
 | `AuthenticationType` | The authentication this host requires. Only `NoAuthentication` is currently accepted; anything else is rejected at configuration time. See `MidiNetworkAuthenticationType`. |
 
 ## Remarks

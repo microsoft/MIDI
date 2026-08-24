@@ -42,7 +42,7 @@ The two static functions are factory-pattern methods for creating a new session.
 
 C#
 ```cs
-using (var session = MidiSession.CreateSession("API Sample Session"))
+using (var session = MidiSession.Create("API Sample Session"))
 {
     ...
 }
@@ -53,7 +53,7 @@ C++
 // remember to initialize the WinRT apartment and also initialize the SDK 
 // runtime first. See samples for example code 
 
-auto session = MidiSession::CreateSession("API Sample Session");
+auto session = MidiSession::Create("API Sample Session");
 
 ...
 
