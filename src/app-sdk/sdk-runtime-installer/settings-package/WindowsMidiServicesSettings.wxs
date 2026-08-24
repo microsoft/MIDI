@@ -1,7 +1,7 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
   <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
-  <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+  <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\AppSdkVersion.wxi ?>
   <?include $(StagingVersionIncludeFile) ?>
 
   <Package  
