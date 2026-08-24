@@ -1,6 +1,6 @@
 ﻿
 <Include>
   <?define SetupVersionName="Plugin Preview 1" ?>
-  <?define SetupVersionNumber="1.0.0-preview.1.62" ?>
-  <?define MidiSdkAndToolsVersion="1.0.0-preview.1.62" ?>
+  <?define SetupVersionNumber="1.0.0-preview.1.63" ?>
+  <?define MidiSdkAndToolsVersion="1.0.0-preview.1.63" ?>
 </Include>
