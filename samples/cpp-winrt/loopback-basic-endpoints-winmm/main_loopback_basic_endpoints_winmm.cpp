@@ -31,7 +31,7 @@ namespace foundation = winrt::Windows::Foundation;
 
 // we'll use these to keep track of the ids of the created endpoints
 winrt::hstring m_endpointId{};
-winrt::guid m_associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
+winrt::guid m_associationId{};
 
 bool CreateLoopbackEndpoints()
 {
@@ -43,7 +43,7 @@ bool CreateLoopbackEndpoints()
     definition.Description(L"The description is optional, but is displayed to users. This becomes the transport-defined description.");
     definition.UniqueId(L"5150-8675309-OU812");    // if left blank, one will be generated
 
-    MidiBasicLoopbackCreationConfig creationConfig(m_associationId, definition);
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
 
     auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
 
@@ -57,6 +57,7 @@ bool CreateLoopbackEndpoints()
             << L" - " << response.CreatedLoopbackEntry().EndpointDeviceId().c_str() << std::endl << std::endl;
 
         m_endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
+        m_associationId = response.CreatedLoopbackEntry().AssociationId();
 
         auto midi1ports = MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(m_endpointId);
 
