@@ -1017,7 +1017,7 @@ function Invoke-ReleaseTarget {
             continue
         }
 
-        $name = "Windows MIDI Services (SDK Runtime and Tools) $($Version.SemVer)-$($plat.ToLowerInvariant()).exe"
+        $name = "Windows MIDI Services Tools $($Version.SemVer)-$($plat.ToLowerInvariant()).exe"
         Copy-Item $bundle -Destination (Join-Path $folder $name) -Force
         Write-Detail "Installer -> $name"
     }

@@ -15,7 +15,7 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
 
-  <Bundle Name="Windows MIDI Services Runtime and Tools" 
+  <Bundle Name="Windows MIDI Services Tools (Preview)" 
           Manufacturer="Microsoft Corporation" 
           Version="$(SetupVersionNumber)" 
           UpgradeCode="7afb7a7b-86d4-42d7-8cb5-08f65ddcb1a9">
@@ -23,7 +23,7 @@
     
 
         <!-- hard-coded path because sharing a directory with the other MSI is not possible. Would have to write to registry -->
-        <Variable Name="LaunchTarget" Value="[ProgramFiles64Folder]\Windows MIDI Services\Tools\Settings\MidiSettings.exe"/>
+        <!--<Variable Name="LaunchTarget" Value="[ProgramFiles64Folder]\Windows MIDI Services\Tools\Settings\MidiSettings.exe"/> -->
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
