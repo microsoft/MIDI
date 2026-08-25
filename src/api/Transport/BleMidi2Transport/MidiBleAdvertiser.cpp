@@ -25,10 +25,10 @@ HRESULT MidiBleAdvertiser::Advertise(
 {
 	bt::Advertisement::BluetoothLEAdvertisement ad{};
 
-	ad.ServiceUuids().Append(winrt::guid(MIDI_BLE_SERVICE_UUID));
+	ad.ServiceUuids().Append(winrt::guid(MidiBleProtocol::MidiServiceUuid));
 
 	//foundation::MemoryBuffer buffer;
-	//bt::Advertisement::BluetoothLEManufacturerData manufacturer(static_cast<uint16_t>(MIDI_BLE_COMPANY_CODE_MICROSOFT), buffer);
+	//bt::Advertisement::BluetoothLEManufacturerData manufacturer(MidiBleProtocol::MicrosoftBluetoothCompanyCode, buffer);
 	
 	bt::Advertisement::BluetoothLEAdvertisementPublisher publisher(ad);
 

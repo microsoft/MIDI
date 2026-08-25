@@ -284,6 +284,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiBleAdvertiser.cpp" />
+    <ClCompile Include="MidiBleConnection.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.Ble2MidiTransport.cpp" />
@@ -302,9 +303,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Ble2_json_defs.h" />
+    <ClInclude Include="bluetooth_json_defs.h" />
+    <ClInclude Include="midi_ble_midi1_codec.h" />
     <ClInclude Include="midi_ble_utilities.h" />
     <ClInclude Include="MidiBleAdvertiser.h" />
+    <ClInclude Include="MidiBleConnection.h" />
     <ClInclude Include="TransportState.h" />
     <ClInclude Include="transport_defs.h" />
     <ClInclude Include="dllmain.h" />
@@ -318,6 +321,20 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.Ble2MidiTransport.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\idl\IDL.vcxproj">
+      <Project>{efb7cf90-7def-44cf-868a-191ca30e0fcf}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj">
+      <Project>{fb45bb5e-f3cb-4079-ad0c-6cac3a14029e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj">
+      <Project>{a631658b-3552-48e3-9df1-eea3e5016257}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libs\MidiSrvTransportLib\MidiSrvTransportLib.vcxproj">
+      <Project>{02d828be-2362-4733-b82e-dc3a511d6fee}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

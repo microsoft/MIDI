@@ -39,6 +39,122 @@ TransportState::ConstructConfigurationManager()
 }
 
 
+_Use_decl_annotations_
+HRESULT
+TransportState::AddConnection(std::shared_ptr<MidiBleConnection> connection)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, connection);
+    RETURN_HR_IF(E_INVALIDARG, connection->DeviceId().empty());
+
+    auto lock = std::scoped_lock{ m_connectionsLock };
+
+    m_connections.insert_or_assign(connection->DeviceId(), connection);
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+TransportState::RemoveConnection(winrt::hstring const& deviceId)
+{
+    std::shared_ptr<MidiBleConnection> connection{ nullptr };
+
+    {
+        auto lock = std::scoped_lock{ m_connectionsLock };
+
+        if (auto entry = m_connections.find(deviceId); entry != m_connections.end())
+        {
+            connection = entry->second;
+            m_connections.erase(entry);
+        }
+    }
+
+    // shutdown blocks on the writer thread and on Bluetooth, so it never runs under the lock
+    if (connection != nullptr)
+    {
+        LOG_IF_FAILED(connection->Shutdown());
+    }
+
+    return S_OK;
+}
+
+
+void
+TransportState::ShutdownAllConnections()
+{
+    std::vector<std::shared_ptr<MidiBleConnection>> connections;
+
+    {
+        auto lock = std::scoped_lock{ m_connectionsLock };
+
+        for (auto const& entry : m_connections)
+        {
+            connections.push_back(entry.second);
+        }
+
+        m_connections.clear();
+    }
+
+    for (auto const& connection : connections)
+    {
+        LOG_IF_FAILED(connection->Shutdown());
+    }
+}
+
+
+_Use_decl_annotations_
+std::shared_ptr<MidiBleConnection>
+TransportState::GetConnectionByDeviceId(winrt::hstring const& deviceId)
+{
+    auto lock = std::scoped_lock{ m_connectionsLock };
+
+    if (auto entry = m_connections.find(deviceId); entry != m_connections.end())
+    {
+        return entry->second;
+    }
+
+    return nullptr;
+}
+
+
+_Use_decl_annotations_
+std::shared_ptr<MidiBleConnection>
+TransportState::GetConnectionByEndpointDeviceInterfaceId(std::wstring const& endpointDeviceInterfaceId)
+{
+    auto const normalizedId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
+
+    auto lock = std::scoped_lock{ m_connectionsLock };
+
+    for (auto const& entry : m_connections)
+    {
+        if (entry.second != nullptr && entry.second->EndpointDeviceInterfaceId() == normalizedId)
+        {
+            return entry.second;
+        }
+    }
+
+    return nullptr;
+}
+
+
+std::vector<std::shared_ptr<MidiBleConnection>>
+TransportState::GetConnections()
+{
+    auto lock = std::scoped_lock{ m_connectionsLock };
+
+    std::vector<std::shared_ptr<MidiBleConnection>> connections;
+    connections.reserve(m_connections.size());
+
+    for (auto const& entry : m_connections)
+    {
+        connections.push_back(entry.second);
+    }
+
+    return connections;
+}
+
+
 
 
 //_Use_decl_annotations_

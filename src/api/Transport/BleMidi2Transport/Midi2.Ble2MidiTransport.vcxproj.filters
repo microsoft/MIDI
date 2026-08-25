@@ -39,6 +39,9 @@
     <ClCompile Include="MidiBleAdvertiser.cpp">
       <Filter>Source Files\Infrastructure</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBleConnection.cpp">
+      <Filter>Source Files\Infrastructure</Filter>
+    </ClCompile>
     <ClCompile Include="Midi2.Ble2MidiTransport.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -83,10 +86,16 @@
     <ClInclude Include="MidiBleAdvertiser.h">
       <Filter>Header Files\Infrastructure</Filter>
     </ClInclude>
+    <ClInclude Include="MidiBleConnection.h">
+      <Filter>Header Files\Infrastructure</Filter>
+    </ClInclude>
     <ClInclude Include="midi_ble_utilities.h">
       <Filter>Header Files\Infrastructure</Filter>
     </ClInclude>
-    <ClInclude Include="Ble2_json_defs.h">
+    <ClInclude Include="midi_ble_midi1_codec.h">
+      <Filter>Header Files\Infrastructure</Filter>
+    </ClInclude>
+    <ClInclude Include="bluetooth_json_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.Ble2MidiTransport.h">

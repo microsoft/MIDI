@@ -27,7 +27,7 @@ private:
 
     std::wstring m_endpointDeviceInterfaceId{ };
 
-    //std::weak_ptr<MidiNetworkConnection> m_connection;
+    std::weak_ptr<MidiBleConnection> m_connection;
 };
 
 

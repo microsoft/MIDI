@@ -42,16 +42,24 @@ public:
 
     HRESULT Shutdown()
     {
+        ShutdownAllConnections();
+
         m_endpointManager.reset();
         m_configurationManager.reset();
-
-        // TODO: Iterate through hosts and clients and call Cleanup()
 
         return S_OK;
     }
 
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
+
+    HRESULT AddConnection(_In_ std::shared_ptr<MidiBleConnection> connection);
+    HRESULT RemoveConnection(_In_ winrt::hstring const& deviceId);
+    void ShutdownAllConnections();
+
+    std::shared_ptr<MidiBleConnection> GetConnectionByDeviceId(_In_ winrt::hstring const& deviceId);
+    std::shared_ptr<MidiBleConnection> GetConnectionByEndpointDeviceInterfaceId(_In_ std::wstring const& endpointDeviceInterfaceId);
+    std::vector<std::shared_ptr<MidiBleConnection>> GetConnections();
 
     //HRESULT AddHost(
     //    _In_ std::shared_ptr<MidiNetworkHost>);
@@ -110,6 +118,11 @@ private:
 
     wil::com_ptr<CMidi2Ble2MidiEndpointManager> m_endpointManager;
     wil::com_ptr<CMidi2Ble2MidiConfigurationManager> m_configurationManager;
+
+    // keyed by the GATT service device interface id, which is what discovery and the config
+    // commands both work with
+    std::map<winrt::hstring, std::shared_ptr<MidiBleConnection>> m_connections{ };
+    std::mutex m_connectionsLock;
 
     //std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
     //std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };

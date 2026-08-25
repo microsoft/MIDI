@@ -38,20 +38,12 @@ CMidi2Ble2MidiBidi::Initialize(
 
     m_endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
+    auto connection = TransportState::Current().GetConnectionByEndpointDeviceInterfaceId(m_endpointDeviceInterfaceId);
+    RETURN_HR_IF_NULL(E_NOTFOUND, connection);
 
-    // look up the endpointDeviceInterfaceId in our list of endpoints, and connect to it
+    m_connection = connection;
 
-//    m_connection = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
-
-    //if (auto conn = m_connection.lock())
-    //{
-    //    RETURN_IF_FAILED(conn->ConnectMidiCallback(this));
-    //}
-    //else
-    //{
-    //    RETURN_IF_FAILED(E_INVALIDARG);
-    //}
-
+    RETURN_IF_FAILED(connection->ConnectMidiCallback(this, context));
 
     return S_OK;
 }
@@ -68,13 +60,12 @@ CMidi2Ble2MidiBidi::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    // TODO: This causes the service to crash when the remote network endpoint disconnects. Need to look into this further.
+    if (auto connection = m_connection.lock())
+    {
+        LOG_IF_FAILED(connection->DisconnectMidiCallback());
+    }
 
-    //if (auto ptr = m_connection.lock())
-    //{
-    //    ptr->DisconnectMidiCallback();
-    //    m_connection.reset();
-    //}
+    m_connection.reset();
 
     m_callback = nullptr;
     m_context = 0;
@@ -121,10 +112,10 @@ CMidi2Ble2MidiBidi::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    //if (auto conn = m_connection.lock())
-    //{
-    //    RETURN_IF_FAILED(conn->QueueMidiMessagesToSendToNetwork(data, length));
-    //}
+    auto connection = m_connection.lock();
+    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), connection);
+
+    RETURN_IF_FAILED(connection->QueueMidiMessagesToSendToDevice(data, length));
 
     return S_OK;
 }

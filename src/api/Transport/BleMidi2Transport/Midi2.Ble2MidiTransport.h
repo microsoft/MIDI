@@ -12,10 +12,10 @@ class MidiBle2MidiTransportTelemetryProvider : public wil::TraceLoggingProvider
 {
     IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
         MidiBle2MidiTransportTelemetryProvider,
-        "Microsoft.Windows.Midi2.Ble2MidiTransport",
-        // a62ca586-f59a-5046-0c50-1e905dfe9355 from hash of name using:
-        // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.Ble2MidiTransport").Guid
-        (0xa62ca586,0xf59a,0x5046,0x0c,0x50,0x1e,0x90,0x5d,0xfe,0x93,0x55))
+        "Microsoft.Windows.Midi2.BluetoothMidiTransport",
+        // ad3b4351-d4a9-5be4-5f69-4fa6c5db220c from hash of name using:
+        // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.BluetoothMidiTransport").Guid
+        (0xad3b4351,0xd4a9,0x5be4,0x5f,0x69,0x4f,0xa6,0xc5,0xdb,0x22,0x0c))
 };
 
 using namespace ATL;

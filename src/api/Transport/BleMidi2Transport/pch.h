@@ -88,6 +88,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "json_defs.h"
 #include "json_helpers.h"
+#include "json_transport_command_helper.h"
 #include "swd_helpers.h"
 #include "resource_util.h"
 
@@ -103,13 +104,31 @@ namespace internal = ::WindowsMidiServicesInternal;
 //#include "boost/circular_buffer.hpp"
 
 #include "transport_defs.h"
-//#include "ble2_json_defs.h"
+#include "bluetooth_json_defs.h"
+
+#include <algorithm>
+#include <atomic>
+#include <deque>
+#include <map>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+// libmidi2 calls sprintf in a display helper this transport never uses
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#include <libmidi2/bytestreamToUMP.h>
+#include <libmidi2/umpToBytestream.h>
+#pragma warning(pop)
 
 #include "midi_ble_utilities.h"
+#include "midi_ble_midi1_codec.h"
 
 class CMidi2Ble2MidiEndpointManager;
 class CMidi2Ble2MidiConfigurationManager;
 class MidiBleAdvertiser;
+
+#include "MidiBleConnection.h"
 
 #include "TransportState.h"
 
