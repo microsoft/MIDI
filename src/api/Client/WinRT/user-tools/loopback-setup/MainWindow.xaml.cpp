@@ -572,6 +572,9 @@ namespace winrt::midiloopbacksetup::implementation
                 snapshot.Loopback.CanSetImage = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
                     transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE);
 
+                snapshot.Loopback.CanCustomize = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                    transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT);
+
                 // either side answering means the pair is there, which is what the settings app
                 // used to check before offering to make one
                 snapshot.Loopback.DefaultExists =
@@ -604,6 +607,9 @@ namespace winrt::midiloopbacksetup::implementation
 
                 snapshot.BasicLoopback.CanSetImage = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
                     transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE);
+
+                snapshot.BasicLoopback.CanCustomize = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                    transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT);
 
                 snapshot.BasicLoopback.DefaultExists =
                     midi2bloop::MidiBasicLoopbackManager::DoesLoopbackExist(native::DefaultBasicLoopbackUniqueId);
@@ -733,6 +739,9 @@ namespace winrt::midiloopbacksetup::implementation
             LoopbackImagePanel().Visibility(
                 transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
+            EditLoopbackImagePanel().Visibility(
+                transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
             // there is only ever one default pair, so the offer disappears once it exists
             CreateDefaultLoopbackButton().Visibility(
                 (usable && !transport.DefaultExists) ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -781,6 +790,8 @@ namespace winrt::midiloopbacksetup::implementation
                         row.DisplayName);
                     row.DeleteButtonAccessibleName = res::FormatString(
                         L"DeleteButtonAccessibleNameFormat", row.DisplayName);
+                    row.EditButtonAccessibleName = res::FormatString(
+                        L"EditButtonAccessibleNameFormat", row.DisplayName);
 
                     row.IsPersisted = Contains(transport.ConfiguredIds, row.AssociationId);
                     row.PersistenceText = res::GetString(
@@ -790,7 +801,7 @@ namespace winrt::midiloopbacksetup::implementation
                 }
             }
 
-            ReconcileRows(m_loopbacks, incoming, transport.DisplayOrders, m_loopbackOrder, transport.CanMute);
+            ReconcileRows(m_loopbacks, incoming, transport.DisplayOrders, m_loopbackOrder, transport.CanMute, transport.CanCustomize);
 
             NoLoopbacksText().Visibility(
                 m_loopbacks.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -814,6 +825,9 @@ namespace winrt::midiloopbacksetup::implementation
             CreateBasicLoopbackButton().IsEnabled(usable);
 
             BasicLoopbackImagePanel().Visibility(
+                transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            EditBasicLoopbackImagePanel().Visibility(
                 transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             CreateDefaultBasicLoopbackButton().Visibility(
@@ -857,6 +871,8 @@ namespace winrt::midiloopbacksetup::implementation
                         row.DisplayName);
                     row.DeleteButtonAccessibleName = res::FormatString(
                         L"DeleteButtonAccessibleNameFormat", row.DisplayName);
+                    row.EditButtonAccessibleName = res::FormatString(
+                        L"EditButtonAccessibleNameFormat", row.DisplayName);
 
                     row.IsPersisted = Contains(transport.ConfiguredIds, row.AssociationId);
                     row.PersistenceText = res::GetString(
@@ -866,7 +882,7 @@ namespace winrt::midiloopbacksetup::implementation
                 }
             }
 
-            ReconcileRows(m_basicLoopbacks, incoming, transport.DisplayOrders, m_basicLoopbackOrder, transport.CanMute);
+            ReconcileRows(m_basicLoopbacks, incoming, transport.DisplayOrders, m_basicLoopbackOrder, transport.CanMute, transport.CanCustomize);
 
             NoBasicLoopbacksText().Visibility(
                 m_basicLoopbacks.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -880,7 +896,8 @@ namespace winrt::midiloopbacksetup::implementation
         std::vector<native::LoopbackRowData> const& incoming,
         std::unordered_map<std::wstring, int32_t> const& fileDisplayOrders,
         std::unordered_map<std::wstring, int32_t> const& sessionDisplayOrders,
-        bool const canMute) noexcept
+        bool const canMute,
+        bool const canCustomize) noexcept
     {
         try
         {
@@ -916,6 +933,7 @@ namespace winrt::midiloopbacksetup::implementation
                 }
 
                 item.CanMute(canMute);
+                item.CanCustomize(canCustomize);
             }
 
             // anything the service no longer reports has been removed, here or elsewhere

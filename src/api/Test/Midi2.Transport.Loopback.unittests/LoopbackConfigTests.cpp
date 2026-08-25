@@ -258,6 +258,108 @@ namespace
     }
 
 
+    struct ReportedSide
+    {
+        std::wstring EndpointDeviceId{};
+        std::wstring Name{};
+        std::wstring Description{};
+    };
+
+    struct ReportedPair
+    {
+        bool Found{ false };
+        ReportedSide A{};
+        ReportedSide B{};
+    };
+
+    // Reads back what the transport reports for one association. Note the list reports the id
+    // under "endpointId" while the match criteria of an update wants "endpointDeviceId": two
+    // different key names for the same value.
+    ReportedPair GetReportedPair(std::wstring const& associationId)
+    {
+        ReportedPair result{};
+
+        auto listResult = SendLoopbackConfig(LR"({"transportCommand":{"commandName":"listEntries"}})");
+
+        if (!listResult.IsSuccess())
+        {
+            return result;
+        }
+
+        winrt::Windows::Data::Json::JsonObject response{ nullptr };
+
+        if (!winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ listResult.ResponseJson }, response) ||
+            response == nullptr ||
+            !response.HasKey(L"entries"))
+        {
+            return result;
+        }
+
+        auto const wanted = winrt::guid{ associationId };
+
+        for (auto const& value : response.GetNamedArray(L"entries"))
+        {
+            auto entry = value.GetObject();
+
+            if (entry == nullptr) continue;
+
+            if (!ReportedAssociationMatches(entry.GetNamedString(L"associationIdentifier", L""), wanted))
+            {
+                continue;
+            }
+
+            auto readSide = [](winrt::Windows::Data::Json::JsonObject const& side) -> ReportedSide
+                {
+                    ReportedSide s{};
+
+                    if (side == nullptr) return s;
+
+                    s.EndpointDeviceId = side.GetNamedString(L"endpointId", L"");
+                    s.Name = side.GetNamedString(L"name", L"");
+                    s.Description = side.GetNamedString(L"description", L"");
+
+                    return s;
+                };
+
+            result.A = readSide(entry.GetNamedObject(L"endpointA", nullptr));
+            result.B = readSide(entry.GetNamedObject(L"endpointB", nullptr));
+            result.Found = true;
+
+            break;
+        }
+
+        return result;
+    }
+
+    std::wstring BuildUpdateEntry(
+        std::wstring const& endpointDeviceId,
+        std::wstring const& name,
+        std::wstring const& description)
+    {
+        return
+            L"{\"match\":{\"endpointDeviceId\":\"" + EscapeJsonString(endpointDeviceId) + L"\"},"
+            L"\"customProperties\":{"
+            L"\"name\":\"" + EscapeJsonString(name) + L"\","
+            L"\"description\":\"" + EscapeJsonString(description) + L"\"}}";
+    }
+
+    // Both sides travel in one payload, which is what lets the transport compare the two names
+    // against each other before it writes either endpoint.
+    ServiceConfigResult SendPairUpdate(
+        ReportedPair const& pair,
+        std::wstring const& nameA,
+        std::wstring const& descriptionA,
+        std::wstring const& nameB,
+        std::wstring const& descriptionB)
+    {
+        return SendLoopbackConfig(
+            L"{\"update\":[" +
+            BuildUpdateEntry(pair.A.EndpointDeviceId, nameA, descriptionA) + L"," +
+            BuildUpdateEntry(pair.B.EndpointDeviceId, nameB, descriptionB) +
+            L"]}");
+    }
+
+
     std::wstring RepeatedString(std::wstring const& unit, uint32_t const count)
     {
         std::wstring result{ };
@@ -803,4 +905,173 @@ void LoopbackConfigTests::TestBasicLoopbackMalformedAssociationKeySkipsOnlyThatE
 
     VERIFY_IS_TRUE(foundGood, L"the entry with a valid association key should still have been created");
     VERIFY_IS_FALSE(foundBad, L"the entry with a malformed association key should have been skipped");
+}
+
+
+namespace
+{
+    // Creates a pair and hands back what the transport reports for it, so the update tests all
+    // start from a known endpoint rather than whatever else is on the machine.
+    bool SetUpPairForUpdate(std::wstring& associationId, ReportedPair& pair)
+    {
+        associationId = MakeGuidString();
+
+        auto const uniqueId = MakeUniqueIdString();
+
+        auto const created = SendLoopbackConfig(
+            BuildCreateJson(associationId, L"Update Test A", uniqueId, L"Update Test B", uniqueId));
+
+        if (!created.IsSuccess())
+        {
+            return false;
+        }
+
+        pair = GetReportedPair(associationId);
+
+        return pair.Found &&
+            !pair.A.EndpointDeviceId.empty() &&
+            !pair.B.EndpointDeviceId.empty();
+    }
+}
+
+
+void LoopbackConfigTests::TestUpdateRenamesBothSidesOfAPair()
+{
+    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    std::wstring associationId{};
+    ReportedPair pair{};
+
+    VERIFY_IS_TRUE(SetUpPairForUpdate(associationId, pair));
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const result = SendPairUpdate(
+        pair,
+        L"Renamed A", L"Description for A",
+        L"Renamed B", L"Description for B");
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto const after = GetReportedPair(associationId);
+
+    VERIFY_IS_TRUE(after.Found);
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Renamed A" }, after.A.Name);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Renamed B" }, after.B.Name);
+
+    // the two sides keep their own descriptions rather than sharing one
+    VERIFY_ARE_EQUAL(std::wstring{ L"Description for A" }, after.A.Description);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Description for B" }, after.B.Description);
+
+    // renaming must not disturb identity, or apps lose their connections
+    VERIFY_ARE_EQUAL(pair.A.EndpointDeviceId, after.A.EndpointDeviceId);
+    VERIFY_ARE_EQUAL(pair.B.EndpointDeviceId, after.B.EndpointDeviceId);
+}
+
+
+// The point of validating the whole batch first is that a rejected update leaves BOTH endpoints
+// untouched. Checking only the return value would pass even if one side had already been written.
+void LoopbackConfigTests::TestUpdateWithDuplicateNamesChangesNothing()
+{
+    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    std::wstring associationId{};
+    ReportedPair pair{};
+
+    VERIFY_IS_TRUE(SetUpPairForUpdate(associationId, pair));
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    // differing only by case, because the comparison has to be case-insensitive
+    auto const result = SendPairUpdate(
+        pair,
+        L"Same Name", L"first",
+        L"SAME NAME", L"second");
+
+    VERIFY_IS_FALSE(result.IsSuccess());
+
+    auto const after = GetReportedPair(associationId);
+
+    VERIFY_IS_TRUE(after.Found);
+
+    VERIFY_ARE_EQUAL(pair.A.Name, after.A.Name);
+    VERIFY_ARE_EQUAL(pair.B.Name, after.B.Name);
+    VERIFY_ARE_EQUAL(pair.A.Description, after.A.Description);
+    VERIFY_ARE_EQUAL(pair.B.Description, after.B.Description);
+}
+
+
+void LoopbackConfigTests::TestUpdateWithBlankNameIsRejected()
+{
+    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    std::wstring associationId{};
+    ReportedPair pair{};
+
+    VERIFY_IS_TRUE(SetUpPairForUpdate(associationId, pair));
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const result = SendPairUpdate(
+        pair,
+        L"", L"blank name on the A side",
+        L"Still Fine B", L"second");
+
+    VERIFY_IS_FALSE(result.IsSuccess());
+
+    // the good sibling in the same batch must be untouched too
+    auto const after = GetReportedPair(associationId);
+
+    VERIFY_IS_TRUE(after.Found);
+    VERIFY_ARE_EQUAL(pair.A.Name, after.A.Name);
+    VERIFY_ARE_EQUAL(pair.B.Name, after.B.Name);
 }

@@ -832,6 +832,83 @@ namespace midiloopbacksetup
     }
 
     _Use_decl_annotations_
+    bool LoopbackConfigFile::UpdateEntryDetails(
+        LoopbackKind const kind,
+        winrt::hstring const& associationKey,
+        winrt::hstring const& nameA,
+        winrt::hstring const& descriptionA,
+        winrt::hstring const& nameB,
+        winrt::hstring const& descriptionB,
+        winrt::hstring const& imageFileName) noexcept
+    {
+        json::JsonObject config{ nullptr };
+
+        if (!Load(config))
+        {
+            return false;
+        }
+
+        auto entries = GetCreateObject(config, kind, false);
+
+        auto entry = FindObject(entries, ResolveKey(entries, associationKey));
+
+        if (entry == nullptr)
+        {
+            // The change was still applied live. There is simply no entry to persist it in,
+            // which is the normal case for a loopback that was created without being saved.
+            m_lastError = resources::GetString(L"ConfigFileEntryMissingError");
+            return false;
+        }
+
+        auto writeEndpoint = [&](json::JsonObject const& endpoint, winrt::hstring const& name, winrt::hstring const& description)
+            {
+                if (endpoint == nullptr) return;
+
+                endpoint.SetNamedValue(
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
+                    json::JsonValue::CreateStringValue(name));
+
+                endpoint.SetNamedValue(
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
+                    json::JsonValue::CreateStringValue(description));
+
+                if (imageFileName.empty())
+                {
+                    if (endpoint.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY))
+                    {
+                        endpoint.Remove(MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY);
+                    }
+                }
+                else
+                {
+                    endpoint.SetNamedValue(
+                        MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY,
+                        json::JsonValue::CreateStringValue(imageFileName));
+                }
+            };
+
+        try
+        {
+            if (kind == LoopbackKind::BasicLoopback)
+            {
+                writeEndpoint(FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY), nameA, descriptionA);
+            }
+            else
+            {
+                writeEndpoint(FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY), nameA, descriptionA);
+                writeEndpoint(FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY), nameB, descriptionB);
+            }
+        }
+        catch (...)
+        {
+            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
+            return false;
+        }
+
+        return Save(config);
+    }
+
+    _Use_decl_annotations_
     bool LoopbackConfigFile::SetDisplayOrder(
         LoopbackKind const kind,
         std::vector<winrt::hstring> const& orderedAssociationKeys) noexcept

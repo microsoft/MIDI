@@ -9,6 +9,7 @@
 #include "pch.h"
 
 #include "MidiEndpointCustomProperties.h"
+#include "MidiEndpointMatchCriteria.h"
 #include "json_transport_command_helper.h"
 #include <mmdeviceapi.h>    // for E_NOTFOUND
 
@@ -172,8 +173,18 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
     {
         std::map<std::wstring, bool> capabilities{};
 
-        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS, false);
+
+        // A rolled back build has no update handler, so it must not claim it can customize an
+        // endpoint or the app offers an edit that would silently do nothing.
+        if (Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+        {
+            capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, true);
+        }
+        else
+        {
+            capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, false);
+        }
 
         // revisit these once the functions are added in
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
@@ -797,6 +808,10 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         }
 
         //auto updateArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY);
+        if (Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+        {
+            LOG_IF_FAILED(ProcessEndpointUpdates(jsonObject, responseObject));
+        }
 
         //// Update ----------------------------------
 
@@ -865,6 +880,255 @@ CMidi2LoopbackMidiConfigurationManager::Shutdown()
     TransportState::Current().Shutdown();
 
     m_MidiDeviceManager.reset();
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiConfigurationManager::ProcessEndpointUpdates(
+    json::JsonObject const& jsonObject,
+    json::JsonObject& responseObject)
+{
+    auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
+
+    if (updateArray == nullptr || updateArray.Size() == 0)
+    {
+        return S_FALSE;
+    }
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointTable());
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_MidiDeviceManager);
+
+    auto const devices = TransportState::Current().GetEndpointTable()->GetDeviceListSnapshot();
+
+    std::vector<PendingEndpointUpdate> pending{};
+
+    // Phase one: resolve and validate every entry. Nothing is written until the whole batch is
+    // known good, because a rename that lands on one side of a pair and not the other leaves the
+    // customer worse off than a rejection.
+    for (auto const& updateVal : updateArray)
+    {
+        auto updateObject = updateVal.GetObject();
+
+        if (updateObject == nullptr)
+        {
+            continue;
+        }
+
+        auto matchObject = updateObject.GetNamedObject(
+            WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey, nullptr);
+
+        if (matchObject == nullptr)
+        {
+            continue;
+        }
+
+        auto matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
+
+        if (matchCriteria == nullptr || matchCriteria->EndpointDeviceId.empty())
+        {
+            continue;
+        }
+
+        auto customPropsJson = updateObject.GetNamedObject(
+            WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey, nullptr);
+
+        if (customPropsJson == nullptr)
+        {
+            continue;
+        }
+
+        PendingEndpointUpdate entry{};
+
+        // Resolved against our own table, so a hand-edited configuration cannot aim an update at
+        // an endpoint belonging to another transport.
+        auto const wantedId = internal::NormalizeEndpointInterfaceIdWStringCopy(matchCriteria->EndpointDeviceId.c_str());
+
+        for (auto const& device : devices)
+        {
+            if (device == nullptr) continue;
+
+            if (wantedId == internal::NormalizeEndpointInterfaceIdWStringCopy(device->DefinitionA.CreatedEndpointInterfaceId))
+            {
+                entry.Device = device;
+                entry.IsSideA = true;
+                break;
+            }
+
+            if (wantedId == internal::NormalizeEndpointInterfaceIdWStringCopy(device->DefinitionB.CreatedEndpointInterfaceId))
+            {
+                entry.Device = device;
+                entry.IsSideA = false;
+                break;
+            }
+        }
+
+        if (entry.Device == nullptr)
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+
+            return S_FALSE;
+        }
+
+        std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
+
+        if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+        {
+            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(customPropsJson);
+        }
+        else
+        {
+            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(customPropsJson);
+        }
+
+        if (customProperties == nullptr)
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                LOOPBACK_ERROR_CODE_INVALID_JSON,
+                internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
+
+            return S_FALSE;
+        }
+
+        entry.EndpointDeviceId = entry.IsSideA
+            ? entry.Device->DefinitionA.CreatedEndpointInterfaceId
+            : entry.Device->DefinitionB.CreatedEndpointInterfaceId;
+
+        entry.Name = internal::TrimmedWStringCopy(customProperties->Name.c_str());
+        entry.Description = internal::TrimmedWStringCopy(customProperties->Description.c_str());
+        entry.ImageFileName = internal::CleanImageFileName(customProperties->Image.c_str());
+
+        if (entry.Name.empty())
+        {
+            // the name is this endpoint's identity to the customer, so blanking it is refused
+            // rather than leaving an unnamed endpoint behind
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                entry.IsSideA ? LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_A : LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_B,
+                internal::ResourceGetWString(IDS_ERROR_MISSING_NAME));
+
+            return S_FALSE;
+        }
+
+        if (Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled())
+        {
+            entry.Name = internal::TruncateToUtf8ByteCount(entry.Name, MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH);
+        }
+
+        pending.push_back(entry);
+    }
+
+    if (pending.empty())
+    {
+        return S_FALSE;
+    }
+
+    // Phase two: the two sides of a pair have to stay tellable apart. Compare against the other
+    // side's pending name when both are being changed at once, and its current name otherwise.
+    for (auto const& entry : pending)
+    {
+        std::wstring otherName{ entry.IsSideA
+            ? entry.Device->DefinitionB.EndpointName
+            : entry.Device->DefinitionA.EndpointName };
+
+        for (auto const& other : pending)
+        {
+            if (other.Device == entry.Device && other.IsSideA != entry.IsSideA)
+            {
+                otherName = other.Name;
+                break;
+            }
+        }
+
+        if (internal::ToLowerTrimmedWStringCopy(entry.Name) == internal::ToLowerTrimmedWStringCopy(otherName))
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                entry.IsSideA ? LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_A : LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B,
+                internal::ResourceGetWString(IDS_ERROR_DUPLICATE_ENDPOINT_NAME));
+
+            return S_FALSE;
+        }
+    }
+
+    // Phase three: commit. Everything above has already been validated, so the only remaining
+    // failure is the device manager itself.
+    for (auto const& entry : pending)
+    {
+        // these strings must outlive UpdateEndpointProperties: DEVPROPERTY holds a pointer
+        std::vector<DEVPROPERTY> endpointProperties{};
+
+        // Both slots, matching what the create path does: for a loopback the customer supplied
+        // the name, so there is no transport-supplied value worth preserving underneath.
+        endpointProperties.push_back({ {PKEY_MIDI_EndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.Name.length() + 1)), (PVOID)entry.Name.c_str() });
+
+        endpointProperties.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.Name.length() + 1)), (PVOID)entry.Name.c_str() });
+
+        if (entry.Description.empty())
+        {
+            endpointProperties.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_EMPTY, 0, nullptr });
+        }
+        else
+        {
+            endpointProperties.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.Description.length() + 1)), (PVOID)entry.Description.c_str() });
+        }
+
+        if (entry.ImageFileName.empty())
+        {
+            endpointProperties.push_back({ {PKEY_MIDI_CustomImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_EMPTY, 0, nullptr });
+        }
+        else
+        {
+            endpointProperties.push_back({ {PKEY_MIDI_CustomImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.ImageFileName.length() + 1)), (PVOID)entry.ImageFileName.c_str() });
+        }
+
+        auto updateHR = m_MidiDeviceManager->UpdateEndpointProperties(
+            entry.EndpointDeviceId.c_str(),
+            (ULONG)endpointProperties.size(),
+            endpointProperties.data());
+
+        if (FAILED(updateHR))
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to update endpoint properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(entry.EndpointDeviceId.c_str(), "endpoint device id"),
+                TraceLoggingHResult(updateHR, MIDI_TRACE_EVENT_HRESULT_FIELD)
+            );
+
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                LOOPBACK_ERROR_CODE_UNKNOWN_ERROR,
+                internal::ResourceGetWString(IDS_ERROR_CREATION_FAILED));
+
+            return S_FALSE;
+        }
+
+        // keep the table in step, or listEntries keeps reporting the old values
+        auto& definition = entry.IsSideA ? entry.Device->DefinitionA : entry.Device->DefinitionB;
+
+        definition.EndpointName = entry.Name;
+        definition.EndpointDescription = entry.Description;
+        definition.ImageFileName = entry.ImageFileName;
+    }
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
 
     return S_OK;
 }
