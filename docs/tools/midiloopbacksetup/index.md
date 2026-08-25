@@ -152,7 +152,12 @@ The pin button next to the minimize button keeps the window above your other win
 
 Each kind of loopback is provided by its own part of Windows MIDI Services, and each page checks
 for its own. If a page tells you it isn't available, either that part isn't installed or enabled on
-this PC, or the version installed is older than this tool needs. For most customers, the new features in loopbacks will arrive between November 2026 and January 2027. Updates to the existing MIDI 2.0 loopback come via a 30 day Controlled Feature Rollout. The new MIDI 1.0-style Basic Loopback comes in the November update at the end of November 2026.
+this PC, or the version currently active isn't compatible with this tool.
+
+There's nothing to do about it by hand. A compatible version arrives with a Windows update: for most
+customers the new loopback features land between November 2026 and January 2027. Updates to the
+existing MIDI 2.0 loopback come via a 30 day Controlled Feature Rollout, and the new MIDI 1.0-style
+Basic Loopback comes in the November update at the end of November 2026.
 
 The two pages are checked separately, so it's normal for one to work while the other doesn't while we roll out the updates.
 

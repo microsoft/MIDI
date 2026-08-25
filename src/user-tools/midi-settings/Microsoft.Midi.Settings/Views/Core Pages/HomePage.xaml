@@ -182,19 +182,6 @@
                                 </controls:SettingsExpander.Header>
                                 <controls:SettingsExpander.Items>
                                   
-                                    
-
-                                    <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
-                                                           Command="{x:Bind ViewModel.CommonTaskSetServiceAutoStartCommand}">
-                                        <controls:SettingsCard.Header>
-                                            <TextBlock x:Uid="CommonTasks_SetServiceAutoStart" TextWrapping="WrapWholeWords" />
-                                        </controls:SettingsCard.Header>
-                                        <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef31;" 
-                                                      Style="{StaticResource CommonTasksIconStyles}"/>
-                                        </controls:SettingsCard.HeaderIcon>
-                                    </controls:SettingsCard>
-
                                     <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
                                                        Command="{x:Bind ViewModel.CommonTaskOpenMidiConsoleCommand}">
                                         <controls:SettingsCard.Header>

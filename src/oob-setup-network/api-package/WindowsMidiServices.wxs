@@ -1,11 +1,13 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+    <?include $(StagingVersionIncludeFile) ?>
 
     <Package  
           Name="Microsoft Windows MIDI Services (Preview Service Plugins) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
-          Version="1.0.0.0"
+          Version="$(MidiPluginsNumericVersion)"
           UpgradeCode="2d53aa96-4021-41fe-b5ef-6df7e345a0b9"
           Scope="perMachine"
           Compressed="true"

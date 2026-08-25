@@ -5,7 +5,7 @@
      >
 
     <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
     <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
 
     <?include $(StagingVersionIncludeFile) ?>
