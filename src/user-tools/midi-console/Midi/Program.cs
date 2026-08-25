@@ -323,8 +323,9 @@ AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppTitle(Strings.AppTitle));
 AnsiConsole.WriteLine();
 
 
+// if in legacy mode, the MIDI Console is not available
 
-if (!Microsoft.Midi.Settings.Helpers.MidiFeatureDetectionHelper.IsWindowsMidiServicesFeatureEnabledAsync().GetAwaiter().GetResult())
+if (MidiApi.GetCurrentlySelectedApiMode() == MidiApiMode.LegacyMode)
 {
     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiFeatureNotEnabled));
 
@@ -339,17 +340,6 @@ if (args.Length > 1 && (args[0].ToLower() == "service" || args[0].ToLower() == "
 }
 else
 {
-    // is the service running? If not, show a message so the user knows what is happening
-    using (var controller = MidiServiceHelper.GetServiceController())
-    {
-        if (!MidiServiceHelper.ServiceIsReallyRunning(controller))
-        {
-            LoggingService.Current.LogInfo(Strings.StartingMidiService);
-
-            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.StartingMidiService));
-        }
-    }
-
     // start the service
     if (!MidiApi.EnsureServiceAvailable())
     {
