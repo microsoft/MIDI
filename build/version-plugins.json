@@ -1,0 +1,35 @@
+{
+  "$comment": [
+    "Single source of truth for the Windows MIDI Services SERVICE PLUGINS version.",
+    "This is a SEPARATE release train from the App SDK (build/version.json), and uses the",
+    "same scheme. build-plugins.ps1 stamps this into build/staging/version/BundleInfo.wxi,",
+    "the version include used by the oob-setup-* installers.",
+    "",
+    "channel:       devpreview | preview | rc | stable",
+    "channelNumber: ignored when channel is 'stable'",
+    "",
+    "SemVer string is <major>.<minor>.<patch>-<channel>.<channelNumber>, for example",
+    "1.0.1-preview.1. Bump 'patch' for each release; that is what distinguishes builds.",
+    "",
+    "build:         4th field of the numeric bundle/file version only. It does NOT appear in",
+    "               the SemVer string. CI can override with -BuildNumber <n> without touching",
+    "               this file; -BumpBuildNumber increments and persists it.",
+    "",
+    "NOTE: patch starts at 16 because it now drives the MSI ProductVersion of both plugin",
+    "packages, and the previously shipped Basic Loopback MSI was 1.0.15.0 (Network was 1.0.0.0).",
+    "Windows Installer compares only major.minor.patch, so anything <= 1.0.15 would refuse to",
+    "upgrade an installed Basic Loopback package. The bundle SemVer 1.0.16-preview.1 also ranks",
+    "above the previously shipped 1.0.0-preview.1.68."
+  ],
+
+  "major": 1,
+  "minor": 0,
+  "patch": 16,
+
+  "channel": "preview",
+  "channelNumber": 1,
+
+  "build": 0,
+
+  "versionName": "Plugin Preview 1"
+}
