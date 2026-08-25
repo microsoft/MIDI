@@ -1,12 +1,14 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util='http://wixtoolset.org/schemas/v4/wxs/util'>
 
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+    <?include $(StagingVersionIncludeFile) ?>
 
     <Package  
           Name="Microsoft Windows MIDI Services Basic Loopback $(var.Platform)"
           Manufacturer="Microsoft Corporation"
-          Version="1.0.15.0"
+          Version="$(MidiPluginsNumericVersion)"
           UpgradeCode="10088473-9478-4e62-850b-3d2315e135b8"
           Scope="perMachine"
           Compressed="true"

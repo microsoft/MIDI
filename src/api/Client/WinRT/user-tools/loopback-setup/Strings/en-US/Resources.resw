@@ -116,7 +116,7 @@
     <value>The loopback transport is not installed or not enabled on this PC.</value>
   </data>
   <data name="LoopbackTooOldMessage" xml:space="preserve">
-    <value>The loopback transport on this PC is older than this tool needs. Update Windows MIDI Services to manage loopbacks here.</value>
+    <value>The version of loopback MIDI currently active on this PC is not compatible with this tool. A compatible version is on the way in a Windows update, so there is nothing you need to do.</value>
   </data>
 
   <!-- basic loopbacks page -->
@@ -151,7 +151,7 @@
     <value>The basic loopback transport is not installed or not enabled on this PC.</value>
   </data>
   <data name="BasicLoopbackTooOldMessage" xml:space="preserve">
-    <value>The basic loopback transport on this PC is older than this tool needs. Update Windows MIDI Services to manage basic loopbacks here.</value>
+    <value>The version of basic loopback MIDI currently active on this PC is not compatible with this tool. A compatible version is on the way in a Windows update, so there is nothing you need to do.</value>
   </data>
 
   <!-- rows -->

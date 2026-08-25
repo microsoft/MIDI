@@ -134,7 +134,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;$(SolutionDir)VSFiles\intermediate\IDL\$(Platform)\$(Configuration)\;$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration)\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -149,7 +149,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;$(SolutionDir)VSFiles\intermediate\IDL\$(Platform)\$(Configuration)\;$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration)\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -164,7 +164,7 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;$(SolutionDir)VSFiles\intermediate\IDL\$(Platform)\$(Configuration)\;$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration)\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>Disabled</Optimization>
@@ -174,7 +174,7 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;$(SolutionDir)VSFiles\intermediate\IDL\$(Platform)\$(Configuration)\;$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration)\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>Disabled</Optimization>
@@ -184,7 +184,7 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;$(SolutionDir)VSFiles\intermediate\IDL\$(Platform)\$(Configuration)\;$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration)\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -193,7 +193,7 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;$(SolutionDir)VSFiles\intermediate\IDL\$(Platform)\$(Configuration)\;$(SolutionDir)VSFiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration)\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>

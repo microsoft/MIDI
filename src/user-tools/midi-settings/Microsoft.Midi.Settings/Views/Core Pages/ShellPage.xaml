@@ -253,42 +253,7 @@
                 <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
             </NavigationView.Resources>
 
-            <NavigationView.PaneHeader>
-                <Grid Margin="16,12,4,30"
-                      Padding="24,12,12,12"
-                      HorizontalAlignment="Stretch"
-                      Background="{StaticResource CardBackgroundFillColorDefault}"
-                      CornerRadius="{StaticResource ControlCornerRadius}"
-                      BorderBrush="{StaticResource AccentControlElevationBorderBrush}"
-                      BorderThickness="0">
-
-                    <Rectangle Height="35" 
-                               Width="3"
-                               Margin="-24,0,0,0"
-                               Stroke="{StaticResource MidiIconBaseColorBlueBrush}"
-                               StrokeThickness="3"
-                               RadiusX="3"
-                               RadiusY="3"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Center" />
-
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Installed MIDI Runtime" 
-                                   FontSize="{StaticResource SmallFontSize}"
-                                   Opacity="0.75"/>
-
-                        <!--<TextBlock Text="Current Configuration File"
-                                   FontSize="{StaticResource SmallFontSize}"
-                                   Opacity="0.75"/>
-
-                        <TextBlock Text="{x:Bind ViewModel.CurrentConfigName}" 
-                                   FontSize="{StaticResource SmallFontSize}"
-                                   Foreground="{StaticResource MidiIconBaseColorBlueBrush}"
-                                   Margin="0,4,0,4"/>-->
-                    </StackPanel>
-                </Grid>
-            </NavigationView.PaneHeader>
-            
+           
             <NavigationView.MenuItems>
 
                 <NavigationViewItem x:Uid="Shell_Home"
