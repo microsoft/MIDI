@@ -24,7 +24,7 @@ namespace foundation = winrt::Windows::Foundation;
 // we'll use these to keep track of the ids of the created endpoints
 winrt::hstring m_endpointAId{};
 winrt::hstring m_endpointBId{};
-winrt::guid m_associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
+winrt::guid m_associationId{};
 
 bool CreateLoopbackEndpoints()
 {
@@ -41,7 +41,7 @@ bool CreateLoopbackEndpoints()
     definitionB.Description(L"The second description is optional, but is displayed to users. This becomes the transport-defined description.");
     definitionB.UniqueId(L"3263827-OU812-5150"); // can be the same as the first one, but doesn't need to be.
 
-    MidiLoopbackCreationConfig creationConfig(m_associationId, definitionA, definitionB);
+    MidiLoopbackCreationConfig creationConfig(definitionA, definitionB);
 
     auto response = MidiLoopbackManager::CreateTransientLoopback(creationConfig);
 
@@ -61,6 +61,7 @@ bool CreateLoopbackEndpoints()
 
         m_endpointAId = response.CreatedLoopbackEntry().EndpointA().EndpointDeviceId();
         m_endpointBId = response.CreatedLoopbackEntry().EndpointB().EndpointDeviceId();
+        m_associationId = response.CreatedLoopbackEntry().AssociationId();
     }
     else
     {
