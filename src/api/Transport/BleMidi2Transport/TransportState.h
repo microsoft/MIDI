@@ -40,15 +40,15 @@ public:
     //}
 
 
-    HRESULT Shutdown()
-    {
-        ShutdownAllConnections();
+    // This class is a function-local static, so its destructor runs after main returns. Anything
+    // holding a thread or a WinRT object has to be released from a transport Shutdown call
+    // instead, which is what the endpoint manager does.
 
-        m_endpointManager.reset();
-        m_configurationManager.reset();
-
-        return S_OK;
-    }
+    // This PC published as a BLE MIDI Peripheral. There is at most one, because the radio can
+    // advertise the MIDI service only once.
+    std::shared_ptr<MidiBlePeripheral> GetPeripheral();
+    HRESULT StartPeripheral(_In_ MidiBleProtocol::Protocol const protocol);
+    HRESULT StopPeripheral();
 
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
@@ -60,6 +60,14 @@ public:
     std::shared_ptr<MidiBleConnection> GetConnectionByDeviceId(_In_ winrt::hstring const& deviceId);
     std::shared_ptr<MidiBleConnection> GetConnectionByEndpointDeviceInterfaceId(_In_ std::wstring const& endpointDeviceInterfaceId);
     std::vector<std::shared_ptr<MidiBleConnection>> GetConnections();
+
+    // The configuration file and the endpoint manager come up in an order this transport does
+    // not control, so configured devices are parked here until someone can act on them.
+    void AddConfiguredDeviceId(_In_ winrt::hstring const& deviceId);
+    std::vector<winrt::hstring> TakeConfiguredDeviceIds();
+
+    void SetConfiguredPeripheralProtocol(_In_ MidiBleProtocol::Protocol const protocol);
+    MidiBleProtocol::Protocol TakeConfiguredPeripheralProtocol();
 
     //HRESULT AddHost(
     //    _In_ std::shared_ptr<MidiNetworkHost>);
@@ -123,6 +131,14 @@ private:
     // commands both work with
     std::map<winrt::hstring, std::shared_ptr<MidiBleConnection>> m_connections{ };
     std::mutex m_connectionsLock;
+
+    std::vector<winrt::hstring> m_configuredDeviceIds{ };
+    std::mutex m_configuredDeviceIdsLock;
+
+    std::shared_ptr<MidiBlePeripheral> m_peripheral{ nullptr };
+    std::mutex m_peripheralLock;
+
+    MidiBleProtocol::Protocol m_configuredPeripheralProtocol{ MidiBleProtocol::Protocol::Unknown };
 
     //std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
     //std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };

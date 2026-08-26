@@ -47,6 +47,27 @@ namespace MidiBleProtocol
         int16_t LastSignalStrengthDbm{ 0 };
         uint64_t LastSeenTimestamp{ 0 };
         winrt::hstring EndpointDeviceId{ };
+
+        // Deterministic, so a customization can name a device before its endpoint exists.
+        winrt::hstring EndpointDeviceInstanceId{ };
+
+        // Connecting happens on a background worker long after the command returns, so the last
+        // failure is kept here. Without it a failed connect is completely silent.
+        int32_t LastConnectErrorHresult{ 0 };
+        winrt::hstring LastConnectErrorDetail{ };
+
+        // filled in from the live connection when one exists
+        uint64_t MessagesReceived{ 0 };
+        uint64_t MessagesSent{ 0 };
+        int32_t LastSendErrorHresult{ 0 };
+
+        // computed when the list is taken, because both are relative to now
+        uint64_t LastSeenAgoMilliseconds{ 0 };
+        bool IsPresent{ false };
+
+        // An endpoint can exist for a device which has gone away. Keeping these separate is what
+        // makes a silent disconnect visible instead of leaving apps holding a dead endpoint.
+        bool HasEndpoint{ false };
     };
 }
 
@@ -54,6 +75,41 @@ namespace MidiBleUtilities
 {
     using namespace ::winrt::Windows::Devices::Bluetooth;
     using namespace ::winrt::Windows::Devices::Bluetooth::GenericAttributeProfile;
+
+    // A GATT call against a device which has gone to sleep or out of range blocks for the full
+    // Bluetooth timeout. Service shutdown joins the threads which make these calls, so an
+    // unbounded wait here keeps the whole midisrv process alive long after the service stopped.
+    inline constexpr uint32_t BleOperationTimeoutMilliseconds = 5000;
+    inline constexpr uint32_t BleDataOperationTimeoutMilliseconds = 2000;
+    inline constexpr uint32_t BleTeardownOperationTimeoutMilliseconds = 1000;
+
+    template<typename TResult>
+    inline TResult AwaitWithTimeout(
+        _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
+        _In_ uint32_t const timeoutMilliseconds,
+        _In_ TResult const onTimeout)
+    {
+        if (operation == nullptr)
+        {
+            return onTimeout;
+        }
+
+        try
+        {
+            if (operation.wait_for(std::chrono::milliseconds{ timeoutMilliseconds }) ==
+                ::winrt::Windows::Foundation::AsyncStatus::Completed)
+            {
+                return operation.GetResults();
+            }
+
+            // Best effort. The operation keeps its own references and unwinds on its own, so
+            // abandoning it is safe even when the cancel is ignored.
+            operation.Cancel();
+        }
+        CATCH_LOG();
+
+        return onTimeout;
+    }
 
     inline winrt::hstring ProtocolToJsonString(_In_ MidiBleProtocol::Protocol const protocol)
     {
@@ -86,13 +142,68 @@ namespace MidiBleUtilities
     }
 
 
+    // Apple, and to a lesser extent Android, withhold the user-assigned device name from an
+    // unpaired peer and report the model instead. Those names are useless for telling two devices
+    // apart and collide constantly, so they are worth pointing out to the user. Matched whole, so
+    // a real name which merely contains one of these is not flagged.
+    inline bool IsGenericDeviceName(_In_ winrt::hstring const& name)
+    {
+        static wchar_t const* const genericNames[] =
+        {
+            L"iPhone", L"iPad", L"iPod", L"iPod touch",
+            L"Apple Watch", L"Mac", L"MacBook", L"MacBook Pro", L"MacBook Air", L"iMac",
+            L"Android", L"Android Phone", L"Android Tablet",
+            L"Phone", L"Tablet", L"Bluetooth", L"BLE MIDI"
+        };
+
+        if (name.empty())
+        {
+            return false;
+        }
+
+        for (auto const& generic : genericNames)
+        {
+            if (_wcsicmp(name.c_str(), generic) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    inline winrt::hstring BluetoothAddressTypeToString(_In_ BluetoothAddressType const addressType)
+    {
+        switch (addressType)
+        {
+        case BluetoothAddressType::Public:      return L"public";
+        case BluetoothAddressType::Random:      return L"random";
+        default:                                return L"unspecified";
+        }
+    }
+
     inline BluetoothLEDevice GetBleDeviceFromEnumerationDeviceId(_In_ std::wstring deviceId)
     {
-        //    std::cout << __FUNCTION__ << std::endl;
+        return AwaitWithTimeout(
+            BluetoothLEDevice::FromIdAsync(winrt::to_hstring(deviceId.c_str())),
+            BleOperationTimeoutMilliseconds,
+            BluetoothLEDevice{ nullptr });
+    }
 
-        auto device = BluetoothLEDevice::FromIdAsync(winrt::to_hstring(deviceId.c_str())).get();
+    // The name a remote Central sees for this PC. The GATT service provider puts the system's
+    // Bluetooth name in the advertisement and gives an application no way to override it, and
+    // Windows takes that name from the computer name, so this is reported rather than configured.
+    inline winrt::hstring GetLocalBluetoothName()
+    {
+        wchar_t computerName[MAX_COMPUTERNAME_LENGTH + 1]{ 0 };
+        DWORD computerNameLength = ARRAYSIZE(computerName);
 
-        return device;
+        if (GetComputerNameW(computerName, &computerNameLength))
+        {
+            return winrt::hstring{ computerName };
+        }
+
+        return L"";
     }
 
     // The Bluetooth address is the only identifier both the advertisement watcher and the GATT
@@ -142,8 +253,12 @@ namespace MidiBleUtilities
     }
 
 
-    inline GattDeviceService GetBleMidiServiceFromDevice(_In_ BluetoothLEDevice bleDevice)
+    inline GattDeviceService GetBleMidiServiceFromDevice(
+        _In_ BluetoothLEDevice bleDevice,
+        _Out_ GattCommunicationStatus& status)
     {
+        status = GattCommunicationStatus::Unreachable;
+
         if (bleDevice == nullptr)
         {
             return nullptr;
@@ -151,7 +266,17 @@ namespace MidiBleUtilities
 
         winrt::guid bleServiceUuid{ MidiBleProtocol::MidiServiceUuid };
 
-        auto gattServicesResult = bleDevice.GetGattServicesForUuidAsync(bleServiceUuid, BluetoothCacheMode::Uncached).get();
+        auto gattServicesResult = AwaitWithTimeout(
+            bleDevice.GetGattServicesForUuidAsync(bleServiceUuid, BluetoothCacheMode::Uncached),
+            BleOperationTimeoutMilliseconds,
+            GattDeviceServicesResult{ nullptr });
+
+        if (gattServicesResult == nullptr)
+        {
+            return nullptr;
+        }
+
+        status = gattServicesResult.Status();
 
         if (gattServicesResult.Status() == GattCommunicationStatus::Success && gattServicesResult.Services().Size() > 0)
         {

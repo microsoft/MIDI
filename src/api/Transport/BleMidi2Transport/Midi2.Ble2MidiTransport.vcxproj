@@ -283,7 +283,7 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MidiBleAdvertiser.cpp" />
+    <ClCompile Include="MidiBlePeripheral.cpp" />
     <ClCompile Include="MidiBleConnection.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
@@ -306,7 +306,7 @@
     <ClInclude Include="bluetooth_json_defs.h" />
     <ClInclude Include="midi_ble_midi1_codec.h" />
     <ClInclude Include="midi_ble_utilities.h" />
-    <ClInclude Include="MidiBleAdvertiser.h" />
+    <ClInclude Include="MidiBlePeripheral.h" />
     <ClInclude Include="MidiBleConnection.h" />
     <ClInclude Include="TransportState.h" />
     <ClInclude Include="transport_defs.h" />

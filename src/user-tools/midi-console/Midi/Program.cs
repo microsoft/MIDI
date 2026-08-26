@@ -289,6 +289,54 @@ app.Configure(config =>
     }).WithAlias("connect");
 
 
+    config.AddBranch("bluetooth", bluetooth =>
+    {
+        bluetooth.SetDescription("Work with Bluetooth Low Energy MIDI devices");
+
+        bluetooth.AddCommand<BluetoothListDevicesCommand>("list")
+            .WithDescription("List the Bluetooth MIDI devices which have been discovered")
+            .WithExample("bluetooth", "list")
+            .WithAlias("list-devices")
+            ;
+
+        bluetooth.AddCommand<BluetoothConnectDeviceCommand>("connect")
+            .WithDescription("Connect to a Bluetooth MIDI device and create a MIDI endpoint for it")
+            .WithExample("bluetooth", "connect", "F0A1B2C3D4E5")
+            ;
+
+        bluetooth.AddCommand<BluetoothDisconnectDeviceCommand>("disconnect")
+            .WithDescription("Disconnect a Bluetooth MIDI device and remove its MIDI endpoint")
+            .WithExample("bluetooth", "disconnect", "F0A1B2C3D4E5")
+            ;
+
+        bluetooth.AddCommand<BluetoothCustomizeDeviceCommand>("customize")
+            .WithDescription("Set the name, description, and image shown for a Bluetooth MIDI device")
+            .WithExample("bluetooth", "customize", "F0A1B2C3D4E5", "--name", "\"Studio Keyboard\"")
+            ;
+
+        bluetooth.AddBranch("peripheral", peripheral =>
+        {
+            peripheral.SetDescription("Publish this PC as a Bluetooth MIDI device other devices can connect to");
+
+            peripheral.AddCommand<BluetoothPeripheralStartCommand>("start")
+                .WithDescription("Publish this PC as a Bluetooth MIDI device")
+                .WithExample("bluetooth", "peripheral", "start")
+                ;
+
+            peripheral.AddCommand<BluetoothPeripheralStopCommand>("stop")
+                .WithDescription("Stop publishing this PC as a Bluetooth MIDI device")
+                .WithExample("bluetooth", "peripheral", "stop")
+                ;
+
+            peripheral.AddCommand<BluetoothPeripheralStatusCommand>("status")
+                .WithDescription("Show whether this PC is published as a Bluetooth MIDI device, and what is connected to it")
+                .WithExample("bluetooth", "peripheral", "status")
+                ;
+        });
+
+    }).WithAlias("ble");
+
+
 
 
 

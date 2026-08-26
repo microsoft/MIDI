@@ -54,6 +54,56 @@ TransportState::AddConnection(std::shared_ptr<MidiBleConnection> connection)
 }
 
 
+std::shared_ptr<MidiBlePeripheral>
+TransportState::GetPeripheral()
+{
+    auto lock = std::scoped_lock{ m_peripheralLock };
+
+    return m_peripheral;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+TransportState::StartPeripheral(MidiBleProtocol::Protocol const protocol)
+{
+    auto lock = std::scoped_lock{ m_peripheralLock };
+
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), m_peripheral != nullptr && m_peripheral->IsRunning());
+
+    auto peripheral = std::make_shared<MidiBlePeripheral>();
+    RETURN_IF_NULL_ALLOC(peripheral);
+
+    RETURN_IF_FAILED(peripheral->Start(protocol));
+
+    m_peripheral = peripheral;
+
+    return S_OK;
+}
+
+
+HRESULT
+TransportState::StopPeripheral()
+{
+    std::shared_ptr<MidiBlePeripheral> peripheral{ nullptr };
+
+    {
+        auto lock = std::scoped_lock{ m_peripheralLock };
+
+        peripheral = std::move(m_peripheral);
+        m_peripheral = nullptr;
+    }
+
+    // stopping blocks on the writer thread and on Bluetooth, so it never runs under the lock
+    if (peripheral != nullptr)
+    {
+        LOG_IF_FAILED(peripheral->Stop());
+    }
+
+    return S_OK;
+}
+
+
 _Use_decl_annotations_
 HRESULT
 TransportState::RemoveConnection(winrt::hstring const& deviceId)
@@ -152,6 +202,58 @@ TransportState::GetConnections()
     }
 
     return connections;
+}
+
+
+_Use_decl_annotations_
+void
+TransportState::AddConfiguredDeviceId(winrt::hstring const& deviceId)
+{
+    if (deviceId.empty())
+    {
+        return;
+    }
+
+    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+
+    if (std::find(m_configuredDeviceIds.begin(), m_configuredDeviceIds.end(), deviceId) == m_configuredDeviceIds.end())
+    {
+        m_configuredDeviceIds.push_back(deviceId);
+    }
+}
+
+
+std::vector<winrt::hstring>
+TransportState::TakeConfiguredDeviceIds()
+{
+    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+
+    auto ids = std::move(m_configuredDeviceIds);
+    m_configuredDeviceIds.clear();
+
+    return ids;
+}
+
+
+_Use_decl_annotations_
+void
+TransportState::SetConfiguredPeripheralProtocol(MidiBleProtocol::Protocol const protocol)
+{
+    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+
+    m_configuredPeripheralProtocol = protocol;
+}
+
+
+MidiBleProtocol::Protocol
+TransportState::TakeConfiguredPeripheralProtocol()
+{
+    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+
+    auto const protocol = m_configuredPeripheralProtocol;
+    m_configuredPeripheralProtocol = MidiBleProtocol::Protocol::Unknown;
+
+    return protocol;
 }
 
 

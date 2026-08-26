@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "MidiEndpointCustomPropertiesCache.h"
 
 class CMidi2Ble2MidiConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
@@ -20,7 +21,14 @@ public:
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _Out_ LPWSTR* Response));
     STDMETHOD(Shutdown)();
 
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> CustomPropertiesCache() { return m_customPropertiesCache; }
+
 private:
+    HRESULT ProcessEndpointCustomizations(
+        _In_ json::JsonObject const& jsonObject,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache>() };
 };

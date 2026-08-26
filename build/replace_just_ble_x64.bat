@@ -10,9 +10,29 @@ set buildoutput="%midi_repo_root%src\api\VSFiles\x64\Release"
 echo Stopping midisrv
 net stop midisrv
 
+rem SCM can report the service stopped while the process is still alive holding the DLL open, so
+rem the copy is retried rather than the process being polled. Whether the file can be replaced is
+rem the only thing that actually matters, and unlike a process check it cannot be fooled.
 echo Copying Bluetooth LE MIDI Transport
-copy /Y %buildoutput%\Midi2.Ble2MidiTransport.dll %servicepath%
-copy /Y %buildoutput%\Midi2.Ble2MidiTransport.pdb %servicepath%
+for /L %%i in (1,1,30) do (
+    copy /Y %buildoutput%\Midi2.Ble2MidiTransport.dll %servicepath% >nul 2>&1
+    if not errorlevel 1 goto :dll_copied
+    echo   the installed binary is still locked, retrying...
+    timeout /t 1 /nobreak >nul
+)
+
+echo.
+echo ERROR: the transport DLL could not be replaced. The OLD build is still installed.
+echo Something still has it open:
+echo.
+tasklist /FI "IMAGENAME eq midisrv.exe"
+echo.
+pause
+exit /b 1
+
+:dll_copied
+echo   transport DLL replaced.
+copy /Y %buildoutput%\Midi2.Ble2MidiTransport.pdb %servicepath% >nul 2>&1
 
 echo Registering the COM server
 regsvr32 /s "%ProgramFiles%\Windows MIDI Services\Service\Midi2.Ble2MidiTransport.dll"

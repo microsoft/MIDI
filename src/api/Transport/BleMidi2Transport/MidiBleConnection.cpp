@@ -101,6 +101,48 @@ MidiBleConnection::Initialize(
 }
 
 
+_Use_decl_annotations_
+HRESULT
+MidiBleConnection::InitializeAsPeripheral(
+    winrt::hstring const& deviceId,
+    winrt::hstring const& deviceName,
+    MidiBleProtocol::Protocol const protocol,
+    MidiBlePeripheralLink const& link
+)
+{
+    TraceLoggingWrite(
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceId.c_str(), "device id"),
+        TraceLoggingUInt8(static_cast<uint8_t>(protocol), "protocol")
+    );
+
+    RETURN_HR_IF(E_INVALIDARG, deviceId.empty());
+    RETURN_HR_IF(E_INVALIDARG, protocol == MidiBleProtocol::Protocol::Unknown);
+    RETURN_HR_IF_NULL(E_INVALIDARG, link.WritePacket);
+    RETURN_HR_IF_NULL(E_INVALIDARG, link.MaxAttPayloadByteCount);
+    RETURN_HR_IF_NULL(E_INVALIDARG, link.IsConnected);
+
+    m_deviceId = deviceId;
+    m_deviceName = deviceName;
+    m_protocol = protocol;
+    m_isPeripheral = true;
+    m_peripheralLink = link;
+
+    m_bytestreamToUmp.defaultGroup = 0;
+    m_bytestreamToUmp.enableRunningStatus = false;
+    m_umpToBytestream.enableRunningStatus = false;
+
+    m_outgoingPacketBuilder.SetMaxPacketByteCount(MaxAttPayloadByteCount());
+
+    return S_OK;
+}
+
+
 HRESULT
 MidiBleConnection::Start()
 {
@@ -115,7 +157,7 @@ MidiBleConnection::Start()
     );
 
     RETURN_HR_IF(E_UNEXPECTED, m_started.load());
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_characteristic);
+    RETURN_HR_IF(E_UNEXPECTED, !m_isPeripheral && m_characteristic == nullptr);
 
     m_writerThread = std::jthread([weakThis = weak_from_this()](std::stop_token stopToken)
         {
@@ -125,30 +167,35 @@ MidiBleConnection::Start()
             }
         });
 
-    try
+    // A peripheral has no Characteristic to subscribe to and no BluetoothLEDevice to watch. Its
+    // link state is reported by the GATT service provider instead.
+    if (!m_isPeripheral)
     {
-        // revoking a token does not drain in-flight handlers, so the handler holds a weak reference
-        m_valueChangedToken = m_characteristic.ValueChanged(
-            [weakThis = weak_from_this()](gatt::GattCharacteristic const& sender, gatt::GattValueChangedEventArgs const& args)
-            {
-                if (auto self = weakThis.lock())
+        try
+        {
+            // revoking a token does not drain in-flight handlers, so the handler holds a weak reference
+            m_valueChangedToken = m_characteristic.ValueChanged(
+                [weakThis = weak_from_this()](gatt::GattCharacteristic const& sender, gatt::GattValueChangedEventArgs const& args)
                 {
-                    self->OnCharacteristicValueChanged(sender, args);
-                }
-            });
+                    if (auto self = weakThis.lock())
+                    {
+                        self->OnCharacteristicValueChanged(sender, args);
+                    }
+                });
 
-        m_connectionStatusChangedToken = m_device.ConnectionStatusChanged(
-            [weakThis = weak_from_this()](bt::BluetoothLEDevice const& sender, foundation::IInspectable const& args)
-            {
-                if (auto self = weakThis.lock())
+            m_connectionStatusChangedToken = m_device.ConnectionStatusChanged(
+                [weakThis = weak_from_this()](bt::BluetoothLEDevice const& sender, foundation::IInspectable const& args)
                 {
-                    self->OnDeviceConnectionStatusChanged(sender, args);
-                }
-            });
+                    if (auto self = weakThis.lock())
+                    {
+                        self->OnDeviceConnectionStatusChanged(sender, args);
+                    }
+                });
 
-        RETURN_IF_FAILED(SubscribeToNotifications());
+            RETURN_IF_FAILED(SubscribeToNotifications());
+        }
+        CATCH_RETURN();
     }
-    CATCH_RETURN();
 
     m_started = true;
 
@@ -163,8 +210,11 @@ MidiBleConnection::SubscribeToNotifications()
 
     try
     {
-        auto descriptorStatus = m_characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-            gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify).get();
+        auto descriptorStatus = MidiBleUtilities::AwaitWithTimeout(
+            m_characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+                gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify),
+            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            gatt::GattCommunicationStatus::Unreachable);
 
         if (descriptorStatus != gatt::GattCommunicationStatus::Success)
         {
@@ -184,7 +234,10 @@ MidiBleConnection::SubscribeToNotifications()
 
         // the specified handshake: the Central reads the Characteristic after connecting and the
         // Peripheral answers with an empty payload. Some devices will not start notifying without it.
-        m_characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached).get();
+        MidiBleUtilities::AwaitWithTimeout(
+            m_characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
+            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            gatt::GattReadResult{ nullptr });
     }
     CATCH_RETURN();
 
@@ -315,9 +368,13 @@ MidiBleConnection::Shutdown()
                 m_valueChangedToken = {};
             }
 
-            // best-effort: the device is often already out of range by the time we get here
-            LOG_IF_FAILED(m_characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-                gatt::GattClientCharacteristicConfigurationDescriptorValue::None).get() == gatt::GattCommunicationStatus::Success ? S_OK : S_FALSE);
+            // Courtesy only, and the link is going away regardless, so it gets the shortest wait
+            // of anything here.
+            LOG_IF_FAILED(MidiBleUtilities::AwaitWithTimeout(
+                m_characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+                    gatt::GattClientCharacteristicConfigurationDescriptorValue::None),
+                MidiBleUtilities::BleTeardownOperationTimeoutMilliseconds,
+                gatt::GattCommunicationStatus::Unreachable) == gatt::GattCommunicationStatus::Success ? S_OK : S_FALSE);
         }
     }
     CATCH_LOG();
@@ -429,6 +486,11 @@ MidiBleConnection::IsDeviceConnected() const
 {
     try
     {
+        if (m_isPeripheral)
+        {
+            return m_peripheralLink.IsConnected != nullptr && m_peripheralLink.IsConnected();
+        }
+
         if (m_device != nullptr)
         {
             return m_device.ConnectionStatus() == bt::BluetoothConnectionStatus::Connected;
@@ -445,6 +507,21 @@ MidiBleConnection::MaxAttPayloadByteCount() const
 {
     try
     {
+        if (m_isPeripheral)
+        {
+            if (m_peripheralLink.MaxAttPayloadByteCount != nullptr)
+            {
+                auto const payloadByteCount = m_peripheralLink.MaxAttPayloadByteCount();
+
+                if (payloadByteCount >= MidiBleMidi1::DefaultMaxPacketByteCount)
+                {
+                    return payloadByteCount;
+                }
+            }
+
+            return MidiBleMidi1::DefaultMaxPacketByteCount;
+        }
+
         if (m_session != nullptr)
         {
             auto const maxPduSize = m_session.MaxPduSize();
@@ -482,16 +559,46 @@ MidiBleConnection::OnCharacteristicValueChanged(
             return;
         }
 
-        if (m_protocol == MidiBleProtocol::Protocol::Midi2Ump)
-        {
-            ProcessIncomingUmpPayload(bytes.data(), bytes.size());
-        }
-        else
-        {
-            ProcessIncomingMidi1Packet(bytes.data(), bytes.size());
-        }
+        ProcessIncomingPacket(bytes.data(), bytes.size());
     }
     CATCH_LOG();
+}
+
+
+_Use_decl_annotations_
+void
+MidiBleConnection::ProcessIncomingPacket(
+    uint8_t const* const bytes,
+    size_t const byteCount
+)
+{
+    if (m_shutdown.load() || bytes == nullptr || byteCount == 0)
+    {
+        return;
+    }
+
+    m_packetsReceived++;
+
+    if (m_protocol == MidiBleProtocol::Protocol::Midi2Ump)
+    {
+        ProcessIncomingUmpPayload(bytes, byteCount);
+    }
+    else
+    {
+        ProcessIncomingMidi1Packet(bytes, byteCount);
+    }
+}
+
+
+void
+MidiBleConnection::ResetForNewRemoteClient()
+{
+    {
+        auto lock = std::scoped_lock{ m_outgoingQueueLock };
+        m_outgoingPackets.clear();
+    }
+
+    ResetTranslationState();
 }
 
 
@@ -657,6 +764,20 @@ MidiBleConnection::SendUmpWordsToCallback(
     RETURN_HR_IF_NULL(E_INVALIDARG, words);
     RETURN_HR_IF(E_INVALIDARG, wordCount == 0);
 
+    // counted here because it is the one place both the MIDI 1.0 and the UMP path pass through
+    for (size_t i = 0; i < wordCount; )
+    {
+        auto const messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words[i]);
+
+        if (messageWordCount == 0 || i + messageWordCount > wordCount)
+        {
+            break;
+        }
+
+        m_messagesReceived++;
+        i += messageWordCount;
+    }
+
     auto lock = std::scoped_lock{ m_callbackLock };
 
     if (m_callback == nullptr)
@@ -750,6 +871,7 @@ MidiBleConnection::BuildOutgoingMidi1Packets(
         if (!messageBytes.empty())
         {
             m_outgoingPacketBuilder.AppendMessage(messageBytes.data(), messageBytes.size(), timestamp);
+            m_messagesSent++;
         }
 
         index += messageWordCount;
@@ -796,6 +918,7 @@ MidiBleConnection::BuildOutgoingUmpPackets(
             AppendWordBigEndian(current, words[index + i]);
         }
 
+        m_messagesSent++;
         index += messageWordCount;
     }
 
@@ -904,6 +1027,29 @@ MidiBleConnection::WritePacketToDevice(std::vector<uint8_t> const& packet)
     RETURN_HR_IF(S_FALSE, packet.empty());
     RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_shutdown.load());
 
+    if (m_isPeripheral)
+    {
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_peripheralLink.WritePacket);
+
+        auto const hr = m_peripheralLink.WritePacket(packet);
+
+        if (SUCCEEDED(hr))
+        {
+            if (hr == S_OK)
+            {
+                m_packetsSent++;
+            }
+
+            m_lastSendErrorHresult = 0;
+        }
+        else
+        {
+            m_lastSendErrorHresult = static_cast<int32_t>(hr);
+        }
+
+        return hr;
+    }
+
     auto characteristic = m_characteristic;
     RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
 
@@ -913,10 +1059,15 @@ MidiBleConnection::WritePacketToDevice(std::vector<uint8_t> const& packet)
         writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
 
         // the Central always writes without response
-        auto status = characteristic.WriteValueAsync(writer.DetachBuffer(), gatt::GattWriteOption::WriteWithoutResponse).get();
+        auto status = MidiBleUtilities::AwaitWithTimeout(
+            characteristic.WriteValueAsync(writer.DetachBuffer(), gatt::GattWriteOption::WriteWithoutResponse),
+            MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
+            gatt::GattCommunicationStatus::Unreachable);
 
         if (status != gatt::GattCommunicationStatus::Success)
         {
+            m_lastSendErrorHresult = static_cast<int32_t>(E_FAIL);
+
             TraceLoggingWrite(
                 MidiBle2MidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_WARNING,
@@ -930,8 +1081,15 @@ MidiBleConnection::WritePacketToDevice(std::vector<uint8_t> const& packet)
 
             return S_FALSE;
         }
+
+        m_packetsSent++;
+        m_lastSendErrorHresult = 0;
     }
-    CATCH_RETURN();
+    catch (...)
+    {
+        m_lastSendErrorHresult = static_cast<int32_t>(winrt::to_hresult());
+        RETURN_CAUGHT_EXCEPTION();
+    }
 
     return S_OK;
 }

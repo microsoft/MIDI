@@ -52,7 +52,7 @@
 #define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT                         MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT
 #define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES                          MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES
 
-// the transport honours an image file name given in the create section, and reports it back
+// the transport honors an image file name given in the create section, and reports it back
 // from listEntries. A transport which cannot must say so, or a client offers the customer a
 // picture that silently never appears.
 #define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE                     L"createWithImage"

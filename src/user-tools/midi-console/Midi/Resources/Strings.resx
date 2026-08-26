@@ -917,6 +917,27 @@ Timestamp</value>
   <data name="ParameterEnumTransportsVerbose" xml:space="preserve">
     <value>Include additional details for each transport, such as the transport id, image file name, and creation capabilities</value>
   </data>
+  <data name="ParameterBluetoothDeviceId" xml:space="preserve">
+    <value>The Bluetooth MIDI device id, as shown by the 'bluetooth list' command</value>
+  </data>
+  <data name="ParameterBluetoothTemporary" xml:space="preserve">
+    <value>Do not save this device to the configuration file. It will be forgotten when the service restarts</value>
+  </data>
+  <data name="ParameterBluetoothCustomName" xml:space="preserve">
+    <value>The name to show for this device instead of the name the device reports. Use an empty string to go back to the device-supplied name</value>
+  </data>
+  <data name="ParameterBluetoothCustomDescription" xml:space="preserve">
+    <value>The description to show for this device. Use an empty string to remove the description</value>
+  </data>
+  <data name="ParameterBluetoothCustomImage" xml:space="preserve">
+    <value>The file name of the image to show for this device. This is a file name only, not a path</value>
+  </data>
+  <data name="ParameterBluetoothCustomClear" xml:space="preserve">
+    <value>Remove the name, description, and image customizations for this device</value>
+  </data>
+  <data name="ParameterBluetoothPeripheralProtocol" xml:space="preserve">
+    <value>The BLE MIDI protocol to publish, either 'midi1' or 'midi2'. Only one can be published at a time, and the default is 'midi1' because that is what devices support today</value>
+  </data>
   <data name="ParameterBridgeEndpointsWinRTBleInputPortId" xml:space="preserve">
     <value>The WinRT MIDI 1.0 input port id of the Bluetooth LE device to bridge from</value>
   </data>

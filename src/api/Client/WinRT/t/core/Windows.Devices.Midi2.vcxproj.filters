@@ -39,6 +39,12 @@
     <ClCompile Include="MidiNetworkPendingRemoteClient.cpp">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </ClCompile>
+    <ClCompile Include="MidiSystemExclusiveReceivedEventArgs.cpp">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSystemExclusiveReceiver.cpp">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -78,6 +84,12 @@
     </ClInclude>
     <ClInclude Include="MidiNetworkPendingRemoteClient.h">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSystemExclusiveReceivedEventArgs.h">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSystemExclusiveReceiver.h">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -503,6 +515,30 @@
     </Midl>
     <Midl Include="MidiEndpointDeviceWatcher.idl">
       <Filter>SDK\Enumeration\Endpoint</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDeviceClientEndpointInUseChangedEventArgs.idl">
+      <Filter>SDK\Transports\Virtual</Filter>
+    </Midl>
+    <Midl Include="MidiSystemExclusiveReceivedEventArgs.idl">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </Midl>
+    <Midl Include="MidiSystemExclusiveReceiver.idl">
+      <Filter>SDK\Utilities\SysEx Transfer</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostConnection.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientDisconnectConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientDisconnectErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientDisconnectResponse.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

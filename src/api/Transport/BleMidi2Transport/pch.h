@@ -92,6 +92,10 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "swd_helpers.h"
 #include "resource_util.h"
 
+#include "MidiEndpointMatchCriteria.h"
+#include "MidiEndpointCustomProperties.h"
+#include "MidiEndpointCustomPropertiesCache.h"
+
 #include "MidiXProc.h"
 
 #include "Midi2Ble2MidiTransport_i.c"
@@ -109,8 +113,10 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include <algorithm>
 #include <atomic>
 #include <deque>
+#include <functional>
 #include <map>
 #include <mutex>
+#include <set>
 #include <thread>
 #include <vector>
 
@@ -126,9 +132,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 class CMidi2Ble2MidiEndpointManager;
 class CMidi2Ble2MidiConfigurationManager;
-class MidiBleAdvertiser;
 
 #include "MidiBleConnection.h"
+#include "MidiBlePeripheral.h"
 
 #include "TransportState.h"
 
@@ -137,6 +143,4 @@ class MidiBleAdvertiser;
 #include "Midi2.Ble2MidiEndpointManager.h"
 #include "Midi2.Ble2MidiConfigurationManager.h"
 #include "Midi2.Ble2MidiPluginMetadataProvider.h"
-
-#include "MidiBleAdvertiser.h"
 
