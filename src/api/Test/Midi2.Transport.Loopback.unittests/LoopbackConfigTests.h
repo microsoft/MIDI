@@ -53,4 +53,9 @@ public:
     // Basic Loopback keys its endpoints by a real GUID parsed from the configuration file, so a
     // hand-edited non-guid there used to become the endpoint's identity
     TEST_METHOD(TestBasicLoopbackMalformedAssociationKeySkipsOnlyThatEntry);
+
+    // changing name, description and picture after creation
+    TEST_METHOD(TestUpdateRenamesBothSidesOfAPair);
+    TEST_METHOD(TestUpdateWithDuplicateNamesChangesNothing);
+    TEST_METHOD(TestUpdateWithBlankNameIsRejected);
 };

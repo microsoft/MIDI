@@ -33,6 +33,12 @@ private:
     HRESULT ExecuteCommandListEntries(
         _Inout_ json::JsonObject const& responseObject);
 
+    // A loopback is entirely user-owned, so an update replaces the endpoint's own name,
+    // description and picture rather than overlaying custom properties on top of them.
+    HRESULT ProcessEndpointUpdates(
+        _In_ json::JsonObject const& jsonObject,
+        _Inout_ json::JsonObject& responseObject);
+
     
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;

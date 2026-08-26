@@ -1282,8 +1282,471 @@ namespace winrt::midiloopbacksetup::implementation
 
 
     // ------------------------------------------------------------------------------------
+    // editing an endpoint which already exists
+    // ------------------------------------------------------------------------------------
+
+    namespace
+    {
+        bool SameNameIgnoringCase(_In_ winrt::hstring const& left, _In_ winrt::hstring const& right) noexcept
+        {
+            std::wstring a{ left };
+            std::wstring b{ right };
+
+            std::transform(a.begin(), a.end(), a.begin(), ::towlower);
+            std::transform(b.begin(), b.end(), b.begin(), ::towlower);
+
+            return a == b;
+        }
+
+        // The update travels as one object carrying an entry per endpoint, so the transport can
+        // check both names against each other before it writes either one.
+        json::JsonObject MergeUpdateEntries(
+            _In_ json::JsonObject const& first,
+            _In_ json::JsonObject const& second) noexcept
+        {
+            try
+            {
+                if (first == nullptr) return second;
+                if (second == nullptr) return first;
+
+                // wrapper keys the SDK's ConfigJson produces
+                winrt::hstring const settingsKey{ L"endpointTransportPluginSettings" };
+                winrt::hstring const updateKey{ L"update" };
+
+                auto firstSettings = first.GetNamedObject(settingsKey, nullptr);
+                auto secondSettings = second.GetNamedObject(settingsKey, nullptr);
+
+                if (firstSettings == nullptr || secondSettings == nullptr) return first;
+
+                for (auto const& transportPair : secondSettings)
+                {
+                    auto secondTransport = transportPair.Value().GetObject();
+                    auto firstTransport = firstSettings.GetNamedObject(transportPair.Key(), nullptr);
+
+                    if (secondTransport == nullptr || firstTransport == nullptr) continue;
+
+                    auto firstUpdates = firstTransport.GetNamedArray(updateKey, nullptr);
+                    auto secondUpdates = secondTransport.GetNamedArray(updateKey, nullptr);
+
+                    if (firstUpdates == nullptr || secondUpdates == nullptr) continue;
+
+                    for (auto const& entry : secondUpdates)
+                    {
+                        firstUpdates.Append(entry);
+                    }
+                }
+
+                return first;
+            }
+            catch (...)
+            {
+                return first;
+            }
+        }
+    }
+
+
+    void MainWindow::UpdateEditLoopbackButtonState() noexcept
+    {
+        try
+        {
+            auto const nameA = TextOf(EditLoopbackNameATextBox());
+            auto const nameB = TextOf(EditLoopbackNameBTextBox());
+
+            bool const duplicate = !nameA.empty() && SameNameIgnoringCase(nameA, nameB);
+
+            // The transport refuses both of these as well. Checking here means the customer
+            // finds out while the dialog is still open rather than after pressing Save.
+            EditLoopbackDialog().IsPrimaryButtonEnabled(!nameA.empty() && !nameB.empty() && !duplicate);
+
+            EditLoopbackStatusText().Text(
+                duplicate ? res::GetString(L"EditLoopbackDuplicateNameMessage") : winrt::hstring{});
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to validate the loopback edit.")
+    }
+
+    void MainWindow::UpdateEditBasicLoopbackButtonState() noexcept
+    {
+        try
+        {
+            EditBasicLoopbackDialog().IsPrimaryButtonEnabled(!TextOf(EditBasicLoopbackNameTextBox()).empty());
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to validate the basic loopback edit.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditLoopbackFieldChanged(
+        foundation::IInspectable const&,
+        controls::TextChangedEventArgs const&)
+    {
+        UpdateEditLoopbackButtonState();
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditBasicLoopbackFieldChanged(
+        foundation::IInspectable const&,
+        controls::TextChangedEventArgs const&)
+    {
+        UpdateEditBasicLoopbackButtonState();
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnChooseEditLoopbackImageClick(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        ChooseEditImageAsync(false);
+
+        co_return;
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnClearEditLoopbackImageClick(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        m_pendingEditImage = L"";
+
+        ShowChosenImage(
+            EditLoopbackImagePreview(), EditLoopbackImageNameText(), EditLoopbackClearImageButton(), L"");
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnChooseEditBasicLoopbackImageClick(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        ChooseEditImageAsync(true);
+
+        co_return;
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnClearEditBasicLoopbackImageClick(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        m_pendingEditImage = L"";
+
+        ShowChosenImage(
+            EditBasicLoopbackImagePreview(), EditBasicLoopbackImageNameText(), EditBasicLoopbackClearImageButton(), L"");
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::ChooseEditImageAsync(bool const forBasicLoopback)
+    {
+        auto strongThis = get_strong();
+
+        try
+        {
+            // an unpackaged app has no implicit window to parent the picker to
+            HWND windowHandle{ nullptr };
+
+            if (auto const nativeWindow = try_as<::IWindowNative>())
+            {
+                LOG_IF_FAILED(nativeWindow->get_WindowHandle(&windowHandle));
+            }
+
+            if (windowHandle == nullptr)
+            {
+                co_return;
+            }
+
+            auto const chosen = midiapp::EndpointImageAssets::ShowPicker(windowHandle);
+
+            if (chosen.empty())
+            {
+                co_return;
+            }
+
+            std::wstring errorMessage{};
+
+            auto const storedName = midiapp::EndpointImageAssets::CopyIntoFolder(chosen, errorMessage);
+
+            if (storedName.empty())
+            {
+                auto const message = res::GetString(
+                    errorMessage == L"folder" ? L"ImageFolderError" :
+                    errorMessage == L"name" ? L"ImageNameError" : L"ImageCopyError");
+
+                if (forBasicLoopback)
+                {
+                    EditBasicLoopbackStatusText().Text(message);
+                }
+                else
+                {
+                    EditLoopbackStatusText().Text(message);
+                }
+
+                co_return;
+            }
+
+            m_pendingEditImage = winrt::hstring{ storedName };
+
+            if (forBasicLoopback)
+            {
+                ShowChosenImage(
+                    EditBasicLoopbackImagePreview(),
+                    EditBasicLoopbackImageNameText(),
+                    EditBasicLoopbackClearImageButton(),
+                    m_pendingEditImage);
+            }
+            else
+            {
+                ShowChosenImage(
+                    EditLoopbackImagePreview(),
+                    EditLoopbackImageNameText(),
+                    EditLoopbackClearImageButton(),
+                    m_pendingEditImage);
+            }
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to choose a picture.")
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnEditLoopbackClick(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        auto const item = ItemOf<midiloopbacksetup::LoopbackItem>(sender);
+
+        if (item == nullptr || m_openDialog != nullptr)
+        {
+            co_return;
+        }
+
+        try
+        {
+            EditLoopbackNameATextBox().Text(item.NameA());
+            EditLoopbackDescriptionATextBox().Text(item.DescriptionA());
+            EditLoopbackNameBTextBox().Text(item.NameB());
+            EditLoopbackDescriptionBTextBox().Text(item.DescriptionB());
+
+            m_pendingEditImage = item.ImageFileName();
+
+            ShowChosenImage(
+                EditLoopbackImagePreview(),
+                EditLoopbackImageNameText(),
+                EditLoopbackClearImageButton(),
+                m_pendingEditImage);
+
+            EditLoopbackStatusText().Text(L"");
+
+            UpdateEditLoopbackButtonState();
+
+            EditLoopbackDialog().XamlRoot(Content().XamlRoot());
+
+            m_openDialog = EditLoopbackDialog();
+
+            auto const result = co_await EditLoopbackDialog().ShowAsync();
+
+            m_openDialog = nullptr;
+
+            if (result != controls::ContentDialogResult::Primary)
+            {
+                co_return;
+            }
+        }
+        catch (...)
+        {
+            m_openDialog = nullptr;
+
+            co_return;
+        }
+
+        SaveEditAsync(item, native::LoopbackKind::Loopback);
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnEditBasicLoopbackClick(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        auto const item = ItemOf<midiloopbacksetup::LoopbackItem>(sender);
+
+        if (item == nullptr || m_openDialog != nullptr)
+        {
+            co_return;
+        }
+
+        try
+        {
+            EditBasicLoopbackNameTextBox().Text(item.NameA());
+            EditBasicLoopbackDescriptionTextBox().Text(item.DescriptionA());
+
+            m_pendingEditImage = item.ImageFileName();
+
+            ShowChosenImage(
+                EditBasicLoopbackImagePreview(),
+                EditBasicLoopbackImageNameText(),
+                EditBasicLoopbackClearImageButton(),
+                m_pendingEditImage);
+
+            EditBasicLoopbackStatusText().Text(L"");
+
+            UpdateEditBasicLoopbackButtonState();
+
+            EditBasicLoopbackDialog().XamlRoot(Content().XamlRoot());
+
+            m_openDialog = EditBasicLoopbackDialog();
+
+            auto const result = co_await EditBasicLoopbackDialog().ShowAsync();
+
+            m_openDialog = nullptr;
+
+            if (result != controls::ContentDialogResult::Primary)
+            {
+                co_return;
+            }
+        }
+        catch (...)
+        {
+            m_openDialog = nullptr;
+
+            co_return;
+        }
+
+        SaveEditAsync(item, native::LoopbackKind::BasicLoopback);
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::SaveEditAsync(
+        midiloopbacksetup::LoopbackItem const item,
+        native::LoopbackKind const kind)
+    {
+        auto strongThis = get_strong();
+
+        bool const isBasic = (kind == native::LoopbackKind::BasicLoopback);
+
+        winrt::guid transportId{};
+        json::JsonObject payload{ nullptr };
+
+        winrt::hstring nameA{};
+        winrt::hstring nameB{};
+        winrt::hstring descriptionA{};
+        winrt::hstring descriptionB{};
+        winrt::hstring image{ m_pendingEditImage };
+
+        try
+        {
+            if (isBasic)
+            {
+                transportId = midi2bloop::MidiBasicLoopbackManager::TransportId();
+
+                nameA = TextOf(EditBasicLoopbackNameTextBox());
+                descriptionA = TextOf(EditBasicLoopbackDescriptionTextBox());
+
+                midi2svc::MidiServiceEndpointCustomizationConfig config{ transportId, nameA, descriptionA, image };
+
+                midi2svc::MidiServiceConfigEndpointMatchCriteria match{};
+                match.EndpointDeviceId(item.EndpointDeviceIdA());
+                config.MatchCriteria(match);
+
+                payload = config.ConfigJson();
+            }
+            else
+            {
+                transportId = midi2loop::MidiLoopbackManager::TransportId();
+
+                nameA = TextOf(EditLoopbackNameATextBox());
+                nameB = TextOf(EditLoopbackNameBTextBox());
+                descriptionA = TextOf(EditLoopbackDescriptionATextBox());
+                descriptionB = TextOf(EditLoopbackDescriptionBTextBox());
+
+                midi2svc::MidiServiceEndpointCustomizationConfig configA{ transportId, nameA, descriptionA, image };
+                midi2svc::MidiServiceConfigEndpointMatchCriteria matchA{};
+                matchA.EndpointDeviceId(item.EndpointDeviceIdA());
+                configA.MatchCriteria(matchA);
+
+                midi2svc::MidiServiceEndpointCustomizationConfig configB{ transportId, nameB, descriptionB, image };
+                midi2svc::MidiServiceConfigEndpointMatchCriteria matchB{};
+                matchB.EndpointDeviceId(item.EndpointDeviceIdB());
+                configB.MatchCriteria(matchB);
+
+                // one payload, so the transport sees both names together
+                payload = MergeUpdateEntries(configA.ConfigJson(), configB.ConfigJson());
+            }
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to prepare the loopback edit.")
+
+        if (payload == nullptr)
+        {
+            co_return;
+        }
+
+        item.IsBusy(true);
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+        auto const associationKey = item.AssociationId();
+
+        co_await winrt::resume_background();
+
+        bool applied{ false };
+        bool saved{ false };
+        winrt::hstring errorMessage{};
+
+        try
+        {
+            auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(transportId, payload);
+
+            applied = response != nullptr &&
+                response.Status() == midi2svc::MidiServiceConfigResponseStatus::Success;
+
+            if (!applied)
+            {
+                errorMessage = response == nullptr ? winrt::hstring{} : response.ResponseJson().Stringify();
+            }
+            else
+            {
+                // The endpoint is user-owned, so the entry it was created from is rewritten
+                // rather than a separate customization being stored beside it.
+                saved = native::LoopbackConfigFile::Current().UpdateEntryDetails(
+                    kind, associationKey, nameA, descriptionA, nameB, descriptionB, image);
+            }
+        }
+        MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to save the loopback edit.")
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, applied, saved, isBasic]()
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr || strong->m_closing)
+                    {
+                        return;
+                    }
+
+                    auto const text = res::GetString(
+                        !applied ? L"EditLoopbackFailed" :
+                        saved ? L"EditLoopbackSaved" : L"EditLoopbackAppliedNotSaved");
+
+                    if (isBasic)
+                    {
+                        strong->SetBasicLoopbackStatus(text);
+                    }
+                    else
+                    {
+                        strong->SetLoopbackStatus(text);
+                    }
+
+                    strong->RequestRefreshAsync();
+                });
+        }
+
+        item.IsBusy(false);
+    }
+
+
+    // ------------------------------------------------------------------------------------
     // reordering
     // ------------------------------------------------------------------------------------
+
 
     _Use_decl_annotations_
     void MainWindow::PersistDisplayOrder(

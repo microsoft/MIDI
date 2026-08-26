@@ -53,6 +53,18 @@ namespace winrt::midiloopbacksetup::implementation
         winrt::fire_and_forget OnDeleteLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDeleteBasicLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        winrt::fire_and_forget OnEditLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnEditBasicLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnEditLoopbackFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
+        void OnEditBasicLoopbackFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
+
+        winrt::fire_and_forget OnChooseEditLoopbackImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnClearEditLoopbackImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        winrt::fire_and_forget OnChooseEditBasicLoopbackImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnClearEditBasicLoopbackImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
         void OnLoopbacksDragStarting(
             foundation::IInspectable const& sender,
             controls::DragItemsStartingEventArgs const& args);
@@ -97,6 +109,8 @@ namespace winrt::midiloopbacksetup::implementation
 
             // the transport honors a picture given at creation, so the option is worth offering
             bool CanSetImage{ false };
+            // the transport can change an existing endpoint, so the row can offer to edit it
+            bool CanCustomize{ false };
             // the well known default loopback is already on this PC, so there is nothing to offer
             bool DefaultExists{ false };
             // association identifiers the configuration file has an entry for, lowercase and
@@ -136,7 +150,8 @@ namespace winrt::midiloopbacksetup::implementation
             _In_ std::vector<::midiloopbacksetup::LoopbackRowData> const& incoming,
             _In_ std::unordered_map<std::wstring, int32_t> const& fileDisplayOrders,
             _In_ std::unordered_map<std::wstring, int32_t> const& sessionDisplayOrders,
-            _In_ bool const canMute) noexcept;
+            _In_ bool const canMute,
+            _In_ bool const canCustomize) noexcept;
 
         void ShowLoopbackPage(bool const showLoopbacks) noexcept;
 
@@ -156,6 +171,9 @@ namespace winrt::midiloopbacksetup::implementation
         void UpdateCreateLoopbackButtonState() noexcept;
         void UpdateCreateBasicLoopbackButtonState() noexcept;
 
+        void UpdateEditLoopbackButtonState() noexcept;
+        void UpdateEditBasicLoopbackButtonState() noexcept;
+
         // Shows the chosen picture next to the picker, or clears it. The file has already been
         // copied into the shared folder by this point, so this works from the stored name.
         void ShowChosenImage(
@@ -166,6 +184,17 @@ namespace winrt::midiloopbacksetup::implementation
 
         winrt::fire_and_forget ChooseImageAsync(
             _In_ bool const forBasicLoopback);
+
+        // The edit dialogs have their own preview controls, so the create path's targets cannot
+        // be reused.
+        winrt::fire_and_forget ChooseEditImageAsync(
+            _In_ bool const forBasicLoopback);
+
+        // Sends both sides of a pair in one call, so the transport can reject a duplicate name
+        // before it has written either endpoint.
+        winrt::fire_and_forget SaveEditAsync(
+            midiloopbacksetup::LoopbackItem const item,
+            ::midiloopbacksetup::LoopbackKind const kind);
 
         void PersistDisplayOrder(
             _In_ ::midiloopbacksetup::LoopbackKind const kind,
@@ -219,6 +248,7 @@ namespace winrt::midiloopbacksetup::implementation
         // picture chosen in the create dialog, already copied into the shared assets folder
         winrt::hstring m_pendingLoopbackImage{};
         winrt::hstring m_pendingBasicLoopbackImage{};
+        winrt::hstring m_pendingEditImage{};
 
         // a drag reorders the collection the list is bound to, so a refresh landing mid drag
         // would fight the customer for it

@@ -37,7 +37,7 @@ namespace Windows.Devices.Midi2.Transports.Loopback
         DuplicateNameA =                    LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_A,
 
         InvalidOrMissingEndpointNameB =     LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_B,
-        DuplicateNameB =                    LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_B,
+        DuplicateNameB =                    LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B,
 
         ClientApiException =                0x11000035,
         InvalidArgument =                   0x11000055,

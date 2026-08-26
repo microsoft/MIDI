@@ -56,6 +56,18 @@ namespace midiloopbacksetup
             _In_ winrt::hstring const& associationKey,
             _In_ bool const isMuted) noexcept;
 
+        // A loopback is entirely user-owned, so an edit overwrites the entry it was created
+        // from rather than layering a separate customization on top of it. For a pair, an empty
+        // nameB leaves the B side alone.
+        bool UpdateEntryDetails(
+            _In_ LoopbackKind const kind,
+            _In_ winrt::hstring const& associationKey,
+            _In_ winrt::hstring const& nameA,
+            _In_ winrt::hstring const& descriptionA,
+            _In_ winrt::hstring const& nameB,
+            _In_ winrt::hstring const& descriptionB,
+            _In_ winrt::hstring const& imageFileName) noexcept;
+
         // Writes the position of every entry the file knows about. The service and the SDK
         // both ignore this key; it exists only so the customer's arrangement of the list
         // survives a restart of the tool.

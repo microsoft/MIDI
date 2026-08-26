@@ -158,6 +158,93 @@
   <data name="UnnamedLoopback" xml:space="preserve">
     <value>Unnamed loopback</value>
   </data>
+  <data name="EditLoopbackButton.Content" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="EditBasicLoopbackButton.Content" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="EditButtonAccessibleNameFormat" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="EditLoopbackDialog.Title" xml:space="preserve">
+    <value>Edit loopback</value>
+  </data>
+  <data name="EditLoopbackDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="EditLoopbackDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="EditLoopbackSideAHeader.Text" xml:space="preserve">
+    <value>A side</value>
+  </data>
+  <data name="EditLoopbackSideBHeader.Text" xml:space="preserve">
+    <value>B side</value>
+  </data>
+  <data name="EditLoopbackNameATextBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="EditLoopbackNameBTextBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="EditLoopbackDescriptionATextBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="EditLoopbackDescriptionBTextBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="EditLoopbackImageHeader.Text" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="EditLoopbackImagePreview.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>The picture chosen for this loopback</value>
+  </data>
+  <data name="EditLoopbackChooseImageButton.Content" xml:space="preserve">
+    <value>Choose picture...</value>
+  </data>
+  <data name="EditLoopbackClearImageButton.Content" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="EditBasicLoopbackDialog.Title" xml:space="preserve">
+    <value>Edit basic loopback</value>
+  </data>
+  <data name="EditBasicLoopbackDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="EditBasicLoopbackDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="EditBasicLoopbackNameTextBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="EditBasicLoopbackDescriptionTextBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="EditBasicLoopbackImageHeader.Text" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="EditBasicLoopbackImagePreview.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>The picture chosen for this loopback</value>
+  </data>
+  <data name="EditBasicLoopbackChooseImageButton.Content" xml:space="preserve">
+    <value>Choose picture...</value>
+  </data>
+  <data name="EditBasicLoopbackClearImageButton.Content" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="EditLoopbackDuplicateNameMessage" xml:space="preserve">
+    <value>The two sides need different names, so apps can tell them apart.</value>
+  </data>
+  <data name="EditLoopbackSaved" xml:space="preserve">
+    <value>Changes applied and saved.</value>
+  </data>
+  <data name="EditLoopbackAppliedNotSaved" xml:space="preserve">
+    <value>Changes applied. This loopback is not saved, so they last until the MIDI service restarts.</value>
+  </data>
+  <data name="EditLoopbackFailed" xml:space="preserve">
+    <value>Those changes could not be applied.</value>
+  </data>
   <data name="LoopbackPairNameFormat" xml:space="preserve">
     <value>{0} and {1}</value>
     <comment>{0} is the name of the A side, {1} the name of the B side</comment>

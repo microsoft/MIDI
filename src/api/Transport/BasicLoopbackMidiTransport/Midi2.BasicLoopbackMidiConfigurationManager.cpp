@@ -9,6 +9,8 @@
 #include "pch.h"
 
 #include "MidiEndpointCustomProperties.h"
+#include "MidiEndpointMatchCriteria.h"
+#include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
 #include "json_transport_command_helper.h"
 #include <mmdeviceapi.h>    // for E_NOTFOUND
 
@@ -143,7 +145,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessCommand(
     {
         std::map<std::wstring, bool> capabilities{};
 
-        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, false);
+        capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, true);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS, false);
 
         // revisit these once the functions are added in
@@ -790,6 +792,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
 
         // NOTE: There is no update functionality at this time.
+        LOG_IF_FAILED(ProcessEndpointUpdates(jsonObject, responseObject));
 
        
         if (response != nullptr)
@@ -847,6 +850,181 @@ CMidi2BasicLoopbackMidiConfigurationManager::Shutdown()
     TransportState::Current().Shutdown();
 
     m_MidiDeviceManager.reset();
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
+    json::JsonObject const& jsonObject,
+    json::JsonObject& responseObject)
+{
+    auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
+
+    if (updateArray == nullptr || updateArray.Size() == 0)
+    {
+        return S_FALSE;
+    }
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointTable());
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_MidiDeviceManager);
+
+    for (auto const& updateVal : updateArray)
+    {
+        auto updateObject = updateVal.GetObject();
+
+        if (updateObject == nullptr)
+        {
+            continue;
+        }
+
+        auto matchObject = updateObject.GetNamedObject(
+            WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey, nullptr);
+
+        if (matchObject == nullptr)
+        {
+            continue;
+        }
+
+        auto matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
+
+        if (matchCriteria == nullptr || matchCriteria->EndpointDeviceId.empty())
+        {
+            continue;
+        }
+
+        // Resolved against our own table, so a hand-edited configuration cannot aim an update
+        // at an endpoint belonging to another transport.
+        auto device = TransportState::Current().GetEndpointTable()->GetDeviceById(matchCriteria->EndpointDeviceId.c_str());
+
+        if (device == nullptr || device->Definition == nullptr)
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+
+            continue;
+        }
+
+        auto customPropsJson = updateObject.GetNamedObject(
+            WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey, nullptr);
+
+        if (customPropsJson == nullptr)
+        {
+            continue;
+        }
+
+        std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
+
+        if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+        {
+            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(customPropsJson);
+        }
+        else
+        {
+            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(customPropsJson);
+        }
+
+        if (customProperties == nullptr)
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON,
+                internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
+
+            continue;
+        }
+
+        std::wstring newName{ internal::TrimmedWStringCopy(customProperties->Name.c_str()) };
+        std::wstring newDescription{ internal::TrimmedWStringCopy(customProperties->Description.c_str()) };
+        std::wstring newImage{ internal::CleanImageFileName(customProperties->Image.c_str()) };
+
+        if (newName.empty())
+        {
+            // the name is this endpoint's identity to the customer, so blanking it is refused
+            // rather than leaving an unnamed endpoint behind
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BASIC_LOOPBACK_ERROR_CODE_MISSING_ENDPOINT_NAME,
+                internal::ResourceGetWString(IDS_ERROR_MISSING_NAME));
+
+            continue;
+        }
+
+        if (Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled())
+        {
+            newName = internal::TruncateToUtf8ByteCount(newName, MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH);
+        }
+
+        // These strings have to outlive UpdateEndpointProperties below, because DEVPROPERTY
+        // holds a pointer rather than a copy.
+        std::vector<DEVPROPERTY> endpointProperties{};
+
+        // Both slots, matching what the create path does: for a loopback the customer supplied
+        // the name, so there is no transport-supplied value worth preserving underneath.
+        endpointProperties.push_back({ {PKEY_MIDI_EndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (newName.length() + 1)), (PVOID)newName.c_str() });
+
+        endpointProperties.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (newName.length() + 1)), (PVOID)newName.c_str() });
+
+        if (newDescription.empty())
+        {
+            endpointProperties.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_EMPTY, 0, nullptr });
+        }
+        else
+        {
+            endpointProperties.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (newDescription.length() + 1)), (PVOID)newDescription.c_str() });
+        }
+
+        if (newImage.empty())
+        {
+            endpointProperties.push_back({ {PKEY_MIDI_CustomImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_EMPTY, 0, nullptr });
+        }
+        else
+        {
+            endpointProperties.push_back({ {PKEY_MIDI_CustomImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (newImage.length() + 1)), (PVOID)newImage.c_str() });
+        }
+
+        auto updateHR = m_MidiDeviceManager->UpdateEndpointProperties(
+            device->Definition->CreatedEndpointInterfaceId.c_str(),
+            (ULONG)endpointProperties.size(),
+            endpointProperties.data());
+
+        if (FAILED(updateHR))
+        {
+            TraceLoggingWrite(
+                MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to update endpoint properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHResult(updateHR, MIDI_TRACE_EVENT_HRESULT_FIELD)
+            );
+
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BASIC_LOOPBACK_ERROR_CODE_UNKNOWN_ERROR,
+                internal::ResourceGetWString(IDS_ERROR_CREATION_FAILED));
+
+            continue;
+        }
+
+        // keep the table in step, or listEntries keeps reporting the old values
+        device->Definition->EndpointName = newName;
+        device->Definition->EndpointDescription = newDescription;
+        device->Definition->ImageFileName = newImage;
+
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+    }
 
     return S_OK;
 }

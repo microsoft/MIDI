@@ -84,6 +84,7 @@ namespace midiloopbacksetup
         // loopback it acts on. "Delete" on its own is the same name eleven times over.
         winrt::hstring MuteButtonAccessibleName{};
         winrt::hstring DeleteButtonAccessibleName{};
+        winrt::hstring EditButtonAccessibleName{};
 
         bool HasSecondEndpoint{ false };
         bool IsMuted{ false };
@@ -147,6 +148,7 @@ namespace winrt::midiloopbacksetup::implementation
 
         winrt::hstring MuteButtonAccessibleName() const noexcept { return m_muteButtonAccessibleName; }
         winrt::hstring DeleteButtonAccessibleName() const noexcept { return m_deleteButtonAccessibleName; }
+        winrt::hstring EditButtonAccessibleName() const noexcept { return m_editButtonAccessibleName; }
 
         // Speaker vs. muted speaker. The glyph carries the state at a glance; the label says
         // what the button will do.
@@ -172,6 +174,23 @@ namespace winrt::midiloopbacksetup::implementation
         xaml::Visibility MuteVisibility() const noexcept
         {
             return m_canMute ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+        }
+
+        // The transport has to say it can customize an endpoint before the row offers to. A
+        // rolled back service reports false, and an edit that silently did nothing would be
+        // worse than no button at all.
+        bool CanCustomize() const noexcept { return m_canCustomize; }
+        void CanCustomize(bool const value) noexcept
+        {
+            if (UpdateField(m_canCustomize, value, L"CanCustomize"))
+            {
+                RaisePropertyChanged(L"EditVisibility");
+            }
+        }
+
+        xaml::Visibility EditVisibility() const noexcept
+        {
+            return m_canCustomize ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
         }
 
         bool IsPersisted() const noexcept { return m_isPersisted; }
@@ -230,6 +249,7 @@ namespace winrt::midiloopbacksetup::implementation
             UpdateField(m_muteButtonLabel, data.MuteButtonLabel, L"MuteButtonLabel");
             UpdateField(m_muteButtonAccessibleName, data.MuteButtonAccessibleName, L"MuteButtonAccessibleName");
             UpdateField(m_deleteButtonAccessibleName, data.DeleteButtonAccessibleName, L"DeleteButtonAccessibleName");
+            UpdateField(m_editButtonAccessibleName, data.EditButtonAccessibleName, L"EditButtonAccessibleName");
             UpdateField(m_persistenceText, data.PersistenceText, L"PersistenceText");
             UpdateField(m_isPersisted, data.IsPersisted, L"IsPersisted");
         }
@@ -287,6 +307,7 @@ namespace winrt::midiloopbacksetup::implementation
         winrt::hstring m_muteButtonLabel{};
         winrt::hstring m_muteButtonAccessibleName{};
         winrt::hstring m_deleteButtonAccessibleName{};
+        winrt::hstring m_editButtonAccessibleName{};
         winrt::hstring m_persistenceText{};
 
         winrt::hstring m_imageFileName{};
@@ -295,6 +316,7 @@ namespace winrt::midiloopbacksetup::implementation
         bool m_hasSecondEndpoint{ false };
         bool m_isMuted{ false };
         bool m_canMute{ false };
+        bool m_canCustomize{ false };
         bool m_isPersisted{ false };
         bool m_isBusy{ false };
 

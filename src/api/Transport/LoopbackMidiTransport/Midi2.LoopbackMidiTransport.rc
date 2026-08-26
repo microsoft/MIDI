@@ -113,6 +113,7 @@ BEGIN
     IDS_ERROR_INVALID_ASSOCIATION_ID    "Association id is not a valid GUID."
     IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."
     IDS_ERROR_ENDPOINT_REMOVAL_FAILED   "Endpoint removal failed for an unknown reason."
+    IDS_ERROR_DUPLICATE_ENDPOINT_NAME   "The two endpoints in a loopback pair cannot have the same name."
 
 END
 

@@ -41,6 +41,7 @@
 #include <Feature_Servicing_MIDI2LoopbackCreateMuted.h>
 #include <Feature_Servicing_MIDI2LoopbackCreateWithImage.h>
 #include <Feature_Servicing_MIDI2TransportAssociationIdGuidValidation.h>
+#include <Feature_Servicing_MIDI2LoopbackEndpointCustomization.h>
 
 // generated service interfaces, so tests can push configuration the same way the SDK does
 #include <WindowsMidiServices.h>

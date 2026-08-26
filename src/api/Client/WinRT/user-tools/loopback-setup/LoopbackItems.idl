@@ -55,11 +55,15 @@ namespace midiloopbacksetup
         // screen reader the same name many times over. These name the loopback as well.
         String MuteButtonAccessibleName{ get; };
         String DeleteButtonAccessibleName{ get; };
+        String EditButtonAccessibleName{ get; };
 
         // The transport reports which commands it supports, so a build without mute shows no
         // mute button rather than one which always fails.
         Boolean CanMute;
         Microsoft.UI.Xaml.Visibility MuteVisibility{ get; };
+
+        Boolean CanCustomize;
+        Microsoft.UI.Xaml.Visibility EditVisibility{ get; };
 
         // true when the configuration file has an entry for this loopback, so it comes back
         // after a restart of the service

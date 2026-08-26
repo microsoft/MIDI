@@ -32,6 +32,22 @@ private:
     HRESULT ExecuteCommandListEntries(
         _Inout_ json::JsonObject const& responseObject);
 
+    // One update can touch both sides of a pair, so everything is validated before anything is
+    // written. A half-applied rename is worse than a rejected one.
+    struct PendingEndpointUpdate
+    {
+        std::shared_ptr<MidiLoopbackDevice> Device;
+        bool IsSideA{ false };
+        std::wstring EndpointDeviceId;
+        std::wstring Name;
+        std::wstring Description;
+        std::wstring ImageFileName;
+    };
+
+    HRESULT ProcessEndpointUpdates(
+        _In_ json::JsonObject const& jsonObject,
+        _Inout_ json::JsonObject& responseObject);
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
 
     GUID m_TransportId;   // kept for convenience
