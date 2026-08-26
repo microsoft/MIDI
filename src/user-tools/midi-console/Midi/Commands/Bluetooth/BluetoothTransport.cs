@@ -85,6 +85,89 @@ namespace Microsoft.Midi.ConsoleApp
         internal const string CustomDescriptionKey = "description";
         internal const string CustomImageKey = "image";
 
+        private const string TransportPluginSettingsObjectKey = "endpointTransportPluginSettings";
+
+        // An empty string is meaningful: it clears that one property while leaving the others
+        // alone. Null means the caller did not mention it at all, so it keeps its stored value.
+        internal static JsonObject BuildCustomProperties(string? name, string? description, string? image, bool clear)
+        {
+            var customProperties = new JsonObject();
+
+            if (clear)
+            {
+                // Clearing is done by setting each property empty rather than by dropping the
+                // entry, because a stored entry is merged into rather than replaced.
+                customProperties.SetNamedValue(CustomNameKey, JsonValue.CreateStringValue(string.Empty));
+                customProperties.SetNamedValue(CustomDescriptionKey, JsonValue.CreateStringValue(string.Empty));
+                customProperties.SetNamedValue(CustomImageKey, JsonValue.CreateStringValue(string.Empty));
+
+                return customProperties;
+            }
+
+            if (name != null)
+            {
+                customProperties.SetNamedValue(CustomNameKey, JsonValue.CreateStringValue(name.Trim()));
+            }
+
+            if (description != null)
+            {
+                customProperties.SetNamedValue(CustomDescriptionKey, JsonValue.CreateStringValue(description.Trim()));
+            }
+
+            if (image != null)
+            {
+                customProperties.SetNamedValue(CustomImageKey, JsonValue.CreateStringValue(image.Trim()));
+            }
+
+            return customProperties;
+        }
+
+        internal static bool ApplyCustomization(string endpointDeviceInstanceId, JsonObject customProperties)
+        {
+            var match = new JsonObject();
+            match.SetNamedValue(MatchDeviceInstanceIdKey, JsonValue.CreateStringValue(endpointDeviceInstanceId));
+
+            var updateEntry = new JsonObject();
+            updateEntry.SetNamedValue(MatchKey, match);
+            updateEntry.SetNamedValue(CustomPropertiesKey, customProperties);
+
+            var updateObject = new JsonObject();
+            updateObject.SetNamedValue(UpdateKey, new JsonArray { updateEntry });
+
+            if (!SendUpdate(updateObject))
+            {
+                return false;
+            }
+
+            // A failure to persist is reported but does not undo the change which is already live
+            SaveUpdate(updateObject);
+
+            return true;
+        }
+
+        // The image is loaded by name from a known folder, so a path would either escape that
+        // folder or simply fail to load.
+        internal static ValidationResult ValidateCustomizationOptions(string? name, string? description, string? image, bool clear)
+        {
+            if (clear && (name != null || description != null || image != null))
+            {
+                return ValidationResult.Error("--clear removes every customization, so it cannot be combined with --name, --description, or --image.");
+            }
+
+            if (!clear && name == null && description == null && image == null)
+            {
+                return ValidationResult.Error("Nothing to change. Supply --name, --description, or --image, or use --clear to remove the customization.");
+            }
+
+            if (!string.IsNullOrEmpty(image) &&
+                (image.Contains('\\') || image.Contains('/') || Path.IsPathRooted(image)))
+            {
+                return ValidationResult.Error("The image must be a file name only, not a path.");
+            }
+
+            return ValidationResult.Success();
+        }
+
         internal static JsonObject? SendPeripheralCommand(string verb, bool useMidi2)
         {
             var command = new MidiServiceTransportCommand(TransportId, verb);
@@ -169,6 +252,26 @@ namespace Microsoft.Midi.ConsoleApp
                 {
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(response.ServiceErrorMessage));
                 }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        // Saving is a separate step from sending, because a change can be applied without being
+        // kept, and kept without being applied.
+        internal static bool SaveUpdate(JsonObject updateObject)
+        {
+            var response = MidiServiceTransportPluginConfigManager.SaveUpdate(TransportId, updateObject);
+
+            if (!response.Success)
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(
+                    AnsiMarkupFormatter.EscapeString(response.ErrorMessage)));
+
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
+                    "This change will be lost when the service restarts."));
 
                 return false;
             }

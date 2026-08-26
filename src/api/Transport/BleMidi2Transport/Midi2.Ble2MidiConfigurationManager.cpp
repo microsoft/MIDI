@@ -101,6 +101,7 @@ namespace
             json::JsonValue::CreateBooleanValue(isRunning && peripheral->IsClientSubscribed()));
 
         winrt::hstring endpointDeviceId{};
+        winrt::hstring endpointDeviceInstanceId{};
         winrt::hstring connectedDeviceName{};
         uint64_t messagesReceived{ 0 };
         uint64_t messagesSent{ 0 };
@@ -112,6 +113,7 @@ namespace
             if (auto connection = peripheral->Connection())
             {
                 endpointDeviceId = winrt::hstring{ connection->EndpointDeviceInterfaceId() };
+                endpointDeviceInstanceId = winrt::hstring{ connection->EndpointDeviceInstanceId() };
                 connectedDeviceName = connection->DeviceName();
                 messagesReceived = connection->MessagesReceived();
                 messagesSent = connection->MessagesSent();
@@ -153,6 +155,13 @@ namespace
         peripheralJson.SetNamedValue(
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_ID_KEY,
             json::JsonValue::CreateStringValue(endpointDeviceId));
+
+        // A customization matches on the instance id, and this is the only place it is exposed
+        // for the peripheral endpoint. It is empty until a Central connects, because the id is
+        // built from the remote device's identity.
+        peripheralJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_INSTANCE_ID_KEY,
+            json::JsonValue::CreateStringValue(endpointDeviceInstanceId));
 
         peripheralJson.SetNamedValue(
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_RECEIVED_KEY,
@@ -385,6 +394,13 @@ CMidi2Ble2MidiConfigurationManager::ProcessEndpointCustomizations(
                     static_cast<ULONG>(endpointDevProperties.size()),
                     endpointDevProperties.data()));
             }
+
+            // The MIDI 1.0 ports are named from the group terminal blocks and the port name
+            // table, neither of which the customization touches, so a rename would otherwise
+            // stop at the endpoint node and leave the WinMM ports on the old name.
+            LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForRenamedEndpoint(
+                existingEndpointDeviceId,
+                customProperties));
         }
     }
     catch (...)

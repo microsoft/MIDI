@@ -42,26 +42,8 @@ namespace Microsoft.Midi.ConsoleApp
                 return ValidationResult.Error("Missing device id. Use 'midi bluetooth list' to see the discovered devices.");
             }
 
-            if (settings.Clear && (settings.Name != null || settings.Description != null || settings.Image != null))
-            {
-                return ValidationResult.Error("--clear removes every customization, so it cannot be combined with --name, --description, or --image.");
-            }
-
-            if (!settings.Clear && settings.Name == null && settings.Description == null && settings.Image == null)
-            {
-                return ValidationResult.Error("Nothing to change. Supply --name, --description, or --image, or use --clear to remove the customization.");
-            }
-
-            // The service loads images by name from a known folder. A path would either escape
-            // that folder or simply fail to load, so it is rejected here rather than at the
-            // service, where the error is far less obvious.
-            if (!string.IsNullOrEmpty(settings.Image) &&
-                (settings.Image.Contains('\\') || settings.Image.Contains('/') || Path.IsPathRooted(settings.Image)))
-            {
-                return ValidationResult.Error("The image must be a file name only, not a path.");
-            }
-
-            return ValidationResult.Success();
+            return BluetoothTransport.ValidateCustomizationOptions(
+                settings.Name, settings.Description, settings.Image, settings.Clear);
         }
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
@@ -92,41 +74,10 @@ namespace Microsoft.Midi.ConsoleApp
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
-            var customProperties = new JsonObject();
+            var customProperties = BluetoothTransport.BuildCustomProperties(
+                settings.Name, settings.Description, settings.Image, settings.Clear);
 
-            if (!settings.Clear)
-            {
-                // An empty string is meaningful: it clears that one property while leaving the
-                // others alone.
-                if (settings.Name != null)
-                {
-                    customProperties.SetNamedValue(BluetoothTransport.CustomNameKey, JsonValue.CreateStringValue(settings.Name.Trim()));
-                }
-
-                if (settings.Description != null)
-                {
-                    customProperties.SetNamedValue(BluetoothTransport.CustomDescriptionKey, JsonValue.CreateStringValue(settings.Description.Trim()));
-                }
-
-                if (settings.Image != null)
-                {
-                    customProperties.SetNamedValue(BluetoothTransport.CustomImageKey, JsonValue.CreateStringValue(settings.Image.Trim()));
-                }
-            }
-
-            var match = new JsonObject();
-            match.SetNamedValue(BluetoothTransport.MatchDeviceInstanceIdKey, JsonValue.CreateStringValue(instanceId));
-
-            var updateEntry = new JsonObject();
-            updateEntry.SetNamedValue(BluetoothTransport.MatchKey, match);
-            updateEntry.SetNamedValue(BluetoothTransport.CustomPropertiesKey, customProperties);
-
-            var updateArray = new JsonArray { updateEntry };
-
-            var updateObject = new JsonObject();
-            updateObject.SetNamedValue(BluetoothTransport.UpdateKey, updateArray);
-
-            if (!BluetoothTransport.SendUpdate(updateObject))
+            if (!BluetoothTransport.ApplyCustomization(instanceId, customProperties))
             {
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
@@ -144,28 +95,7 @@ namespace Microsoft.Midi.ConsoleApp
                     $"The name reported by the device is {AnsiMarkupFormatter.EscapeString(transportName)}."));
             }
 
-            if (!BluetoothConfigFile.TryUpsertCustomization(instanceId, ToSystemTextJson(customProperties), out var error))
-            {
-                AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(AnsiMarkupFormatter.EscapeString(error ?? "The customization could not be saved.")));
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("This customization will be lost when the service restarts."));
-            }
-
             return (int)MidiConsoleReturnCode.Success;
-        }
-
-        // The config file is edited with System.Text.Json so the rest of it survives untouched,
-        // but the service command uses Windows.Data.Json.
-        private static System.Text.Json.Nodes.JsonObject ToSystemTextJson(JsonObject source)
-        {
-            var result = new System.Text.Json.Nodes.JsonObject();
-
-            foreach (var pair in source)
-            {
-                result[pair.Key] = pair.Value.GetString();
-            }
-
-            return result;
         }
     }
 }

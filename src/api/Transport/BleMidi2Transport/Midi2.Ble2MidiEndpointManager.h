@@ -52,6 +52,12 @@ public:
     winrt::hstring FindMatchingInstantiatedEndpoint(
         _In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
 
+    // A rename has to reach the MIDI 1.0 ports as well as the endpoint node, and those are named
+    // from the group terminal blocks and the port name table rather than from the endpoint name.
+    STDMETHOD(RefreshMidi1PortsForRenamedEndpoint)(
+        _In_ winrt::hstring const& endpointDeviceInterfaceId,
+        _In_opt_ std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> const customProperties);
+
     STDMETHOD(WakeupBackgroundEndpointCreatorThread)();
 
 private:

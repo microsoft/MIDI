@@ -94,6 +94,12 @@ namespace Microsoft.Midi.ConsoleApp
                     "Nothing is connected yet. A MIDI endpoint appears when a device connects to this PC."));
                 AnsiConsole.WriteLine();
             }
+            else
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
+                    "Use 'midi bluetooth peripheral customize' to rename this endpoint."));
+                AnsiConsole.WriteLine();
+            }
 
             if (isConnected && !isPaired)
             {
@@ -247,6 +253,96 @@ namespace Microsoft.Midi.ConsoleApp
             }
 
             BluetoothPeripheral.ReportStatus(responseJson);
+
+            return (int)MidiConsoleReturnCode.Success;
+        }
+    }
+
+
+    internal class BluetoothPeripheralCustomizeCommand : Command<BluetoothPeripheralCustomizeCommand.Settings>
+    {
+        public sealed class Settings : CommandSettings
+        {
+            [LocalizedDescription("ParameterBluetoothCustomName")]
+            [CommandOption("-n|--name")]
+            public string? Name { get; set; }
+
+            [LocalizedDescription("ParameterBluetoothCustomDescription")]
+            [CommandOption("-d|--description")]
+            public string? Description { get; set; }
+
+            [LocalizedDescription("ParameterBluetoothCustomImage")]
+            [CommandOption("-i|--image")]
+            public string? Image { get; set; }
+
+            [LocalizedDescription("ParameterBluetoothCustomClear")]
+            [CommandOption("-c|--clear")]
+            public bool Clear { get; set; }
+        }
+
+        public override ValidationResult Validate(CommandContext context, Settings settings)
+        {
+            return BluetoothTransport.ValidateCustomizationOptions(
+                settings.Name, settings.Description, settings.Image, settings.Clear);
+        }
+
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
+        {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
+            var responseJson = BluetoothTransport.SendCommand(BluetoothTransport.VerbGetPeripheralStatus);
+
+            if (responseJson == null)
+            {
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            if (!responseJson.ContainsKey(BluetoothTransport.ResponsePeripheral))
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("The transport did not report the peripheral status."));
+
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            var peripheral = responseJson.GetNamedObject(BluetoothTransport.ResponsePeripheral);
+
+            // The endpoint is the remote device, and its identity is what the customization is
+            // keyed on, so there is nothing to address until something is connected.
+            var instanceId = peripheral.GetNamedString(BluetoothTransport.ResponseEndpointDeviceInstanceId, string.Empty);
+
+            if (string.IsNullOrEmpty(instanceId))
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("There is no connected device to customize."));
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
+                    "Connect the device to this PC first. The customization is remembered against that device and is reapplied every time it reconnects."));
+
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            var customProperties = BluetoothTransport.BuildCustomProperties(
+                settings.Name, settings.Description, settings.Image, settings.Clear);
+
+            if (!BluetoothTransport.ApplyCustomization(instanceId, customProperties))
+            {
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(
+                settings.Clear ? "Customization removed." : "Customization applied."));
+
+            AnsiConsole.WriteLine();
+
+            var isPaired = peripheral.GetNamedBoolean(BluetoothTransport.ResponseIsPaired, false);
+
+            if (!isPaired)
+            {
+                // Without a bond there is no stable identity, so every unpaired device lands on
+                // the same endpoint and shares whatever name is set here.
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(
+                    "This device is not paired with this PC, so it has no stable identity. This customization will apply to any unpaired device which connects."));
+                AnsiConsole.WriteLine();
+            }
 
             return (int)MidiConsoleReturnCode.Success;
         }

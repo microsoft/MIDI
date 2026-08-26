@@ -338,6 +338,11 @@ app.Configure(config =>
                 .WithDescription("Show whether this PC is published as a Bluetooth MIDI device, and what is connected to it")
                 .WithExample("bluetooth", "peripheral", "status")
                 ;
+
+            peripheral.AddCommand<BluetoothPeripheralCustomizeCommand>("customize")
+                .WithDescription("Set the name, description, and image shown for the device connected to this PC")
+                .WithExample("bluetooth", "peripheral", "customize", "--name", "\"Studio iPad\"")
+                ;
         });
 
     }).WithAlias("ble");

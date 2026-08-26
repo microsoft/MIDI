@@ -96,6 +96,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointCustomPropertiesCache.h"
 
+// also brings in midi_group_terminal_blocks.h
+#include "MidiEndpointNameTable.h"
+
 #include "MidiXProc.h"
 
 #include "Midi2Ble2MidiTransport_i.c"

@@ -1816,10 +1816,13 @@ CMidi2Ble2MidiEndpointManager::CreateEndpoint(
 
     std::wstring customName{};
     std::wstring customDescription{};
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
 
     if (auto configurationManager = TransportState::Current().GetConfigurationManager())
     {
-        if (auto customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria))
+        customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
+
+        if (customProperties != nullptr)
         {
             if (!customProperties->Name.empty())
             {
@@ -1842,6 +1845,11 @@ CMidi2Ble2MidiEndpointManager::CreateEndpoint(
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
+    // These two own the memory the group terminal block and name table properties point at, so
+    // they have to outlive the ActivateEndpoint call below.
+    std::vector<std::byte> groupTerminalBlockData{ };
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{ };
+
     if (!isUmpNative)
     {
         // A BLE MIDI 1.0 device presents as a UMP endpoint but has no endpoint discovery to run,
@@ -1849,6 +1857,13 @@ CMidi2Ble2MidiEndpointManager::CreateEndpoint(
         // instead of waiting for a negotiation that will never happen.
         interfaceDevProperties.push_back({ { PKEY_MIDI_EndpointDiscoveryProcessComplete, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), (PVOID)&devPropTrue });
+
+        LOG_IF_FAILED(MidiBleUtilities::BuildMidi1PortProperties(
+            friendlyName,
+            customProperties,
+            groupTerminalBlockData,
+            nameTable,
+            interfaceDevProperties));
     }
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
@@ -1942,6 +1957,79 @@ CMidi2Ble2MidiEndpointManager::CreateEndpoint(
         TraceLoggingWideString(instanceId.c_str(), "instance id"),
         TraceLoggingWideString(friendlyName.c_str(), "friendly name"),
         TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2Ble2MidiEndpointManager::RefreshMidi1PortsForRenamedEndpoint(
+    winrt::hstring const& endpointDeviceInterfaceId,
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> const customProperties
+)
+{
+    RETURN_HR_IF(E_INVALIDARG, endpointDeviceInterfaceId.empty());
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
+
+    auto connection = TransportState::Current().GetConnectionByEndpointDeviceInterfaceId(
+        std::wstring{ endpointDeviceInterfaceId });
+
+    // Only BLE MIDI 1.0 endpoints get their blocks from this transport. A BLE MIDI 2.0 endpoint
+    // declares function blocks of its own during discovery, and the service names the ports
+    // from those.
+    RETURN_HR_IF(S_FALSE, connection == nullptr);
+    RETURN_HR_IF(S_FALSE, connection->Protocol() != MidiBleProtocol::Protocol::Midi1);
+
+    std::wstring portName{ };
+
+    if (customProperties != nullptr && !customProperties->Name.empty())
+    {
+        portName = customProperties->Name;
+    }
+    else
+    {
+        // the customization was cleared, so the name reverts to the one the device reported
+        auto lock = std::scoped_lock{ m_createdEndpointsLock };
+
+        auto const record = std::find_if(
+            m_createdEndpoints.begin(),
+            m_createdEndpoints.end(),
+            [&connection](CreatedEndpointRecord const& entry) { return entry.DeviceId == connection->DeviceId(); });
+
+        RETURN_HR_IF(S_FALSE, record == m_createdEndpoints.end());
+
+        portName = record->TransportSuppliedEndpointName;
+    }
+
+    RETURN_HR_IF(S_FALSE, portName.empty());
+
+    std::vector<std::byte> groupTerminalBlockData{ };
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{ };
+    std::vector<DEVPROPERTY> properties{ };
+
+    RETURN_IF_FAILED(MidiBleUtilities::BuildMidi1PortProperties(
+        portName,
+        customProperties,
+        groupTerminalBlockData,
+        nameTable,
+        properties));
+
+    RETURN_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+        endpointDeviceInterfaceId.c_str(),
+        static_cast<ULONG>(properties.size()),
+        properties.data()));
+
+    TraceLoggingWrite(
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Rebuilt MIDI 1.0 ports for renamed endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingWideString(portName.c_str(), "port name")
     );
 
     return S_OK;
