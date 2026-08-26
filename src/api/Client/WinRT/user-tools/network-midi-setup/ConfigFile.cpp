@@ -164,163 +164,6 @@ namespace midinetworksetup
             return {};
         }
 
-        // Deep merge, so adding one host cannot discard another transport's settings, the other
-        // hosts, or anything the customer hand-edited into the file.
-        void MergeInto(_In_ json::JsonObject const& target, _In_ json::JsonObject const& source) noexcept
-        {
-            try
-            {
-                for (auto const& pair : source)
-                {
-                    auto const key = pair.Key();
-                    auto const sourceValue = pair.Value();
-
-                    if (sourceValue != nullptr &&
-                        sourceValue.ValueType() == json::JsonValueType::Object &&
-                        target.HasKey(key))
-                    {
-                        auto existing = target.GetNamedValue(key);
-
-                        if (existing != nullptr && existing.ValueType() == json::JsonValueType::Object)
-                        {
-                            MergeInto(existing.GetObject(), sourceValue.GetObject());
-                            continue;
-                        }
-                    }
-
-                    target.SetNamedValue(key, sourceValue);
-                }
-            }
-            catch (...)
-            {
-            }
-        }
-
-        // matches the indent the shipped configuration files already use
-        constexpr size_t IndentSpaces = 4;
-
-        void AppendIndent(_Inout_ std::wstring& text, _In_ int32_t const depth) noexcept
-        {
-            text.append(static_cast<size_t>(depth) * IndentSpaces, L' ');
-        }
-
-        // Windows.Data.Json only stringifies to a single line. The configuration file is meant
-        // to be readable and hand-editable, so it is written back out indented.
-        void AppendPretty(
-            _Inout_ std::wstring& text,
-            _In_ json::IJsonValue const& value,
-            _In_ int32_t const depth) noexcept
-        {
-            try
-            {
-                if (value == nullptr)
-                {
-                    text += L"null";
-                    return;
-                }
-
-                switch (value.ValueType())
-                {
-                case json::JsonValueType::Object:
-                {
-                    auto const object = value.GetObject();
-
-                    if (object.Size() == 0)
-                    {
-                        text += L"{}";
-                        return;
-                    }
-
-                    text += L"{\n";
-
-                    uint32_t index{ 0 };
-
-                    for (auto const& pair : object)
-                    {
-                        AppendIndent(text, depth + 1);
-
-                        text += json::JsonValue::CreateStringValue(pair.Key()).Stringify();
-                        text += L": ";
-
-                        AppendPretty(text, pair.Value(), depth + 1);
-
-                        if (++index < object.Size())
-                        {
-                            text += L",";
-                        }
-
-                        text += L"\n";
-                    }
-
-                    AppendIndent(text, depth);
-                    text += L"}";
-                    return;
-                }
-
-                case json::JsonValueType::Array:
-                {
-                    auto const array = value.GetArray();
-
-                    if (array.Size() == 0)
-                    {
-                        text += L"[]";
-                        return;
-                    }
-
-                    text += L"[\n";
-
-                    for (uint32_t i = 0; i < array.Size(); i++)
-                    {
-                        AppendIndent(text, depth + 1);
-
-                        AppendPretty(text, array.GetAt(i), depth + 1);
-
-                        if (i + 1 < array.Size())
-                        {
-                            text += L",";
-                        }
-
-                        text += L"\n";
-                    }
-
-                    AppendIndent(text, depth);
-                    text += L"]";
-                    return;
-                }
-
-                default:
-                    text += value.Stringify();
-                    return;
-                }
-            }
-            catch (...)
-            {
-            }
-        }
-
-        std::string ToUtf8(_In_ std::wstring const& text) noexcept
-        {
-            if (text.empty())
-            {
-                return {};
-            }
-
-            auto const required = ::WideCharToMultiByte(
-                CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
-
-            if (required <= 0)
-            {
-                return {};
-            }
-
-            std::string result(static_cast<size_t>(required), '\0');
-
-            ::WideCharToMultiByte(
-                CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), result.data(), required, nullptr, nullptr);
-
-            return result;
-        }
-
         std::wstring FromUtf8(_In_ std::string const& text) noexcept
         {
             if (text.empty())
@@ -479,29 +322,28 @@ namespace midinetworksetup
             return result;
         }
 
-        // an empty allow or deny list means the same thing as no list at all, so the key is
-        // dropped rather than left behind as "[]" for someone to puzzle over
-        void SetOrRemoveList(
-            _In_ json::JsonObject const& host,
-            _In_ std::wstring_view const key,
-            _In_ json::JsonArray const& list) noexcept
+        // A change to one host is expressed as the smallest section which identifies it, so the
+        // SDK merges it into whatever the file currently holds rather than replacing the lot.
+        json::JsonObject BuildHostSection(
+            _In_ winrt::hstring const& hostKey,
+            _In_ json::JsonObject const& hostChange) noexcept
         {
             try
             {
-                if (list == nullptr || list.Size() == 0)
-                {
-                    if (host.HasKey(key))
-                    {
-                        host.Remove(key);
-                    }
-                }
-                else
-                {
-                    host.SetNamedValue(key, list);
-                }
+                json::JsonObject hosts{};
+                hosts.SetNamedValue(hostKey, hostChange);
+
+                json::JsonObject createObject{};
+                createObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY, hosts);
+
+                json::JsonObject section{};
+                section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, createObject);
+
+                return section;
             }
             catch (...)
             {
+                return nullptr;
             }
         }
     }
@@ -574,6 +416,7 @@ namespace midinetworksetup
     _Use_decl_annotations_
     void NetworkConfigFile::OverridePath(std::wstring const& path) noexcept
     {
+#ifdef _DEBUG
         if (path.empty())
         {
             return;
@@ -582,6 +425,19 @@ namespace midinetworksetup
         m_path = path;
         m_isOverridden = true;
         m_cachedConfig = nullptr;
+
+        try
+        {
+            midi2svc::MidiServiceTransportPluginConfigManager::ConfigFilePathOverride(winrt::hstring{ path });
+        }
+        catch (...)
+        {
+        }
+#else
+        // Saving goes through the SDK, which only ever writes the file this PC is configured to
+        // use. Honoring the override here would read one file and write another.
+        UNREFERENCED_PARAMETER(path);
+#endif
     }
 
     bool NetworkConfigFile::Exists() const noexcept
@@ -705,58 +561,6 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
-    bool NetworkConfigFile::Save(json::JsonObject const& config) noexcept
-    {
-        try
-        {
-            if (config == nullptr || m_path.empty())
-            {
-                m_lastError = resources::GetString(L"ConfigFileNoPathError");
-                return false;
-            }
-
-            std::wstring text{};
-            AppendPretty(text, config, 0);
-            text += L"\n";
-
-            auto const bytes = ToUtf8(text);
-
-            if (bytes.empty())
-            {
-                m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
-                return false;
-            }
-
-            // Written in place rather than swapped in from a temporary file. ReplaceFileW needs
-            // delete rights on the replacement, and the ACL on %ProgramData%\Microsoft\MIDI grants
-            // Authenticated Users write but not delete, so the temporary file could neither be
-            // swapped in nor cleaned up afterwards and simply accumulated beside the real file.
-            // The MIDI Settings app writes in place for the same reason.
-            if (WriteAllBytes(m_path, bytes))
-            {
-                m_lastError = winrt::hstring{};
-
-                // the file just changed under the cache
-                m_cachedConfig = nullptr;
-
-                return true;
-            }
-
-            m_lastError = resources::FormatString(
-                L"ConfigFileWriteError",
-                m_path,
-                winrt::hstring{ std::to_wstring(::GetLastError()) });
-
-            return false;
-        }
-        catch (...)
-        {
-            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
-            return false;
-        }
-    }
-
-    _Use_decl_annotations_
     json::JsonObject NetworkConfigFile::GetEntriesObject(
         json::JsonObject const& config,
         std::wstring_view const entriesKey,
@@ -791,52 +595,56 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
+    bool NetworkConfigFile::SaveSection(json::JsonObject const& transportSection) noexcept
+    {
+        if (transportSection == nullptr)
+        {
+            return false;
+        }
+
+        // The SDK re-reads and merges under its own write lock, so nothing this tool read
+        // earlier can be written back over a change another program made in the meantime.
+        auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(
+            midi2net::MidiNetworkTransportManager::TransportId(),
+            transportSection);
+
+        if (response == nullptr || !response.Success())
+        {
+            m_lastError = response == nullptr ? resources::GetString(L"ConfigFileNoPathError") : response.ErrorMessage();
+
+            return false;
+        }
+
+        m_lastError = winrt::hstring{};
+        m_cachedConfig = nullptr;
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool NetworkConfigFile::MergeSection(json::JsonObject const& wrappedSection) noexcept
     {
-        if (wrappedSection == nullptr)
-        {
-            return false;
-        }
-
-        json::JsonObject config{ nullptr };
-
-        if (!Load(config))
-        {
-            return false;
-        }
-
-        MergeInto(config, wrappedSection);
-
-        return Save(config);
+        // wrappedSection comes from the SDK creation config already wrapped from the root, and
+        // SaveUpdate takes it in that form or as a bare section
+        return SaveSection(wrappedSection);
     }
 
     _Use_decl_annotations_
     bool NetworkConfigFile::RemoveHost(winrt::hstring const& hostIdKey) noexcept
     {
-        json::JsonObject config{ nullptr };
-
-        if (!Load(config))
-        {
-            return false;
-        }
-
-        auto hosts = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY, false);
-
-        auto const actualKey = ResolveKey(hosts, hostIdKey);
-
-        if (hosts == nullptr || actualKey.empty())
-        {
-            // nothing to remove is a success: the live host is already gone
-            return true;
-        }
-
-        hosts.Remove(actualKey);
-
-        return Save(config);
+        return RemoveEntry(MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY, hostIdKey);
     }
 
     _Use_decl_annotations_
     bool NetworkConfigFile::RemoveClient(winrt::hstring const& clientIdKey) noexcept
+    {
+        return RemoveEntry(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, clientIdKey);
+    }
+
+    _Use_decl_annotations_
+    bool NetworkConfigFile::RemoveEntry(
+        std::wstring_view const entriesKey,
+        winrt::hstring const& entryIdKey) noexcept
     {
         json::JsonObject config{ nullptr };
 
@@ -845,18 +653,35 @@ namespace midinetworksetup
             return false;
         }
 
-        auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
+        auto entries = GetEntriesObject(config, entriesKey, false);
 
-        auto const actualKey = ResolveKey(clients, clientIdKey);
+        auto const actualKey = ResolveKey(entries, entryIdKey);
 
-        if (clients == nullptr || actualKey.empty())
+        if (entries == nullptr || actualKey.empty())
         {
+            // nothing to remove is a success: the live entry is already gone
             return true;
         }
 
-        clients.Remove(actualKey);
+        try
+        {
+            // A removal names what to delete and mirrors the shape of "create". The leaf is an
+            // empty object, which is what marks the entry itself as the thing being removed.
+            json::JsonObject entryLeaf{};
+            entryLeaf.SetNamedValue(actualKey, json::JsonObject{});
 
-        return Save(config);
+            json::JsonObject removeObject{};
+            removeObject.SetNamedValue(winrt::hstring{ entriesKey }, entryLeaf);
+
+            json::JsonObject section{};
+            section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY, removeObject);
+
+            return SaveSection(section);
+        }
+        catch (...)
+        {
+            return false;
+        }
     }
 
     _Use_decl_annotations_
@@ -931,16 +756,20 @@ namespace midinetworksetup
                 newDenied.Append(identity);
             }
 
-            SetOrRemoveList(host, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, newAllowed);
-            SetOrRemoveList(host, MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, newDenied);
+            // Both lists are written whole. An empty one is written as an empty array rather
+            // than removed, because a merge cannot delete a key, and the service reads the two
+            // the same way either way.
+            json::JsonObject hostChange{};
+            hostChange.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, newAllowed);
+            hostChange.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, newDenied);
+
+            return SaveSection(BuildHostSection(ResolveKey(hosts, hostIdKey), hostChange));
         }
         catch (...)
         {
             m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
             return false;
         }
-
-        return Save(config);
     }
 
     _Use_decl_annotations_
@@ -970,6 +799,8 @@ namespace midinetworksetup
             bool removedFromAllowed{ false };
             bool removedFromDenied{ false };
 
+            json::JsonObject hostChange{};
+
             if (host.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY))
             {
                 auto updated = WithoutIdentity(
@@ -980,7 +811,7 @@ namespace midinetworksetup
 
                 if (removedFromAllowed)
                 {
-                    SetOrRemoveList(host, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, updated);
+                    hostChange.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, updated);
                 }
             }
 
@@ -994,7 +825,7 @@ namespace midinetworksetup
 
                 if (removedFromDenied)
                 {
-                    SetOrRemoveList(host, MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, updated);
+                    hostChange.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, updated);
                 }
             }
 
@@ -1002,14 +833,14 @@ namespace midinetworksetup
             {
                 return true;
             }
+
+            return SaveSection(BuildHostSection(ResolveKey(hosts, hostIdKey), hostChange));
         }
         catch (...)
         {
             m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
             return false;
         }
-
-        return Save(config);
     }
 
     _Use_decl_annotations_

@@ -198,6 +198,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
@@ -439,6 +442,10 @@
     <ClInclude Include="MidiServiceConfigResponse.h">
       <DependentUpon>MidiServiceConfigResponse.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiServiceConfigSaveResponse.h">
+      <DependentUpon>MidiServiceConfigSaveResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiConfigFile.h" />
     <ClInclude Include="MidiServiceTransportPluginConfigManager.h">
       <DependentUpon>MidiServiceTransportPluginConfigManager.idl</DependentUpon>
     </ClInclude>
@@ -787,6 +794,10 @@
     <ClCompile Include="MidiServiceConfigResponse.cpp">
       <DependentUpon>MidiServiceConfigResponse.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiServiceConfigSaveResponse.cpp">
+      <DependentUpon>MidiServiceConfigSaveResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiConfigFile.cpp" />
     <ClCompile Include="MidiServiceTransportPluginConfigManager.cpp">
       <DependentUpon>MidiServiceTransportPluginConfigManager.idl</DependentUpon>
     </ClCompile>
@@ -1046,6 +1057,8 @@
     <Midl Include="MidiServiceTransportCommand.idl" />
     <Midl Include="MidiServiceConfigResponse.idl" />
     <Midl Include="MidiServiceConfigResponseStatusEnum.idl" />
+    <Midl Include="MidiServiceConfigSaveResponse.idl" />
+    <Midl Include="MidiServiceConfigSaveResultEnum.idl" />
     <Midl Include="MidiServiceTransportPluginConfigManager.idl" />
     <Midl Include="MidiBasicLoopbackErrorCodeEnum.idl" />
     <Midl Include="MidiBasicLoopbackCreationConfig.idl" />

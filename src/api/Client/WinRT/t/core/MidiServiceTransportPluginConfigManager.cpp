@@ -14,6 +14,237 @@
 
 #include "MidiServiceConfigResponse.h"
 
+#include "MidiServiceConfigSaveResponse.h"
+#include "MidiConfigFile.h"
+
+
+namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
+{
+    _Use_decl_annotations_
+    json::JsonObject MidiServiceTransportPluginConfigManager::InternalEnsureTransportWrapper(
+        winrt::guid const& transportId,
+        json::JsonObject const& configObject) noexcept
+    {
+        try
+        {
+            if (configObject == nullptr)
+            {
+                return nullptr;
+            }
+
+            if (configObject.HasKey(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT))
+            {
+                return configObject;
+            }
+
+            auto const transportKey = winrt::hstring{ internal::GuidToString(transportId) };
+
+            // Re-parsing rather than reusing the object keeps the caller's copy untouched. Adding
+            // the original to a new parent would otherwise share the same underlying node.
+            json::JsonObject section{ nullptr };
+
+            if (!json::JsonObject::TryParse(configObject.Stringify(), section) || section == nullptr)
+            {
+                return nullptr;
+            }
+
+            json::JsonObject pluginSettings{};
+
+            // a caller may already have keyed by transport id but left off the outer wrapper
+            if (section.HasKey(transportKey))
+            {
+                pluginSettings = section;
+            }
+            else
+            {
+                pluginSettings.SetNamedValue(transportKey, section);
+            }
+
+            json::JsonObject wrapper{};
+            wrapper.SetNamedValue(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, pluginSettings);
+
+            return wrapper;
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
+    _Use_decl_annotations_
+    json::JsonObject MidiServiceTransportPluginConfigManager::InternalGetTransportSection(
+        winrt::guid const& transportId,
+        json::JsonObject const& configObject) noexcept
+    {
+        try
+        {
+            auto const wrapped = InternalEnsureTransportWrapper(transportId, configObject);
+
+            if (wrapped == nullptr || !wrapped.HasKey(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT))
+            {
+                return nullptr;
+            }
+
+            auto const pluginSettingsValue = wrapped.GetNamedValue(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
+
+            if (pluginSettingsValue == nullptr || pluginSettingsValue.ValueType() != json::JsonValueType::Object)
+            {
+                return nullptr;
+            }
+
+            auto const pluginSettings = pluginSettingsValue.GetObject();
+            auto const wanted = internal::ToUpperTrimmedWStringCopy(internal::GuidToString(transportId));
+
+            for (auto const& pair : pluginSettings)
+            {
+                if (internal::ToUpperTrimmedWStringCopy(std::wstring{ pair.Key() }) == wanted)
+                {
+                    auto const value = pair.Value();
+
+                    if (value != nullptr && value.ValueType() == json::JsonValueType::Object)
+                    {
+                        return value.GetObject();
+                    }
+                }
+            }
+
+            return nullptr;
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
+    _Use_decl_annotations_
+    svc::MidiServiceConfigSaveResponse MidiServiceTransportPluginConfigManager::SaveUpdate(
+        winrt::guid const& transportId,
+        json::JsonObject const& fullConfigObject) noexcept
+    {
+        auto response = winrt::make_self<MidiServiceConfigSaveResponse>();
+
+        if (response == nullptr)
+        {
+            return nullptr;
+        }
+
+        try
+        {
+            if (fullConfigObject == nullptr)
+            {
+                response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorConfigJsonNullOrEmpty);
+                return *response;
+            }
+
+            auto const section = InternalGetTransportSection(transportId, fullConfigObject);
+
+            if (section == nullptr || section.Size() == 0)
+            {
+                response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorProcessingConfigJson);
+                return *response;
+            }
+
+            // A command tells the service to do something now. There is nothing in it to store,
+            // and storing it would run it again on every service start.
+            if (section.HasKey(MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY))
+            {
+                response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorNotPersistable);
+                return *response;
+            }
+
+            if (!section.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY) &&
+                !section.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY) &&
+                !section.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY))
+            {
+                // Transport-level settings, such as the Bluetooth device list, are stored as-is.
+                // Anything else with no recognized shape is refused rather than guessed at.
+                bool const looksLikeTransportSettings = section.Size() > 0;
+
+                if (!looksLikeTransportSettings)
+                {
+                    response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorNotPersistable);
+                    return *response;
+                }
+            }
+
+            auto const outcome = MidiConfigFile::SaveTransportSection(transportId, section);
+
+            response->InternalSetResult(outcome.Result);
+            response->InternalSetConfigFilePath(outcome.ConfigFilePath);
+            response->InternalSetBackupFilePath(outcome.BackupFilePath);
+
+            if (outcome.Result != svc::MidiServiceConfigSaveResult::Success)
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to save transport configuration", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingUInt32(static_cast<uint32_t>(outcome.Result), "save result"),
+                    TraceLoggingWideString(outcome.ConfigFilePath.c_str(), "config file"),
+                    TraceLoggingGuid(transportId, "transport id")
+                );
+            }
+
+            return *response;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error saving transport configuration.");
+
+            response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorUnexpected);
+            return *response;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception saving transport configuration.");
+
+            response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorUnexpected);
+            return *response;
+        }
+    }
+
+    _Use_decl_annotations_
+    svc::MidiServiceConfigSaveResponse MidiServiceTransportPluginConfigManager::SaveUpdate(
+        svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept
+    {
+        if (configUpdate == nullptr)
+        {
+            auto response = winrt::make_self<MidiServiceConfigSaveResponse>();
+
+            if (response == nullptr)
+            {
+                return nullptr;
+            }
+
+            response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorConfigJsonNullOrEmpty);
+            return *response;
+        }
+
+        return SaveUpdate(configUpdate.TransportId(), configUpdate.ConfigJson());
+    }
+
+#ifdef _DEBUG
+    winrt::hstring MidiServiceTransportPluginConfigManager::ConfigFilePathOverride() noexcept
+    {
+        return winrt::hstring{ MidiConfigFile::GetPathOverride() };
+    }
+
+    _Use_decl_annotations_
+    void MidiServiceTransportPluginConfigManager::ConfigFilePathOverride(winrt::hstring const& value) noexcept
+    {
+        MidiConfigFile::SetPathOverride(std::wstring{ value });
+    }
+#endif
+
+    winrt::hstring MidiServiceTransportPluginConfigManager::ConfigFilePath() noexcept
+    {
+        return winrt::hstring{ MidiConfigFile::ResolvePath() };
+    }
+}
+
 
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {
@@ -295,7 +526,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
             auto responseJsonObject = InternalSendConfigJsonAndGetResponse(
                 transportId,
-                fullConfigObject
+                InternalEnsureTransportWrapper(transportId, fullConfigObject)
             );
 
             if (responseJsonObject == nullptr)

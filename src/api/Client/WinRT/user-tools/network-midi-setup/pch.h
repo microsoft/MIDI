@@ -105,6 +105,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
 namespace midi2msg = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
 namespace midi2net = ::winrt::Windows::Devices::Midi2::Transports::Network;
+namespace midi2svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
 namespace json = ::winrt::Windows::Data::Json;
 namespace appshared = ::winrt::MidiAppShared;
 

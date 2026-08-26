@@ -94,7 +94,11 @@ namespace midiloopbacksetup
         // save must use Load instead.
         bool LoadCached(_Out_ winrt::Windows::Data::Json::JsonObject& config) noexcept;
 
-        bool Save(_In_ winrt::Windows::Data::Json::JsonObject const& config) noexcept;
+        // Hands one transport section to the SDK, which re-reads, merges and writes the file
+        // under its own lock. This tool no longer writes the file itself.
+        bool SaveSection(
+            _In_ LoopbackKind const kind,
+            _In_ winrt::Windows::Data::Json::JsonObject const& transportSection) noexcept;
 
         // the create object for the transport, created on demand when creating is true
         winrt::Windows::Data::Json::JsonObject GetCreateObject(

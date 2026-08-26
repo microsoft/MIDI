@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiServiceConfigResponse.idl";
+import "MidiServiceConfigSaveResponse.idl";
 import "MidiServiceTransportCommand.idl";
 
 namespace Windows.Devices.Midi2.ServiceConfig
@@ -29,6 +30,27 @@ namespace Windows.Devices.Midi2.ServiceConfig
 
         [noexcept] static MidiServiceConfigResponse SendCommand(
             MidiServiceTransportCommand command);
+
+        // Writes the configuration into the configuration file so it survives a service restart.
+        // This is separate from sending, because sending without saving and saving without
+        // sending are both things a caller legitimately wants to do.
+        [noexcept] static MidiServiceConfigSaveResponse SaveUpdate(
+            IMidiServiceTransportPluginConfig configUpdate);
+
+        [noexcept] static MidiServiceConfigSaveResponse SaveUpdate(
+            Guid transportId,
+            Windows.Data.Json.JsonObject fullConfigObject);
+
+#ifdef _DEBUG
+        // Debug builds only, so it cannot ship. This lets any caller redirect SaveUpdate to a
+        // file of its choosing, which is an arbitrary write in the caller's context. This API is
+        // declared as needing only a base level of trust, so offering that would violate its own
+        // contract. It is also a static, so one component could silently redirect another's saves.
+        [noexcept] static String ConfigFilePathOverride{ get; set; };
+#endif
+
+        // The file SaveUpdate will write. Empty when no configuration file is registered.
+        [noexcept] static String ConfigFilePath{ get; };
 
         [noexcept] static Boolean QueryCapability(
             Guid transportId,

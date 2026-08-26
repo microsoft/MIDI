@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiServiceConfigSaveResultEnum.idl";
+
+namespace Windows.Devices.Midi2.ServiceConfig
+{
+    [contract(MidiServiceConfigApiContract, 1)]
+
+    [interface_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigSaveResponse", UUID_IMidiServiceConfigSaveResponse)]
+    runtimeclass MidiServiceConfigSaveResponse
+    {
+        [noexcept] MidiServiceConfigSaveResult Result { get; };
+
+        [noexcept] Boolean Success { get; };
+
+        // localized, suitable for showing to the customer
+        [noexcept] String ErrorMessage { get; };
+
+        // the file which was written, or would have been. Empty when none is registered
+        [noexcept] String ConfigFilePath { get; };
+
+        // the backup taken before this save, when one was taken
+        [noexcept] String BackupFilePath { get; };
+    }
+}

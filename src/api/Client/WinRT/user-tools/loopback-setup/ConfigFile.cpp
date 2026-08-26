@@ -76,13 +76,18 @@ namespace midiloopbacksetup
             return result;
         }
 
+        winrt::guid TransportIdFor(_In_ LoopbackKind const kind) noexcept
+        {
+            return kind == LoopbackKind::BasicLoopback ?
+                midi2bloop::MidiBasicLoopbackManager::TransportId() :
+                midi2loop::MidiLoopbackManager::TransportId();
+        }
+
         winrt::hstring TransportSectionKey(_In_ LoopbackKind const kind) noexcept
         {
             try
             {
-                return BracedUppercaseGuid(kind == LoopbackKind::BasicLoopback ?
-                    midi2bloop::MidiBasicLoopbackManager::TransportId() :
-                    midi2loop::MidiLoopbackManager::TransportId());
+                return BracedUppercaseGuid(TransportIdFor(kind));
             }
             catch (...)
             {
@@ -180,163 +185,6 @@ namespace midiloopbacksetup
             return {};
         }
 
-        // Deep merge, so adding one loopback cannot discard another transport's settings, the
-        // other loopbacks, or anything the customer hand-edited into the file.
-        void MergeInto(_In_ json::JsonObject const& target, _In_ json::JsonObject const& source) noexcept
-        {
-            try
-            {
-                for (auto const& pair : source)
-                {
-                    auto const key = pair.Key();
-                    auto const sourceValue = pair.Value();
-
-                    if (sourceValue != nullptr &&
-                        sourceValue.ValueType() == json::JsonValueType::Object &&
-                        target.HasKey(key))
-                    {
-                        auto existing = target.GetNamedValue(key);
-
-                        if (existing != nullptr && existing.ValueType() == json::JsonValueType::Object)
-                        {
-                            MergeInto(existing.GetObject(), sourceValue.GetObject());
-                            continue;
-                        }
-                    }
-
-                    target.SetNamedValue(key, sourceValue);
-                }
-            }
-            catch (...)
-            {
-            }
-        }
-
-        // matches the indent the shipped configuration files already use
-        constexpr size_t IndentSpaces = 4;
-
-        void AppendIndent(_Inout_ std::wstring& text, _In_ int32_t const depth) noexcept
-        {
-            text.append(static_cast<size_t>(depth) * IndentSpaces, L' ');
-        }
-
-        // Windows.Data.Json only stringifies to a single line. The configuration file is meant
-        // to be readable and hand-editable, so it is written back out indented.
-        void AppendPretty(
-            _Inout_ std::wstring& text,
-            _In_ json::IJsonValue const& value,
-            _In_ int32_t const depth) noexcept
-        {
-            try
-            {
-                if (value == nullptr)
-                {
-                    text += L"null";
-                    return;
-                }
-
-                switch (value.ValueType())
-                {
-                case json::JsonValueType::Object:
-                {
-                    auto const object = value.GetObject();
-
-                    if (object.Size() == 0)
-                    {
-                        text += L"{}";
-                        return;
-                    }
-
-                    text += L"{\n";
-
-                    uint32_t index{ 0 };
-
-                    for (auto const& pair : object)
-                    {
-                        AppendIndent(text, depth + 1);
-
-                        text += json::JsonValue::CreateStringValue(pair.Key()).Stringify();
-                        text += L": ";
-
-                        AppendPretty(text, pair.Value(), depth + 1);
-
-                        if (++index < object.Size())
-                        {
-                            text += L",";
-                        }
-
-                        text += L"\n";
-                    }
-
-                    AppendIndent(text, depth);
-                    text += L"}";
-                    return;
-                }
-
-                case json::JsonValueType::Array:
-                {
-                    auto const array = value.GetArray();
-
-                    if (array.Size() == 0)
-                    {
-                        text += L"[]";
-                        return;
-                    }
-
-                    text += L"[\n";
-
-                    for (uint32_t i = 0; i < array.Size(); i++)
-                    {
-                        AppendIndent(text, depth + 1);
-
-                        AppendPretty(text, array.GetAt(i), depth + 1);
-
-                        if (i + 1 < array.Size())
-                        {
-                            text += L",";
-                        }
-
-                        text += L"\n";
-                    }
-
-                    AppendIndent(text, depth);
-                    text += L"]";
-                    return;
-                }
-
-                default:
-                    text += value.Stringify();
-                    return;
-                }
-            }
-            catch (...)
-            {
-            }
-        }
-
-        std::string ToUtf8(_In_ std::wstring const& text) noexcept
-        {
-            if (text.empty())
-            {
-                return {};
-            }
-
-            auto const required = ::WideCharToMultiByte(
-                CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
-
-            if (required <= 0)
-            {
-                return {};
-            }
-
-            std::string result(static_cast<size_t>(required), '\0');
-
-            ::WideCharToMultiByte(
-                CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), result.data(), required, nullptr, nullptr);
-
-            return result;
-        }
-
         std::wstring FromUtf8(_In_ std::string const& text) noexcept
         {
             if (text.empty())
@@ -409,32 +257,6 @@ namespace midiloopbacksetup
 
             return true;
         }
-
-        bool WriteAllBytes(_In_ std::wstring const& path, _In_ std::string const& contents) noexcept
-        {
-            wil::unique_hfile file{ ::CreateFileW(
-                path.c_str(),
-                GENERIC_WRITE,
-                0,
-                nullptr,
-                CREATE_ALWAYS,
-                FILE_ATTRIBUTE_NORMAL,
-                nullptr) };
-
-            if (!file)
-            {
-                return false;
-            }
-
-            DWORD bytesWritten{ 0 };
-
-            if (!::WriteFile(file.get(), contents.data(), static_cast<DWORD>(contents.size()), &bytesWritten, nullptr))
-            {
-                return false;
-            }
-
-            return bytesWritten == contents.size();
-        }
     }
 
 
@@ -505,6 +327,7 @@ namespace midiloopbacksetup
     _Use_decl_annotations_
     void LoopbackConfigFile::OverridePath(std::wstring const& path) noexcept
     {
+#ifdef _DEBUG
         if (path.empty())
         {
             return;
@@ -513,6 +336,19 @@ namespace midiloopbacksetup
         m_path = path;
         m_isOverridden = true;
         m_cachedConfig = nullptr;
+
+        try
+        {
+            midi2svc::MidiServiceTransportPluginConfigManager::ConfigFilePathOverride(winrt::hstring{ path });
+        }
+        catch (...)
+        {
+        }
+#else
+        // Saving goes through the SDK, which only ever writes the file this PC is configured to
+        // use. Honoring the override here would read one file and write another.
+        UNREFERENCED_PARAMETER(path);
+#endif
     }
 
     bool LoopbackConfigFile::Exists() const noexcept
@@ -636,57 +472,6 @@ namespace midiloopbacksetup
     }
 
     _Use_decl_annotations_
-    bool LoopbackConfigFile::Save(json::JsonObject const& config) noexcept
-    {
-        try
-        {
-            if (config == nullptr || m_path.empty())
-            {
-                m_lastError = resources::GetString(L"ConfigFileNoPathError");
-                return false;
-            }
-
-            std::wstring text{};
-            AppendPretty(text, config, 0);
-            text += L"\n";
-
-            auto const bytes = ToUtf8(text);
-
-            if (bytes.empty())
-            {
-                m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
-                return false;
-            }
-
-            // Written in place rather than swapped in from a temporary file. ReplaceFileW needs
-            // delete rights on the replacement, and the ACL on %ProgramData%\Microsoft\MIDI
-            // grants Authenticated Users write but not delete, so the temporary file could
-            // neither be swapped in nor cleaned up afterwards and simply accumulated beside the
-            // real file. The MIDI Settings app writes in place for the same reason.
-            if (WriteAllBytes(m_path, bytes))
-            {
-                m_lastError = winrt::hstring{};
-
-                // the file just changed under the cache
-                m_cachedConfig = nullptr;
-
-                return true;
-            }
-
-            m_lastError = resources::FormatString(
-                L"ConfigFileWriteError",
-                m_path,
-                winrt::hstring{ std::to_wstring(::GetLastError()) });
-
-            return false;
-        }
-        catch (...)
-        {
-            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
-            return false;
-        }
-    }
-
     _Use_decl_annotations_
     json::JsonObject LoopbackConfigFile::GetCreateObject(
         json::JsonObject const& config,
@@ -720,6 +505,35 @@ namespace midiloopbacksetup
     }
 
     _Use_decl_annotations_
+    bool LoopbackConfigFile::SaveSection(
+        LoopbackKind const kind,
+        json::JsonObject const& transportSection) noexcept
+    {
+        if (transportSection == nullptr)
+        {
+            return false;
+        }
+
+        // The SDK re-reads and merges under its own write lock, so nothing this tool read
+        // earlier can be written back over a change another program made in the meantime.
+        auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(
+            TransportIdFor(kind),
+            transportSection);
+
+        if (response == nullptr || !response.Success())
+        {
+            m_lastError = response == nullptr ? resources::GetString(L"ConfigFileNoPathError") : response.ErrorMessage();
+
+            return false;
+        }
+
+        m_lastError = winrt::hstring{};
+        m_cachedConfig = nullptr;
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool LoopbackConfigFile::MergeSection(json::JsonObject const& wrappedSection) noexcept
     {
         if (wrappedSection == nullptr)
@@ -727,16 +541,23 @@ namespace midiloopbacksetup
             return false;
         }
 
-        json::JsonObject config{ nullptr };
+        // wrappedSection comes from the SDK creation config already wrapped from the root, and
+        // SaveUpdate takes it in that form or as a bare section
+        auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(
+            TransportIdFor(LoopbackKind::Loopback),
+            wrappedSection);
 
-        if (!Load(config))
+        if (response == nullptr || !response.Success())
         {
+            m_lastError = response == nullptr ? resources::GetString(L"ConfigFileNoPathError") : response.ErrorMessage();
+
             return false;
         }
 
-        MergeInto(config, wrappedSection);
+        m_lastError = winrt::hstring{};
+        m_cachedConfig = nullptr;
 
-        return Save(config);
+        return true;
     }
 
     _Use_decl_annotations_
@@ -761,14 +582,18 @@ namespace midiloopbacksetup
 
         try
         {
-            entries.Remove(actualKey);
+            json::JsonArray removals{};
+            removals.Append(json::JsonValue::CreateStringValue(actualKey));
+
+            json::JsonObject section{};
+            section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY, removals);
+
+            return SaveSection(kind, section);
         }
         catch (...)
         {
             return false;
         }
-
-        return Save(config);
     }
 
     _Use_decl_annotations_
@@ -801,34 +626,43 @@ namespace midiloopbacksetup
             // A pair keeps the flag on the association, because it mutes both directions at
             // once. A basic loopback keeps it on its single endpoint. This is where the SDK
             // creation config puts them, so the service reads them back from the same place.
+            json::JsonObject entryChange{};
+
             if (kind == LoopbackKind::BasicLoopback)
             {
-                auto endpoint = FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY);
-
-                if (endpoint == nullptr)
+                if (FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY) == nullptr)
                 {
                     m_lastError = resources::GetString(L"ConfigFileEntryMissingError");
                     return false;
                 }
 
-                endpoint.SetNamedValue(
+                json::JsonObject endpointChange{};
+                endpointChange.SetNamedValue(
                     MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
                     json::JsonValue::CreateBooleanValue(isMuted));
+
+                entryChange.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY, endpointChange);
             }
             else
             {
-                entry.SetNamedValue(
+                entryChange.SetNamedValue(
                     MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
                     json::JsonValue::CreateBooleanValue(isMuted));
             }
+
+            json::JsonObject entries2{};
+            entries2.SetNamedValue(ResolveKey(entries, associationKey), entryChange);
+
+            json::JsonObject section{};
+            section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, entries2);
+
+            return SaveSection(kind, section);
         }
         catch (...)
         {
             m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
             return false;
         }
-
-        return Save(config);
     }
 
     _Use_decl_annotations_
@@ -860,9 +694,9 @@ namespace midiloopbacksetup
             return false;
         }
 
-        auto writeEndpoint = [&](json::JsonObject const& endpoint, winrt::hstring const& name, winrt::hstring const& description)
+        auto buildEndpoint = [&imageFileName](winrt::hstring const& name, winrt::hstring const& description)
             {
-                if (endpoint == nullptr) return;
+                json::JsonObject endpoint{};
 
                 endpoint.SetNamedValue(
                     MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
@@ -872,40 +706,49 @@ namespace midiloopbacksetup
                     MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
                     json::JsonValue::CreateStringValue(description));
 
-                if (imageFileName.empty())
-                {
-                    if (endpoint.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY))
-                    {
-                        endpoint.Remove(MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY);
-                    }
-                }
-                else
-                {
-                    endpoint.SetNamedValue(
-                        MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY,
-                        json::JsonValue::CreateStringValue(imageFileName));
-                }
+                // An empty value clears the image. The stored entry is merged into rather than
+                // replaced, so the key has to be written rather than left out.
+                endpoint.SetNamedValue(
+                    MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY,
+                    json::JsonValue::CreateStringValue(imageFileName));
+
+                return endpoint;
             };
 
         try
         {
+            json::JsonObject entryChange{};
+
             if (kind == LoopbackKind::BasicLoopback)
             {
-                writeEndpoint(FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY), nameA, descriptionA);
+                entryChange.SetNamedValue(
+                    MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY,
+                    buildEndpoint(nameA, descriptionA));
             }
             else
             {
-                writeEndpoint(FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY), nameA, descriptionA);
-                writeEndpoint(FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY), nameB, descriptionB);
+                entryChange.SetNamedValue(
+                    MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY,
+                    buildEndpoint(nameA, descriptionA));
+
+                entryChange.SetNamedValue(
+                    MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY,
+                    buildEndpoint(nameB, descriptionB));
             }
+
+            json::JsonObject entries2{};
+            entries2.SetNamedValue(ResolveKey(entries, associationKey), entryChange);
+
+            json::JsonObject section{};
+            section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, entries2);
+
+            return SaveSection(kind, section);
         }
         catch (...)
         {
             m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
             return false;
         }
-
-        return Save(config);
     }
 
     _Use_decl_annotations_
@@ -929,21 +772,26 @@ namespace midiloopbacksetup
 
         bool changedAnything{ false };
 
+        json::JsonObject entryChanges{};
+
         try
         {
             int32_t position{ 0 };
 
             for (auto const& key : orderedAssociationKeys)
             {
-                auto entry = FindObject(entries, ResolveKey(entries, key));
+                auto const actualKey = ResolveKey(entries, key);
 
                 // a loopback which was never saved has no entry to record a position in, and
                 // still takes up a position so the saved ones keep their relative order
-                if (entry != nullptr)
+                if (!actualKey.empty())
                 {
-                    entry.SetNamedValue(
+                    json::JsonObject entryChange{};
+                    entryChange.SetNamedValue(
                         DisplayOrderKey,
                         json::JsonValue::CreateNumberValue(static_cast<double>(position)));
+
+                    entryChanges.SetNamedValue(actualKey, entryChange);
 
                     changedAnything = true;
                 }
@@ -961,7 +809,17 @@ namespace midiloopbacksetup
             return true;
         }
 
-        return Save(config);
+        try
+        {
+            json::JsonObject section{};
+            section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, entryChanges);
+
+            return SaveSection(kind, section);
+        }
+        catch (...)
+        {
+            return false;
+        }
     }
 
     _Use_decl_annotations_

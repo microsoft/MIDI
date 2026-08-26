@@ -175,6 +175,8 @@
 
 #define UUID_IMidiServiceConfigResponse                                     8087b303-0519-c0de-31d1-ee0060007000
 
+#define UUID_IMidiServiceConfigSaveResponse                                 8087b303-0519-c0de-31d1-ee0060008000
+
 // ============================================================================
 // Windows.Devices.Midi2.CapabilityInquiry : Interface number 007
 

@@ -26,6 +26,20 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         static svc::MidiServiceConfigResponse SendCommand(
             _In_ svc::MidiServiceTransportCommand const& command) noexcept;
 
+        static svc::MidiServiceConfigSaveResponse SaveUpdate(
+            _In_ svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept;
+
+        static svc::MidiServiceConfigSaveResponse SaveUpdate(
+            _In_ winrt::guid const& transportId,
+            _In_ json::JsonObject const& fullConfigObject) noexcept;
+
+#ifdef _DEBUG
+        static winrt::hstring ConfigFilePathOverride() noexcept;
+        static void ConfigFilePathOverride(_In_ winrt::hstring const& value) noexcept;
+#endif
+
+        static winrt::hstring ConfigFilePath() noexcept;
+
         static bool QueryCapability(
             _In_ winrt::guid const& transportId,
             _In_ winrt::hstring const& capabilityQueryKey) noexcept;
@@ -35,6 +49,18 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             _In_ winrt::guid const& transportId);
 
     private:
+
+        // Callers reasonably build just their own section, so the transport plugin settings
+        // wrapper and the transport id key are added when they are missing. The caller's object is
+        // never modified, because it belongs to them and may be reused.
+        static json::JsonObject InternalEnsureTransportWrapper(
+            _In_ winrt::guid const& transportId,
+            _In_ json::JsonObject const& configObject) noexcept;
+
+        // The section under the transport id, whatever depth the caller supplied it at.
+        static json::JsonObject InternalGetTransportSection(
+            _In_ winrt::guid const& transportId,
+            _In_ json::JsonObject const& configObject) noexcept;
 
         static json::JsonObject InternalSendConfigJsonAndGetResponse(
             _In_ winrt::guid const& transportId,
