@@ -22,6 +22,34 @@ namespace Microsoft.Midi.ConsoleApp
         internal const string VerbStartPeripheral = "startPeripheral";
         internal const string VerbStopPeripheral = "stopPeripheral";
         internal const string VerbGetPeripheralStatus = "getPeripheralStatus";
+        internal const string VerbSetConnectionParameters = "setConnectionParameters";
+
+        internal const string ArgumentConnectionParameters = "connectionParameters";
+        internal const string ResponseMinIntervalMilliseconds = "minConnectionIntervalMilliseconds";
+        internal const string ResponseMaxIntervalMilliseconds = "maxConnectionIntervalMilliseconds";
+        internal const string ResponseConnectionIntervalMilliseconds = "connectionIntervalMilliseconds";
+
+        // Short words for the command line, mapped to what the transport expects.
+        internal static string? ResolveConnectionParameterPreference(string? value)
+        {
+            return (value ?? string.Empty).ToLowerInvariant() switch
+            {
+                "system" or "systemdefault" or "default" or "none" => "systemDefault",
+                "throughput" or "throughputoptimized" or "low" => "throughputOptimized",
+                "balanced" => "balanced",
+                "power" or "poweroptimized" => "powerOptimized",
+                _ => null,
+            };
+        }
+
+        internal static JsonObject? SendConnectionParametersCommand(string preference)
+        {
+            var command = new MidiServiceTransportCommand(TransportId, VerbSetConnectionParameters);
+
+            command.Arguments[ArgumentConnectionParameters] = preference;
+
+            return SendCommand(command, VerbSetConnectionParameters);
+        }
 
         internal const string ArgumentDeviceId = "deviceId";
         internal const string ArgumentProtocol = "protocol";

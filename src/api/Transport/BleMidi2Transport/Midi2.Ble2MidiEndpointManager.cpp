@@ -697,10 +697,12 @@ CMidi2Ble2MidiEndpointManager::GetDiscoveredDevices()
             // is what distinguishes a live link from one that went away without telling us,
             // which is the failure the older Windows Bluetooth MIDI support hid from apps.
             device.IsConnected = connection->IsDeviceConnected();
+            device.ConnectionIntervalUnits = connection->ConnectionIntervalUnits();
         }
         else
         {
             device.IsConnected = false;
+            device.ConnectionIntervalUnits = 0;
         }
 
         device.LastSeenAgoMilliseconds = now > device.LastSeenTimestamp ? now - device.LastSeenTimestamp : 0;
@@ -953,24 +955,26 @@ CMidi2Ble2MidiEndpointManager::ProcessPeripheralClientChange()
     winrt::hstring remoteBluetoothDeviceId{};
     winrt::hstring remoteAddressType{ L"unspecified" };
     bool remoteIsPaired{ false };
+    bt::BluetoothLEDevice remoteDevice{ nullptr };
 
     try
     {
-        if (auto remoteDevice = MidiBleUtilities::AwaitWithTimeout(
+        if (auto device = MidiBleUtilities::AwaitWithTimeout(
             bt::BluetoothLEDevice::FromIdAsync(clientDeviceId),
             MidiBleUtilities::BleOperationTimeoutMilliseconds,
             bt::BluetoothLEDevice{ nullptr }))
         {
-            remoteName = remoteDevice.Name();
-            remoteAddress = MidiBleUtilities::FormatBluetoothAddress(remoteDevice.BluetoothAddress());
-            remoteAddressType = MidiBleUtilities::BluetoothAddressTypeToString(remoteDevice.BluetoothAddressType());
+            remoteDevice = device;
+            remoteName = device.Name();
+            remoteAddress = MidiBleUtilities::FormatBluetoothAddress(device.BluetoothAddress());
+            remoteAddressType = MidiBleUtilities::BluetoothAddressTypeToString(device.BluetoothAddressType());
 
-            if (auto bluetoothDeviceId = remoteDevice.BluetoothDeviceId())
+            if (auto bluetoothDeviceId = device.BluetoothDeviceId())
             {
                 remoteBluetoothDeviceId = bluetoothDeviceId.Id();
             }
 
-            if (auto deviceInformation = remoteDevice.DeviceInformation())
+            if (auto deviceInformation = device.DeviceInformation())
             {
                 if (auto pairing = deviceInformation.Pairing())
                 {
@@ -1019,6 +1023,8 @@ CMidi2Ble2MidiEndpointManager::ProcessPeripheralClientChange()
         remoteBluetoothDeviceId,
         remoteIsPaired,
         hasGenericName });
+
+    peripheral->SetRemoteDevice(remoteDevice);
 
     RETURN_IF_FAILED(TransportState::Current().AddConnection(connection));
 
@@ -1426,6 +1432,64 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
         // BLE devices drop out constantly. This asks the system to re-establish the link rather
         // than leaving an app holding an endpoint that has silently stopped working.
         session.MaintainConnection(true);
+
+        // Both specifications make a connection interval of 15 ms or less mandatory and prefer the
+        // lowest both ends support, with 7.5 ms recommended for live performance. WinRT offers
+        // only presets and no way to name an interval, and the throughput-optimized one asks for
+        // 15 ms as both floor and ceiling, so which preset is actually best is a measurement.
+        try
+        {
+            auto const preference = TransportState::Current().GetConnectionParameterPreference();
+            auto const preferredParameters = MidiBleUtilities::GetPreferredConnectionParameters(preference);
+
+            if (preferredParameters != nullptr)
+            {
+                auto connectionParametersRequest = bleDevice.RequestPreferredConnectionParameters(preferredParameters);
+
+                // Connection intervals are in units of 1.25 ms, so these are logged raw and
+                // converted, because the preset's name says nothing about what it asks for.
+                TraceLoggingWrite(
+                    MidiBle2MidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Requested preferred connection parameters", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceId.c_str(), "device id"),
+                    TraceLoggingWideString(
+                        MidiBleUtilities::ConnectionParameterPreferenceToJsonString(preference).c_str(), "preference"),
+                    TraceLoggingUInt16(preferredParameters.MinConnectionInterval(), "min interval units"),
+                    TraceLoggingUInt16(preferredParameters.MaxConnectionInterval(), "max interval units"),
+                    TraceLoggingFloat32(preferredParameters.MinConnectionInterval() * 1.25f, "min interval ms"),
+                    TraceLoggingFloat32(preferredParameters.MaxConnectionInterval() * 1.25f, "max interval ms"),
+                    TraceLoggingUInt32(
+                        connectionParametersRequest != nullptr ? static_cast<uint32_t>(connectionParametersRequest.Status()) : 0xFFFFFFFF,
+                        "request status")
+                );
+
+                // The request object must outlive the connection, because releasing it withdraws
+                // the preference and the link reverts to the system default.
+                if (connectionParametersRequest != nullptr)
+                {
+                    auto lock = std::scoped_lock{ m_connectionParameterRequestsLock };
+
+                    m_connectionParameterRequests.insert_or_assign(deviceId, connectionParametersRequest);
+                }
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiBle2MidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Leaving connection parameters to the system", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceId.c_str(), "device id")
+                );
+            }
+        }
+        CATCH_LOG();
     }
     catch (...)
     {
@@ -1660,6 +1724,12 @@ CMidi2Ble2MidiEndpointManager::DisconnectDeviceInternal(winrt::hstring const& de
     }
 
     auto const deviceInstanceId = connection->EndpointDeviceInstanceId();
+
+    {
+        auto lock = std::scoped_lock{ m_connectionParameterRequestsLock };
+
+        m_connectionParameterRequests.erase(deviceId);
+    }
 
     {
         auto lock = std::scoped_lock{ m_createdEndpointsLock };
@@ -2122,6 +2192,11 @@ CMidi2Ble2MidiEndpointManager::Shutdown()
     CATCH_LOG();
 
     TransportState::Current().ShutdownAllConnections();
+
+    {
+        auto lock = std::scoped_lock{ m_connectionParameterRequestsLock };
+        m_connectionParameterRequests.clear();
+    }
 
     {
         auto lock = std::scoped_lock{ m_discoveredDevicesLock };

@@ -69,6 +69,10 @@ public:
     void SetConfiguredPeripheralProtocol(_In_ MidiBleProtocol::Protocol const protocol);
     MidiBleProtocol::Protocol TakeConfiguredPeripheralProtocol();
 
+    // Read at connect time, so changing it and reconnecting is enough to compare presets.
+    void SetConnectionParameterPreference(_In_ MidiBleProtocol::ConnectionParameterPreference const preference);
+    MidiBleProtocol::ConnectionParameterPreference GetConnectionParameterPreference();
+
     //HRESULT AddHost(
     //    _In_ std::shared_ptr<MidiNetworkHost>);
     //std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts() { return m_hosts; }
@@ -139,6 +143,9 @@ private:
     std::mutex m_peripheralLock;
 
     MidiBleProtocol::Protocol m_configuredPeripheralProtocol{ MidiBleProtocol::Protocol::Unknown };
+
+    std::atomic<MidiBleProtocol::ConnectionParameterPreference> m_connectionParameterPreference{
+        MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized };
 
     //std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
     //std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };

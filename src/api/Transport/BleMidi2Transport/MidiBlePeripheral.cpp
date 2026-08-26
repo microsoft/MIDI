@@ -167,6 +167,7 @@ MidiBlePeripheral::DetachConnection()
         connection = std::move(m_connection);
         m_connection = nullptr;
         m_remoteClientInfo = {};
+        m_remoteDevice = nullptr;
     }
 
     if (connection != nullptr)
@@ -194,6 +195,44 @@ MidiBlePeripheral::RemoteClientInfo() const
     auto lock = std::scoped_lock{ m_connectionLock };
 
     return m_remoteClientInfo;
+}
+
+
+_Use_decl_annotations_
+void
+MidiBlePeripheral::SetRemoteDevice(bt::BluetoothLEDevice const& device)
+{
+    auto lock = std::scoped_lock{ m_connectionLock };
+
+    m_remoteDevice = device;
+}
+
+
+uint16_t
+MidiBlePeripheral::ConnectionIntervalUnits() const
+{
+    bt::BluetoothLEDevice device{ nullptr };
+
+    {
+        auto lock = std::scoped_lock{ m_connectionLock };
+        device = m_remoteDevice;
+    }
+
+    if (device == nullptr)
+    {
+        return 0;
+    }
+
+    try
+    {
+        if (auto const parameters = device.GetConnectionParameters())
+        {
+            return parameters.ConnectionInterval();
+        }
+    }
+    CATCH_LOG();
+
+    return 0;
 }
 
 

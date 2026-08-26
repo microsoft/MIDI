@@ -23,6 +23,19 @@ namespace Microsoft.Midi.ConsoleApp
         private const string UpdateKey = "update";
         private const string PeripheralKey = "peripheral";
         private const string ProtocolKey = "protocol";
+        private const string ConnectionParametersKey = "connectionParameters";
+
+        internal static bool TrySetConnectionParameters(string preference, out string? error)
+        {
+            return TryUpdateTransportSection(
+                transportSection =>
+                {
+                    transportSection[ConnectionParametersKey] = preference;
+
+                    return true;
+                },
+                out error);
+        }
 
         // Section keys are written by the service as braced upper case, and a differently cased
         // key would silently become a second section the service never reads.

@@ -374,6 +374,67 @@ Because a generic name is both unhelpful and very likely to collide, a name from
 known generic names is worth flagging to the user, along with the suggestion to pair the device.
 Endpoint customization is the other way out, and is per-device.
 
+## Specification conformance
+
+Audited against MMA/AMEI RP-052 (BLE MIDI 1.0) and the BLE MIDI 2.0 transport draft, including
+every part of the latter which restates or supersedes the former. The draft's Table 10 and
+Table 11 are the checklists.
+
+Everything mandatory for the MIDI 1.0 Characteristic is implemented: the service and
+characteristic UUIDs, write without response, the empty-payload read handshake in both directions,
+notify, MTU negotiation with the packet size following the negotiated value, the header and
+timestamp byte layout, full messages, Running Status on receive, System Real-Time de-interleaving,
+the SysEx continuation rules including a timestamp byte before an interrupting real-time message
+and before EOX, 13-bit millisecond timestamps, and receiver-side timestampHigh overflow tracking.
+Running Status on transmit is optional and is not generated, which the specification permits
+because every receiver must accept full messages.
+
+For the UMP Characteristic: big-endian words, multiple UMPs per payload, no fragmentation,
+discarding a malformed UMP along with the rest of its payload, the advertisement carrying the
+MIDI Service UUID, and UMP stream state being reset on reconnection.
+
+### Known deviations
+
+| Requirement | Status | Reason |
+|---|---|---|
+| Connection interval ≤ 15 ms, Central role | Requested | `RequestPreferredConnectionParameters` with the throughput-optimized preset. The interval is ultimately negotiated, so this is advisory. |
+| Connection interval ≤ 15 ms, Peripheral role | **Not done** | A Peripheral is meant to propose the interval with a Connection Parameter Update Request. `GattServiceProvider` exposes no way to do so. |
+| Peripheral rejects a second Characteristic subscription with ATT 0x80 | **Not possible** | WinRT does not let an application fail a CCCD write. Avoided instead by publishing a single Characteristic, which the specification permits. |
+| Peripheral limited to one active connection | Partial | The first subscriber is served and later ones are ignored, but their subscription cannot be refused, for the same reason. |
+| Encryption | Not enabled | Optional in both specifications. Requiring it would force pairing, and an unpaired device connecting is a case which has to keep working. |
+| Bluetooth 5.0 required for the UMP Characteristic | Not enforced | No check that the radio is 5.0 or higher before offering UMP. |
+| Peripheral minimum 64-byte ATT payload for UMP | Not enforced | The negotiated size is used as-is, with a floor of the 20-byte MIDI 1.0 default. |
+| Jitter Reduction Timestamps | Not implemented | Optional. The service has no JR clock. |
+| Endpoint Discovery retried three times before disconnecting | Service-side | Retry policy belongs to the service's protocol manager, not this transport. |
+
+### Connection interval
+
+Both specifications require 15 ms or less and prefer the lowest both ends support, with 7.5 ms
+recommended for live performance. Windows exposes three presets through
+`RequestPreferredConnectionParameters` and no way to name an interval, and the presets are not
+what their names suggest. Measured on one PC against a BLE MIDI instrument, with the negotiated
+value read back from `BluetoothLEDevice.GetConnectionParameters`:
+
+| Preference | Requested | Negotiated |
+|---|---|---|
+| `systemDefault` (no request) | — | 15 ms |
+| `throughputOptimized` | min 15 ms, max 15 ms | 15 ms |
+| `balanced` | min 30 ms, max 60 ms | 60 ms |
+| `powerOptimized` | min 90 ms, max 180 ms | 15 ms |
+
+Nothing below 15 ms has been observed. Making no request produces the same 15 ms as the
+throughput preset, so requesting it neither helps nor harms; it is kept because it states the
+intent and guarantees the mandatory ceiling rather than relying on the default staying there. The
+balanced preset makes matters worse, which shows requests do influence the link. The power preset
+landing on 15 ms despite asking for far more suggests the device's own Connection Parameter Update
+Request wins in that case.
+
+The preference is settable with `midi bluetooth connection-parameters`, and the negotiated value
+is shown per device by `midi bluetooth list` and, for the peripheral role, by
+`midi bluetooth peripheral status`. The peripheral case is worth watching separately: there the
+remote Central chooses the interval, so it shows what a phone asks for rather than what Windows
+requests.
+
 ## Not yet implemented
 
 - A WinRT projection (`Windows.Devices.Midi2.Transports.Bluetooth`) and a setup app for

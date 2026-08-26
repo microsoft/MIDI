@@ -60,4 +60,13 @@ public:
     // the two halves have to agree
     TEST_METHOD(TestRoundTripOfChannelMessages);
     TEST_METHOD(TestRoundTripOfSysExAcrossPackets);
+
+    // Timestamp correlation across packets
+    TEST_METHOD(TestCorrelatorKeepsSpacingWithinAPacket);
+    TEST_METHOD(TestCorrelatorIsMonotonicAcrossPackets);
+    TEST_METHOD(TestCorrelatorHandlesSenderClockWrap);
+    TEST_METHOD(TestCorrelatorNeverReturnsAFutureTimestamp);
+    TEST_METHOD(TestCorrelatorIgnoresImplausibleBackwardsJump);
+    TEST_METHOD(TestCorrelatorResetRebuildsMapping);
+    TEST_METHOD(TestDecoderReportsSenderTimestamp);
 };

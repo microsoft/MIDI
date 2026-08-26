@@ -67,6 +67,11 @@ namespace Microsoft.Midi.ConsoleApp
                 table.AddRow("Address", string.IsNullOrEmpty(address)
                     ? "-"
                     : $"{AnsiMarkupFormatter.EscapeString(address)}{(string.IsNullOrEmpty(addressType) ? "" : $" ({addressType})")}");
+
+                // The remote device is the Central here, so it chose this.
+                var interval = peripheral.GetNamedNumber(BluetoothTransport.ResponseConnectionIntervalMilliseconds, 0);
+
+                table.AddRow("Connection interval", interval > 0 ? $"{interval:N2} ms" : "-");
             }
 
             table.AddRow("Subscribed clients", clientCount.ToString());

@@ -60,3 +60,16 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_MIDI1         L"timestampedMidi1ByteStream"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_UMP           L"ump"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_UNKNOWN       L"unknown"
+
+// Which connection parameters to ask the radio for when connecting out to a device. Windows
+// offers only these presets, so this exists mainly to measure what each one actually does.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_KEY              L"connectionParameters"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_DEFAULT    L"systemDefault"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_THROUGHPUT L"throughputOptimized"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_BALANCED   L"balanced"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_POWER      L"powerOptimized"
+
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_SET_CONNECTION_PARAMETERS      L"setConnectionParameters"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MIN_INTERVAL_MS_KEY                    L"minConnectionIntervalMilliseconds"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MAX_INTERVAL_MS_KEY                    L"maxConnectionIntervalMilliseconds"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INTERVAL_MS_KEY                        L"connectionIntervalMilliseconds"

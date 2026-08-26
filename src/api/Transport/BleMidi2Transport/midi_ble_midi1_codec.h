@@ -28,6 +28,8 @@ namespace MidiBleMidi1
     inline constexpr size_t MinimumMaxPacketByteCount = 5;
     inline constexpr size_t MaximumMaxPacketByteCount = 512;
 
+    // The sender's 13-bit clock wraps at 8,192 ms.
+
     inline uint8_t ExpectedDataByteCount(_In_ uint8_t const statusByte) noexcept
     {
         if (statusByte >= 0xF8)
@@ -62,13 +64,148 @@ namespace MidiBleMidi1
         }
     }
 
-    // A run of MIDI 1.0 bytes which share a single BLE timestamp. Milliseconds are relative to
-    // the first timestamp in the packet, so the sender's clock never has to be correlated with
-    // ours: the receiver only needs the spacing between messages within one packet.
+    // A run of MIDI 1.0 bytes which share a single BLE timestamp. RelativeMilliseconds is the
+    // spacing from the first timestamp in this packet. SenderTimestamp is the sender's own 13-bit
+    // millisecond clock, which is what lets timestamps stay ordered across packet boundaries.
     struct DecodedSegment
     {
         uint32_t RelativeMilliseconds{ 0 };
+        uint16_t SenderTimestamp{ 0 };
         std::vector<uint8_t> Bytes{ };
+    };
+
+    inline constexpr uint32_t TimestampWrapMilliseconds = 8192;
+
+    // A jump larger than this is treated as the sender's clock having restarted rather than as
+    // elapsed time, which stops one bad timestamp from throwing the mapping thousands of
+    // milliseconds out.
+    inline constexpr uint32_t MaximumPlausibleGapMilliseconds = 4096;
+
+    // Maps the sender's 13-bit millisecond clock onto the local timestamp clock.
+    //
+    // RP-052 leaves this to the implementation, saying only that correlation "must be performed".
+    // Anchoring each packet to its own arrival time does not work: consecutive packets are
+    // anchored independently, so an early message in one packet can be given a timestamp before a
+    // late message in the packet before it, and the stream arrives out of order.
+    //
+    // Instead the sender's clock is unwrapped into a continuous millisecond count and mapped to
+    // the local clock through a single offset. The offset is the smallest arrival delay seen so
+    // far, because that is the sample with the least transport latency in it, and it creeps
+    // forward slowly to follow clock drift.
+    class TimestampCorrelator
+    {
+    public:
+        void Reset() noexcept
+        {
+            m_haveClock = false;
+            m_haveOffset = false;
+            m_senderContinuousMilliseconds = 0;
+            m_lastSenderTimestamp = 0;
+            m_offsetTicks = 0;
+            m_lastEmittedTimestamp = 0;
+        }
+
+        // Maps every segment of one packet onto the local clock. Whole packets rather than single
+        // segments, because all segments in a packet share one arrival time: treating each as its
+        // own delay sample would drag the offset down by exactly the spacing being preserved and
+        // collapse the packet to a single instant.
+        void MapPacket(
+            _In_ std::vector<DecodedSegment> const& segments,
+            _In_ uint64_t const localArrivalTimestamp,
+            _In_ uint64_t const ticksPerMillisecond,
+            _Inout_ std::vector<uint64_t>& localTimestamps)
+        {
+            localTimestamps.clear();
+
+            if (segments.empty())
+            {
+                return;
+            }
+
+            localTimestamps.reserve(segments.size());
+
+            for (auto const& segment : segments)
+            {
+                localTimestamps.push_back(AdvanceSenderClock(segment.SenderTimestamp));
+            }
+
+            // The newest segment is the one whose arrival was actually observed.
+            int64_t const newestSenderTicks =
+                static_cast<int64_t>(localTimestamps.back() * ticksPerMillisecond);
+
+            int64_t const candidateOffset = static_cast<int64_t>(localArrivalTimestamp) - newestSenderTicks;
+
+            if (!m_haveOffset)
+            {
+                m_offsetTicks = candidateOffset;
+                m_haveOffset = true;
+            }
+            else if (candidateOffset < m_offsetTicks)
+            {
+                // Less delay than anything seen before, so a better estimate of the true offset.
+                m_offsetTicks = candidateOffset;
+            }
+            else
+            {
+                int64_t const creepLimit = static_cast<int64_t>(ticksPerMillisecond);
+                int64_t const drift = candidateOffset - m_offsetTicks;
+
+                m_offsetTicks += drift > creepLimit ? creepLimit : drift;
+            }
+
+            for (auto& value : localTimestamps)
+            {
+                int64_t mapped = static_cast<int64_t>(value * ticksPerMillisecond) + m_offsetTicks;
+
+                // Never ahead of the arrival, and never behind what was already delivered.
+                if (mapped > static_cast<int64_t>(localArrivalTimestamp))
+                {
+                    mapped = static_cast<int64_t>(localArrivalTimestamp);
+                }
+
+                uint64_t result = mapped < 0 ? 0 : static_cast<uint64_t>(mapped);
+
+                if (result < m_lastEmittedTimestamp)
+                {
+                    result = m_lastEmittedTimestamp;
+                }
+
+                m_lastEmittedTimestamp = result;
+                value = result;
+            }
+        }
+
+    private:
+        // Advances the sender clock by one segment and returns its continuous millisecond value.
+        uint64_t AdvanceSenderClock(_In_ uint16_t const senderTimestamp) noexcept
+        {
+            uint16_t const masked = senderTimestamp & TimestampMask;
+
+            if (!m_haveClock)
+            {
+                m_senderContinuousMilliseconds = masked;
+                m_lastSenderTimestamp = masked;
+                m_haveClock = true;
+
+                return m_senderContinuousMilliseconds;
+            }
+
+            // Timestamps are required to increase, so the forward distance is the wrap-safe delta.
+            uint32_t const forwardDelta =
+                (static_cast<uint32_t>(masked) + TimestampWrapMilliseconds - m_lastSenderTimestamp) % TimestampWrapMilliseconds;
+
+            m_senderContinuousMilliseconds += forwardDelta > MaximumPlausibleGapMilliseconds ? 0 : forwardDelta;
+            m_lastSenderTimestamp = masked;
+
+            return m_senderContinuousMilliseconds;
+        }
+
+        bool m_haveClock{ false };
+        bool m_haveOffset{ false };
+        uint64_t m_senderContinuousMilliseconds{ 0 };
+        uint16_t m_lastSenderTimestamp{ 0 };
+        int64_t m_offsetTicks{ 0 };
+        uint64_t m_lastEmittedTimestamp{ 0 };
     };
 
 
@@ -112,13 +249,15 @@ namespace MidiBleMidi1
             uint32_t previousTimestampLow{ 0 };
             bool havePreviousTimestampLow{ false };
             uint32_t relativeMilliseconds{ 0 };
+            uint32_t absoluteMilliseconds{ 0 };
 
-            auto emit = [&segments](uint32_t const relative, uint8_t const value)
+            auto emit = [&segments, &absoluteMilliseconds](uint32_t const relative, uint8_t const value)
                 {
                     if (segments.empty() || segments.back().RelativeMilliseconds != relative)
                     {
                         DecodedSegment segment{};
                         segment.RelativeMilliseconds = relative;
+                        segment.SenderTimestamp = static_cast<uint16_t>(absoluteMilliseconds & TimestampMask);
                         segments.push_back(std::move(segment));
                     }
 
@@ -154,6 +293,7 @@ namespace MidiBleMidi1
                     }
 
                     relativeMilliseconds = absolute > firstTimestamp ? absolute - firstTimestamp : 0;
+                    absoluteMilliseconds = absolute;
 
                     i++;
 

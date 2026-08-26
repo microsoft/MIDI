@@ -314,6 +314,12 @@ app.Configure(config =>
             .WithExample("bluetooth", "customize", "F0A1B2C3D4E5", "--name", "\"Studio Keyboard\"")
             ;
 
+        bluetooth.AddCommand<BluetoothConnectionParametersCommand>("connection-parameters")
+            .WithDescription("Choose which connection parameters to request when connecting to a device")
+            .WithExample("bluetooth", "connection-parameters", "throughput")
+            .WithExample("bluetooth", "connection-parameters", "system")
+            ;
+
         bluetooth.AddBranch("peripheral", peripheral =>
         {
             peripheral.SetDescription("Publish this PC as a Bluetooth MIDI device other devices can connect to");

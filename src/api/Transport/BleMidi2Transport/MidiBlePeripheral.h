@@ -19,7 +19,6 @@ struct MidiBleRemoteClientInfo
     bool IsPaired{ false };
     bool HasGenericName{ false };
 };
-
 // Publishes this PC as a BLE MIDI Peripheral so a remote Central, such as a phone or tablet, can
 // connect to it. Like the Network MIDI 2.0 host, the endpoint represents the remote device which
 // connected, not this PC, so it is created when a Central subscribes and removed when it leaves.
@@ -54,6 +53,11 @@ public:
 
     void SetRemoteClientInfo(_In_ MidiBleRemoteClientInfo const& info);
     MidiBleRemoteClientInfo RemoteClientInfo() const;
+
+    // The remote Central chooses the interval in this direction, so this is the only place to see
+    // what a phone or tablet actually asks for. Units of 1.25 ms, zero when unknown.
+    void SetRemoteDevice(_In_ bt::BluetoothLEDevice const& device);
+    uint16_t ConnectionIntervalUnits() const;
 
     std::shared_ptr<MidiBleConnection> Connection() const;
 
@@ -94,6 +98,7 @@ private:
     mutable std::mutex m_connectionLock;
     std::shared_ptr<MidiBleConnection> m_connection{ nullptr };
     MidiBleRemoteClientInfo m_remoteClientInfo{ };
+    bt::BluetoothLEDevice m_remoteDevice{ nullptr };
 
     std::mutex m_clientChangedCallbackLock;
     std::function<void()> m_clientChangedCallback{ nullptr };

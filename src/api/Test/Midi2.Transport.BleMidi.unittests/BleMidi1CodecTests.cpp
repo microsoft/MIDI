@@ -501,3 +501,148 @@ void BleMidi1CodecTests::TestRoundTripOfSysExAcrossPackets()
     VerifyBytes(expected, actual);
     VERIFY_IS_FALSE(decoder.IsInSysex());
 }
+
+// ---------------------------------------------------------------------------
+// Timestamp correlation across packets
+//
+// Anchoring each packet to its own arrival time produced timestamps that went
+// backwards at packet boundaries, which is what these cover.
+// ---------------------------------------------------------------------------
+
+namespace
+{
+    // 10,000 ticks per millisecond keeps the arithmetic easy to read.
+    constexpr uint64_t TestTicksPerMillisecond = 10000;
+
+    std::vector<MidiBleMidi1::DecodedSegment> MakeSegments(std::vector<uint16_t> const& senderTimestamps)
+    {
+        std::vector<MidiBleMidi1::DecodedSegment> segments;
+
+        for (auto const& timestamp : senderTimestamps)
+        {
+            MidiBleMidi1::DecodedSegment segment{};
+            segment.SenderTimestamp = timestamp;
+            segment.Bytes.push_back(0x90);
+            segments.push_back(std::move(segment));
+        }
+
+        return segments;
+    }
+
+    std::vector<uint64_t> MapPacket(
+        MidiBleMidi1::TimestampCorrelator& correlator,
+        std::vector<uint16_t> const& senderTimestamps,
+        uint64_t localArrival)
+    {
+        auto const segments = MakeSegments(senderTimestamps);
+
+        std::vector<uint64_t> mapped;
+        correlator.MapPacket(segments, localArrival, TestTicksPerMillisecond, mapped);
+
+        return mapped;
+    }
+}
+
+void BleMidi1CodecTests::TestCorrelatorKeepsSpacingWithinAPacket()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    // one packet carrying three messages 10 ms and 20 ms apart
+    auto const mapped = MapPacket(correlator, { 100, 110, 130 }, 1000 * TestTicksPerMillisecond);
+
+    VERIFY_ARE_EQUAL((size_t)3, mapped.size());
+    VERIFY_ARE_EQUAL(10 * TestTicksPerMillisecond, mapped[1] - mapped[0]);
+    VERIFY_ARE_EQUAL(20 * TestTicksPerMillisecond, mapped[2] - mapped[1]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorIsMonotonicAcrossPackets()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    // The reported defect: the earliest message of a later packet landed before
+    // the last message of the packet before it.
+    auto const first = MapPacket(correlator, { 100, 130, 170 }, 1000 * TestTicksPerMillisecond);
+    auto const second = MapPacket(correlator, { 175, 225 }, 1080 * TestTicksPerMillisecond);
+
+    VERIFY_IS_TRUE(first[1] > first[0]);
+    VERIFY_IS_TRUE(first[2] > first[1]);
+    VERIFY_IS_TRUE(second[0] > first[2]);
+    VERIFY_IS_TRUE(second[1] > second[0]);
+
+    // spacing must survive the packet boundary too
+    VERIFY_ARE_EQUAL(50 * TestTicksPerMillisecond, second[1] - second[0]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorHandlesSenderClockWrap()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    auto const before = MapPacket(correlator, { 8180 }, 1000 * TestTicksPerMillisecond);
+
+    // 8191 -> 0 is a wrap, not a jump backwards of 8,180 ms
+    auto const after = MapPacket(correlator, { 8 }, 1020 * TestTicksPerMillisecond);
+
+    VERIFY_IS_TRUE(after[0] > before[0]);
+    VERIFY_ARE_EQUAL(20 * TestTicksPerMillisecond, after[0] - before[0]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorNeverReturnsAFutureTimestamp()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    uint64_t const arrival = 1000 * TestTicksPerMillisecond;
+    auto const mapped = MapPacket(correlator, { 500 }, arrival);
+
+    VERIFY_IS_TRUE(mapped[0] <= arrival);
+
+    // a sender whose clock races ahead must still not be scheduled in the future
+    uint64_t const laterArrival = arrival + (5 * TestTicksPerMillisecond);
+    auto const racing = MapPacket(correlator, { 4000 }, laterArrival);
+
+    VERIFY_IS_TRUE(racing[0] <= laterArrival);
+}
+
+void BleMidi1CodecTests::TestCorrelatorIgnoresImplausibleBackwardsJump()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    uint64_t const arrival = 1000 * TestTicksPerMillisecond;
+
+    auto const first = MapPacket(correlator, { 4000 }, arrival);
+
+    // 4000 -> 3000 is a 7,192 ms forward wrap, which is not credible between two
+    // packets, so it is treated as no elapsed time rather than a huge jump
+    auto const second = MapPacket(correlator, { 3000 }, arrival);
+
+    VERIFY_IS_TRUE(second[0] >= first[0]);
+    VERIFY_IS_TRUE(second[0] - first[0] < TestTicksPerMillisecond);
+}
+
+void BleMidi1CodecTests::TestCorrelatorResetRebuildsMapping()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    MapPacket(correlator, { 5000 }, 1000 * TestTicksPerMillisecond);
+
+    correlator.Reset();
+
+    // after a link drop the remote clock has no continuity, so a much smaller
+    // sender timestamp must still map near the new arrival time
+    uint64_t const arrival = 9000 * TestTicksPerMillisecond;
+    auto const afterReset = MapPacket(correlator, { 10 }, arrival);
+
+    VERIFY_ARE_EQUAL(arrival, afterReset[0]);
+}
+
+void BleMidi1CodecTests::TestDecoderReportsSenderTimestamp()
+{
+    MidiBleMidi1::PacketDecoder decoder;
+    std::vector<MidiBleMidi1::DecodedSegment> segments;
+
+    // timestampHigh = 3 -> 3 << 7 = 384; timestampLow = 20 -> 404 ms
+    std::vector<uint8_t> packet{ 0x83, (uint8_t)(0x80 | 20), 0x90, 0x40, 0x7F };
+
+    VERIFY_IS_TRUE(decoder.DecodePacket(packet.data(), packet.size(), segments));
+    VERIFY_ARE_EQUAL((size_t)1, segments.size());
+    VERIFY_ARE_EQUAL((uint16_t)404, segments[0].SenderTimestamp);
+}

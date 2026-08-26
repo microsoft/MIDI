@@ -27,6 +27,18 @@ namespace MidiBleProtocol
         UniversalMidiPacket = 2,
     };
 
+    // Both specifications require an interval of 15 ms or less and prefer the lowest both ends
+    // support. Windows exposes three presets and no way to name an interval, and the
+    // throughput-optimized one asks for 15 ms as both the floor and the ceiling, so which of
+    // these actually produces the lowest interval has to be measured rather than assumed.
+    enum class ConnectionParameterPreference : uint8_t
+    {
+        SystemDefault = 0,
+        ThroughputOptimized = 1,
+        Balanced = 2,
+        PowerOptimized = 3,
+    };
+
     inline constexpr wchar_t MidiServiceUuid[] = L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}";
     inline constexpr wchar_t Midi1DataIoCharacteristicUuid[] = L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}";
     inline constexpr wchar_t Midi2UmpCharacteristicUuid[] = L"{C3B10ECF-88F5-4F7D-BFFA-8AD2C91FBAFE}";
@@ -47,6 +59,9 @@ namespace MidiBleProtocol
         int16_t LastSignalStrengthDbm{ 0 };
         uint64_t LastSeenTimestamp{ 0 };
         winrt::hstring EndpointDeviceId{ };
+
+        // The interval the link negotiated, in units of 1.25 ms. Zero when not connected.
+        uint16_t ConnectionIntervalUnits{ 0 };
 
         // Deterministic, so a customization can name a device before its endpoint exists.
         winrt::hstring EndpointDeviceInstanceId{ };
@@ -179,6 +194,72 @@ namespace MidiBleUtilities
         case BluetoothAddressType::Public:      return L"public";
         case BluetoothAddressType::Random:      return L"random";
         default:                                return L"unspecified";
+        }
+    }
+
+    inline winrt::hstring ConnectionParameterPreferenceToJsonString(
+        _In_ MidiBleProtocol::ConnectionParameterPreference const preference)
+    {
+        switch (preference)
+        {
+        case MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_THROUGHPUT;
+
+        case MidiBleProtocol::ConnectionParameterPreference::Balanced:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_BALANCED;
+
+        case MidiBleProtocol::ConnectionParameterPreference::PowerOptimized:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_POWER;
+
+        default:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_DEFAULT;
+        }
+    }
+
+    inline MidiBleProtocol::ConnectionParameterPreference ConnectionParameterPreferenceFromJsonString(
+        _In_ winrt::hstring const& value,
+        _In_ MidiBleProtocol::ConnectionParameterPreference const fallback)
+    {
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_THROUGHPUT)
+        {
+            return MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_BALANCED)
+        {
+            return MidiBleProtocol::ConnectionParameterPreference::Balanced;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_POWER)
+        {
+            return MidiBleProtocol::ConnectionParameterPreference::PowerOptimized;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_DEFAULT)
+        {
+            return MidiBleProtocol::ConnectionParameterPreference::SystemDefault;
+        }
+
+        return fallback;
+    }
+
+    // Returns null for SystemDefault, meaning make no request and leave the radio alone.
+    inline BluetoothLEPreferredConnectionParameters GetPreferredConnectionParameters(
+        _In_ MidiBleProtocol::ConnectionParameterPreference const preference)
+    {
+        switch (preference)
+        {
+        case MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized:
+            return BluetoothLEPreferredConnectionParameters::ThroughputOptimized();
+
+        case MidiBleProtocol::ConnectionParameterPreference::Balanced:
+            return BluetoothLEPreferredConnectionParameters::Balanced();
+
+        case MidiBleProtocol::ConnectionParameterPreference::PowerOptimized:
+            return BluetoothLEPreferredConnectionParameters::PowerOptimized();
+
+        default:
+            return nullptr;
         }
     }
 

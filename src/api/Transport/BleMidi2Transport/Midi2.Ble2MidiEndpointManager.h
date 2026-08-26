@@ -136,6 +136,12 @@ private:
 
     std::vector<CreatedEndpointRecord> m_createdEndpoints;
     std::mutex m_createdEndpointsLock;
+
+    // Releasing the request withdraws the connection interval preference, so one is held per
+    // connected device for as long as that connection lasts.
+    std::map<winrt::hstring, bt::BluetoothLEPreferredConnectionParametersRequest> m_connectionParameterRequests{ };
+    std::mutex m_connectionParameterRequestsLock;
+
     // Only ever touched on the background worker, which is the one thread allowed to create or
     // remove endpoints.
     winrt::hstring m_peripheralClientDeviceId{ };

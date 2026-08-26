@@ -192,7 +192,20 @@ MidiBleConnection::Start()
                     }
                 });
 
+            // The negotiated interval can be renegotiated at any time by either end, so it is
+            // tracked rather than read once.
+            m_connectionParametersChangedToken = m_device.ConnectionParametersChanged(
+                [weakThis = weak_from_this()](bt::BluetoothLEDevice const&, foundation::IInspectable const&)
+                {
+                    if (auto self = weakThis.lock())
+                    {
+                        self->RefreshConnectionParameters();
+                    }
+                });
+
             RETURN_IF_FAILED(SubscribeToNotifications());
+
+            RefreshConnectionParameters();
         }
         CATCH_RETURN();
     }
@@ -259,6 +272,10 @@ MidiBleConnection::ResetTranslationState()
 
     m_incomingPacketDecoder.Reset();
     m_bytestreamToUmp.resetBuffer();
+
+    // The remote clock has no continuity across a link drop, so the mapping is rebuilt from the
+    // first packet after reconnecting.
+    m_incomingTimestampCorrelator.Reset();
 
     auto lock = std::scoped_lock{ m_outgoingQueueLock };
     m_outgoingPackets.clear();
@@ -358,6 +375,12 @@ MidiBleConnection::Shutdown()
         {
             m_device.ConnectionStatusChanged(m_connectionStatusChangedToken);
             m_connectionStatusChangedToken = {};
+        }
+
+        if (m_device != nullptr && m_connectionParametersChangedToken)
+        {
+            m_device.ConnectionParametersChanged(m_connectionParametersChangedToken);
+            m_connectionParametersChangedToken = {};
         }
 
         if (m_characteristic != nullptr)
@@ -481,10 +504,53 @@ MidiBleConnection::SetEndpointDeviceInstanceId(std::wstring const& endpointDevic
 }
 
 
+void
+MidiBleConnection::RefreshConnectionParameters()
+{
+    if (m_shutdown.load() || m_device == nullptr)
+    {
+        return;
+    }
+
+    try
+    {
+        auto const parameters = m_device.GetConnectionParameters();
+
+        if (parameters == nullptr)
+        {
+            return;
+        }
+
+        auto const intervalUnits = parameters.ConnectionInterval();
+
+        if (m_connectionIntervalUnits.exchange(intervalUnits) == intervalUnits)
+        {
+            return;
+        }
+
+        // The only place the real interval is visible. Both specifications require 15 ms or less
+        // and prefer lower, and what was requested is not necessarily what the link settled on.
+        TraceLoggingWrite(
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Negotiated BLE connection parameters", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingUInt16(intervalUnits, "connection interval units"),
+            TraceLoggingFloat32(intervalUnits * 1.25f, "connection interval ms"),
+            TraceLoggingUInt16(parameters.ConnectionLatency(), "connection latency"),
+            TraceLoggingUInt16(parameters.LinkTimeout(), "link timeout")
+        );
+    }
+    CATCH_LOG();
+}
+
+
 bool
 MidiBleConnection::IsDeviceConnected() const
-{
-    try
+{    try
     {
         if (m_isPeripheral)
         {
@@ -632,24 +698,18 @@ MidiBleConnection::ProcessIncomingMidi1Packet(
         return;
     }
 
-    // Timestamps arrive in the sender's clock domain and may never be scheduled in the future,
-    // so the newest message in the packet is anchored to now and the rest are backdated by their
-    // spacing. That preserves the intra-packet timing the timestamps exist to convey without
-    // needing to correlate the two clocks.
+    // The sender's clock is mapped onto ours through a single running offset, so spacing is kept
+    // both within a packet and across packet boundaries.
     auto const receiveTimestamp = internal::GetCurrentMidiTimestamp();
     auto const ticksPerMillisecond = MidiTimestampTicksPerMillisecond();
 
-    uint32_t newestRelativeMilliseconds{ 0 };
+    std::vector<uint64_t> segmentTimestamps;
+    m_incomingTimestampCorrelator.MapPacket(segments, receiveTimestamp, ticksPerMillisecond, segmentTimestamps);
 
-    for (auto const& segment : segments)
+    for (size_t segmentIndex = 0; segmentIndex < segments.size(); segmentIndex++)
     {
-        newestRelativeMilliseconds = (std::max)(newestRelativeMilliseconds, segment.RelativeMilliseconds);
-    }
-
-    for (auto const& segment : segments)
-    {
-        auto const backdateTicks = (newestRelativeMilliseconds - segment.RelativeMilliseconds) * ticksPerMillisecond;
-        auto const timestamp = receiveTimestamp > backdateTicks ? receiveTimestamp - backdateTicks : 0;
+        auto const& segment = segments[segmentIndex];
+        auto const timestamp = segmentTimestamps[segmentIndex];
 
         std::vector<uint32_t> words;
         words.reserve(segment.Bytes.size());

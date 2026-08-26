@@ -257,6 +257,21 @@ TransportState::TakeConfiguredPeripheralProtocol()
 }
 
 
+_Use_decl_annotations_
+void
+TransportState::SetConnectionParameterPreference(MidiBleProtocol::ConnectionParameterPreference const preference)
+{
+    m_connectionParameterPreference.store(preference);
+}
+
+
+MidiBleProtocol::ConnectionParameterPreference
+TransportState::GetConnectionParameterPreference()
+{
+    return m_connectionParameterPreference.load();
+}
+
+
 
 
 //_Use_decl_annotations_

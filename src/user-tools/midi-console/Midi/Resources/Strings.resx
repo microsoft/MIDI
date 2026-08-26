@@ -938,6 +938,9 @@ Timestamp</value>
   <data name="ParameterBluetoothPeripheralProtocol" xml:space="preserve">
     <value>The BLE MIDI protocol to publish, either 'midi1' or 'midi2'. Only one can be published at a time, and the default is 'midi1' because that is what devices support today</value>
   </data>
+  <data name="ParameterBluetoothConnectionParameters" xml:space="preserve">
+    <value>Which connection parameters to request: 'throughput' for the lowest interval Windows offers, 'balanced', 'power' to save battery, or 'system' to make no request at all</value>
+  </data>
   <data name="ParameterBridgeEndpointsWinRTBleInputPortId" xml:space="preserve">
     <value>The WinRT MIDI 1.0 input port id of the Bluetooth LE device to bridge from</value>
   </data>

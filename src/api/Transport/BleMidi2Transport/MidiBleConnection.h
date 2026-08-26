@@ -86,6 +86,10 @@ public:
     bool IsShutdown() const noexcept { return m_shutdown; }
     bool IsPeripheral() const noexcept { return m_isPeripheral; }
 
+    // The interval the link actually negotiated, in units of 1.25 ms. Zero when unknown.
+    uint16_t ConnectionIntervalUnits() const noexcept { return m_connectionIntervalUnits.load(); }
+    void RefreshConnectionParameters();
+
 private:
     void OnCharacteristicValueChanged(_In_ gatt::GattCharacteristic const& sender, _In_ gatt::GattValueChangedEventArgs const& args);
     void OnDeviceConnectionStatusChanged(_In_ bt::BluetoothLEDevice const& sender, _In_ foundation::IInspectable const& args);
@@ -125,7 +129,9 @@ private:
 
     bt::BluetoothLEDevice m_device{ nullptr };
     winrt::event_token m_connectionStatusChangedToken{ };
+    winrt::event_token m_connectionParametersChangedToken{ };
     std::atomic<bool> m_deviceConnected{ true };
+    std::atomic<uint16_t> m_connectionIntervalUnits{ 0 };
 
     mutable std::mutex m_identityLock;
     std::wstring m_endpointDeviceInterfaceId{ };
@@ -137,6 +143,7 @@ private:
 
     // inbound and outbound translation state is per-direction and never shared
     MidiBleMidi1::PacketDecoder m_incomingPacketDecoder{ };
+    MidiBleMidi1::TimestampCorrelator m_incomingTimestampCorrelator{ };
     bytestreamToUMP m_bytestreamToUmp{ };
 
     MidiBleMidi1::PacketBuilder m_outgoingPacketBuilder{ };

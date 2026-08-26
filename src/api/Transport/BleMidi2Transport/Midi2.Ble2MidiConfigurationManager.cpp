@@ -31,6 +31,7 @@ namespace
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY, json::JsonValue::CreateBooleanValue(device.IsPresent));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEEN_AGO_MS_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.LastSeenAgoMilliseconds)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_ENDPOINT_KEY, json::JsonValue::CreateBooleanValue(device.HasEndpoint));
+        deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INTERVAL_MS_KEY, json::JsonValue::CreateNumberValue(device.ConnectionIntervalUnits * 1.25));
 
         return deviceJson;
     }
@@ -143,6 +144,12 @@ namespace
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_GENERIC_NAME_KEY,
             json::JsonValue::CreateBooleanValue(remoteClient.HasGenericName));
 
+        // In this direction the remote Central picks the interval, so this shows what a phone or
+        // tablet actually asks for rather than what Windows would request.
+        peripheralJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INTERVAL_MS_KEY,
+            json::JsonValue::CreateNumberValue(isRunning ? peripheral->ConnectionIntervalUnits() * 1.25 : 0.0));
+
         peripheralJson.SetNamedValue(
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_ID_KEY,
             json::JsonValue::CreateStringValue(endpointDeviceId));
@@ -217,8 +224,7 @@ namespace
 
     // Publishing this PC as a peripheral is off unless the configuration file asks for it, because
     // it makes the machine visible and connectable to anything nearby.
-    void QueueConfiguredPeripheral(_In_ json::JsonObject const& transportObject)
-    {
+    void QueueConfiguredPeripheral(_In_ json::JsonObject const& transportObject)    {
         if (transportObject == nullptr)
         {
             return;
@@ -434,6 +440,15 @@ CMidi2Ble2MidiConfigurationManager::UpdateConfiguration(
         QueueConfiguredDevices(jsonObject);
         QueueConfiguredPeripheral(jsonObject);
 
+        if (jsonObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_KEY))
+        {
+            auto const preference = MidiBleUtilities::ConnectionParameterPreferenceFromJsonString(
+                jsonObject.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_KEY, L""),
+                TransportState::Current().GetConnectionParameterPreference());
+
+            TransportState::Current().SetConnectionParameterPreference(preference);
+        }
+
         LOG_IF_FAILED(ProcessEndpointCustomizations(jsonObject, responseObject));
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
@@ -591,6 +606,41 @@ CMidi2Ble2MidiConfigurationManager::UpdateConfiguration(
     {
         AddPeripheralStatusToResponse(responseObject);
         internal::SetConfigurationResponseObjectSuccess(responseObject);
+    }
+    else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_SET_CONNECTION_PARAMETERS)
+    {
+        auto const requested = GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_KEY);
+
+        auto const current = TransportState::Current().GetConnectionParameterPreference();
+        auto const preference = MidiBleUtilities::ConnectionParameterPreferenceFromJsonString(requested, current);
+
+        if (!requested.empty() && preference == current &&
+            requested != MidiBleUtilities::ConnectionParameterPreferenceToJsonString(current))
+        {
+            internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized Bluetooth MIDI connection parameter preference.");
+        }
+        else
+        {
+            TransportState::Current().SetConnectionParameterPreference(preference);
+
+            responseObject.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_KEY,
+                json::JsonValue::CreateStringValue(MidiBleUtilities::ConnectionParameterPreferenceToJsonString(preference)));
+
+            // Reported so the caller can see what the preset actually asks for rather than
+            // inferring it from the name.
+            auto const parameters = MidiBleUtilities::GetPreferredConnectionParameters(preference);
+
+            responseObject.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MIN_INTERVAL_MS_KEY,
+                json::JsonValue::CreateNumberValue(parameters != nullptr ? parameters.MinConnectionInterval() * 1.25 : 0.0));
+
+            responseObject.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MAX_INTERVAL_MS_KEY,
+                json::JsonValue::CreateNumberValue(parameters != nullptr ? parameters.MaxConnectionInterval() * 1.25 : 0.0));
+
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
     }
     else
     {

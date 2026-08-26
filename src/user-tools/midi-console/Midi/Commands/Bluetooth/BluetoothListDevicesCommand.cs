@@ -70,6 +70,7 @@ namespace Microsoft.Midi.ConsoleApp
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Protocol"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Endpoint"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Presence"));
+            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Interval"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Signal"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Msgs In"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Msgs Out"));
@@ -96,6 +97,7 @@ namespace Microsoft.Midi.ConsoleApp
                     var isPresent = device.GetNamedBoolean("isPresent", false);
                     var lastSeenAgo = (ulong)device.GetNamedNumber("lastSeenAgoMilliseconds", 0);
                     var hasEndpoint = device.GetNamedBoolean("hasEndpoint", false);
+                    var intervalMilliseconds = device.GetNamedNumber("connectionIntervalMilliseconds", 0);
 
                     // A device only reports its protocol once connected, because that requires
                     // reading its characteristics.
@@ -110,6 +112,7 @@ namespace Microsoft.Midi.ConsoleApp
                         protocol,
                         hasEndpoint ? "[green]yes[/]" : "no",
                         FormatPresence(isConnected, isPresent, lastSeenAgo),
+                        intervalMilliseconds > 0 ? $"{intervalMilliseconds:N2} ms" : "-",
                         signal != 0 ? $"{signal} dBm" : "-",
                         hasEndpoint ? messagesIn.ToString() : "-",
                         hasEndpoint ? messagesOut.ToString() : "-");
