@@ -17,6 +17,10 @@ namespace Microsoft.Midi.ConsoleApp
             [LocalizedDescription("ParameterRemoveLoopbackAssociationId")]
             [CommandOption("-i|--association-id")]
             public Guid AssociationId { get; set; }
+
+            [LocalizedDescription("ParameterLoopbackSaveToConfig")]
+            [CommandOption("-s|--save-to-config")]
+            public bool SaveToConfig { get; set; }
         }
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
@@ -38,6 +42,13 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.MessageLoopbackRemovalSuccess));
                 AnsiConsole.WriteLine();
+
+                if (settings.SaveToConfig)
+                {
+                    ConfigFileSaver.ReportSave(config);
+                    AnsiConsole.WriteLine();
+                }
+
                 return (int)MidiConsoleReturnCode.Success;
             }
             else

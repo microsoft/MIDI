@@ -923,6 +923,9 @@ Timestamp</value>
   <data name="ParameterBluetoothTemporary" xml:space="preserve">
     <value>Do not save this device to the configuration file. It will be forgotten when the service restarts</value>
   </data>
+  <data name="ParameterLoopbackSaveToConfig" xml:space="preserve">
+    <value>Also save this change to the configuration file so it survives a restart of the MIDI service</value>
+  </data>
   <data name="ParameterBluetoothCustomName" xml:space="preserve">
     <value>The name to show for this device instead of the name the device reports. Use an empty string to go back to the device-supplied name</value>
   </data>
@@ -1155,7 +1158,7 @@ Timestamp</value>
     <value>Operations on bidirectional (MIDI 2.0) loopback endpoints.</value>
   </data>
   <data name="CommandCreateLoopbackDescription" xml:space="preserve">
-    <value>Create a temporary set of MIDI 2.0 (and MIDI 1.0) loopback endpoints, connected to each other. Messages sent to the A loopback will be received by B, and messages sent to B will be received by A. </value>
+    <value>Create a set of MIDI 2.0 (and MIDI 1.0) loopback endpoints, connected to each other. Messages sent to the A loopback will be received by B, and messages sent to B will be received by A. These last until the service restarts unless --save-to-config is used. </value>
   </data>
   <data name="ErrorCreatingLoopback" xml:space="preserve">
     <value>Error attempting to create loopback endpoints.</value>
@@ -1175,7 +1178,7 @@ Timestamp</value>
   <data name="MessageLoopbackCreationSuccessDetails" xml:space="preserve">
     <value>Unlike classic MIDI 1.0 loopbacks, these are fully MIDI 2.0-compatible bidirectional endpoints. Messages sent to Loopback A will be received by Loopback B. Messages sent by B will be received by A. MIDI 1.0 apps will see 4 created ports (2 sources, 2 destinations) as a result.
 
-These endpoints will disappear when the service or PC is restarted. To create permanent loopback endpoints, use the MIDI Settings app.</value>
+These endpoints will disappear when the service or PC is restarted. Use --save-to-config to keep them.</value>
   </data>
   <data name="CommandRemoveLoopbackDescription" xml:space="preserve">
     <value>Remove a pair of loopback endpoints by providing the association id</value>
@@ -1189,6 +1192,24 @@ These endpoints will disappear when the service or PC is restarted. To create pe
   <data name="ErrorRemovingLoopback" xml:space="preserve">
     <value>Error attempting to remove endpoint loopback pair.</value>
   </data>
+  <data name="ErrorLoopbackTransportNotAvailable" xml:space="preserve">
+    <value>The loopback transport is not available on this PC.</value>
+  </data>
+  <data name="ErrorLoopbackListNotSupported" xml:space="preserve">
+    <value>This version of the MIDI service cannot list loopback endpoints.</value>
+  </data>
+  <data name="MessageNoLoopbacksFound" xml:space="preserve">
+    <value>There are no loopback endpoints right now.</value>
+  </data>
+  <data name="MessageLoopbackListDetails" xml:space="preserve">
+    <value>Use the association id with the remove command. Anything not saved will be gone after the MIDI service restarts.</value>
+  </data>
+  <data name="CommandListLoopbackDescription" xml:space="preserve">
+    <value>List the MIDI 2.0 loopback endpoint pairs which exist right now, and whether each one is saved in the configuration file.</value>
+  </data>
+  <data name="CommandListBasicLoopbackDescription" xml:space="preserve">
+    <value>List the basic MIDI 1.0 loopback endpoints which exist right now, and whether each one is saved in the configuration file.</value>
+  </data>
   <data name="ParameterCreateLoopbackRootName" xml:space="preserve">
     <value>Provide a root name instead of individual endpoint names. "(A)" and "(B)" will be appended to this name to create the two endpoints.</value>
   </data>
@@ -1199,10 +1220,10 @@ These endpoints will disappear when the service or PC is restarted. To create pe
     <value>The name of the basic MIDI 1.0 loopback endpoint</value>
   </data>
   <data name="CommandCreateBasicLoopbackDescription" xml:space="preserve">
-    <value>Create a temporary basic MIDI 1.0 loopback endpoint for connecting two MIDI 1.0 applications together.</value>
+    <value>Create a basic MIDI 1.0 loopback endpoint for connecting two MIDI 1.0 applications together. This lasts until the service restarts unless --save-to-config is used.</value>
   </data>
   <data name="MessageBasicLoopbackCreationSuccessDetails" xml:space="preserve">
-    <value>This endpoint will disappear when the MIDI service or PC is restarted. To create permanent loopback endpoints, use the MIDI Settings app.</value>
+    <value>This endpoint will disappear when the MIDI service or PC is restarted. Use --save-to-config to keep it.</value>
   </data>
   <data name="MessageBasicLoopbackCreationSuccess" xml:space="preserve">
     <value>Loopback endpoint created</value>

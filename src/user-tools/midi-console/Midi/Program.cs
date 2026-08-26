@@ -35,6 +35,11 @@ app.Configure(config =>
     {
         create.SetDescription(Strings.CommandLoopbackDescription);
 
+        create.AddCommand<ListLoopbackCommand>("list")
+            .WithDescription(Strings.CommandListLoopbackDescription)
+            .WithExample("loopback", "list")
+        ;
+
         create.AddCommand<CreateLoopbackCommand>("create")
             .WithDescription(Strings.CommandCreateLoopbackDescription)
             .WithExample("loopback", "create", "--name-a", "\"My Loopback A\"", "--name-b", "\"My Loopback B\"")
@@ -54,6 +59,11 @@ app.Configure(config =>
     config.AddBranch("basic-loopback", create =>
     {
         create.SetDescription(Strings.CommandBasicLoopbackDescription);
+
+        create.AddCommand<ListBasicLoopbackCommand>("list")
+            .WithDescription(Strings.CommandListBasicLoopbackDescription)
+            .WithExample("basic-loopback", "list")
+        ;
 
         create.AddCommand<CreateBasicLoopbackCommand>("create")
             .WithDescription(Strings.CommandCreateBasicLoopbackDescription)

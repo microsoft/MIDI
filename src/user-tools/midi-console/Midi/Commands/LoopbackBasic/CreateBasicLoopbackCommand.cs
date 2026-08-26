@@ -25,6 +25,10 @@ namespace Microsoft.Midi.ConsoleApp
             [LocalizedDescription("ParameterCreateBasicLoopbackUniqueIdentifier")]
             [CommandOption("-u|--unique-identifier")]
             public string? UniqueId { get; set; }
+
+            [LocalizedDescription("ParameterLoopbackSaveToConfig")]
+            [CommandOption("-s|--save-to-config")]
+            public bool SaveToConfig { get; set; }
         }
 
         const int MaxWinMMPortNameLength = 31;
@@ -115,8 +119,12 @@ namespace Microsoft.Midi.ConsoleApp
 
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.MessageBasicLoopbackCreationSuccess));
                 AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(Strings.MessageBasicLoopbackCreationSuccessDetails));
-                AnsiConsole.WriteLine();
+
+                if (!settings.SaveToConfig)
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(Strings.MessageBasicLoopbackCreationSuccessDetails));
+                    AnsiConsole.WriteLine();
+                }
 
                 var table = new Table();
                 AnsiMarkupFormatter.SetTableBorderStyle(table);
@@ -135,6 +143,12 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.Write(table);
 
                 AnsiConsole.WriteLine();
+
+                if (settings.SaveToConfig)
+                {
+                    ConfigFileSaver.ReportSave(creationConfig);
+                    AnsiConsole.WriteLine();
+                }
 
                 return (int)MidiConsoleReturnCode.Success;
             }

@@ -763,6 +763,60 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The loopback transport is not available on this PC..
+        /// </summary>
+        internal static string ErrorLoopbackTransportNotAvailable {
+            get {
+                return ResourceManager.GetString("ErrorLoopbackTransportNotAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This version of the MIDI service cannot list loopback endpoints..
+        /// </summary>
+        internal static string ErrorLoopbackListNotSupported {
+            get {
+                return ResourceManager.GetString("ErrorLoopbackListNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no loopback endpoints right now..
+        /// </summary>
+        internal static string MessageNoLoopbacksFound {
+            get {
+                return ResourceManager.GetString("MessageNoLoopbacksFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the association id with the remove command..
+        /// </summary>
+        internal static string MessageLoopbackListDetails {
+            get {
+                return ResourceManager.GetString("MessageLoopbackListDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List the MIDI 2.0 loopback endpoint pairs which exist right now..
+        /// </summary>
+        internal static string CommandListLoopbackDescription {
+            get {
+                return ResourceManager.GetString("CommandListLoopbackDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List the basic MIDI 1.0 loopback endpoints which exist right now..
+        /// </summary>
+        internal static string CommandListBasicLoopbackDescription {
+            get {
+                return ResourceManager.GetString("CommandListBasicLoopbackDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Windows MIDI Services SDK runtime failed to initialize. Is it installed?.
         /// </summary>
         internal static string ErrorSdkInitializationFailed {
