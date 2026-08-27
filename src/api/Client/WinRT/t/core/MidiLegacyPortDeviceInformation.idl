@@ -17,6 +17,7 @@ import "MidiParentDeviceInformation.idl";
 namespace Windows.Devices.Midi2.Enumeration.Legacy
 {
     [contract(MidiEnumerationLegacyApiContract, 1)]
+    [static_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceInformationStatics", UUID_IMidiLegacyPortDeviceInformationStatics)]
     [interface_name("Windows.Devices.Midi2.Enumeration.Legacy.IMidiLegacyPortDeviceInformation", UUID_IMidiLegacyPortDeviceInformation )]
     runtimeclass MidiLegacyPortDeviceInformation : Windows.Foundation.IStringable
     {

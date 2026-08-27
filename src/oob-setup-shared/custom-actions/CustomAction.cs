@@ -327,6 +327,9 @@ namespace custom_actions
                 @"CLSID\{942BF02D-93C0-4EA8-B03E-D51156CA75E1}",  // Loopback Transport
                 @"CLSID\{8FEAAD91-70E1-4A19-997A-377720A719C1}",  // Virtual MIDI Transport
                 @"CLSID\{ac9b5417-3fe0-4e62-960f-034ee4235a1a}",  // Diagnostics Transport
+                @"CLSID\{5dc87270-f318-4838-a4f9-6aadc63e925f}",  // Bluetooth MIDI Transport
+                @"CLSID\{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}",  // Network MIDI 2.0 Transport
+                @"CLSID\{10088473-9478-4E62-850B-3D2315E135B8}",  // Basic Loopback MIDI Transport
 
                 @"CLSID\{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}",  // Main Midisrv Transport
 
@@ -419,6 +422,234 @@ namespace custom_actions
 
             return ActionResult.Success;
         }
-            
+
+
+        // ------------------------------------------------------------------------------------
+        // Transport COM registration.
+        //
+        // A preview transport and the in-box one share a CLSID. Uninstalling the preview after the
+        // in-box version has shipped used to delete that CLSID and the transport plugin key
+        // outright, which left the in-box transport unable to load. Self-registration cannot avoid
+        // that, because DllUnregisterServer removes the key whoever happens to own it, so
+        // registration is done here instead and removal only happens for a registration this
+        // installer still owns.
+        // ------------------------------------------------------------------------------------
+
+        private const string TransportPluginsKeyPath = @"SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins";
+
+        // The registry view is stated rather than inherited from the process, so that a 32-bit
+        // custom action host could not quietly read and write the WOW6432Node copy of a
+        // registration the 64-bit service will never see.
+        private static RegistryKey OpenClassesRoot64()
+        {
+            return RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64);
+        }
+
+        private static RegistryKey OpenLocalMachine64()
+        {
+            return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+        }
+
+        private static string ReadInprocServer32(string clsid)
+        {
+            using (var root = OpenClassesRoot64())
+            using (var key = root.OpenSubKey($@"CLSID\{clsid}\InprocServer32"))
+            {
+                return key?.GetValue(null) as string;
+            }
+        }
+
+        // Older installers stamped an explicit ACL on these keys with a WiX Permission element,
+        // which REPLACES the ACL rather than adding to it. That granted Administrators and removed
+        // read access for everybody else, so midisrv running as LOCAL SERVICE could not see the
+        // plugin and silently loaded no transport. MSI never repairs the security descriptor of a
+        // key that already exists, so machines that took that ACL stay broken through every
+        // upgrade unless something explicitly turns inheritance back on.
+        private static void EnsureInheritedRegistryAcl(Session session, string subKeyPath)
+        {
+            try
+            {
+                using (var hklm = OpenLocalMachine64())
+                // A handle from CreateSubKey carries neither READ_CONTROL nor WRITE_DAC, so the
+                // key is reopened with exactly the rights the ACL work needs.
+                using (var key = hklm.OpenSubKey(
+                    subKeyPath,
+                    RegistryKeyPermissionCheck.ReadWriteSubTree,
+                    System.Security.AccessControl.RegistryRights.ReadPermissions |
+                    System.Security.AccessControl.RegistryRights.ChangePermissions))
+                {
+                    if (key == null)
+                    {
+                        session.Log($"EnsureInheritedRegistryAcl: {subKeyPath} could not be opened for ACL inspection.");
+                        return;
+                    }
+
+                    var acl = key.GetAccessControl(System.Security.AccessControl.AccessControlSections.Access);
+
+                    if (!acl.AreAccessRulesProtected)
+                    {
+                        session.Log($"EnsureInheritedRegistryAcl: {subKeyPath} already inherits its ACL.");
+                        return;
+                    }
+
+                    session.Log($"WARNING: EnsureInheritedRegistryAcl: {subKeyPath} has a protected ACL, most likely stamped by an older installer. Re-enabling inheritance.");
+
+                    acl.SetAccessRuleProtection(false, false);
+                    key.SetAccessControl(acl);
+
+                    session.Log($"EnsureInheritedRegistryAcl: {subKeyPath} now inherits from its parent.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Not fatal. A wrong ACL stops the service seeing the plugin, but failing the
+                // install leaves the machine in a worse state than logging it does.
+                session.Log($"ERROR: EnsureInheritedRegistryAcl: could not repair the ACL on {subKeyPath}. {ex.Message}");
+            }
+        }
+
+        [CustomAction]
+        public static ActionResult RegisterTransportComServer(Session session)
+        {
+            // Set by the SetProperty immediately before this action in the wxs
+            var data = session.CustomActionData;
+
+            string dllPath = data["DllPath"];
+            string clsid = data["Clsid"];
+            string pluginKeyName = data["PluginKeyName"];
+
+            session.Log($"RegisterTransportComServer: dll=\"{dllPath}\" clsid=\"{clsid}\" plugin=\"{pluginKeyName}\"");
+
+            if (!File.Exists(dllPath))
+            {
+                session.Log($"ERROR: RegisterTransportComServer: \"{dllPath}\" does not exist.");
+                return ActionResult.Failure;
+            }
+
+            if (!RunCommand(session, $"regsvr32.exe /s \"{dllPath}\"", 30000))
+            {
+                session.Log("ERROR: RegisterTransportComServer: regsvr32 failed.");
+                return ActionResult.Failure;
+            }
+
+            // RunCommand does not surface a non-zero exit code, so the registration is confirmed by
+            // reading it back rather than by trusting regsvr32.
+            string registered = ReadInprocServer32(clsid);
+
+            if (!string.Equals(registered?.Trim('"'), dllPath, StringComparison.OrdinalIgnoreCase))
+            {
+                session.Log($"ERROR: RegisterTransportComServer: after registering, the CLSID reads back as \"{registered}\".");
+                return ActionResult.Failure;
+            }
+
+            try
+            {
+                // No explicit ACL is written here, deliberately. Inheriting from the parent gives
+                // Administrators and SYSTEM full control and Users read, and LOCAL SERVICE is a
+                // member of Users, which is how midisrv gets to see the plugin at all.
+                using (var hklm = OpenLocalMachine64())
+                using (var plugins = hklm.CreateSubKey(TransportPluginsKeyPath))
+                using (var plugin = plugins.CreateSubKey(pluginKeyName))
+                {
+                    plugin.SetValue("CLSID", clsid, RegistryValueKind.String);
+                    plugin.SetValue("Enabled", 1, RegistryValueKind.DWord);
+                }
+
+                EnsureInheritedRegistryAcl(session, TransportPluginsKeyPath);
+                EnsureInheritedRegistryAcl(session, $@"{TransportPluginsKeyPath}\{pluginKeyName}");
+            }
+            catch (Exception ex)
+            {
+                session.Log($"ERROR: RegisterTransportComServer: writing the plugin key failed. {ex.Message}");
+                return ActionResult.Failure;
+            }
+
+            session.Log("RegisterTransportComServer: Completed");
+
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult UnregisterTransportComServerIfOwned(Session session)
+        {
+            var data = session.CustomActionData;
+
+            string dllPath = data["DllPath"];
+            string clsid = data["Clsid"];
+            string pluginKeyName = data["PluginKeyName"];
+
+            session.Log($"UnregisterTransportComServerIfOwned: dll=\"{dllPath}\" clsid=\"{clsid}\"");
+
+            string registered = null;
+
+            try
+            {
+                registered = ReadInprocServer32(clsid);
+            }
+            catch (Exception ex)
+            {
+                session.Log($"UnregisterTransportComServerIfOwned: could not read the registration. {ex.Message}");
+            }
+
+            if (string.IsNullOrEmpty(registered))
+            {
+                session.Log("UnregisterTransportComServerIfOwned: nothing is registered. Leaving everything alone.");
+                return ActionResult.Success;
+            }
+
+            // Ownership is decided by the path, not by whether it looks like an in-box location.
+            // Anything other than the file this installer placed belongs to somebody else, and
+            // removing it is what broke the in-box transport before.
+            if (!string.Equals(registered.Trim('"'), dllPath, StringComparison.OrdinalIgnoreCase))
+            {
+                session.Log(
+                    $"UnregisterTransportComServerIfOwned: the CLSID points at \"{registered}\", " +
+                    $"not at \"{dllPath}\". Another copy of this transport owns it, most likely an " +
+                    "in-box one, so the COM registration and the transport plugin key are being left " +
+                    "in place. Removing them here is what previously left the in-box transport unable to load.");
+
+                return ActionResult.Success;
+            }
+
+            if (!File.Exists(dllPath))
+            {
+                session.Log($"UnregisterTransportComServerIfOwned: \"{dllPath}\" is already gone, so it cannot self-unregister. Removing the keys directly.");
+
+                try
+                {
+                    using (var root = OpenClassesRoot64())
+                    {
+                        root.DeleteSubKeyTree($@"CLSID\{clsid}", false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    session.Log($"UnregisterTransportComServerIfOwned: could not remove the CLSID. {ex.Message}");
+                }
+            }
+            else if (!RunCommand(session, $"regsvr32.exe /s /u \"{dllPath}\"", 30000))
+            {
+                // Not fatal. Leaving a stale CLSID behind is better than failing the uninstall.
+                session.Log("UnregisterTransportComServerIfOwned: regsvr32 /u reported a failure.");
+            }
+
+            try
+            {
+                using (var hklm = OpenLocalMachine64())
+                using (var plugins = hklm.OpenSubKey(TransportPluginsKeyPath, true))
+                {
+                    plugins?.DeleteSubKeyTree(pluginKeyName, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                session.Log($"UnregisterTransportComServerIfOwned: could not remove the plugin key. {ex.Message}");
+            }
+
+            session.Log("UnregisterTransportComServerIfOwned: Completed");
+
+            return ActionResult.Success;
+        }
+
     }
 }

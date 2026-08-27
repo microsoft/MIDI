@@ -131,8 +131,9 @@
 #define UUID_IMidiEndpointAssociatedPortDeviceInformation	                8087b303-0519-c0de-31d1-dd0040017000
 #define UUID_IMidiEndpointDevicePropertyHelperStatics		                8087b303-0519-c0de-31d1-ee0040018000
 #define UUID_IMidiEndpointDeviceHelperStatics				                8087b303-0519-c0de-31d1-ee0040019000
-#define UUID_IMidiLegacyPortDeviceInformation					            8087b303-0519-c0de-31d1-dd004001A000
 
+#define UUID_IMidiLegacyPortDeviceInformation					            8087b303-0519-c0de-31d1-dd004001A000
+#define UUID_IMidiLegacyPortDeviceInformationStatics                        8087b303-0519-c0de-31d1-ee004001A000
 
 #define UUID_IMidiLegacyPortDeviceInformationAddedEventArgs	                8087b303-0519-c0de-31d1-dd004001B000
 #define UUID_IMidiLegacyPortDeviceInformationRemovedEventArgs	            8087b303-0519-c0de-31d1-dd004001C000
@@ -173,9 +174,9 @@
 
 #define UUID_IMidiServiceTransportPluginConfig				                "8087b303-0519-c0de-31d1-cc0060006000"
 
-#define UUID_IMidiServiceConfigResponse                                     8087b303-0519-c0de-31d1-ee0060007000
+#define UUID_IMidiServiceConfigResponse                                     8087b303-0519-c0de-31d1-dd0060007000
 
-#define UUID_IMidiServiceConfigSaveResponse                                 8087b303-0519-c0de-31d1-ee0060008000
+#define UUID_IMidiServiceConfigSaveResponse                                 8087b303-0519-c0de-31d1-dd0060008000
 
 #define UUID_IMidiServiceEndpointCustomizationRemovalConfig                 8087b303-0519-c0de-31d1-dd0060009000
 #define UUID_IMidiServiceEndpointCustomizationRemovalConfigFactory          8087b303-0519-c0de-31d1-ff0060009000

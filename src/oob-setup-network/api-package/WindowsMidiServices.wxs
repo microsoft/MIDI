@@ -4,6 +4,11 @@
     <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
     <?include $(StagingVersionIncludeFile) ?>
 
+    <!-- Shared with any in-box version of this transport, which is what makes the uninstall
+         behaviour below matter. -->
+    <?define NetworkTransportClsid={C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6} ?>
+    <?define NetworkTransportPluginKeyName=Midi2NetworkMidiTransport ?>
+
     <Package  
           Name="Microsoft Windows MIDI Services (Preview Service Plugins) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
@@ -23,76 +28,120 @@
             </Directory>
         </StandardDirectory>
         
-        <!-- Transport and other Service Plugins -->
-        <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
-    
+        <!--
+          Deliberately no SelfRegCost here. Self-registration also self-UNregisters, and
+          DllUnregisterServer removes the CLSID no matter who owns it by then. Customers who
+          uninstalled this preview after an in-box version had shipped were left with an in-box
+          transport that could not load, because its CLSID and its transport plugin key had just
+          been deleted. Registration is done from the custom actions at the bottom of this file
+          instead, and removal only happens when the registration still points at the file this
+          package installed.
+        -->
         <Component Id="WindowsServiceAbstractions"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="3727cc9a-c427-4237-a733-5c6b10b33a9d"  >
 
-       <!--     <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBay.dll"          SelfRegCost="1" Vital="true" /> -->
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll"                SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.pdb" />
 
 
         </Component>
         
 
+            <!--
+              This component no longer writes the transport plugin key; the custom actions do, so
+              that uninstall can decline to remove a registration that has since been taken over by
+              an in-box transport. It still exists, and MUST keep its original GUID, because MSI
+              reference counts components across products. Burn uninstalls the superseded bundle
+              after the new one is installed, so if this GUID disappeared, that uninstall would drop
+              the reference count to zero and take the plugin key with it.
+            -->
             <Component Id="ConfigurationRegistryEntries"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="1a92e5a9-a210-48d5-a37c-63b0573b68ee"
                    NeverOverwrite="false">
-                   
-            <!--
-              Earlier versions of this installer stamped an explicit ACL on the transport plugin
-              key with a Permission element. MSI never repairs the security descriptor of a key
-              that already exists, so upgrading alone would leave those machines broken forever.
-              Removing the key first means it is recreated inheriting from the parent.
-            -->
-            <RemoveRegistryKey Id="RemoveLegacyNetworkTransportPluginKey"
-                               Root="HKLM"
-                               Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins\Midi2NetworkMidiTransport"
-                               Action="removeOnInstall" />
 
             <RegistryKey Root="HKLM"
-                         Key="SOFTWARE\Microsoft\Windows MIDI Services">
-
-                <RegistryKey Key="Endpoint Processing Plugins">
-                    <!-- TODO: Any processing plugins -->
-                </RegistryKey>
-
-                <RegistryKey Key="Transport Plugins">
-                    
-                    <!--
-                    <RegistryKey Key="Midi2VirtualPatchBayTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
-                    </RegistryKey>
-                    -->
-                        
-                    <!--
-                      No Permission element here, deliberately. WiX's Permission REPLACES the
-                      ACL rather than adding to it, so granting Administrators removed read
-                      access for everyone else, including the service account. midisrv running
-                      as LOCAL SERVICE could then not see this plugin at all, and silently
-                      loaded no network transport. Inheriting from the parent gives
-                      Administrators/SYSTEM full control and Users read, which is what the
-                      other transports use.
-                    -->
-                    <RegistryKey Key="Midi2NetworkMidiTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
-                    </RegistryKey>
-                </RegistryKey>
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services\Network MIDI 2.0 Preview">
+                <RegistryValue Type="string" Name="TransportRegistration" Value="installed" KeyPath="yes" />
             </RegistryKey>
         </Component>
+
+      <!-- midisrv only picks the transport up when it restarts -->
+      <Component Id="RestartService"
+                 Bitness="always64"
+                 Directory="SERVICE_INSTALLFOLDER"
+                 Guid="22B38E00-2220-405C-8857-C08478909474">
+
+        <ServiceControl Id="midisrv" Name="midisrv"
+                        Start="both"
+                        Stop="both"/>
+
+      </Component>
 
 
       <Feature Id="WindowsMIDIServices">
         <ComponentRef Id="WindowsServiceAbstractions"/>
         <ComponentRef Id="ConfigurationRegistryEntries"/>
+        <ComponentRef Id="RestartService"/>
       </Feature>
+
+
+      <Binary Id="CustomActionBinary"
+              SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+      <!-- The registry keys the transport needs may be owned by an earlier in-box or preview
+           install, so ownership is taken before anything is written to them. -->
+      <CustomAction Id="Action_TakeRegistryOwnership"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="TakeRegistryOwnership"
+                    Return="check"/>
+
+      <!-- Deferred custom actions cannot read properties, so everything they need is handed over
+           through CustomActionData. -->
+      <SetProperty Id="Action_RegisterNetworkTransport"
+                   Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.NetworkMidiTransport.dll;Clsid=$(NetworkTransportClsid);PluginKeyName=$(NetworkTransportPluginKeyName)"
+                   Before="Action_RegisterNetworkTransport"
+                   Sequence="execute" />
+
+      <CustomAction Id="Action_RegisterNetworkTransport"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="RegisterTransportComServer"
+                    Return="check" />
+
+      <SetProperty Id="Action_UnregisterNetworkTransport"
+                   Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.NetworkMidiTransport.dll;Clsid=$(NetworkTransportClsid);PluginKeyName=$(NetworkTransportPluginKeyName)"
+                   Before="Action_UnregisterNetworkTransport"
+                   Sequence="execute" />
+
+      <CustomAction Id="Action_UnregisterNetworkTransport"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="UnregisterTransportComServerIfOwned"
+                    Return="check" />
+
+      <InstallExecuteSequence>
+        <Custom Action="Action_TakeRegistryOwnership"
+                Before="CreateFolders"
+                Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+        <!-- After InstallFiles so the DLL regsvr32 is pointed at is already on disk -->
+        <Custom Action="Action_RegisterNetworkTransport"
+                After="InstallFiles"
+                Condition='NOT (REMOVE="ALL")' />
+
+        <!-- Before RemoveFiles so the DLL is still there to unregister itself -->
+        <Custom Action="Action_UnregisterNetworkTransport"
+                Before="RemoveFiles"
+                Condition='(REMOVE="ALL") AND NOT UPGRADINGPRODUCTCODE' />
+      </InstallExecuteSequence>
+
     </Package>
 </Wix>

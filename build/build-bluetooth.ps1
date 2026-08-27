@@ -1,25 +1,32 @@
 <#
 .SYNOPSIS
-    Builds, stages and packages the Windows MIDI Services service plugin installers.
+    Builds, stages and packages the Windows MIDI Services Bluetooth MIDI preview installer.
 
 .DESCRIPTION
-    Replaces the old Nuke build (build/nuke_build-plugins). Produces standalone installers for
-    the Network MIDI 2.0 and Basic Loopback MIDI service transports, for x64 and Arm64.
+    The Bluetooth preview is a single installer that spans both release trains: the transport
+    comes out of src/api/Midi2.sln like the other service plugins, and the Bluetooth MIDI Setup
+    app plus its app-local copy of the API come out of src/api/Midi2-AppSDK.sln. That is why it
+    has its own script rather than being another entry in build-plugins.ps1.
 
-    This is a SEPARATE release train from the App SDK (build/build-sdk.ps1). It owns
-    build/staging/version/BundleInfo.wxi; the App SDK owns build/staging/version/AppSdkVersion.wxi.
-    All version numbers come from build/version-plugins.json.
+    Version numbers come from build/version-plugins.json and are written to
+    build/staging/version/BundleInfo.wxi, exactly as build-plugins.ps1 writes them. The two
+    scripts generate identical content from the same source file, so running either is safe.
+
+    The bundle carries the Visual C++ runtime and the Windows App Runtime, because a customer
+    installing only the Bluetooth preview will not have the App SDK runtime installer that
+    normally provides them.
 
 .PARAMETER Target
     One or more of:
       Version  Compute versions and write BundleInfo.wxi.
-      Service  Build src/api/Midi2.sln for each platform.
-      Stage    Copy the transport binaries into build/staging/api, and the shared API headers
-               into src/shared/api-ref (mididiag and midi2monitor have that on their IncludePath).
-      Setup    Build the Network MIDI 2.0 and Basic Loopback installers.
-      Release  Collect the installers into build/release/plugins-<version>.
-      Clean    Delete plugin staging and service solution output folders.
-      All      Version, Service, Stage, Setup, Release.
+      Service  Build src/api/Midi2.sln for each platform (the transport).
+      App      Build src/api/Midi2-AppSDK.sln for each platform (the setup app and the SDK).
+      Stage    Copy the transport into build/staging/api, and the app payload into
+               build/staging/bluetooth-app.
+      Setup    Build the installer.
+      Release  Collect the installer into build/release/bluetooth-<version>.
+      Clean    Delete the Bluetooth staging folders.
+      All      Version, Service, App, Stage, Setup, Release.
 
 .PARAMETER BuildNumber
     Overrides the 'build' field in version-plugins.json without modifying the file. For CI.
@@ -28,17 +35,17 @@
     Increments and persists the 'build' field in version-plugins.json before computing versions.
 
 .EXAMPLE
-    .\build-plugins.ps1
-    Full plugin release build for x64 and Arm64.
+    .\build-bluetooth.ps1
+    Full Bluetooth preview build for x64 and Arm64.
 
 .EXAMPLE
-    .\build-plugins.ps1 -Target Setup -Platform x64
-    Rebuild just the installers for x64 against whatever is already staged.
+    .\build-bluetooth.ps1 -Target Setup -Platform x64
+    Rebuild just the installer for x64 against whatever is already staged.
 #>
 [CmdletBinding()]
 param(
     # Comma-separated is accepted as a single token so this works through `pwsh -File`
-    # and build-plugins.cmd, which do not split array arguments.
+    # and build-bluetooth.cmd, which do not split array arguments.
     [string[]] $Target = @('All'),
 
     [string[]] $Platform = @('x64', 'Arm64'),
@@ -77,7 +84,7 @@ function Expand-Argument {
     , @($resolved)
 }
 
-$Target = Expand-Argument -Value $Target -Allowed @('All', 'Version', 'Service', 'Stage', 'Setup', 'Release', 'Clean') -Name 'Target'
+$Target = Expand-Argument -Value $Target -Allowed @('All', 'Version', 'Service', 'App', 'Stage', 'Setup', 'Release', 'Clean') -Name 'Target'
 $Platform = Expand-Argument -Value $Platform -Allowed @('x64', 'Arm64') -Name 'Platform'
 
 # ----------------------------------------------------------------------------------------------
@@ -93,71 +100,60 @@ $ApiRoot = Join-Path $SourceRoot 'api'
 $ServiceSolution = Join-Path $ApiRoot 'Midi2.sln'
 $ServiceOutRoot = Join-Path $ApiRoot 'VSFiles'
 
+$AppSdkSolution = Join-Path $ApiRoot 'Midi2-AppSDK.sln'
+$AppSdkOutRoot = Join-Path $ApiRoot 'vsfiles-sdk\out'
+
 $StagingRoot = Join-Path $BuildRoot 'staging'
 $ReleaseRoot = Join-Path $BuildRoot 'release'
 $ApiStagingRoot = Join-Path $StagingRoot 'api'
+$AppStagingRoot = Join-Path $StagingRoot 'bluetooth-app'
 $VersionStagingFolder = Join-Path $StagingRoot 'version'
 
-# Owned by this build. The App SDK writes AppSdkVersion.wxi instead, so the two trains cannot
-# overwrite each other's version.
+# Shared with build-plugins.ps1. Both write the same content from version-plugins.json.
 $BundleInfoFile = Join-Path $VersionStagingFolder 'BundleInfo.wxi'
 
 $VersionFile = Join-Path $BuildRoot 'version-plugins.json'
 
-$ApiReferenceRoot = Join-Path $SourceRoot 'shared\api-ref'
-$ApiIncludeFolder = Join-Path $ApiRoot 'Inc'
-$NetworkTransportFolder = Join-Path $ApiRoot 'Transport\UdpNetworkMidi2Transport'
+$SetupSolutionDir = Join-Path $SourceRoot 'oob-setup-bluetooth'
+$SetupSolution = Join-Path $SetupSolutionDir 'midi-services-bluetooth-midi-preview-setup.sln'
+
+$BundleName = 'WindowsMidiServicesBluetoothMidiSetup'
+$InstallerName = 'Windows MIDI Services (Bluetooth MIDI Preview)'
 
 # The .wxs files resolve staging as "$(env.MIDI_REPO_ROOT)\build\staging", so this must NOT
 # have a trailing separator.
 $env:MIDI_REPO_ROOT = $RepoRoot.TrimEnd('\')
 
-# Each plugin: the transport binaries it stages, its installer solution, and its bundle name.
-$Plugins = @(
-    [pscustomobject]@{
-        Name         = 'Network MIDI 2.0'
-        Binary       = 'Midi2.NetworkMidiTransport'
-        SolutionDir  = Join-Path $SourceRoot 'oob-setup-network'
-        Solution     = 'midi-services-network-midi-preview-setup.sln'
-        BundleName   = 'WindowsMidiServicesNetworkMidiSetup'
-        InstallerName = 'Windows MIDI Services (Network MIDI 2.0 Preview)'
-    }
-    [pscustomobject]@{
-        Name         = 'Basic Loopback MIDI'
-        Binary       = 'Midi2.BasicLoopbackMidiTransport'
-        SolutionDir  = Join-Path $SourceRoot 'oob-setup-basic-loopback'
-        Solution     = 'midi-services-basic-loopback-setup.sln'
-        BundleName   = 'WindowsMidiServicesBasicLoopbackSetup'
-        InstallerName = 'Windows MIDI Services (Basic MIDI 1.0 Loopback Preview)'
-    }
-)
+$TransportBinary = 'Midi2.BluetoothMidiTransport'
 
-# Headers consumers compile against. mididiag and midi2monitor put src/shared/api-ref/<platform>
-# on their IncludePath, so the App SDK build depends on this being populated.
-$ApiReferenceHeaders = @(
-    (Join-Path $ApiIncludeFolder 'hstring_util.h')
-    (Join-Path $ApiIncludeFolder 'wstring_util.h')
-    (Join-Path $ApiIncludeFolder 'json_defs.h')
-    (Join-Path $ApiIncludeFolder 'json_helpers.h')
-    (Join-Path $ApiIncludeFolder 'loopback_ids.h')
-    (Join-Path $NetworkTransportFolder 'network_json_defs.h')
+# The app payload, as referenced by src/oob-setup-bluetooth/api-package/WindowsMidiServices.wxs.
+# The .exp, .lib and .pdb files in the same output folder are deliberately not shipped; the two
+# pdbs alone are over 160 MB.
+$AppPayload = @(
+    'midibluetoothsetup.exe'
+    'midibluetoothsetup.winmd'
+    'App.xbf'
+    'MainWindow.xbf'
+    'resources.pri'
+    'Microsoft.WindowsAppRuntime.Bootstrap.dll'
+    'Microsoft.Web.WebView2.Core.dll'
+    'Microsoft.Web.WebView2.Core.winmd'
+    'MidiAppShared.winmd'
+    'Windows.Devices.Midi2.dll'
+    'Windows.Devices.Midi2.winmd'
+    'Windows.Devices.Midi2.pri'
 )
-
-$ApiReferencePlatforms = @('x64', 'Arm64', 'Arm64EC')
 
 # ----------------------------------------------------------------------------------------------
 # Output helpers
 # ----------------------------------------------------------------------------------------------
 
-$script:StepNumber = 0
-
 function Write-Step {
     param([string] $Message)
-    $script:StepNumber++
+
     Write-Host ''
-    Write-Host ('=' * 96) -ForegroundColor DarkCyan
-    Write-Host (' {0,2}. {1}' -f $script:StepNumber, $Message) -ForegroundColor Cyan
-    Write-Host ('=' * 96) -ForegroundColor DarkCyan
+    Write-Host "==== $Message " -ForegroundColor Cyan -NoNewline
+    Write-Host ('=' * [Math]::Max(0, 78 - $Message.Length)) -ForegroundColor Cyan
 }
 
 function Write-Detail {
@@ -191,8 +187,6 @@ function Get-BuildVersion {
 
     $majorMinorPatch = '{0}.{1}.{2}' -f $json.major, $json.minor, $json.patch
 
-    # Same scheme as the App SDK: no build number in the SemVer string; 'patch' distinguishes
-    # releases. Stable drops the prerelease tag entirely.
     if ($json.channel -eq 'stable') {
         $semVer = $majorMinorPatch
     }
@@ -312,6 +306,15 @@ function Invoke-ServiceTarget {
     }
 }
 
+function Invoke-AppTarget {
+    Write-Step 'Build App SDK and setup app'
+
+    foreach ($plat in $Platform) {
+        Invoke-MSBuild -ProjectOrSolution $AppSdkSolution -BuildPlatform $plat `
+            -Properties @{ 'NoWarn' = 'MIDL2111' }
+    }
+}
+
 # ----------------------------------------------------------------------------------------------
 # Staging
 # ----------------------------------------------------------------------------------------------
@@ -332,28 +335,28 @@ function Invoke-StageTarget {
     Write-Step 'Stage'
 
     foreach ($plat in $Platform) {
-        $sourceFolder = Join-Path $ServiceOutRoot "$plat\$Configuration"
-        $destination = Join-Path $ApiStagingRoot $plat
+        $transportSource = Join-Path $ServiceOutRoot "$plat\$Configuration"
+        $transportDestination = Join-Path $ApiStagingRoot $plat
 
-        foreach ($plugin in $Plugins) {
-            foreach ($ext in @('dll', 'pdb')) {
-                Copy-Staged -Source (Join-Path $sourceFolder "$($plugin.Binary).$ext") -Destination $destination
-            }
+        foreach ($ext in @('dll', 'pdb')) {
+            Copy-Staged -Source (Join-Path $transportSource "$TransportBinary.$ext") -Destination $transportDestination
         }
 
-        Write-Detail "Staged $($Plugins.Count) transports -> api\$plat"
-    }
+        Write-Detail "Staged $TransportBinary -> api\$plat"
 
-    # Not needed by the installers, but mididiag and midi2monitor compile against these, so the
-    # App SDK build breaks on a clean clone if this is skipped.
-    foreach ($plat in $ApiReferencePlatforms) {
-        $destination = Join-Path $ApiReferenceRoot $plat
-        foreach ($header in $ApiReferenceHeaders) {
-            Copy-Staged -Source $header -Destination $destination
+        $appSource = Join-Path $AppSdkOutRoot "midibluetoothsetup\$plat\$Configuration"
+        $appDestination = Join-Path $AppStagingRoot $plat
+
+        # A stale file here would be silently packaged, so the folder is emptied rather than
+        # copied over.
+        if (Test-Path $appDestination) { Remove-Item $appDestination -Recurse -Force }
+
+        foreach ($file in $AppPayload) {
+            Copy-Staged -Source (Join-Path $appSource $file) -Destination $appDestination
         }
-    }
 
-    Write-Detail "Refreshed shared API headers for $($ApiReferencePlatforms -join ', ')"
+        Write-Detail "Staged $($AppPayload.Count) app files -> bluetooth-app\$plat"
+    }
 }
 
 # ----------------------------------------------------------------------------------------------
@@ -361,26 +364,22 @@ function Invoke-StageTarget {
 # ----------------------------------------------------------------------------------------------
 
 function Get-InstallerPath {
-    param([Parameter(Mandatory)] $Plugin, [Parameter(Mandatory)] [string] $BuildPlatform)
-    Join-Path $Plugin.SolutionDir "main-bundle\bin\$BuildPlatform\$Configuration\$($Plugin.BundleName).exe"
+    param([Parameter(Mandatory)] [string] $BuildPlatform)
+    Join-Path $SetupSolutionDir "main-bundle\bin\$BuildPlatform\$Configuration\$BundleName.exe"
 }
 
 function Invoke-SetupTarget {
     Write-Step 'Setup'
 
-    foreach ($plugin in $Plugins) {
-        foreach ($plat in $Platform) {
-            $solution = Join-Path $plugin.SolutionDir $plugin.Solution
+    foreach ($plat in $Platform) {
+        Invoke-MSBuild -ProjectOrSolution $SetupSolution -BuildPlatform $plat `
+            -Targets @('Restore', 'Rebuild') -SolutionDir $SetupSolutionDir
 
-            Invoke-MSBuild -ProjectOrSolution $solution -BuildPlatform $plat `
-                -Targets @('Restore', 'Rebuild') -SolutionDir $plugin.SolutionDir
-
-            $bundle = Get-InstallerPath -Plugin $plugin -BuildPlatform $plat
-            if (-not (Test-Path $bundle)) {
-                throw "Installer bundle not found after build: $bundle"
-            }
-            Write-Detail "Built installer: $bundle"
+        $bundle = Get-InstallerPath -BuildPlatform $plat
+        if (-not (Test-Path $bundle)) {
+            throw "Installer bundle not found after build: $bundle"
         }
+        Write-Detail "Built installer: $bundle"
     }
 }
 
@@ -393,21 +392,19 @@ function Invoke-ReleaseTarget {
 
     Write-Step 'Release'
 
-    $folder = Join-Path $ReleaseRoot "plugins-$($Version.ReleaseLabel)"
+    $folder = Join-Path $ReleaseRoot "bluetooth-$($Version.ReleaseLabel)"
     New-Item -ItemType Directory -Force -Path $folder | Out-Null
 
-    foreach ($plugin in $Plugins) {
-        foreach ($plat in $Platform) {
-            $bundle = Get-InstallerPath -Plugin $plugin -BuildPlatform $plat
-            if (-not (Test-Path $bundle)) {
-                Write-Note "Installer not found for $($plugin.Name) $plat - run the Setup target: $bundle"
-                continue
-            }
-
-            $name = "$($plugin.InstallerName) $($Version.SemVer)-$($plat.ToLowerInvariant()).exe"
-            Copy-Item $bundle -Destination (Join-Path $folder $name) -Force
-            Write-Detail "Installer -> $name"
+    foreach ($plat in $Platform) {
+        $bundle = Get-InstallerPath -BuildPlatform $plat
+        if (-not (Test-Path $bundle)) {
+            Write-Note "Installer not found for $plat - run the Setup target: $bundle"
+            continue
         }
+
+        $name = "$InstallerName $($Version.SemVer)-$($plat.ToLowerInvariant()).exe"
+        Copy-Item $bundle -Destination (Join-Path $folder $name) -Force
+        Write-Detail "Installer -> $name"
     }
 
     Write-Host ''
@@ -421,11 +418,21 @@ function Invoke-ReleaseTarget {
 function Invoke-CleanTarget {
     Write-Step 'Clean'
 
-    foreach ($path in @($ApiStagingRoot, (Join-Path $ServiceOutRoot 'intermediate'))) {
-        if (Test-Path $path) {
-            Remove-Item $path -Recurse -Force
-            Write-Detail "Removed $path"
+    # The api staging folder is shared with build-plugins.ps1, so only the Bluetooth transport is
+    # removed from it rather than the whole folder.
+    foreach ($plat in @('x64', 'Arm64')) {
+        foreach ($ext in @('dll', 'pdb')) {
+            $path = Join-Path $ApiStagingRoot "$plat\$TransportBinary.$ext"
+            if (Test-Path $path) {
+                Remove-Item $path -Force
+                Write-Detail "Removed $path"
+            }
         }
+    }
+
+    if (Test-Path $AppStagingRoot) {
+        Remove-Item $AppStagingRoot -Recurse -Force
+        Write-Detail "Removed $AppStagingRoot"
     }
 }
 
@@ -435,15 +442,14 @@ function Invoke-CleanTarget {
 
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
-$targets = if ($Target -contains 'All') { @('Version', 'Service', 'Stage', 'Setup', 'Release') } else { $Target }
+$targets = if ($Target -contains 'All') { @('Version', 'Service', 'App', 'Stage', 'Setup', 'Release') } else { $Target }
 
 Write-Host ''
-Write-Host 'Windows MIDI Services - service plugins build' -ForegroundColor White
+Write-Host 'Windows MIDI Services - Bluetooth MIDI preview build' -ForegroundColor White
 Write-Detail "Repo          $RepoRoot"
 Write-Detail "Targets       $($targets -join ', ')"
 Write-Detail "Platforms     $($Platform -join ', ')"
 Write-Detail "Configuration $Configuration"
-Write-Detail "Plugins       $(($Plugins | ForEach-Object { $_.Name }) -join ', ')"
 
 if ($targets -contains 'Clean') {
     Invoke-CleanTarget
@@ -456,13 +462,14 @@ if ($targets -notcontains 'Version') {
     Write-Detail "Version       $($version.SemVer)"
 }
 
-if ($targets -contains 'Service' -or $targets -contains 'Setup') {
+if ($targets -contains 'Service' -or $targets -contains 'App' -or $targets -contains 'Setup') {
     $script:MSBuild = Resolve-MSBuild
     Write-Detail "MSBuild       $script:MSBuild"
 }
 
 if ($targets -contains 'Version') { Invoke-VersionTarget $version }
 if ($targets -contains 'Service') { Invoke-ServiceTarget }
+if ($targets -contains 'App') { Invoke-AppTarget }
 if ($targets -contains 'Stage') { Invoke-StageTarget }
 if ($targets -contains 'Setup') { Invoke-SetupTarget }
 if ($targets -contains 'Release') { Invoke-ReleaseTarget $version }
