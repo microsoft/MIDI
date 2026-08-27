@@ -203,6 +203,30 @@ namespace MidiBleProtocol
         PowerOptimized = 3,
     };
 
+    // Whether a Central which subscribes to this PC's peripheral is let through without asking.
+    // WinRT cannot refuse a subscription, so "require approval" gates the MIDI endpoint and the
+    // data path rather than the Bluetooth link itself.
+    enum class PeripheralClientPolicy : uint8_t
+    {
+        RequireApproval = 0,
+        AllowAny = 1,
+    };
+
+    enum class PeripheralClientDecision : uint8_t
+    {
+        Pending = 0,
+        Allowed = 1,
+        Denied = 2,
+    };
+
+    // Matches the Network MIDI 2.0 transport's vocabulary so the two behave the same way.
+    enum class ApprovalScope : uint8_t
+    {
+        Once = 0,
+        UntilRestart = 1,
+        Always = 2,
+    };
+
     // What the radio on this machine can actually do. Probed once at start up and reported, so a
     // machine with no Bluetooth, or with a radio which cannot act as a peripheral, explains itself
     // instead of looking like a transport which silently does nothing.
@@ -298,7 +322,6 @@ namespace MidiBleUtilities
         {
         case MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized:
             return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_THROUGHPUT;
-
         case MidiBleProtocol::ConnectionParameterPreference::Balanced:
             return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_BALANCED;
 
@@ -409,6 +432,149 @@ namespace MidiBleUtilities
         }
 
         return digitCount == 12;
+    }
+
+    inline winrt::hstring PeripheralClientPolicyToJsonString(
+        _In_ MidiBleProtocol::PeripheralClientPolicy const policy)
+    {
+        return policy == MidiBleProtocol::PeripheralClientPolicy::AllowAny ?
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_VALUE_ALLOW_ANY :
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL;
+    }
+
+    // Anything unrecognized falls back to requiring approval, so a typo in the configuration file
+    // cannot silently open the peripheral to any Central which asks.
+    inline MidiBleProtocol::PeripheralClientPolicy PeripheralClientPolicyFromJsonString(
+        _In_ winrt::hstring const& value)
+    {
+        return value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_VALUE_ALLOW_ANY ?
+            MidiBleProtocol::PeripheralClientPolicy::AllowAny :
+            MidiBleProtocol::PeripheralClientPolicy::RequireApproval;
+    }
+
+    inline winrt::hstring PeripheralClientDecisionToJsonString(
+        _In_ MidiBleProtocol::PeripheralClientDecision const decision)
+    {
+        switch (decision)
+        {
+        case MidiBleProtocol::PeripheralClientDecision::Allowed:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_ALLOWED;
+
+        case MidiBleProtocol::PeripheralClientDecision::Denied:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_DENIED;
+
+        default:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_PENDING;
+        }
+    }
+
+    inline winrt::hstring ApprovalScopeToJsonString(_In_ MidiBleProtocol::ApprovalScope const scope)
+    {
+        switch (scope)
+        {
+        case MidiBleProtocol::ApprovalScope::Always:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_ALWAYS;
+
+        case MidiBleProtocol::ApprovalScope::UntilRestart:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_UNTIL_RESTART;
+
+        default:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_ONCE;
+        }
+    }
+
+    // An unrecognized scope is rejected rather than assumed, because guessing wrong here either
+    // writes a permission nobody asked for or silently drops one they did.
+    inline bool TryApprovalScopeFromJsonString(
+        _In_ winrt::hstring const& value,
+        _Out_ MidiBleProtocol::ApprovalScope& scope)
+    {
+        scope = MidiBleProtocol::ApprovalScope::Once;
+
+        if (value.empty() || value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_ONCE)
+        {
+            return true;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_ALWAYS)
+        {
+            scope = MidiBleProtocol::ApprovalScope::Always;
+            return true;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_UNTIL_RESTART)
+        {
+            scope = MidiBleProtocol::ApprovalScope::UntilRestart;
+            return true;
+        }
+
+        return false;
+    }
+
+    // A remembered decision is keyed on the Bluetooth address with the separators and case
+    // removed, so an entry typed by hand into the configuration file matches what the radio
+    // reports.
+    inline std::wstring NormalizeClientMatchKey(_In_ std::wstring const& address) noexcept
+    {
+        std::wstring key{};
+
+        for (auto const& ch : address)
+        {
+            if (ch == L':' || ch == L'-' || ch == L' ')
+            {
+                continue;
+            }
+
+            key.push_back(static_cast<wchar_t>(::towupper(ch)));
+        }
+
+        return key;
+    }
+
+    // Bluetooth Core Specification, Vol 6 Part B 1.3.2: the top two bits of a random address say
+    // which kind it is. Only the static kind stays put.
+    enum class RandomAddressKind : uint8_t
+    {
+        NonResolvablePrivate = 0,    // 0b00, rotates and cannot be resolved by anyone
+        ResolvablePrivate = 1,       // 0b01, rotates, resolvable only with the device's IRK
+        Reserved = 2,                // 0b10
+        Static = 3,                  // 0b11, fixed until the device restarts
+    };
+
+    inline RandomAddressKind ClassifyRandomAddress(_In_ uint64_t const address) noexcept
+    {
+        return static_cast<RandomAddressKind>((address >> 46) & 0x3);
+    }
+
+    // Whether this address can still identify the same device tomorrow, which is what decides
+    // if "always allow" or "always deny" can be honored.
+    //
+    // A bonded device is always recognizable: Windows resolves the rotating address back to the
+    // identity address recorded at bonding, so the address seen is stable even when the device
+    // advertises a private one. Without a bond, only a public or static random address is stable.
+    inline bool IsRememberableAddress(
+        _In_ winrt::hstring const& addressType,
+        _In_ uint64_t const address,
+        _In_ bool const isPaired) noexcept
+    {
+        if (isPaired)
+        {
+            return true;
+        }
+
+        if (addressType == L"public")
+        {
+            return true;
+        }
+
+        if (addressType == L"random")
+        {
+            return ClassifyRandomAddress(address) == RandomAddressKind::Static;
+        }
+
+        // "unspecified" means the radio did not tell us, and guessing wrong here would offer a
+        // permanent decision that quietly stops working.
+        return false;
     }
 }
 

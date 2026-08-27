@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midibluetoothsetup.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midibluetoothsetup"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style x:Key="SectionHeaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="Margin" Value="0,0,0,4" />
+            </Style>
+
+            <Style x:Key="CardBorderStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="12" />
+            </Style>
+        </Grid.Resources>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="Windows MIDI Bluetooth Setup"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <Button x:Name="AppearanceButton"
+                    x:Uid="AppearanceButton"
+                    Grid.Column="3"
+                    Width="46"
+                    Height="32"
+                    VerticalAlignment="Top"
+                    Padding="0"
+                    BorderThickness="0"
+                    Background="Transparent"
+                    Click="OnAppearanceButtonClick">
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
+            </Button>
+
+            <ToggleButton x:Name="AlwaysOnTopToggle"
+                          x:Uid="AlwaysOnTopToggle"
+                          Grid.Column="4"
+                          Width="46"
+                          Height="32"
+                          VerticalAlignment="Top"
+                          Padding="0"
+                          BorderThickness="0"
+                          Click="OnAlwaysOnTopToggled">
+                <ToggleButton.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </ToggleButton.Resources>
+                <FontIcon Glyph="&#xE718;" FontSize="14" />
+            </ToggleButton>
+        </Grid>
+
+        <!-- ================================= Navigation ================================= -->
+        <NavigationView x:Name="MainNavigation"
+                        Grid.Row="1"
+                        IsSettingsVisible="False"
+                        IsBackButtonVisible="Collapsed"
+                        IsPaneToggleButtonVisible="False"
+                        OpenPaneLength="220"
+                        PaneDisplayMode="Left"
+                        SelectionChanged="OnNavigationSelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="DevicesNavigationItem"
+                                    x:Uid="DevicesNavigationItem"
+                                    Content="Bluetooth devices"
+                                    Tag="devices">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE702;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="ThisPcNavigationItem"
+                                    x:Uid="ThisPcNavigationItem"
+                                    Content="This PC"
+                                    Tag="thispc">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE977;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- A radio which cannot do what is being asked is not a failure of any one
+                     operation, so it is said once here rather than on every button. -->
+                <InfoBar x:Name="RadioLimitationBar"
+                         x:Uid="RadioLimitationBar"
+                         Grid.Row="0"
+                         Severity="Warning"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Title="Bluetooth is limited on this PC"
+                         Margin="16,12,16,0" />
+
+                <Grid Grid.Row="1">
+                    <!-- Shown instead of everything else when the transport is missing -->
+                    <InfoBar x:Name="TransportUnavailableBar"
+                             x:Uid="TransportUnavailableBar"
+                             VerticalAlignment="Top"
+                             Margin="16,12,16,12"
+                             Canvas.ZIndex="1"
+                             Severity="Error"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Title="Bluetooth MIDI is not available"
+                             Message="The Bluetooth MIDI transport is not installed, so this tool has nothing to work with." />
+
+                    <!-- ======================== Page 1: Bluetooth devices ======================== -->
+                    <Grid x:Name="DevicesPanel" Margin="16,12,16,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,10" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock x:Uid="DevicesHeader"
+                                           Text="Bluetooth MIDI devices"
+                                           Style="{StaticResource SectionHeaderTextStyle}" />
+                                <TextBlock x:Uid="DevicesDescription"
+                                           Text="Devices are found by listening for advertisements, so a device which is switched off, asleep, or already connected to another host will not be listed."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
+                            <Button x:Name="DevicesRefreshButton"
+                                    x:Uid="DevicesRefreshButton"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Top"
+                                    Content="Refresh"
+                                    Click="OnRefreshClick" />
+                        </Grid>
+
+                        <TextBlock x:Name="NoDevicesText"
+                                   x:Uid="NoDevicesText"
+                                   Grid.Row="1"
+                                   Text="No Bluetooth MIDI devices have been discovered yet. Wake a device so it advertises, then wait a moment."
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Top"
+                                   Visibility="Collapsed"
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <ListView x:Name="DevicesListView"
+                                  x:Uid="DevicesListView"
+                                  Grid.Row="1"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="False"
+                                  ScrollViewer.HorizontalScrollMode="Disabled"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Padding" Value="0,4,0,4" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:BluetoothDeviceItem">
+                                    <Border Style="{StaticResource CardBorderStyle}">
+                                        <StackPanel Spacing="6">
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                                    <!-- fixed so that every row lines up whether or not
+                                                         it currently has a signal trace to draw -->
+                                                    <ColumnDefinition Width="172" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Grid Grid.Column="0" VerticalAlignment="Center">
+                                                    <FontIcon Glyph="&#xE702;" FontSize="20" />
+                                                    <!-- drawn as a badge in the lower right of its own
+                                                         box, so it overlays without offsets -->
+                                                    <FontIcon Glyph="&#xF386;"
+                                                              FontSize="20"
+                                                              Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                                              Visibility="{x:Bind ConnectedBadgeVisibility, Mode=OneWay}" />
+                                                </Grid>
+
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                               TextWrapping="NoWrap"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                    <TextBlock Text="{x:Bind SubtitleText, Mode=OneWay}"
+                                                               TextWrapping="NoWrap"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                               TextWrapping="Wrap"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                    <TextBlock Text="{x:Bind IntervalText, Mode=OneWay}"
+                                                               TextWrapping="NoWrap"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Visibility="{x:Bind IntervalVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    <TextBlock Text="{x:Bind StatisticsText, Mode=OneWay}"
+                                                               TextWrapping="NoWrap"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                </StackPanel>
+
+                                                <!-- Signal history. The geometry is generated against a
+                                                     fixed 300x40 box in BluetoothDeviceItem, so this size
+                                                     must match. A connected device stops advertising, so
+                                                     the trace disappears rather than freezing. -->
+                                                <StackPanel Grid.Column="2"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center"
+                                                            Spacing="2"
+                                                            Visibility="{x:Bind SignalGraphVisibility, Mode=OneWay}">
+                                                    <TextBlock Text="{x:Bind SignalText, Mode=OneWay}"
+                                                               HorizontalAlignment="Right"
+                                                               Margin="0,0,2,0"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                                    <Border Width="160"
+                                                            Height="32"
+                                                            HorizontalAlignment="Center"
+                                                            CornerRadius="4"
+                                                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                            BorderThickness="1"
+                                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                        <Grid>
+                                                            <Polygon Points="{x:Bind SignalFillPoints, Mode=OneWay}"
+                                                                     Fill="{ThemeResource AccentFillColorTertiaryBrush}"
+                                                                     Opacity="0.45" />
+                                                            <Polyline Points="{x:Bind SignalLinePoints, Mode=OneWay}"
+                                                                      Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                                                                      StrokeThickness="1.5"
+                                                                      StrokeLineJoin="Round" />
+                                                        </Grid>
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="3"
+                                                            Orientation="Horizontal"
+                                                            Spacing="8"
+                                                            VerticalAlignment="Center">
+                                                    <Button x:Uid="ConnectButton"
+                                                            Content="Connect"
+                                                            Style="{ThemeResource AccentButtonStyle}"
+                                                            Visibility="{x:Bind ConnectVisibility, Mode=OneWay}"
+                                                            Click="OnConnectDeviceClick" />
+                                                    <Button x:Uid="DisconnectButton"
+                                                            Content="Disconnect"
+                                                            Visibility="{x:Bind DisconnectVisibility, Mode=OneWay}"
+                                                            Click="OnDisconnectDeviceClick" />
+                                                    <Button x:Uid="ForgetButton"
+                                                            Content="Forget"
+                                                            Visibility="{x:Bind ForgetVisibility, Mode=OneWay}"
+                                                            Click="OnForgetDeviceClick" />
+                                                    <Button x:Uid="CustomizeButton"
+                                                            Content="Rename"
+                                                            Visibility="{x:Bind CustomizeVisibility, Mode=OneWay}"
+                                                            Click="OnCustomizeDeviceClick" />
+                                                    <Button x:Uid="CopyEndpointIdButton"
+                                                            Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                            Click="OnCopyEndpointDeviceIdClick">
+                                                        <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- The transport's own wording, which is more specific than
+                                                 an error code can be. -->
+                                            <TextBlock Text="{x:Bind LastErrorText, Mode=OneWay}"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="{x:Bind LastErrorVisibility, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <TextBlock x:Name="DevicesStatusText"
+                                   Grid.Row="2"
+                                   Margin="0,10,0,0"
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <!-- ============================ Page 2: This PC ============================ -->
+                    <ScrollViewer x:Name="ThisPcPanel"
+                                  Margin="16,12,16,16"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Visibility="Collapsed">
+                        <StackPanel Spacing="12" Margin="0,0,4,0">
+                            <StackPanel>
+                                <TextBlock x:Uid="ThisPcHeader"
+                                           Text="Publish this PC"
+                                           Style="{StaticResource SectionHeaderTextStyle}" />
+                                <TextBlock x:Uid="ThisPcDescription"
+                                           Text="Other devices, such as a phone or tablet, can connect to this PC and appear as a MIDI endpoint. The endpoint represents the device which connected, so it exists only while something is connected."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <FontIcon Grid.Column="0"
+                                                  Glyph="&#xE977;"
+                                                  FontSize="20"
+                                                  VerticalAlignment="Center" />
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock x:Name="PeripheralNameText"
+                                                       TextWrapping="NoWrap"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                            <TextBlock x:Name="PeripheralStateText"
+                                                       TextWrapping="Wrap"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2"
+                                                    Orientation="Horizontal"
+                                                    Spacing="8"
+                                                    VerticalAlignment="Center">
+                                            <ComboBox x:Name="PeripheralProtocolCombo"
+                                                      x:Uid="PeripheralProtocolCombo"
+                                                      MinWidth="190"
+                                                      Header="Protocol" />
+                                            <Button x:Name="StartPeripheralButton"
+                                                    x:Uid="StartPeripheralButton"
+                                                    Content="Publish"
+                                                    VerticalAlignment="Bottom"
+                                                    Style="{ThemeResource AccentButtonStyle}"
+                                                    Click="OnStartPeripheralClick" />
+                                            <Button x:Name="StopPeripheralButton"
+                                                    x:Uid="StopPeripheralButton"
+                                                    Content="Stop"
+                                                    VerticalAlignment="Bottom"
+                                                    Visibility="Collapsed"
+                                                    Click="OnStopPeripheralClick" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Windows takes the advertised name from the computer name and
+                                         the GATT service provider gives an application no way to
+                                         override it, so this is reported rather than editable. -->
+                                    <TextBlock x:Uid="AdvertisedNameNote"
+                                               Text="The name a remote device sees is this PC's Bluetooth name, which is changed in Windows Settings."
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock x:Uid="ConnectedDeviceHeader"
+                                       Text="Connected device"
+                                       Style="{StaticResource SectionHeaderTextStyle}" />
+
+                            <TextBlock x:Name="NoPeripheralClientText"
+                                       x:Uid="NoPeripheralClientText"
+                                       Text="Nothing is connected. A MIDI endpoint appears when a device connects to this PC."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <ItemsControl x:Name="PeripheralClientsList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:PeripheralClientItem">
+                                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,8">
+                                            <StackPanel Spacing="6">
+                                                <Grid ColumnSpacing="12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" MinWidth="140" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <FontIcon Grid.Column="0"
+                                                              Glyph="&#xE8EA;"
+                                                              FontSize="20"
+                                                              VerticalAlignment="Center" />
+
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                                   TextWrapping="NoWrap"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                        <TextBlock Text="{x:Bind AddressText, Mode=OneWay}"
+                                                                   TextWrapping="NoWrap"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                        <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                                   TextWrapping="Wrap"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                        <TextBlock Text="{x:Bind IntervalText, Mode=OneWay}"
+                                                                   TextWrapping="NoWrap"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                        <TextBlock Text="{x:Bind StatisticsText, Mode=OneWay}"
+                                                                   TextWrapping="NoWrap"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="2"
+                                                                Orientation="Horizontal"
+                                                                Spacing="8"
+                                                                VerticalAlignment="Center">
+                                                        <Button x:Uid="CustomizeButton"
+                                                                Content="Rename"
+                                                                Click="OnCustomizePeripheralClick" />
+                                                        <Button x:Uid="CopyEndpointIdButton"
+                                                                Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                                Click="OnCopyPeripheralEndpointDeviceIdClick">
+                                                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <TextBlock x:Uid="GenericNameHint"
+                                                           Text="This device is reporting a generic name. Phones and tablets withhold their real name from a PC they are not paired with."
+                                                           TextWrapping="Wrap"
+                                                           Visibility="{x:Bind GenericNameHintVisibility, Mode=OneWay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+
+                                                <TextBlock x:Uid="PairingHint"
+                                                           Text="This device is not paired with this PC, so it has no stable identity. Pair from the device itself to give it one. Until then, a name set here applies to any unpaired device which connects."
+                                                           TextWrapping="Wrap"
+                                                           Visibility="{x:Bind PairingHintVisibility, Mode=OneWay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock x:Name="PeripheralStatusText"
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </NavigationView>
+
+        <!-- ================================== Dialogs ================================== -->
+        <ContentDialog x:Name="ConfirmDialog"
+                       x:Uid="ConfirmDialog"
+                       PrimaryButtonText="Yes"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Close">
+            <TextBlock x:Name="ConfirmDialogText" TextWrapping="Wrap" />
+        </ContentDialog>
+
+        <ContentDialog x:Name="CustomizeDialog"
+                       x:Uid="CustomizeDialog"
+                       Title="Rename this device"
+                       PrimaryButtonText="Save"
+                       SecondaryButtonText="Reset"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="12" Width="420">
+                <TextBlock x:Name="CustomizeTransportNameText"
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <TextBox x:Name="CustomizeNameBox"
+                         x:Uid="CustomizeNameBox"
+                         Header="Name" />
+
+                <TextBox x:Name="CustomizeDescriptionBox"
+                         x:Uid="CustomizeDescriptionBox"
+                         Header="Description"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         Height="80" />
+
+                <TextBox x:Name="CustomizeImageBox"
+                         x:Uid="CustomizeImageBox"
+                         Header="Image file name" />
+
+                <TextBlock x:Uid="CustomizeHelpText"
+                           Text="Leave a box empty to use what the device reports. The image is a file name only, from the shared endpoint images folder."
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </StackPanel>
+        </ContentDialog>
+    </Grid>
+</Window>

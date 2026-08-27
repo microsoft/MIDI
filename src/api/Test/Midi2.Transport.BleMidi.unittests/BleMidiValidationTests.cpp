@@ -367,6 +367,169 @@ void BleMidiValidationTests::TestGenericDeviceNameIsMatchedWholeAndCaseInsensiti
 }
 
 
+void BleMidiValidationTests::TestApprovalScopeStringsRoundTrip()
+{
+    MidiBleProtocol::ApprovalScope const scopes[] =
+    {
+        MidiBleProtocol::ApprovalScope::Once,
+        MidiBleProtocol::ApprovalScope::UntilRestart,
+        MidiBleProtocol::ApprovalScope::Always,
+    };
+
+    for (auto const& scope : scopes)
+    {
+        MidiBleProtocol::ApprovalScope parsed{};
+
+        VERIFY_IS_TRUE(MidiBleUtilities::TryApprovalScopeFromJsonString(
+            MidiBleUtilities::ApprovalScopeToJsonString(scope), parsed));
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(scope), static_cast<uint32_t>(parsed));
+    }
+}
+
+void BleMidiValidationTests::TestApprovalScopeRejectsAnUnrecognizedValue()
+{
+    MidiBleProtocol::ApprovalScope parsed{ MidiBleProtocol::ApprovalScope::Always };
+
+    // Guessing here would either write down a permission nobody asked for or silently drop one
+    // they did, so an unknown scope is refused rather than defaulted.
+    VERIFY_IS_FALSE(MidiBleUtilities::TryApprovalScopeFromJsonString(winrt::hstring{ L"forever" }, parsed));
+    VERIFY_IS_FALSE(MidiBleUtilities::TryApprovalScopeFromJsonString(winrt::hstring{ L"ALWAYS" }, parsed));
+    VERIFY_IS_FALSE(MidiBleUtilities::TryApprovalScopeFromJsonString(winrt::hstring{ L"never" }, parsed));
+}
+
+void BleMidiValidationTests::TestApprovalScopeTreatsEmptyAsOnce()
+{
+    MidiBleProtocol::ApprovalScope parsed{ MidiBleProtocol::ApprovalScope::Always };
+
+    // The narrowest scope is the safe reading of a command which did not say.
+    VERIFY_IS_TRUE(MidiBleUtilities::TryApprovalScopeFromJsonString(winrt::hstring{ L"" }, parsed));
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(MidiBleProtocol::ApprovalScope::Once),
+        static_cast<uint32_t>(parsed));
+}
+
+void BleMidiValidationTests::TestClientPolicyDefaultsToRequiringApproval()
+{
+    // A typo in the configuration file must not silently open the peripheral to any Central.
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(MidiBleProtocol::PeripheralClientPolicy::RequireApproval),
+        static_cast<uint32_t>(MidiBleUtilities::PeripheralClientPolicyFromJsonString(winrt::hstring{ L"allowAnyone" })));
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(MidiBleProtocol::PeripheralClientPolicy::RequireApproval),
+        static_cast<uint32_t>(MidiBleUtilities::PeripheralClientPolicyFromJsonString(winrt::hstring{ L"" })));
+}
+
+void BleMidiValidationTests::TestClientPolicyStringsRoundTrip()
+{
+    MidiBleProtocol::PeripheralClientPolicy const policies[] =
+    {
+        MidiBleProtocol::PeripheralClientPolicy::RequireApproval,
+        MidiBleProtocol::PeripheralClientPolicy::AllowAny,
+    };
+
+    for (auto const& policy : policies)
+    {
+        VERIFY_ARE_EQUAL(
+            static_cast<uint32_t>(policy),
+            static_cast<uint32_t>(MidiBleUtilities::PeripheralClientPolicyFromJsonString(
+                MidiBleUtilities::PeripheralClientPolicyToJsonString(policy))));
+    }
+}
+
+void BleMidiValidationTests::TestClientMatchKeyIgnoresSeparatorsAndCase()
+{
+    // A remembered decision typed by hand has to match what the radio reports.
+    auto const expected = std::wstring{ L"48B6201A719D" };
+
+    VERIFY_ARE_EQUAL(expected, MidiBleUtilities::NormalizeClientMatchKey(L"48B6201A719D"));
+    VERIFY_ARE_EQUAL(expected, MidiBleUtilities::NormalizeClientMatchKey(L"48b6201a719d"));
+    VERIFY_ARE_EQUAL(expected, MidiBleUtilities::NormalizeClientMatchKey(L"48:B6:20:1A:71:9D"));
+    VERIFY_ARE_EQUAL(expected, MidiBleUtilities::NormalizeClientMatchKey(L"48-b6-20-1a-71-9d"));
+    VERIFY_ARE_EQUAL(expected, MidiBleUtilities::NormalizeClientMatchKey(L" 48 B6 20 1A 71 9D "));
+}
+
+void BleMidiValidationTests::TestClientMatchKeyOfAnUnusableAddressIsEmpty()
+{
+    // An empty key is what makes the caller fall through to asking a person, so it must not be
+    // producible from something which carries no address at all.
+    VERIFY_IS_TRUE(MidiBleUtilities::NormalizeClientMatchKey(L"").empty());
+    VERIFY_IS_TRUE(MidiBleUtilities::NormalizeClientMatchKey(L"::::").empty());
+    VERIFY_IS_TRUE(MidiBleUtilities::NormalizeClientMatchKey(L"  -- ").empty());
+}
+
+void BleMidiValidationTests::TestClientDecisionStrings()
+{
+    VERIFY_ARE_EQUAL(
+        winrt::hstring{ MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_PENDING },
+        MidiBleUtilities::PeripheralClientDecisionToJsonString(MidiBleProtocol::PeripheralClientDecision::Pending));
+
+    VERIFY_ARE_EQUAL(
+        winrt::hstring{ MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_ALLOWED },
+        MidiBleUtilities::PeripheralClientDecisionToJsonString(MidiBleProtocol::PeripheralClientDecision::Allowed));
+
+    VERIFY_ARE_EQUAL(
+        winrt::hstring{ MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_DENIED },
+        MidiBleUtilities::PeripheralClientDecisionToJsonString(MidiBleProtocol::PeripheralClientDecision::Denied));
+}
+
+
+void BleMidiValidationTests::TestRandomAddressKindComesFromTheTopTwoBits()
+{
+    // Core Specification Vol 6 Part B 1.3.2. Only the low 48 bits are the address, so the kind
+    // lives in bits 47:46.
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(MidiBleUtilities::RandomAddressKind::NonResolvablePrivate),
+        static_cast<uint32_t>(MidiBleUtilities::ClassifyRandomAddress(0x00B6201A719Dull)));
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(MidiBleUtilities::RandomAddressKind::ResolvablePrivate),
+        static_cast<uint32_t>(MidiBleUtilities::ClassifyRandomAddress(0x48B6201A719Dull)));
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(MidiBleUtilities::RandomAddressKind::Reserved),
+        static_cast<uint32_t>(MidiBleUtilities::ClassifyRandomAddress(0x88B6201A719Dull)));
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(MidiBleUtilities::RandomAddressKind::Static),
+        static_cast<uint32_t>(MidiBleUtilities::ClassifyRandomAddress(0xC8B6201A719Dull)));
+}
+
+void BleMidiValidationTests::TestPublicAddressIsAlwaysRememberable()
+{
+    // An IEEE assigned address never changes, bonded or not.
+    VERIFY_IS_TRUE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"public" }, 0x48B6201A719Dull, false));
+    VERIFY_IS_TRUE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"public" }, 0x000000000001ull, false));
+}
+
+void BleMidiValidationTests::TestStaticRandomAddressIsRememberable()
+{
+    VERIFY_IS_TRUE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"random" }, 0xC8B6201A719Dull, false));
+    VERIFY_IS_TRUE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"random" }, 0xFFFFFFFFFFFFull, false));
+}
+
+void BleMidiValidationTests::TestPrivateRandomAddressIsNotRememberableUnlessPaired()
+{
+    // These rotate, so a permanent decision about one would quietly stop matching.
+    VERIFY_IS_FALSE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"random" }, 0x48B6201A719Dull, false));
+    VERIFY_IS_FALSE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"random" }, 0x00B6201A719Dull, false));
+
+    // Bonding gives Windows the key to resolve the rotating address back to a stable one.
+    VERIFY_IS_TRUE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"random" }, 0x48B6201A719Dull, true));
+    VERIFY_IS_TRUE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"random" }, 0x00B6201A719Dull, true));
+}
+
+void BleMidiValidationTests::TestUnspecifiedAddressTypeIsNotRememberableUnlessPaired()
+{
+    // The radio did not say, and guessing wrong offers a permission which does not work.
+    VERIFY_IS_FALSE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"unspecified" }, 0xC8B6201A719Dull, false));
+    VERIFY_IS_FALSE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"" }, 0xC8B6201A719Dull, false));
+
+    VERIFY_IS_TRUE(MidiBleUtilities::IsRememberableAddress(winrt::hstring{ L"unspecified" }, 0xC8B6201A719Dull, true));
+}
+
+
 void BleMidiValidationTests::TestEveryTransportErrorCodeIsDistinct()
 {
     // These are a contract with the SDK, which casts the service's number straight into its own
@@ -398,6 +561,12 @@ void BleMidiValidationTests::TestEveryTransportErrorCodeIsDistinct()
         { L"PERIPHERAL_NO_CLIENT",          BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_NO_CLIENT },
         { L"PERIPHERAL_INVALID_PROTOCOL",   BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_INVALID_PROTOCOL },
         { L"PERIPHERAL_ADVERTISING_FAILED", BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_ADVERTISING_FAILED },
+        { L"CLIENT_NOT_PENDING",           BLUETOOTH_MIDI_ERROR_CODE_CLIENT_NOT_PENDING },
+        { L"CLIENT_IDENTITY_MISMATCH",     BLUETOOTH_MIDI_ERROR_CODE_CLIENT_IDENTITY_MISMATCH },
+        { L"INVALID_APPROVAL_SCOPE",       BLUETOOTH_MIDI_ERROR_CODE_INVALID_APPROVAL_SCOPE },
+        { L"MISSING_CLIENT_ADDRESS",       BLUETOOTH_MIDI_ERROR_CODE_MISSING_CLIENT_ADDRESS },
+        { L"CLIENT_NOT_REMEMBERED",        BLUETOOTH_MIDI_ERROR_CODE_CLIENT_NOT_REMEMBERED },
+        { L"ADDRESS_NOT_REMEMBERABLE",     BLUETOOTH_MIDI_ERROR_CODE_ADDRESS_NOT_REMEMBERABLE },
         { L"RADIO_NOT_AVAILABLE",           BLUETOOTH_MIDI_ERROR_CODE_RADIO_NOT_AVAILABLE },
         { L"RADIO_NOT_SUPPORTED",           BLUETOOTH_MIDI_ERROR_CODE_RADIO_NOT_SUPPORTED },
         { L"PROTOCOL_NOT_SUPPORTED",        BLUETOOTH_MIDI_ERROR_CODE_PROTOCOL_NOT_SUPPORTED },

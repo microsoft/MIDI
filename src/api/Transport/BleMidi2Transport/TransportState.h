@@ -78,6 +78,41 @@ public:
     void SetRadioCapabilities(_In_ MidiBleProtocol::RadioCapabilities const& capabilities);
     MidiBleProtocol::RadioCapabilities GetRadioCapabilities();
 
+    // Approval of a Central which subscribes to this PC's peripheral. WinRT cannot refuse a GATT
+    // subscription, so an unapproved Central is left subscribed with no endpoint and no data path.
+    void SetPeripheralClientPolicy(_In_ MidiBleProtocol::PeripheralClientPolicy const policy);
+    MidiBleProtocol::PeripheralClientPolicy GetPeripheralClientPolicy();
+
+    void SetRememberedPeripheralClients(
+        _In_ std::vector<MidiBleProtocol::PeripheralClientIdentity> const& allowed,
+        _In_ std::vector<MidiBleProtocol::PeripheralClientIdentity> const& denied);
+
+    std::vector<MidiBleProtocol::PeripheralClientIdentity> GetRememberedPeripheralClients(_In_ bool const allowed);
+
+    // Returns what should happen to a Central which has just subscribed, and records it as the
+    // waiting client when the answer is Pending.
+    MidiBleProtocol::PeripheralClientDecision EvaluatePeripheralClient(
+        _In_ MidiBleProtocol::PendingPeripheralClient const& client);
+
+    bool TryGetPendingPeripheralClient(_Out_ MidiBleProtocol::PendingPeripheralClient& client);
+    void ClearPendingPeripheralClient();
+
+    // Drops the decision covering the current link only. Called when the Central goes away, so an
+    // "allow once" does not carry over to whoever connects next.
+    void ClearPeripheralClientLinkDecision();
+
+    // Applies a user decision to the waiting client. Returns 0 on success, or the error code
+    // saying why not: nothing waiting, a different device waiting, or a permanent decision asked
+    // for about an address which rotates.
+    uint32_t ApplyPeripheralClientDecision(
+        _In_ std::wstring const& address,
+        _In_ bool const approve,
+        _In_ MidiBleProtocol::ApprovalScope const scope,
+        _Out_ bool& shouldPersist,
+        _Out_ MidiBleProtocol::PeripheralClientIdentity& identity);
+
+    bool ForgetPeripheralClient(_In_ std::wstring const& address);
+
     //HRESULT AddHost(
     //    _In_ std::shared_ptr<MidiNetworkHost>);
     //std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts() { return m_hosts; }
@@ -154,6 +189,27 @@ private:
 
     MidiBleProtocol::RadioCapabilities m_radioCapabilities{};
     std::mutex m_radioCapabilitiesLock;
+
+    // BLE MIDI allows a single active link, so there is at most one Central waiting at a time.
+    std::atomic<MidiBleProtocol::PeripheralClientPolicy> m_peripheralClientPolicy{
+        MidiBleProtocol::PeripheralClientPolicy::RequireApproval };
+
+    MidiBleProtocol::PendingPeripheralClient m_pendingPeripheralClient{};
+    bool m_hasPendingPeripheralClient{ false };
+
+    // The decision covering the Central which is connected right now, keyed on its WinRT device
+    // id. This is what makes "once" mean once: it is dropped when the link goes away.
+    std::wstring m_linkDecisionClientDeviceId{ };
+    bool m_linkDecisionApproved{ false };
+
+    // keyed by the normalized address so a hand-edited configuration entry still matches
+    std::map<std::wstring, MidiBleProtocol::PeripheralClientIdentity> m_allowedPeripheralClients{ };
+    std::map<std::wstring, MidiBleProtocol::PeripheralClientIdentity> m_deniedPeripheralClients{ };
+
+    // decisions scoped to this run of the service, which are never written to the config file
+    std::map<std::wstring, bool> m_sessionPeripheralClientDecisions{ };
+
+    std::mutex m_peripheralClientLock;
 
     //std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
     //std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };

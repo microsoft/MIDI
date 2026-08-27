@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Windows MIDI Bluetooth Setup</value>
+  </data>
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Appearance and settings</value>
+  </data>
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Appearance and settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="DevicesNavigationItem.Content" xml:space="preserve">
+    <value>Bluetooth devices</value>
+  </data>
+  <data name="ThisPcNavigationItem.Content" xml:space="preserve">
+    <value>This PC</value>
+  </data>
+  <data name="RadioLimitationBar.Title" xml:space="preserve">
+    <value>Bluetooth is limited on this PC</value>
+  </data>
+  <data name="TransportUnavailableBar.Title" xml:space="preserve">
+    <value>Bluetooth MIDI is not available</value>
+  </data>
+  <data name="TransportUnavailableBar.Message" xml:space="preserve">
+    <value>The Bluetooth MIDI transport is not installed, so this tool has nothing to work with.</value>
+  </data>
+  <data name="DevicesHeader.Text" xml:space="preserve">
+    <value>Bluetooth MIDI devices</value>
+  </data>
+  <data name="DevicesDescription.Text" xml:space="preserve">
+    <value>Devices are found by listening for advertisements, so a device which is switched off, asleep, or already connected to another host will not be listed.</value>
+  </data>
+  <data name="DevicesRefreshButton.Content" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="NoDevicesText.Text" xml:space="preserve">
+    <value>No Bluetooth MIDI devices have been discovered yet. Wake a device so it advertises, then wait a moment.</value>
+  </data>
+  <data name="DevicesListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Bluetooth MIDI devices</value>
+  </data>
+  <data name="ConnectButton.Content" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="DisconnectButton.Content" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="ForgetButton.Content" xml:space="preserve">
+    <value>Forget</value>
+  </data>
+  <data name="CustomizeButton.Content" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="CopyEndpointIdButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Copy the endpoint id</value>
+  </data>
+  <data name="CopyEndpointIdButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copy the endpoint id</value>
+  </data>
+  <data name="ThisPcHeader.Text" xml:space="preserve">
+    <value>Publish this PC</value>
+  </data>
+  <data name="ThisPcDescription.Text" xml:space="preserve">
+    <value>Other devices, such as a phone or tablet, can connect to this PC and appear as a MIDI endpoint. The endpoint represents the device which connected, so it exists only while something is connected.</value>
+  </data>
+  <data name="PeripheralProtocolCombo.Header" xml:space="preserve">
+    <value>Protocol</value>
+  </data>
+  <data name="StartPeripheralButton.Content" xml:space="preserve">
+    <value>Publish</value>
+  </data>
+  <data name="StopPeripheralButton.Content" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="AdvertisedNameNote.Text" xml:space="preserve">
+    <value>The name a remote device sees is this PC&apos;s Bluetooth name, which is changed in Windows Settings.</value>
+  </data>
+  <data name="ConnectedDeviceHeader.Text" xml:space="preserve">
+    <value>Connected device</value>
+  </data>
+  <data name="NoPeripheralClientText.Text" xml:space="preserve">
+    <value>Nothing is connected. A MIDI endpoint appears when a device connects to this PC.</value>
+  </data>
+  <data name="GenericNameHint.Text" xml:space="preserve">
+    <value>This device is reporting a generic name. Phones and tablets withhold their real name from a PC they are not paired with.</value>
+  </data>
+  <data name="PairingHint.Text" xml:space="preserve">
+    <value>This device is not paired with this PC, so it has no stable identity. Pair from the device itself to give it one. Until then, a name set here applies to any unpaired device which connects.</value>
+  </data>
+  <data name="ConfirmDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ConfirmDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CustomizeDialog.Title" xml:space="preserve">
+    <value>Rename this device</value>
+  </data>
+  <data name="CustomizeDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="CustomizeDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="CustomizeDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CustomizeNameBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CustomizeDescriptionBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="CustomizeImageBox.Header" xml:space="preserve">
+    <value>Image file name</value>
+  </data>
+  <data name="CustomizeHelpText.Text" xml:space="preserve">
+    <value>Leave a box empty to use what the device reports. The image is a file name only, from the shared endpoint images folder.</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropLabel" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="SettingsBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom color</value>
+  </data>
+  <data name="SettingsColorPickerName" xml:space="preserve">
+    <value>Custom window color</value>
+  </data>
+  <data name="SettingsRefreshIntervalLabel" xml:space="preserve">
+    <value>Refresh every (seconds)</value>
+  </data>
+  <data name="SettingsRefreshIntervalHelp" xml:space="preserve">
+    <value>How often this tool asks the service for device state and signal strength. A shorter interval gives a smoother signal graph.</value>
+  </data>
+  <data name="ProtocolMidi1" xml:space="preserve">
+    <value>Bluetooth LE MIDI 1.0</value>
+  </data>
+  <data name="ProtocolMidi2" xml:space="preserve">
+    <value>Bluetooth LE MIDI 2.0 (draft)</value>
+  </data>
+  <data name="ProtocolUnknown" xml:space="preserve">
+    <value>Not known yet</value>
+  </data>
+  <data name="PresenceConnected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="PresenceNearby" xml:space="preserve">
+    <value>Nearby</value>
+  </data>
+  <data name="PresenceAway" xml:space="preserve">
+    <value>Not heard from recently</value>
+  </data>
+  <data name="PresenceAwaySecondsFormat" xml:space="preserve">
+    <value>Last heard from {0} seconds ago</value>
+  </data>
+  <data name="PresenceAwayMinutesFormat" xml:space="preserve">
+    <value>Last heard from {0} minutes ago</value>
+  </data>
+  <data name="PresenceAwayHoursFormat" xml:space="preserve">
+    <value>Last heard from {0} hours ago</value>
+  </data>
+  <data name="ConnectionIntervalFormat" xml:space="preserve">
+    <value>Connection interval {0:.2f} ms</value>
+  </data>
+  <data name="AddressPublicFormat" xml:space="preserve">
+    <value>{0} (public address)</value>
+  </data>
+  <data name="AddressRandomFormat" xml:space="preserve">
+    <value>{0} (random address, which the device changes for privacy)</value>
+  </data>
+  <data name="UnknownDeviceName" xml:space="preserve">
+    <value>Unnamed device</value>
+  </data>
+  <data name="DeviceSubtitleFormat" xml:space="preserve">
+    <value>{0} - {1}</value>
+  </data>
+  <data name="MessageCountsFormat" xml:space="preserve">
+    <value>{0} messages in, {1} out</value>
+  </data>
+  <data name="SignalStrengthFormat" xml:space="preserve">
+    <value>{0} dBm (scale {1} to {2})</value>
+  </data>
+  <data name="RadioNotPresent" xml:space="preserve">
+    <value>This PC has no Bluetooth radio, so no Bluetooth MIDI device can be found.</value>
+  </data>
+  <data name="RadioNoLowEnergy" xml:space="preserve">
+    <value>This PC&apos;s Bluetooth radio does not support Bluetooth Low Energy, which Bluetooth MIDI requires.</value>
+  </data>
+  <data name="RadioNoCentralRole" xml:space="preserve">
+    <value>This PC&apos;s Bluetooth radio cannot connect out to devices, so no Bluetooth MIDI device can be found.</value>
+  </data>
+  <data name="RadioNoPeripheralRole" xml:space="preserve">
+    <value>This PC&apos;s Bluetooth radio cannot advertise, so this PC cannot be published for other devices to connect to. Connecting out to devices still works.</value>
+  </data>
+  <data name="PeripheralRunningFormat" xml:space="preserve">
+    <value>Published, advertising {0}</value>
+  </data>
+  <data name="PeripheralStopped" xml:space="preserve">
+    <value>Not published. Other devices cannot see this PC as a MIDI device.</value>
+  </data>
+  <data name="ClientPaired" xml:space="preserve">
+    <value>Paired with this PC</value>
+  </data>
+  <data name="ClientNotPaired" xml:space="preserve">
+    <value>Not paired with this PC</value>
+  </data>
+  <data name="StatusServiceDidNotRespond" xml:space="preserve">
+    <value>The Bluetooth MIDI transport did not respond.</value>
+  </data>
+  <data name="StatusConnectingFormat" xml:space="preserve">
+    <value>Connecting to {0}. The connection is made in the background.</value>
+  </data>
+  <data name="StatusRememberedFormat" xml:space="preserve">
+    <value>{0} has been remembered. It will connect on its own when it is switched on and in range.</value>
+  </data>
+  <data name="StatusConnectFailedFormat" xml:space="preserve">
+    <value>Could not connect to {0}. {1}</value>
+  </data>
+  <data name="StatusConnectedNotSavedFormat" xml:space="preserve">
+    <value>Connected to {0}, but it could not be saved, so it will be forgotten when the service restarts.</value>
+  </data>
+  <data name="StatusConnectedSaveFailedFormat" xml:space="preserve">
+    <value>Connected to {0}, but it could not be saved. {1}</value>
+  </data>
+  <data name="StatusDisconnectedFormat" xml:space="preserve">
+    <value>{0} has been disconnected and will not reconnect on its own.</value>
+  </data>
+  <data name="StatusDisconnectFailedFormat" xml:space="preserve">
+    <value>Could not disconnect {0}. {1}</value>
+  </data>
+  <data name="ConfirmForgetTitle" xml:space="preserve">
+    <value>Forget this device?</value>
+  </data>
+  <data name="ConfirmForgetMessageFormat" xml:space="preserve">
+    <value>{0} will be removed from the configuration file. It can be connected again at any time.</value>
+  </data>
+  <data name="StatusForgottenFormat" xml:space="preserve">
+    <value>{0} has been removed from the configuration file.</value>
+  </data>
+  <data name="StatusForgetFailedFormat" xml:space="preserve">
+    <value>Could not forget {0}. {1}</value>
+  </data>
+  <data name="StatusEndpointIdCopied" xml:space="preserve">
+    <value>The endpoint id has been copied to the clipboard.</value>
+  </data>
+  <data name="CustomizeTransportNameFormat" xml:space="preserve">
+    <value>The name this device reports is {0}.</value>
+  </data>
+  <data name="StatusImageMustBeFileName" xml:space="preserve">
+    <value>The image must be a file name only, not a path.</value>
+  </data>
+  <data name="StatusCustomizationSaved" xml:space="preserve">
+    <value>The name has been saved.</value>
+  </data>
+  <data name="StatusCustomizationNotSaved" xml:space="preserve">
+    <value>The name was not changed.</value>
+  </data>
+  <data name="ConfirmStopPeripheralTitle" xml:space="preserve">
+    <value>Stop publishing this PC?</value>
+  </data>
+  <data name="ConfirmStopPeripheralMessage" xml:space="preserve">
+    <value>Any device connected to this PC will be disconnected, and its MIDI endpoint will go away. An app still using it will see the endpoint disappear.</value>
+  </data>
+  <data name="StatusPeripheralStarted" xml:space="preserve">
+    <value>This PC is now published as a Bluetooth MIDI device.</value>
+  </data>
+  <data name="StatusPeripheralStopped" xml:space="preserve">
+    <value>This PC is no longer published as a Bluetooth MIDI device.</value>
+  </data>
+  <data name="StatusPeripheralStartFailedFormat" xml:space="preserve">
+    <value>Could not publish this PC. {0}</value>
+  </data>
+  <data name="StatusPeripheralStopFailedFormat" xml:space="preserve">
+    <value>Could not stop publishing this PC. {0}</value>
+  </data>
+  <data name="StatusPeripheralMidi2Warning" xml:space="preserve">
+    <value>Bluetooth LE MIDI 2.0 is a draft standard and almost nothing supports it yet. Only one protocol is published at a time, so a MIDI 1.0 device cannot connect while this is selected.</value>
+  </data>
+</root>

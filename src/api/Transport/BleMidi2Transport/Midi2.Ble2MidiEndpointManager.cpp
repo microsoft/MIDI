@@ -976,6 +976,7 @@ CMidi2Ble2MidiEndpointManager::RemovePeripheralEndpoint()
     }
 
     m_peripheralClientDeviceId = L"";
+    m_peripheralEvaluatedClientDeviceId = L"";
 
     return S_OK;
 }
@@ -988,13 +989,24 @@ CMidi2Ble2MidiEndpointManager::ProcessPeripheralClientChange()
 
     auto const clientDeviceId = peripheral != nullptr ? peripheral->ActiveClientDeviceId() : winrt::hstring{};
 
-    if (clientDeviceId == m_peripheralClientDeviceId)
+    // The same Central which already has an endpoint means nothing has changed.
+    if (!clientDeviceId.empty() && clientDeviceId == m_peripheralClientDeviceId)
     {
         return S_OK;
     }
 
-    // A different Central, or none, means the endpoint no longer represents what is connected.
-    LOG_IF_FAILED(RemovePeripheralEndpoint());
+    if (clientDeviceId != m_peripheralEvaluatedClientDeviceId)
+    {
+        // A different Central, or none, means the endpoint no longer represents what is connected.
+        LOG_IF_FAILED(RemovePeripheralEndpoint());
+
+        // Whoever was waiting or was let through is no longer the device on the link, so neither
+        // their request nor an "allow once" granted to them may carry over.
+        TransportState::Current().ClearPendingPeripheralClient();
+        TransportState::Current().ClearPeripheralClientLinkDecision();
+
+        m_peripheralEvaluatedClientDeviceId = clientDeviceId;
+    }
 
     if (peripheral == nullptr || clientDeviceId.empty())
     {
@@ -1059,6 +1071,63 @@ CMidi2Ble2MidiEndpointManager::ProcessPeripheralClientChange()
         TraceLoggingBool(remoteIsPaired, "remote is paired"),
         TraceLoggingBool(hasGenericName, "remote name is generic")
     );
+
+    MidiBleProtocol::PendingPeripheralClient candidate{};
+    candidate.BluetoothDeviceId = clientDeviceId;
+    candidate.Name = remoteName;
+    candidate.Address = remoteAddress;
+    candidate.AddressType = remoteAddressType;
+    candidate.IsPaired = remoteIsPaired;
+    candidate.HasGenericName = hasGenericName;
+
+    // Taken from the device rather than the formatted string, because the classification is in
+    // the top two bits of the address.
+    candidate.IsRememberable = MidiBleUtilities::IsRememberableAddress(
+        remoteAddressType,
+        remoteDevice != nullptr ? remoteDevice.BluetoothAddress() : 0,
+        remoteIsPaired);
+
+    FILETIME requestedTime{};
+    GetSystemTimeAsFileTime(&requestedTime);
+    candidate.RequestedFileTime =
+        (static_cast<uint64_t>(requestedTime.dwHighDateTime) << 32) | requestedTime.dwLowDateTime;
+
+    auto const decision = TransportState::Current().EvaluatePeripheralClient(candidate);
+
+    // The Central stays subscribed either way, because WinRT cannot refuse a subscription. What
+    // approval controls is whether an endpoint exists and whether anything is read off the link.
+    if (decision != MidiBleProtocol::PeripheralClientDecision::Allowed)
+    {
+        TraceLoggingWrite(
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(
+                decision == MidiBleProtocol::PeripheralClientDecision::Denied ?
+                    L"A Central was denied, so no endpoint was created for it" :
+                    L"A Central is waiting for approval, so no endpoint was created for it",
+                MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(clientDeviceId.c_str(), "client device id"),
+            TraceLoggingWideString(remoteName.c_str(), "remote name"),
+            TraceLoggingWideString(remoteAddress.c_str(), "remote address")
+        );
+
+        // Recorded so the status command can describe who is waiting even though there is no
+        // connection to read it from.
+        peripheral->SetRemoteClientInfo(MidiBleRemoteClientInfo{
+            remoteName,
+            remoteAddress,
+            remoteAddressType,
+            remoteBluetoothDeviceId,
+            remoteIsPaired,
+            hasGenericName });
+
+        peripheral->SetRemoteDevice(remoteDevice);
+
+        return S_OK;
+    }
 
     std::wstring endpointName{ remoteName };
 

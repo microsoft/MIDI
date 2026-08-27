@@ -47,6 +47,10 @@ public:
     STDMETHOD(StartPeripheral)(_In_ MidiBleProtocol::Protocol const protocol);
     STDMETHOD(StopPeripheral)();
 
+    // Re-runs the check which decides whether the Central on the link gets an endpoint. Also
+    // called after a user approves or denies one, which is why it is not private.
+    void OnPeripheralClientChanged();
+
     // Lets a customization find an endpoint which already exists, so a rename does not require
     // disconnecting the device.
     winrt::hstring FindMatchingInstantiatedEndpoint(
@@ -89,7 +93,6 @@ private:
 
     HRESULT CreateEndpointForConnection(_In_ std::shared_ptr<MidiBleConnection> connection);
 
-    void OnPeripheralClientChanged();
     HRESULT ProcessPeripheralClientChange();
     HRESULT RemovePeripheralEndpoint();
 
@@ -152,6 +155,11 @@ private:
     // Only ever touched on the background worker, which is the one thread allowed to create or
     // remove endpoints.
     winrt::hstring m_peripheralClientDeviceId{ };
+
+    // The Central the approval decision was last made about. Separate from the one above because
+    // a Central waiting for approval has no endpoint, and re-running the check after a person
+    // answers must not look like a different device arriving.
+    winrt::hstring m_peripheralEvaluatedClientDeviceId{ };
     std::wstring m_peripheralEndpointInstanceId{ };
     bool m_peripheralClientChangePending{ false };
     // Connecting opens a GATT session and creates a device node, so it never runs on a caller's

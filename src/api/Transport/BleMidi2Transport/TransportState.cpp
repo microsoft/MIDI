@@ -291,6 +291,261 @@ TransportState::GetRadioCapabilities()
 }
 
 
+_Use_decl_annotations_
+void
+TransportState::SetPeripheralClientPolicy(MidiBleProtocol::PeripheralClientPolicy const policy)
+{
+    m_peripheralClientPolicy.store(policy);
+}
+
+
+MidiBleProtocol::PeripheralClientPolicy
+TransportState::GetPeripheralClientPolicy()
+{
+    return m_peripheralClientPolicy.load();
+}
+
+
+_Use_decl_annotations_
+void
+TransportState::SetRememberedPeripheralClients(
+    std::vector<MidiBleProtocol::PeripheralClientIdentity> const& allowed,
+    std::vector<MidiBleProtocol::PeripheralClientIdentity> const& denied)
+{
+    auto lock = std::scoped_lock{ m_peripheralClientLock };
+
+    m_allowedPeripheralClients.clear();
+    m_deniedPeripheralClients.clear();
+
+    for (auto const& entry : allowed)
+    {
+        auto const key = MidiBleUtilities::NormalizeClientMatchKey(entry.Address);
+
+        if (!key.empty())
+        {
+            m_allowedPeripheralClients[key] = entry;
+        }
+    }
+
+    // A device named in both lists is denied, because the safe reading of a contradictory
+    // configuration file is the more restrictive one.
+    for (auto const& entry : denied)
+    {
+        auto const key = MidiBleUtilities::NormalizeClientMatchKey(entry.Address);
+
+        if (!key.empty())
+        {
+            m_deniedPeripheralClients[key] = entry;
+            m_allowedPeripheralClients.erase(key);
+        }
+    }
+}
+
+
+_Use_decl_annotations_
+std::vector<MidiBleProtocol::PeripheralClientIdentity>
+TransportState::GetRememberedPeripheralClients(bool const allowed)
+{
+    auto lock = std::scoped_lock{ m_peripheralClientLock };
+
+    std::vector<MidiBleProtocol::PeripheralClientIdentity> results{};
+
+    for (auto const& entry : allowed ? m_allowedPeripheralClients : m_deniedPeripheralClients)
+    {
+        results.push_back(entry.second);
+    }
+
+    return results;
+}
+
+
+_Use_decl_annotations_
+MidiBleProtocol::PeripheralClientDecision
+TransportState::EvaluatePeripheralClient(MidiBleProtocol::PendingPeripheralClient const& client)
+{
+    if (m_peripheralClientPolicy.load() == MidiBleProtocol::PeripheralClientPolicy::AllowAny)
+    {
+        return MidiBleProtocol::PeripheralClientDecision::Allowed;
+    }
+
+    auto const key = MidiBleUtilities::NormalizeClientMatchKey(client.Address);
+
+    auto lock = std::scoped_lock{ m_peripheralClientLock };
+
+    // The decision already made about the Central on the current link wins over everything else,
+    // because it is the most recent thing a person said and it may have been "once".
+    if (!client.BluetoothDeviceId.empty() && client.BluetoothDeviceId == m_linkDecisionClientDeviceId)
+    {
+        return m_linkDecisionApproved ?
+            MidiBleProtocol::PeripheralClientDecision::Allowed :
+            MidiBleProtocol::PeripheralClientDecision::Denied;
+    }
+
+    // A Central with no resolvable address cannot be identified, let alone remembered, so it is
+    // always put in front of a person.
+    if (!key.empty())
+    {
+        if (m_deniedPeripheralClients.find(key) != m_deniedPeripheralClients.end())
+        {
+            return MidiBleProtocol::PeripheralClientDecision::Denied;
+        }
+
+        if (m_allowedPeripheralClients.find(key) != m_allowedPeripheralClients.end())
+        {
+            return MidiBleProtocol::PeripheralClientDecision::Allowed;
+        }
+
+        if (auto session = m_sessionPeripheralClientDecisions.find(key);
+            session != m_sessionPeripheralClientDecisions.end())
+        {
+            return session->second ?
+                MidiBleProtocol::PeripheralClientDecision::Allowed :
+                MidiBleProtocol::PeripheralClientDecision::Denied;
+        }
+    }
+
+    m_pendingPeripheralClient = client;
+    m_hasPendingPeripheralClient = true;
+
+    return MidiBleProtocol::PeripheralClientDecision::Pending;
+}
+
+
+_Use_decl_annotations_
+bool
+TransportState::TryGetPendingPeripheralClient(MidiBleProtocol::PendingPeripheralClient& client)
+{
+    auto lock = std::scoped_lock{ m_peripheralClientLock };
+
+    if (!m_hasPendingPeripheralClient)
+    {
+        return false;
+    }
+
+    client = m_pendingPeripheralClient;
+
+    return true;
+}
+
+
+void
+TransportState::ClearPendingPeripheralClient()
+{
+    auto lock = std::scoped_lock{ m_peripheralClientLock };
+
+    m_pendingPeripheralClient = {};
+    m_hasPendingPeripheralClient = false;
+}
+
+
+void
+TransportState::ClearPeripheralClientLinkDecision()
+{
+    auto lock = std::scoped_lock{ m_peripheralClientLock };
+
+    m_linkDecisionClientDeviceId.clear();
+    m_linkDecisionApproved = false;
+}
+
+
+_Use_decl_annotations_
+uint32_t
+TransportState::ApplyPeripheralClientDecision(
+    std::wstring const& address,
+    bool const approve,
+    MidiBleProtocol::ApprovalScope const scope,
+    bool& shouldPersist,
+    MidiBleProtocol::PeripheralClientIdentity& identity)
+{
+    shouldPersist = false;
+    identity = {};
+
+    auto const key = MidiBleUtilities::NormalizeClientMatchKey(address);
+
+    auto lock = std::scoped_lock{ m_peripheralClientLock };
+
+    if (!m_hasPendingPeripheralClient)
+    {
+        return BLUETOOTH_MIDI_ERROR_CODE_CLIENT_NOT_PENDING;
+    }
+
+    // The decision has to name the Central which is actually waiting. Without this an approval
+    // raced against a device swapping out would land on whoever connected in the meantime.
+    if (key.empty() || MidiBleUtilities::NormalizeClientMatchKey(m_pendingPeripheralClient.Address) != key)
+    {
+        return BLUETOOTH_MIDI_ERROR_CODE_CLIENT_IDENTITY_MISMATCH;
+    }
+
+    identity.Address = m_pendingPeripheralClient.Address;
+    identity.Name = m_pendingPeripheralClient.Name;
+
+    // A rotating address cannot identify this device again, so recording a permanent decision
+    // about it would be a permission which quietly stops matching. Refused rather than accepted
+    // and ignored, so a caller which offers "always" anyway is told why it cannot have it.
+    if (scope == MidiBleProtocol::ApprovalScope::Always && !m_pendingPeripheralClient.IsRememberable)
+    {
+        return BLUETOOTH_MIDI_ERROR_CODE_ADDRESS_NOT_REMEMBERABLE;
+    }
+
+    switch (scope)
+    {
+    case MidiBleProtocol::ApprovalScope::Always:
+        if (approve)
+        {
+            m_allowedPeripheralClients[key] = identity;
+            m_deniedPeripheralClients.erase(key);
+        }
+        else
+        {
+            m_deniedPeripheralClients[key] = identity;
+            m_allowedPeripheralClients.erase(key);
+        }
+
+        shouldPersist = true;
+        break;
+
+    case MidiBleProtocol::ApprovalScope::UntilRestart:
+        m_sessionPeripheralClientDecisions[key] = approve;
+        break;
+
+    default:
+        // "once" is recorded against this link only, so the same device connecting again asks
+        // again.
+        break;
+    }
+
+    m_linkDecisionClientDeviceId = m_pendingPeripheralClient.BluetoothDeviceId;
+    m_linkDecisionApproved = approve;
+
+    m_pendingPeripheralClient = {};
+    m_hasPendingPeripheralClient = false;
+
+    return 0;
+}
+
+
+_Use_decl_annotations_
+bool
+TransportState::ForgetPeripheralClient(std::wstring const& address)
+{
+    auto const key = MidiBleUtilities::NormalizeClientMatchKey(address);
+
+    if (key.empty())
+    {
+        return false;
+    }
+
+    auto lock = std::scoped_lock{ m_peripheralClientLock };
+
+    auto const removed =
+        m_allowedPeripheralClients.erase(key) + m_deniedPeripheralClients.erase(key);
+
+    m_sessionPeripheralClientDecisions.erase(key);
+
+    return removed > 0;
+}
+
+
 
 
 //_Use_decl_annotations_

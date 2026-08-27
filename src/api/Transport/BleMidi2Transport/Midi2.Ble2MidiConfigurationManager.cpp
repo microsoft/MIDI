@@ -54,6 +54,92 @@ namespace
         return GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_ARGUMENT_DEVICE_ID_KEY);
     }
 
+    // FILETIME is what the pending record captures, because it is monotonic enough for "how long
+    // has this been asking" and converts to the ISO 8601 string the setup app displays.
+    winrt::hstring FileTimeToIso8601(_In_ uint64_t const fileTime)
+    {
+        if (fileTime == 0)
+        {
+            return L"";
+        }
+
+        FILETIME ft{};
+        ft.dwLowDateTime = static_cast<DWORD>(fileTime & 0xFFFFFFFF);
+        ft.dwHighDateTime = static_cast<DWORD>(fileTime >> 32);
+
+        SYSTEMTIME st{};
+
+        if (!FileTimeToSystemTime(&ft, &st))
+        {
+            return L"";
+        }
+
+        wchar_t buffer[64]{};
+
+        swprintf_s(
+            buffer,
+            ARRAYSIZE(buffer),
+            L"%04u-%02u-%02uT%02u:%02u:%02u.%03uZ",
+            st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+
+        return winrt::hstring{ buffer };
+    }
+
+    json::JsonObject BuildPendingClientJson(_In_ MidiBleProtocol::PendingPeripheralClient const& client)
+    {
+        json::JsonObject clientJson;
+
+        clientJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_NAME_KEY,
+            json::JsonValue::CreateStringValue(client.Name));
+
+        clientJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY,
+            json::JsonValue::CreateStringValue(client.Address));
+
+        clientJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_TYPE_KEY,
+            json::JsonValue::CreateStringValue(client.AddressType));
+
+        clientJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_BLUETOOTH_DEVICE_ID_KEY,
+            json::JsonValue::CreateStringValue(client.BluetoothDeviceId));
+
+        // A Central which is not bonded rotates its address, so an "always" decision about it
+        // cannot be relied on to match later. The caller needs this to say so.
+        clientJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PAIRED_KEY,
+            json::JsonValue::CreateBooleanValue(client.IsPaired));
+
+        clientJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_GENERIC_NAME_KEY,
+            json::JsonValue::CreateBooleanValue(client.HasGenericName));
+
+        clientJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_REMEMBERABLE_KEY,
+            json::JsonValue::CreateBooleanValue(client.IsRememberable));
+
+        clientJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_REQUEST_TIME_KEY,
+            json::JsonValue::CreateStringValue(FileTimeToIso8601(client.RequestedFileTime)));
+
+        return clientJson;
+    }
+
+    void AddPendingClientsToResponse(_In_ json::JsonObject& responseObject)
+    {
+        json::JsonArray pendingJson;
+
+        MidiBleProtocol::PendingPeripheralClient pending{};
+
+        if (TransportState::Current().TryGetPendingPeripheralClient(pending))
+        {
+            pendingJson.Append(BuildPendingClientJson(pending));
+        }
+
+        responseObject.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PENDING_CLIENTS_RESPONSE_KEY, pendingJson);
+    }
+
     MidiBleProtocol::Protocol ParseProtocolJsonString(
         _In_ winrt::hstring const& value,
         _In_ MidiBleProtocol::Protocol const defaultProtocol)
@@ -95,6 +181,14 @@ namespace
         peripheralJson.SetNamedValue(
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERIPHERAL_CLIENT_COUNT_KEY,
             json::JsonValue::CreateNumberValue(isRunning ? peripheral->SubscribedClientCount() : 0));
+
+        // Reported whether or not the peripheral is running, because it describes what will happen
+        // to the next Central rather than the state of the current one.
+        peripheralJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_KEY,
+            json::JsonValue::CreateStringValue(
+                MidiBleUtilities::PeripheralClientPolicyToJsonString(
+                    TransportState::Current().GetPeripheralClientPolicy())));
 
         // A remote Central being subscribed is the only sign that data can actually move.
         peripheralJson.SetNamedValue(
@@ -283,6 +377,49 @@ namespace
 
     // Publishing this PC as a peripheral is off unless the configuration file asks for it, because
     // it makes the machine visible and connectable to anything nearby.
+    // An entry with no usable address is dropped rather than kept, because it could never match a
+    // Central and would only make the remembered list look like it says more than it does.
+    std::vector<MidiBleProtocol::PeripheralClientIdentity> ReadClientIdentityList(
+        _In_ json::JsonObject const& peripheralObject,
+        _In_ std::wstring const& key)
+    {
+        std::vector<MidiBleProtocol::PeripheralClientIdentity> results{};
+
+        json::JsonArray entries{ nullptr };
+
+        if (!MidiBleProtocol::SafeJson::TryGetArray(peripheralObject, key, entries))
+        {
+            return results;
+        }
+
+        for (auto const& entry : entries)
+        {
+            if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
+            {
+                continue;
+            }
+
+            auto const entryObject = entry.GetObjectW();
+
+            MidiBleProtocol::PeripheralClientIdentity identity{};
+
+            identity.Address = MidiBleProtocol::SafeJson::GetString(
+                entryObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY).c_str();
+
+            identity.Name = MidiBleProtocol::SafeJson::GetString(
+                entryObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_NAME_KEY).c_str();
+
+            if (!MidiBleUtilities::IsWellFormedBluetoothDeviceId(identity.Address))
+            {
+                continue;
+            }
+
+            results.push_back(identity);
+        }
+
+        return results;
+    }
+
     void QueueConfiguredPeripheral(_In_ json::JsonObject const& transportObject)    {
         if (transportObject == nullptr)
         {
@@ -295,6 +432,16 @@ namespace
         {
             return;
         }
+
+        // Read before the enabled check, because the answer has to be ready for whenever the
+        // peripheral is started, which may be by a command long after this file was read.
+        TransportState::Current().SetPeripheralClientPolicy(
+            MidiBleUtilities::PeripheralClientPolicyFromJsonString(
+                MidiBleProtocol::SafeJson::GetString(peripheralObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_KEY)));
+
+        TransportState::Current().SetRememberedPeripheralClients(
+            ReadClientIdentityList(peripheralObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ALLOWED_CLIENTS_KEY),
+            ReadClientIdentityList(peripheralObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DENIED_CLIENTS_KEY));
 
         if (!MidiBleProtocol::SafeJson::GetBoolean(peripheralObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERIPHERAL_ENABLED_KEY, false))
         {
@@ -735,8 +882,134 @@ CMidi2Ble2MidiConfigurationManager::UpdateConfiguration(
     else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_GET_PERIPHERAL_STATUS)
     {
         AddPeripheralStatusToResponse(responseObject);
+        AddPendingClientsToResponse(responseObject);
         AddRadioCapabilitiesToResponse(responseObject);
         internal::SetConfigurationResponseObjectSuccess(responseObject);
+    }
+    else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_GET_PENDING_CLIENTS)
+    {
+        AddPendingClientsToResponse(responseObject);
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+    }
+    else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_APPROVE_CLIENT ||
+             commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_DENY_CLIENT)
+    {
+        auto const approve = (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_APPROVE_CLIENT);
+        auto const address = GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY);
+
+        MidiBleProtocol::ApprovalScope scope{ MidiBleProtocol::ApprovalScope::Once };
+
+        if (address.empty())
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BLUETOOTH_MIDI_ERROR_CODE_MISSING_CLIENT_ADDRESS,
+                L"A Bluetooth address is required to identify the client being decided about.");
+        }
+        else if (!MidiBleUtilities::TryApprovalScopeFromJsonString(
+            GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_KEY), scope))
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BLUETOOTH_MIDI_ERROR_CODE_INVALID_APPROVAL_SCOPE,
+                L"Unrecognized approval scope. Use once, untilRestart or always.");
+        }
+        else
+        {
+            bool shouldPersist{ false };
+            MidiBleProtocol::PeripheralClientIdentity identity{};
+
+            auto const decisionError = TransportState::Current().ApplyPeripheralClientDecision(
+                std::wstring{ address }, approve, scope, shouldPersist, identity);
+
+            if (decisionError == BLUETOOTH_MIDI_ERROR_CODE_ADDRESS_NOT_REMEMBERABLE)
+            {
+                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                    responseObject,
+                    decisionError,
+                    L"This device's Bluetooth address changes periodically, so a permanent decision "
+                    L"about it cannot be honored. Pair the device first, or choose a scope of once "
+                    L"or untilRestart.");
+            }
+            else if (decisionError == BLUETOOTH_MIDI_ERROR_CODE_CLIENT_IDENTITY_MISMATCH)
+            {
+                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                    responseObject,
+                    decisionError,
+                    L"A different Bluetooth MIDI client is waiting for a decision.");
+            }
+            else if (decisionError != 0)
+            {
+                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                    responseObject,
+                    decisionError,
+                    L"No Bluetooth MIDI client is waiting for a decision.");
+            }
+            else
+            {
+                // Approving has to create the endpoint, and denying has to make sure one is not
+                // left behind, so both re-run the peripheral client check.
+                if (auto endpointManager = TransportState::Current().GetEndpointManager())
+                {
+                    endpointManager->OnPeripheralClientChanged();
+                }
+
+                responseObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_KEY,
+                    json::JsonValue::CreateStringValue(
+                        MidiBleUtilities::PeripheralClientDecisionToJsonString(
+                            approve ?
+                                MidiBleProtocol::PeripheralClientDecision::Allowed :
+                                MidiBleProtocol::PeripheralClientDecision::Denied)));
+
+                responseObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_KEY,
+                    json::JsonValue::CreateStringValue(MidiBleUtilities::ApprovalScopeToJsonString(scope)));
+
+                responseObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY,
+                    json::JsonValue::CreateStringValue(identity.Address));
+
+                responseObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_NAME_KEY,
+                    json::JsonValue::CreateStringValue(identity.Name));
+
+                // The service applies every scope immediately but never writes the configuration
+                // file, so "always" only survives a restart if the caller records it.
+                responseObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERSIST_REQUIRED_KEY,
+                    json::JsonValue::CreateBooleanValue(shouldPersist));
+
+                internal::SetConfigurationResponseObjectSuccess(responseObject);
+            }
+        }
+    }
+    else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_FORGET_CLIENT)
+    {
+        auto const address = GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY);
+
+        if (address.empty())
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BLUETOOTH_MIDI_ERROR_CODE_MISSING_CLIENT_ADDRESS,
+                L"A Bluetooth address is required to identify the client to forget.");
+        }
+        else if (!TransportState::Current().ForgetPeripheralClient(std::wstring{ address }))
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BLUETOOTH_MIDI_ERROR_CODE_CLIENT_NOT_REMEMBERED,
+                L"No remembered Bluetooth MIDI client has that address.");
+        }
+        else
+        {
+            responseObject.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERSIST_REQUIRED_KEY,
+                json::JsonValue::CreateBooleanValue(true));
+
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
     }
     else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_SET_CONNECTION_PARAMETERS)
     {

@@ -57,6 +57,23 @@ public:
 
     TEST_METHOD(TestGenericDeviceNameIsMatchedWholeAndCaseInsensitively);
 
+    // peripheral client approval
+    TEST_METHOD(TestApprovalScopeStringsRoundTrip);
+    TEST_METHOD(TestApprovalScopeRejectsAnUnrecognizedValue);
+    TEST_METHOD(TestApprovalScopeTreatsEmptyAsOnce);
+    TEST_METHOD(TestClientPolicyDefaultsToRequiringApproval);
+    TEST_METHOD(TestClientPolicyStringsRoundTrip);
+    TEST_METHOD(TestClientMatchKeyIgnoresSeparatorsAndCase);
+    TEST_METHOD(TestClientMatchKeyOfAnUnusableAddressIsEmpty);
+    TEST_METHOD(TestClientDecisionStrings);
+
+    // whether "always" can be honored, which decides if the UI may offer it
+    TEST_METHOD(TestRandomAddressKindComesFromTheTopTwoBits);
+    TEST_METHOD(TestPublicAddressIsAlwaysRememberable);
+    TEST_METHOD(TestStaticRandomAddressIsRememberable);
+    TEST_METHOD(TestPrivateRandomAddressIsNotRememberableUnlessPaired);
+    TEST_METHOD(TestUnspecifiedAddressTypeIsNotRememberableUnlessPaired);
+
     // the whole point of giving the transport its own codes
     TEST_METHOD(TestEveryTransportErrorCodeIsDistinct);
 };

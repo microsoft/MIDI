@@ -66,6 +66,33 @@ namespace MidiBleProtocol
         // makes a silent disconnect visible instead of leaving apps holding a dead endpoint.
         bool HasEndpoint{ false };
     };
+
+    // A remembered approve or deny decision for a Central which connects to this PC. The address
+    // is the match key; the name is carried only so the configuration file is readable.
+    struct PeripheralClientIdentity
+    {
+        std::wstring Address{ };
+        std::wstring Name{ };
+    };
+
+    // A Central which has subscribed and is waiting on a decision. Every identity WinRT offers is
+    // kept, because a device which is not bonded rotates its address and cannot be remembered.
+    struct PendingPeripheralClient
+    {
+        std::wstring BluetoothDeviceId{ };
+        std::wstring Name{ };
+        std::wstring Address{ };
+        std::wstring AddressType{ };
+        bool IsPaired{ false };
+        bool HasGenericName{ false };
+
+        // False when the address rotates, which means "always" cannot be honored for this device
+        // and the caller should not offer it.
+        bool IsRememberable{ false };
+
+        // FILETIME UTC, so a person deciding later can see how long something has been asking
+        uint64_t RequestedFileTime{ 0 };
+    };
 }
 
 namespace MidiBleUtilities

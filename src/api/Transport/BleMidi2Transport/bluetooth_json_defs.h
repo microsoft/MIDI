@@ -15,6 +15,12 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_STOP_PERIPHERAL                L"stopPeripheral"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_GET_PERIPHERAL_STATUS          L"getPeripheralStatus"
 
+// approving a Central which has subscribed to this PC's peripheral
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_GET_PENDING_CLIENTS            L"getPendingPeripheralClients"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_APPROVE_CLIENT                 L"approvePeripheralClient"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_DENY_CLIENT                    L"denyPeripheralClient"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_FORGET_CLIENT                  L"forgetPeripheralClient"
+
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_AVAILABLE_DEVICES_RESPONSE_KEY         L"availableDevices"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY                          L"deviceId"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_NAME_KEY                        L"name"
@@ -53,6 +59,38 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_TYPE_KEY                       L"bluetoothAddressType"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_BLUETOOTH_DEVICE_ID_KEY                L"bluetoothDeviceId"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_GENERIC_NAME_KEY                   L"hasGenericName"
+
+// False when the address rotates, so a caller knows not to offer "always" for this device
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_REMEMBERABLE_KEY                    L"isRememberable"
+
+// Whether a Central which subscribes is let straight through. WinRT cannot refuse a GATT
+// subscription, so requiring approval gates the MIDI endpoint and the data path, not the link.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_KEY                      L"clientPolicy"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_VALUE_ALLOW_ANY          L"allowAny"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_VALUE_REQUIRE_APPROVAL   L"requireApproval"
+
+// remembered decisions, persisted in the configuration file under the peripheral object
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ALLOWED_CLIENTS_KEY                    L"allowedClients"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DENIED_CLIENTS_KEY                     L"deniedClients"
+
+// getPendingPeripheralClients response, which the setup app polls
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PENDING_CLIENTS_RESPONSE_KEY           L"pendingPeripheralClients"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_REQUEST_TIME_KEY                       L"requestTime"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_KEY                    L"decision"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_PENDING          L"pending"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_ALLOWED          L"allowed"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_DECISION_VALUE_DENIED           L"denied"
+
+// Set on an approve or deny response when the decision has to be written to the configuration
+// file by the caller to survive a restart. The service never writes that file itself.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERSIST_REQUIRED_KEY                   L"persistRequired"
+
+// Only "always" is written to the configuration file. "once" settles the waiting client and
+// nothing else, and "untilRestart" is a memory-only decision by definition.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_KEY                     L"scope"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_ONCE              L"once"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_UNTIL_RESTART     L"untilRestart"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_ALWAYS            L"always"
 
 // what the radio on this machine can do, so a machine with no Bluetooth explains itself
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_RADIO_KEY                              L"radio"

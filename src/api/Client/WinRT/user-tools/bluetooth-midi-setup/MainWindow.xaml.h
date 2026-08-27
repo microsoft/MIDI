@@ -1,0 +1,135 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+
+#include "MainWindow.g.h"
+
+#include "AppSettings.h"
+#include "BluetoothItems.h"
+#include "WindowChrome.h"
+
+namespace winrt::midibluetoothsetup::implementation
+{
+    struct MainWindow : MainWindowT<MainWindow>
+    {
+        MainWindow();
+
+        // runs before Activate, so it cannot touch the chrome instance
+        void RestoreWindowPlacement();
+
+        void OnRootLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnRootSizeChanged(foundation::IInspectable const& sender, xaml::SizeChangedEventArgs const& args);
+
+        void OnAlwaysOnTopToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAppearanceButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnNavigationSelectionChanged(
+            controls::NavigationView const& sender,
+            controls::NavigationViewSelectionChangedEventArgs const& args);
+
+        void OnRefreshClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        winrt::fire_and_forget OnConnectDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnDisconnectDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnForgetDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnCustomizeDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        winrt::fire_and_forget OnStartPeripheralClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnStopPeripheralClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnCustomizePeripheralClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCopyPeripheralEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+    private:
+        // everything the service knows, gathered off the UI thread in one pass
+        struct ServiceSnapshot
+        {
+            bool TransportAvailable{ false };
+            bool Gathered{ false };
+
+            collections::IVectorView<midi2bt::MidiBluetoothDeviceInformation> Devices{ nullptr };
+            midi2bt::MidiBluetoothPeripheralStatus Peripheral{ nullptr };
+
+            // null when the transport did not report it, which is what an older service looks
+            // like. Reporting that as "no radio" would be worse than saying nothing.
+            midi2bt::MidiBluetoothRadioInformation Radio{ nullptr };
+
+            // addresses the configuration file remembers, lowercased
+            std::vector<std::wstring> RememberedDeviceIds{};
+        };
+
+        void StartRefreshTimer() noexcept;
+        void StopRefreshTimer() noexcept;
+
+        winrt::fire_and_forget RequestRefreshAsync() noexcept;
+        static ServiceSnapshot GatherSnapshot() noexcept;
+
+        void ApplySnapshot(ServiceSnapshot const& snapshot) noexcept;
+        void ApplyDevices(ServiceSnapshot const& snapshot) noexcept;
+        void ApplyPeripheral(ServiceSnapshot const& snapshot) noexcept;
+        void ApplyRadio(ServiceSnapshot const& snapshot) noexcept;
+
+        void ShowDevicesPage(bool const showDevices) noexcept;
+
+        void SetDevicesStatus(winrt::hstring const& text) noexcept;
+        void SetPeripheralStatus(winrt::hstring const& text) noexcept;
+
+        // A status line describes something that just happened, so it stops being true within
+        // seconds. Shows the text, then fades it away rather than leaving a stale claim on screen.
+        void ShowTransientStatus(
+            winrt::Microsoft::UI::Xaml::Controls::TextBlock const& target,
+            winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer& timer,
+            winrt::hstring const& text) noexcept;
+
+        // False when the transport is missing. It has already shown the customer why by the
+        // time it returns.
+        bool VerifyTransportIsUsable() noexcept;
+
+        // yes / cancel confirmation, used before anything destructive
+        foundation::IAsyncOperation<bool> ConfirmAsync(winrt::hstring const& title, winrt::hstring const& message);
+
+        // shared by the device rows and the peripheral's connected client
+        foundation::IAsyncOperation<bool> ShowCustomizeDialogAsync(
+            winrt::hstring const& endpointDeviceInstanceId,
+            winrt::hstring const& transportSuppliedName,
+            winrt::hstring const& currentName,
+            winrt::hstring const& currentDescription,
+            winrt::hstring const& currentImage);
+
+        midiapp::WindowChrome m_chrome{};
+
+        // only one dialog can be open at a time, and a second ShowAsync throws
+        controls::ContentDialog m_openDialog{ nullptr };
+
+        collections::IObservableVector<midibluetoothsetup::BluetoothDeviceItem> m_devices{
+            winrt::single_threaded_observable_vector<midibluetoothsetup::BluetoothDeviceItem>() };
+
+        // one row, because the peripheral accepts a single connected client
+        collections::IObservableVector<midibluetoothsetup::PeripheralClientItem> m_peripheralClients{
+            winrt::single_threaded_observable_vector<midibluetoothsetup::PeripheralClientItem>() };
+
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_refreshTimer{ nullptr };
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_devicesStatusTimer{ nullptr };
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_peripheralStatusTimer{ nullptr };
+
+        bool m_loaded{ false };
+        bool m_closing{ false };
+
+        // a tick is skipped rather than queued when the previous refresh is still running
+        std::atomic<bool> m_refreshInFlight{ false };
+
+        bool m_transportUsable{ false };
+    };
+}
+
+namespace winrt::midibluetoothsetup::factory_implementation
+{
+    struct MainWindow : MainWindowT<MainWindow, implementation::MainWindow>
+    {
+    };
+}
