@@ -178,6 +178,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             configUpdate.Name = CustomName;
             configUpdate.Description = CustomDescription;
             configUpdate.ImageFileName = ImageFileName;
+
+            // What is on screen is the whole customization, so emptying a field has to clear the
+            // stored value. Without this an empty field is left out of the save and the old value
+            // survives the merge.
+            configUpdate.ClearDisplayProperties = true;
             configUpdate.RequiresNoteOffTranslation = RequiresNoteOffTranslation;
             configUpdate.SupportsMidiPolyphonicExpression = SupportsMidiPolyphonicExpression;
             configUpdate.RecommendedControlChangeIntervalMilliseconds = RecommendedControlChangeAutomationIntervalMilliseconds;

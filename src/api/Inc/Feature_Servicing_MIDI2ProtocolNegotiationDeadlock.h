@@ -21,11 +21,11 @@
 //    the entire life of the worker, spanning both the discovery wait and the unbounded
 //    m_endProcessing wait. Shutdown signals EndProcessing before taking the lock, so the
 //    handshake was meant to work, but Start was parked on the discovery event alone and could
-//    not see the signal until that timeout expired. Every endpoint teardown therefore serialised
+//    not see the signal until that timeout expired. Every endpoint teardown therefore serialized
 //    behind a worker that was only waiting. Measured as repeated multi second stalls of
 //    RemoveEndpoint, DeactivateEndpoint and UpdateEndpointProperties.
 //
-// Rolling this back restores both previous behaviours: holding the map mutex for the whole of
+// Rolling this back restores both previous behaviors: holding the map mutex for the whole of
 // worker removal, and holding the worker lock for the whole of negotiation.
 class Feature_Servicing_MIDI2ProtocolNegotiationDeadlock
 {

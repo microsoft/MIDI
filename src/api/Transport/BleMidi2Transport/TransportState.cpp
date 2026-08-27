@@ -272,6 +272,25 @@ TransportState::GetConnectionParameterPreference()
 }
 
 
+_Use_decl_annotations_
+void
+TransportState::SetRadioCapabilities(MidiBleProtocol::RadioCapabilities const& capabilities)
+{
+    auto lock = std::scoped_lock{ m_radioCapabilitiesLock };
+
+    m_radioCapabilities = capabilities;
+}
+
+
+MidiBleProtocol::RadioCapabilities
+TransportState::GetRadioCapabilities()
+{
+    auto lock = std::scoped_lock{ m_radioCapabilitiesLock };
+
+    return m_radioCapabilities;
+}
+
+
 
 
 //_Use_decl_annotations_

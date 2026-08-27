@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // Connecting and remembering are separate steps. Passing this to ConnectDeviceAsync connects
+    // now; passing the same object to MidiServiceTransportPluginConfigManager.SaveUpdate is what
+    // makes the connection come back after the service restarts.
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothDeviceConnectConfig", UUID_IMidiBluetoothDeviceConnectConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothDeviceConnectConfigFactory", UUID_IMidiBluetoothDeviceConnectConfigFactory)]
+    runtimeclass MidiBluetoothDeviceConnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiBluetoothDeviceConnectConfig(String bluetoothDeviceId);
+
+        [noexcept] String BluetoothDeviceId;
+    }
+}

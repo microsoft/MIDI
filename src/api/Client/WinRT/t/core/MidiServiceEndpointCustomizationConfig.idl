@@ -34,6 +34,11 @@ namespace Windows.Devices.Midi2.ServiceConfig
         [noexcept] String Description;
         [noexcept] String ImageFileName;
 
+        // An empty value is normally left out, so that saving a name does not wipe a stored
+        // description. Set this when the caller owns the whole set, as an editor does, and an
+        // empty value then means empty rather than unmentioned.
+        [noexcept] Boolean ClearDisplayProperties;
+
         [noexcept] MidiServiceConfigEndpointMatchCriteria MatchCriteria;
 
         [noexcept] Boolean RequiresNoteOffTranslation;

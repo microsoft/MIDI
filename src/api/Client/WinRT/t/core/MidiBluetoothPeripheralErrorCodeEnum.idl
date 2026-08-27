@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+// error codes shared with the service
+#include "..\..\..\..\Transport\BleMidi2Transport\bluetooth_transport_error_codes.h"
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    enum MidiBluetoothPeripheralErrorCode
+    {
+        Success =                       0,
+
+        TransportNotAvailable =         BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE,
+
+        AlreadyRunning =                BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_ALREADY_RUNNING,
+        NotRunning =                    BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_NOT_RUNNING,
+
+        // Not every Bluetooth radio or driver supports the peripheral role. This is not a fault
+        // in the transport, and everything else keeps working when it happens.
+        PeripheralRoleNotAvailable =    BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_ROLE_NOT_AVAILABLE,
+
+        NoClientConnected =             BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_NO_CLIENT,
+        InvalidProtocol =               BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_INVALID_PROTOCOL,
+        AdvertisingFailed =             BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_ADVERTISING_FAILED,
+
+        RadioNotAvailable =             BLUETOOTH_MIDI_ERROR_CODE_RADIO_NOT_AVAILABLE,
+
+        Unexpected =                    0x11002011,
+    };
+}

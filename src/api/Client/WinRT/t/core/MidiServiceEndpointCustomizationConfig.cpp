@@ -88,6 +88,30 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                 endpointUpdateObject.SetNamedValue(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
             }
 
+            // WriteJson leaves an empty display property out, so that saving a name cannot wipe a
+            // stored description. A caller which owns the whole set says so here, and then an
+            // empty value means empty rather than unmentioned. These keys are the wire format,
+            // defined alongside the reader in MidiEndpointCustomProperties.cpp.
+            if (m_clearDisplayProperties)
+            {
+                if (m_props->Name.empty())
+                {
+                    customPropertiesObject.SetNamedValue(L"name", json::JsonValue::CreateStringValue(L""));
+                }
+
+                if (m_props->Description.empty())
+                {
+                    customPropertiesObject.SetNamedValue(L"description", json::JsonValue::CreateStringValue(L""));
+                }
+
+                if (m_props->Image.empty())
+                {
+                    customPropertiesObject.SetNamedValue(L"image", json::JsonValue::CreateStringValue(L""));
+                }
+
+                endpointUpdateObject.SetNamedValue(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
+            }
+
 
             // add the endpoint update object to the array
             endpointUpdateArray.Append(endpointUpdateObject);

@@ -6,7 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Windows.Data.Json;
+using Windows.Devices.Midi2.Transports.Bluetooth;
 
 namespace Microsoft.Midi.ConsoleApp
 {
@@ -15,36 +15,91 @@ namespace Microsoft.Midi.ConsoleApp
         internal const string ProtocolMidi1 = "midi1";
         internal const string ProtocolMidi2 = "midi2";
 
-        internal static void ReportStatus(JsonObject responseJson)
+        internal static MidiBluetoothProtocol ResolveProtocol(string? value)
         {
-            if (!responseJson.ContainsKey(BluetoothTransport.ResponsePeripheral))
+            return string.Equals(value, ProtocolMidi2, StringComparison.OrdinalIgnoreCase)
+                ? MidiBluetoothProtocol.BluetoothLowEnergyMidi2Ump
+                : MidiBluetoothProtocol.BluetoothLowEnergyMidi1;
+        }
+
+        // Not every radio can advertise, so whether this PC could ever be published is worth
+        // stating before anything about whether it currently is.
+        private static string DescribeRadio()
+        {
+            var radio = MidiBluetoothTransportManager.GetRadioInformation();
+
+            if (radio == null)
+            {
+                return "[grey](not reported)[/]";
+            }
+
+            if (!radio.IsPresent)
+            {
+                return "[red]none[/]";
+            }
+
+            if (!radio.IsLowEnergySupported)
+            {
+                return "[red]no Bluetooth Low Energy[/]";
+            }
+
+            var roles = new List<string>();
+
+            if (radio.IsCentralRoleSupported) roles.Add("central");
+            if (radio.IsPeripheralRoleSupported) roles.Add("peripheral");
+
+            return roles.Count > 0 ? string.Join(" + ", roles) : "[red]no usable role[/]";
+        }
+
+        private static void ReportRadio()
+        {
+            var radio = MidiBluetoothTransportManager.GetRadioInformation();
+
+            if (radio == null)
+            {
+                return;
+            }
+
+            if (!radio.IsPresent)
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning("This PC has no Bluetooth radio."));
+                AnsiConsole.WriteLine();
+                return;
+            }
+
+            if (!radio.IsLowEnergySupported)
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning("This PC's Bluetooth radio does not support Bluetooth Low Energy, which Bluetooth MIDI requires."));
+                AnsiConsole.WriteLine();
+                return;
+            }
+
+            if (!radio.IsPeripheralRoleSupported)
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning("This PC's Bluetooth radio cannot act as a peripheral, so this PC cannot be published for other devices to connect to."));
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("Connecting out to Bluetooth MIDI devices still works."));
+                AnsiConsole.WriteLine();
+            }
+        }
+
+        internal static void ReportStatus(MidiBluetoothPeripheralStatus status)
+        {
+            if (status == null)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning("The transport did not report the peripheral status."));
                 return;
             }
 
-            var peripheral = responseJson.GetNamedObject(BluetoothTransport.ResponsePeripheral);
+            ReportRadio();
 
-            var isRunning = peripheral.GetNamedBoolean(BluetoothTransport.ResponsePeripheralIsRunning, false);
-
-            if (!isRunning)
+            if (!status.IsRunning)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("This PC is not published as a Bluetooth MIDI device."));
                 return;
             }
 
-            var advertisedName = peripheral.GetNamedString(BluetoothTransport.ResponsePeripheralAdvertisedName, string.Empty);
-            var protocol = peripheral.GetNamedString(BluetoothTransport.ResponsePeripheralProtocol, string.Empty);
-            var connectedDeviceName = peripheral.GetNamedString(BluetoothTransport.ResponseName, string.Empty);
-            var endpointDeviceId = peripheral.GetNamedString(BluetoothTransport.ResponseEndpointDeviceId, string.Empty);
-            var isConnected = peripheral.GetNamedBoolean(BluetoothTransport.ResponseIsConnected, false);
-            var clientCount = (int)peripheral.GetNamedNumber(BluetoothTransport.ResponsePeripheralClientCount, 0);
-            var messagesIn = (ulong)peripheral.GetNamedNumber(BluetoothTransport.ResponseMessagesReceived, 0);
-            var messagesOut = (ulong)peripheral.GetNamedNumber(BluetoothTransport.ResponseMessagesSent, 0);
-            var isPaired = peripheral.GetNamedBoolean(BluetoothTransport.ResponseIsPaired, false);
-            var hasGenericName = peripheral.GetNamedBoolean(BluetoothTransport.ResponseHasGenericName, false);
-            var address = peripheral.GetNamedString(BluetoothTransport.ResponseBluetoothAddress, string.Empty);
-            var addressType = peripheral.GetNamedString(BluetoothTransport.ResponseBluetoothAddressType, string.Empty);
+            var client = status.ConnectedClient;
 
             var table = new Table();
 
@@ -53,34 +108,35 @@ namespace Microsoft.Midi.ConsoleApp
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Property"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Value"));
 
-            table.AddRow("Published as", string.IsNullOrEmpty(advertisedName) ? "[grey](unknown)[/]" : AnsiMarkupFormatter.EscapeString(advertisedName));
-            table.AddRow("Protocol", string.IsNullOrEmpty(protocol) ? "-" : protocol);
-            table.AddRow("Connected device", isConnected && !string.IsNullOrEmpty(connectedDeviceName)
-                ? AnsiMarkupFormatter.FormatEndpointName(connectedDeviceName)
+            table.AddRow("Published as", string.IsNullOrEmpty(status.AdvertisedName) ? "[grey](unknown)[/]" : AnsiMarkupFormatter.EscapeString(status.AdvertisedName));
+            table.AddRow("Protocol", BluetoothTransport.FormatProtocol(status.Protocol));
+            table.AddRow("Radio", DescribeRadio());
+            table.AddRow("Connected device", status.IsClientConnected && client != null && !string.IsNullOrEmpty(client.Name)
+                ? AnsiMarkupFormatter.FormatEndpointName(client.Name)
                 : "[grey]none[/]");
 
-            if (isConnected)
+            if (status.IsClientConnected && client != null)
             {
-                table.AddRow("Paired", isPaired ? "[green]yes[/]" : "no");
+                table.AddRow("Paired", client.IsPaired ? "[green]yes[/]" : "no");
 
                 // A random address is rotated by the device for privacy, so it is not an identity.
-                table.AddRow("Address", string.IsNullOrEmpty(address)
+                table.AddRow("Address", client.BluetoothAddress == 0
                     ? "-"
-                    : $"{AnsiMarkupFormatter.EscapeString(address)}{(string.IsNullOrEmpty(addressType) ? "" : $" ({addressType})")}");
+                    : $"{client.BluetoothAddress:X12} ({client.BluetoothAddressType})");
 
                 // The remote device is the Central here, so it chose this.
-                var interval = peripheral.GetNamedNumber(BluetoothTransport.ResponseConnectionIntervalMilliseconds, 0);
-
-                table.AddRow("Connection interval", interval > 0 ? $"{interval:N2} ms" : "-");
+                table.AddRow("Connection interval", client.ConnectionInterval > TimeSpan.Zero
+                    ? $"{client.ConnectionInterval.TotalMilliseconds:N2} ms"
+                    : "-");
             }
 
-            table.AddRow("Subscribed clients", clientCount.ToString());
-            table.AddRow("Messages in", isConnected ? messagesIn.ToString() : "-");
-            table.AddRow("Messages out", isConnected ? messagesOut.ToString() : "-");
+            table.AddRow("Subscribed clients", status.SubscribedClientCount.ToString());
+            table.AddRow("Messages in", status.IsClientConnected ? status.MessagesReceived.ToString() : "-");
+            table.AddRow("Messages out", status.IsClientConnected ? status.MessagesSent.ToString() : "-");
 
-            if (!string.IsNullOrEmpty(endpointDeviceId))
+            if (!string.IsNullOrEmpty(status.EndpointDeviceId))
             {
-                table.AddRow("Endpoint", AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointDeviceId));
+                table.AddRow("Endpoint", AnsiMarkupFormatter.FormatFullEndpointInterfaceId(status.EndpointDeviceId));
             }
 
             AnsiConsole.Write(table);
@@ -88,7 +144,7 @@ namespace Microsoft.Midi.ConsoleApp
 
             // The endpoint is the remote device, the same way a Network MIDI 2.0 host endpoint is
             // the remote client, so there is nothing to open until something connects.
-            if (!isConnected)
+            if (!status.IsClientConnected)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
                     "Nothing is connected yet. A MIDI endpoint appears when a device connects to this PC."));
@@ -101,12 +157,12 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.WriteLine();
             }
 
-            if (isConnected && !isPaired)
+            if (status.IsClientConnected && client != null && !client.IsPaired)
             {
-                if (hasGenericName)
+                if (client.HasGenericName)
                 {
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(
-                        $"'{AnsiMarkupFormatter.EscapeString(connectedDeviceName)}' is a generic name. Phones and tablets withhold their real name from an unpaired PC."));
+                        $"'{AnsiMarkupFormatter.EscapeString(client.Name)}' is a generic name. Phones and tablets withhold their real name from an unpaired PC."));
                 }
 
                 // Pairing has to be initiated from the remote device, which is the side that
@@ -153,12 +209,22 @@ namespace Microsoft.Midi.ConsoleApp
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            var useMidi2 = string.Equals(settings.Protocol, BluetoothPeripheral.ProtocolMidi2, StringComparison.OrdinalIgnoreCase);
-
-            var responseJson = BluetoothTransport.SendPeripheralCommand(BluetoothTransport.VerbStartPeripheral, useMidi2);
-
-            if (responseJson == null)
+            if (!BluetoothTransport.EnsureTransportAvailable())
             {
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            var protocol = BluetoothPeripheral.ResolveProtocol(settings.Protocol);
+
+            var config = new MidiBluetoothPeripheralConfig(protocol);
+
+            var response = AnsiConsole.Status()
+                .Start("Starting...", ctx => MidiBluetoothTransportManager.StartPeripheralAsync(config).GetAwaiter().GetResult());
+
+            if (!response.Success)
+            {
+                BluetoothTransport.ReportFailure(response.ErrorCode.ToString(), response.ErrorMessage, response.ErrorHResult);
+
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
@@ -168,9 +234,9 @@ namespace Microsoft.Midi.ConsoleApp
                 "A MIDI endpoint is created when a device connects, and is named after that device."));
             AnsiConsole.WriteLine();
 
-            BluetoothPeripheral.ReportStatus(responseJson);
+            BluetoothPeripheral.ReportStatus(response.Status);
 
-            if (useMidi2)
+            if (protocol == MidiBluetoothProtocol.BluetoothLowEnergyMidi2Ump)
             {
                 AnsiConsole.WriteLine();
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(
@@ -182,12 +248,9 @@ namespace Microsoft.Midi.ConsoleApp
                 return (int)MidiConsoleReturnCode.Success;
             }
 
-            if (!BluetoothConfigFile.TrySetPeripheral(true, useMidi2, out var error))
-            {
-                AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(AnsiMarkupFormatter.EscapeString(error ?? "The setting could not be saved.")));
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("This PC will stop being published when the service restarts."));
-            }
+            AnsiConsole.WriteLine();
+
+            ConfigFileSaver.ReportSave(config);
 
             return (int)MidiConsoleReturnCode.Success;
         }
@@ -207,10 +270,18 @@ namespace Microsoft.Midi.ConsoleApp
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            var responseJson = BluetoothTransport.SendCommand(BluetoothTransport.VerbStopPeripheral);
-
-            if (responseJson == null)
+            if (!BluetoothTransport.EnsureTransportAvailable())
             {
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            var response = AnsiConsole.Status()
+                .Start("Stopping...", ctx => MidiBluetoothTransportManager.StopPeripheralAsync().GetAwaiter().GetResult());
+
+            if (!response.Success)
+            {
+                BluetoothTransport.ReportFailure(response.ErrorCode.ToString(), response.ErrorMessage, response.ErrorHResult);
+
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
@@ -223,12 +294,10 @@ namespace Microsoft.Midi.ConsoleApp
                 return (int)MidiConsoleReturnCode.Success;
             }
 
-            if (!BluetoothConfigFile.TrySetPeripheral(false, false, out var error))
-            {
-                AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(AnsiMarkupFormatter.EscapeString(error ?? "The setting could not be saved.")));
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("This PC may be published again when the service restarts."));
-            }
+            AnsiConsole.WriteLine();
+
+            // Stopping only lasts for this session unless the configuration file says so too
+            ConfigFileSaver.ReportSave(new MidiBluetoothPeripheralConfig { IsEnabled = false });
 
             return (int)MidiConsoleReturnCode.Success;
         }
@@ -245,14 +314,12 @@ namespace Microsoft.Midi.ConsoleApp
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            var responseJson = BluetoothTransport.SendCommand(BluetoothTransport.VerbGetPeripheralStatus);
-
-            if (responseJson == null)
+            if (!BluetoothTransport.EnsureTransportAvailable())
             {
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
-            BluetoothPeripheral.ReportStatus(responseJson);
+            BluetoothPeripheral.ReportStatus(MidiBluetoothTransportManager.GetPeripheralStatus());
 
             return (int)MidiConsoleReturnCode.Success;
         }
@@ -278,6 +345,11 @@ namespace Microsoft.Midi.ConsoleApp
             [LocalizedDescription("ParameterBluetoothCustomClear")]
             [CommandOption("-c|--clear")]
             public bool Clear { get; set; }
+
+            [LocalizedDescription("ParameterBluetoothTemporary")]
+            [CommandOption("-t|--temporary")]
+            [DefaultValue(false)]
+            public bool Temporary { get; set; }
         }
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
@@ -290,27 +362,16 @@ namespace Microsoft.Midi.ConsoleApp
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            var responseJson = BluetoothTransport.SendCommand(BluetoothTransport.VerbGetPeripheralStatus);
-
-            if (responseJson == null)
+            if (!BluetoothTransport.EnsureTransportAvailable())
             {
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
-            if (!responseJson.ContainsKey(BluetoothTransport.ResponsePeripheral))
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("The transport did not report the peripheral status."));
-
-                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
-            }
-
-            var peripheral = responseJson.GetNamedObject(BluetoothTransport.ResponsePeripheral);
+            var status = MidiBluetoothTransportManager.GetPeripheralStatus();
 
             // The endpoint is the remote device, and its identity is what the customization is
             // keyed on, so there is nothing to address until something is connected.
-            var instanceId = peripheral.GetNamedString(BluetoothTransport.ResponseEndpointDeviceInstanceId, string.Empty);
-
-            if (string.IsNullOrEmpty(instanceId))
+            if (status == null || string.IsNullOrEmpty(status.EndpointDeviceInstanceId))
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("There is no connected device to customize."));
                 AnsiConsole.WriteLine();
@@ -320,10 +381,13 @@ namespace Microsoft.Midi.ConsoleApp
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
-            var customProperties = BluetoothTransport.BuildCustomProperties(
-                settings.Name, settings.Description, settings.Image, settings.Clear);
-
-            if (!BluetoothTransport.ApplyCustomization(instanceId, customProperties))
+            if (!BluetoothTransport.ApplyCustomization(
+                    status.EndpointDeviceInstanceId,
+                    settings.Name,
+                    settings.Description,
+                    settings.Image,
+                    settings.Clear,
+                    !settings.Temporary))
             {
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
@@ -333,9 +397,7 @@ namespace Microsoft.Midi.ConsoleApp
 
             AnsiConsole.WriteLine();
 
-            var isPaired = peripheral.GetNamedBoolean(BluetoothTransport.ResponseIsPaired, false);
-
-            if (!isPaired)
+            if (status.ConnectedClient != null && !status.ConnectedClient.IsPaired)
             {
                 // Without a bond there is no stable identity, so every unpaired device lands on
                 // the same endpoint and shares whatever name is set here.

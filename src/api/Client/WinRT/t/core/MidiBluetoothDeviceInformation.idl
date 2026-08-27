@@ -1,0 +1,62 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiBluetoothProtocolEnum.idl";
+import "MidiBluetoothDeviceConnectErrorCodeEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothDeviceInformation", UUID_IMidiBluetoothDeviceInformation)]
+    runtimeclass MidiBluetoothDeviceInformation
+    {
+        // The 12 hex digit Bluetooth address, and the key for every operation in this namespace.
+        // This is not a Windows device interface id.
+        [noexcept] String BluetoothDeviceId{ get; };
+
+        // The same address as a number, for lining up with the Windows.Devices.Bluetooth APIs
+        [noexcept] UInt64 BluetoothAddress{ get; };
+
+        [noexcept] String Name{ get; };
+
+        [noexcept] MidiBluetoothProtocol SelectedProtocol{ get; };
+
+        [noexcept] Boolean IsConnected{ get; };
+        [noexcept] Boolean IsPaired{ get; };
+
+        // False when the device has stopped advertising. Bluetooth MIDI peripherals sleep
+        // aggressively, so a device which is not present is usually asleep rather than gone.
+        [noexcept] Boolean IsPresent{ get; };
+
+        [noexcept] Int16 SignalStrengthDecibelMilliwatts{ get; };
+        [noexcept] Windows.Foundation.TimeSpan LastSeenAgo{ get; };
+
+        [noexcept] Boolean HasEndpoint{ get; };
+        [noexcept] String EndpointDeviceId{ get; };
+        [noexcept] String EndpointDeviceInstanceId{ get; };
+
+        [noexcept] UInt64 MessagesReceived{ get; };
+        [noexcept] UInt64 MessagesSent{ get; };
+
+        // What the link actually negotiated. Zero when not connected.
+        [noexcept] Windows.Foundation.TimeSpan ConnectionInterval{ get; };
+
+        [noexcept] String LastConnectError{ get; };
+
+        // Why the last connection attempt failed. Connecting happens in the background long after
+        // the request returns, so this is the only place that reason appears.
+        [noexcept] MidiBluetoothDeviceConnectErrorCode LastConnectErrorCode{ get; };
+
+        [noexcept] Int32 LastConnectErrorHResult{ get; };
+        [noexcept] Int32 LastSendErrorHResult{ get; };
+    }
+}

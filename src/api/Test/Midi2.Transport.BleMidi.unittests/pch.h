@@ -20,10 +20,18 @@
 #include <string>
 #include <vector>
 
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Data.Json.h>
+
 #include <WexTestClass.h>
 
 // The codec is header only and has no dependency on Bluetooth, the service or COM, which is
 // what makes these pure unit tests.
 #include "midi_ble_midi1_codec.h"
+
+// Same again for the validation helpers: everything here is decided from a string, a number or
+// a json value, so none of it needs a radio or a running service.
+#include "midi_ble_validation.h"
+#include "bluetooth_transport_error_codes.h"
 
 #endif //PCH_H

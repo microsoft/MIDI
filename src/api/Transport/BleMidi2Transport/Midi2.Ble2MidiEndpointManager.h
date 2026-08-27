@@ -79,7 +79,7 @@ private:
     HRESULT EndpointCreatorWorker(_In_ std::stop_token stopToken);
 
     HRESULT ConnectDeviceInternal(_In_ winrt::hstring const& deviceId);
-    HRESULT ConnectDeviceCore(_In_ winrt::hstring const& deviceId, _Out_ winrt::hstring& failureDetail);
+    HRESULT ConnectDeviceCore(_In_ winrt::hstring const& deviceId, _Out_ winrt::hstring& failureDetail, _Out_ uint32_t& errorCode);
 
     // Connecting runs several GATT calls in sequence, each of which can take seconds against a
     // sleeping device. Shutdown joins this worker, so every stage checks whether to give up.
@@ -105,7 +105,8 @@ private:
     void RecordConnectResult(
         _In_ winrt::hstring const& deviceId,
         _In_ HRESULT const hr,
-        _In_ winrt::hstring const& detail);
+        _In_ winrt::hstring const& detail,
+        _In_ uint32_t const errorCode);
 
     void QueueConnectIfWanted(_In_ winrt::hstring const& deviceId);
     void QueueNameResolutionIfNeeded(_In_ winrt::hstring const& deviceId);

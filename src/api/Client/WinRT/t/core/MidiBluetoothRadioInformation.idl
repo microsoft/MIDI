@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // What the Bluetooth radio on this PC can actually do. A machine with no Bluetooth, or with a
+    // radio which cannot advertise, still loads the transport, so this is what tells an
+    // application why nothing is happening.
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothRadioInformation", UUID_IMidiBluetoothRadioInformation)]
+    runtimeclass MidiBluetoothRadioInformation
+    {
+        [noexcept] Boolean IsPresent{ get; };
+        [noexcept] Boolean IsLowEnergySupported{ get; };
+
+        // Required to connect out to a device. Without it, nothing can be discovered or connected.
+        [noexcept] Boolean IsCentralRoleSupported{ get; };
+
+        // Required to publish this PC. Plenty of radios do not support it, and that is not a
+        // failure of the transport: everything else keeps working.
+        [noexcept] Boolean IsPeripheralRoleSupported{ get; };
+    }
+}

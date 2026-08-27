@@ -177,6 +177,9 @@
 
 #define UUID_IMidiServiceConfigSaveResponse                                 8087b303-0519-c0de-31d1-ee0060008000
 
+#define UUID_IMidiServiceEndpointCustomizationRemovalConfig                 8087b303-0519-c0de-31d1-dd0060009000
+#define UUID_IMidiServiceEndpointCustomizationRemovalConfigFactory          8087b303-0519-c0de-31d1-ff0060009000
+
 // ============================================================================
 // Windows.Devices.Midi2.CapabilityInquiry : Interface number 007
 
@@ -334,6 +337,34 @@
 
 #define UUID_IMidiVirtualDeviceClientEndpointInUseChangedEventArgs   8087b303-0519-c0de-31d1-dd00F0405000
 
+
+// ============================================================================
+// Windows.Devices.Midi2.Transports.Bluetooth : Interface number 00F05
+// One namespace covers BLE MIDI 1.0 and 2.0. Which one a device speaks is an internal detail
+// apart from the read-only protocol, and the choice of what to advertise as a peripheral.
+
+#define UUID_IMidiBluetoothTransportManagerStatics              8087b303-0519-c0de-31d1-ee00F0501000
+
+#define UUID_IMidiBluetoothDeviceInformation                    8087b303-0519-c0de-31d1-dd00F0502000
+
+#define UUID_IMidiBluetoothDeviceConnectConfig                  8087b303-0519-c0de-31d1-dd00F0503000
+#define UUID_IMidiBluetoothDeviceConnectConfigFactory           8087b303-0519-c0de-31d1-ff00F0503000
+
+#define UUID_IMidiBluetoothDeviceConnectResponse                8087b303-0519-c0de-31d1-dd00F0504000
+
+#define UUID_IMidiBluetoothDeviceDisconnectConfig               8087b303-0519-c0de-31d1-dd00F0505000
+#define UUID_IMidiBluetoothDeviceDisconnectConfigFactory        8087b303-0519-c0de-31d1-ff00F0505000
+
+#define UUID_IMidiBluetoothDeviceDisconnectResponse             8087b303-0519-c0de-31d1-dd00F0506000
+
+#define UUID_IMidiBluetoothPeripheralConfig                     8087b303-0519-c0de-31d1-dd00F0507000
+#define UUID_IMidiBluetoothPeripheralConfigFactory              8087b303-0519-c0de-31d1-ff00F0507000
+
+#define UUID_IMidiBluetoothPeripheralResponse                   8087b303-0519-c0de-31d1-dd00F0508000
+
+#define UUID_IMidiBluetoothPeripheralStatus                     8087b303-0519-c0de-31d1-dd00F0509000
+#define UUID_IMidiBluetoothPeripheralClient                     8087b303-0519-c0de-31d1-dd00F050A000
+#define UUID_IMidiBluetoothRadioInformation                    8087b303-0519-c0de-31d1-dd00F050B000
 
 
 

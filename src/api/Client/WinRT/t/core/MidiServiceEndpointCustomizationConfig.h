@@ -45,6 +45,9 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
         winrt::hstring ImageFileName() const noexcept { return m_props->Image; }
         void ImageFileName(_In_ winrt::hstring const& value) noexcept { m_props->Image = internal::TrimmedHStringCopy(value); }
+
+        bool ClearDisplayProperties() const noexcept { return m_clearDisplayProperties; }
+        void ClearDisplayProperties(_In_ bool const value) noexcept { m_clearDisplayProperties = value; }
         
         bool RequiresNoteOffTranslation() const noexcept { return m_props->RequiresNoteOffTranslation; }
         void RequiresNoteOffTranslation(_In_ bool const value) noexcept { m_props->RequiresNoteOffTranslation = value; }
@@ -78,6 +81,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{};
 
         winrt::guid m_transportId{};
+
+        bool m_clearDisplayProperties{ false };
 
         collections::IMap<winrt::hstring, winrt::hstring> m_matchValues = winrt::single_threaded_map<winrt::hstring, winrt::hstring>();
     };

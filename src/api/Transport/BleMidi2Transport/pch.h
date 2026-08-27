@@ -112,6 +112,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "transport_defs.h"
 #include "bluetooth_json_defs.h"
+#include "bluetooth_transport_error_codes.h"
 
 #include <algorithm>
 #include <atomic>

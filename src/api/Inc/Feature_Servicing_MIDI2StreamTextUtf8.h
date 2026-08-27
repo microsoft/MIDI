@@ -16,7 +16,7 @@
 // The fix decodes the text once it has been fully accumulated. It cannot be decoded per message,
 // because a multi-byte sequence can straddle two stream messages.
 //
-// Rolling this back restores the previous behaviour of storing one UTF-8 byte per character.
+// Rolling this back restores the previous behavior of storing one UTF-8 byte per character.
 class Feature_Servicing_MIDI2StreamTextUtf8
 {
 public:

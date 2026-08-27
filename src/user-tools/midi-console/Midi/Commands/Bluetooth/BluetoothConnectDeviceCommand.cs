@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Windows.Devices.Midi2.Transports.Bluetooth;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class BluetoothConnectDeviceCommand : Command<BluetoothConnectDeviceCommand.Settings>
@@ -13,8 +15,8 @@ namespace Microsoft.Midi.ConsoleApp
         public sealed class Settings : CommandSettings
         {
             [LocalizedDescription("ParameterBluetoothDeviceId")]
-            [CommandArgument(0, "<device id>")]
-            public string? DeviceId { get; set; }
+            [CommandArgument(0, "<bluetooth device id>")]
+            public string? BluetoothDeviceId { get; set; }
 
             [LocalizedDescription("ParameterBluetoothTemporary")]
             [CommandOption("-t|--temporary")]
@@ -24,9 +26,9 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
         {
-            if (string.IsNullOrWhiteSpace(settings.DeviceId))
+            if (string.IsNullOrWhiteSpace(settings.BluetoothDeviceId))
             {
-                return ValidationResult.Error("Missing device id. Use 'midi bluetooth list' to see the available devices.");
+                return ValidationResult.Error("Missing Bluetooth device id. Use 'midi bluetooth list' to see the available devices.");
             }
 
             return ValidationResult.Success();
@@ -36,28 +38,38 @@ namespace Microsoft.Midi.ConsoleApp
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            var responseJson = BluetoothTransport.SendCommand(BluetoothTransport.VerbConnectDevice, settings.DeviceId!.Trim());
-
-            if (responseJson == null)
+            if (!BluetoothTransport.EnsureTransportAvailable())
             {
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
-            var isKnown = responseJson.GetNamedBoolean("isKnown", false);
-            var isPresent = responseJson.GetNamedBoolean("isPresent", false);
-            var name = responseJson.GetNamedString("name", string.Empty);
+            var bluetoothDeviceId = settings.BluetoothDeviceId!.Trim();
 
-            var displayName = string.IsNullOrEmpty(name) ? settings.DeviceId!.Trim() : name;
+            var config = new MidiBluetoothDeviceConnectConfig(bluetoothDeviceId);
+
+            var response = AnsiConsole.Status()
+                .Start("Connecting...", ctx => MidiBluetoothTransportManager.ConnectDeviceAsync(config).GetAwaiter().GetResult());
+
+            if (!response.Success)
+            {
+                BluetoothTransport.ReportFailure(response.ErrorCode.ToString(), response.ErrorMessage, response.ErrorHResult);
+
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            var displayName = response.Device != null && !string.IsNullOrEmpty(response.Device.Name)
+                ? response.Device.Name
+                : bluetoothDeviceId;
 
             // The request is remembered rather than performed, so saying "connecting" for a
             // device that is powered off would be a lie.
-            if (isPresent)
+            if (response.Device != null && response.Device.IsPresent)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess($"Connecting to {AnsiMarkupFormatter.EscapeString(displayName)}."));
                 AnsiConsole.WriteLine();
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("The connection is made in the background. Use 'midi bluetooth list' to see when it reports as connected, and 'midi enumerate midi-services-endpoints' to see the new endpoint."));
             }
-            else if (isKnown)
+            else if (response.IsKnown)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess($"{AnsiMarkupFormatter.EscapeString(displayName)} has been remembered."));
                 AnsiConsole.WriteLine();
@@ -77,17 +89,11 @@ namespace Microsoft.Midi.ConsoleApp
             if (settings.Temporary)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("This device was not saved to the configuration file, so it is forgotten when the service restarts."));
+
+                return (int)MidiConsoleReturnCode.Success;
             }
-            else if (BluetoothConfigFile.TryAddDevice(settings.DeviceId!.Trim(), out var error))
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
-                    $"Saved to {AnsiMarkupFormatter.EscapeString(BluetoothConfigFile.FilePath ?? string.Empty)}, so it reconnects after a service restart."));
-            }
-            else
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(AnsiMarkupFormatter.EscapeString(error ?? "The device could not be saved.")));
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("The connection still works, but is forgotten when the service restarts."));
-            }
+
+            ConfigFileSaver.ReportSave(config);
 
             return (int)MidiConsoleReturnCode.Success;
         }

@@ -485,6 +485,43 @@
     <ClInclude Include="MidiBasicLoopbackUpdateResponse.h">
       <DependentUpon>MidiBasicLoopbackUpdateResponse.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="midi_bluetooth_utility.h" />
+    <ClInclude Include="MidiBluetoothRadioInformation.h">
+      <DependentUpon>MidiBluetoothRadioInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceEndpointCustomizationRemovalConfig.h">
+      <DependentUpon>MidiServiceEndpointCustomizationRemovalConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothDeviceInformation.h">
+      <DependentUpon>MidiBluetoothDeviceInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothPeripheralClient.h">
+      <DependentUpon>MidiBluetoothPeripheralClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothPeripheralStatus.h">
+      <DependentUpon>MidiBluetoothPeripheralStatus.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothDeviceConnectConfig.h">
+      <DependentUpon>MidiBluetoothDeviceConnectConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothDeviceConnectResponse.h">
+      <DependentUpon>MidiBluetoothDeviceConnectResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothDeviceDisconnectConfig.h">
+      <DependentUpon>MidiBluetoothDeviceDisconnectConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothDeviceDisconnectResponse.h">
+      <DependentUpon>MidiBluetoothDeviceDisconnectResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothPeripheralConfig.h">
+      <DependentUpon>MidiBluetoothPeripheralConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothPeripheralResponse.h">
+      <DependentUpon>MidiBluetoothPeripheralResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothTransportManager.h">
+      <DependentUpon>MidiBluetoothTransportManager.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiLoopbackCreationResponse.h">
       <DependentUpon>MidiLoopbackCreationResponse.idl</DependentUpon>
     </ClInclude>
@@ -837,6 +874,42 @@
     <ClCompile Include="MidiBasicLoopbackUpdateResponse.cpp">
       <DependentUpon>MidiBasicLoopbackUpdateResponse.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiBluetoothDeviceInformation.cpp">
+      <DependentUpon>MidiBluetoothDeviceInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothRadioInformation.cpp">
+      <DependentUpon>MidiBluetoothRadioInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceEndpointCustomizationRemovalConfig.cpp">
+      <DependentUpon>MidiServiceEndpointCustomizationRemovalConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothPeripheralClient.cpp">
+      <DependentUpon>MidiBluetoothPeripheralClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothPeripheralStatus.cpp">
+      <DependentUpon>MidiBluetoothPeripheralStatus.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothDeviceConnectConfig.cpp">
+      <DependentUpon>MidiBluetoothDeviceConnectConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothDeviceConnectResponse.cpp">
+      <DependentUpon>MidiBluetoothDeviceConnectResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothDeviceDisconnectConfig.cpp">
+      <DependentUpon>MidiBluetoothDeviceDisconnectConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothDeviceDisconnectResponse.cpp">
+      <DependentUpon>MidiBluetoothDeviceDisconnectResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothPeripheralConfig.cpp">
+      <DependentUpon>MidiBluetoothPeripheralConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothPeripheralResponse.cpp">
+      <DependentUpon>MidiBluetoothPeripheralResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothTransportManager.cpp">
+      <DependentUpon>MidiBluetoothTransportManager.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiLoopbackCreationResponse.cpp">
       <DependentUpon>MidiLoopbackCreationResponse.idl</DependentUpon>
     </ClCompile>
@@ -1065,6 +1138,23 @@
     <Midl Include="MidiBasicLoopbackCreationResponse.idl" />
     <Midl Include="MidiBasicLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiBasicLoopbackManager.idl" />
+    <Midl Include="MidiBluetoothProtocolEnum.idl" />
+    <Midl Include="MidiBluetoothRadioInformation.idl" />
+    <Midl Include="MidiServiceEndpointCustomizationRemovalConfig.idl" />
+    <Midl Include="MidiBluetoothAddressTypeEnum.idl" />
+    <Midl Include="MidiBluetoothDeviceConnectErrorCodeEnum.idl" />
+    <Midl Include="MidiBluetoothDeviceDisconnectErrorCodeEnum.idl" />
+    <Midl Include="MidiBluetoothPeripheralErrorCodeEnum.idl" />
+    <Midl Include="MidiBluetoothDeviceInformation.idl" />
+    <Midl Include="MidiBluetoothPeripheralClient.idl" />
+    <Midl Include="MidiBluetoothPeripheralStatus.idl" />
+    <Midl Include="MidiBluetoothDeviceConnectConfig.idl" />
+    <Midl Include="MidiBluetoothDeviceConnectResponse.idl" />
+    <Midl Include="MidiBluetoothDeviceDisconnectConfig.idl" />
+    <Midl Include="MidiBluetoothDeviceDisconnectResponse.idl" />
+    <Midl Include="MidiBluetoothPeripheralConfig.idl" />
+    <Midl Include="MidiBluetoothPeripheralResponse.idl" />
+    <Midl Include="MidiBluetoothTransportManager.idl" />
     <Midl Include="MidiBasicLoopbackRemovalConfig.idl" />
     <Midl Include="MidiBasicLoopbackEntry.idl" />
     <Midl Include="MidiBasicLoopbackRemovalResponse.idl" />

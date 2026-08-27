@@ -923,6 +923,9 @@ Timestamp</value>
   <data name="ParameterBluetoothTemporary" xml:space="preserve">
     <value>Do not save this device to the configuration file. It will be forgotten when the service restarts</value>
   </data>
+  <data name="ParameterBluetoothForget" xml:space="preserve">
+    <value>Also remove this device from the configuration file, instead of only stopping it from connecting on its own</value>
+  </data>
   <data name="ParameterLoopbackSaveToConfig" xml:space="preserve">
     <value>Also save this change to the configuration file so it survives a restart of the MIDI service</value>
   </data>

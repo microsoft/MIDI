@@ -153,17 +153,53 @@ CMidi2Ble2MidiEndpointManager::Initialize(
 
     m_initialized = true;
 
+    // Probed before anything is started, so every later failure can say whether the radio was ever
+    // capable of it. A machine with no Bluetooth loads the transport and simply finds nothing.
+    auto const radioCapabilities = MidiBleUtilities::ProbeRadioCapabilities();
+
+    TransportState::Current().SetRadioCapabilities(radioCapabilities);
+
+    TraceLoggingWrite(
+        MidiBle2MidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Bluetooth radio capabilities", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingBool(radioCapabilities.RadioPresent, "radio present"),
+        TraceLoggingBool(radioCapabilities.LowEnergySupported, "low energy supported"),
+        TraceLoggingBool(radioCapabilities.CentralRoleSupported, "central role supported"),
+        TraceLoggingBool(radioCapabilities.PeripheralRoleSupported, "peripheral role supported"),
+        TraceLoggingUInt32(radioCapabilities.MaxAdvertisementDataLength, "max advertisement data length")
+    );
+
     RETURN_IF_FAILED(StartBackgroundEndpointCreator());
 
-    // Advertisements are the primary source: they surface unpaired devices too, which is the
-    // main gap in the older Windows BLE MIDI 1.0 support. The GATT watcher then fills in the
-    // devices Windows already knows about but which are not advertising right now.
-    LOG_IF_FAILED(StartAdvertisementWatcher());
-    LOG_IF_FAILED(StartGattServiceWatcher());
+    // Discovery is pointless without a radio which can act as a central, and starting the watchers
+    // anyway would log a failure on every machine which simply has no Bluetooth.
+    if (radioCapabilities.CanConnectToDevices())
+    {
+        // Advertisements are the primary source: they surface unpaired devices too, which is the
+        // main gap in the older Windows BLE MIDI 1.0 support. The GATT watcher then fills in the
+        // devices Windows already knows about but which are not advertising right now.
+        LOG_IF_FAILED(StartAdvertisementWatcher());
+        LOG_IF_FAILED(StartGattServiceWatcher());
 
-    // The configuration file may have been pushed before this point, in which case the device
-    // ids are already parked and waiting.
-    LOG_IF_FAILED(ConnectConfiguredDevices());
+        // The configuration file may have been pushed before this point, in which case the device
+        // ids are already parked and waiting.
+        LOG_IF_FAILED(ConnectConfiguredDevices());
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No Bluetooth Low Energy central support, so device discovery was not started", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+    }
 
     TraceLoggingWrite(
         MidiBle2MidiTransportTelemetryProvider::Provider(),
@@ -834,6 +870,27 @@ CMidi2Ble2MidiEndpointManager::StartPeripheral(MidiBleProtocol::Protocol const p
     RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
     RETURN_HR_IF(E_INVALIDARG, protocol == MidiBleProtocol::Protocol::Unknown);
 
+    // Plenty of radios cannot advertise at all. Refusing here means the caller is told why,
+    // instead of the GATT service provider failing later with nothing to explain it.
+    auto const radioCapabilities = TransportState::Current().GetRadioCapabilities();
+
+    if (!radioCapabilities.CanPublishPeripheral())
+    {
+        TraceLoggingWrite(
+            MidiBle2MidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"This radio cannot act as a Bluetooth LE peripheral", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingBool(radioCapabilities.RadioPresent, "radio present"),
+            TraceLoggingBool(radioCapabilities.LowEnergySupported, "low energy supported"),
+            TraceLoggingBool(radioCapabilities.PeripheralRoleSupported, "peripheral role supported")
+        );
+
+        RETURN_HR(HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED));
+    }
+
     RETURN_IF_FAILED(TransportState::Current().StartPeripheral(protocol));
 
     auto cleanupOnFailure = wil::scope_exit([&]() { LOG_IF_FAILED(StopPeripheral()); });
@@ -1282,10 +1339,11 @@ HRESULT
 CMidi2Ble2MidiEndpointManager::ConnectDeviceInternal(winrt::hstring const& deviceId)
 {
     winrt::hstring failureDetail{};
+    uint32_t errorCode{ BLUETOOTH_MIDI_ERROR_CODE_UNKNOWN_ERROR };
 
-    auto hr = ConnectDeviceCore(deviceId, failureDetail);
+    auto hr = ConnectDeviceCore(deviceId, failureDetail, errorCode);
 
-    RecordConnectResult(deviceId, hr, failureDetail);
+    RecordConnectResult(deviceId, hr, failureDetail, errorCode);
 
     return hr;
 }
@@ -1295,7 +1353,8 @@ _Use_decl_annotations_
 HRESULT
 CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
     winrt::hstring const& deviceId,
-    winrt::hstring& failureDetail
+    winrt::hstring& failureDetail,
+    uint32_t& errorCode
 )
 {
     TraceLoggingWrite(
@@ -1309,6 +1368,7 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
     );
 
     failureDetail = L"";
+    errorCode = BLUETOOTH_MIDI_ERROR_CODE_UNKNOWN_ERROR;
 
     if (TransportState::Current().GetConnectionByDeviceId(deviceId) != nullptr)
     {
@@ -1320,6 +1380,7 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
     if (!TryGetDiscoveredDevice(deviceId, discoveredDevice) || discoveredDevice.BluetoothAddress == 0)
     {
         failureDetail = L"This device has not been discovered. Wake it so it advertises, then try again.";
+        errorCode = BLUETOOTH_MIDI_ERROR_CODE_DEVICE_NOT_DISCOVERED;
         RETURN_IF_FAILED(E_NOTFOUND);
     }
 
@@ -1338,6 +1399,7 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
         if (bleDevice == nullptr)
         {
             failureDetail = L"Windows could not open this Bluetooth device.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_DEVICE_NOT_AVAILABLE;
             RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE));
         }
 
@@ -1352,6 +1414,7 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
         if (IsStopping())
         {
             failureDetail = L"The transport is shutting down.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_OPERATION_ABORTED;
             RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED));
         }
 
@@ -1362,18 +1425,22 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
             case gatt::GattCommunicationStatus::Unreachable:
                 // by far the most common outcome: BLE peripherals sleep aggressively
                 failureDetail = L"The device did not respond. Wake it up, keep it in range, and make sure it is not already connected to another host.";
+                errorCode = BLUETOOTH_MIDI_ERROR_CODE_DEVICE_UNREACHABLE;
                 break;
 
             case gatt::GattCommunicationStatus::AccessDenied:
                 failureDetail = L"Windows denied access to this device's GATT services.";
+                errorCode = BLUETOOTH_MIDI_ERROR_CODE_GATT_ACCESS_DENIED;
                 break;
 
             case gatt::GattCommunicationStatus::ProtocolError:
                 failureDetail = L"The device reported a GATT protocol error.";
+                errorCode = BLUETOOTH_MIDI_ERROR_CODE_GATT_PROTOCOL_ERROR;
                 break;
 
             default:
                 failureDetail = L"The device does not expose the Bluetooth MIDI service.";
+                errorCode = BLUETOOTH_MIDI_ERROR_CODE_MIDI_SERVICE_NOT_FOUND;
                 break;
             }
 
@@ -1388,19 +1455,22 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
         if (openStatus == gatt::GattOpenStatus::AccessDenied)
         {
             failureDetail = L"Access to the device's MIDI service was denied.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_GATT_ACCESS_DENIED;
             RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED));
         }
 
         if (openStatus == gatt::GattOpenStatus::SharingViolation)
         {
             // the in-box Bluetooth MIDI 1.0 stack claims paired devices and holds them exclusively
-            failureDetail = L"Another component already has this device's MIDI service open. The older Windows Bluetooth MIDI support may be holding it.";
+            failureDetail = L"Another component already has this device's MIDI service open. The older Windows Bluetooth MIDI support may be holding it. Remove the device's Bluetooth MIDI entry in Device Manager, then try again.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_DEVICE_IN_USE;
             RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION));
         }
 
         if (openStatus != gatt::GattOpenStatus::Success && openStatus != gatt::GattOpenStatus::AlreadyOpened)
         {
             failureDetail = L"The device's MIDI service could not be opened.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_SESSION_CREATION_FAILED;
             RETURN_IF_FAILED(E_FAIL);
         }
 
@@ -1409,12 +1479,14 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
         if (IsStopping())
         {
             failureDetail = L"The transport is shutting down.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_OPERATION_ABORTED;
             RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED));
         }
 
         if (selection.Protocol == MidiBleProtocol::Protocol::Unknown || selection.Characteristic == nullptr)
         {
             failureDetail = L"The device's MIDI service has neither a MIDI 1.0 nor a UMP characteristic.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_MIDI_CHARACTERISTIC_NOT_FOUND;
             RETURN_IF_FAILED(E_NOTFOUND);
         }
 
@@ -1426,6 +1498,7 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
         if (session == nullptr)
         {
             failureDetail = L"A Bluetooth session could not be created for this device.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_SESSION_CREATION_FAILED;
             RETURN_IF_FAILED(E_FAIL);
         }
 
@@ -1494,11 +1567,15 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
     catch (...)
     {
         failureDetail = L"An unexpected Bluetooth error occurred.";
+        errorCode = BLUETOOTH_MIDI_ERROR_CODE_UNKNOWN_ERROR;
         RETURN_CAUGHT_EXCEPTION();
     }
 
     auto connection = std::make_shared<MidiBleConnection>();
     RETURN_IF_NULL_ALLOC(connection);
+
+    errorCode = BLUETOOTH_MIDI_ERROR_CODE_NOTIFY_FAILED;
+    failureDetail = L"The device's MIDI characteristic could not be subscribed to.";
 
     RETURN_IF_FAILED(connection->Initialize(
         deviceId,
@@ -1521,6 +1598,9 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
     // the bidi immediately and the bidi resolves its connection out of this table.
     RETURN_IF_FAILED(TransportState::Current().AddConnection(connection));
 
+    errorCode = BLUETOOTH_MIDI_ERROR_CODE_ENDPOINT_CREATION_FAILED;
+    failureDetail = L"The MIDI endpoint for this device could not be created.";
+
     hr = CreateEndpointForConnection(connection);
 
     if (FAILED(hr))
@@ -1528,6 +1608,9 @@ CMidi2Ble2MidiEndpointManager::ConnectDeviceCore(
         LOG_IF_FAILED(TransportState::Current().RemoveConnection(deviceId));
         RETURN_IF_FAILED(hr);
     }
+
+    failureDetail = L"";
+    errorCode = BLUETOOTH_MIDI_ERROR_CODE_UNKNOWN_ERROR;
 
     UpdateDiscoveredDeviceConnectionState(
         deviceId,
@@ -1563,7 +1646,8 @@ void
 CMidi2Ble2MidiEndpointManager::RecordConnectResult(
     winrt::hstring const& deviceId,
     HRESULT const hr,
-    winrt::hstring const& detail
+    winrt::hstring const& detail,
+    uint32_t const errorCode
 )
 {
     {
@@ -1573,6 +1657,7 @@ CMidi2Ble2MidiEndpointManager::RecordConnectResult(
         {
             entry->second.LastConnectErrorHresult = SUCCEEDED(hr) ? 0 : static_cast<int32_t>(hr);
             entry->second.LastConnectErrorDetail = SUCCEEDED(hr) ? winrt::hstring{} : detail;
+            entry->second.LastConnectErrorCode = SUCCEEDED(hr) ? 0 : errorCode;
         }
     }
 

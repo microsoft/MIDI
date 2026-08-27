@@ -11,34 +11,12 @@
 #ifndef MIDI_BLE_UTILITIES_H
 #define MIDI_BLE_UTILITIES_H
 
+// The parts which are decided purely from a string, a number or a json value live here, so they
+// can be unit tested without the radio, the service or COM.
+#include "midi_ble_validation.h"
+
 namespace MidiBleProtocol
 {
-    enum class Protocol : uint8_t
-    {
-        Unknown = 0,
-        Midi1 = 1,
-        Midi2Ump = 2,
-    };
-
-    enum class NativeDataFormat : uint8_t
-    {
-        Unknown = 0,
-        TimestampedMidi1ByteStream = 1,
-        UniversalMidiPacket = 2,
-    };
-
-    // Both specifications require an interval of 15 ms or less and prefer the lowest both ends
-    // support. Windows exposes three presets and no way to name an interval, and the
-    // throughput-optimized one asks for 15 ms as both the floor and the ceiling, so which of
-    // these actually produces the lowest interval has to be measured rather than assumed.
-    enum class ConnectionParameterPreference : uint8_t
-    {
-        SystemDefault = 0,
-        ThroughputOptimized = 1,
-        Balanced = 2,
-        PowerOptimized = 3,
-    };
-
     inline constexpr wchar_t MidiServiceUuid[] = L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}";
     inline constexpr wchar_t Midi1DataIoCharacteristicUuid[] = L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}";
     inline constexpr wchar_t Midi2UmpCharacteristicUuid[] = L"{C3B10ECF-88F5-4F7D-BFFA-8AD2C91FBAFE}";
@@ -70,6 +48,10 @@ namespace MidiBleProtocol
         // failure is kept here. Without it a failed connect is completely silent.
         int32_t LastConnectErrorHresult{ 0 };
         winrt::hstring LastConnectErrorDetail{ };
+
+        // Several distinct causes share one HRESULT, so the cause is recorded separately rather
+        // than being inferred from it later.
+        uint32_t LastConnectErrorCode{ 0 };
 
         // filled in from the live connection when one exists
         uint64_t MessagesReceived{ 0 };
@@ -126,67 +108,6 @@ namespace MidiBleUtilities
         return onTimeout;
     }
 
-    inline winrt::hstring ProtocolToJsonString(_In_ MidiBleProtocol::Protocol const protocol)
-    {
-        switch (protocol)
-        {
-        case MidiBleProtocol::Protocol::Midi1:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PROTOCOL_VALUE_MIDI1;
-
-        case MidiBleProtocol::Protocol::Midi2Ump:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PROTOCOL_VALUE_MIDI2_UMP;
-
-        default:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PROTOCOL_VALUE_UNKNOWN;
-        }
-    }
-
-    inline winrt::hstring NativeDataFormatToJsonString(_In_ MidiBleProtocol::NativeDataFormat const nativeDataFormat)
-    {
-        switch (nativeDataFormat)
-        {
-        case MidiBleProtocol::NativeDataFormat::TimestampedMidi1ByteStream:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_MIDI1;
-
-        case MidiBleProtocol::NativeDataFormat::UniversalMidiPacket:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_UMP;
-
-        default:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_UNKNOWN;
-        }
-    }
-
-
-    // Apple, and to a lesser extent Android, withhold the user-assigned device name from an
-    // unpaired peer and report the model instead. Those names are useless for telling two devices
-    // apart and collide constantly, so they are worth pointing out to the user. Matched whole, so
-    // a real name which merely contains one of these is not flagged.
-    inline bool IsGenericDeviceName(_In_ winrt::hstring const& name)
-    {
-        static wchar_t const* const genericNames[] =
-        {
-            L"iPhone", L"iPad", L"iPod", L"iPod touch",
-            L"Apple Watch", L"Mac", L"MacBook", L"MacBook Pro", L"MacBook Air", L"iMac",
-            L"Android", L"Android Phone", L"Android Tablet",
-            L"Phone", L"Tablet", L"Bluetooth", L"BLE MIDI"
-        };
-
-        if (name.empty())
-        {
-            return false;
-        }
-
-        for (auto const& generic : genericNames)
-        {
-            if (_wcsicmp(name.c_str(), generic) == 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     inline winrt::hstring BluetoothAddressTypeToString(_In_ BluetoothAddressType const addressType)
     {
         switch (addressType)
@@ -195,52 +116,6 @@ namespace MidiBleUtilities
         case BluetoothAddressType::Random:      return L"random";
         default:                                return L"unspecified";
         }
-    }
-
-    inline winrt::hstring ConnectionParameterPreferenceToJsonString(
-        _In_ MidiBleProtocol::ConnectionParameterPreference const preference)
-    {
-        switch (preference)
-        {
-        case MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_THROUGHPUT;
-
-        case MidiBleProtocol::ConnectionParameterPreference::Balanced:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_BALANCED;
-
-        case MidiBleProtocol::ConnectionParameterPreference::PowerOptimized:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_POWER;
-
-        default:
-            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_DEFAULT;
-        }
-    }
-
-    inline MidiBleProtocol::ConnectionParameterPreference ConnectionParameterPreferenceFromJsonString(
-        _In_ winrt::hstring const& value,
-        _In_ MidiBleProtocol::ConnectionParameterPreference const fallback)
-    {
-        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_THROUGHPUT)
-        {
-            return MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized;
-        }
-
-        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_BALANCED)
-        {
-            return MidiBleProtocol::ConnectionParameterPreference::Balanced;
-        }
-
-        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_POWER)
-        {
-            return MidiBleProtocol::ConnectionParameterPreference::PowerOptimized;
-        }
-
-        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_PARAMETERS_VALUE_DEFAULT)
-        {
-            return MidiBleProtocol::ConnectionParameterPreference::SystemDefault;
-        }
-
-        return fallback;
     }
 
     // Returns null for SystemDefault, meaning make no request and leave the radio alone.
@@ -271,6 +146,38 @@ namespace MidiBleUtilities
             BluetoothLEDevice{ nullptr });
     }
 
+    // Never throws and never fails: a machine with no Bluetooth at all simply reports a radio
+    // which cannot do anything, which is a state the transport runs in quite happily.
+    inline MidiBleProtocol::RadioCapabilities ProbeRadioCapabilities() noexcept
+    {
+        MidiBleProtocol::RadioCapabilities capabilities{};
+
+        try
+        {
+            auto adapter = AwaitWithTimeout(
+                winrt::Windows::Devices::Bluetooth::BluetoothAdapter::GetDefaultAsync(),
+                BleOperationTimeoutMilliseconds,
+                winrt::Windows::Devices::Bluetooth::BluetoothAdapter{ nullptr });
+
+            if (adapter == nullptr)
+            {
+                return capabilities;
+            }
+
+            capabilities.RadioPresent = true;
+            capabilities.LowEnergySupported = adapter.IsLowEnergySupported();
+            capabilities.CentralRoleSupported = adapter.IsCentralRoleSupported();
+            capabilities.PeripheralRoleSupported = adapter.IsPeripheralRoleSupported();
+            capabilities.MaxAdvertisementDataLength = adapter.MaxAdvertisementDataLength();
+        }
+        catch (...)
+        {
+            // a radio which throws on interrogation is treated exactly like one which is absent
+        }
+
+        return capabilities;
+    }
+
     // The name a remote Central sees for this PC. The GATT service provider puts the system's
     // Bluetooth name in the advertisement and gives an application no way to override it, and
     // Windows takes that name from the computer name, so this is reported rather than configured.
@@ -285,52 +192,6 @@ namespace MidiBleUtilities
         }
 
         return L"";
-    }
-
-    // The Bluetooth address is the only identifier both the advertisement watcher and the GATT
-    // device watcher can supply, so it is what commands, discovery and device instance ids all
-    // key on.
-    inline winrt::hstring FormatBluetoothAddress(_In_ uint64_t const address)
-    {
-        wchar_t buffer[13]{ };
-
-        swprintf_s(buffer, ARRAYSIZE(buffer), L"%012llX", address & 0x0000FFFFFFFFFFFFULL);
-
-        return winrt::hstring{ buffer };
-    }
-
-    // Accepts the bare hex form this transport emits as well as the colon and dash separated
-    // forms the Windows property system and users produce.
-    inline bool TryParseBluetoothAddress(_In_ std::wstring const& value, _Out_ uint64_t& address)
-    {
-        address = 0;
-
-        uint8_t digitCount{ 0 };
-
-        for (auto const& ch : value)
-        {
-            if (ch == L':' || ch == L'-' || ch == L' ')
-            {
-                continue;
-            }
-
-            uint64_t digit{ 0 };
-
-            if (ch >= L'0' && ch <= L'9')       digit = static_cast<uint64_t>(ch - L'0');
-            else if (ch >= L'A' && ch <= L'F')  digit = static_cast<uint64_t>(ch - L'A') + 10;
-            else if (ch >= L'a' && ch <= L'f')  digit = static_cast<uint64_t>(ch - L'a') + 10;
-            else return false;
-
-            if (digitCount >= 12)
-            {
-                return false;
-            }
-
-            address = (address << 4) | digit;
-            digitCount++;
-        }
-
-        return digitCount > 0;
     }
 
 

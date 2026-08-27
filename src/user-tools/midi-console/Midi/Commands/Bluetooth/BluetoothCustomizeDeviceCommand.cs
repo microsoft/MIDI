@@ -6,7 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Windows.Data.Json;
+using Windows.Devices.Midi2.Transports.Bluetooth;
 
 namespace Microsoft.Midi.ConsoleApp
 {
@@ -15,8 +15,8 @@ namespace Microsoft.Midi.ConsoleApp
         public sealed class Settings : CommandSettings
         {
             [LocalizedDescription("ParameterBluetoothDeviceId")]
-            [CommandArgument(0, "<device id>")]
-            public string? DeviceId { get; set; }
+            [CommandArgument(0, "<bluetooth device id>")]
+            public string? BluetoothDeviceId { get; set; }
 
             [LocalizedDescription("ParameterBluetoothCustomName")]
             [CommandOption("-n|--name")]
@@ -33,13 +33,18 @@ namespace Microsoft.Midi.ConsoleApp
             [LocalizedDescription("ParameterBluetoothCustomClear")]
             [CommandOption("-c|--clear")]
             public bool Clear { get; set; }
+
+            [LocalizedDescription("ParameterBluetoothTemporary")]
+            [CommandOption("-t|--temporary")]
+            [DefaultValue(false)]
+            public bool Temporary { get; set; }
         }
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
         {
-            if (string.IsNullOrWhiteSpace(settings.DeviceId))
+            if (string.IsNullOrWhiteSpace(settings.BluetoothDeviceId))
             {
-                return ValidationResult.Error("Missing device id. Use 'midi bluetooth list' to see the discovered devices.");
+                return ValidationResult.Error("Missing Bluetooth device id. Use 'midi bluetooth list' to see the discovered devices.");
             }
 
             return BluetoothTransport.ValidateCustomizationOptions(
@@ -50,34 +55,40 @@ namespace Microsoft.Midi.ConsoleApp
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            var deviceId = settings.DeviceId!.Trim();
+            if (!BluetoothTransport.EnsureTransportAvailable())
+            {
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
 
-            var device = BluetoothTransport.FindDevice(deviceId);
+            var bluetoothDeviceId = settings.BluetoothDeviceId!.Trim();
+
+            var device = MidiBluetoothTransportManager.GetDevice(bluetoothDeviceId);
 
             if (device == null)
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Device {AnsiMarkupFormatter.EscapeString(deviceId)} has not been discovered."));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Device {AnsiMarkupFormatter.EscapeString(bluetoothDeviceId)} has not been discovered."));
                 AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("Wake the device so it advertises, then use 'midi bluetooth list' to confirm the device id."));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("Wake the device so it advertises, then use 'midi bluetooth list' to confirm the Bluetooth device id."));
 
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
             // The endpoint is matched on its instance id, which the transport derives from the
             // device, so a customization can be written before the device has ever connected.
-            var instanceId = device.GetNamedString(BluetoothTransport.ResponseEndpointDeviceInstanceId, string.Empty);
-
-            if (string.IsNullOrEmpty(instanceId))
+            if (string.IsNullOrEmpty(device.EndpointDeviceInstanceId))
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("This device has no endpoint instance id, so it cannot be customized."));
 
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 
-            var customProperties = BluetoothTransport.BuildCustomProperties(
-                settings.Name, settings.Description, settings.Image, settings.Clear);
-
-            if (!BluetoothTransport.ApplyCustomization(instanceId, customProperties))
+            if (!BluetoothTransport.ApplyCustomization(
+                    device.EndpointDeviceInstanceId,
+                    settings.Name,
+                    settings.Description,
+                    settings.Image,
+                    settings.Clear,
+                    !settings.Temporary))
             {
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
@@ -87,12 +98,10 @@ namespace Microsoft.Midi.ConsoleApp
 
             AnsiConsole.WriteLine();
 
-            var transportName = device.GetNamedString(BluetoothTransport.ResponseName, string.Empty);
-
-            if (!string.IsNullOrEmpty(transportName))
+            if (!string.IsNullOrEmpty(device.Name))
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
-                    $"The name reported by the device is {AnsiMarkupFormatter.EscapeString(transportName)}."));
+                    $"The name reported by the device is {AnsiMarkupFormatter.EscapeString(device.Name)}."));
             }
 
             return (int)MidiConsoleReturnCode.Success;

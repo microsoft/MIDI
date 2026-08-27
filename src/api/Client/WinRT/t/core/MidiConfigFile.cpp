@@ -474,6 +474,157 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             }
         }
 
+        // Every property named in the wanted object must be present and equal in the candidate.
+        // A subset rather than an exact comparison, so a caller can name just the one property
+        // which identifies the entry instead of restating the whole match block.
+        bool MatchObjectContains(
+            _In_ json::JsonObject const& candidate,
+            _In_ json::JsonObject const& wanted) noexcept
+        {
+            try
+            {
+                if (candidate == nullptr || wanted == nullptr)
+                {
+                    return false;
+                }
+
+                for (auto const& pair : wanted)
+                {
+                    if (!candidate.HasKey(pair.Key()))
+                    {
+                        return false;
+                    }
+
+                    auto const candidateValue = candidate.GetNamedValue(pair.Key());
+                    auto const wantedValue = pair.Value();
+
+                    if (candidateValue == nullptr || wantedValue == nullptr)
+                    {
+                        return false;
+                    }
+
+                    if (candidateValue.ValueType() == json::JsonValueType::String &&
+                        wantedValue.ValueType() == json::JsonValueType::String)
+                    {
+                        if (internal::ToUpperTrimmedWStringCopy(std::wstring{ candidateValue.GetString() }) !=
+                            internal::ToUpperTrimmedWStringCopy(std::wstring{ wantedValue.GetString() }))
+                        {
+                            return false;
+                        }
+
+                        continue;
+                    }
+
+                    if (candidateValue.Stringify() != wantedValue.Stringify())
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+
+        // Removal from an array whose entries are identified by a property rather than by
+        // position. A listed string names the identity value; a listed object is matched against
+        // the entry's identity object, which is how an endpoint customization is deleted.
+        void ApplyKeyedArrayRemoval(
+            _In_ json::JsonArray const& persistedArray,
+            _In_ json::IJsonValue const& removeValue,
+            _In_ std::wstring_view const identityKey) noexcept
+        {
+            try
+            {
+                if (persistedArray == nullptr || removeValue == nullptr || identityKey.empty())
+                {
+                    return;
+                }
+
+                if (removeValue.ValueType() != json::JsonValueType::Array)
+                {
+                    return;
+                }
+
+                auto const wantedEntries = removeValue.GetArray();
+                winrt::hstring const identityKeyName{ identityKey };
+
+                for (uint32_t wantedIndex = 0; wantedIndex < wantedEntries.Size(); wantedIndex++)
+                {
+                    auto const wanted = wantedEntries.GetAt(wantedIndex);
+
+                    if (wanted == nullptr)
+                    {
+                        continue;
+                    }
+
+                    // walked backwards because entries are removed while iterating
+                    for (int32_t index = static_cast<int32_t>(persistedArray.Size()) - 1; index >= 0; index--)
+                    {
+                        auto const existing = persistedArray.GetAt(static_cast<uint32_t>(index));
+
+                        if (existing == nullptr || existing.ValueType() != json::JsonValueType::Object)
+                        {
+                            continue;
+                        }
+
+                        auto const existingObject = existing.GetObject();
+
+                        if (!existingObject.HasKey(identityKeyName))
+                        {
+                            continue;
+                        }
+
+                        auto const existingIdentity = existingObject.GetNamedValue(identityKeyName);
+
+                        if (existingIdentity == nullptr)
+                        {
+                            continue;
+                        }
+
+                        bool matched{ false };
+
+                        if (wanted.ValueType() == json::JsonValueType::String &&
+                            existingIdentity.ValueType() == json::JsonValueType::String)
+                        {
+                            matched =
+                                internal::ToUpperTrimmedWStringCopy(std::wstring{ existingIdentity.GetString() }) ==
+                                internal::ToUpperTrimmedWStringCopy(std::wstring{ wanted.GetString() });
+                        }
+                        else if (wanted.ValueType() == json::JsonValueType::Object &&
+                                 existingIdentity.ValueType() == json::JsonValueType::Object)
+                        {
+                            auto wantedObject = wanted.GetObject();
+
+                            // accepts either the identity object itself, or an entry which wraps it
+                            if (wantedObject.HasKey(identityKeyName))
+                            {
+                                auto const nested = wantedObject.GetNamedValue(identityKeyName);
+
+                                if (nested != nullptr && nested.ValueType() == json::JsonValueType::Object)
+                                {
+                                    wantedObject = nested.GetObject();
+                                }
+                            }
+
+                            matched = MatchObjectContains(existingIdentity.GetObject(), wantedObject);
+                        }
+
+                        if (matched)
+                        {
+                            persistedArray.RemoveAt(static_cast<uint32_t>(index));
+                        }
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+        }
+
         void MergeTransportSection(
             _In_ json::JsonObject const& persistedSection,
             _In_ json::JsonObject const& incomingSection) noexcept
@@ -486,13 +637,40 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
                     if (key == MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY)
                     {
-                        if (persistedSection.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY))
+                        auto const removeValue = pair.Value();
+
+                        // A keyed array lives directly in the transport section rather than under
+                        // create, so those keys are handled before falling back to create.
+                        bool handledAsKeyedArray{ false };
+
+                        if (removeValue != nullptr && removeValue.ValueType() == json::JsonValueType::Object)
+                        {
+                            for (auto const& removePair : removeValue.GetObject())
+                            {
+                                auto const identityKey = IdentityKeyForArray(std::wstring_view{ removePair.Key() });
+
+                                if (identityKey.empty() || !persistedSection.HasKey(removePair.Key()))
+                                {
+                                    continue;
+                                }
+
+                                auto const persistedValue = persistedSection.GetNamedValue(removePair.Key());
+
+                                if (persistedValue != nullptr && persistedValue.ValueType() == json::JsonValueType::Array)
+                                {
+                                    ApplyKeyedArrayRemoval(persistedValue.GetArray(), removePair.Value(), identityKey);
+                                    handledAsKeyedArray = true;
+                                }
+                            }
+                        }
+
+                        if (!handledAsKeyedArray && persistedSection.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY))
                         {
                             auto const createValue = persistedSection.GetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY);
 
                             if (createValue != nullptr && createValue.ValueType() == json::JsonValueType::Object)
                             {
-                                ApplyRemoval(createValue.GetObject(), pair.Value());
+                                ApplyRemoval(createValue.GetObject(), removeValue);
                             }
                         }
 

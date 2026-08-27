@@ -153,6 +153,9 @@ namespace sysex = ::winrt::Windows::Devices::Midi2::Utilities::SysExTransfer;
 namespace winrt::Windows::Devices::Midi2::Transports::Network {};
 namespace network = ::winrt::Windows::Devices::Midi2::Transports::Network;
 
+namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth {};
+namespace bluetooth = ::winrt::Windows::Devices::Midi2::Transports::Bluetooth;
+
 
 #define SAFE_COTASKMEMFREE(p) \
     if (NULL != p) { \

@@ -73,6 +73,11 @@ public:
     void SetConnectionParameterPreference(_In_ MidiBleProtocol::ConnectionParameterPreference const preference);
     MidiBleProtocol::ConnectionParameterPreference GetConnectionParameterPreference();
 
+    // Probed once at start up. A machine with no usable radio still loads the transport, so this
+    // is what lets every command explain itself rather than just doing nothing.
+    void SetRadioCapabilities(_In_ MidiBleProtocol::RadioCapabilities const& capabilities);
+    MidiBleProtocol::RadioCapabilities GetRadioCapabilities();
+
     //HRESULT AddHost(
     //    _In_ std::shared_ptr<MidiNetworkHost>);
     //std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts() { return m_hosts; }
@@ -146,6 +151,9 @@ private:
 
     std::atomic<MidiBleProtocol::ConnectionParameterPreference> m_connectionParameterPreference{
         MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized };
+
+    MidiBleProtocol::RadioCapabilities m_radioCapabilities{};
+    std::mutex m_radioCapabilitiesLock;
 
     //std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
     //std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };

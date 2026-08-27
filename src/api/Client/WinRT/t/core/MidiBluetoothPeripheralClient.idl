@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiBluetoothAddressTypeEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // The remote Central which has connected to this PC while it is published as a peripheral.
+    // This is the opposite direction to MidiBluetoothDeviceInformation, so the identifiers are
+    // different: the remote picked the connection parameters, and Windows supplies a device
+    // interface id rather than an address for it.
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothPeripheralClient", UUID_IMidiBluetoothPeripheralClient)]
+    runtimeclass MidiBluetoothPeripheralClient
+    {
+        [noexcept] String Name{ get; };
+
+        // True when the remote reports something like "iPhone" rather than a distinguishing name
+        [noexcept] Boolean HasGenericName{ get; };
+
+        [noexcept] UInt64 BluetoothAddress{ get; };
+        [noexcept] MidiBluetoothAddressType BluetoothAddressType{ get; };
+
+        [noexcept] Boolean IsPaired{ get; };
+
+        // A Windows device interface id, unlike the address-based ids used elsewhere here
+        [noexcept] String WindowsDeviceId{ get; };
+
+        // The remote Central chooses this when it connects, so it is what the phone or tablet
+        // asked for rather than what Windows would have requested.
+        [noexcept] Windows.Foundation.TimeSpan ConnectionInterval{ get; };
+    }
+}

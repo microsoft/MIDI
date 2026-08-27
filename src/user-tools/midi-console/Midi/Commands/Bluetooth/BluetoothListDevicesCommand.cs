@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Windows.Devices.Midi2.Transports.Bluetooth;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class BluetoothListDevicesCommand : Command<BluetoothListDevicesCommand.Settings>
@@ -16,7 +18,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         // A connected device stops advertising, so its presence comes from the link. For the
         // rest, how long ago it was last heard from is the only presence signal BLE offers.
-        private static string FormatPresence(bool isConnected, bool isPresent, ulong lastSeenAgoMilliseconds)
+        private static string FormatPresence(bool isConnected, bool isPresent, TimeSpan lastSeenAgo)
         {
             if (isConnected)
             {
@@ -28,7 +30,7 @@ namespace Microsoft.Midi.ConsoleApp
                 return "nearby";
             }
 
-            var seconds = lastSeenAgoMilliseconds / 1000;
+            var seconds = (long)lastSeenAgo.TotalSeconds;
 
             if (seconds == 0)
             {
@@ -50,22 +52,47 @@ namespace Microsoft.Midi.ConsoleApp
             return $"[grey]away ({minutes / 60}h)[/]";
         }
 
+        // -127 is the sentinel for no reading rather than an extremely weak one, and a connected
+        // device has stopped advertising so there is nothing left to measure.
+        private static string FormatSignalStrength(short decibelMilliwatts)
+        {
+            if (decibelMilliwatts == 0 || decibelMilliwatts <= -127)
+            {
+                return "-";
+            }
+
+            return $"{decibelMilliwatts} dBm";
+        }
+
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             LoggingService.Current.LogInfo("Enter Execute Command");
 
-            var responseJson = BluetoothTransport.SendCommand(BluetoothTransport.VerbListAvailableDevices);
-
-            if (responseJson == null)
+            if (!BluetoothTransport.EnsureTransportAvailable())
             {
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            var devices = MidiBluetoothTransportManager.GetAvailableDevices();
+
+            if (devices.Count == 0)
+            {
+                BluetoothTransport.ReportRadioLimitations();
+
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("No Bluetooth MIDI devices have been discovered."));
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("Devices are found by listening for advertisements, so a device which is powered off, asleep, or already connected to another host will not be listed. Wake the device and try again."));
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("A device is also held back for a few seconds after it is first seen, until its name is known."));
+
+                return (int)MidiConsoleReturnCode.Success;
             }
 
             var table = new Table();
 
             AnsiMarkupFormatter.SetTableBorderStyle(table);
 
-            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Device Id"));
+            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Bluetooth Device Id"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Name"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Protocol"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Endpoint"));
@@ -75,71 +102,30 @@ namespace Microsoft.Midi.ConsoleApp
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Msgs In"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Msgs Out"));
 
-            uint deviceCount = 0;
-
             var connectErrors = new List<string>();
 
-            if (responseJson.ContainsKey("availableDevices"))
+            foreach (var device in devices)
             {
-                foreach (var entry in responseJson.GetNamedArray("availableDevices"))
+                table.AddRow(
+                    AnsiMarkupFormatter.FormatDeviceInstanceId(device.BluetoothDeviceId),
+                    string.IsNullOrEmpty(device.Name) ? "[grey](unknown name)[/]" : AnsiMarkupFormatter.FormatEndpointName(device.Name),
+                    BluetoothTransport.FormatProtocol(device.SelectedProtocol),
+                    device.HasEndpoint ? "[green]yes[/]" : "no",
+                    FormatPresence(device.IsConnected, device.IsPresent, device.LastSeenAgo),
+                    device.ConnectionInterval > TimeSpan.Zero ? $"{device.ConnectionInterval.TotalMilliseconds:N2} ms" : "-",
+                    FormatSignalStrength(device.SignalStrengthDecibelMilliwatts),
+                    device.HasEndpoint ? device.MessagesReceived.ToString() : "-",
+                    device.HasEndpoint ? device.MessagesSent.ToString() : "-");
+
+                if (!string.IsNullOrEmpty(device.LastConnectError))
                 {
-                    var device = entry.GetObject();
-
-                    var deviceId = device.GetNamedString("deviceId", string.Empty);
-                    var name = device.GetNamedString("name", string.Empty);
-                    var protocol = device.GetNamedString("selectedProtocol", string.Empty);
-                    var isConnected = device.GetNamedBoolean("isConnected", false);
-                    var signal = (int)device.GetNamedNumber("signalStrengthDbm", 0);
-                    var lastConnectError = device.GetNamedString("lastConnectError", string.Empty);
-                    var messagesIn = (ulong)device.GetNamedNumber("messagesReceived", 0);
-                    var messagesOut = (ulong)device.GetNamedNumber("messagesSent", 0);
-                    var lastSendError = (int)device.GetNamedNumber("lastSendErrorHresult", 0);
-                    var isPresent = device.GetNamedBoolean("isPresent", false);
-                    var lastSeenAgo = (ulong)device.GetNamedNumber("lastSeenAgoMilliseconds", 0);
-                    var hasEndpoint = device.GetNamedBoolean("hasEndpoint", false);
-                    var intervalMilliseconds = device.GetNamedNumber("connectionIntervalMilliseconds", 0);
-
-                    // A device only reports its protocol once connected, because that requires
-                    // reading its characteristics.
-                    if (string.IsNullOrEmpty(protocol) || protocol == "unknown")
-                    {
-                        protocol = "-";
-                    }
-
-                    table.AddRow(
-                        AnsiMarkupFormatter.FormatDeviceInstanceId(deviceId),
-                        string.IsNullOrEmpty(name) ? "[grey](unknown name)[/]" : AnsiMarkupFormatter.FormatEndpointName(name),
-                        protocol,
-                        hasEndpoint ? "[green]yes[/]" : "no",
-                        FormatPresence(isConnected, isPresent, lastSeenAgo),
-                        intervalMilliseconds > 0 ? $"{intervalMilliseconds:N2} ms" : "-",
-                        signal != 0 ? $"{signal} dBm" : "-",
-                        hasEndpoint ? messagesIn.ToString() : "-",
-                        hasEndpoint ? messagesOut.ToString() : "-");
-
-                    if (!string.IsNullOrEmpty(lastConnectError))
-                    {
-                        connectErrors.Add($"{deviceId}: {lastConnectError}");
-                    }
-
-                    if (lastSendError != 0)
-                    {
-                        connectErrors.Add($"{deviceId}: the most recent send to this device failed (0x{lastSendError:X8}).");
-                    }
-
-                    deviceCount++;
+                    connectErrors.Add($"{device.BluetoothDeviceId}: {device.LastConnectError}");
                 }
-            }
 
-            if (deviceCount == 0)
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("No Bluetooth MIDI devices have been discovered."));
-                AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("Devices are found by listening for advertisements, so a device which is powered off, asleep, or already connected to another host will not be listed. Wake the device and try again."));
-                AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("A device is also held back for a few seconds after it is first seen, until its name is known."));
-
-                return (int)MidiConsoleReturnCode.Success;
+                if (device.LastSendErrorHResult != 0)
+                {
+                    connectErrors.Add($"{device.BluetoothDeviceId}: the most recent send to this device failed (0x{device.LastSendErrorHResult:X8}).");
+                }
             }
 
             AnsiConsole.Write(table);
@@ -157,7 +143,7 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.WriteLine();
             }
 
-            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("Use 'midi bluetooth connect <device id>' to create a MIDI endpoint for a device."));
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("Use 'midi bluetooth connect <bluetooth device id>' to create a MIDI endpoint for a device."));
 
             return (int)MidiConsoleReturnCode.Success;
         }

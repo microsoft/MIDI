@@ -84,6 +84,12 @@ namespace Windows.Devices.Midi2
             apicontract MidiTransportsNetworkApiContract { };
         }
 
+        namespace Bluetooth
+        {
+            [contractversion(1)]
+            apicontract MidiTransportsBluetoothApiContract { };
+        }
+
     }
 
 

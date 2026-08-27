@@ -83,7 +83,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementati
                 m_isReceiving = false;
             }
 
-            // documented behaviour: whatever is still buffered is handed out now, so stopping
+            // documented behavior: whatever is still buffered is handed out now, so stopping
             // may raise one or more further events
             RaisePending(true);
         }

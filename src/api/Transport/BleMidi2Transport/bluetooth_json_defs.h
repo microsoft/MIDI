@@ -27,6 +27,7 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_INSTANCE_ID_KEY        L"endpointDeviceInstanceId"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_CONNECT_ERROR_KEY                 L"lastConnectError"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_CONNECT_ERROR_HRESULT_KEY         L"lastConnectErrorHresult"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_CONNECT_ERROR_CODE_KEY            L"lastConnectErrorCode"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_RECEIVED_KEY                  L"messagesReceived"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_SENT_KEY                      L"messagesSent"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEND_ERROR_HRESULT_KEY            L"lastSendErrorHresult"
@@ -52,6 +53,13 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_TYPE_KEY                       L"bluetoothAddressType"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_BLUETOOTH_DEVICE_ID_KEY                L"bluetoothDeviceId"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_GENERIC_NAME_KEY                   L"hasGenericName"
+
+// what the radio on this machine can do, so a machine with no Bluetooth explains itself
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_RADIO_KEY                              L"radio"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_RADIO_PRESENT_KEY                      L"isPresent"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_RADIO_LOW_ENERGY_KEY                   L"isLowEnergySupported"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_RADIO_CENTRAL_ROLE_KEY                 L"isCentralRoleSupported"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_RADIO_PERIPHERAL_ROLE_KEY              L"isPeripheralRoleSupported"
 
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PROTOCOL_VALUE_MIDI1                   L"bleMidi1"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PROTOCOL_VALUE_MIDI2_UMP               L"bleMidi2Ump"
