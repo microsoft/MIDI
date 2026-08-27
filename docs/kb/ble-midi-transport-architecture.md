@@ -11,7 +11,7 @@ description: How the Windows MIDI Services Bluetooth LE MIDI transport discovers
 > may change.
 
 This page describes the design of the in-box Bluetooth Low Energy MIDI transport
-(`Midi2.Ble2MidiTransport.dll`, registered as `Midi2BluetoothMidiTransport`). It is aimed at
+(`Midi2.BluetoothMidiTransport.dll`, registered as `Midi2BluetoothMidiTransport`). It is aimed at
 people working on the transport itself rather than at app developers.
 
 ## One transport, two protocols
@@ -167,7 +167,7 @@ downscaler, so an app sending MIDI 2.0 protocol messages to a MIDI 1.0 device st
 
 `midi_ble_midi1_codec.h` is a self-contained implementation of the packet format with no
 dependency on Bluetooth, the service or COM, which is what makes it unit testable
-(`Midi2.Transport.BleMidi.unittests`).
+(`Midi2.Transport.BluetoothMidi.unittests`).
 
 A packet is a Header Byte (bit 7 set, bit 6 reserved, bits 5-0 `timestampHigh`) followed by
 Timestamp Byte and message pairs (bit 7 set, bits 6-0 `timestampLow`). Timestamps are 13 bit

@@ -10,8 +10,8 @@
 
 // The json keys and error codes are shared with the transport rather than restated here, so the
 // two cannot drift
-#include "..\..\..\..\Transport\BleMidi2Transport\bluetooth_json_defs.h"
-#include "..\..\..\..\Transport\BleMidi2Transport\bluetooth_transport_error_codes.h"
+#include "..\..\..\..\Transport\BluetoothMidiTransport\bluetooth_json_defs.h"
+#include "..\..\..\..\Transport\BluetoothMidiTransport\bluetooth_transport_error_codes.h"
 
 namespace Windows::Devices::Midi2::Transports::Bluetooth::Internal
 {
@@ -23,6 +23,72 @@ namespace Windows::Devices::Midi2::Transports::Bluetooth::Internal
         }
 
         return foundation::TimeSpan{ static_cast<int64_t>(milliseconds * 10000.0) };
+    }
+
+    // Inverse of the service's FileTimeToIso8601. The wire format is ISO 8601 UTC with the full
+    // 100ns FILETIME resolution, for example 2026-08-12T01:23:45.6789012Z. Anything unparseable
+    // becomes a zero DateTime, which is also what "nothing is waiting" means on the service side.
+    inline foundation::DateTime RequestTimeFromJsonString(_In_ winrt::hstring const& value) noexcept
+    {
+        foundation::DateTime result{};
+
+        if (value.empty())
+        {
+            return result;
+        }
+
+        uint32_t year{}, month{}, day{}, hour{}, minute{}, second{}, fraction{};
+
+        if (swscanf_s(value.c_str(), L"%4u-%2u-%2uT%2u:%2u:%2u.%7uZ",
+            &year, &month, &day, &hour, &minute, &second, &fraction) != 7)
+        {
+            return result;
+        }
+
+        SYSTEMTIME st{};
+        st.wYear = static_cast<WORD>(year);
+        st.wMonth = static_cast<WORD>(month);
+        st.wDay = static_cast<WORD>(day);
+        st.wHour = static_cast<WORD>(hour);
+        st.wMinute = static_cast<WORD>(minute);
+        st.wSecond = static_cast<WORD>(second);
+
+        FILETIME ft{};
+
+        if (!SystemTimeToFileTime(&st, &ft))
+        {
+            return result;
+        }
+
+        // whole seconds from the conversion, plus the sub-second ticks the service preserved
+        uint64_t fileTime = (static_cast<uint64_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+        fileTime += fraction;
+
+        return winrt::clock::from_file_time(winrt::file_time{ fileTime });
+    }
+
+    inline bluetooth::MidiBluetoothPeripheralClientPolicy ClientPolicyFromJsonString(
+        _In_ winrt::hstring const& value) noexcept
+    {
+        return value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_VALUE_ALLOW_ANY ?
+            bluetooth::MidiBluetoothPeripheralClientPolicy::AllowAny :
+            bluetooth::MidiBluetoothPeripheralClientPolicy::RequireApproval;
+    }
+
+    inline winrt::hstring ApprovalScopeToJsonString(
+        _In_ bluetooth::MidiBluetoothApprovalScope const scope) noexcept
+    {
+        switch (scope)
+        {
+        case bluetooth::MidiBluetoothApprovalScope::Always:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_ALWAYS;
+
+        case bluetooth::MidiBluetoothApprovalScope::UntilRestart:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_UNTIL_RESTART;
+
+        default:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_VALUE_ONCE;
+        }
     }
 
     inline bluetooth::MidiBluetoothProtocol ProtocolFromJsonString(_In_ winrt::hstring const& value) noexcept

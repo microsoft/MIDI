@@ -17,7 +17,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
         static bool IsTransportAvailable() noexcept;
 
-        // Midi2.Ble2MidiTransport.dll, registered as Midi2BluetoothMidiTransport
+        // Midi2.BluetoothMidiTransport.dll, registered as Midi2BluetoothMidiTransport
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{5dc87270-f318-4838-a4f9-6aadc63e925f}"); }
 
         static collections::IVectorView<bluetooth::MidiBluetoothDeviceInformation> GetAvailableDevices() noexcept;
@@ -37,7 +37,26 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
         static bluetooth::MidiBluetoothPeripheralStatus GetPeripheralStatus() noexcept;
 
+        static collections::IVectorView<bluetooth::MidiBluetoothPeripheralClient> GetPendingPeripheralClients() noexcept;
+
+        static foundation::IAsyncOperation<bluetooth::MidiBluetoothPeripheralClientDecisionResponse> ApprovePeripheralClientAsync(
+            _In_ winrt::hstring bluetoothAddress,
+            _In_ bluetooth::MidiBluetoothApprovalScope scope) noexcept;
+
+        static foundation::IAsyncOperation<bluetooth::MidiBluetoothPeripheralClientDecisionResponse> DenyPeripheralClientAsync(
+            _In_ winrt::hstring bluetoothAddress,
+            _In_ bluetooth::MidiBluetoothApprovalScope scope) noexcept;
+
+        static foundation::IAsyncOperation<bluetooth::MidiBluetoothPeripheralClientDecisionResponse> ForgetPeripheralClientAsync(
+            _In_ winrt::hstring bluetoothAddress) noexcept;
+
         static bluetooth::MidiBluetoothRadioInformation GetRadioInformation() noexcept;
+
+    private:
+        static bluetooth::MidiBluetoothPeripheralClientDecisionResponse SendClientDecision(
+            _In_ std::wstring const& verb,
+            _In_ winrt::hstring const& bluetoothAddress,
+            _In_ bluetooth::MidiBluetoothApprovalScope const scope) noexcept;
     };
 }
 

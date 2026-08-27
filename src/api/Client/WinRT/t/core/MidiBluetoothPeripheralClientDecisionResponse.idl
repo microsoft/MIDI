@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiBluetoothPeripheralErrorCodeEnum.idl";
+import "MidiBluetoothApprovalScopeEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothPeripheralClientDecisionResponse", UUID_IMidiBluetoothPeripheralClientDecisionResponse)]
+    runtimeclass MidiBluetoothPeripheralClientDecisionResponse
+    {
+        [noexcept] Boolean Success{ get; };
+
+        [noexcept] MidiBluetoothPeripheralErrorCode ErrorCode{ get; };
+        [noexcept] String ErrorMessage{ get; };
+
+        // What was actually applied, which is not always what was asked for: a request to
+        // remember a device whose address rotates is refused rather than quietly downgraded.
+        [noexcept] MidiBluetoothApprovalScope AppliedScope{ get; };
+
+        [noexcept] String BluetoothAddress{ get; };
+        [noexcept] String Name{ get; };
+
+        // True when the decision has to be written to the configuration file to survive a
+        // service restart. The service applies it immediately either way.
+        [noexcept] Boolean PersistRequired{ get; };
+    }
+}

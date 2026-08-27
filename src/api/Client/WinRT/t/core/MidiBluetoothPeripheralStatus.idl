@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiBluetoothProtocolEnum.idl";
+import "MidiBluetoothPeripheralClientPolicyEnum.idl";
 import "MidiBluetoothPeripheralClient.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
@@ -28,6 +29,10 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         [noexcept] String AdvertisedName{ get; };
 
         [noexcept] UInt32 SubscribedClientCount{ get; };
+
+        // What happens to the next remote Central which connects. Reported whether or not the
+        // peripheral is running, because it describes the rule rather than the current state.
+        [noexcept] MidiBluetoothPeripheralClientPolicy ClientPolicy{ get; };
 
         // A remote Central being subscribed is the only sign that data can actually move
         [noexcept] Boolean IsClientConnected{ get; };

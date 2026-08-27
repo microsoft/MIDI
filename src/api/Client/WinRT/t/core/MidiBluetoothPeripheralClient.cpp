@@ -29,6 +29,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
             m_isPaired = peripheralJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PAIRED_KEY, false);
 
+            m_isRememberable = peripheralJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_REMEMBERABLE_KEY, false);
+
+            m_approvalRequestedTime = btinternal::RequestTimeFromJsonString(
+                peripheralJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_REQUEST_TIME_KEY, L""));
+
             m_windowsDeviceId = peripheralJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_BLUETOOTH_DEVICE_ID_KEY, L"");
 
             m_connectionInterval = btinternal::TimeSpanFromMilliseconds(

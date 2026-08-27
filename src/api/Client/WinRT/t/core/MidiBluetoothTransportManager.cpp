@@ -16,6 +16,8 @@
 #include "MidiBluetoothDeviceDisconnectResponse.h"
 #include "MidiBluetoothPeripheralResponse.h"
 #include "MidiBluetoothPeripheralStatus.h"
+#include "MidiBluetoothPeripheralClient.h"
+#include "MidiBluetoothPeripheralClientDecisionResponse.h"
 #include "MidiBluetoothRadioInformation.h"
 
 #include "MidiReporting.h"
@@ -423,9 +425,149 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         return BuildPeripheralStatus(nullptr);
     }
 
-    bluetooth::MidiBluetoothRadioInformation MidiBluetoothTransportManager::GetRadioInformation() noexcept
+    collections::IVectorView<bluetooth::MidiBluetoothPeripheralClient>
+    MidiBluetoothTransportManager::GetPendingPeripheralClients() noexcept
     {
+        auto results = winrt::single_threaded_vector<bluetooth::MidiBluetoothPeripheralClient>();
+
         try
+        {
+            auto const outcome = SendTransportCommand(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_GET_PENDING_CLIENTS, {});
+
+            if (outcome.ResponseJson != nullptr &&
+                outcome.ResponseJson.TryLookup(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PENDING_CLIENTS_RESPONSE_KEY) != nullptr)
+            {
+                auto const entries = outcome.ResponseJson.GetNamedArray(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PENDING_CLIENTS_RESPONSE_KEY, nullptr);
+
+                if (entries != nullptr)
+                {
+                    for (auto const& entry : entries)
+                    {
+                        if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
+                        {
+                            continue;
+                        }
+
+                        auto client = winrt::make_self<implementation::MidiBluetoothPeripheralClient>();
+                        client->InternalInitializeFromJson(entry.GetObject());
+
+                        results.Append(*client);
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading pending Bluetooth MIDI clients.");
+        }
+
+        return results.GetView();
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bluetooth::MidiBluetoothPeripheralClientDecisionResponse>
+    MidiBluetoothTransportManager::ApprovePeripheralClientAsync(
+        winrt::hstring bluetoothAddress,
+        bluetooth::MidiBluetoothApprovalScope scope) noexcept
+    {
+        co_return SendClientDecision(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_APPROVE_CLIENT, bluetoothAddress, scope);
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bluetooth::MidiBluetoothPeripheralClientDecisionResponse>
+    MidiBluetoothTransportManager::DenyPeripheralClientAsync(
+        winrt::hstring bluetoothAddress,
+        bluetooth::MidiBluetoothApprovalScope scope) noexcept
+    {
+        co_return SendClientDecision(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_DENY_CLIENT, bluetoothAddress, scope);
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bluetooth::MidiBluetoothPeripheralClientDecisionResponse>
+    MidiBluetoothTransportManager::ForgetPeripheralClientAsync(winrt::hstring bluetoothAddress) noexcept
+    {
+        co_return SendClientDecision(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_FORGET_CLIENT,
+            bluetoothAddress,
+            bluetooth::MidiBluetoothApprovalScope::Always);
+    }
+
+    _Use_decl_annotations_
+    bluetooth::MidiBluetoothPeripheralClientDecisionResponse
+    MidiBluetoothTransportManager::SendClientDecision(
+        std::wstring const& verb,
+        winrt::hstring const& bluetoothAddress,
+        bluetooth::MidiBluetoothApprovalScope const scope) noexcept
+    {
+        auto result = winrt::make_self<implementation::MidiBluetoothPeripheralClientDecisionResponse>();
+
+        try
+        {
+            std::map<std::wstring, std::wstring> arguments{};
+
+            arguments.emplace(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY, std::wstring{ bluetoothAddress });
+
+            // forgetPeripheralClient takes no scope, and sending one it does not understand would
+            // only give the service something extra to reject
+            if (verb != MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_FORGET_CLIENT)
+            {
+                arguments.emplace(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_APPROVAL_SCOPE_KEY,
+                    std::wstring{ btinternal::ApprovalScopeToJsonString(scope) });
+            }
+
+            auto const outcome = SendTransportCommand(winrt::hstring{ verb }, arguments);
+
+            winrt::hstring resultAddress{ bluetoothAddress };
+            winrt::hstring resultName{};
+            bool persistRequired{ false };
+
+            if (outcome.ResponseJson != nullptr)
+            {
+                resultAddress = outcome.ResponseJson.GetNamedString(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY, bluetoothAddress);
+
+                resultName = outcome.ResponseJson.GetNamedString(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_NAME_KEY, L"");
+
+                persistRequired = outcome.ResponseJson.GetNamedBoolean(
+                    MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERSIST_REQUIRED_KEY, false);
+            }
+
+            result->InternalInitialize(
+                outcome.Success,
+                outcome.Success
+                    ? bluetooth::MidiBluetoothPeripheralErrorCode::Success
+                    : static_cast<bluetooth::MidiBluetoothPeripheralErrorCode>(outcome.ServiceErrorCode),
+                outcome.ErrorMessage,
+                scope,
+                resultAddress,
+                resultName,
+                persistRequired);
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception deciding about a Bluetooth MIDI client.");
+
+            result->InternalInitialize(
+                false,
+                bluetooth::MidiBluetoothPeripheralErrorCode::Unexpected,
+                internal::ResourceGetHString(IDS_BLUETOOTH_ERROR_NO_SERVICE_RESPONSE),
+                scope,
+                bluetoothAddress,
+                L"",
+                false);
+        }
+
+        return *result;
+    }
+
+    bluetooth::MidiBluetoothRadioInformation MidiBluetoothTransportManager::GetRadioInformation() noexcept
+    {        try
         {
             auto const outcome = SendTransportCommand(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_GET_PERIPHERAL_STATUS, {});
 

@@ -305,7 +305,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiPnpLib", "Libs\MidiPnpL
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.NetworkMidiTransport", "Transport\UdpNetworkMidi2Transport\Midi2.NetworkMidiTransport.vcxproj", "{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.BluetoothMidiTransport", "Transport\BleMidi2Transport\Midi2.Ble2MidiTransport.vcxproj", "{28A17545-0C78-4752-8962-B6D3A0C0786C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.BluetoothMidiTransport", "Transport\BluetoothMidiTransport\Midi2.BluetoothMidiTransport.vcxproj", "{28A17545-0C78-4752-8962-B6D3A0C0786C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02D828BE-2362-4733-B82E-DC3A511D6FEE} = {02D828BE-2362-4733-B82E-DC3A511D6FEE}
 		{A631658B-3552-48E3-9DF1-EEA3E5016257} = {A631658B-3552-48E3-9DF1-EEA3E5016257}
@@ -315,7 +315,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.BluetoothMidiTranspor
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transport.Loopback.unittests", "Test\Midi2.Transport.Loopback.unittests\Midi2.Transport.Loopback.unittests.vcxproj", "{3F1A7C40-6B21-4D55-9C8E-1A2B3C4D5E01}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transport.BleMidi.unittests", "Test\Midi2.Transport.BleMidi.unittests\Midi2.Transport.BleMidi.unittests.vcxproj", "{7D2E91B4-58C6-4A1F-9F0D-2C6BA7E41D33}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transport.BluetoothMidi.unittests", "Test\Midi2.Transport.BluetoothMidi.unittests\Midi2.Transport.BluetoothMidi.unittests.vcxproj", "{7D2E91B4-58C6-4A1F-9F0D-2C6BA7E41D33}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transport.VirtualMidi.unittests", "Test\Midi2.Transport.VirtualMidi.unittests\Midi2.Transport.VirtualMidi.unittests.vcxproj", "{3F1A7C40-6B21-4D55-9C8E-1A2B3C4D5E02}"
 EndProject

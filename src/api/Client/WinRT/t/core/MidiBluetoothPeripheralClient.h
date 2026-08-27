@@ -20,6 +20,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         uint64_t BluetoothAddress() const noexcept { return m_bluetoothAddress; }
         bluetooth::MidiBluetoothAddressType BluetoothAddressType() const noexcept { return m_bluetoothAddressType; }
         bool IsPaired() const noexcept { return m_isPaired; }
+        bool IsRememberable() const noexcept { return m_isRememberable; }
+        foundation::DateTime ApprovalRequestedTime() const noexcept { return m_approvalRequestedTime; }
         winrt::hstring WindowsDeviceId() const noexcept { return m_windowsDeviceId; }
         foundation::TimeSpan ConnectionInterval() const noexcept { return m_connectionInterval; }
 
@@ -31,6 +33,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         uint64_t m_bluetoothAddress{ 0 };
         bluetooth::MidiBluetoothAddressType m_bluetoothAddressType{ bluetooth::MidiBluetoothAddressType::Unknown };
         bool m_isPaired{ false };
+        bool m_isRememberable{ false };
+        foundation::DateTime m_approvalRequestedTime{};
         winrt::hstring m_windowsDeviceId{};
         foundation::TimeSpan m_connectionInterval{};
     };

@@ -20,6 +20,9 @@ import "MidiBluetoothDeviceDisconnectResponse.idl";
 import "MidiBluetoothPeripheralConfig.idl";
 import "MidiBluetoothPeripheralResponse.idl";
 import "MidiBluetoothPeripheralStatus.idl";
+import "MidiBluetoothPeripheralClient.idl";
+import "MidiBluetoothPeripheralClientDecisionResponse.idl";
+import "MidiBluetoothApprovalScopeEnum.idl";
 import "MidiBluetoothRadioInformation.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
@@ -56,6 +59,25 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralResponse> StopPeripheralAsync();
 
         [noexcept] static MidiBluetoothPeripheralStatus GetPeripheralStatus();
+
+        // Remote Centrals which have connected and are waiting for a decision. Bluetooth does not
+        // let Windows refuse the connection, so one of these is connected but has no MIDI
+        // endpoint and moves no data until it is approved.
+        [noexcept] static IVectorView<MidiBluetoothPeripheralClient> GetPendingPeripheralClients();
+
+        // The address must be the one reported for the client which is waiting, so a decision made
+        // against a stale list is rejected rather than applied to whoever connected since.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralClientDecisionResponse> ApprovePeripheralClientAsync(
+            String bluetoothAddress,
+            MidiBluetoothApprovalScope scope);
+
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralClientDecisionResponse> DenyPeripheralClientAsync(
+            String bluetoothAddress,
+            MidiBluetoothApprovalScope scope);
+
+        // Drops a remembered allow or deny, so the device is asked about again next time
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralClientDecisionResponse> ForgetPeripheralClientAsync(
+            String bluetoothAddress);
 
         // Null when the transport did not report it, which is what an older service looks like.
         // Otherwise this is how an application explains a machine with no usable Bluetooth.

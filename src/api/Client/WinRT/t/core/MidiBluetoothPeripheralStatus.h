@@ -17,6 +17,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
         bool IsRunning() const noexcept { return m_isRunning; }
         bluetooth::MidiBluetoothProtocol Protocol() const noexcept { return m_protocol; }
+        bluetooth::MidiBluetoothPeripheralClientPolicy ClientPolicy() const noexcept { return m_clientPolicy; }
         winrt::hstring AdvertisedName() const noexcept { return m_advertisedName; }
         uint32_t SubscribedClientCount() const noexcept { return m_subscribedClientCount; }
         bool IsClientConnected() const noexcept { return m_isClientConnected; }
@@ -31,6 +32,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
     private:
         bool m_isRunning{ false };
         bluetooth::MidiBluetoothProtocol m_protocol{ bluetooth::MidiBluetoothProtocol::Unknown };
+        bluetooth::MidiBluetoothPeripheralClientPolicy m_clientPolicy{ bluetooth::MidiBluetoothPeripheralClientPolicy::RequireApproval };
         winrt::hstring m_advertisedName{};
         uint32_t m_subscribedClientCount{ 0 };
         bool m_isClientConnected{ false };

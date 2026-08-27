@@ -29,6 +29,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
             m_subscribedClientCount = static_cast<uint32_t>(
                 peripheralJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERIPHERAL_CLIENT_COUNT_KEY, 0.0));
 
+            m_clientPolicy = btinternal::ClientPolicyFromJsonString(
+                peripheralJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CLIENT_POLICY_KEY, L""));
+
             m_isClientConnected = peripheralJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_CONNECTED_KEY, false);
 
             m_endpointDeviceId = peripheralJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_ID_KEY, L"");
