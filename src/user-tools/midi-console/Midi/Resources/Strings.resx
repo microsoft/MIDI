@@ -926,6 +926,12 @@ Timestamp</value>
   <data name="ParameterBluetoothForget" xml:space="preserve">
     <value>Also remove this device from the configuration file, instead of only stopping it from connecting on its own</value>
   </data>
+  <data name="ParameterBluetoothClientAddress" xml:space="preserve">
+    <value>The twelve hex digit Bluetooth address of the device which connected to this PC</value>
+  </data>
+  <data name="ParameterBluetoothApprovalScope" xml:space="preserve">
+    <value>How long the decision applies: once, untilRestart, or always. Always is only available for a device whose address does not change.</value>
+  </data>
   <data name="ParameterLoopbackSaveToConfig" xml:space="preserve">
     <value>Also save this change to the configuration file so it survives a restart of the MIDI service</value>
   </data>

@@ -9,6 +9,7 @@
 
 #include "BluetoothDeviceItem.g.h"
 #include "PeripheralClientItem.g.h"
+#include "PendingClientItem.g.h"
 
 #include "AppSettings.h"
 #include "StringResources.h"
@@ -520,6 +521,61 @@ namespace winrt::midibluetoothsetup::implementation
 
         MIDI_BTSETUP_OBSERVABLE_ITEM()
     };
+
+    struct PendingClientItem : PendingClientItemT<PendingClientItem>
+    {
+        PendingClientItem() = default;
+
+        winrt::hstring BluetoothAddress() const noexcept { return m_bluetoothAddress; }
+        winrt::hstring Headline() const noexcept { return m_headline; }
+        winrt::hstring Detail() const noexcept { return m_detail; }
+        bool CanRememberDecision() const noexcept { return m_canRememberDecision; }
+        bool CanDecide() const noexcept { return !m_isBusy; }
+        bool CanDecidePermanently() const noexcept { return m_canRememberDecision && !m_isBusy; }
+
+        bool IsBusy() const noexcept { return m_isBusy; }
+
+        void IsBusy(_In_ bool const value) noexcept
+        {
+            if (UpdateField(m_isBusy, value, L"IsBusy"))
+            {
+                RaisePropertyChanged(L"CanDecide");
+                RaisePropertyChanged(L"CanDecidePermanently");
+            }
+        }
+
+        xaml::Visibility RotatingAddressHintVisibility() const noexcept
+        {
+            return m_canRememberDecision ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+        }
+
+        void InternalUpdate(
+            _In_ winrt::hstring const& bluetoothAddress,
+            _In_ winrt::hstring const& headline,
+            _In_ winrt::hstring const& detail,
+            _In_ bool const canRememberDecision) noexcept
+        {
+            UpdateField(m_bluetoothAddress, bluetoothAddress, L"BluetoothAddress");
+            UpdateField(m_headline, headline, L"Headline");
+            UpdateField(m_detail, detail, L"Detail");
+
+            if (UpdateField(m_canRememberDecision, canRememberDecision, L"CanRememberDecision"))
+            {
+                RaisePropertyChanged(L"RotatingAddressHintVisibility");
+                RaisePropertyChanged(L"CanDecidePermanently");
+            }
+        }
+
+    private:
+        winrt::hstring m_bluetoothAddress{};
+        winrt::hstring m_headline{};
+        winrt::hstring m_detail{};
+
+        bool m_canRememberDecision{ false };
+        bool m_isBusy{ false };
+
+        MIDI_BTSETUP_OBSERVABLE_ITEM()
+    };
 }
 
 namespace winrt::midibluetoothsetup::factory_implementation
@@ -529,6 +585,10 @@ namespace winrt::midibluetoothsetup::factory_implementation
     };
 
     struct PeripheralClientItem : PeripheralClientItemT<PeripheralClientItem, implementation::PeripheralClientItem>
+    {
+    };
+
+    struct PendingClientItem : PendingClientItemT<PendingClientItem, implementation::PendingClientItem>
     {
     };
 }

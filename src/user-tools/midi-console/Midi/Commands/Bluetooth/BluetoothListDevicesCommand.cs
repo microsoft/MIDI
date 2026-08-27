@@ -18,7 +18,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         // A connected device stops advertising, so its presence comes from the link. For the
         // rest, how long ago it was last heard from is the only presence signal BLE offers.
-        private static string FormatPresence(bool isConnected, bool isPresent, TimeSpan lastSeenAgo)
+        private static string FormatPresence(bool isConnected, bool isPresent, bool hasBeenSeen, TimeSpan lastSeenAgo)
         {
             if (isConnected)
             {
@@ -28,6 +28,13 @@ namespace Microsoft.Midi.ConsoleApp
             if (isPresent)
             {
                 return "nearby";
+            }
+
+            // A paired device the system remembers has never been heard by the radio, so there is
+            // no age to report.
+            if (!hasBeenSeen)
+            {
+                return "[grey]not heard yet[/]";
             }
 
             var seconds = (long)lastSeenAgo.TotalSeconds;
@@ -111,7 +118,7 @@ namespace Microsoft.Midi.ConsoleApp
                     string.IsNullOrEmpty(device.Name) ? "[grey](unknown name)[/]" : AnsiMarkupFormatter.FormatEndpointName(device.Name),
                     BluetoothTransport.FormatProtocol(device.SelectedProtocol),
                     device.HasEndpoint ? "[green]yes[/]" : "no",
-                    FormatPresence(device.IsConnected, device.IsPresent, device.LastSeenAgo),
+                    FormatPresence(device.IsConnected, device.IsPresent, device.HasBeenSeen, device.LastSeenAgo),
                     device.ConnectionInterval > TimeSpan.Zero ? $"{device.ConnectionInterval.TotalMilliseconds:N2} ms" : "-",
                     FormatSignalStrength(device.SignalStrengthDecibelMilliwatts),
                     device.HasEndpoint ? device.MessagesReceived.ToString() : "-",

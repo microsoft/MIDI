@@ -347,6 +347,23 @@ app.Configure(config =>
                 .WithDescription("Set the name, description, and image shown for the device connected to this PC")
                 .WithExample("bluetooth", "peripheral", "customize", "--name", "\"Studio iPad\"")
                 ;
+
+            peripheral.AddCommand<BluetoothPeripheralApproveCommand>("approve")
+                .WithDescription("Let a device which has connected to this PC have a MIDI endpoint")
+                .WithExample("bluetooth", "peripheral", "approve", "498EB25D52B3")
+                .WithExample("bluetooth", "peripheral", "approve", "498EB25D52B3", "--scope", "always")
+                ;
+
+            peripheral.AddCommand<BluetoothPeripheralDenyCommand>("deny")
+                .WithDescription("Refuse a device which has connected to this PC")
+                .WithExample("bluetooth", "peripheral", "deny", "498EB25D52B3")
+                .WithExample("bluetooth", "peripheral", "deny", "498EB25D52B3", "--scope", "always")
+                ;
+
+            peripheral.AddCommand<BluetoothPeripheralForgetCommand>("forget")
+                .WithDescription("Drop a remembered approve or deny, so the device is asked about again")
+                .WithExample("bluetooth", "peripheral", "forget", "498EB25D52B3")
+                ;
         });
 
     }).WithAlias("ble");

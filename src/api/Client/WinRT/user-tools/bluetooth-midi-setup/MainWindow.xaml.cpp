@@ -81,6 +81,7 @@ namespace winrt::midibluetoothsetup::implementation
         winrt::hstring PresenceDescription(
             _In_ bool const isConnected,
             _In_ bool const isPresent,
+            _In_ bool const hasBeenSeen,
             _In_ foundation::TimeSpan const lastSeenAgo) noexcept
         {
             try
@@ -93,6 +94,13 @@ namespace winrt::midibluetoothsetup::implementation
                 if (isPresent)
                 {
                     return res::GetString(L"PresenceNearby");
+                }
+
+                // A paired device the system remembers has never been heard by the radio, so
+                // there is no age to report and claiming one would be a fiction.
+                if (!hasBeenSeen)
+                {
+                    return res::GetString(L"PresenceNotHeardYet");
                 }
 
                 auto const seconds = std::chrono::duration_cast<std::chrono::seconds>(lastSeenAgo).count();
@@ -135,6 +143,19 @@ namespace winrt::midibluetoothsetup::implementation
                 }
 
                 return res::FormatString(L"ConnectionIntervalFormat", milliseconds);
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
+        // The bare twelve hex digit form, which is what every command keys on.
+        winrt::hstring AddressKey(_In_ uint64_t const address) noexcept
+        {
+            try
+            {
+                return address == 0 ? winrt::hstring{} : winrt::hstring{ std::format(L"{:012X}", address) };
             }
             catch (...)
             {
@@ -224,6 +245,7 @@ namespace winrt::midibluetoothsetup::implementation
 
             DevicesListView().ItemsSource(m_devices);
             PeripheralClientsList().ItemsSource(m_peripheralClients);
+            PendingClientsList().ItemsSource(m_pendingClients);
 
             // Publishing is the one place a Bluetooth MIDI protocol is chosen rather than
             // reported, because a peripheral has to advertise as one or the other.
@@ -445,6 +467,7 @@ namespace winrt::midibluetoothsetup::implementation
 
             snapshot.Devices = midi2bt::MidiBluetoothTransportManager::GetAvailableDevices();
             snapshot.Peripheral = midi2bt::MidiBluetoothTransportManager::GetPeripheralStatus();
+            snapshot.PendingClients = midi2bt::MidiBluetoothTransportManager::GetPendingPeripheralClients();
             snapshot.Radio = midi2bt::MidiBluetoothTransportManager::GetRadioInformation();
 
             // The configuration file is this app's record of which devices are meant to come
@@ -548,6 +571,7 @@ namespace winrt::midibluetoothsetup::implementation
         ApplyRadio(snapshot);
         ApplyDevices(snapshot);
         ApplyPeripheral(snapshot);
+        ApplyPendingClients(snapshot);
     }
 
     void MainWindow::ApplyRadio(ServiceSnapshot const& snapshot) noexcept
@@ -668,7 +692,7 @@ namespace winrt::midibluetoothsetup::implementation
                 winrt::get_self<implementation::BluetoothDeviceItem>(item)->InternalUpdate(
                     name,
                     subtitle,
-                    PresenceDescription(device.IsConnected(), device.IsPresent(), device.LastSeenAgo()),
+                    PresenceDescription(device.IsConnected(), device.IsPresent(), device.HasBeenSeen(), device.LastSeenAgo()),
                     statistics,
                     device.IsConnected() ? IntervalDescription(device.ConnectionInterval()) : winrt::hstring{},
                     device.EndpointDeviceId(),
@@ -701,9 +725,54 @@ namespace winrt::midibluetoothsetup::implementation
         MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to apply the device list.")
     }
 
-    void MainWindow::ApplyPeripheral(ServiceSnapshot const& snapshot) noexcept
+    void MainWindow::ApplyPendingClients(ServiceSnapshot const& snapshot) noexcept
     {
         try
+        {
+            if (!snapshot.Gathered)
+            {
+                return;
+            }
+
+            auto const pending = snapshot.PendingClients;
+
+            if (pending == nullptr || pending.Size() == 0)
+            {
+                m_pendingClients.Clear();
+                PendingClientsBar().IsOpen(false);
+
+                return;
+            }
+
+            // Rebuilt rather than reconciled: there is at most one, and nothing here holds
+            // selection or scroll state worth preserving.
+            m_pendingClients.Clear();
+
+            for (auto const& client : pending)
+            {
+                auto item = winrt::make_self<implementation::PendingClientItem>();
+
+                auto const name = client.Name().empty() ?
+                    res::GetString(L"UnknownDeviceName") : client.Name();
+
+                item->InternalUpdate(
+                    AddressKey(client.BluetoothAddress()),
+                    res::FormatString(L"PendingClientHeadlineFormat", name),
+                    res::FormatString(
+                        L"PendingClientDetailFormat",
+                        AddressDescription(client.BluetoothAddress(), client.BluetoothAddressType())),
+                    client.IsRememberable());
+
+                m_pendingClients.Append(*item);
+            }
+
+            PendingClientsBar().IsOpen(true);
+        }
+        MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to show the devices waiting for permission.")
+    }
+
+    void MainWindow::ApplyPeripheral(ServiceSnapshot const& snapshot) noexcept
+    {        try
         {
             if (!snapshot.Gathered || snapshot.Peripheral == nullptr)
             {

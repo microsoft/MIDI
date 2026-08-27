@@ -45,6 +45,11 @@ namespace winrt::midibluetoothsetup::implementation
         winrt::fire_and_forget OnCustomizePeripheralClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyPeripheralEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        winrt::fire_and_forget OnAllowClientOnceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnAllowClientAlwaysClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnDenyClientOnceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnBlockClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
     private:
         // everything the service knows, gathered off the UI thread in one pass
         struct ServiceSnapshot
@@ -54,6 +59,9 @@ namespace winrt::midibluetoothsetup::implementation
 
             collections::IVectorView<midi2bt::MidiBluetoothDeviceInformation> Devices{ nullptr };
             midi2bt::MidiBluetoothPeripheralStatus Peripheral{ nullptr };
+
+            // remote devices which have connected and are waiting for a decision
+            collections::IVectorView<midi2bt::MidiBluetoothPeripheralClient> PendingClients{ nullptr };
 
             // null when the transport did not report it, which is what an older service looks
             // like. Reporting that as "no radio" would be worse than saying nothing.
@@ -72,7 +80,13 @@ namespace winrt::midibluetoothsetup::implementation
         void ApplySnapshot(ServiceSnapshot const& snapshot) noexcept;
         void ApplyDevices(ServiceSnapshot const& snapshot) noexcept;
         void ApplyPeripheral(ServiceSnapshot const& snapshot) noexcept;
+        void ApplyPendingClients(ServiceSnapshot const& snapshot) noexcept;
         void ApplyRadio(ServiceSnapshot const& snapshot) noexcept;
+
+        winrt::Windows::Foundation::IAsyncOperation<bool> DecideClientAsync(
+            _In_ foundation::IInspectable const& sender,
+            _In_ bool const approve,
+            _In_ midi2bt::MidiBluetoothApprovalScope const scope) noexcept;
 
         void ShowDevicesPage(bool const showDevices) noexcept;
 
@@ -112,6 +126,9 @@ namespace winrt::midibluetoothsetup::implementation
         // one row, because the peripheral accepts a single connected client
         collections::IObservableVector<midibluetoothsetup::PeripheralClientItem> m_peripheralClients{
             winrt::single_threaded_observable_vector<midibluetoothsetup::PeripheralClientItem>() };
+
+        collections::IObservableVector<midibluetoothsetup::PendingClientItem> m_pendingClients{
+            winrt::single_threaded_observable_vector<midibluetoothsetup::PendingClientItem>() };
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_refreshTimer{ nullptr };
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_devicesStatusTimer{ nullptr };

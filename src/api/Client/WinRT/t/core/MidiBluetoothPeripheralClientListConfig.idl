@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiBluetoothPeripheralStatus.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // Writes the remembered allow and deny lists to the configuration file, so decisions made
+    // with MidiBluetoothApprovalScope.Always survive a service restart. The service applies those
+    // decisions immediately but never writes that file itself.
+    //
+    // Both lists are stored whole rather than merged entry by entry, so this must always carry
+    // the complete set. Constructing it from a MidiBluetoothPeripheralStatus is the reliable way
+    // to do that, because the service is what holds the current lists.
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothPeripheralClientListConfig", UUID_IMidiBluetoothPeripheralClientListConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothPeripheralClientListConfigFactory", UUID_IMidiBluetoothPeripheralClientListConfigFactory)]
+    runtimeclass MidiBluetoothPeripheralClientListConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiBluetoothPeripheralClientListConfig(MidiBluetoothPeripheralStatus currentStatus);
+    }
+}

@@ -45,6 +45,7 @@
     <ClCompile Include="MidiSystemExclusiveReceiver.cpp">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClCompile>
+    <ClCompile Include="MidiConfigFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -91,6 +92,8 @@
     <ClInclude Include="MidiSystemExclusiveReceiver.h">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClInclude>
+    <ClInclude Include="MidiConfigFile.h" />
+    <ClInclude Include="midi_bluetooth_utility.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
@@ -540,6 +543,28 @@
     <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
+    <Midl Include="MidiServiceConfigSaveResponse.idl" />
+    <Midl Include="MidiServiceConfigSaveResultEnum.idl" />
+    <Midl Include="MidiBluetoothProtocolEnum.idl" />
+    <Midl Include="MidiBluetoothRadioInformation.idl" />
+    <Midl Include="MidiServiceEndpointCustomizationRemovalConfig.idl" />
+    <Midl Include="MidiBluetoothAddressTypeEnum.idl" />
+    <Midl Include="MidiBluetoothApprovalScopeEnum.idl" />
+    <Midl Include="MidiBluetoothPeripheralClientPolicyEnum.idl" />
+    <Midl Include="MidiBluetoothDeviceConnectErrorCodeEnum.idl" />
+    <Midl Include="MidiBluetoothDeviceDisconnectErrorCodeEnum.idl" />
+    <Midl Include="MidiBluetoothPeripheralErrorCodeEnum.idl" />
+    <Midl Include="MidiBluetoothPeripheralClientDecisionResponse.idl" />
+    <Midl Include="MidiBluetoothDeviceInformation.idl" />
+    <Midl Include="MidiBluetoothPeripheralClient.idl" />
+    <Midl Include="MidiBluetoothPeripheralStatus.idl" />
+    <Midl Include="MidiBluetoothDeviceConnectConfig.idl" />
+    <Midl Include="MidiBluetoothDeviceConnectResponse.idl" />
+    <Midl Include="MidiBluetoothDeviceDisconnectConfig.idl" />
+    <Midl Include="MidiBluetoothDeviceDisconnectResponse.idl" />
+    <Midl Include="MidiBluetoothPeripheralConfig.idl" />
+    <Midl Include="MidiBluetoothPeripheralResponse.idl" />
+    <Midl Include="MidiBluetoothTransportManager.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -633,6 +658,9 @@
     </Filter>
     <Filter Include="SDK\Enumeration\Endpoint">
       <UniqueIdentifier>{e3156cdb-b2f5-401b-9817-28a085783742}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Bluetooth">
+      <UniqueIdentifier>{234700eb-c749-4026-bc65-e036ed3d66f4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

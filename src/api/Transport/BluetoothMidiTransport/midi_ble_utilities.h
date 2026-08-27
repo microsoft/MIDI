@@ -62,6 +62,10 @@ namespace MidiBleProtocol
         uint64_t LastSeenAgoMilliseconds{ 0 };
         bool IsPresent{ false };
 
+        // False when the radio has never heard this device, which is how a paired device the
+        // system remembers is told apart from one which was heard a long time ago.
+        bool HasBeenSeen{ false };
+
         // An endpoint can exist for a device which has gone away. Keeping these separate is what
         // makes a silent disconnect visible instead of leaving apps holding a dead endpoint.
         bool HasEndpoint{ false };

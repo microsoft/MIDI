@@ -27,6 +27,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
         int16_t SignalStrengthDecibelMilliwatts() const noexcept { return m_signalStrengthDecibelMilliwatts; }
         foundation::TimeSpan LastSeenAgo() const noexcept { return m_lastSeenAgo; }
+        bool HasBeenSeen() const noexcept { return m_hasBeenSeen; }
 
         bool HasEndpoint() const noexcept { return m_hasEndpoint; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
@@ -54,6 +55,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         bool m_isPresent{ false };
         int16_t m_signalStrengthDecibelMilliwatts{ 0 };
         foundation::TimeSpan m_lastSeenAgo{};
+        bool m_hasBeenSeen{ false };
         bool m_hasEndpoint{ false };
         winrt::hstring m_endpointDeviceId{};
         winrt::hstring m_endpointDeviceInstanceId{};

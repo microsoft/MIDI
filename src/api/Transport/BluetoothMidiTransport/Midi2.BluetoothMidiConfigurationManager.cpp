@@ -31,6 +31,7 @@ namespace
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEND_ERROR_HRESULT_KEY, json::JsonValue::CreateNumberValue(device.LastSendErrorHresult));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY, json::JsonValue::CreateBooleanValue(device.IsPresent));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEEN_AGO_MS_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.LastSeenAgoMilliseconds)));
+        deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_BEEN_SEEN_KEY, json::JsonValue::CreateBooleanValue(device.HasBeenSeen));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_ENDPOINT_KEY, json::JsonValue::CreateBooleanValue(device.HasEndpoint));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INTERVAL_MS_KEY, json::JsonValue::CreateNumberValue(device.ConnectionIntervalUnits * 1.25));
 
@@ -141,6 +142,31 @@ namespace
         responseObject.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PENDING_CLIENTS_RESPONSE_KEY, pendingJson);
     }
 
+    // The remembered lists are reported in the same shape the configuration file stores them, so
+    // a caller persisting an "always" decision can write back what it is given without having to
+    // merge anything itself.
+    json::JsonArray BuildRememberedClientArray(_In_ bool const allowed)
+    {
+        json::JsonArray entries;
+
+        for (auto const& identity : TransportState::Current().GetRememberedPeripheralClients(allowed))
+        {
+            json::JsonObject entry;
+
+            entry.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY,
+                json::JsonValue::CreateStringValue(identity.Address));
+
+            entry.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_NAME_KEY,
+                json::JsonValue::CreateStringValue(identity.Name));
+
+            entries.Append(entry);
+        }
+
+        return entries;
+    }
+
     MidiBleProtocol::Protocol ParseProtocolJsonString(
         _In_ winrt::hstring const& value,
         _In_ MidiBleProtocol::Protocol const defaultProtocol)
@@ -191,6 +217,14 @@ namespace
                 MidiBleUtilities::PeripheralClientPolicyToJsonString(
                     TransportState::Current().GetPeripheralClientPolicy())));
 
+        peripheralJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ALLOWED_CLIENTS_KEY,
+            BuildRememberedClientArray(true));
+
+        peripheralJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DENIED_CLIENTS_KEY,
+            BuildRememberedClientArray(false));
+
         // A remote Central being subscribed is the only sign that data can actually move.
         peripheralJson.SetNamedValue(
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_CONNECTED_KEY,
@@ -216,11 +250,18 @@ namespace
             }
         }
 
+        auto const remoteClient = isRunning ? peripheral->RemoteClientInfo() : MidiBleRemoteClientInfo{};
+
+        // The name normally comes from the connection, but a Central waiting for approval has no
+        // connection. Falling back keeps the caller from reporting a subscribed device as nameless.
+        if (connectedDeviceName.empty())
+        {
+            connectedDeviceName = remoteClient.Name;
+        }
+
         peripheralJson.SetNamedValue(
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_NAME_KEY,
             json::JsonValue::CreateStringValue(connectedDeviceName));
-
-        auto const remoteClient = isRunning ? peripheral->RemoteClientInfo() : MidiBleRemoteClientInfo{};
 
         peripheralJson.SetNamedValue(
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ADDRESS_KEY,

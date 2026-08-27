@@ -101,6 +101,10 @@ namespace Microsoft.Midi.ConsoleApp
 
             var client = status.ConnectedClient;
 
+            // A Central can be subscribed and still have no endpoint, because approval gates the
+            // endpoint rather than the Bluetooth link.
+            var hasEndpoint = !string.IsNullOrEmpty(status.EndpointDeviceId);
+
             var table = new Table();
 
             AnsiMarkupFormatter.SetTableBorderStyle(table);
@@ -112,7 +116,7 @@ namespace Microsoft.Midi.ConsoleApp
             table.AddRow("Protocol", BluetoothTransport.FormatProtocol(status.Protocol));
             table.AddRow("Radio", DescribeRadio());
             table.AddRow("Connected device", status.IsClientConnected && client != null && !string.IsNullOrEmpty(client.Name)
-                ? AnsiMarkupFormatter.FormatEndpointName(client.Name)
+                ? AnsiMarkupFormatter.FormatEndpointName(client.Name) + (hasEndpoint ? string.Empty : " [yellow](waiting for approval)[/]")
                 : "[grey]none[/]");
 
             if (status.IsClientConnected && client != null)
@@ -131,6 +135,9 @@ namespace Microsoft.Midi.ConsoleApp
             }
 
             table.AddRow("Subscribed clients", status.SubscribedClientCount.ToString());
+            table.AddRow("Client policy", status.ClientPolicy == MidiBluetoothPeripheralClientPolicy.AllowAny
+                ? "[yellow]allow any device[/]"
+                : "require approval");
             table.AddRow("Messages in", status.IsClientConnected ? status.MessagesReceived.ToString() : "-");
             table.AddRow("Messages out", status.IsClientConnected ? status.MessagesSent.ToString() : "-");
 
@@ -142,6 +149,8 @@ namespace Microsoft.Midi.ConsoleApp
             AnsiConsole.Write(table);
             AnsiConsole.WriteLine();
 
+            ReportPendingClients();
+
             // The endpoint is the remote device, the same way a Network MIDI 2.0 host endpoint is
             // the remote client, so there is nothing to open until something connects.
             if (!status.IsClientConnected)
@@ -150,7 +159,7 @@ namespace Microsoft.Midi.ConsoleApp
                     "Nothing is connected yet. A MIDI endpoint appears when a device connects to this PC."));
                 AnsiConsole.WriteLine();
             }
-            else
+            else if (hasEndpoint)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
                     "Use 'midi bluetooth peripheral customize' to rename this endpoint."));
@@ -176,6 +185,53 @@ namespace Microsoft.Midi.ConsoleApp
             // service provider gives an application no way to override it.
             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
                 "The name a remote device sees is this PC's Bluetooth name, which is changed in Windows Settings, not here."));
+        }
+
+        // Bluetooth gives Windows no way to refuse the connection itself, so a waiting device is
+        // connected but has no endpoint and moves no data until somebody decides about it.
+        internal static void ReportPendingClients()
+        {
+            IReadOnlyList<MidiBluetoothPeripheralClient> pending;
+
+            try
+            {
+                pending = MidiBluetoothTransportManager.GetPendingPeripheralClients();
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
+            if (pending == null || pending.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var client in pending)
+            {
+                var name = string.IsNullOrEmpty(client.Name)
+                    ? "(unnamed device)"
+                    : AnsiMarkupFormatter.EscapeString(client.Name);
+
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(
+                    $"'{name}' is waiting for approval. It is connected but has no MIDI endpoint and is receiving nothing."));
+
+                var address = BluetoothTransport.FormatAddress(client.BluetoothAddress);
+
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
+                    $"  midi bluetooth peripheral approve {address}"));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
+                    $"  midi bluetooth peripheral deny {address}"));
+
+                if (!client.IsRememberable)
+                {
+                    // The address is a rotating private one, so nothing durable can be keyed on it.
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage(
+                        "  This device's Bluetooth address changes periodically, so --scope always is not available for it. Pair the device to give it a stable identity."));
+                }
+
+                AnsiConsole.WriteLine();
+            }
         }
     }
 

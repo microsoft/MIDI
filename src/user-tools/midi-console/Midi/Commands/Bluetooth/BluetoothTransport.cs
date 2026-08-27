@@ -85,6 +85,12 @@ namespace Microsoft.Midi.ConsoleApp
             };
         }
 
+        // The twelve hex digit form is what every Bluetooth command here takes as an identifier.
+        internal static string FormatAddress(ulong address)
+        {
+            return address == 0 ? string.Empty : $"{address:X12}";
+        }
+
         // The image is loaded by name from a known folder, so a path would either escape that
         // folder or simply fail to load.
         internal static ValidationResult ValidateCustomizationOptions(string? name, string? description, string? image, bool clear)

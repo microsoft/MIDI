@@ -368,6 +368,11 @@
 
 #define UUID_IMidiBluetoothPeripheralClientDecisionResponse      8087b303-0519-c0de-31d1-dd00F050C000
 
+#define UUID_IMidiBluetoothRememberedClient                     8087b303-0519-c0de-31d1-dd00F050D000
+
+#define UUID_IMidiBluetoothPeripheralClientListConfig           8087b303-0519-c0de-31d1-dd00F050E000
+#define UUID_IMidiBluetoothPeripheralClientListConfigFactory    8087b303-0519-c0de-31d1-ff00F050E000
+
 
 
 // ============================================================================

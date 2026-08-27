@@ -83,4 +83,32 @@ namespace midibluetoothsetup
         Microsoft.UI.Xaml.Visibility PairingHintVisibility{ get; };
         Microsoft.UI.Xaml.Visibility GenericNameHintVisibility{ get; };
     }
+
+    // A remote device which has connected to this PC and is waiting for a decision. Bluetooth
+    // gives Windows no way to refuse the connection, so it is connected but has no endpoint and
+    // moves no data until somebody decides.
+    [default_interface]
+    runtimeclass PendingClientItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        PendingClientItem();
+
+        // the twelve hex digit address, which is what the decision is keyed on
+        String BluetoothAddress{ get; };
+
+        String Headline{ get; };
+        String Detail{ get; };
+
+        Boolean IsBusy;
+
+        // False when the device's address rotates, so it cannot be recognized again and a
+        // permanent decision about it cannot be applied.
+        Boolean CanRememberDecision{ get; };
+
+        // Enable states, computed so the buttons need no converter
+        Boolean CanDecide{ get; };
+        Boolean CanDecidePermanently{ get; };
+
+        // Shown only when a permanent decision is unavailable, to say why
+        Microsoft.UI.Xaml.Visibility RotatingAddressHintVisibility{ get; };
+    }
 }

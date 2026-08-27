@@ -36,6 +36,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
             m_lastSeenAgo = btinternal::TimeSpanFromMilliseconds(
                 deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEEN_AGO_MS_KEY, 0.0));
 
+            m_hasBeenSeen = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_BEEN_SEEN_KEY, false);
+
             m_hasEndpoint = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_ENDPOINT_KEY, false);
             m_endpointDeviceId = deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_ID_KEY, L"");
             m_endpointDeviceInstanceId = deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_INSTANCE_ID_KEY, L"");

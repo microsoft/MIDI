@@ -352,7 +352,7 @@ CMidi2BluetoothMidiEndpointManager::OnAdvertisementReceived(
         device.LastSignalStrengthDbm = args.RawSignalStrengthInDBm();
         device.LastSeenTimestamp = NowInMilliseconds();
 
-        UpsertDiscoveredDevice(device);
+        MergeDiscoveredDevice(device);
 
         // A device only advertises when it is awake and unconnected, which makes this the exact
         // moment a remembered device becomes connectable.
@@ -417,7 +417,10 @@ CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherAdded(
         device.Name = args.Name();
         device.GattServiceDeviceId = args.Id();
         device.IsPaired = true;
-        device.LastSeenTimestamp = NowInMilliseconds();
+
+        // Deliberately no LastSeenTimestamp. This watcher reports what the system already knows
+        // about a paired device, which is not evidence the radio has heard it. Stamping it here
+        // made every remembered device look like it had been heard the moment the service started.
 
         TraceLoggingWrite(
             MidiBluetoothMidiTransportTelemetryProvider::Provider(),
@@ -431,7 +434,7 @@ CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherAdded(
             TraceLoggingWideString(device.Id.c_str(), "device id")
         );
 
-        UpsertDiscoveredDevice(device);
+        MergeDiscoveredDevice(device);
 
         // Windows enumerating the GATT service is the other moment a remembered device becomes
         // reachable, and a bonded device which is not advertising only appears this way.
@@ -504,7 +507,7 @@ CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherStopped(
 
 _Use_decl_annotations_
 void
-CMidi2BluetoothMidiEndpointManager::UpsertDiscoveredDevice(MidiBleProtocol::DiscoveredDevice const& device)
+CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::DiscoveredDevice const& device)
 {
     if (device.Id.empty())
     {
@@ -541,7 +544,12 @@ CMidi2BluetoothMidiEndpointManager::UpsertDiscoveredDevice(MidiBleProtocol::Disc
                 existing->second.LastSignalStrengthDbm = device.LastSignalStrengthDbm;
             }
 
-            existing->second.LastSeenTimestamp = device.LastSeenTimestamp;
+            // Only an advertisement carries a sighting, so a GATT watcher update must not erase
+            // one, and must not invent one either.
+            if (device.LastSeenTimestamp != 0)
+            {
+                existing->second.LastSeenTimestamp = device.LastSeenTimestamp;
+            }
 
             needsName = existing->second.Name.empty();
         }
@@ -741,7 +749,12 @@ CMidi2BluetoothMidiEndpointManager::GetDiscoveredDevices()
             device.ConnectionIntervalUnits = 0;
         }
 
-        device.LastSeenAgoMilliseconds = now > device.LastSeenTimestamp ? now - device.LastSeenTimestamp : 0;
+        // Zero means the radio has never heard this device, which is different from having heard
+        // it a long time ago, so it is reported as unknown rather than as a huge age.
+        device.HasBeenSeen = device.LastSeenTimestamp != 0;
+
+        device.LastSeenAgoMilliseconds = device.HasBeenSeen && now > device.LastSeenTimestamp ?
+            now - device.LastSeenTimestamp : 0;
 
         // Deterministic, so a client can write a customization for a device it has never
         // connected, and the creation path will find it.
@@ -750,7 +763,7 @@ CMidi2BluetoothMidiEndpointManager::GetDiscoveredDevices()
         // A connected device stops advertising, so its presence comes from the link instead.
         device.IsPresent =
             device.IsConnected ||
-            device.LastSeenAgoMilliseconds <= MIDI_BLE_DEVICE_PRESENT_WITHIN_MS;
+            (device.HasBeenSeen && device.LastSeenAgoMilliseconds <= MIDI_BLE_DEVICE_PRESENT_WITHIN_MS);
 
         if (!device.IsPresent)
         {

@@ -39,6 +39,9 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEND_ERROR_HRESULT_KEY            L"lastSendErrorHresult"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY                         L"isPresent"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEEN_AGO_MS_KEY                   L"lastSeenAgoMilliseconds"
+
+// False when the radio has never heard the device, so "last heard from" has no meaning for it
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_BEEN_SEEN_KEY                      L"hasBeenSeen"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_ENDPOINT_KEY                       L"hasEndpoint"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_KNOWN_KEY                           L"isKnown"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_ARGUMENT_DEVICE_ID_KEY         L"deviceId"

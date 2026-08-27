@@ -355,6 +355,45 @@
   <data name="StatusPeripheralStopped" xml:space="preserve">
     <value>This PC is no longer published as a Bluetooth MIDI device.</value>
   </data>
+  <data name="PendingClientsBar.Title" xml:space="preserve">
+    <value>A device is waiting for permission</value>
+  </data>
+  <data name="PresenceNotHeardYet" xml:space="preserve">
+    <value>Paired, but not heard from since the service started</value>
+  </data>
+  <data name="PendingClientHeadlineFormat" xml:space="preserve">
+    <value>{0} has connected to this PC</value>
+  </data>
+  <data name="PendingClientDetailFormat" xml:space="preserve">
+    <value>{0}. It is connected but has no MIDI endpoint and is receiving nothing until you decide.</value>
+  </data>
+  <data name="AllowOnceButton.Content" xml:space="preserve">
+    <value>Allow once</value>
+  </data>
+  <data name="AllowAlwaysButton.Content" xml:space="preserve">
+    <value>Always allow</value>
+  </data>
+  <data name="DenyOnceButton.Content" xml:space="preserve">
+    <value>Deny</value>
+  </data>
+  <data name="BlockClientButton.Content" xml:space="preserve">
+    <value>Block</value>
+  </data>
+  <data name="RotatingAddressHint.Text" xml:space="preserve">
+    <value>This device's Bluetooth address changes periodically, so it cannot be remembered. Pair it with this PC to give it a stable identity.</value>
+  </data>
+  <data name="StatusClientApprovedFormat" xml:space="preserve">
+    <value>{0} was allowed. A MIDI endpoint for it appears in a moment.</value>
+  </data>
+  <data name="StatusClientDeniedFormat" xml:space="preserve">
+    <value>{0} was denied. It stays connected over Bluetooth but gets no MIDI endpoint.</value>
+  </data>
+  <data name="StatusClientDecisionFailedFormat" xml:space="preserve">
+    <value>The decision could not be applied. {0}</value>
+  </data>
+  <data name="StatusClientDecisionNotSavedFormat" xml:space="preserve">
+    <value>{0} was decided and is in effect now, but the configuration file could not be updated, so restarting the service will forget it.</value>
+  </data>
   <data name="StatusPeripheralStartFailedFormat" xml:space="preserve">
     <value>Could not publish this PC. {0}</value>
   </data>

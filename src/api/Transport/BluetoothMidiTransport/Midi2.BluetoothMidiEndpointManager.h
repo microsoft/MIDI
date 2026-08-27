@@ -104,7 +104,10 @@ private:
         _In_ std::wstring const& uniqueIdentifier);
 
     bool TryGetDiscoveredDevice(_In_ winrt::hstring const& deviceId, _Out_ MidiBleProtocol::DiscoveredDevice& device);
-    void UpsertDiscoveredDevice(_In_ MidiBleProtocol::DiscoveredDevice const& device);
+
+    // Advertisements and the GATT watcher each know only part of what there is to know about a
+    // device, so a new sighting is merged field by field rather than replacing what is held.
+    void MergeDiscoveredDevice(_In_ MidiBleProtocol::DiscoveredDevice const& device);
     void RecordConnectResult(
         _In_ winrt::hstring const& deviceId,
         _In_ HRESULT const hr,

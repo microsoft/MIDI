@@ -522,6 +522,12 @@
     <ClInclude Include="MidiBluetoothPeripheralClientDecisionResponse.h">
       <DependentUpon>MidiBluetoothPeripheralClientDecisionResponse.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiBluetoothRememberedClient.h">
+      <DependentUpon>MidiBluetoothRememberedClient.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBluetoothPeripheralClientListConfig.h">
+      <DependentUpon>MidiBluetoothPeripheralClientListConfig.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiBluetoothTransportManager.h">
       <DependentUpon>MidiBluetoothTransportManager.idl</DependentUpon>
     </ClInclude>
@@ -913,6 +919,12 @@
     <ClCompile Include="MidiBluetoothPeripheralClientDecisionResponse.cpp">
       <DependentUpon>MidiBluetoothPeripheralClientDecisionResponse.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiBluetoothRememberedClient.cpp">
+      <DependentUpon>MidiBluetoothRememberedClient.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBluetoothPeripheralClientListConfig.cpp">
+      <DependentUpon>MidiBluetoothPeripheralClientListConfig.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiBluetoothTransportManager.cpp">
       <DependentUpon>MidiBluetoothTransportManager.idl</DependentUpon>
     </ClCompile>
@@ -1154,6 +1166,8 @@
     <Midl Include="MidiBluetoothDeviceDisconnectErrorCodeEnum.idl" />
     <Midl Include="MidiBluetoothPeripheralErrorCodeEnum.idl" />
     <Midl Include="MidiBluetoothPeripheralClientDecisionResponse.idl" />
+    <Midl Include="MidiBluetoothRememberedClient.idl" />
+    <Midl Include="MidiBluetoothPeripheralClientListConfig.idl" />
     <Midl Include="MidiBluetoothDeviceInformation.idl" />
     <Midl Include="MidiBluetoothPeripheralClient.idl" />
     <Midl Include="MidiBluetoothPeripheralStatus.idl" />

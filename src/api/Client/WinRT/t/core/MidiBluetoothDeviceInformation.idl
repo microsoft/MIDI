@@ -40,6 +40,11 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         [noexcept] Int16 SignalStrengthDecibelMilliwatts{ get; };
         [noexcept] Windows.Foundation.TimeSpan LastSeenAgo{ get; };
 
+        // False when the radio has never heard this device at all, which is how a paired device
+        // the system remembers is told apart from one which was heard a long time ago.
+        // LastSeenAgo means nothing when this is false.
+        [noexcept] Boolean HasBeenSeen{ get; };
+
         [noexcept] Boolean HasEndpoint{ get; };
         [noexcept] String EndpointDeviceId{ get; };
         [noexcept] String EndpointDeviceInstanceId{ get; };

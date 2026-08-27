@@ -10,3 +10,4 @@
 
 #include "BluetoothDeviceItem.g.cpp"
 #include "PeripheralClientItem.g.cpp"
+#include "PendingClientItem.g.cpp"

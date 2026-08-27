@@ -131,21 +131,94 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
+
+                <!-- Above both pages, because a device connects to this PC whichever page is
+                     showing, and it is connected but getting nothing until this is answered. -->
+                <InfoBar x:Name="PendingClientsBar"
+                         x:Uid="PendingClientsBar"
+                         Grid.Row="0"
+                         Severity="Warning"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Title="A device is waiting for permission"
+                         Margin="16,12,16,0">
+                    <InfoBar.Content>
+                        <ItemsControl x:Name="PendingClientsList" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:PendingClientItem">
+                                    <StackPanel Margin="0,0,0,10" Spacing="4">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" MinWidth="120" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind Headline, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind Detail, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1"
+                                                        Orientation="Horizontal"
+                                                        Spacing="8"
+                                                        VerticalAlignment="Center">
+                                                <Button x:Uid="AllowOnceButton"
+                                                        Content="Allow once"
+                                                        IsEnabled="{x:Bind CanDecide, Mode=OneWay}"
+                                                        Click="OnAllowClientOnceClick" />
+
+                                                <!-- Disabled rather than hidden for a rotating
+                                                     address, so it is clear the choice exists but
+                                                     cannot apply to this device. -->
+                                                <Button x:Uid="AllowAlwaysButton"
+                                                        Content="Always allow"
+                                                        Style="{ThemeResource AccentButtonStyle}"
+                                                        IsEnabled="{x:Bind CanDecidePermanently, Mode=OneWay}"
+                                                        Click="OnAllowClientAlwaysClick" />
+                                                <Button x:Uid="DenyOnceButton"
+                                                        Content="Deny"
+                                                        IsEnabled="{x:Bind CanDecide, Mode=OneWay}"
+                                                        Click="OnDenyClientOnceClick" />
+                                                <Button x:Uid="BlockClientButton"
+                                                        Content="Block"
+                                                        IsEnabled="{x:Bind CanDecidePermanently, Mode=OneWay}"
+                                                        Click="OnBlockClientClick" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <TextBlock x:Uid="RotatingAddressHint"
+                                                   Text="This device's Bluetooth address changes periodically, so it cannot be remembered. Pair it with this PC to give it a stable identity."
+                                                   TextWrapping="Wrap"
+                                                   Visibility="{x:Bind RotatingAddressHintVisibility, Mode=OneWay}"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </InfoBar.Content>
+                </InfoBar>
 
                 <!-- A radio which cannot do what is being asked is not a failure of any one
                      operation, so it is said once here rather than on every button. -->
                 <InfoBar x:Name="RadioLimitationBar"
                          x:Uid="RadioLimitationBar"
-                         Grid.Row="0"
+                         Grid.Row="1"
                          Severity="Warning"
                          IsOpen="False"
                          IsClosable="False"
                          Title="Bluetooth is limited on this PC"
                          Margin="16,12,16,0" />
 
-                <Grid Grid.Row="1">
+                <Grid Grid.Row="2">
                     <!-- Shown instead of everything else when the transport is missing -->
                     <InfoBar x:Name="TransportUnavailableBar"
                              x:Uid="TransportUnavailableBar"

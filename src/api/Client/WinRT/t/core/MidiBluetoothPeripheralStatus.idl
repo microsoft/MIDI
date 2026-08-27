@@ -12,6 +12,7 @@ import "MidiApiContracts.idl";
 import "MidiBluetoothProtocolEnum.idl";
 import "MidiBluetoothPeripheralClientPolicyEnum.idl";
 import "MidiBluetoothPeripheralClient.idl";
+import "MidiBluetoothRememberedClient.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
@@ -46,5 +47,10 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
 
         // Null when nothing is connected
         [noexcept] MidiBluetoothPeripheralClient ConnectedClient{ get; };
+
+        // Decisions the service is currently honoring. Pass this whole status to
+        // MidiBluetoothPeripheralClientListConfig to write them to the configuration file.
+        [noexcept] IVectorView<MidiBluetoothRememberedClient> AllowedClients{ get; };
+        [noexcept] IVectorView<MidiBluetoothRememberedClient> DeniedClients{ get; };
     }
 }

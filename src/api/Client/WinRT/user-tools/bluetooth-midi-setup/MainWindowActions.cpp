@@ -792,6 +792,126 @@ namespace winrt::midibluetoothsetup::implementation
             });
     }
 
+    // Approving has to create the endpoint and denying has to make sure one is not left behind,
+    // so both go through here and then refresh.
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bool> MainWindow::DecideClientAsync(
+        foundation::IInspectable const& sender,
+        bool const approve,
+        midi2bt::MidiBluetoothApprovalScope const scope) noexcept
+    {
+        auto strongThis = get_strong();
+
+        auto const item = ItemFromSender<midibluetoothsetup::PendingClientItem>(sender);
+
+        if (item == nullptr || item.IsBusy())
+        {
+            co_return false;
+        }
+
+        item.IsBusy(true);
+
+        auto const address = item.BluetoothAddress();
+        auto const dispatcher = DispatcherQueue();
+
+        co_await winrt::resume_background();
+
+        midi2bt::MidiBluetoothPeripheralClientDecisionResponse response{ nullptr };
+        bool persisted{ false };
+
+        try
+        {
+            response = approve ?
+                co_await midi2bt::MidiBluetoothTransportManager::ApprovePeripheralClientAsync(address, scope) :
+                co_await midi2bt::MidiBluetoothTransportManager::DenyPeripheralClientAsync(address, scope);
+
+            // The service applies the decision immediately but never writes the configuration
+            // file, so an "always" only survives a restart if it is recorded here. The lists are
+            // stored whole, so the complete set is read back from the service and written out.
+            if (response != nullptr && response.Success() && response.PersistRequired())
+            {
+                auto const status = midi2bt::MidiBluetoothTransportManager::GetPeripheralStatus();
+
+                if (status != nullptr)
+                {
+                    midi2bt::MidiBluetoothPeripheralClientListConfig config{ status };
+
+                    auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                    persisted = saveResponse != nullptr && saveResponse.Success();
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        if (dispatcher == nullptr)
+        {
+            co_return false;
+        }
+
+        dispatcher.TryEnqueue([this, strongThis, item, response, approve, persisted]()
+            {
+                try
+                {
+                    item.IsBusy(false);
+
+                    if (response == nullptr)
+                    {
+                        SetPeripheralStatus(res::GetString(L"StatusServiceDidNotRespond"));
+                    }
+                    else if (!response.Success())
+                    {
+                        SetPeripheralStatus(res::FormatString(
+                            L"StatusClientDecisionFailedFormat",
+                            response.ErrorMessage()));
+                    }
+                    else if (response.PersistRequired() && !persisted)
+                    {
+                        SetPeripheralStatus(res::FormatString(
+                            L"StatusClientDecisionNotSavedFormat",
+                            response.Name().empty() ? response.BluetoothAddress() : response.Name()));
+                    }
+                    else
+                    {
+                        SetPeripheralStatus(res::FormatString(
+                            approve ? L"StatusClientApprovedFormat" : L"StatusClientDeniedFormat",
+                            response.Name().empty() ? response.BluetoothAddress() : response.Name()));
+                    }
+
+                    RequestRefreshAsync();
+                }
+                MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to report the result of the decision.")
+            });
+
+        co_return response != nullptr && response.Success();
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnAllowClientOnceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        co_await DecideClientAsync(sender, true, midi2bt::MidiBluetoothApprovalScope::Once);
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnAllowClientAlwaysClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        co_await DecideClientAsync(sender, true, midi2bt::MidiBluetoothApprovalScope::Always);
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnDenyClientOnceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        co_await DecideClientAsync(sender, false, midi2bt::MidiBluetoothApprovalScope::Once);
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnBlockClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        co_await DecideClientAsync(sender, false, midi2bt::MidiBluetoothApprovalScope::Always);
+    }
+
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnCustomizePeripheralClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
